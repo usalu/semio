@@ -22,7 +22,6 @@ use semio_framework_async::{Job, Lane, ProcessKind, WorkerPool, WorkerPoolConfig
 use semio_framework_os_kernel::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -2474,106 +2473,61 @@ fn try_send_bridge_frame(entry: &ConnectionEntry, frame: GatewayToShell) -> Resu
 }
 //#endregion 🔖️BridgeHandle
 
-//#region 🔖️BridgeToken
-/// 🎲️ The `/bridge` connection secret, freshly minted per process start — a DIFFERENT secret from the
-/// `/mcp` bearer token (`📋️master.md` §2.1: "token minted at start, 0600 file"). Same
-/// dependency-free blake3-mixed scheme as `🎫️handles::mint_id` (no `rand`/`uuid` added for this).
-pub fn mint_bridge_token() -> String {
-    static COUNTER: AtomicU64 = AtomicU64::new(0);
-    let counter = COUNTER.fetch_add(1, Ordering::Relaxed);
-    let now_ns = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_nanos()).unwrap_or(0);
-    let entropy_marker = Box::new(counter);
-    let entropy = format!("{now_ns}:{counter}:{:p}:{}", entropy_marker.as_ref(), std::process::id());
-    framework_hash::hash_bytes(entropy.as_bytes())
-}
-
-fn home_dir() -> Option<PathBuf> {
-    for variable in ["HOME", "USERPROFILE"] {
-        if let Ok(value) = std::env::var(variable) {
-            if !value.is_empty() {
-                return Some(PathBuf::from(value));
-            }
-        }
-    }
-    None
-}
-
-/// 🏠️ `~/.semio/agent/bridge-token` — overridable by `semio-os-mcp http`'s `--bridge-token-file`.
-pub fn default_bridge_token_path() -> PathBuf {
-    home_dir().unwrap_or_else(|| PathBuf::from(".")).join(".semio").join("agent").join("bridge-token")
-}
-
-/// 🔐️ Creates the parent directory if missing, writes `token` verbatim, and (unix only) chmods the
-/// file `0600` — best-effort on non-unix targets (no POSIX mode bits there; the file still inherits
-/// the parent directory's normal ACLs), documented rather than silently claimed as `0600` everywhere.
-pub fn write_bridge_token_file(path: &Path, token: &str) -> Result<(), GatewayError> {
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("cannot create bridge token directory `{}`: {error}", parent.display())))?;
-    }
-    std::fs::write(path, token).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("cannot write bridge token file `{}`: {error}", path.display())))?;
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("cannot chmod bridge token file `{}`: {error}", path.display())))?;
-    }
-    Ok(())
-}
-//#endregion 🔖️BridgeToken
-
 //#region 🔖️BridgeServer
 /// 🌐️ The real `/bridge` websocket endpoint (P1c) — mounted onto the SAME axum app `/mcp` lives on
 /// (`🚚️transport/🦀️.rs`'s `HttpTransport::router` calls [`bridge_router`] and `.merge()`s the
 /// result). Auth: `Origin` must be loopback/`null`/allowlisted (`403` otherwise — the identical policy
-/// `/mcp` uses, via `crate::transport::origin_allowed`), and `?token=` must match the minted bridge
-/// token (`401` otherwise, constant-time compared via `crate::transport::constant_time_eq`) — BOTH
+/// `/mcp` uses, via `crate::transport::origin_allowed`), and the second exact websocket subprotocol
+/// must match the protected process credential — BOTH
 /// checked before the websocket upgrade completes, so a rejected client gets a plain HTTP error
 /// status, never a silently-closed socket.
 #[cfg(test)]
 pub mod server {
     use super::{BridgeHandle, GatewayToShell, ShellToGateway, BRIDGE_VERSION};
     use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
-    use axum::extract::{Query, State};
-    use axum::http::{HeaderMap, StatusCode};
+    use axum::extract::State;
+    use axum::http::{HeaderMap, StatusCode, Uri};
     use axum::response::{IntoResponse, Response};
     use axum::routing::get;
     use axum::Router;
     use futures::{SinkExt, StreamExt};
     use semio_framework_os_kernel::{FromValue, ToValue};
-    use serde::Deserialize;
     use std::sync::Arc;
-
-    #[derive(Deserialize, ToValue, FromValue)]
-    struct BridgeQuery {
-        token: Option<String>,
-    }
 
     #[derive(Clone)]
     struct BridgeServerState {
-        token: Arc<str>,
+        admission: crate::transport::HttpAdmission,
         allowed_origins: Arc<Vec<String>>,
         handle: BridgeHandle,
     }
 
     /// 🏗️ Builds the `/bridge` route + its [`BridgeHandle`] — never bound to a socket by itself; a
     /// caller `.merge()`s the returned [`Router`] into the app it actually serves.
-    pub fn bridge_router(token: impl Into<String>, allowed_origins: Vec<String>) -> (Router, BridgeHandle) {
+    pub(crate) fn bridge_router(admission: crate::transport::HttpAdmission, allowed_origins: Vec<String>) -> (Router, BridgeHandle) {
         let handle = BridgeHandle::new();
-        let state = BridgeServerState { token: Arc::from(token.into().as_str()), allowed_origins: Arc::new(allowed_origins), handle: handle.clone() };
+        let state = BridgeServerState { admission, allowed_origins: Arc::new(allowed_origins), handle: handle.clone() };
         let router = Router::new().route("/bridge", get(upgrade)).with_state(state);
         (router, handle)
     }
 
-    async fn upgrade(ws: WebSocketUpgrade, Query(query): Query<BridgeQuery>, headers: HeaderMap, State(state): State<BridgeServerState>) -> Response {
+    async fn upgrade(ws: WebSocketUpgrade, uri: Uri, headers: HeaderMap, State(state): State<BridgeServerState>) -> Response {
+        if uri.path() != "/bridge" || uri.query().is_some() {
+            return (StatusCode::UNAUTHORIZED, "invalid bridge admission").into_response();
+        }
         let origin = headers.get(axum::http::header::ORIGIN).and_then(|value| value.to_str().ok());
         if !crate::transport::origin_allowed(origin, &state.allowed_origins) {
             return (StatusCode::FORBIDDEN, "origin not allowed").into_response();
         }
-        let provided = query.token.unwrap_or_default();
-        if !crate::transport::constant_time_eq(provided.as_bytes(), state.token.as_bytes()) {
-            return (StatusCode::UNAUTHORIZED, "invalid bridge token").into_response();
+        let protocols = headers
+            .get(axum::http::header::SEC_WEBSOCKET_PROTOCOL)
+            .and_then(|value| value.to_str().ok())
+            .map(|value| value.split(',').map(str::trim).collect::<Vec<_>>())
+            .unwrap_or_default();
+        if protocols.len() != 2 || protocols[0] != "semio.mcp.bridge.v1" || !state.admission.authorizes_capability(protocols[1]) {
+            return (StatusCode::UNAUTHORIZED, "invalid bridge admission").into_response();
         }
         let handle = state.handle.clone();
-        ws.on_upgrade(move |socket| handle_socket(socket, handle))
+        ws.protocols(["semio.mcp.bridge.v1"]).on_upgrade(move |socket| handle_socket(socket, handle))
     }
 
     /// 🔁️ One connection's full lifecycle: the OPENING frame must decode as `Hello` (anything else,
@@ -3141,7 +3095,8 @@ mod long {
     use tokio_tungstenite::tungstenite::Message as TungsteniteMessage;
 
     async fn boot(token: &str, allowed_origins: Vec<String>) -> (std::net::SocketAddr, BridgeHandle, tokio::task::JoinHandle<()>) {
-        let (router, handle) = bridge_router(token.to_string(), allowed_origins);
+        let admission = crate::transport::HttpAdmission::Fixture(Arc::from(token.as_bytes()));
+        let (router, handle) = bridge_router(admission, allowed_origins);
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
         let server_task = tokio::spawn(async move {
@@ -3163,7 +3118,10 @@ mod long {
     #[tokio::test]
     async fn bridge_websocket_replies_welcome_to_hello() {
         let (addr, _handle, server_task) = boot("secret", vec![]).await;
-        let (mut socket, _response) = tokio_tungstenite::connect_async(format!("ws://{addr}/bridge?token=secret")).await.expect("client connects");
+        let mut request = format!("ws://{addr}/bridge").into_client_request().unwrap();
+        request.headers_mut().insert("sec-websocket-protocol", "semio.mcp.bridge.v1, secret".parse().unwrap());
+        let (mut socket, response) = tokio_tungstenite::connect_async(request).await.expect("client connects");
+        assert_eq!(response.headers().get("sec-websocket-protocol").and_then(|value| value.to_str().ok()), Some("semio.mcp.bridge.v1"));
         socket.send(TungsteniteMessage::Binary(hello("shell-42").encode().into())).await.unwrap();
         let welcome = recv_frame(&mut socket).await;
         assert!(matches!(welcome, GatewayToShell::Welcome { bridge_version, ref principal, .. } if bridge_version == BRIDGE_VERSION && principal == "agent:local"));
@@ -3173,7 +3131,9 @@ mod long {
     #[tokio::test]
     async fn wrong_token_is_rejected_before_the_websocket_upgrade() {
         let (addr, _handle, server_task) = boot("correct-token", vec![]).await;
-        let result = tokio_tungstenite::connect_async(format!("ws://{addr}/bridge?token=wrong-token")).await;
+        let mut request = format!("ws://{addr}/bridge").into_client_request().unwrap();
+        request.headers_mut().insert("sec-websocket-protocol", "semio.mcp.bridge.v1, wrong-token".parse().unwrap());
+        let result = tokio_tungstenite::connect_async(request).await;
         assert!(result.is_err(), "a mismatched token must never complete the websocket handshake");
         server_task.abort();
     }
@@ -3187,9 +3147,19 @@ mod long {
     }
 
     #[tokio::test]
-    async fn an_evil_origin_is_rejected_before_the_websocket_upgrade() {
+    async fn query_credential_is_rejected_even_with_the_valid_protocol_proof() {
         let (addr, _handle, server_task) = boot("secret", vec![]).await;
         let mut request = format!("ws://{addr}/bridge?token=secret").into_client_request().unwrap();
+        request.headers_mut().insert("sec-websocket-protocol", "semio.mcp.bridge.v1, secret".parse().unwrap());
+        assert!(tokio_tungstenite::connect_async(request).await.is_err());
+        server_task.abort();
+    }
+
+    #[tokio::test]
+    async fn an_evil_origin_is_rejected_before_the_websocket_upgrade() {
+        let (addr, _handle, server_task) = boot("secret", vec![]).await;
+        let mut request = format!("ws://{addr}/bridge").into_client_request().unwrap();
+        request.headers_mut().insert("sec-websocket-protocol", "semio.mcp.bridge.v1, secret".parse().unwrap());
         request.headers_mut().insert("origin", "https://evil.example".parse().unwrap());
         let result = tokio_tungstenite::connect_async(request).await;
         assert!(result.is_err(), "a non-loopback Origin must never complete the websocket handshake");
@@ -3203,7 +3173,9 @@ mod long {
     #[tokio::test]
     async fn full_bridge_lifecycle_hello_state_push_and_command_result() {
         let (addr, handle, server_task) = boot("secret", vec![]).await;
-        let (mut socket, _response) = tokio_tungstenite::connect_async(format!("ws://{addr}/bridge?token=secret")).await.expect("client connects");
+        let mut request = format!("ws://{addr}/bridge").into_client_request().unwrap();
+        request.headers_mut().insert("sec-websocket-protocol", "semio.mcp.bridge.v1, secret".parse().unwrap());
+        let (mut socket, _response) = tokio_tungstenite::connect_async(request).await.expect("client connects");
         socket.send(TungsteniteMessage::Binary(hello("shell-1").encode().into())).await.unwrap();
         let _welcome = recv_frame(&mut socket).await;
 
@@ -3239,32 +3211,5 @@ mod long {
         assert!(!handle.send_to(ShellConnectionId(999), GatewayToShell::Pong));
     }
 
-    #[test]
-    fn mint_bridge_token_produces_distinct_high_entropy_tokens() {
-        let a = mint_bridge_token();
-        let b = mint_bridge_token();
-        assert_ne!(a, b);
-        assert_eq!(a.len(), 64, "blake3 hex digest is 64 chars");
-    }
-
-    #[test]
-    fn write_bridge_token_file_creates_parents_and_is_readable_back() {
-        let dir = std::env::temp_dir().join(format!("semio-mcp-bridge-token-test-{}-{}", std::process::id(), framework_hash::hash_bytes(b"bridge-token-test")));
-        let path = dir.join("bridge-token");
-        write_bridge_token_file(&path, "the-token").unwrap();
-        assert_eq!(std::fs::read_to_string(&path).unwrap(), "the-token");
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            let mode = std::fs::metadata(&path).unwrap().permissions().mode() & 0o777;
-            assert_eq!(mode, 0o600);
-        }
-        std::fs::remove_dir_all(&dir).ok();
-    }
-
-    #[test]
-    fn default_bridge_token_path_ends_with_the_frozen_suffix() {
-        assert!(default_bridge_token_path().ends_with(Path::new(".semio").join("agent").join("bridge-token")));
-    }
 }
 //#endregion 🧪️Tests

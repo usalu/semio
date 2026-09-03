@@ -5,10 +5,10 @@ use store::{ArtifactCanonicalJson, ArtifactCanonicalJsonArray as Array, Artifact
 
 //#region 🔣️Scalars
 fn text(value: &str) -> Value<'_> { Value::Scalar(Node::String(value)) }
-fn number(value: f64) -> Value<'static> { Value::Scalar(Node::F64(value)) }
-fn index(value: usize) -> Value<'static> { Value::Scalar(Node::U64(value as u64)) }
-fn boolean(value: bool) -> Value<'static> { Value::Scalar(Node::Bool(value)) }
-fn null() -> Value<'static> { Value::Scalar(Node::Null) }
+fn number<'a>(value: f64) -> Value<'a> { Value::Scalar(Node::F64(value)) }
+fn index<'a>(value: usize) -> Value<'a> { Value::Scalar(Node::U64(value as u64)) }
+fn boolean<'a>(value: bool) -> Value<'a> { Value::Scalar(Node::Bool(value)) }
+fn null<'a>() -> Value<'a> { Value::Scalar(Node::Null) }
 fn object<'a, const N: usize>(fields: [(&'a str, Value<'a>); N]) -> Value<'a> { Value::Object(Object::new(fields.into_iter())) }
 fn array<'a>(values: impl Iterator<Item = Value<'a>> + Send + 'a) -> Value<'a> { Value::Array(Array::new(values)) }
 fn strings(values: &[String]) -> Value<'_> { array(values.iter().map(|value| text(value))) }

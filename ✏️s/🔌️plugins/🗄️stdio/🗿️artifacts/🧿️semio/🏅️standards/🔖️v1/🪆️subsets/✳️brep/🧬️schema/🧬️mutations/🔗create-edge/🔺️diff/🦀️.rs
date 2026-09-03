@@ -11,7 +11,7 @@ pub fn diff(payload: &super::CreateEdge, base: &SemioBrepSnapshot) -> protocol::
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("An edge with id \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
     protocol::MutationOutcome::new(SemioBrepDiff {
-        edges: Some(NamedTripleDiff { removed: vec![], modified: vec![], added: vec![BrepEdge { id: payload.id.clone(), start_vertex: payload.start_vertex.clone(), end_vertex: payload.end_vertex.clone(), curve: payload.curve.clone() }] }),
+        edges: Some(NamedTripleDiff { removed: vec![], modified: vec![], added: vec![BrepEdge { id: payload.id.clone(), start_vertex: payload.start_vertex.clone(), end_vertex: payload.end_vertex.clone(), curve: payload.curve.clone(), tol: 0.0 }] }),
         ..Default::default()
     })
 }

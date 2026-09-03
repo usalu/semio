@@ -7,7 +7,7 @@ import ts from "typescript";
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../../");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8")) as {
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧪️🔗️registry-catalog-gitlink-boundary/🔣️.json"), "utf8")) as {
   schemaVersion: number;
   virtualRoot: string;
   boundary: string;

@@ -4,23 +4,23 @@
 //! (see `bin.rs`). `#[cfg(feature = "neo4j")]`-gated as a whole by the parent `directory` module
 //! (see `📇️directory/🦀️.rs`'s `//#region 🔖️Backends`).
 
+use crate::artifact_authority::chunk_cas::{decode_artifact_cas_ownership_v1, encode_artifact_cas_ownership_v1, validate_artifact_cas_publication_v1, ArtifactCasDeleteFence, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation};
 use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{
     active_capability, auth_audit, bounded_event_read, checkpoint_projection_rebuild, decode_auth_digest_hex, encode_capability_bytes, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire,
-    validate_bounded_auth_text, validate_verified_checkpoint_append, visibility_to_str, HubClock, HubDirectory, InviteCapability, NewDirectoryEvent, ProjectionRebuildControl, SessionCapability, ShareCapability,
-    ArtifactCasSweepCandidatePage, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, DIRECTORY_WIRE_INTEGER_MAX,
-    UNCONTROLLED_PROJECTION_REBUILD,
+    same_admin_operation_request, validate_admin_operation_audit, validate_bounded_auth_text, validate_verified_checkpoint_append, visibility_to_str, ArtifactCasSweepCandidatePage, HubClock, HubDirectory, InviteCapability, NewDirectoryEvent,
+    ProjectionRebuildControl, SessionCapability, ShareCapability, ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES,
+    DIRECTORY_WIRE_INTEGER_MAX, UNCONTROLLED_PROJECTION_REBUILD,
 };
-use crate::artifact_authority::chunk_cas::{decode_artifact_cas_ownership_v1, encode_artifact_cas_ownership_v1, validate_artifact_cas_publication_v1, ArtifactCasDeleteFence, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation};
 use directory::os_directory::{
     hex_lower, ArtifactCheckpoint, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor, Hlc,
     PublishedArtifactCheckpoint,
 };
 use directory::os_identity::time_ordered_id;
 use directory::{FromValue, ToValue};
-use semio_framework_hash::Sha256;
 use neo4rs::{query, Graph, Txn};
+use semio_framework_hash::Sha256;
 
 fn now_ms() -> i64 {
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -88,7 +88,10 @@ async fn cas_generation(txn: &mut Txn) -> DirectoryResult<i64> {
 }
 
 async fn cas_lock_space(txn: &mut Txn, space_id: &str) -> DirectoryResult<i64> {
-    let mut result = txn.execute(query("MERGE (b:ArtifactCasSpaceBarrier {spaceId: $space_id}) ON CREATE SET b.lockNonce = 0 SET b.lockNonce = b.lockNonce + 1 RETURN coalesce(b.leaseExpiresAtMs, 0) AS leaseExpiresAtMs").param("space_id", space_id)).await.map_err(backend)?;
+    let mut result = txn
+        .execute(query("MERGE (b:ArtifactCasSpaceBarrier {spaceId: $space_id}) ON CREATE SET b.lockNonce = 0 SET b.lockNonce = b.lockNonce + 1 RETURN coalesce(b.leaseExpiresAtMs, 0) AS leaseExpiresAtMs").param("space_id", space_id))
+        .await
+        .map_err(backend)?;
     let expires_at_ms = result.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("artifact CAS space barrier returned no row".into()))?.get("leaseExpiresAtMs").map_err(backend)?;
     drop(result);
     Ok(expires_at_ms)
@@ -96,8 +99,13 @@ async fn cas_lock_space(txn: &mut Txn, space_id: &str) -> DirectoryResult<i64> {
 
 async fn cas_reservation_barrier(txn: &mut Txn, space_id: &str, now_ms: i64) -> DirectoryResult<([u8; 32], u64)> {
     let lease_expires_at_ms = cas_lock_space(txn, space_id).await?;
-    if lease_expires_at_ms > now_ms { return Err(DirectoryError::Conflict("artifact CAS deletion lease is active for this space".into())); }
-    let mut epoch_result = txn.execute(query("MATCH (b:ArtifactCasSpaceBarrier {spaceId: $space_id}) SET b.fenceEpoch = coalesce(b.fenceEpoch, 0) + 1 REMOVE b.leaseToken, b.leaseExpiresAtMs RETURN b.fenceEpoch AS epoch").param("space_id", space_id)).await.map_err(backend)?;
+    if lease_expires_at_ms > now_ms {
+        return Err(DirectoryError::Conflict("artifact CAS deletion lease is active for this space".into()));
+    }
+    let mut epoch_result = txn
+        .execute(query("MATCH (b:ArtifactCasSpaceBarrier {spaceId: $space_id}) SET b.fenceEpoch = coalesce(b.fenceEpoch, 0) + 1 REMOVE b.leaseToken, b.leaseExpiresAtMs RETURN b.fenceEpoch AS epoch").param("space_id", space_id))
+        .await
+        .map_err(backend)?;
     let epoch: i64 = epoch_result.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("artifact CAS barrier epoch returned no row".into()))?.get("epoch").map_err(backend)?;
     drop(epoch_result);
     let mut identity = txn.execute(query("MATCH (b:ArtifactCasBarrierIdentity {id: 'singleton'}) RETURN b.coordinatorId AS coordinator")).await.map_err(backend)?;
@@ -117,8 +125,19 @@ async fn cas_project_reserve(txn: &mut Txn, reservation: &ArtifactCasReservation
 async fn cas_project_publish(txn: &mut Txn, reservation: &ArtifactCasReservation, generation: i64) -> DirectoryResult<()> {
     let scope_key = checkpoint_key_v1(&reservation.plan.scope, reservation.plan.checkpoint_id);
     txn.run(query("MATCH (r:ArtifactCasReservation {scopeCheckpointKey: $key}) DELETE r").param("key", scope_key.clone())).await.map_err(backend)?;
-    txn.run(query("CREATE (r:ArtifactCasReference {scopeCheckpointKey: $key, spaceId: $space_id, documentId: $document_id, checkpointId: $checkpoint_id, generation: $generation, writeEpoch: $write_epoch, plan: $plan, objects: $objects})")
-        .param("key", scope_key).param("space_id", reservation.plan.scope.space_id.clone()).param("document_id", reservation.plan.scope.document_id.clone()).param("checkpoint_id", hex_lower(&reservation.plan.checkpoint_id.0)).param("generation", generation).param("write_epoch", i64::try_from(reservation.write_epoch).map_err(backend)?).param("plan", encode_artifact_cas_ownership_v1(&reservation.plan).map_err(|error| DirectoryError::Conflict(error.to_string()))?).param("objects", reservation.plan.objects.iter().map(cas_object_token).collect::<Vec<_>>())).await.map_err(backend)?;
+    txn.run(
+        query("CREATE (r:ArtifactCasReference {scopeCheckpointKey: $key, spaceId: $space_id, documentId: $document_id, checkpointId: $checkpoint_id, generation: $generation, writeEpoch: $write_epoch, plan: $plan, objects: $objects})")
+            .param("key", scope_key)
+            .param("space_id", reservation.plan.scope.space_id.clone())
+            .param("document_id", reservation.plan.scope.document_id.clone())
+            .param("checkpoint_id", hex_lower(&reservation.plan.checkpoint_id.0))
+            .param("generation", generation)
+            .param("write_epoch", i64::try_from(reservation.write_epoch).map_err(backend)?)
+            .param("plan", encode_artifact_cas_ownership_v1(&reservation.plan).map_err(|error| DirectoryError::Conflict(error.to_string()))?)
+            .param("objects", reservation.plan.objects.iter().map(cas_object_token).collect::<Vec<_>>()),
+    )
+    .await
+    .map_err(backend)?;
     Ok(())
 }
 
@@ -129,8 +148,14 @@ async fn cas_project_release(txn: &mut Txn, operation: &str, space_id: &str, sco
             let floor_key = checkpoint_key_v1(scope, checkpoint_id.ok_or_else(|| DirectoryError::Backend("artifact CAS retention checkpoint missing".into()))?);
             txn.run(query("MATCH (floor:ArtifactAuthorityEvent {scopeCheckpointKey: $floor_key}) MATCH (r:ArtifactCasReference {spaceId: $space_id, documentId: $document_id}) MATCH (published:ArtifactAuthorityEvent {scopeCheckpointKey: r.scopeCheckpointKey}) WHERE published.eventSeq < floor.eventSeq DETACH DELETE r")
                 .param("floor_key", floor_key.clone()).param("space_id", space_id).param("document_id", scope.document_id.clone())).await.map_err(backend)?;
-            txn.run(query("MATCH (floor:ArtifactAuthorityEvent {scopeCheckpointKey: $floor_key}) MATCH (p:ArtifactCheckpointPrivate {spaceId: $space_id, documentId: $document_id}) WHERE p.eventSeq < floor.eventSeq DETACH DELETE p")
-                .param("floor_key", floor_key).param("space_id", space_id).param("document_id", scope.document_id.clone())).await.map_err(backend)?;
+            txn.run(
+                query("MATCH (floor:ArtifactAuthorityEvent {scopeCheckpointKey: $floor_key}) MATCH (p:ArtifactCheckpointPrivate {spaceId: $space_id, documentId: $document_id}) WHERE p.eventSeq < floor.eventSeq DETACH DELETE p")
+                    .param("floor_key", floor_key)
+                    .param("space_id", space_id)
+                    .param("document_id", scope.document_id.clone()),
+            )
+            .await
+            .map_err(backend)?;
         }
         "space-delete" => {
             txn.run(query("MATCH (r:ArtifactCasReservation {spaceId: $space_id}) DETACH DELETE r").param("space_id", space_id)).await.map_err(backend)?;
@@ -163,6 +188,10 @@ const CONSTRAINTS: &[&str] = &[
     "CREATE CONSTRAINT IF NOT EXISTS FOR (i:SpaceInvite) REQUIRE i.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (i:SpaceInvite) REQUIRE i.selector IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (a:AuthAudit) REQUIRE a.id IS UNIQUE",
+    "CREATE CONSTRAINT IF NOT EXISTS FOR (a:AdminOperationAudit) REQUIRE a.sequence IS UNIQUE",
+    "CREATE CONSTRAINT IF NOT EXISTS FOR (a:AdminOperationAudit) REQUIRE a.requestTerminalKey IS UNIQUE",
+    "CREATE INDEX IF NOT EXISTS FOR (a:AdminOperationAudit) ON (a.operationId)",
+    "CREATE CONSTRAINT IF NOT EXISTS FOR (c:AdminOperationAuditCounter) REQUIRE c.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (e:DirectoryEvent) REQUIRE e.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (e:DirectoryEvent) REQUIRE e.seq IS UNIQUE",
 ];
@@ -186,15 +215,7 @@ impl Neo4jDirectory {
         Ok(Self { graph })
     }
 
-    async fn revoke_auth_sessions_by(
-        &self,
-        field: &str,
-        key: &str,
-        subject_digest: Option<[u8; 32]>,
-        reason: &str,
-        actor_user_id: Option<&str>,
-        correlation_id: &str,
-    ) -> DirectoryResult<Vec<RevokedAuthSession>> {
+    async fn revoke_auth_sessions_by(&self, field: &str, key: &str, subject_digest: Option<[u8; 32]>, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>> {
         validate_bounded_auth_text(reason, "session revoke reason", AUTH_TEXT_MAX_BYTES)?;
         let revoked_at = now_ms();
         let mut txn = self.graph.start_txn().await.map_err(backend)?;
@@ -490,31 +511,31 @@ impl Neo4jDirectory {
 
 impl HubDirectory for Neo4jDirectory {
     //#region ShareTokens
-    async fn issue_share_token(&self, scope: &DocumentScope, ttl_secs: i64, correlation_id: &str) -> DirectoryResult<IssuedShareToken> {
+    async fn issue_share_token_as(&self, scope: &DocumentScope, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<IssuedShareToken> {
         let issued = prepare_share_token(scope, ttl_secs, now_ms())?;
-        let audit = auth_audit(issued.record.created_at, "share-issued", Some(&issued.record.id), None, None, None, "success", None, correlation_id, "server")?;
+        let audit = auth_audit(issued.record.created_at, "share-issued", Some(&issued.record.id), None, actor_user_id, None, "success", None, correlation_id, "server")?;
         let mut txn = self.graph.start_txn().await.map_err(backend)?;
         txn.run(
-                query("CREATE (g:ShareGrant {id: $id, selector: $selector, secretDigest: $secret_digest, spaceId: $space_id, documentId: $document_id, createdAt: $created_at, expiresAt: $expires_at})")
-                    .param("id", issued.record.id.clone())
-                    .param("selector", issued.record.selector.clone())
-                    .param("secret_digest", encode_capability_bytes(&issued.record.secret_digest))
-                    .param("space_id", scope.space_id.clone())
-                    .param("document_id", scope.document_id.clone())
-                    .param("created_at", issued.record.created_at)
-                    .param("expires_at", issued.record.expires_at),
-            )
-            .await
-            .map_err(backend)?;
+            query("CREATE (g:ShareGrant {id: $id, selector: $selector, secretDigest: $secret_digest, spaceId: $space_id, documentId: $document_id, createdAt: $created_at, expiresAt: $expires_at})")
+                .param("id", issued.record.id.clone())
+                .param("selector", issued.record.selector.clone())
+                .param("secret_digest", encode_capability_bytes(&issued.record.secret_digest))
+                .param("space_id", scope.space_id.clone())
+                .param("document_id", scope.document_id.clone())
+                .param("created_at", issued.record.created_at)
+                .param("expires_at", issued.record.expires_at),
+        )
+        .await
+        .map_err(backend)?;
         insert_auth_audit(&mut txn, &audit).await?;
         txn.commit().await.map_err(backend)?;
         Ok(issued)
     }
 
-    async fn revoke_share_token(&self, scope: &DocumentScope, share_id: &str, reason: &str, correlation_id: &str) -> DirectoryResult<()> {
+    async fn revoke_share_token_as(&self, scope: &DocumentScope, share_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()> {
         validate_bounded_auth_text(reason, "share revoke reason", AUTH_TEXT_MAX_BYTES)?;
         let revoked_at = now_ms();
-        let audit = auth_audit(revoked_at, "share-revoked", Some(share_id), None, None, None, "success", Some(reason), correlation_id, "server")?;
+        let audit = auth_audit(revoked_at, "share-revoked", Some(share_id), None, actor_user_id, None, "success", Some(reason), correlation_id, "server")?;
         let mut txn = self.graph.start_txn().await.map_err(backend)?;
         let mut result = txn
             .execute(
@@ -644,6 +665,24 @@ impl HubDirectory for Neo4jDirectory {
         }
         Ok(users)
     }
+
+    async fn admin_overview_counts(&self) -> DirectoryResult<AdminDirectoryOverviewCounts> {
+        let mut result = self
+            .graph
+            .execute(query(
+                "MATCH (s:Space) WITH count(s) AS spaces
+                 OPTIONAL MATCH (u:User) WITH spaces, count(u) AS users
+                 OPTIONAL MATCH (session:SyncSession) WHERE session.disconnectedAt IS NULL
+                 RETURN spaces, users, count(session) AS connections",
+            ))
+            .await
+            .map_err(backend)?;
+        let row = result.next().await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("administrator overview count query returned no row".into()))?;
+        let spaces: i64 = row.get("spaces").map_err(backend)?;
+        let users: i64 = row.get("users").map_err(backend)?;
+        let connections: i64 = row.get("connections").map_err(backend)?;
+        Ok(AdminDirectoryOverviewCounts { spaces: u64::try_from(spaces).map_err(backend)?, users: u64::try_from(users).map_err(backend)?, connections: u64::try_from(connections).map_err(backend)? })
+    }
     //#endregion
 
     //#region Spaces
@@ -675,6 +714,56 @@ impl HubDirectory for Neo4jDirectory {
             studios.push(space_from_node(&row)?);
         }
         Ok(studios)
+    }
+
+    async fn list_admin_space_summaries_page(&self, space_id: Option<&str>, offset: usize, limit: usize) -> DirectoryResult<Vec<AdminSpaceSummaryRecord>> {
+        if limit == 0 || limit > super::ADMIN_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("administrator space page limit must be 1..={}", super::ADMIN_PAGE_FETCH_MAX)));
+        }
+        let cypher = "MATCH (s:Space) WHERE $space_id IS NULL OR s.id = $space_id
+                      WITH s ORDER BY s.id SKIP $offset LIMIT $limit
+                      CALL { WITH s OPTIONAL MATCH (:User)-[membership:MEMBER_OF]->(s) RETURN count(membership) AS memberCount }
+                      CALL { WITH s OPTIONAL MATCH (s)-[:CONTAINS_DOCUMENT]->(document:DocumentDescriptor) RETURN count(document) AS documentCount }
+                      CALL { WITH s OPTIONAL MATCH (session:SyncSession {spaceId: s.id}) WHERE session.disconnectedAt IS NULL RETURN count(session) AS activeConnections }
+                      CALL { WITH s OPTIONAL MATCH (event:DirectoryEvent {spaceId: s.id}) RETURN coalesce(max(event.recordedAt), s.createdAt) AS updatedAt }
+                      RETURN s AS s, memberCount, documentCount, activeConnections, updatedAt ORDER BY s.id";
+        let mut result = self.graph.execute(query(cypher).param("space_id", space_id.map(str::to_string)).param("offset", i64::try_from(offset).map_err(backend)?).param("limit", i64::try_from(limit).map_err(backend)?)).await.map_err(backend)?;
+        let mut summaries = Vec::new();
+        while let Some(row) = result.next().await.map_err(backend)? {
+            summaries.push(AdminSpaceSummaryRecord {
+                space: space_from_node(&row)?,
+                member_count: u64::try_from(row.get::<i64>("memberCount").map_err(backend)?).map_err(backend)?,
+                document_count: u64::try_from(row.get::<i64>("documentCount").map_err(backend)?).map_err(backend)?,
+                active_connections: u64::try_from(row.get::<i64>("activeConnections").map_err(backend)?).map_err(backend)?,
+                updated_at: row.get("updatedAt").map_err(backend)?,
+            });
+        }
+        Ok(summaries)
+    }
+
+    async fn list_admin_space_members_page(&self, space_id: &str, offset: usize, limit: usize) -> DirectoryResult<Vec<(UserRecord, SpaceRole)>> {
+        if limit == 0 || limit > super::ADMIN_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("administrator member page limit must be 1..={}", super::ADMIN_PAGE_FETCH_MAX)));
+        }
+        let mut result = self
+            .graph
+            .execute(
+                query(
+                    "MATCH (u:User)-[membership:MEMBER_OF]->(:Space {id: $space_id})
+                     RETURN u AS u, membership.role AS role ORDER BY u.id SKIP $offset LIMIT $limit",
+                )
+                .param("space_id", space_id)
+                .param("offset", i64::try_from(offset).map_err(backend)?)
+                .param("limit", i64::try_from(limit).map_err(backend)?),
+            )
+            .await
+            .map_err(backend)?;
+        let mut members = Vec::new();
+        while let Some(row) = result.next().await.map_err(backend)? {
+            let role: String = row.get("role").map_err(backend)?;
+            members.push((user_from_node(&row)?, SpaceRole::parse(&role).ok_or_else(|| DirectoryError::Backend("stored member role is invalid".into()))?));
+        }
+        Ok(members)
     }
 
     async fn list_members(&self, space_id: &str) -> DirectoryResult<Vec<(UserRecord, SpaceRole)>> {
@@ -711,6 +800,33 @@ impl HubDirectory for Neo4jDirectory {
 
     async fn list_document_descriptors(&self, space_id: &str) -> DirectoryResult<Vec<DocumentDescriptor>> {
         let mut result = self.graph.execute(query("MATCH (d:DocumentDescriptor {spaceId: $space_id}) RETURN d.descriptor AS descriptor ORDER BY d.documentId").param("space_id", space_id)).await.map_err(backend)?;
+        let mut descriptors = Vec::new();
+        while let Some(row) = result.next().await.map_err(backend)? {
+            let encoded: String = row.get("descriptor").map_err(backend)?;
+            descriptors.push(directory::os_pack::json::from_json_str(&encoded).map_err(backend)?);
+        }
+        Ok(descriptors)
+    }
+
+    async fn list_document_descriptors_page(&self, space_id: Option<&str>, offset: usize, limit: usize) -> DirectoryResult<Vec<DocumentDescriptor>> {
+        if limit == 0 || limit > super::ADMIN_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("administrator document page limit must be 1..={}", super::ADMIN_PAGE_FETCH_MAX)));
+        }
+        let mut result = self
+            .graph
+            .execute(
+                query(
+                    "MATCH (d:DocumentDescriptor)
+                     WHERE $space_id IS NULL OR d.spaceId = $space_id
+                     RETURN d.descriptor AS descriptor
+                     ORDER BY d.spaceId, d.documentId SKIP $offset LIMIT $limit",
+                )
+                .param("space_id", space_id.map(str::to_string))
+                .param("offset", i64::try_from(offset).map_err(backend)?)
+                .param("limit", i64::try_from(limit).map_err(backend)?),
+            )
+            .await
+            .map_err(backend)?;
         let mut descriptors = Vec::new();
         while let Some(row) = result.next().await.map_err(backend)? {
             let encoded: String = row.get("descriptor").map_err(backend)?;
@@ -806,11 +922,7 @@ impl HubDirectory for Neo4jDirectory {
     }
 
     async fn authenticate_session(&self, capability: &SessionCapability) -> DirectoryResult<Option<AuthSessionRecord>> {
-        let mut result = self
-            .graph
-            .execute(query("MATCH (a:AuthSession {selector: $selector})-[:BELONGS_TO]->(u:User) RETURN a AS a, u.id AS userId").param("selector", capability.selector()))
-            .await
-            .map_err(backend)?;
+        let mut result = self.graph.execute(query("MATCH (a:AuthSession {selector: $selector})-[:BELONGS_TO]->(u:User) RETURN a AS a, u.id AS userId").param("selector", capability.selector())).await.map_err(backend)?;
         match result.next().await.map_err(backend)? {
             Some(row) => {
                 let record = auth_session_from_node(&row)?;
@@ -881,23 +993,132 @@ impl HubDirectory for Neo4jDirectory {
     }
     //#endregion
 
-    //#region Invites
-    async fn issue_invite(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, correlation_id: &str) -> DirectoryResult<IssuedInvite> {
-        let issued = prepare_invite(space_id, role, ttl_secs, now_ms())?;
-        let audit = auth_audit(issued.record.created_at, "invite-issued", Some(&issued.record.id), None, None, None, "success", None, correlation_id, "server")?;
+    //#region AdminOperations
+    async fn append_admin_operation_audit(&self, fact: &NewAdminOperationAuditRecord) -> DirectoryResult<AdminOperationAuditRecord> {
+        validate_admin_operation_audit(fact)?;
+        let terminal = fact.phase != "accepted";
         let mut txn = self.graph.start_txn().await.map_err(backend)?;
-        txn.run(
-                query("CREATE (i:SpaceInvite {id: $id, selector: $selector, secretDigest: $secret_digest, spaceId: $space_id, role: $role, createdAt: $created_at, expiresAt: $expires_at})")
-                    .param("id", issued.record.id.clone())
-                    .param("selector", issued.record.selector.clone())
-                    .param("secret_digest", encode_capability_bytes(&issued.record.secret_digest))
-                    .param("space_id", space_id)
-                    .param("role", role.as_str())
-                    .param("created_at", issued.record.created_at)
-                    .param("expires_at", issued.record.expires_at),
+        let mut existing_result = txn.execute(query("MATCH (a:AdminOperationAudit {requestId: $request_id}) RETURN a AS a ORDER BY a.sequence LIMIT 2").param("request_id", fact.request_id.clone())).await.map_err(backend)?;
+        let mut existing = Vec::new();
+        while let Some(row) = existing_result.next(txn.handle()).await.map_err(backend)? {
+            existing.push(admin_operation_audit_from_node(&row)?);
+        }
+        drop(existing_result);
+        if !terminal {
+            if let Some(established) = existing.first() {
+                let outcome = if same_admin_operation_request(&established.fact, fact) { Ok(established.clone()) } else { Err(DirectoryError::Conflict("admin request id was reused for a different intent".into())) };
+                txn.rollback().await.map_err(backend)?;
+                return outcome;
+            }
+        } else {
+            let accepted = existing.iter().find(|row| row.fact.phase == "accepted").ok_or_else(|| DirectoryError::Conflict("admin terminal fact requires accepted fact".into()))?;
+            if accepted.fact.operation_id != fact.operation_id || !same_admin_operation_request(&accepted.fact, fact) {
+                return Err(DirectoryError::Conflict("admin terminal fact changed operation identity".into()));
+            }
+            if let Some(established) = existing.iter().find(|row| row.fact.phase != "accepted") {
+                let outcome = if established.fact.operation_id == fact.operation_id && established.fact.phase == fact.phase {
+                    Ok(established.clone())
+                } else {
+                    Err(DirectoryError::Conflict("admin operation already terminated with a different outcome".into()))
+                };
+                txn.rollback().await.map_err(backend)?;
+                return outcome;
+            }
+        }
+        let mut sequence_result = txn.execute(query("MERGE (c:AdminOperationAuditCounter {id: 'singleton'}) ON CREATE SET c.sequence = 0 SET c.sequence = c.sequence + 1 RETURN c.sequence AS sequence")).await.map_err(backend)?;
+        let sequence: i64 = sequence_result.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("admin operation audit counter returned no row".into()))?.get("sequence").map_err(backend)?;
+        drop(sequence_result);
+        let mut merged = txn
+            .execute(
+            query("MERGE (a:AdminOperationAudit {requestTerminalKey: $request_terminal_key}) ON CREATE SET a.sequence = $sequence, a.requestId = $request_id, a.intentDigest = $intent_digest, a.operationId = $operation_id, a.occurredAt = $occurred_at, a.phase = $phase, a.intentKind = $intent_kind, a.targetKind = $target_kind, a.targetId = $target_id, a.principalUserId = $principal_user_id, a.principalSessionId = $principal_session_id, a.principalGeneration = $principal_generation, a.correlationId = $correlation_id, a.eventSeqFirst = $event_seq_first, a.eventSeqLast = $event_seq_last, a.outcomeCode = $outcome_code, a.reasonCode = $reason_code RETURN a AS a")
+                .param("sequence", sequence)
+                .param("request_id", fact.request_id.clone())
+                .param("intent_digest", fact.intent_digest.clone())
+                .param("request_terminal_key", format!("{}:{}", fact.request_id, u8::from(terminal)))
+                .param("operation_id", fact.operation_id.clone())
+                .param("occurred_at", fact.occurred_at)
+                .param("phase", fact.phase.clone())
+                .param("intent_kind", fact.intent_kind.clone())
+                .param("target_kind", fact.target_kind.clone())
+                .param("target_id", fact.target_id.clone())
+                .param("principal_user_id", fact.principal_user_id.clone())
+                .param("principal_session_id", fact.principal_session_id.clone())
+                .param("principal_generation", i64::try_from(fact.principal_generation).map_err(backend)?)
+                .param("correlation_id", fact.correlation_id.clone())
+                .param("event_seq_first", fact.event_seq_first.map(i64::try_from).transpose().map_err(backend)?.unwrap_or_default())
+                .param("event_seq_last", fact.event_seq_last.map(i64::try_from).transpose().map_err(backend)?.unwrap_or_default())
+                .param("outcome_code", fact.outcome_code.clone())
+                .param("reason_code", fact.reason_code.clone().unwrap_or_default()),
+        )
+        .await
+        .map_err(backend)?;
+        let established = merged.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("admin operation audit merge returned no row".into()))?;
+        let established = admin_operation_audit_from_node(&established)?;
+        drop(merged);
+        txn.commit().await.map_err(backend)?;
+        if same_admin_operation_request(&established.fact, fact) {
+            Ok(established)
+        } else {
+            Err(DirectoryError::Conflict("admin request id race changed intent".into()))
+        }
+    }
+
+    async fn admin_operation_audit_for_request(&self, request_id: &str) -> DirectoryResult<Vec<AdminOperationAuditRecord>> {
+        validate_bounded_auth_text(request_id, "admin request id", AUTH_TEXT_MAX_BYTES)?;
+        let mut result = self.graph.execute(query("MATCH (a:AdminOperationAudit {requestId: $request_id}) RETURN a AS a ORDER BY a.sequence LIMIT 2").param("request_id", request_id)).await.map_err(backend)?;
+        let mut records = Vec::new();
+        while let Some(row) = result.next().await.map_err(backend)? {
+            records.push(admin_operation_audit_from_node(&row)?);
+        }
+        Ok(records)
+    }
+
+    async fn admin_operation_audit_for_operation(&self, operation_id: &str) -> DirectoryResult<Vec<AdminOperationAuditRecord>> {
+        validate_bounded_auth_text(operation_id, "admin operation id", AUTH_TEXT_MAX_BYTES)?;
+        let mut result = self.graph.execute(query("MATCH (a:AdminOperationAudit {operationId: $operation_id}) RETURN a AS a ORDER BY a.sequence LIMIT 2").param("operation_id", operation_id)).await.map_err(backend)?;
+        let mut records = Vec::new();
+        while let Some(row) = result.next().await.map_err(backend)? {
+            records.push(admin_operation_audit_from_node(&row)?);
+        }
+        Ok(records)
+    }
+
+    async fn list_admin_operation_audit(&self, after_sequence: u64, limit: usize) -> DirectoryResult<Vec<AdminOperationAuditRecord>> {
+        if limit == 0 || limit > ADMIN_PAGE_MAX {
+            return Err(DirectoryError::Conflict(format!("admin audit limit must be 1..={ADMIN_PAGE_MAX}")));
+        }
+        let mut result = self
+            .graph
+            .execute(
+                query("MATCH (a:AdminOperationAudit) WHERE a.sequence > $after RETURN a AS a ORDER BY a.sequence LIMIT $limit").param("after", i64::try_from(after_sequence).map_err(backend)?).param("limit", i64::try_from(limit).map_err(backend)?),
             )
             .await
             .map_err(backend)?;
+        let mut records = Vec::new();
+        while let Some(row) = result.next().await.map_err(backend)? {
+            records.push(admin_operation_audit_from_node(&row)?);
+        }
+        Ok(records)
+    }
+    //#endregion
+
+    //#region Invites
+    async fn issue_invite_as(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<IssuedInvite> {
+        let issued = prepare_invite(space_id, role, ttl_secs, now_ms())?;
+        let audit = auth_audit(issued.record.created_at, "invite-issued", Some(&issued.record.id), None, actor_user_id, None, "success", None, correlation_id, "server")?;
+        let mut txn = self.graph.start_txn().await.map_err(backend)?;
+        txn.run(
+            query("CREATE (i:SpaceInvite {id: $id, selector: $selector, secretDigest: $secret_digest, spaceId: $space_id, role: $role, createdAt: $created_at, expiresAt: $expires_at})")
+                .param("id", issued.record.id.clone())
+                .param("selector", issued.record.selector.clone())
+                .param("secret_digest", encode_capability_bytes(&issued.record.secret_digest))
+                .param("space_id", space_id)
+                .param("role", role.as_str())
+                .param("created_at", issued.record.created_at)
+                .param("expires_at", issued.record.expires_at),
+        )
+        .await
+        .map_err(backend)?;
         insert_auth_audit(&mut txn, &audit).await?;
         txn.commit().await.map_err(backend)?;
         Ok(issued)
@@ -914,12 +1135,15 @@ impl HubDirectory for Neo4jDirectory {
         }
     }
 
-    async fn revoke_invite(&self, invite_id: &str, reason: &str, correlation_id: &str) -> DirectoryResult<()> {
+    async fn revoke_invite_as(&self, invite_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()> {
         validate_bounded_auth_text(reason, "invite revoke reason", AUTH_TEXT_MAX_BYTES)?;
         let revoked_at = now_ms();
-        let audit = auth_audit(revoked_at, "invite-revoked", Some(invite_id), None, None, None, "success", Some(reason), correlation_id, "server")?;
+        let audit = auth_audit(revoked_at, "invite-revoked", Some(invite_id), None, actor_user_id, None, "success", Some(reason), correlation_id, "server")?;
         let mut txn = self.graph.start_txn().await.map_err(backend)?;
-        let mut result = txn.execute(query("MATCH (i:SpaceInvite {id: $id}) WHERE i.revokedAt IS NULL SET i.revokedAt = $revoked_at, i.revokedReason = $reason RETURN count(i) AS c").param("id", invite_id).param("revoked_at", revoked_at).param("reason", reason)).await.map_err(backend)?;
+        let mut result = txn
+            .execute(query("MATCH (i:SpaceInvite {id: $id}) WHERE i.revokedAt IS NULL SET i.revokedAt = $revoked_at, i.revokedReason = $reason RETURN count(i) AS c").param("id", invite_id).param("revoked_at", revoked_at).param("reason", reason))
+            .await
+            .map_err(backend)?;
         let changed: i64 = result.next(txn.handle()).await.map_err(backend)?.and_then(|row| row.get("c").ok()).unwrap_or(0);
         if changed == 0 {
             return Err(DirectoryError::NotFound(format!("invite {invite_id}")));
@@ -949,6 +1173,7 @@ impl HubDirectory for Neo4jDirectory {
         document_id: &str,
         surface: &str,
         user_id: Option<&str>,
+        authenticated_email: Option<&str>,
         space_role: Option<SpaceRole>,
         client_label: &str,
     ) -> DirectoryResult<SyncSessionRecord> {
@@ -962,13 +1187,14 @@ impl HubDirectory for Neo4jDirectory {
                     .run(
                         query(
                             "MATCH (u:User {id: $user_id})
-                             CREATE (s:SyncSession {id: $id, authSessionId: $auth_session_id, authorizationGeneration: $generation, actorId: $actor_id, spaceId: $space_id, documentId: $document_id, surface: $surface, clientLabel: $client_label, spaceRole: $role, connectedAt: $connected_at})
+                             CREATE (s:SyncSession {id: $id, authSessionId: $auth_session_id, authorizationGeneration: $generation, actorId: $actor_id, spaceId: $space_id, documentId: $document_id, surface: $surface, authenticatedEmail: $authenticated_email, clientLabel: $client_label, spaceRole: $role, connectedAt: $connected_at})
                              CREATE (s)-[:AS_USER]->(u)",
                         )
                         .param("space_id", space_id)
                         .param("document_id", document_id)
                         .param("surface", surface)
                         .param("user_id", user_id)
+                        .param("authenticated_email", authenticated_email.unwrap_or_default())
                         .param("id", id.clone())
                         .param("auth_session_id", auth_session_id.unwrap_or_default())
                         .param("generation", i64::try_from(authorization_generation).map_err(backend)?)
@@ -983,10 +1209,11 @@ impl HubDirectory for Neo4jDirectory {
             None => {
                 self.graph
                     .run(
-                        query("CREATE (s:SyncSession {id: $id, authSessionId: $auth_session_id, authorizationGeneration: $generation, actorId: $actor_id, spaceId: $space_id, documentId: $document_id, surface: $surface, clientLabel: $client_label, spaceRole: $role, connectedAt: $connected_at})")
+                        query("CREATE (s:SyncSession {id: $id, authSessionId: $auth_session_id, authorizationGeneration: $generation, actorId: $actor_id, spaceId: $space_id, documentId: $document_id, surface: $surface, authenticatedEmail: $authenticated_email, clientLabel: $client_label, spaceRole: $role, connectedAt: $connected_at})")
                             .param("space_id", space_id)
                             .param("document_id", document_id)
                             .param("surface", surface)
+                            .param("authenticated_email", authenticated_email.unwrap_or_default())
                             .param("id", id.clone())
                             .param("auth_session_id", auth_session_id.unwrap_or_default())
                             .param("generation", i64::try_from(authorization_generation).map_err(backend)?)
@@ -1008,6 +1235,7 @@ impl HubDirectory for Neo4jDirectory {
             document_id: document_id.to_string(),
             surface: surface.to_string(),
             user_id: user_id.map(str::to_string),
+            authenticated_email: authenticated_email.map(str::to_string),
             space_role,
             client_label: client_label.to_string(),
             connected_at,
@@ -1028,7 +1256,7 @@ impl HubDirectory for Neo4jDirectory {
                     "MATCH (s:SyncSession {documentId: $document_id})
                      OPTIONAL MATCH (s)-[:AS_USER]->(u:User)
                      RETURN s.id AS id, s.authSessionId AS authSessionId, s.authorizationGeneration AS generation, s.actorId AS actorId,
-                            s.spaceId AS spaceId, s.surface AS surface, u.id AS userId, s.spaceRole AS role, s.clientLabel AS clientLabel,
+                            s.spaceId AS spaceId, s.surface AS surface, u.id AS userId, s.authenticatedEmail AS authenticatedEmail, s.spaceRole AS role, s.clientLabel AS clientLabel,
                             s.connectedAt AS connectedAt, s.disconnectedAt AS disconnectedAt
                      ORDER BY s.connectedAt DESC",
                 )
@@ -1043,15 +1271,18 @@ impl HubDirectory for Neo4jDirectory {
         Ok(sessions)
     }
 
-    async fn list_active_sync_sessions(&self, space_id: Option<&str>) -> DirectoryResult<Vec<SyncSessionRecord>> {
+    async fn list_active_sync_sessions_page(&self, space_id: Option<&str>, offset: usize, limit: usize) -> DirectoryResult<Vec<SyncSessionRecord>> {
+        if limit == 0 || limit > super::ACTIVE_SYNC_SESSION_READ_MAX {
+            return Err(DirectoryError::Conflict(format!("active sync-session limit must be 1..={}", super::ACTIVE_SYNC_SESSION_READ_MAX)));
+        }
         let cypher = "MATCH (s:SyncSession)
                        WHERE s.disconnectedAt IS NULL AND ($space_id IS NULL OR s.spaceId = $space_id)
                        OPTIONAL MATCH (s)-[:AS_USER]->(u:User)
                        RETURN s.id AS id, s.authSessionId AS authSessionId, s.authorizationGeneration AS generation, s.actorId AS actorId,
-                              s.spaceId AS spaceId, s.documentId AS documentId, s.surface AS surface, u.id AS userId,
+                              s.spaceId AS spaceId, s.documentId AS documentId, s.surface AS surface, u.id AS userId, s.authenticatedEmail AS authenticatedEmail,
                               s.spaceRole AS role, s.clientLabel AS clientLabel, s.connectedAt AS connectedAt, s.disconnectedAt AS disconnectedAt
-                       ORDER BY s.connectedAt DESC";
-        let mut result = self.graph.execute(query(cypher).param("space_id", space_id.map(str::to_string))).await.map_err(backend)?;
+                       ORDER BY s.connectedAt DESC, s.id ASC SKIP $offset LIMIT $limit";
+        let mut result = self.graph.execute(query(cypher).param("space_id", space_id.map(str::to_string)).param("offset", i64::try_from(offset).map_err(backend)?).param("limit", i64::try_from(limit).map_err(backend)?)).await.map_err(backend)?;
         let mut sessions = Vec::new();
         while let Some(row) = result.next().await.map_err(backend)? {
             let document_id: String = row.get("documentId").map_err(backend)?;
@@ -1077,14 +1308,25 @@ impl HubDirectory for Neo4jDirectory {
         let mut historical = txn.execute(query("MATCH (e:ArtifactCasLedgerEvent {scopeCheckpointKey: $key}) WHERE e.plan IS NOT NULL RETURN e.plan AS plan ORDER BY e.generation LIMIT 1").param("key", scope_key.clone())).await.map_err(backend)?;
         if let Some(row) = historical.next(txn.handle()).await.map_err(backend)? {
             let stored: neo4rs::BoltBytes = row.get("plan").map_err(backend)?;
-            if stored.value.as_ref() != encoded { return Err(DirectoryError::Conflict("artifact CAS checkpoint identity names a different ownership plan".into())); }
+            if stored.value.as_ref() != encoded {
+                return Err(DirectoryError::Conflict("artifact CAS checkpoint identity names a different ownership plan".into()));
+            }
         }
         drop(historical);
         let mut published = txn.execute(query("MATCH (r:ArtifactCasReference {scopeCheckpointKey: $key}) RETURN r.generation AS generation, r.writeEpoch AS writeEpoch, r.plan AS plan").param("key", scope_key.clone())).await.map_err(backend)?;
         if let Some(row) = published.next(txn.handle()).await.map_err(backend)? {
             let stored: neo4rs::BoltBytes = row.get("plan").map_err(backend)?;
-            if stored.value.as_ref() != encoded { return Err(DirectoryError::Conflict("artifact CAS published ownership conflict".into())); }
-            let reservation = ArtifactCasReservation::fenced(plan.clone(), u64::try_from(row.get::<i64>("generation").map_err(backend)?).map_err(backend)?, u64::try_from(row.get::<i64>("writeEpoch").map_err(backend)?).map_err(backend)?, i64::MAX as u64, coordinator_id, physical_epoch);
+            if stored.value.as_ref() != encoded {
+                return Err(DirectoryError::Conflict("artifact CAS published ownership conflict".into()));
+            }
+            let reservation = ArtifactCasReservation::fenced(
+                plan.clone(),
+                u64::try_from(row.get::<i64>("generation").map_err(backend)?).map_err(backend)?,
+                u64::try_from(row.get::<i64>("writeEpoch").map_err(backend)?).map_err(backend)?,
+                i64::MAX as u64,
+                coordinator_id,
+                physical_epoch,
+            );
             drop(published);
             txn.commit().await.map_err(backend)?;
             return Ok(reservation);
@@ -1096,13 +1338,25 @@ impl HubDirectory for Neo4jDirectory {
         if was_released {
             return Err(DirectoryError::Conflict("artifact CAS released checkpoint cannot be reserved again".into()));
         }
-        let mut current = txn.execute(query("MATCH (r:ArtifactCasReservation {scopeCheckpointKey: $key}) RETURN r.generation AS generation, r.writeEpoch AS writeEpoch, r.expiresAtMs AS expiresAtMs, r.plan AS plan").param("key", scope_key.clone())).await.map_err(backend)?;
+        let mut current = txn
+            .execute(query("MATCH (r:ArtifactCasReservation {scopeCheckpointKey: $key}) RETURN r.generation AS generation, r.writeEpoch AS writeEpoch, r.expiresAtMs AS expiresAtMs, r.plan AS plan").param("key", scope_key.clone()))
+            .await
+            .map_err(backend)?;
         if let Some(row) = current.next(txn.handle()).await.map_err(backend)? {
             let stored: neo4rs::BoltBytes = row.get("plan").map_err(backend)?;
-            if stored.value.as_ref() != encoded { return Err(DirectoryError::Conflict("artifact CAS reservation identity conflict".into())); }
+            if stored.value.as_ref() != encoded {
+                return Err(DirectoryError::Conflict("artifact CAS reservation identity conflict".into()));
+            }
             let expiry: i64 = row.get("expiresAtMs").map_err(backend)?;
             if expiry > i64::try_from(now_ms).map_err(backend)? {
-                let reservation = ArtifactCasReservation::fenced(plan.clone(), u64::try_from(row.get::<i64>("generation").map_err(backend)?).map_err(backend)?, u64::try_from(row.get::<i64>("writeEpoch").map_err(backend)?).map_err(backend)?, u64::try_from(expiry).map_err(backend)?, coordinator_id, physical_epoch);
+                let reservation = ArtifactCasReservation::fenced(
+                    plan.clone(),
+                    u64::try_from(row.get::<i64>("generation").map_err(backend)?).map_err(backend)?,
+                    u64::try_from(row.get::<i64>("writeEpoch").map_err(backend)?).map_err(backend)?,
+                    u64::try_from(expiry).map_err(backend)?,
+                    coordinator_id,
+                    physical_epoch,
+                );
                 drop(current);
                 txn.commit().await.map_err(backend)?;
                 return Ok(reservation);
@@ -1124,37 +1378,65 @@ impl HubDirectory for Neo4jDirectory {
 
     async fn append_reserved_artifact_checkpoint(&self, event: Option<&NewDirectoryEvent>, checkpoint: &ArtifactCheckpoint, reservation: &ArtifactCasReservation, current_now_ms: u64) -> DirectoryResult<Vec<DirectoryEvent>> {
         validate_artifact_cas_publication_v1(&reservation.plan, checkpoint).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
-        if let Some(event) = event { validate_verified_checkpoint_append(event, checkpoint)?; }
+        if let Some(event) = event {
+            validate_verified_checkpoint_append(event, checkpoint)?;
+        }
         let scope_key = checkpoint_key_v1(&reservation.plan.scope, reservation.plan.checkpoint_id);
         let encoded = encode_artifact_cas_ownership_v1(&reservation.plan).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
         let mut txn = self.graph.start_txn().await.map_err(backend)?;
-        if cas_lock_space(&mut txn, &reservation.plan.scope.space_id).await? > i64::try_from(current_now_ms).map_err(backend)? { return Err(DirectoryError::Conflict("artifact CAS deletion lease is active for this space".into())); }
+        if cas_lock_space(&mut txn, &reservation.plan.scope.space_id).await? > i64::try_from(current_now_ms).map_err(backend)? {
+            return Err(DirectoryError::Conflict("artifact CAS deletion lease is active for this space".into()));
+        }
         let mut published = txn.execute(query("MATCH (r:ArtifactCasReference {scopeCheckpointKey: $key}) RETURN r.generation AS generation, r.writeEpoch AS writeEpoch, r.plan AS plan").param("key", scope_key.clone())).await.map_err(backend)?;
         if let Some(row) = published.next(txn.handle()).await.map_err(backend)? {
             let stored: neo4rs::BoltBytes = row.get("plan").map_err(backend)?;
-            if event.is_some() || row.get::<i64>("generation").map_err(backend)? != i64::try_from(reservation.generation).map_err(backend)? || row.get::<i64>("writeEpoch").map_err(backend)? != i64::try_from(reservation.write_epoch).map_err(backend)? || stored.value.as_ref() != encoded {
+            if event.is_some()
+                || row.get::<i64>("generation").map_err(backend)? != i64::try_from(reservation.generation).map_err(backend)?
+                || row.get::<i64>("writeEpoch").map_err(backend)? != i64::try_from(reservation.write_epoch).map_err(backend)?
+                || stored.value.as_ref() != encoded
+            {
                 return Err(DirectoryError::Conflict("artifact CAS published reservation conflict".into()));
             }
             return Ok(Vec::new());
         }
         drop(published);
-        let mut current = txn.execute(query("MATCH (r:ArtifactCasReservation {scopeCheckpointKey: $key}) RETURN r.generation AS generation, r.writeEpoch AS writeEpoch, r.expiresAtMs AS expiresAtMs, r.plan AS plan").param("key", scope_key.clone())).await.map_err(backend)?;
+        let mut current = txn
+            .execute(query("MATCH (r:ArtifactCasReservation {scopeCheckpointKey: $key}) RETURN r.generation AS generation, r.writeEpoch AS writeEpoch, r.expiresAtMs AS expiresAtMs, r.plan AS plan").param("key", scope_key.clone()))
+            .await
+            .map_err(backend)?;
         let row = current.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Conflict("artifact CAS reservation is missing, expired, or superseded".into()))?;
         let stored: neo4rs::BoltBytes = row.get("plan").map_err(backend)?;
-        if row.get::<i64>("generation").map_err(backend)? != i64::try_from(reservation.generation).map_err(backend)? || row.get::<i64>("writeEpoch").map_err(backend)? != i64::try_from(reservation.write_epoch).map_err(backend)? || row.get::<i64>("expiresAtMs").map_err(backend)? != i64::try_from(reservation.expires_at_ms).map_err(backend)? || reservation.expires_at_ms <= current_now_ms || stored.value.as_ref() != encoded {
+        if row.get::<i64>("generation").map_err(backend)? != i64::try_from(reservation.generation).map_err(backend)?
+            || row.get::<i64>("writeEpoch").map_err(backend)? != i64::try_from(reservation.write_epoch).map_err(backend)?
+            || row.get::<i64>("expiresAtMs").map_err(backend)? != i64::try_from(reservation.expires_at_ms).map_err(backend)?
+            || reservation.expires_at_ms <= current_now_ms
+            || stored.value.as_ref() != encoded
+        {
             return Err(DirectoryError::Conflict("artifact CAS reservation is missing, expired, or superseded".into()));
         }
         drop(current);
         let event = event.ok_or_else(|| DirectoryError::Conflict("new artifact CAS publication requires one public event".into()))?;
-        let id = time_ordered_id(); let recorded_at_ms = now_ms(); let payload_value = serde_json::Value::from(&event.body.to_value()); let kind = payload_value.get("kind").and_then(|value| value.as_str()).unwrap_or_default().to_string();
+        let id = time_ordered_id();
+        let recorded_at_ms = now_ms();
+        let payload_value = serde_json::Value::from(&event.body.to_value());
+        let kind = payload_value.get("kind").and_then(|value| value.as_str()).unwrap_or_default().to_string();
         let mut counter = txn.execute(query("MERGE (c:DirectoryCounter {id: 'singleton'}) ON CREATE SET c.seq = 0 SET c.seq = c.seq + 1 RETURN c.seq AS seq")).await.map_err(backend)?;
-        let seq: i64 = counter.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("directory counter query returned no row".into()))?.get("seq").map_err(backend)?; drop(counter);
-        let public_seq = u64::try_from(seq).map_err(backend)?; if public_seq > DIRECTORY_WIRE_INTEGER_MAX { return Err(DirectoryError::Conflict("directory event sequence exceeds the public integer boundary".into())); }
+        let seq: i64 = counter.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("directory counter query returned no row".into()))?.get("seq").map_err(backend)?;
+        drop(counter);
+        let public_seq = u64::try_from(seq).map_err(backend)?;
+        if public_seq > DIRECTORY_WIRE_INTEGER_MAX {
+            return Err(DirectoryError::Conflict("directory event sequence exceeds the public integer boundary".into()));
+        }
         txn.run(query("CREATE (e:DirectoryEvent {seq: $seq, id: $id, hlcPhysical: $hlc_physical, hlcLogical: $hlc_logical, actorKind: $actor_kind, actorId: $actor_id, spaceId: $space_id, userId: $user_id, kind: $kind, payload: $payload, recordedAt: $recorded_at})")
             .param("seq", seq).param("id", id.clone()).param("hlc_physical", event.hlc.physical_ms).param("hlc_logical", i64::from(event.hlc.logical)).param("actor_kind", actor_kind_to_str(event.actor.kind)).param("actor_id", event.actor.id.clone()).param("space_id", event.space_id.clone()).param("user_id", event.user_id.clone()).param("kind", kind).param("payload", payload_value.to_string()).param("recorded_at", recorded_at_ms)).await.map_err(backend)?;
         let full = DirectoryEvent { seq: public_seq, id, hlc: event.hlc, actor: event.actor.clone(), space_id: event.space_id.clone(), user_id: event.user_id.clone(), body: event.body.clone(), recorded_at_ms };
-        txn.run(query("CREATE (:ArtifactAuthorityEvent {eventSeq: $event_seq, scopeCheckpointKey: $key, payload: $payload})").param("event_seq", seq).param("key", scope_key.clone()).param("payload", directory::os_pack::json::to_json_string(checkpoint))).await.map_err(backend)?;
-        self.project(&mut txn, &full).await?; self.project_verified_checkpoint(&mut txn, &full, checkpoint).await?;
+        txn.run(
+            query("CREATE (:ArtifactAuthorityEvent {eventSeq: $event_seq, scopeCheckpointKey: $key, payload: $payload})").param("event_seq", seq).param("key", scope_key.clone()).param("payload", directory::os_pack::json::to_json_string(checkpoint)),
+        )
+        .await
+        .map_err(backend)?;
+        self.project(&mut txn, &full).await?;
+        self.project_verified_checkpoint(&mut txn, &full, checkpoint).await?;
         let generation = cas_generation(&mut txn).await?;
         txn.run(query("CREATE (:ArtifactCasLedgerEvent {generation: $generation, operation: 'publish', scopeCheckpointKey: $key, spaceId: $space_id, documentId: $document_id, checkpointId: $checkpoint_id, writeEpoch: $write_epoch, expiresAtMs: $expires_at, eventSeq: $event_seq, plan: $plan})")
             .param("generation", generation).param("key", scope_key).param("space_id", reservation.plan.scope.space_id.clone()).param("document_id", reservation.plan.scope.document_id.clone()).param("checkpoint_id", hex_lower(&reservation.plan.checkpoint_id.0)).param("write_epoch", i64::try_from(reservation.write_epoch).map_err(backend)?).param("expires_at", i64::try_from(reservation.expires_at_ms).map_err(backend)?).param("event_seq", seq).param("plan", encoded)).await.map_err(backend)?;
@@ -1179,14 +1461,39 @@ impl HubDirectory for Neo4jDirectory {
     }
 
     async fn artifact_cas_sweep_candidates(&self, after_generation: u64, through_generation: u64, limit: usize) -> DirectoryResult<ArtifactCasSweepCandidatePage> {
-        if limit == 0 || limit > ARTIFACT_CAS_SWEEP_PAGE_MAX { return Err(DirectoryError::Conflict(format!("artifact CAS sweep page requires limit 1..={ARTIFACT_CAS_SWEEP_PAGE_MAX}"))); }
+        if limit == 0 || limit > ARTIFACT_CAS_SWEEP_PAGE_MAX {
+            return Err(DirectoryError::Conflict(format!("artifact CAS sweep page requires limit 1..={ARTIFACT_CAS_SWEEP_PAGE_MAX}")));
+        }
         let mut head = self.graph.execute(query("MATCH (h:ArtifactCasLedgerHead {id: 'singleton'}) RETURN h.generation AS generation")).await.map_err(backend)?;
-        let current = match head.next().await.map_err(backend)? { Some(row) => row.get::<i64>("generation").map_err(backend)?, None => 0 }; let after = i64::try_from(after_generation).map_err(backend)?; let through = i64::try_from(through_generation).map_err(backend)?;
-        if through > current || after > through { return Err(DirectoryError::Conflict("artifact CAS sweep bounds are outside the ledger".into())); }
-        let mut result = self.graph.execute(query("MATCH (e:ArtifactCasLedgerEvent) WHERE e.generation > $after AND e.generation <= $through RETURN e.generation AS generation, e.plan AS plan ORDER BY e.generation LIMIT $limit").param("after", after).param("through", through).param("limit", i64::try_from(limit).map_err(backend)?)).await.map_err(backend)?;
-        let mut next = after; let mut objects = Vec::new();
-        while let Some(row) = result.next().await.map_err(backend)? { next = row.get("generation").map_err(backend)?; if let Ok(plan) = row.get::<neo4rs::BoltBytes>("plan") { objects.extend(decode_artifact_cas_ownership_v1(&plan.value).map_err(|error| DirectoryError::Backend(error.to_string()))?.objects); } }
-        objects.sort_by_key(|object| (object.space_id.clone(), object.kind, object.digest.0)); objects.dedup();
+        let current = match head.next().await.map_err(backend)? {
+            Some(row) => row.get::<i64>("generation").map_err(backend)?,
+            None => 0,
+        };
+        let after = i64::try_from(after_generation).map_err(backend)?;
+        let through = i64::try_from(through_generation).map_err(backend)?;
+        if through > current || after > through {
+            return Err(DirectoryError::Conflict("artifact CAS sweep bounds are outside the ledger".into()));
+        }
+        let mut result = self
+            .graph
+            .execute(
+                query("MATCH (e:ArtifactCasLedgerEvent) WHERE e.generation > $after AND e.generation <= $through RETURN e.generation AS generation, e.plan AS plan ORDER BY e.generation LIMIT $limit")
+                    .param("after", after)
+                    .param("through", through)
+                    .param("limit", i64::try_from(limit).map_err(backend)?),
+            )
+            .await
+            .map_err(backend)?;
+        let mut next = after;
+        let mut objects = Vec::new();
+        while let Some(row) = result.next().await.map_err(backend)? {
+            next = row.get("generation").map_err(backend)?;
+            if let Ok(plan) = row.get::<neo4rs::BoltBytes>("plan") {
+                objects.extend(decode_artifact_cas_ownership_v1(&plan.value).map_err(|error| DirectoryError::Backend(error.to_string()))?.objects);
+            }
+        }
+        objects.sort_by_key(|object| (object.space_id.clone(), object.kind, object.digest.0));
+        objects.dedup();
         Ok(ArtifactCasSweepCandidatePage { observed_generation: through_generation, next_generation: u64::try_from(next).map_err(backend)?, objects })
     }
 
@@ -1200,13 +1507,19 @@ impl HubDirectory for Neo4jDirectory {
                 .param("now", i64::try_from(now_ms).map_err(backend)?),
         ).await.map_err(backend)?;
         let row = result.next().await.map_err(backend)?.ok_or_else(|| DirectoryError::Conflict("artifact CAS sweep requires an initialized ledger".into()))?;
-        if !row.get::<bool>("observed").map_err(backend)? { return Err(DirectoryError::Conflict("artifact CAS sweep observation is ahead of the ledger".into())); }
+        if !row.get::<bool>("observed").map_err(backend)? {
+            return Err(DirectoryError::Conflict("artifact CAS sweep observation is ahead of the ledger".into()));
+        }
         Ok(row.get::<bool>("referenced").map_err(backend)? || row.get::<bool>("reserved").map_err(backend)?)
     }
 
     async fn acquire_artifact_cas_delete_fence(&self, key: &ArtifactCasObjectKey, observed_generation: u64, lease_token: [u8; 32], now_ms: u64, expires_at_ms: u64) -> DirectoryResult<Option<ArtifactCasDeleteFence>> {
-        if observed_generation == 0 { return Err(DirectoryError::Conflict("artifact CAS sweep requires a nonzero observed generation".into())); }
-        if lease_token == [0; 32] || expires_at_ms <= now_ms { return Err(DirectoryError::Conflict("artifact CAS deletion lease is invalid".into())); }
+        if observed_generation == 0 {
+            return Err(DirectoryError::Conflict("artifact CAS sweep requires a nonzero observed generation".into()));
+        }
+        if lease_token == [0; 32] || expires_at_ms <= now_ms {
+            return Err(DirectoryError::Conflict("artifact CAS deletion lease is invalid".into()));
+        }
         let token = cas_object_token(key);
         let now = i64::try_from(now_ms).map_err(backend)?;
         let mut txn = self.graph.start_txn().await.map_err(backend)?;
@@ -1214,13 +1527,25 @@ impl HubDirectory for Neo4jDirectory {
             txn.commit().await.map_err(backend)?;
             return Ok(None);
         }
-        let mut epoch_result = txn.execute(query("MATCH (b:ArtifactCasSpaceBarrier {spaceId: $space_id}) SET b.fenceEpoch = coalesce(b.fenceEpoch, 0) + 1, b.leaseToken = $lease_token, b.leaseExpiresAtMs = $expires_at RETURN b.fenceEpoch AS epoch").param("space_id", key.space_id.clone()).param("lease_token", lease_token.to_vec()).param("expires_at", i64::try_from(expires_at_ms).map_err(backend)?)).await.map_err(backend)?;
+        let mut epoch_result = txn
+            .execute(
+                query("MATCH (b:ArtifactCasSpaceBarrier {spaceId: $space_id}) SET b.fenceEpoch = coalesce(b.fenceEpoch, 0) + 1, b.leaseToken = $lease_token, b.leaseExpiresAtMs = $expires_at RETURN b.fenceEpoch AS epoch")
+                    .param("space_id", key.space_id.clone())
+                    .param("lease_token", lease_token.to_vec())
+                    .param("expires_at", i64::try_from(expires_at_ms).map_err(backend)?),
+            )
+            .await
+            .map_err(backend)?;
         let physical_epoch: i64 = epoch_result.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("artifact CAS barrier epoch returned no row".into()))?.get("epoch").map_err(backend)?;
         drop(epoch_result);
         let mut result = txn.execute(query("MATCH (h:ArtifactCasLedgerHead {id: 'singleton'}) RETURN h.generation AS generation, EXISTS { MATCH (r:ArtifactCasReference {spaceId: $space_id}) WHERE $token IN r.objects } AS referenced, EXISTS { MATCH (r:ArtifactCasReservation {spaceId: $space_id}) WHERE r.expiresAtMs > $now AND $token IN r.objects } AS reserved").param("space_id", key.space_id.clone()).param("token", token).param("now", now)).await.map_err(backend)?;
-        let row = result.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Conflict("artifact CAS sweep requires an initialized ledger".into()))?; let generation: i64 = row.get("generation").map_err(backend)?;
-        if generation < i64::try_from(observed_generation).map_err(backend)? { return Err(DirectoryError::Conflict("artifact CAS sweep observation is ahead of the ledger".into())); }
-        let referenced: bool = row.get("referenced").map_err(backend)?; let reserved: bool = row.get("reserved").map_err(backend)?;
+        let row = result.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Conflict("artifact CAS sweep requires an initialized ledger".into()))?;
+        let generation: i64 = row.get("generation").map_err(backend)?;
+        if generation < i64::try_from(observed_generation).map_err(backend)? {
+            return Err(DirectoryError::Conflict("artifact CAS sweep observation is ahead of the ledger".into()));
+        }
+        let referenced: bool = row.get("referenced").map_err(backend)?;
+        let reserved: bool = row.get("reserved").map_err(backend)?;
         drop(result);
         if referenced || reserved {
             txn.run(query("MATCH (b:ArtifactCasSpaceBarrier {spaceId: $space_id}) REMOVE b.leaseToken, b.leaseExpiresAtMs").param("space_id", key.space_id.clone())).await.map_err(backend)?;
@@ -1265,13 +1590,26 @@ impl HubDirectory for Neo4jDirectory {
     }
 
     async fn renew_artifact_cas_delete_fence(&self, fence: &ArtifactCasDeleteFence, now_ms: u64, expires_at_ms: u64) -> DirectoryResult<()> {
-        if expires_at_ms <= now_ms { return Err(DirectoryError::Conflict("artifact CAS deletion lease renewal is invalid".into())); }
+        if expires_at_ms <= now_ms {
+            return Err(DirectoryError::Conflict("artifact CAS deletion lease renewal is invalid".into()));
+        }
         let mut txn = self.graph.start_txn().await.map_err(backend)?;
         cas_lock_space(&mut txn, &fence.object().space_id).await?;
-        let mut result = txn.execute(query("MATCH (b:ArtifactCasSpaceBarrier {spaceId: $space_id}) WHERE b.leaseToken = $lease_token AND b.leaseExpiresAtMs > $now SET b.leaseExpiresAtMs = $expires_at RETURN count(b) AS renewed").param("space_id", fence.object().space_id.clone()).param("lease_token", fence.lease_token().to_vec()).param("now", i64::try_from(now_ms).map_err(backend)?).param("expires_at", i64::try_from(expires_at_ms).map_err(backend)?)).await.map_err(backend)?;
+        let mut result = txn
+            .execute(
+                query("MATCH (b:ArtifactCasSpaceBarrier {spaceId: $space_id}) WHERE b.leaseToken = $lease_token AND b.leaseExpiresAtMs > $now SET b.leaseExpiresAtMs = $expires_at RETURN count(b) AS renewed")
+                    .param("space_id", fence.object().space_id.clone())
+                    .param("lease_token", fence.lease_token().to_vec())
+                    .param("now", i64::try_from(now_ms).map_err(backend)?)
+                    .param("expires_at", i64::try_from(expires_at_ms).map_err(backend)?),
+            )
+            .await
+            .map_err(backend)?;
         let renewed: i64 = result.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("artifact CAS deletion lease renewal returned no row".into()))?.get("renewed").map_err(backend)?;
         drop(result);
-        if renewed != 1 { return Err(DirectoryError::Conflict("artifact CAS deletion lease is no longer owned".into())); }
+        if renewed != 1 {
+            return Err(DirectoryError::Conflict("artifact CAS deletion lease is no longer owned".into()));
+        }
         txn.commit().await.map_err(backend)?;
         Ok(())
     }
@@ -1279,10 +1617,19 @@ impl HubDirectory for Neo4jDirectory {
     async fn release_artifact_cas_delete_fence(&self, fence: ArtifactCasDeleteFence) -> DirectoryResult<()> {
         let mut txn = self.graph.start_txn().await.map_err(backend)?;
         cas_lock_space(&mut txn, &fence.object().space_id).await?;
-        let mut result = txn.execute(query("MATCH (b:ArtifactCasSpaceBarrier {spaceId: $space_id}) WHERE b.leaseToken = $lease_token REMOVE b.leaseToken, b.leaseExpiresAtMs RETURN count(b) AS released").param("space_id", fence.object().space_id.clone()).param("lease_token", fence.lease_token().to_vec())).await.map_err(backend)?;
+        let mut result = txn
+            .execute(
+                query("MATCH (b:ArtifactCasSpaceBarrier {spaceId: $space_id}) WHERE b.leaseToken = $lease_token REMOVE b.leaseToken, b.leaseExpiresAtMs RETURN count(b) AS released")
+                    .param("space_id", fence.object().space_id.clone())
+                    .param("lease_token", fence.lease_token().to_vec()),
+            )
+            .await
+            .map_err(backend)?;
         let released: i64 = result.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("artifact CAS deletion lease release returned no row".into()))?.get("released").map_err(backend)?;
         drop(result);
-        if released != 1 { return Err(DirectoryError::Conflict("artifact CAS deletion lease is no longer owned".into())); }
+        if released != 1 {
+            return Err(DirectoryError::Conflict("artifact CAS deletion lease is no longer owned".into()));
+        }
         txn.commit().await.map_err(backend)?;
         Ok(())
     }
@@ -1334,12 +1681,28 @@ impl HubDirectory for Neo4jDirectory {
             match &full.body {
                 DirectoryEventBody::ArtifactRetentionAdvanced { retention } => {
                     let generation = cas_generation(&mut txn).await?;
-                    txn.run(query("CREATE (:ArtifactCasLedgerEvent {generation: $generation, operation: 'retention', spaceId: $space_id, documentId: $document_id, checkpointId: $checkpoint_id, eventSeq: $event_seq})").param("generation", generation).param("space_id", retention.scope.space_id.clone()).param("document_id", retention.scope.document_id.clone()).param("checkpoint_id", hex_lower(&retention.retained_checkpoint_id.0)).param("event_seq", i64::try_from(seq).map_err(backend)?)).await.map_err(backend)?;
+                    txn.run(
+                        query("CREATE (:ArtifactCasLedgerEvent {generation: $generation, operation: 'retention', spaceId: $space_id, documentId: $document_id, checkpointId: $checkpoint_id, eventSeq: $event_seq})")
+                            .param("generation", generation)
+                            .param("space_id", retention.scope.space_id.clone())
+                            .param("document_id", retention.scope.document_id.clone())
+                            .param("checkpoint_id", hex_lower(&retention.retained_checkpoint_id.0))
+                            .param("event_seq", i64::try_from(seq).map_err(backend)?),
+                    )
+                    .await
+                    .map_err(backend)?;
                     cas_project_release(&mut txn, "retention", &retention.scope.space_id, Some(&retention.scope), Some(retention.retained_checkpoint_id)).await?;
                 }
                 DirectoryEventBody::SpaceDeleted { space_id } => {
                     let generation = cas_generation(&mut txn).await?;
-                    txn.run(query("CREATE (:ArtifactCasLedgerEvent {generation: $generation, operation: 'space-delete', spaceId: $space_id, eventSeq: $event_seq})").param("generation", generation).param("space_id", space_id.clone()).param("event_seq", i64::try_from(seq).map_err(backend)?)).await.map_err(backend)?;
+                    txn.run(
+                        query("CREATE (:ArtifactCasLedgerEvent {generation: $generation, operation: 'space-delete', spaceId: $space_id, eventSeq: $event_seq})")
+                            .param("generation", generation)
+                            .param("space_id", space_id.clone())
+                            .param("event_seq", i64::try_from(seq).map_err(backend)?),
+                    )
+                    .await
+                    .map_err(backend)?;
                     cas_project_release(&mut txn, "space-delete", space_id, None, None).await?;
                 }
                 _ => {}
@@ -1418,9 +1781,13 @@ impl HubDirectory for Neo4jDirectory {
         loop {
             let mut result = txn.execute(query("MATCH (e:ArtifactCasLedgerEvent) WHERE e.generation > $cursor RETURN e AS e ORDER BY e.generation LIMIT 512").param("cursor", ledger_cursor)).await.map_err(backend)?;
             let mut entries = Vec::new();
-            while let Some(row) = result.next(txn.handle()).await.map_err(backend)? { entries.push(row.get::<neo4rs::Node>("e").map_err(backend)?); }
+            while let Some(row) = result.next(txn.handle()).await.map_err(backend)? {
+                entries.push(row.get::<neo4rs::Node>("e").map_err(backend)?);
+            }
             drop(result);
-            if entries.is_empty() { break; }
+            if entries.is_empty() {
+                break;
+            }
             for entry in entries {
                 ledger_cursor = entry.get("generation").map_err(backend)?;
                 let operation: String = entry.get("operation").map_err(backend)?;
@@ -1433,7 +1800,11 @@ impl HubDirectory for Neo4jDirectory {
                             u64::try_from(entry.get::<i64>("writeEpoch").map_err(backend)?).map_err(backend)?,
                             u64::try_from(entry.get::<i64>("expiresAtMs").map_err(backend)?).map_err(backend)?,
                         );
-                        if operation == "reserve" { cas_project_reserve(&mut txn, &reservation).await?; } else { cas_project_publish(&mut txn, &reservation, ledger_cursor).await?; }
+                        if operation == "reserve" {
+                            cas_project_reserve(&mut txn, &reservation).await?;
+                        } else {
+                            cas_project_publish(&mut txn, &reservation, ledger_cursor).await?;
+                        }
                     }
                     "retention" => {
                         let scope = DocumentScope::new(entry.get::<String>("spaceId").map_err(backend)?, entry.get::<String>("documentId").map_err(backend)?);
@@ -1548,6 +1919,33 @@ fn auth_audit_from_node(row: &neo4rs::Row) -> DirectoryResult<AuthAuditRecord> {
     })
 }
 
+fn admin_operation_audit_from_node(row: &neo4rs::Row) -> DirectoryResult<AdminOperationAuditRecord> {
+    let node: neo4rs::Node = row.get("a").map_err(backend)?;
+    let event_seq_first = node.get::<i64>("eventSeqFirst").ok().filter(|value| *value > 0).map(u64::try_from).transpose().map_err(backend)?;
+    let event_seq_last = node.get::<i64>("eventSeqLast").ok().filter(|value| *value > 0).map(u64::try_from).transpose().map_err(backend)?;
+    Ok(AdminOperationAuditRecord {
+        sequence: u64::try_from(node.get::<i64>("sequence").map_err(backend)?).map_err(backend)?,
+        fact: NewAdminOperationAuditRecord {
+            request_id: node.get("requestId").map_err(backend)?,
+            intent_digest: node.get("intentDigest").map_err(backend)?,
+            operation_id: node.get("operationId").map_err(backend)?,
+            occurred_at: node.get("occurredAt").map_err(backend)?,
+            phase: node.get("phase").map_err(backend)?,
+            intent_kind: node.get("intentKind").map_err(backend)?,
+            target_kind: node.get("targetKind").map_err(backend)?,
+            target_id: node.get("targetId").map_err(backend)?,
+            principal_user_id: node.get("principalUserId").map_err(backend)?,
+            principal_session_id: node.get("principalSessionId").map_err(backend)?,
+            principal_generation: u64::try_from(node.get::<i64>("principalGeneration").map_err(backend)?).map_err(backend)?,
+            correlation_id: node.get("correlationId").map_err(backend)?,
+            event_seq_first,
+            event_seq_last,
+            outcome_code: node.get("outcomeCode").map_err(backend)?,
+            reason_code: node.get::<String>("reasonCode").ok().filter(|value| !value.is_empty()),
+        },
+    })
+}
+
 /// 🧭️ Shared by `list_sync_sessions_for_document` (caller already knows `document_id`) and
 /// `list_active_sync_sessions` (reads `documentId` off the row itself, since it spans documents).
 fn sync_session_from_row(row: &neo4rs::Row, document_id: &str) -> DirectoryResult<SyncSessionRecord> {
@@ -1561,6 +1959,7 @@ fn sync_session_from_row(row: &neo4rs::Row, document_id: &str) -> DirectoryResul
         document_id: document_id.to_string(),
         surface: row.get("surface").unwrap_or_default(),
         user_id: row.get::<String>("userId").ok(),
+        authenticated_email: row.get::<String>("authenticatedEmail").ok().filter(|value| !value.is_empty()),
         space_role: SpaceRole::parse(&role),
         client_label: row.get("clientLabel").map_err(backend)?,
         connected_at: row.get("connectedAt").map_err(backend)?,

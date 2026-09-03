@@ -9,7 +9,7 @@
 //! `MergePolicyConfigMutation` vocabulary.
 //!
 //! **Why the case sits here rather than beside the vocabulary.** `🎚️config` has no crate of its
-//! own; `🦀️.rs` in `🖥️host/📦️packages/🦀️rust` is the ONE place `MergePolicyConfigMutation` is
+//! own; `../../🧪️🧪️🏔️🦋️tests/🎚️🟧️mutate-os-config-merge-policy/🦀️.rs` in `🖥️host/📦️packages/🦀️rust` is the ONE place `MergePolicyConfigMutation` is
 //! mounted, and the generated test host resolves its subject crate by walking UP from the case
 //! owner. The feature says the same thing in prose so a reader is not left guessing.
 //!

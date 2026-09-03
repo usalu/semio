@@ -76,10 +76,13 @@ pub const DB_IO_OPERATION_ITEMS: usize = 64;
 const DB_IO_BACKEND_CONTROLS: usize = 64;
 const DB_IO_LEDGER_ITEMS: usize = DB_IO_OPERATION_ITEMS + DB_IO_BACKEND_CONTROLS;
 const DB_IO_TASK_SLOT_BYTES: u64 = std::mem::size_of::<DbIoTaskSlot>() as u64;
-const DB_IO_OPERATION_BYTES: u64 = (DB_IO_PAGE_BYTES * DB_IO_OPERATION_PAGES * 4) as u64 + DB_IO_TASK_SLOT_BYTES;
+const DB_IO_LIST_BACKING_BYTES: u64 = (DB_IO_LIST_ITEMS * std::mem::size_of::<u64>()) as u64;
+const DB_IO_LIST_TRANSIENT_BYTES: u64 = DB_IO_LIST_BACKING_BYTES * 2;
+const DB_IO_OPERATION_BYTES: u64 = (DB_IO_PAGE_BYTES * DB_IO_OPERATION_PAGES * 4) as u64 + DB_IO_TASK_SLOT_BYTES + DB_IO_LIST_TRANSIENT_BYTES;
 const DB_IO_OPERATION_ITEM_CREDIT: usize = DB_IO_LIST_ITEMS * 2 + DB_IO_OPERATION_PAGES + 32;
 const DB_IO_OPERATION_CONTROL_CREDIT: usize = 16;
-const DB_IO_PROCESS_BYTES: u64 = (DB_IO_PAGE_BYTES * DB_IO_TOTAL_PAGES * 2 + DB_IO_PAGE_BYTES * DB_IO_OPERATION_PAGES * DB_IO_OPERATION_ITEMS * 2) as u64 + DB_IO_OPERATION_ITEMS as u64 * DB_IO_TASK_SLOT_BYTES;
+const DB_IO_PROCESS_BYTES: u64 =
+    (DB_IO_PAGE_BYTES * DB_IO_TOTAL_PAGES * 2 + DB_IO_PAGE_BYTES * DB_IO_OPERATION_PAGES * DB_IO_OPERATION_ITEMS * 2) as u64 + DB_IO_OPERATION_ITEMS as u64 * (DB_IO_TASK_SLOT_BYTES + DB_IO_LIST_TRANSIENT_BYTES);
 const DB_IO_PROCESS_ITEM_CREDIT: usize = DB_IO_OPERATION_ITEMS * DB_IO_OPERATION_ITEM_CREDIT;
 const DB_IO_PROCESS_CONTROL_CREDIT: usize = DB_IO_OPERATION_ITEMS * DB_IO_OPERATION_CONTROL_CREDIT;
 
@@ -1835,32 +1838,46 @@ impl std::fmt::Debug for DbIoText {
     }
 }
 
-/// @emoji 🔢 Fixed typed list result without a dynamic vector owner.
+/// @emoji 🔢 Bounded heap-backed typed list result with incremental close ownership.
 pub struct DbIoU64List {
-    values: [u64; DB_IO_LIST_ITEMS],
+    values: Option<Box<[u64]>>,
     len: u16,
     result_handback: Option<DbIoTaskHandle>,
 }
 
 impl DbIoU64List {
     pub fn new() -> Self {
-        Self { values: [0; DB_IO_LIST_ITEMS], len: 0, result_handback: None }
+        Self { values: None, len: 0, result_handback: None }
     }
 
     fn take_for_result(&mut self) -> Self {
         std::mem::replace(self, Self::new())
     }
 
+    fn ensure_backing(&mut self) -> Result<(), DbError> {
+        if self.values.is_some() {
+            return Ok(());
+        }
+        let mut values = Vec::new();
+        values.try_reserve_exact(DB_IO_LIST_ITEMS).map_err(|_| DbError::Unavailable("DB I/O list backing allocation failed".to_string()))?;
+        values.resize(DB_IO_LIST_ITEMS, 0);
+        self.values = Some(values.into_boxed_slice());
+        Ok(())
+    }
+
     pub fn push(&mut self, value: u64) -> Result<(), DbError> {
         let index = usize::from(self.len);
-        let Some(slot) = self.values.get_mut(index) else { return Err(DbError::LimitExceeded("db_io list authority")) };
+        self.ensure_backing()?;
+        let Some(slot) = self.values.as_deref_mut().and_then(|values| values.get_mut(index)) else {
+            return Err(DbError::LimitExceeded("db_io list authority"));
+        };
         *slot = value;
         self.len += 1;
         Ok(())
     }
 
     pub fn as_slice(&self) -> &[u64] {
-        &self.values[..usize::from(self.len)]
+        self.values.as_deref().map_or(&[], |values| &values[..usize::from(self.len)])
     }
 
     pub fn len(&self) -> usize {
@@ -1907,7 +1924,7 @@ impl std::ops::Deref for DbIoU64List {
 impl std::ops::DerefMut for DbIoU64List {
     fn deref_mut(&mut self) -> &mut Self::Target {
         let len = usize::from(self.len);
-        &mut self.values[..len]
+        self.values.as_deref_mut().map_or(&mut [], |values| &mut values[..len])
     }
 }
 
@@ -1946,11 +1963,11 @@ impl<const N: usize> PartialEq<[u64; N]> for DbIoU64List {
 
 impl IntoIterator for DbIoU64List {
     type Item = u64;
-    type IntoIter = std::iter::Take<std::array::IntoIter<u64, DB_IO_LIST_ITEMS>>;
+    type IntoIter = std::iter::Take<std::vec::IntoIter<u64>>;
 
     fn into_iter(mut self) -> Self::IntoIter {
         let len = usize::from(self.len);
-        std::mem::replace(&mut self.values, [0; DB_IO_LIST_ITEMS]).into_iter().take(len)
+        self.values.take().map_or_else(Vec::new, Vec::from).into_iter().take(len)
     }
 }
 
@@ -1959,7 +1976,7 @@ impl Drop for DbIoU64List {
         if self.terminal_is_empty() {
             return;
         }
-        let owner = Self { values: std::mem::replace(&mut self.values, [0; DB_IO_LIST_ITEMS]), len: self.len, result_handback: self.result_handback.take() };
+        let owner = Self { values: self.values.take(), len: self.len, result_handback: self.result_handback.take() };
         self.len = 0;
         if let Err(DbIoLostOwner::List(owner)) = db_io_park_lost_owner(DbIoLostOwner::List(owner)) {
             *self = owner;
@@ -2153,11 +2170,28 @@ impl DbIoTask {
     }
 
     fn aggregate_credit(&self) -> DbIoCredit {
-        let items = match self {
-            Self::WalList { .. } | Self::SnapshotLatest { .. } | Self::SnapshotList { .. } | Self::IndexList { .. } => DB_IO_LIST_ITEMS + 1,
-            _ => 1,
+        let (bytes, items) = match self {
+            Self::WalList { .. } | Self::SnapshotLatest { .. } | Self::SnapshotList { .. } | Self::IndexList { .. } => {
+                (DB_IO_TASK_SLOT_BYTES + DB_IO_LIST_TRANSIENT_BYTES, DB_IO_LIST_ITEMS * 2 + 1)
+            }
+            _ => (DB_IO_TASK_SLOT_BYTES, 1),
         };
-        DbIoCredit { pages: 0, bytes: DB_IO_TASK_SLOT_BYTES, items, controls: 1 }
+        DbIoCredit { pages: 0, bytes, items, controls: 1 }
+    }
+
+    fn admit_list_backing(&mut self) -> Result<(), DbError> {
+        match self {
+            Self::WalList { output, .. } | Self::SnapshotLatest { output, .. } | Self::SnapshotList { output, .. } | Self::IndexList { output, .. } if output.is_empty() => output.ensure_backing(),
+            Self::WalList { .. } | Self::SnapshotLatest { .. } | Self::SnapshotList { .. } | Self::IndexList { .. } => Err(DbError::Internal("DB I/O list output was not empty at admission".to_string())),
+            _ => Ok(()),
+        }
+    }
+
+    fn release_unstarted_list_backing(&mut self) {
+        match self {
+            Self::WalList { output, .. } | Self::SnapshotLatest { output, .. } | Self::SnapshotList { output, .. } | Self::IndexList { output, .. } if output.is_empty() => output.values = None,
+            _ => {}
+        }
     }
 
     fn admit_pages(&self) -> Result<(), DbError> {
@@ -3242,7 +3276,7 @@ fn db_io_error_text(error: &DbError) -> DbIoText {
     DbIoText::try_from_str(&error.to_string()).unwrap_or_else(|_| db_io_text_literal("DB I/O error detail exceeded fixed authority"))
 }
 
-fn db_io_allocate_task(pool: &WorkerPool, task: DbIoTask) -> Result<DbIoTaskHandle, (DbError, DbIoTask)> {
+fn db_io_allocate_task(pool: &WorkerPool, mut task: DbIoTask) -> Result<DbIoTaskHandle, (DbError, DbIoTask)> {
     let mut arena = db_io_task_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     if arena.free_len == 0 || arena.next_generation == u64::MAX {
         return Err((DbError::Unavailable("db I/O task capacity exhausted".to_string()), task));
@@ -3264,9 +3298,14 @@ fn db_io_allocate_task(pool: &WorkerPool, task: DbIoTask) -> Result<DbIoTaskHand
             Err(error) => return Err((error, task)),
         },
     };
+    if let Err(error) = task.admit_list_backing() {
+        let _ = db_io_operation_detach_task(operation, aggregate_credit);
+        return Err((error, task));
+    }
     let async_backend_admitted = match db_io_backend_admit_async_operation(task.backend(), operation) {
         Ok(admitted) => admitted,
         Err(error) => {
+            task.release_unstarted_list_backing();
             let _ = db_io_operation_detach_task(operation, aggregate_credit);
             return Err((error, task));
         }
@@ -3275,6 +3314,7 @@ fn db_io_allocate_task(pool: &WorkerPool, task: DbIoTask) -> Result<DbIoTaskHand
         if async_backend_admitted {
             let _ = db_io_backend_return_async_operation(task.backend(), operation);
         }
+        task.release_unstarted_list_backing();
         let _ = db_io_operation_detach_task(operation, aggregate_credit);
         return Err((error, task));
     }
@@ -8124,6 +8164,7 @@ mod db_io_retained_fixtures {
 
     #[test]
     fn db_io_list_capacity_plus_one_does_not_mutate_the_fixed_owner() {
+        let _serial = fixture_serial();
         let mut list = DbIoU64List::new();
         for value in 0..DB_IO_LIST_ITEMS as u64 {
             list.push(value).unwrap();
@@ -8131,6 +8172,53 @@ mod db_io_retained_fixtures {
         assert!(list.push(DB_IO_LIST_ITEMS as u64).is_err());
         assert_eq!(list.len(), DB_IO_LIST_ITEMS);
         assert_eq!(list.as_slice().last(), Some(&((DB_IO_LIST_ITEMS - 1) as u64)));
+        while list.close_step() {}
+        assert!(list.terminal_is_empty());
+    }
+
+    #[test]
+    fn db_io_list_keeps_exact_capacity_off_worker_stacks_and_in_the_ledger() {
+        let _serial = fixture_serial();
+        let mut task = DbIoTask::WalList {
+            backend: DbIoBackendControl::Memory { slot: 0, generation: 1 },
+            document: DbIoText::try_from_str("budget-witness").unwrap(),
+            output: DbIoU64List::new(),
+        };
+        assert!(matches!(&task, DbIoTask::WalList { output, .. } if output.values.is_none()));
+        let credit = task.aggregate_credit();
+        assert_eq!(credit.bytes, DB_IO_TASK_SLOT_BYTES + DB_IO_LIST_TRANSIENT_BYTES);
+        assert_eq!(credit.items, DB_IO_LIST_ITEMS * 2 + 1);
+        assert!(db_io_credit_within_limits(credit, false));
+        assert!(db_io_credit_within_limits(
+            DbIoCredit { pages: DB_IO_OPERATION_PAGES, bytes: DB_IO_OPERATION_BYTES, items: DB_IO_OPERATION_ITEM_CREDIT, controls: DB_IO_OPERATION_CONTROL_CREDIT },
+            false,
+        ));
+        assert!(!db_io_credit_within_limits(
+            DbIoCredit { pages: DB_IO_OPERATION_PAGES, bytes: DB_IO_OPERATION_BYTES + 1, items: DB_IO_OPERATION_ITEM_CREDIT, controls: DB_IO_OPERATION_CONTROL_CREDIT },
+            false,
+        ));
+        let before = ledger_witness();
+        let operation = db_io_operation_reserve(credit).unwrap();
+        let during = ledger_witness();
+        assert_eq!(during.0, before.0.checked_add(credit).unwrap());
+        assert_eq!(during.1 + 1, before.1);
+        task.admit_list_backing().unwrap();
+        assert!(matches!(&task, DbIoTask::WalList { output, .. } if output.values.as_deref().map(<[u64]>::len) == Some(DB_IO_LIST_ITEMS)));
+        task.release_unstarted_list_backing();
+        assert!(matches!(&task, DbIoTask::WalList { output, .. } if output.values.is_none()));
+        task.admit_list_backing().unwrap();
+        let mut source = DbIoU64List::new();
+        source.push(1).unwrap();
+        assert_eq!(source.values.as_deref().map(<[u64]>::len), Some(DB_IO_LIST_ITEMS));
+        assert_eq!(DB_IO_LIST_TRANSIENT_BYTES, 2 * DB_IO_LIST_ITEMS as u64 * std::mem::size_of::<u64>() as u64);
+        while source.close_step() {}
+        db_io_operation_return(operation, credit).unwrap();
+        assert_eq!(ledger_witness(), before);
+        assert!(std::mem::size_of::<DbIoU64List>() <= 64);
+        assert!(std::mem::size_of::<DbIoTask>() <= 4 * 1024);
+        assert!(std::mem::size_of::<DbIoResult>() <= 4 * 1024);
+        assert!(std::mem::size_of::<DbIoTaskSlot>() <= 8 * 1024);
+        assert!(std::mem::size_of::<DbIoLostOwner>() <= 4 * 1024);
     }
 
     #[test]

@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 import { Slider } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "../../🧪️story";
+import type { Meta, StoryObj } from "../../🧪️🐨️story.ts";
 import { useState } from "react";
 
 // 💻️#region 🏩️Slider

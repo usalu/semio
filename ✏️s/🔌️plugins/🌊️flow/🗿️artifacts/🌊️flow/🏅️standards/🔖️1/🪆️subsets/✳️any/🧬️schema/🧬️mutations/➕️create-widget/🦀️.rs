@@ -4,7 +4,7 @@ use crate::artifacts::flow::FlowSnapshot;
 use crate::artifacts::flow::schema::diff::text::FlowDiff;
 use crate::artifacts::flow::schema::mutations::FlowMutation;
 use flow::Widget;
-use protocol::{MutationKind, SemanticDescriptor};
+use protocol::{Identified, MutationKind, SemanticDescriptor};
 
 //#region ➕️CreateWidget
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

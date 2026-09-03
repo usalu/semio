@@ -5,7 +5,7 @@
 // boots exactly that one pane immediately instead of waiting through the 1.5s/35s sequential-boot queue —
 // see `🟦️.tsx`'s `paneIdFromLocationHash`/`useSequentialPaneBoot`), waits for that pane's own
 // `FrameworkOsShell` to report readiness via the per-shell `data-shell-ready`/`data-shell-error` beacon
-// (`ShellHost/🟦️component.tsx`'s `#region 🔖️ReadinessBeacon`), asserts its declared window(s) attach, and
+// (`ShellHost/🟦️.tsx`'s `#region 🔖️ReadinessBeacon`), asserts its declared window(s) attach, and
 // asserts each window actually carries rendered content (not an empty surface, not the "wird vorbereitet"
 // `CanvasSkeleton`) by reading the same production `data-*-json`/`data-row-id` attributes each surface host
 // already stamps on itself (`World3dHost`'s `data-meshes-json`/`data-instances-json`, `NodeGraph`'s
@@ -51,7 +51,7 @@ function significantConsoleErrors(messages: string[]): string[] {
 }
 
 //#region 🆔️ElementId
-/** @emoji 🆔️ Local mirror of `framework/ui/elements/🆔️ElementId/component.tsx`'s `elementIdSegment` — kept
+/** @emoji 🆔️ Local mirror of `framework/ui/elements/🆔️ElementId/🟦️.tsx`'s `elementIdSegment` — kept
  * as a tiny pure copy rather than importing the framework's React-bearing module into a Playwright spec. */
 function elementIdSegment(raw: string): string {
   let segment = "";
@@ -89,7 +89,7 @@ type ShellOutcome = "ready" | "error" | "notFound";
 /** @emoji 🚦️ Waits for the pane's own `[data-shell-id]` root to report an outcome via the per-shell
  * `data-shell-ready`/`data-shell-error`/`data-shell-not-found` beacon (added alongside the pre-existing
  * global `document.documentElement` one specifically so a page hosting several shells can ask "is THIS
- * one ready" — see `ShellHost/🟦️component.tsx`'s `#region 🔖️ReadinessBeacon`). */
+ * one ready" — see `ShellHost/🟦️.tsx`'s `#region 🔖️ReadinessBeacon`). */
 async function waitForPaneShellOutcome(page: Page, paneId: string): Promise<ShellOutcome> {
   await page.waitForFunction(
     (id) => {
@@ -124,8 +124,8 @@ type WindowSurfaceKind = "world3d" | "nodeGraph" | "table" | "tiledMap";
 /** @emoji 🪟️ One window this pane is expected to open by default (per-app fixture/window research,
  * `.🧬semio/…/DEMONSTRATOR-END-TO-END-ALL-APPS/📓️app-*.md`). `instanceIds` covers a window kind opened as
  * several simultaneous instances (aggregator's split top/perspective puzzle3d-main views) — each instance
- * carries its OWN `id` plus a shared `data-element-alias` back to the kind id (`ShellHost/🟦️component.tsx`
- * lines ~6558-6591). `expectContent` is false only for windows that are documented, distinct, *non-empty-
+ * carries its OWN `id` plus a shared `data-element-alias` back to the kind id (`ShellHost/🟦️.tsx`
+ * lines ~6687-6717). `expectContent` is false only for windows that are documented, distinct, *non-empty-
  * surface* gaps unrelated to "did the fixture load" (aussuchen's Curated table starts genuinely empty by
  * design; its Preview window is a framework-wide selection-threading gap, permanently "No selection") —
  * every other window is asserted to carry real, non-empty content, including the two known regressions
@@ -205,7 +205,7 @@ function jsonArrayLength(raw: string | null): number {
 }
 
 /** @emoji 🌍️ `World3dHost` stamps its live scene straight onto `.semio-world-3d-host` as
- * `data-meshes-json`/`data-instances-json` (`World3dHost/🟦️component.tsx` ~line 4997) — reading those is
+ * `data-meshes-json`/`data-instances-json` (`World3dHost/🟦️.tsx` ~line 5063) — reading those is
  * strictly more reliable than sampling canvas pixels (no readback-timing/`preserveDrawingBuffer` gotchas). */
 async function worldContentCount(container: Locator): Promise<{ readonly hasScene: boolean; readonly meshes: number; readonly instances: number }> {
   const host = container.locator(".semio-world-3d-host");
@@ -217,7 +217,7 @@ async function worldContentCount(container: Locator): Promise<{ readonly hasScen
 }
 
 /** @emoji 🕸️ `NodeGraph` stamps its live flow document onto `.semio-node-graph-host` as `data-fixture-json`
- * (`NodeGraph/🟦️component.tsx` line 1151) — a real fixture parses to a JSON object carrying a `widgets[]`. */
+ * (`NodeGraph/🟦️.tsx` line 1154) — a real fixture parses to a JSON object carrying a `widgets[]`. */
 async function nodeGraphWidgetCount(container: Locator): Promise<{ readonly hasScene: boolean; readonly widgets: number }> {
   const host = container.locator(".semio-node-graph-host");
   const empty = container.locator(".semio-node-graph-empty");
@@ -234,7 +234,7 @@ async function nodeGraphWidgetCount(container: Locator): Promise<{ readonly hasS
 }
 
 /** @emoji 📊️ `Table`'s generic row primitive stamps `data-row-id` on every real data `<tr>`
- * (`framework/ui/elements/📊️Table/🟦️component.tsx` lines 183/243) — counting them is a direct, DOM-level
+ * (`framework/ui/elements/📊️Table/🟦️.tsx` lines 201/262) — counting them is a direct, DOM-level
  * "does this table have rows" check with no reliance on cell text/locale. */
 async function tableRowCount(container: Locator): Promise<{ readonly hasScene: boolean; readonly rows: number }> {
   const host = container.locator(".semio-table-host");
@@ -249,7 +249,7 @@ async function tableRowCount(container: Locator): Promise<{ readonly hasScene: b
  * falls back to sampling the rendered canvas for more than one distinct pixel color — the same
  * "did anything actually paint" question `capturePanePoster` (`🟦️.tsx`) answers for its poster
  * capture, just read-only here. Map tiles are proxied same-origin by the dev server
- * (`vite-elements-assets.ts`'s `createTileProxyMiddleware`), so this canvas is not cross-origin-tainted. */
+ * (`framework/ui/🎨️styling/🟦️.ts`'s `createTileProxyMiddleware`), so this canvas is not cross-origin-tainted. */
 async function tiledMapHasVisibleContent(container: Locator): Promise<{ readonly hasScene: boolean; readonly painted: boolean }> {
   const host = container.locator(".semio-tiled-map-host");
   const empty = container.locator(".semio-tiled-map-empty");

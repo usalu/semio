@@ -11,8 +11,8 @@ import { sourceFileFactByteCompare, sourceFileFactCatalog, sourceFileFactReferen
 
 //#region 🧭️Inputs
 const root = resolve(import.meta.dir, "../../../../../../../../");
-const schemaPath = resolve(import.meta.dir, "🧬️schema/🔣️.json");
-const vectorsPath = resolve(import.meta.dir, "🔣️.json");
+const schemaPath = resolve(import.meta.dir, "../../🧬️🔀️🌲️mutation-inventory/🧪️source-file-facts/🧬️schema/🔣️.json");
+const vectorsPath = resolve(import.meta.dir, "../../🧬️🔀️🌲️mutation-inventory/🧪️source-file-facts/🔣️.json");
 const rootScriptPath = resolve(root, "📜️script.ts");
 const taxonomyPath = resolve(import.meta.dir, "../../../🔣️taxonomy.json");
 const schema = JSON.parse(readFileSync(schemaPath, "utf8"));

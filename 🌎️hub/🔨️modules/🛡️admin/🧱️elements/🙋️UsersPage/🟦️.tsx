@@ -21,7 +21,7 @@ export function UsersPage(): React.ReactElement {
   const [users, setUsers] = React.useState<UserView[] | null>(null);
 
   const load = React.useCallback(() => {
-    client.users().then((rows) => setUsers([...rows])).catch(() => setUsers([]));
+    client.users().then((page) => setUsers([...page.rows])).catch(() => setUsers([]));
   }, [client]);
 
   React.useEffect(load, [load]);

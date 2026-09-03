@@ -90,25 +90,20 @@ function verifyAdminStylesheetGraph(root: string): void {
   console.log(`[DEBUG] hub admin stylesheet graph oracle: ${fixture.laws.length} laws, ${imports.length} canonical import, ${sources.length} Tailwind sources, ${localImports} resolved shared imports across ${visited.size} stylesheets`);
 }
 
-/** @emoji 🩺️ Preflight: this dev server is a pure vite proxy shell — every `/admin/api`, `/directory`
- * and `/auth` call it serves is forwarded to a separately-running hub. With no hub behind it the page
- * loads but every request dies with `ECONNREFUSED`, which reads as "admin is broken" rather than "the
- * hub is not up". Probing once and saying so plainly turns a confusing dead page into an instruction.
- * Deliberately a warning, not a hard failure: iterating on admin UI against a hub you are about to
- * start is legitimate. */
+/** 🩺️ Warns that the standalone Vite surface has no administrator authority; authenticated use is
+ * exclusively owned by the loopback relay started by `os-hub:dev-secure-admin`. */
 async function warnWhenHubIsUnreachable(): Promise<void> {
   const hubUrl = process.env.OS_HUB_URL ?? "http://127.0.0.1:8787";
   try {
     const response = await fetch(`${hubUrl}/admin/api/overview`, { signal: AbortSignal.timeout(2_000) });
     if (response.ok) {
-      console.log(`[admin] hub reachable at ${hubUrl}`);
+      console.log(`[admin] hub reachable at ${hubUrl}; use bun nx run os-hub:dev-secure-admin for authenticated administration`);
       return;
     }
-    console.warn(`[admin] hub at ${hubUrl} answered ${response.status} for /admin/api/overview — a verified administrator session is required.`);
+    console.warn(`[admin] hub at ${hubUrl} answered ${response.status}; use bun nx run os-hub:dev-secure-admin for the authenticated relay.`);
   } catch {
-    console.warn(`[admin] no hub reachable at ${hubUrl} — every API call from this page will fail with ECONNREFUSED.`);
-    console.warn(`[admin] start one with:  OS_HUB_PORT=8787 bun nx run os-hub:dev`);
-    console.warn(`[admin] (that hub also serves the built admin page itself at ${hubUrl}/admin — this 8790 dev server is only for iterating on the admin UI.)`);
+    console.warn(`[admin] no hub reachable at ${hubUrl}; this Vite surface is static-only and has no administrator credential.`);
+    console.warn(`[admin] start the protected surface with: bun nx run os-hub:dev-secure-admin`);
   }
 }
 

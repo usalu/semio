@@ -7,6 +7,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { Button } from "@semio-tech/ui-react";
+import type { AdminOperationStatusV1 } from "@semio-tech/framework-os";
 import { useAdminT } from "../📚️I18n/🟦️.tsx";
 import { useAdminSession, type AdminOverview } from "../🔑️AdminSession/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -34,13 +35,14 @@ function formatBytes(bytes: number): string {
   return `${value.toFixed(1)} ${units[unitIndex]}`;
 }
 
-/** 🏠️ `GET /admin/api/overview` rendered as a stat-tile grid plus a "rebuild projections" action
- * (`POST /admin/api/directory/rebuild`). */
+/** 🏠️ `GET /admin/api/overview` rendered as a stat-tile grid plus a typed rebuild intent. */
 export function OverviewPage(): React.ReactElement {
   const t = useAdminT();
   const { client } = useAdminSession();
   const [overview, setOverview] = React.useState<AdminOverview | null>(null);
   const [rebuilding, setRebuilding] = React.useState(false);
+  const [rebuildOperationId, setRebuildOperationId] = React.useState<string | null>(null);
+  const [rebuildStatus, setRebuildStatus] = React.useState<AdminOperationStatusV1 | null>(null);
   const [message, setMessage] = React.useState<string | null>(null);
 
   const load = React.useCallback(() => {
@@ -50,17 +52,49 @@ export function OverviewPage(): React.ReactElement {
   React.useEffect(load, [load]);
 
   const rebuild = React.useCallback(() => {
+    if (!overview) return;
     setRebuilding(true);
     setMessage(null);
     client
-      .rebuild()
-      .then((result) => {
-        setMessage(t("admin.overview.rebuildSuccess", { count: result.eventsReplayed }));
-        load();
+      .rebuild(overview.headSeq)
+      .then(({ receipt }) => {
+        setRebuildOperationId(receipt.operationId);
+        setRebuildStatus({ receipt });
+        if (receipt.state !== "accepted") {
+          setRebuilding(false);
+          setMessage(receipt.state === "succeeded" ? t("admin.overview.rebuildSuccess", { count: 0 }) : t("admin.overview.rebuildError"));
+          load();
+        }
       })
-      .catch(() => setMessage(t("admin.overview.rebuildError")))
-      .finally(() => setRebuilding(false));
-  }, [client, load, t]);
+      .catch(() => {
+        setRebuilding(false);
+        setMessage(t("admin.overview.rebuildError"));
+      });
+  }, [client, load, overview, t]);
+
+  React.useEffect(() => {
+    if (!rebuilding || !rebuildOperationId) return;
+    let cancelled = false;
+    const timer = setInterval(() => {
+      client
+        .operation(rebuildOperationId)
+        .then((status) => {
+          if (cancelled) return;
+          setRebuildStatus(status);
+          if (status.receipt.state !== "accepted") {
+            clearInterval(timer);
+            setRebuilding(false);
+            setMessage(status.receipt.state === "succeeded" ? t("admin.overview.rebuildSuccess", { count: status.progress?.completedEvents ?? 0 }) : t("admin.overview.rebuildError"));
+            load();
+          }
+        })
+        .catch(() => undefined);
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [client, load, rebuildOperationId, rebuilding, t]);
 
   if (!overview) return <div className="p-single text-sm text-muted-foreground">{t("admin.session.probing")}</div>;
 
@@ -83,6 +117,14 @@ export function OverviewPage(): React.ReactElement {
       </div>
       <div className="flex items-center gap-single">
         <Button id="admin-overview-rebuild" icon="save" text={rebuilding ? t("admin.overview.rebuilding") : t("admin.overview.rebuild")} disabled={rebuilding} onClick={rebuild} />
+        {rebuilding && rebuildOperationId ? (
+          <Button id="admin-overview-rebuild-cancel" icon="x" text={t("admin.spaces.cancel")} variant="ghost" onClick={() => client.cancelOperation(rebuildOperationId)} />
+        ) : null}
+        {rebuildStatus?.progress ? (
+          <span className="text-sm text-muted-foreground" role="status">
+            {rebuildStatus.progress.completedEvents}/{rebuildStatus.progress.totalEvents}
+          </span>
+        ) : null}
         {message ? <span className="text-sm text-muted-foreground">{message}</span> : null}
       </div>
     </div>

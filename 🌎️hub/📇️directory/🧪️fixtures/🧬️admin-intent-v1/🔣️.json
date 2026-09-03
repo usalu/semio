@@ -1,0 +1,72 @@
+{
+  "schema": "semio.hub.admin-intent-v1.fixture/v1",
+  "limits": { "textBytes": 256, "intentBytes": 8192, "pageRows": 100, "responseBytes": 65536 },
+  "principal": {
+    "userId": "user:operator-a",
+    "sessionId": "session:operator-a:01",
+    "authorizationGeneration": 7,
+    "identityProvider": "oidc",
+    "identitySubjectDigestHex": "1111111111111111111111111111111111111111111111111111111111111111",
+    "expiresAtMs": 4102444800000,
+    "correlationId": "correlation:admin:01",
+    "peerClass": "admin-rest"
+  },
+  "createSpaceIntent": {
+    "kind": "create-space",
+    "requestId": "request:create-space:01",
+    "name": "Verified Atelier",
+    "spaceKind": "atelier",
+    "visibility": "private"
+  },
+  "expectedActor": {
+    "kind": "user",
+    "id": "user:user:operator-a#admin-session:session:operator-a:01",
+    "ownerUserId": "user:operator-a"
+  },
+  "recordedConnection": {
+    "stored": {
+      "syncSessionId": "sync:01",
+      "spaceId": "space:alpha",
+      "documentId": "doc:tokyo",
+      "authenticatedUserId": "user:member-a",
+      "email": "member@example.invalid",
+      "role": "author",
+      "connectedAtMs": 1770000000000,
+      "actorId": "forged-admin",
+      "clientLabel": "forged-client",
+      "surface": "forged-surface",
+      "presenceKnown": true
+    },
+    "publicKeys": ["syncSessionId", "scope", "authenticatedUserId", "email", "role", "connectedAtMs", "source"]
+  },
+  "auditPhases": ["accepted", "succeeded"],
+  "outcomes": {
+    "durableRevoke": { "code": "sessions-revoked", "durable": true, "kickAttempted": 2, "kickSignalled": 1 },
+    "ephemeralKick": { "code": "connection-kicked", "durable": false, "kickAttempted": 1, "kickSignalled": 1 }
+  },
+  "invalidVectors": [
+    "unconfigured-subject",
+    "expired-session",
+    "revoked-session",
+    "zero-generation",
+    "changed-generation",
+    "duplicate-authorization",
+    "malformed-bearer",
+    "oversized-bearer",
+    "unknown-intent-field",
+    "generic-directory-command",
+    "forbidden-admin-announce-document",
+    "body-actor",
+    "body-owner",
+    "body-session",
+    "body-generation",
+    "body-package",
+    "body-app",
+    "body-surface",
+    "page-zero",
+    "page-101",
+    "oversized-intent",
+    "oversized-reason"
+  ],
+  "redactionProbes": ["session.v1.fake-selector.fake-secret", "share.v1.fake-selector.fake-secret", "private://locator/never-public"]
+}

@@ -10,13 +10,6 @@ import { semioEmojiIndexHtmlVitePlugin } from "../../../../../🧰️framework/�
 const dir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(dir, "../../../../..");
 
-/** 🎯️ Contract §C0 "hub admin vite dev": `/directory`, `/admin/api`, `/auth`, `/spaces` all proxy to
- * the hub (`OS_HUB_URL`, else the loopback default `bin.rs`'s own dev default binds to), `ws: true`
- * so `/directory/ws` and `/spaces/{id}/documents/{id}/ws` tunnel through the dev server exactly like
- * the production `/admin` deployment (same-origin, no CORS). */
-const hubProxyTarget = process.env.OS_HUB_URL ?? "http://127.0.0.1:8787";
-const hubProxy = { target: hubProxyTarget, changeOrigin: true, ws: true };
-
 export default defineConfig({
   root: dir,
   base: "/admin/",
@@ -24,6 +17,7 @@ export default defineConfig({
   resolve: {
     alias: [
       { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx") },
+      { find: "@semio-tech/ui-styling", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🟦️.ts") },
       { find: "@semio-tech/framework-os", replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts") },
     ],
   },
@@ -31,12 +25,6 @@ export default defineConfig({
     port: Number(process.env.OS_HUB_ADMIN_DEV_PORT ?? 8790),
     strictPort: true,
     fs: { allow: [repoRoot] },
-    proxy: {
-      "/directory": hubProxy,
-      "/admin/api": hubProxy,
-      "/auth": hubProxy,
-      "/spaces": hubProxy,
-    },
   },
   build: {
     outDir: "📤️dist",

@@ -79,7 +79,7 @@ struct Expected {
 }
 
 fn fixture() -> Fixture {
-    let fixture: Fixture = serde_json::from_str(include_str!("🔣️.json")).expect("canonical rejected-page vectors");
+    let fixture: Fixture = serde_json::from_str(include_str!("../../🧪️🧪️🏔️🦋️tests/🧬️🚫️rejected-page-close/🔣️.json")).expect("canonical rejected-page vectors");
     assert_eq!(fixture.version, 1);
     assert_eq!(fixture.page_bytes, OWNED_SCHEMA_DECODE_PAGE_BYTES);
     assert_eq!(fixture.input_state, "unstarted-record");

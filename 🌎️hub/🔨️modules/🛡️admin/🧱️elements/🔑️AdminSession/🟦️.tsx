@@ -6,8 +6,21 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { Button, Form, Input } from "@semio-tech/ui-react";
-import type { ConnectionView, DirectoryCommand, DirectoryEvent, DocumentView, InviteView, MemberView, SpaceView, UserView } from "@semio-tech/framework-os";
+import type {
+  AdminConnectionSnapshotV1,
+  AdminIntentReceiptV1,
+  AdminIntentV1,
+  AdminOperationStatusV1,
+  AdminPageV1,
+  DirectoryEvent,
+  DirectorySpaceKind,
+  DirectorySpaceRole,
+  DirectorySpaceVisibility,
+  DocumentView,
+  MemberView,
+  SpaceView,
+  UserView,
+} from "@semio-tech/framework-os";
 import { useAdminT } from "../📚️I18n/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -32,89 +45,148 @@ export interface AdminOverview {
   openArtifacts: number;
 }
 
-export type AdminSpaceDetail = SpaceView & { members: MemberView[]; documents: DocumentView[]; invites: InviteView[] };
+export type AdminSpaceDetail = SpaceView & { members: AdminPageV1<MemberView> };
 
 /** 📡️ Typed facade over the hub's `/admin/api/*` surface (contract §C2) — the counterpart to
  * `@semio-tech/framework-os`'s `DirectoryClient`, which only covers `/directory/*` and
  * `/auth/sessions/*`. `fetch` only, no external HTTP library (CLAUDE.md). */
 export class AdminClient {
   private readonly baseUrl: string;
-  readonly token: string | undefined;
 
-  constructor(baseUrl: string, token?: string) {
+  constructor(baseUrl: string) {
     this.baseUrl = baseUrl.replace(/\/+$/, "");
-    this.token = token;
   }
 
   private headers(json: boolean): Record<string, string> {
     const headers: Record<string, string> = {};
     if (json) headers["content-type"] = "application/json";
-    if (this.token) headers.authorization = `Bearer ${this.token}`;
     return headers;
   }
 
   private async getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${path}`, { headers: this.headers(false), signal });
+    const response = await fetch(`${this.baseUrl}${path}`, { credentials: "same-origin", headers: this.headers(false), signal });
     if (!response.ok) throw new AdminHttpError(response.status, `admin: GET ${path} failed (${response.status})`);
     return (await response.json()) as T;
   }
 
   private async postJson<T>(path: string, body?: unknown): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${path}`, { method: "POST", headers: this.headers(true), body: body === undefined ? undefined : JSON.stringify(body) });
+    const response = await fetch(`${this.baseUrl}${path}`, { method: "POST", credentials: "same-origin", headers: this.headers(true), body: body === undefined ? undefined : JSON.stringify(body) });
     if (!response.ok) throw new AdminHttpError(response.status, `admin: POST ${path} failed (${response.status})`);
     const text = await response.text();
     return (text.length === 0 ? undefined : JSON.parse(text)) as T;
   }
 
-  overview(): Promise<AdminOverview> {
-    return this.getJson<AdminOverview>("/admin/api/overview");
+  private requestId(kind: AdminIntentV1["kind"]): string {
+    return `${kind}:${globalThis.crypto.randomUUID()}`;
   }
 
-  spaces(): Promise<readonly SpaceView[]> {
-    return this.getJson<SpaceView[]>("/admin/api/spaces");
+  private async submit(intent: AdminIntentV1): Promise<AdminIntentReceiptV1> {
+    const receipt = await this.postJson<AdminIntentReceiptV1>("/admin/api/intents", intent);
+    if (
+      typeof receipt?.operationId !== "string" ||
+      typeof receipt.correlationId !== "string" ||
+      !["accepted", "succeeded", "failed", "cancelled"].includes(receipt.state) ||
+      typeof receipt.outcome?.code !== "string" ||
+      typeof receipt.outcome.durable !== "boolean"
+    ) {
+      throw new AdminHttpError(502, "admin: malformed intent receipt");
+    }
+    return receipt;
   }
 
-  space(id: string): Promise<AdminSpaceDetail> {
-    return this.getJson<AdminSpaceDetail>(`/admin/api/spaces/${encodeURIComponent(id)}`);
+  private async submitTerminal(intent: AdminIntentV1): Promise<AdminIntentReceiptV1> {
+    const receipt = await this.submit(intent);
+    if (receipt.state !== "succeeded") throw new AdminHttpError(409, `admin: intent ${intent.kind} ended as ${receipt.state}`);
+    return receipt;
   }
 
-  users(): Promise<readonly UserView[]> {
-    return this.getJson<UserView[]>("/admin/api/users");
+  overview(signal?: AbortSignal): Promise<AdminOverview> {
+    return this.getJson<AdminOverview>("/admin/api/overview", signal);
   }
 
-  connections(signal?: AbortSignal): Promise<readonly ConnectionView[]> {
-    return this.getJson<ConnectionView[]>("/admin/api/connections", signal);
+  spaces(cursor?: string): Promise<AdminPageV1<SpaceView>> {
+    return this.getJson<AdminPageV1<SpaceView>>(`/admin/api/spaces?limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`);
   }
 
-  documents(spaceId?: string): Promise<readonly DocumentView[]> {
-    return this.getJson<DocumentView[]>(spaceId ? `/admin/api/documents?space=${encodeURIComponent(spaceId)}` : "/admin/api/documents");
+  space(id: string, cursor?: string): Promise<AdminSpaceDetail> {
+    return this.getJson<AdminSpaceDetail>(`/admin/api/spaces/${encodeURIComponent(id)}?limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`);
   }
 
-  events(since = 0, limit = 500): Promise<readonly DirectoryEvent[]> {
-    return this.getJson<DirectoryEvent[]>(`/admin/api/events?since=${encodeURIComponent(String(since))}&limit=${encodeURIComponent(String(limit))}`);
+  users(cursor?: string): Promise<AdminPageV1<UserView>> {
+    return this.getJson<AdminPageV1<UserView>>(`/admin/api/users?limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`);
   }
 
-  command(command: DirectoryCommand): Promise<{ events: readonly DirectoryEvent[]; result?: unknown }> {
-    return this.postJson("/admin/api/commands", command);
+  connections(signal?: AbortSignal, cursor?: string): Promise<AdminConnectionSnapshotV1> {
+    return this.getJson<AdminConnectionSnapshotV1>(`/admin/api/connections?limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`, signal);
   }
 
-  rebuild(): Promise<{ eventsReplayed: number }> {
-    return this.postJson("/admin/api/directory/rebuild");
+  documents(spaceId?: string, cursor?: string): Promise<AdminPageV1<DocumentView>> {
+    const query = new URLSearchParams({ limit: "100" });
+    if (spaceId) query.set("space", spaceId);
+    if (cursor) query.set("cursor", cursor);
+    return this.getJson<AdminPageV1<DocumentView>>(`/admin/api/documents?${query.toString()}`);
   }
 
-  closeConnection(syncSessionId: string): Promise<void> {
-    return this.postJson(`/admin/api/connections/${encodeURIComponent(syncSessionId)}/close`);
+  events(cursor?: string): Promise<AdminPageV1<DirectoryEvent>> {
+    return this.getJson<AdminPageV1<DirectoryEvent>>(`/admin/api/events?limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`);
   }
 
-  revokeUserSessions(userId: string): Promise<void> {
-    return this.postJson(`/admin/api/users/${encodeURIComponent(userId)}/sessions/revoke`);
+  createSpace(name: string, spaceKind: DirectorySpaceKind, visibility: DirectorySpaceVisibility): Promise<AdminIntentReceiptV1> {
+    return this.submitTerminal({ kind: "create-space", requestId: this.requestId("create-space"), name, spaceKind, visibility });
+  }
+
+  renameSpace(spaceId: string, name: string): Promise<AdminIntentReceiptV1> {
+    return this.submitTerminal({ kind: "rename-space", requestId: this.requestId("rename-space"), spaceId, name });
+  }
+
+  setSpaceVisibility(spaceId: string, visibility: DirectorySpaceVisibility): Promise<AdminIntentReceiptV1> {
+    return this.submitTerminal({ kind: "set-space-visibility", requestId: this.requestId("set-space-visibility"), spaceId, visibility });
+  }
+
+  archiveSpace(spaceId: string): Promise<AdminIntentReceiptV1> {
+    return this.submitTerminal({ kind: "archive-space", requestId: this.requestId("archive-space"), spaceId });
+  }
+
+  deleteSpace(spaceId: string): Promise<AdminIntentReceiptV1> {
+    return this.submitTerminal({ kind: "delete-space", requestId: this.requestId("delete-space"), spaceId });
+  }
+
+  upsertSpaceMember(spaceId: string, email: string, role: DirectorySpaceRole): Promise<AdminIntentReceiptV1> {
+    return this.submitTerminal({ kind: "upsert-space-member", requestId: this.requestId("upsert-space-member"), spaceId, email, role });
+  }
+
+  removeSpaceMember(spaceId: string, userId: string): Promise<AdminIntentReceiptV1> {
+    return this.submitTerminal({ kind: "remove-space-member", requestId: this.requestId("remove-space-member"), spaceId, userId });
+  }
+
+  createSpaceInvite(spaceId: string, role: DirectorySpaceRole, ttlSecs: number): Promise<AdminIntentReceiptV1> {
+    return this.submitTerminal({ kind: "create-space-invite", requestId: this.requestId("create-space-invite"), spaceId, role, ttlSecs });
+  }
+
+  async rebuild(expectedHeadSeq: number): Promise<{ readonly requestId: string; readonly receipt: AdminIntentReceiptV1 }> {
+    const requestId = this.requestId("rebuild-directory-projections");
+    return { requestId, receipt: await this.submit({ kind: "rebuild-directory-projections", requestId, expectedHeadSeq }) };
+  }
+
+  closeConnection(syncSessionId: string, reasonCode = "operator-kick"): Promise<AdminIntentReceiptV1> {
+    return this.submitTerminal({ kind: "kick-connection", requestId: this.requestId("kick-connection"), syncSessionId, reasonCode });
+  }
+
+  revokeUserSessions(userId: string, reasonCode = "operator-revoke"): Promise<AdminIntentReceiptV1> {
+    return this.submitTerminal({ kind: "revoke-user-sessions", requestId: this.requestId("revoke-user-sessions"), userId, reasonCode });
+  }
+
+  operation(operationId: string): Promise<AdminOperationStatusV1> {
+    return this.getJson<AdminOperationStatusV1>(`/admin/api/operations/${encodeURIComponent(operationId)}`);
+  }
+
+  cancelOperation(operationId: string): Promise<AdminOperationStatusV1> {
+    return this.postJson<AdminOperationStatusV1>(`/admin/api/operations/${encodeURIComponent(operationId)}/cancel`);
   }
 }
 //#endregion 🔖️AdminClient
 
 //#region 🔖️Session
-const TOKEN_STORAGE_KEY = "semio.hub.admin.token";
-
 /** @emoji 🚦️ `unreachable` is deliberately distinct from `unauthorized`: a hub that is not running at
  * all fails the probe with a transport error, and reporting that as "your token was rejected" sends
  * the operator hunting for a credential when the actual fix is to start the hub. */
@@ -123,29 +195,37 @@ export type AdminSessionStatus = "probing" | "authorized" | "unauthorized" | "un
 export interface AdminSessionState {
   status: AdminSessionStatus;
   client: AdminClient;
-  setToken: (token: string) => void;
 }
 
 const AdminSessionContext = React.createContext<AdminSessionState | null>(null);
 
-/** 🔑️ Probes `GET /admin/api/overview` on capability change. The hub accepts only a live
- * `session.v1` whose verified identity is in the administrator-subject policy, so this page always
- * probes instead of inferring authority from network location. `authorized` renders `children`; `unauthorized` renders
- * the bearer-token form instead. The token, once accepted, is kept in `sessionStorage` only (never
- * `localStorage` — an admin bearer token should not outlive the browser tab). */
+/** 🔑️ Exchanges one exact fragment nonce for the relay's host-only HttpOnly cookie, clears the
+ * fragment before probing, and leaves the administrator capability exclusively in the local relay. */
 export function AdminSessionProvider({ baseUrl, children }: { readonly baseUrl: string; readonly children: React.ReactNode }): React.ReactElement {
-  const [token, setTokenState] = React.useState<string | undefined>(() => {
-    if (typeof sessionStorage === "undefined") return undefined;
-    return sessionStorage.getItem(TOKEN_STORAGE_KEY) ?? undefined;
-  });
   const [status, setStatus] = React.useState<AdminSessionStatus>("probing");
-  const client = React.useMemo(() => new AdminClient(baseUrl, token), [baseUrl, token]);
+  const client = React.useMemo(() => new AdminClient(baseUrl), [baseUrl]);
 
   React.useEffect(() => {
     let cancelled = false;
+    const controller = new AbortController();
     setStatus("probing");
-    client
-      .overview()
+    const authorize = async (): Promise<void> => {
+      const hash = typeof window === "undefined" ? "" : window.location.hash;
+      const match = /^#semio-admin=([0-9a-f]{64})$/u.exec(hash);
+      if (hash.length > 0) window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}`);
+      if (hash.length > 0 && !match) throw new AdminHttpError(401, "admin bootstrap fragment invalid");
+      if (match) {
+        const response = await fetch(`${baseUrl.replace(/\/+$/, "")}/__semio/admin/bootstrap`, {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "x-semio-admin-bootstrap": match[1]! },
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new AdminHttpError(response.status, `admin bootstrap failed (${response.status})`);
+      }
+      await client.overview(controller.signal);
+    };
+    authorize()
       .then(() => {
         if (!cancelled) setStatus("authorized");
       })
@@ -157,15 +237,11 @@ export function AdminSessionProvider({ baseUrl, children }: { readonly baseUrl: 
       });
     return () => {
       cancelled = true;
+      controller.abort();
     };
   }, [client]);
 
-  const setToken = React.useCallback((next: string) => {
-    if (typeof sessionStorage !== "undefined") sessionStorage.setItem(TOKEN_STORAGE_KEY, next);
-    setTokenState(next);
-  }, []);
-
-  const value = React.useMemo<AdminSessionState>(() => ({ status, client, setToken }), [status, client, setToken]);
+  const value = React.useMemo<AdminSessionState>(() => ({ status, client }), [status, client]);
   return <AdminSessionContext.Provider value={value}>{children}</AdminSessionContext.Provider>;
 }
 
@@ -176,22 +252,18 @@ export function useAdminSession(): AdminSessionState {
 }
 //#endregion 🔖️Session
 
-//#region 🔖️TokenForm
-/** 🚪️ Rendered by `AdminApp` in place of every other page while `status !== "authorized"` — a bare
- * bearer-token form. Submitting re-probes via `setToken` (which recreates `client`, re-running the
- * probe effect above); a still-rejected token flips back to `"unauthorized"` and this form re-renders
- * with the error line shown. */
-export function AdminTokenForm(): React.ReactElement {
+//#region 🔖️AccessGate
+/** 🚪️ Accessible fail-closed status for an absent, rejected, or unreachable local admin relay. */
+export function AdminAccessGate(): React.ReactElement {
   const t = useAdminT();
-  const { status, setToken } = useAdminSession();
-  const [draft, setDraft] = React.useState("");
+  const { status } = useAdminSession();
 
   // 🔌️ No hub answering: a token form here would be a dead end, so show what is actually wrong and the
   // command that fixes it instead of prompting for a credential that cannot help.
   if (status === "unreachable") {
     return (
       <div className="flex h-full w-full items-center justify-center">
-        <div id="admin-session-unreachable" className="flex w-full max-w-md flex-col gap-single">
+        <div id="admin-session-unreachable" className="flex w-full max-w-md flex-col gap-single" role="alert" aria-live="assertive">
           <h1 className="text-lg font-semibold text-emphasized">{t("admin.session.unreachableTitle")}</h1>
           <p className="text-sm text-muted-foreground">{t("admin.session.unreachableDescription")}</p>
           <code className="rounded bg-muted px-single py-single text-xs">bun nx run os-hub:dev</code>
@@ -203,23 +275,12 @@ export function AdminTokenForm(): React.ReactElement {
 
   return (
     <div className="flex h-full w-full items-center justify-center">
-      <Form
-        className="flex w-full max-w-sm flex-col gap-single"
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (draft.trim().length > 0) setToken(draft.trim());
-        }}
-      >
+      <div className="flex w-full max-w-md flex-col gap-single" role={status === "probing" ? "status" : "alert"} aria-live={status === "probing" ? "polite" : "assertive"}>
         <h1 className="text-lg font-semibold text-emphasized">{t("admin.session.title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("admin.session.description")}</p>
-        <label className="flex flex-col gap-single text-sm" htmlFor="admin-session-token">
-          {t("admin.session.tokenLabel")}
-          <Input id="admin-session-token" type="password" value={draft} placeholder={t("admin.session.tokenPlaceholder")} onChange={(event) => setDraft(event.target.value)} />
-        </label>
-        {status === "unauthorized" ? <p className="text-sm text-destructive">{t("admin.session.error")}</p> : null}
-        <Button id="admin-session-submit" icon="check" text={t("admin.session.submit")} type="submit" disabled={status === "probing"} />
-      </Form>
+        <p className={status === "unauthorized" ? "text-sm text-destructive" : "text-sm text-muted-foreground"}>{t(status === "probing" ? "admin.session.probing" : "admin.session.error")}</p>
+        {status === "unauthorized" ? <code className="rounded bg-muted px-single py-single text-xs">bun nx run os-hub:dev-secure-admin</code> : null}
+      </div>
     </div>
   );
 }
-//#endregion 🔖️TokenForm
+//#endregion 🔖️AccessGate

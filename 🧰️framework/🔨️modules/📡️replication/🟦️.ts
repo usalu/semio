@@ -216,18 +216,6 @@ export type WireAckStage = "Received" | "Persisted" | { readonly Applied: { read
  * {@link decodeClientFrame} below — never hand-construct the JSON. */
 export type ClientFrame =
   | {
-      readonly Hello: {
-        readonly wire_version: number;
-        readonly protocol_version: number;
-        readonly schema: string;
-        readonly pack_schema_hash: readonly number[];
-        readonly actor: string;
-        readonly token: string | null;
-        readonly resume_token: string | null;
-        readonly frontier: WireFrontierSummary | null;
-      };
-    }
-  | {
       readonly SocketHelloV1: {
         readonly wire_version: number;
         readonly protocol_version: number;
@@ -1085,18 +1073,7 @@ export function encodeClientFrame(frame: ClientFrame, lane: WireLane): Uint8Arra
     out.push(6);
     return new Uint8Array(out);
   }
-  if ("Hello" in frame) {
-    out.push(0);
-    const hello = frame.Hello;
-    writeVarintU64(out, hello.wire_version);
-    writeVarintU64(out, hello.protocol_version);
-    writeStr(out, hello.schema);
-    writeHash32(out, hello.pack_schema_hash);
-    writeStr(out, hello.actor);
-    writeOptStr(out, hello.token);
-    writeOptStr(out, hello.resume_token);
-    writeOptFrontier(out, hello.frontier);
-  } else if ("SocketHelloV1" in frame) {
+  if ("SocketHelloV1" in frame) {
     out.push(7);
     const hello = frame.SocketHelloV1;
     writeVarintU64(out, hello.wire_version);
@@ -1140,18 +1117,6 @@ export function decodeClientFrame(bytes: Uint8Array): { readonly lane: WireLane;
   pos[0] += 1;
   let frame: ClientFrame;
   switch (tag) {
-    case 0: {
-      const wire_version = readVarintU64(bytes, pos);
-      const protocol_version = readVarintU64(bytes, pos);
-      const schema = readStr(bytes, pos);
-      const pack_schema_hash = readHash32(bytes, pos);
-      const actor = readStr(bytes, pos);
-      const token = readOptStr(bytes, pos);
-      const resume_token = readOptStr(bytes, pos);
-      const frontier = readOptFrontier(bytes, pos);
-      frame = { Hello: { wire_version, protocol_version, schema, pack_schema_hash, actor, token, resume_token, frontier } };
-      break;
-    }
     case 1:
       frame = { Commands: { batch_id: readVarintU64(bytes, pos), envelopes: readVecEnvelope(bytes, pos) } };
       break;
@@ -1558,11 +1523,8 @@ if (import.meta.vitest) {
           expect(payload[0]).toBe(1); // dsl::op_rt::OP_BINARY_FORMAT
         }
   
-        const hello = loadClient("📦️client-hello.bin");
-        expect(hello.lane).toBe("command");
-        if (typeof hello.frame === "string" || !("Hello" in hello.frame)) throw new Error("expected a Hello frame");
-        expect(hello.frame.Hello.schema).toBe("demo/v1");
-        expect(hello.frame.Hello.actor).toBe("actor-1");
+        const legacyHello = new Uint8Array(readFileSync(join(fixturesDir, "🚫️legacy-client-hello-rejected", "💾️.bin")));
+        expect(() => decodeClientFrame(legacyHello)).toThrow(/unknown tag 0/u);
   
         const commands = loadClient("📦️client-commands.bin");
         if (typeof commands.frame === "string" || !("Commands" in commands.frame)) throw new Error("expected a Commands frame");

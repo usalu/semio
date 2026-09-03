@@ -1,0 +1,18 @@
+{
+  "$schema": "../../../../../🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ The plugin host owns its replay and mounted-relay lifecycle semantics. AJV independently validates the neutral trace schema, while Rust and TypeScript execute the committed traces through separate state-machine implementations.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "plugin-host-relay-lifecycle-state-machine",
+      "capabilities": ["plugin-host-relay-lifecycle"],
+      "rationale": "Replay-seed and mounted-relay retirement are repository-owned authority semantics with no external implementation that can adjudicate them. Confidence comes from schema-valid committed traces, bounded accounting and no-spin properties, and independently written Rust production-machine and TypeScript state-machine executions.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"],
+      "coversMutations": false
+    }
+  ],
+  "migrationStatus": {
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host": "protocol-v2"
+  }
+}

@@ -301,19 +301,20 @@ mod tests {
     fn full_vocabulary_snapshot() -> SemioBrepSnapshot {
         let mut snap = SemioBrepSnapshot::default();
         snap.vertices = vec![
-            BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } },
-            BrepVertex { id: "v2".into(), point: SemioPoint3 { x: 4.0, y: 0.0, z: 0.0 } },
-            BrepVertex { id: "v3".into(), point: SemioPoint3 { x: 4.0, y: 3.0, z: 0.0 } },
-            BrepVertex { id: "v4".into(), point: SemioPoint3 { x: 0.0, y: 3.0, z: 0.0 } },
+            BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, tol: 0.0 },
+            BrepVertex { id: "v2".into(), point: SemioPoint3 { x: 4.0, y: 0.0, z: 0.0 }, tol: 0.0 },
+            BrepVertex { id: "v3".into(), point: SemioPoint3 { x: 4.0, y: 3.0, z: 0.0 }, tol: 0.0 },
+            BrepVertex { id: "v4".into(), point: SemioPoint3 { x: 0.0, y: 3.0, z: 0.0 }, tol: 0.0 },
         ];
         snap.edges = vec![
-            BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v2".into(), curve: BrepCurve::Line { origin: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } },
-            BrepEdge { id: "e2".into(), start_vertex: "v2".into(), end_vertex: "v3".into(), curve: BrepCurve::Circle { center: SemioPoint3 { x: 4.0, y: 1.5, z: 0.0 }, axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 1.5 } },
+            BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v2".into(), curve: BrepCurve::Line { origin: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } }, tol: 0.0 },
+            BrepEdge { id: "e2".into(), start_vertex: "v2".into(), end_vertex: "v3".into(), curve: BrepCurve::Circle { center: SemioPoint3 { x: 4.0, y: 1.5, z: 0.0 }, axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 1.5 }, tol: 0.0 },
             BrepEdge {
                 id: "e3".into(),
                 start_vertex: "v3".into(),
                 end_vertex: "v4".into(),
                 curve: BrepCurve::Ellipse { center: SemioPoint3 { x: 2.0, y: 3.0, z: 0.0 }, axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius_major: 2.0, radius_minor: 1.0 },
+                tol: 0.0,
             },
             BrepEdge {
                 id: "e4".into(),
@@ -325,6 +326,7 @@ mod tests {
                     degree: 2,
                     knots: vec![0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
                 },
+                tol: 0.0,
             },
         ];
         snap.loops = vec![
@@ -335,16 +337,17 @@ mod tests {
             BrepLoop { id: "l2".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: false }] },
         ];
         snap.faces = vec![
-            BrepFace { id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec!["l2".into()], surface: BrepSurface::Plane { origin: SemioPoint3::default(), normal: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 } }, orientation: true },
-            BrepFace { id: "f2".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Cylinder { origin: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 2.0 }, orientation: true },
-            BrepFace { id: "f3".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Cone { origin: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 2.0, half_angle: 0.4 }, orientation: false },
-            BrepFace { id: "f4".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Sphere { center: SemioPoint3 { x: 1.0, y: 1.0, z: 0.0 }, radius: 3.0 }, orientation: true },
+            BrepFace { id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec!["l2".into()], surface: BrepSurface::Plane { origin: SemioPoint3::default(), normal: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 } }, orientation: true, tol: 0.0 },
+            BrepFace { id: "f2".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Cylinder { origin: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 2.0 }, orientation: true, tol: 0.0 },
+            BrepFace { id: "f3".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Cone { origin: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 2.0, half_angle: 0.4 }, orientation: false, tol: 0.0 },
+            BrepFace { id: "f4".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Sphere { center: SemioPoint3 { x: 1.0, y: 1.0, z: 0.0 }, radius: 3.0 }, orientation: true, tol: 0.0 },
             BrepFace {
                 id: "f5".into(),
                 outer_loop: "l1".into(),
                 inner_loops: vec![],
                 surface: BrepSurface::Torus { center: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, major_radius: 5.0, minor_radius: 1.0 },
                 orientation: true,
+                tol: 0.0,
             },
             BrepFace {
                 id: "f6".into(),
@@ -361,6 +364,7 @@ mod tests {
                     knots_v: vec![0.0, 0.0, 1.0, 1.0],
                 },
                 orientation: true,
+                tol: 0.0,
             },
         ];
         snap.shells = vec![
@@ -487,7 +491,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn dangling_reference_errors_rather_than_fabricating() {
         let mut snap = SemioBrepSnapshot::default();
-        snap.edges = vec![BrepEdge { id: "e1".into(), start_vertex: "nonexistent".into(), end_vertex: "also-nonexistent".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } }];
+        snap.edges = vec![BrepEdge { id: "e1".into(), start_vertex: "nonexistent".into(), end_vertex: "also-nonexistent".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } }, tol: 0.0 }];
         let result = semio_framework_plugin::resolve_ready(SemioBrepToStep::serialize(&snap));
         assert!(result.is_err(), "an edge referencing a nonexistent vertex must error, not silently drop the edge");
     }

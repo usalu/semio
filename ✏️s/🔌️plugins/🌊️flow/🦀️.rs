@@ -21,7 +21,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `"computation.flow"` artifact (`crate::artifacts::flow::artifact_kind().id`) is opened, this plugin's
 /// own actor runs `Isolated` (its 9 `🧩️extensions/` run `Linked` instead — see each extension's own
 /// `bundle()`), and it asks the broker for document write access to persist edits.
-pub async fn plugin() -> Result<Plugin<FlowApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<FlowApps>, semio_framework_plugin::PluginAssemblyError> {
     Plugin::<FlowApps>::builder("flow")
         .label("Flow")
         .version("0.1.0")

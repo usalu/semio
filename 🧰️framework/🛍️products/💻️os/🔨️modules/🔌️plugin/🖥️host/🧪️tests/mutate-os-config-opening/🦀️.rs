@@ -10,7 +10,7 @@
 //! vocabulary.
 //!
 //! **Why the case sits here rather than beside the vocabulary.** `🎚️config` has no crate of its
-//! own. `🦀️.rs` in `🖥️host/📦️packages/🦀️rust` is the ONE place `OpeningConfigMutation` is
+//! own. `../../🧪️🧪️🏔️🦋️tests/🎚️🍐️mutate-os-config-opening/🦀️.rs` in `🖥️host/📦️packages/🦀️rust` is the ONE place `OpeningConfigMutation` is
 //! mounted, and the generated test host resolves its subject crate by walking UP from the case
 //! owner — from `🎚️config` that walk reaches the OS kernel, which does not expose the facet at all.
 //! The feature says the same thing in prose so a reader is not left guessing.

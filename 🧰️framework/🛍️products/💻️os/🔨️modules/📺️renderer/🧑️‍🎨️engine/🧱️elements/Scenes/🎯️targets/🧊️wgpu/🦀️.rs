@@ -337,7 +337,7 @@ mod admitted_surface_map_tests {
 
     #[test]
     fn production_surface_authority_has_no_hash_map_or_structural_deref() {
-        let source = include_str!("🦀️.rs");
+        let source = include_str!("../../../🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs");
         let authority = source.split("#[cfg(test)]\nmod admitted_surface_map_tests").next().unwrap();
         assert!(!authority.contains("values: HashMap<String, T>"));
         assert!(!authority.contains("DerefMut"));
@@ -1085,9 +1085,9 @@ fn queue_commit_rename_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescri
 #[cfg(test)]
 #[test]
 fn production_action_ingress_has_no_legacy_queue_and_text_vec_helpers_are_test_only() {
-    const SCENES_SOURCE: &str = include_str!("🦀️.rs");
-    const INTERPRETER_SOURCE: &str = include_str!("../../../Interpreter/🎯️targets/🧊️wgpu/🦀️.rs");
-    const ENGINE_CANVAS_SOURCE: &str = include_str!("../../../EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs");
+    const SCENES_SOURCE: &str = include_str!("../../../🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs");
+    const INTERPRETER_SOURCE: &str = include_str!("../../../🟦️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs");
+    const ENGINE_CANVAS_SOURCE: &str = include_str!("../../../⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs");
     assert!(!SCENES_SOURCE.contains(concat!("queue_", "event(")));
     assert!(!INTERPRETER_SOURCE.contains(concat!("queue_", "event(")));
     assert!(!SCENES_SOURCE.contains(concat!("drain_", "keys(")));

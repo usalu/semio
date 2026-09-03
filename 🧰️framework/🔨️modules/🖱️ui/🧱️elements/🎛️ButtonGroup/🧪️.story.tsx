@@ -10,7 +10,7 @@
 
 import { ButtonGroup, ButtonGroupItem } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "../../🧪️story";
+import type { Meta, StoryObj } from "../../🧪️🐨️story.ts";
 
 // 🔘️#region 🧵️ButtonGroup
 const Box = createIconComponent("box");

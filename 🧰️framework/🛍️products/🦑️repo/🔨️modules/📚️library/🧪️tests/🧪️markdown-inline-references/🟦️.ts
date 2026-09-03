@@ -22,10 +22,10 @@ type NativeSpan = Readonly<{ value: string; start: number; end: number; raw: str
 const library = resolve(import.meta.dir, "../.."), root = resolve(library, "../../../../..");
 const oracleRequire = createRequire(import.meta.url), MarkdownIt = oracleRequire("markdown-it") as new () => NativeParser;
 const normalizerPath = join(library, "🧹️normalization/🟦️.ts");
-const vectorPath = join(import.meta.dir, "🔣️.json"), schemaPath = join(import.meta.dir, "🧬️schema/🔣️.json");
+const vectorPath = join(import.meta.dir, "../🧪️🪻️markdown-inline-references/🔣️.json"), schemaPath = join(import.meta.dir, "../🧪️🪻️markdown-inline-references/🧬️schema/🔣️.json");
 const packagePath = join(library, "📦️packages/🟦️typescript/package.json"), oraclePath = fileURLToPath(import.meta.resolve("markdown-it/package.json")), oracleEntryPath = oracleRequire.resolve("markdown-it");
 const vectorBytes = snapshot(vectorPath), vector: Vector = JSON.parse(vectorBytes.toString("utf8"));
-const inputBytes = new Map([vectorPath, schemaPath, join(import.meta.dir, "🟦️.ts"), packagePath, oraclePath, oracleEntryPath, ...["index.mjs", "parser_inline.mjs", "helpers/parse_link_destination.mjs", "rules_inline/link.mjs", "rules_inline/image.mjs", "common/utils.mjs"].map((path) => join(dirname(oraclePath), "lib", path))].map((path) => [path, snapshot(path)]));
+const inputBytes = new Map([vectorPath, schemaPath, join(import.meta.dir, "../🧪️🪻️markdown-inline-references/🟦️.ts"), packagePath, oraclePath, oracleEntryPath, ...["index.mjs", "parser_inline.mjs", "helpers/parse_link_destination.mjs", "rules_inline/link.mjs", "rules_inline/image.mjs", "common/utils.mjs"].map((path) => join(dirname(oraclePath), "lib", path))].map((path) => [path, snapshot(path)]));
 const sha = (bytes: string | Uint8Array): string => createHash("sha256").update(bytes).digest("hex");
 const compilers = [
   { id: "bun", compile: (code: string): string => new Bun.Transpiler({ loader: "ts" }).transformSync(code) },
@@ -172,7 +172,7 @@ async function stress(compiler: typeof compilers[number]) {
   if (ancestry(join(runs, "📜️script.ts")) !== parents) throw new Error("Run container changed during allocation");
   const inputs = vector.stress.map((row) => ({ path: "📝️.md", source: row.unit.repeat(row.repeat) + row.suffix }));
   writeNew(driverPath, driver);
-  writeNew(join(run, "🔣️.json"), JSON.stringify({ compiler: compiler.id, declarationSha256: sha(closure), sourceDeclarations: closure, limits: vector.limits, stress: vector.stress }, null, 2) + "\n");
+  writeNew(join(run, "../🧪️🪻️markdown-inline-references/🔣️.json"), JSON.stringify({ compiler: compiler.id, declarationSha256: sha(closure), sourceDeclarations: closure, limits: vector.limits, stress: vector.stress }, null, 2) + "\n");
   const started = performance.now(), child = spawn(process.execPath, [driverPath], { cwd: run, stdio: ["pipe", "pipe", "pipe"] });
   let bytes = 0, timedOut = false, overflow = false, spawnError: string | null = null;
   const stdout: Buffer[] = [], stderr: Buffer[] = [];

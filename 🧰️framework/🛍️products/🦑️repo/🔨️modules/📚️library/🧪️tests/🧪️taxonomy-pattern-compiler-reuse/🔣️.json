@@ -80,7 +80,7 @@
     },
     {
       "id": "globstar-zero",
-      "path": "🟦️.ts",
+      "path": "../🧪️⚪️taxonomy-pattern-compiler-reuse/🟦️.ts",
       "pattern": "**/🟦️.ts",
       "expected": true
     },

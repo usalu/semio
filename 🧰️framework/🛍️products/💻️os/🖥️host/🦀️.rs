@@ -2456,8 +2456,8 @@ pub mod host_runtime {
     /// @emoji ☁️ The semio_hub persistence binding for a document. `surface` is the out-of-band
     /// presence scope (ticket 26/08/16/HUB-SPACES-…, contract §C0) — `None` for non-presence
     /// documents (e.g. the OS config/home documents, which stay folder-only per contract §C3).
-    pub fn hub_binding(base_url: impl Into<String>, space_id: impl Into<String>, token: Option<String>, surface: Option<String>) -> PersistenceBinding {
-        PersistenceBinding::Hub { base_url: base_url.into(), space_id: space_id.into(), token, surface }
+    pub fn hub_binding(base_url: impl Into<String>, space_id: impl Into<String>, surface: Option<String>) -> PersistenceBinding {
+        PersistenceBinding::Hub { base_url: base_url.into(), space_id: space_id.into(), surface }
     }
 
     /// @emoji 🔗️ Builds the `ArtifactActorConfig` to open an app instance's own document, from its

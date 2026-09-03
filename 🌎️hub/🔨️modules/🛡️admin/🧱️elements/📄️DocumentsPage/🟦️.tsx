@@ -28,18 +28,18 @@ export function DocumentsPage(): React.ReactElement {
   const [connectionCounts, setConnectionCounts] = React.useState<Map<string, number>>(new Map());
 
   React.useEffect(() => {
-    client.spaces().then((rows) => setSpaces([...rows])).catch(() => setSpaces([]));
+    client.spaces().then((page) => setSpaces([...page.rows])).catch(() => setSpaces([]));
   }, [client]);
 
   const load = React.useCallback(() => {
     const scope = spaceId === ALL_SPACES ? undefined : spaceId;
-    client.documents(scope).then((rows) => setDocuments([...rows])).catch(() => setDocuments([]));
+    client.documents(scope).then((page) => setDocuments([...page.rows])).catch(() => setDocuments([]));
     client
       .connections()
-      .then((rows) => {
+      .then((snapshot) => {
         const counts = new Map<string, number>();
-        for (const connection of rows) {
-          const key = `${connection.spaceId}:${connection.documentId}`;
+        for (const connection of snapshot.rows) {
+          const key = `${connection.scope.spaceId}:${connection.scope.documentId}`;
           counts.set(key, (counts.get(key) ?? 0) + 1);
         }
         setConnectionCounts(counts);

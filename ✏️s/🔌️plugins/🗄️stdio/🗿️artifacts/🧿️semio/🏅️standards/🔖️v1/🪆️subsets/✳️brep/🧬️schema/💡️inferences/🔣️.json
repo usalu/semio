@@ -1,8 +1,39 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.brep.inference/inferences.json",
   "title": "SemioBrepInference",
-  "description": "Derived, non-persisted computation over a SemioBrepSnapshot. See the sibling 🦀️.rs for the real source of truth. tessellation/massProperties are deliberately absent (see that file's module doc comment).",
+  "description": "Derived, non-persisted computation over a SemioBrepSnapshot. See the sibling 🦀️.rs for the real source of truth.",
   "type": "object",
+  "$defs": {
+    "vec3": { "type": "object", "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" } }, "required": ["x", "y", "z"] },
+    "faceGroup": { "type": "object", "properties": { "start": { "type": "integer" }, "count": { "type": "integer" }, "entityId": { "type": "string" } }, "required": ["start", "count", "entityId"] },
+    "edgeGroup": { "type": "object", "properties": { "start": { "type": "integer" }, "count": { "type": "integer" }, "entityId": { "type": "string" } }, "required": ["start", "count", "entityId"] },
+    "surfaceKind": { "enum": ["plane", "cylinder", "cone", "sphere", "torus", "nurbs"] },
+    "curveKind": { "enum": ["line", "circle", "ellipse", "nurbs"] },
+    "faceInfo": { "type": "object", "properties": { "entityId": { "type": "string" }, "surfaceKind": { "$ref": "#/$defs/surfaceKind" }, "area": { "type": "number" }, "normal": { "$ref": "#/$defs/vec3" } }, "required": ["entityId", "surfaceKind", "area", "normal"] },
+    "edgeInfo": { "type": "object", "properties": { "entityId": { "type": "string" }, "curveKind": { "$ref": "#/$defs/curveKind" }, "length": { "type": "number" } }, "required": ["entityId", "curveKind", "length"] },
+    "meshTransfer": {
+      "type": "object",
+      "description": "Tessellated mesh payload for preview upload — see ⚙️engine/🔖️contract/🦀️.rs's MeshTransfer.",
+      "properties": {
+        "position": { "type": "array", "items": { "type": "number" } },
+        "normal": { "type": "array", "items": { "type": "number" } },
+        "index": { "type": "array", "items": { "type": "integer" } },
+        "edges": { "type": "array", "items": { "type": "number" } },
+        "points": { "type": "array", "items": { "type": "number" } },
+        "faceGroups": { "type": "array", "items": { "$ref": "#/$defs/faceGroup" } },
+        "edgeGroups": { "type": "array", "items": { "$ref": "#/$defs/edgeGroup" } },
+        "faceInfos": { "type": "array", "items": { "$ref": "#/$defs/faceInfo" } },
+        "edgeInfos": { "type": "array", "items": { "$ref": "#/$defs/edgeInfo" } }
+      },
+      "required": ["position", "normal", "index", "edges", "points", "faceGroups", "edgeGroups", "faceInfos", "edgeInfos"]
+    },
+    "semioPoint3": { "type": "object", "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" } }, "required": ["x", "y", "z"] },
+    "brepMassProperties": {
+      "type": "object",
+      "properties": { "volume": { "type": "number" }, "area": { "type": "number" }, "centroid": { "$ref": "#/$defs/semioPoint3" }, "errorEstimate": { "type": "number" } },
+      "required": ["volume", "area", "centroid", "errorEstimate"]
+    }
+  },
   "properties": {
     "validationReport": {
       "type": "array",
@@ -14,7 +45,9 @@
         },
         "required": ["code", "message"]
       }
-    }
+    },
+    "tessellation": { "$ref": "#/$defs/meshTransfer" },
+    "massProperties": { "$ref": "#/$defs/brepMassProperties" }
   },
-  "required": ["validationReport"]
+  "required": ["validationReport", "tessellation", "massProperties"]
 }

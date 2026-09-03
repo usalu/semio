@@ -112,6 +112,18 @@ export function resolveCliBin(root = getWorkspaceRoot()): string {
   return defaultCliBin(root);
 }
 
+function defaultMcpBin(root: string): string {
+  const win = process.platform === "win32";
+  return join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client", win ? "mcp.exe" : "mcp");
+}
+
+/** 🔌️Resolves the native repo MCP binary without colliding with the repo CLI executable. */
+export function resolveMcpBin(root = getWorkspaceRoot()): string {
+  const fromEnv = process.env.REPO_MCP_BIN?.trim();
+  if (fromEnv) return resolve(fromEnv);
+  return defaultMcpBin(root);
+}
+
 /** 📡️Runs repo client with `--json` and returns parsed GraphQL payload (`data` object). */
 export function runCliGraphql(query: string, variables: Record<string, unknown> = {}, options?: { cwd?: string; repoRoot?: string }): unknown {
   const root = options?.repoRoot ?? getWorkspaceRoot();

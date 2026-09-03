@@ -211,3 +211,258 @@ After implementation, focused laws—not current evidence—are:
 6. **Medium — checkpoint retention/release and exact tail barrier.** This gates broad cold-open/large-pair claims, not the plan schema or small verified existing-document policy.
 
 The current acceptance states therefore remain `PARTIAL` for descriptor/bootstrap/React and `BLOCKED` for collaboration/native/integrated release. This report supplies implementation order only; it establishes no build, test, socket, mount, or end-to-end runtime result.
+
+## Current D0 source and gate re-read — no activation drift
+
+The D0 packet is now present and remains deliberately non-activating. Rust and TypeScript expose
+strict intent, plan, exchange, and redacted error forms; both reject unknown fields, noncanonical
+43-character receipt tails, control characters, unsafe integers, ambiguous session/share
+generation, mismatched checkpoint/frontier, bad hash text, and invalid grant/surface pairing
+(`🧬️schema/🦀️.rs:601-760`, `🧬️schema/🟦️.ts:409-532`). The fixture contains one descriptor,
+nonempty catalog row, canonical SHA-256 receipt digest, and sixteen hostile vectors
+(`🧫️fixtures/📇️directory/📄️document-open-plan-v1.json:1-154`).
+
+The process-local ledger is bounded to 1,024 records and 64 issued records per binding. It stores
+only a domain-separated SHA-256 receipt digest, zeroizes the boxed secret on drop, uses one mutex
+to make exchange single-winner, checks an exact current private authority, and invalidates/reaps
+replacement, expiry, and revocation indexes (`🌎️hub/📦️packages/🦀️rust/📦️bin.rs:754-1088`).
+Its selected law includes concurrent exchange, stale/expired/replaced receipts, restart-scoped
+absence, capacity, and session/share administrative invalidation (`:5659-5806`).
+
+The fail-closed catalog boundary is honest at D0: there is no public open-plan or
+receipt-to-SocketGrant route in the live router, which only mounts existing socket-grant routes
+(`📦️bin.rs:4489-4519`). Nor is there a catalog provider/authority-construction route that can
+turn an empty catalog into a plan. `catalog-unavailable` is contractual vocabulary, not a falsely
+claimed live behavior yet; D1/D2 must bind a nonempty verified catalog generation before adding
+an issuer. This is intentionally still not an open/mount authority claim.
+
+`os-hub:open-plan-check` is uncacheable and launch-registered
+(`📋️project.json:103-109`, `.vscode/launch.json:4422-4429`). It runs the self-contained Node
+descriptor/catalog/receipt/negative oracle before Cargo, exact-lists then exact-runs one kernel
+schema law and two hub-ledger/revocation laws (`📜️script.ts:1886-2129`). The corrected schema
+selector is the physical package `semio-framework-os-kernel`
+(`🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml:1-5`). No current runtime terminal is
+claimed here: I did not run this Cargo gate while the shared target is occupied.
+
+## Cargo-101 attribution and narrow-law boundary
+
+The recorded `open-plan-check` terminal is an honest preflight failure, not a zero-test pass:
+the independent Node oracle and its separately labelled production-codec parity finished, then
+the first `cargo test --all-features -p semio-framework-os-kernel --lib … --list` returned status
+101 before any Rust law could be enumerated. Its first reported error was the unrelated missing
+`issues_scoped_to_new_solids` symbol in the B-rep plugin source. This attribution is consistent
+with the kernel's test dependency fan-in: its `Cargo.toml:126-160` declares the plugin fixture
+crates as direct dev-dependencies, so the kernel lib-test harness cannot be treated as isolated
+from that graph merely because the selected schema law is D0-owned.
+
+There is no truthful one-command narrow substitute for all three gate laws. The kernel schema
+law must remain red/runtime-unproven until its actual lib-test harness compiles. The two hub
+binary laws have no feature guard in their definitions (`🌎️hub/📦️packages/🦀️rust/📦️bin.rs:5712-5809,
+5811+`) and their test state uses the hub's default SQLite feature. After target ownership is
+available, two separately labelled default-feature exact commands may therefore provide useful
+*subset* evidence for those same production test functions:
+
+```text
+cargo test --manifest-path Cargo.toml --bin os-hub <resolved-ledger-FQN> -- --exact --test-threads=1
+cargo test --manifest-path Cargo.toml --bin os-hub <resolved-revocation-FQN> -- --exact --test-threads=1
+```
+
+They must retain the gate's exact-one `--list` resolution first and must not replace or clear the
+separately red `--all-features` schema/graph terminal. I did not run either command in this audit.
+
+## D1 receipt-to-socket-grant source re-read
+
+The new private `exchange_to_socket_grant` path retains the plan-ledger mutex through exact
+receipt-digest lookup, expiry/state/authority validation, socket-ledger issue, and marking the
+plan consumed (`🌎️hub/📦️packages/🦀️rust/📦️bin.rs:1027-1063,1071-1109`). There is no reverse
+nested lock in the invalidation callers; they finish socket-ledger invalidation before taking the
+plan ledger. A full socket ledger therefore returns `DeadlineExceeded` before the plan record is
+consumed, so the same receipt can retry after capacity is released. The focused D1 law races eight
+exchanges (one success/seven `AlreadyConsumed`), proves the exact actor/audience/subject/expiry
+pending grant, fills capacity, checks the plan remains `Issued`, then retries successfully
+(`:5821-5894`). Expiry is capped at the minimum of issue+socket TTL, plan expiry, and binding
+expiry (`:1079-1091`).
+
+Both capability types redact debugging: the plan capability is boxed and zeroed on drop
+(`:758-769`), and the established socket-capability debug implementation shows only selector and
+`[REDACTED]` secret (`🌎️hub/📇️directory/🦀️.rs:583-615`). The two ledgers retain only
+domain-separated secret digests, never either raw secret. The response necessarily contains the
+new one-use socket grant for its caller; it does not echo the plan receipt. No log/audit format was
+added by this private helper.
+
+D1 remains source-first and non-activating: the router still has no `open-plan` route
+(`📦️bin.rs:4553-4588`), readiness still reports `open_plan: false` (`:1527-1560`), and no catalog
+authority or `DocumentPlanSocketGrantIntentV1` route handler is present. The Node pre-Cargo oracle
+now rejects any open-plan route, any public exchange intent, or a production count other than one
+private helper (`📜️script.ts:2056-2064`). The primary all-feature gate now exact-selects all four
+current laws, including D1 (`:2106-2137`).
+
+The separately added `open-plan-server-check` is an honestly labelled default-feature hub subset:
+it exact-lists and runs the two pre-existing hub laws plus D1 exchange, then explicitly says the
+kernel all-feature schema qualification remains separate (`📜️script.ts:2140-2165`; uncacheable
+project target `📋️project.json:111-117`). It is not a substitute for the prior all-feature-graph
+red. Its launch-seed entry is currently ahead of generated `.vscode/launch.json`
+(`.vscode/🧩️launch.seed.jsonc:3085-3093`; generated file has no matching entry): generated launch
+freshness remains a release-blocking registration gap. No Cargo command was run by this audit.
+
+### D1 redaction/zeroization hold
+
+`document_open_plan_base64url_decode` zeroes its stack buffer for late tail/length failures, but
+the invalid-alphabet branch uses `document_open_plan_base64_value(byte).ok_or(...)?` after prior
+bytes may already have been decoded (`📦️bin.rs:803-829`). That early return does not fill
+`decoded`. Because D1's exchange parses the externally supplied plan receipt, this is a real
+partial-secret/capability candidate wipe gap despite the successful-path boxed drop and Debug
+redaction. Replace the early `?` with an explicit fill-before-error (or a wiping candidate type)
+and add an observer law for an invalid character after valid decoded prefix. This finding holds
+secret-hygiene acceptance; no source route is activated by it.
+
+### Wipe-hold source repair — gate selection still required
+
+The preceding early-return wipe finding is source-closed. The decoder now wraps its candidate in
+`DocumentOpenPlanDecodedSecretV1` before parsing; its `Drop` wipes every error exit, while the
+successful transfer to the boxed live capability clears the stack copy (`📦️bin.rs:831-900`). The
+new direct observer law supplies an invalid final character after 31 decoded bytes and observes
+`nonzero_before: 31` plus a zeroed post-drop candidate (`:5963-5971`). This is a real secret-wipe
+repair, not a diagnostic-only assertion.
+
+It remains runtime-pending because neither current gate exact-selects that new law: the main
+all-feature list includes schema, ledger, revocation, and exchange only
+(`📜️script.ts:2127-2136`), and the default-feature subset likewise lists the three hub laws only
+(`:2157-2164`). The pre-existing ledger law has no wipe observer. Add the new exact law before
+claiming a registered D1 wipe terminal.
+
+## Final D1 cutover reread — prior selection and generated-launch holds superseded
+
+The preceding wipe-selection hold is **superseded in current source**. Both
+`OpenPlanCheckScript` and the explicitly labelled default-feature
+`OpenPlanServerCheckScript` exact-list, require exactly one fully qualified
+match, and exact-run the same four hub laws: ledger, revocation, receipt
+exchange, and `document_open_plan_late_invalid_receipt_wipes_exact_candidate_bytes`
+(`🌎️hub/📦️packages/🦀️rust/📜️script.ts:2244-2276,2279-2305`). The latter law
+still observes a 31-byte partially decoded hostile receipt candidate followed
+by an all-zero post-drop buffer (`📦️bin.rs:5971-5983`). This is a non-vacuous
+source registration; no Cargo result is claimed by this audit.
+
+The generated launch file now contains the same two registered uncached NX
+commands and ordering as the seed: `open-plan-check` at `411.108` and
+`open-plan-server-check` at `411.109`
+(`.vscode/🧩️launch.seed.jsonc:3085-3105`, `.vscode/launch.json:4433-4453`; the
+project target is `🌎️hub/📦️packages/🦀️rust/📋️project.json:119-125`). Thus the
+old seed/generated divergence is source-closed. Freshness runtime evidence
+must come from a terminal generation/check command, not this byte comparison.
+
+`SocketGrantRecordV1` now retains the private document-plan authority as an
+`Arc` and passes it atomically from private exchange issue into the stored
+record (`📦️bin.rs:548-651,1139-1177`). The ledger compares that authority on
+consume, live registration, and every live-authority check
+(`:675-743`), while the D1 law reads the pending record and proves the exact
+authority equals the plan authority (`:5928-5939`). This closes the former
+identity propagation gap without exposing the authority in the public receipt.
+
+The only opposite lock direction is private exchange's plan-ledger mutex then
+socket-ledger issue. Revocation callers first complete socket-ledger
+invalidation and only then take the plan ledger (`:1789-1802,3504-3526,4068-4097`);
+neither invalidator retains its own ledger mutex after it returns. Therefore
+the current code does not form a nested reverse plan/socket mutex cycle.
+The binding admission guard remains deliberately held around the durable
+revocation and sequential invalidations, preserving revocation-versus-dial
+ordering. This conclusion is source-qualified; runtime still requires a fresh
+registered terminal.
+
+## D1 activation drift — RED
+
+The current production router now mounts
+`POST /spaces/{space_id}/documents/{id}/socket-grants` on
+`issue_document_plan_socket_grant` (`🌎️hub/📦️packages/🦀️rust/📦️bin.rs:4785-4790`).
+That handler parses the receipt intent, authenticates and revalidates the
+session/share subject, takes the binding admission gate, compares the durable
+descriptor, and invokes the plan-to-socket exchange (`:1892-1960`). The
+handler is therefore not a test-only helper.
+
+The readiness shape has separately gained the granular
+`open_plan_exchange: true` while retaining `open_plan: false`
+(`:1629-1659`). That honestly distinguishes the exchange endpoint from a
+complete open-plan feature. The independently executed pre-Cargo oracle used
+by *both* registered D1 gates, however, still rejects any production
+`DocumentPlanSocketGrantIntentV1` occurrence (`📜️script.ts:2197-2202`). It
+will now throw before law selection, even though its path-string check misses
+the newly mounted `socket-grants` spelling. No gate terminal can be credited
+until the activation-positive/no-catalog contract and oracle are made
+coherent.
+
+There is also no non-test production caller of `DocumentOpenPlanLedgerV1`'s
+issuance method in the hub binary: the route is an exchange consumer only.
+Consequently, the new public surface is currently neither readiness-advertised
+nor supplied by a production plan issuer. This is a fail-closed/inert path in
+the present tree, but it is still an externally mounted contract and cannot be
+described as the prior source-first, non-activating D1 scope.
+
+### Selector drift — independently blocking
+
+The current exchange test has been renamed to
+`document_open_plan_receipt_exchange_mints_one_exact_bounded_socket_grant`
+(`📦️bin.rs:6079`) to match the now-mounted route. Both D1 gates still
+exact-select the obsolete suffix ending in `_without_route`
+(`📜️script.ts:2269,2300`). Their exact-one preflight will therefore select
+zero even if the preceding oracle is made activation-positive. This is a
+separate gate-registration RED and must be repaired together with the oracle;
+no D1 terminal is claimed here.
+
+## Current D1 exchange-only correction — source-qualified
+
+The immediately preceding activation/selector REDs are superseded in the
+current tree. The independent Node oracle now rejects only literal
+`open-plan` routes, requires exactly one mounted
+`/spaces/{space_id}/documents/{id}/socket-grants` route, and positively
+requires the production intent, authenticated authority lookup, exchange
+handler, and truthful `open_plan: false, open_plan_exchange: true` readiness
+declaration (`🌎️hub/📦️packages/🦀️rust/📜️script.ts:2194-2210`). This correctly
+describes the bounded exchange-only surface while retaining the absence of a
+catalog-backed plan issuer.
+
+Both registered gates now exact-preflight and run six laws rather than the
+obsolete four: schema, ledger, revocation, receipt-to-grant exchange, mounted
+authenticated route, and late-invalid wipe
+(`📜️script.ts:2272-2307,2310-2337`). Each selection requires exactly one FQN
+before execution. The former `_without_route` suffix no longer appears.
+
+Source review finds no new D1 ownership regression. The plan-ledger mutex
+holds through socket-grant issuance, so concurrent exchanges have one winner;
+the grant expiry is the minimum of socket TTL, plan expiry, and binding expiry
+(`📦️bin.rs:1126-1208`). A full socket ledger leaves the plan Issued for retry,
+which the direct law checks (`:6152-6161`). The private plan `Arc` remains part
+of SocketGrant record equality for consume, live registration, and liveness
+(`:677-745`). Revocation sequentially returns from socket invalidation before
+taking the plan ledger, avoiding a reverse nested mutex cycle. These are
+source-only conclusions; no new Cargo terminal is asserted here.
+
+## Final D1 exchange-only boundary — bounded ACCEPT
+
+The preceding statement that both registered gates select six laws is now
+superseded. Current `OpenPlanCheckScript` has **six** exact selectors: the
+kernel schema law under `--all-features`, plus five hub laws (ledger,
+revocation, atomic receipt exchange, hostile mounted route, and late-invalid
+wipe). Current `OpenPlanServerCheckScript` has **five** exact selectors: only
+those five hub laws under the hub's default feature set. Both list, require one
+fully-qualified `: test` result per suffix, print it, and invoke its full name
+with `--exact`; the server subset expressly says it cannot qualify the kernel
+all-feature graph (`🌎️hub/📦️packages/🦀️rust/📜️script.ts:2290-2355`). Thus the
+five-law server run is non-vacuous and is not presented as a substitute for
+the separately red D0 kernel preflight.
+
+The source keeps the production surface correctly bounded: it mounts exactly
+one authenticated `POST /spaces/{space_id}/documents/{id}/socket-grants`,
+rejects malformed/query/bounded-body requests, authenticates and revalidates
+the caller under its binding gate, checks the current descriptor, and invokes
+the atomic exchange (`📦️bin.rs:1893-1966,4790-4793`). Readiness reports
+`openPlan=false` and `openPlanExchange=true` (`:1626-1660`); no issuance route
+or verified catalog provider is implied.
+
+Coordinator-recorded final session `79424` exited `0`: independent oracle and
+production-parser parity completed with 16 general and 5 exchange hostile
+negatives, then all five exact default-feature hub laws selected and passed
+(`📓️sol-document-open-plan-foundation.md:89-111`). Session `63149` separately
+verified generated launch/catalog freshness. I did not execute either command.
+This accepts only the D1 exchange-only server boundary. It does not clear the
+kernel/all-feature D0 preflight, create a public plan issuer, or establish
+browser/native/WGPU/MCP acquisition or transport.

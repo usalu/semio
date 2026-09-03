@@ -336,7 +336,7 @@ test("Rust diagnostic references require exact unescaped assertion-message argum
 test("independent syn parsing reproduces assertion-message, manifest-path and join-provenance facts", async () => {
   const directory = retainedRun("syn-oracle"), target = join(directory, "🧪️target");
   writeFileSync(join(directory, "Cargo.toml"), readFileSync(join(root, golden.oracle.manifestInput)));
-  writeFileSync(join(directory, "🦀️.rs"), readFileSync(join(root, golden.oracle.sourceInput)));
+  writeFileSync(join(directory, "../🧪️🔤️rust-physical-reference-context/🦀️.rs"), readFileSync(join(root, golden.oracle.sourceInput)));
   let passed = false;
   try {
     const result = Bun.spawn(["cargo", "run", "--offline", "--quiet", "--manifest-path", join(directory, "Cargo.toml"), "--target-dir", target, "--", vectorPath], { cwd: directory, env: { ...process.env, RUSTC_WRAPPER: "" }, stdout: "pipe", stderr: "pipe" });
@@ -359,7 +359,7 @@ test("rustc independently confirms delimiter strings and actual custom or standa
   let passed = false;
   try {
     for (const row of golden.joinArguments.cases.filter((row: { compiler?: string }) => row.compiler)) {
-      const owner = join(directory, `🧪️${row.id}`), input = join(owner, "🦀️.rs"), executable = join(owner, process.platform === "win32" ? "🧪️.exe" : "🧪️.bin");
+      const owner = join(directory, `🧪️${row.id}`), input = join(owner, "../🧪️🔤️rust-physical-reference-context/🦀️.rs"), executable = join(owner, process.platform === "win32" ? "🧪️.exe" : "🧪️.bin");
       mkdirSync(owner);
       writeFileSync(input, `${row.source}\n${row.compiler}\n`, { flag: "wx" });
       const compiled = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "join_oracle", input, "-o", executable], { cwd: owner, env: { ...process.env, RUSTC_WRAPPER: "" }, stdout: "pipe", stderr: "pipe", timeout: 30_000 });
@@ -391,7 +391,7 @@ test("rustc confirms correlated finite receiver targets and missing-target rejec
     const cases = golden.manifestCandidates.cases.filter((row: { runtime?: boolean }) => row.runtime);
     expect(cases).toHaveLength(5);
     for (const row of cases) for (const missing of row.id === "tuple-row-correlation" ? [false, true] : [false]) {
-      const owner = join(directory, row.id + (missing ? "-missing" : "-present")), manifestDirectory = join(owner, "pkg"), input = join(owner, "🦀️.rs"), executable = join(owner, process.platform === "win32" ? "🧪️.exe" : "🧪️.bin");
+      const owner = join(directory, row.id + (missing ? "-missing" : "-present")), manifestDirectory = join(owner, "pkg"), input = join(owner, "../🧪️🔤️rust-physical-reference-context/🦀️.rs"), executable = join(owner, process.platform === "win32" ? "🧪️.exe" : "🧪️.bin");
       mkdirSync(manifestDirectory, { recursive: true });
       for (const path of row.physicalTargets.slice(missing ? 1 : 0)) { mkdirSync(dirname(join(owner, path)), { recursive: true }); writeFileSync(join(owner, path), "exact finite target\n", { flag: "wx" }); }
       writeFileSync(input, row.source + '\nfn main() { inspect(); println!("finite-targets-confirmed"); }\n', { flag: "wx" });
@@ -411,7 +411,7 @@ for (const row of golden.manifestCandidates.adversarial.cases) test(`finite cand
   expect(contract.contract).toBe("rust-finite-candidate-adversarial-v1");
   expect(contract.unknownControlFlow).toBe("captured-bindings-remain-unproven");
   expect(contract.namespace).toBe("standard-type-and-macro-identity-required");
-  const directory = retainedRun("finite-adversarial-" + row.id), manifestDirectory = join(directory, "pkg"), input = join(directory, "🦀️.rs"), executable = join(directory, process.platform === "win32" ? "🧪️.exe" : "🧪️.bin");
+  const directory = retainedRun("finite-adversarial-" + row.id), manifestDirectory = join(directory, "pkg"), input = join(directory, "../🧪️🔤️rust-physical-reference-context/🦀️.rs"), executable = join(directory, process.platform === "win32" ? "🧪️.exe" : "🧪️.bin");
   let passed = false;
   try {
     mkdirSync(manifestDirectory);
@@ -436,7 +436,7 @@ test("finite candidate generic std namespace and expanded env ambiguities are re
   let passed = false;
   try {
     for (const row of golden.manifestCandidates.adversarial.namespaceReviews) {
-      const owner = join(directory, row.id), input = join(owner, "🦀️.rs");
+      const owner = join(directory, row.id), input = join(owner, "../🧪️🔤️rust-physical-reference-context/🦀️.rs");
       mkdirSync(owner);
       for (const [path, bytes] of Object.entries(row.files ?? {})) writeFileSync(join(owner, path), bytes as string, { flag: "wx" });
       writeFileSync(input, row.source, { flag: "wx" });
@@ -455,7 +455,7 @@ test("rustc independently confirms manifest-root PathBuf construction and format
     const cases = golden.manifestPaths.cases.filter((row: { compiler?: string }) => row.compiler);
     expect(cases).toHaveLength(5);
     for (const row of cases) {
-      const owner = join(directory, `🧪️${row.id}`), input = join(owner, "🦀️.rs"), executable = join(owner, process.platform === "win32" ? "🧪️.exe" : "🧪️.bin");
+      const owner = join(directory, `🧪️${row.id}`), input = join(owner, "../🧪️🔤️rust-physical-reference-context/🦀️.rs"), executable = join(owner, process.platform === "win32" ? "🧪️.exe" : "🧪️.bin");
       mkdirSync(owner);
       writeFileSync(input, `${row.source}\n${row.compiler}\n`, { flag: "wx" });
       const compiled = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "manifest_pathbuf_oracle", input, "-o", executable], { cwd: owner, env: { ...process.env, CARGO_MANIFEST_DIR: owner, RUSTC_WRAPPER: "" }, stdout: "pipe", stderr: "pipe", timeout: 30_000 });

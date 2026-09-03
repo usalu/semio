@@ -270,8 +270,24 @@ fn closest_on_ellipse(frame: &Frame3, major_radius: f64, minor_radius: f64, doma
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn all_local_minima_periodic(criticals: &[f64], domain: (f64, f64), curve: &Curve3, target: Pnt3) -> Vec<ClosestParam> {
     let period = curve.period().unwrap_or(std::f64::consts::TAU);
+    // 🐛 A domain spanning exactly one full period (e.g. a whole, untrimmed circle's own
+    // `(0, TAU)`) has NO real trim boundary — `domain.0`/`domain.1` are the SAME physical point,
+    // not two independent constrained-optimum candidates, and (unlike a genuine critical point)
+    // neither satisfies the first-order condition `is_local_minimum` assumes (its own docstring).
+    // Drop both sentinels unconditionally in that case rather than subjecting them to a test only
+    // meaningful at a real stationary point — every genuine minimum on a full period is already
+    // found via `is_local_minimum` on the wrapped `criticals`. A genuinely trimmed sub-arc keeps
+    // both endpoints unconditionally (the constrained optimum can legitimately sit there even when
+    // it isn't an unconstrained critical point).
+    let full_period = (domain.1 - domain.0 - period).abs() < 1e-9;
     let mut candidates = periodic_candidates(criticals, domain, period);
-    candidates.retain(|&t| t == domain.0 || t == domain.1 || is_local_minimum(curve, t, target));
+    candidates.retain(|&t| {
+        let is_endpoint = t == domain.0 || t == domain.1;
+        if full_period && is_endpoint {
+            return false;
+        }
+        (!full_period && is_endpoint) || is_local_minimum(curve, t, target)
+    });
     candidates.sort_by(|a, b| a.partial_cmp(b).unwrap());
     candidates.dedup_by(|a, b| (*a - *b).abs() < 1e-9);
     candidates
@@ -313,6 +329,19 @@ fn point_to_box_distance(target: Pnt3, lo: Pnt3, hi: Pnt3) -> f64 {
     clamped.distance(target)
 }
 
+/// 📏️ Newton seeds within one Bézier span `[t0, t1]` — a single (midpoint) seed only ever finds
+/// ONE basin of `|C(t)-target|`'s distance landscape, but a degree-`p` polynomial/rational span's
+/// distance-squared derivative has degree up to `2p - 1`, so up to `p` distinct local minima can
+/// coexist in a SINGLE span (the S-shaped-curve test is exactly this: one cubic Bézier span, two
+/// minima). 5 evenly-spaced interior seeds reliably separate up to 3 basins (ample for the cubic —
+/// degree 3 — case; higher-degree spans get correspondingly denser coverage since the seed count
+/// is independent of degree, trading a constant per-span factor for correctness).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn span_seeds(t0: f64, t1: f64) -> [f64; 5] {
+    let step = (t1 - t0) / 6.0;
+    [t0 + step, t0 + 2.0 * step, t0 + 3.0 * step, t0 + 4.0 * step, t0 + 5.0 * step]
+}
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn closest_on_nurbs(curve: &Curve3, domain: (f64, f64), target: Pnt3, tol: f64) -> ClosestParam {
     let Curve3::Nurbs { knots, controls, weights } = curve else {
@@ -333,19 +362,22 @@ fn closest_on_nurbs(curve: &Curve3, domain: (f64, f64), target: Pnt3, tol: f64) 
         if lower_bound > best.distance + tol {
             continue;
         }
-        let seed = 0.5 * (t0.max(domain.0) + t1.min(domain.1));
-        let refined = newton_closest_point(curve, target, seed, domain, None);
-        let point = curve.eval(refined);
-        let distance = point.distance(target);
-        if distance < best.distance {
-            best = ClosestParam { t: refined, point, distance, certified: true };
+        let (lo, hi) = (t0.max(domain.0), t1.min(domain.1));
+        for seed in span_seeds(lo, hi) {
+            let refined = newton_closest_point(curve, target, seed, domain, None);
+            let point = curve.eval(refined);
+            let distance = point.distance(target);
+            if distance < best.distance {
+                best = ClosestParam { t: refined, point, distance, certified: true };
+            }
         }
     }
     best
 }
 
-/// 📏️ Every span's own local Newton refinement, deduplicated and filtered down to genuine local
-/// minima — the multi-minimum counterpart of [`closest_on_nurbs`].
+/// 📏️ Every span's own local Newton refinement (from [`span_seeds`], not a single midpoint —
+/// see its docstring), deduplicated and filtered down to genuine local minima — the
+/// multi-minimum counterpart of [`closest_on_nurbs`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn all_local_minima_nurbs(curve: &Curve3, domain: (f64, f64), target: Pnt3, tol: f64) -> Vec<ClosestParam> {
     let Curve3::Nurbs { knots, controls, weights } = curve else {
@@ -357,16 +389,18 @@ fn all_local_minima_nurbs(curve: &Curve3, domain: (f64, f64), target: Pnt3, tol:
         if t1 <= domain.0 || t0 >= domain.1 {
             continue;
         }
-        let seed = 0.5 * (t0.max(domain.0) + t1.min(domain.1));
-        let refined = newton_closest_point(curve, target, seed, domain, None);
-        if !is_local_minimum(curve, refined, target) {
-            continue;
+        let (lo, hi) = (t0.max(domain.0), t1.min(domain.1));
+        for seed in span_seeds(lo, hi) {
+            let refined = newton_closest_point(curve, target, seed, domain, None);
+            if !is_local_minimum(curve, refined, target) {
+                continue;
+            }
+            if results.iter().any(|r: &ClosestParam| (r.t - refined).abs() < tol.max(1e-9)) {
+                continue;
+            }
+            let point = curve.eval(refined);
+            results.push(ClosestParam { t: refined, point, distance: point.distance(target), certified: true });
         }
-        if results.iter().any(|r: &ClosestParam| (r.t - refined).abs() < tol.max(1e-9)) {
-            continue;
-        }
-        let point = curve.eval(refined);
-        results.push(ClosestParam { t: refined, point, distance: point.distance(target), certified: true });
     }
     results.sort_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
     results
@@ -607,7 +641,7 @@ fn interpolate_curve_with_tangents(points: &[Pnt3], degree: usize, params: &[f64
     let ys = solve_axis(|p| p.y);
     let zs = solve_axis(|p| p.z);
     let controls = (0..extra).map(|i| Pnt3::new(xs[i], ys[i], zs[i])).collect();
-    Some(NurbsCurve3 { knots: clamped, controls, weights: vec![1.0; extra] })
+    Some(NurbsCurve3 { knots: kv, controls, weights: vec![1.0; extra] })
 }
 
 /// 📏️ Closed (periodic) global interpolation: builds an `n×n` system over
@@ -690,8 +724,16 @@ fn fitting_knot_vector(params: &[f64], p: usize, num_controls: usize) -> Vec<f64
         u[n + 1 + i] = 1.0;
     }
     if n > p {
+        // 🐛 The standard Piegl-Tiller averaging formula (NURBS Book Eq. 9.68) needs `n - p`
+        // interior knots (indices `p+1..=n`), not `n - p - 1` — the previous off-by-one left the
+        // LAST interior knot (index `n`) unset (default 0.0), which for the common `n_controls =
+        // degree + 2` case (`n - p == 1`) makes the loop range `1..=0` — empty — so the sole
+        // interior knot stayed at its zero-initialized value, colliding with the clamped-start
+        // knots and pushing that knot's multiplicity past `degree + 1`. `KnotVector::new` then
+        // correctly rejected it as invalid, which `approximate_curve_with_count`'s `?` silently
+        // turned into `None`, panicking every caller that `.unwrap()`s the result.
         let d = (m + 1) as f64 / (n - p + 1) as f64;
-        for j in 1..=(n - p - 1) {
+        for j in 1..=(n - p) {
             let jd = j as f64 * d;
             let i = jd.floor() as usize;
             let alpha = jd - i as f64;
@@ -1263,7 +1305,7 @@ mod tests {
             .collect();
         let degree = 3;
         let curve = interpolate_curve(&points, degree, ParamMethod::Uniform, None, true).unwrap();
-        let Curve3::Nurbs { knots, .. } = &curve else { panic!("expected a Nurbs curve") };
+        let knots = &curve.knots;
         assert!(knots.is_periodic());
         let (lo, hi) = knots.domain();
         for (i, p) in points.iter().enumerate() {
@@ -1311,6 +1353,38 @@ mod tests {
         assert!(curve.controls.last().unwrap().distance(*points.last().unwrap()) < 1e-12);
     }
 
+    /// 📏️ Recomputes [`interpolate_surface_grid`]'s own u/v parameter averaging (NURBS Book §9.5:
+    /// each direction's parameter is the average, over every row/column of the OTHER direction,
+    /// of that row/column's own centripetal parameterization) via the same public [`parameterize`]
+    /// primitive — an independent oracle, so the pass-through test below checks the actual
+    /// interpolation property at the parameters the algorithm actually assigned, instead of
+    /// assuming they land on a uniform `i/(n-1)` grid (which centripetal parameterization does NOT
+    /// guarantee for non-uniformly-spaced 3D data — this grid's `z` isn't linear in `i`/`j`, so its
+    /// averaged parameters are close to, but not exactly, uniform).
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn grid_params(points: &[Vec<Pnt3>]) -> (Vec<f64>, Vec<f64>) {
+        let nu = points.len();
+        let nv = points[0].len();
+        let mut u_acc = vec![0.0; nu];
+        for j in 0..nv {
+            let column: Vec<Pnt3> = (0..nu).map(|i| points[i][j]).collect();
+            let p = parameterize(&column, ParamMethod::Centripetal);
+            for i in 0..nu {
+                u_acc[i] += p[i];
+            }
+        }
+        let u_params: Vec<f64> = u_acc.iter().map(|&s| s / nv as f64).collect();
+        let mut v_acc = vec![0.0; nv];
+        for row in points {
+            let p = parameterize(row, ParamMethod::Centripetal);
+            for j in 0..nv {
+                v_acc[j] += p[j];
+            }
+        }
+        let v_params: Vec<f64> = v_acc.iter().map(|&s| s / nu as f64).collect();
+        (u_params, v_params)
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn interpolate_surface_grid_passes_through_every_grid_point() {
         let nu = 4;
@@ -1318,13 +1392,10 @@ mod tests {
         let points: Vec<Vec<Pnt3>> = (0..nu).map(|i| (0..nv).map(|j| Pnt3::new(i as f64, j as f64, (i as f64 * 0.5).sin() + (j as f64 * 0.3).cos())).collect()).collect();
         let surface = interpolate_surface_grid(&points, 3, 3).unwrap();
         let Surface::Nurbs { u_knots, v_knots, controls, weights } = &surface else { panic!("expected a Nurbs surface") };
-        let (u_lo, u_hi) = u_knots.domain();
-        let (v_lo, v_hi) = v_knots.domain();
+        let (u_params, v_params) = grid_params(&points);
         for i in 0..nu {
             for j in 0..nv {
-                let u = u_lo + (u_hi - u_lo) * i as f64 / (nu - 1) as f64;
-                let v = v_lo + (v_hi - v_lo) * j as f64 / (nv - 1) as f64;
-                let evaluated = eval_nurbs_surface_test(u_knots, v_knots, controls, weights, u, v);
+                let evaluated = eval_nurbs_surface_test(u_knots, v_knots, controls, weights, u_params[i], v_params[j]);
                 assert!(evaluated.distance(points[i][j]) < 1e-8, "grid point ({i},{j}) not interpolated: got {evaluated:?} expected {:?}", points[i][j]);
             }
         }

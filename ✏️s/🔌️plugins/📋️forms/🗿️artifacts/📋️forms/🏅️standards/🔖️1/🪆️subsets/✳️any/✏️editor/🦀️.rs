@@ -24,13 +24,16 @@ use crate::editor::forms::modes::blueprint::windows::{builder, try_wizard as try
 use crate::editor::forms::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::forms::presence::{FormsPresence, FormsPresenceMutation};
 use crate::editor::forms::terminology::{forms_play_labels, FormsLabels};
-use semio_framework_plugin::app::{Dialect, InteractionView};
-use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, ArtifactEditor, ArtifactKindSpec, ArtifactView, CommandDefinition, ConfigView, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition,
-    HierarchyProvider, HoverSpec, IconName, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability,
-    SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
-};
 use dsl::os_pack::json::{object, Object, Value};
+use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
+use semio_framework_plugin::app::{Dialect, InteractionView};
+use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_framework_plugin::{
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
+    ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, DomainTopology, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, IconName, InteractionDefinition, InteractionRef,
+    InteractionTopology, InteractiveJobClassification, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec,
+    TopologyNode, UiNode,
+};
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -364,6 +367,341 @@ pub async fn forms_io() -> semio_framework_plugin::AppIo {
 }
 //#endregion 🔖️Io
 
+//#region 🧵️RetainedCommands
+/// 🧾️ Every Forms tool id in `FormsCommand` declaration order, kept exact against the generated
+/// command catalog, proof rows, and publication contracts by the exhaustiveness law below.
+const FORMS_RETAINED_TOOL_IDS: &[&str] = &[
+    "setTryValue",
+    "setTryValues",
+    "resetTry",
+    "previousStep",
+    "nextStep",
+    "submit",
+    "setLocale",
+    "setContributions",
+    "addStep",
+    "patchStep",
+    "removeStep",
+    "moveStep",
+    "updateForm",
+    "addQuestion",
+    "removeQuestion",
+    "patchQuestions",
+    "patchQuestionOptions",
+    "addQuestionOption",
+    "removeQuestionOption",
+    "patchVectorField",
+    "addVectorField",
+    "removeVectorField",
+    "moveQuestion",
+    "dropQuestionKind",
+    "setSpecJson",
+    "setActiveExample",
+    "exportFixture",
+    "setTryValueStep",
+];
+const FORMS_RETAINED_PAYLOAD_SCHEMA: &str = "forms.tool-command.v1";
+const FORMS_RETAINED_RAW_BYTES: usize = 16_384;
+const FORMS_STORE_MUTATION_MAXIMUM_BYTES: usize = store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
+
+fn forms_bounded_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(FORMS_RETAINED_RAW_BYTES, 64, 64, 4_096, 7_500)
+}
+
+fn forms_bounded_extent(_command: &FormsCommand, _snapshot: &FormsSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    Some(1)
+}
+
+fn forms_retained_reduce(
+    command: &FormsCommand,
+    snapshot: &FormsSnapshot,
+    config: &FormsConfig,
+    history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    operation: &AppOperationContext,
+) -> Result<Emit<FormMutation, FormsConfigMutation, NoDraftMutation>, Fault> {
+    if !FORMS_RETAINED_TOOL_IDS.contains(&command.command_id()) {
+        return Err(Fault::from("forms-command-retained-route-rejected"));
+    }
+    let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
+    let cfg = ConfigView { snapshot: config };
+    command.dispatch(&doc, &cfg)
+}
+
+struct FormsBoundedCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl FormsBoundedCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: FORMS_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for FormsBoundedCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<FormsPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<FormsPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        FORMS_RETAINED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        forms_bounded_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > FORMS_RETAINED_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("Forms retained command rejects oversized wire or unsupported checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FormsBoundedCommandJobFactory {
+    type Owner = EditorApp<FormsPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = FORMS_RETAINED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
+        ArtifactToolPublicationContract { tool_id: "setTryValue", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setTryValues", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "resetTry", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "previousStep", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "nextStep", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "submit", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "patchStep", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "removeStep", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "moveStep", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "updateForm", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "addQuestion", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "removeQuestion", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "patchQuestions", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "patchQuestionOptions", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "addQuestionOption", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "removeQuestionOption", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "patchVectorField", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "addVectorField", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "removeVectorField", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "moveQuestion", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "dropQuestionKind", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setSpecJson", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "exportFixture", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "setTryValueStep", lanes: &[ArtifactToolPublicationLane::Config] },
+    ];
+}
+//#endregion 🧵️RetainedCommands
+
+//#region 📬️StorePreparation
+fn forms_next_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
+    let id = format!("{prefix}-{}", authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
+        }],
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
+    }
+}
+
+fn forms_store_mutation_retained_bytes<M: protocol::OpBinary>(mutation: &M) -> Result<usize, String> {
+    protocol::OpBinary::encode_op(mutation).map(|bytes| bytes.len()).map_err(|_| "forms-store-mutation-encode-failed".to_string())
+}
+
+fn admit_forms_store_mutation<M: protocol::OpBinary>(mutation: &M) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    let retained_bytes = forms_store_mutation_retained_bytes(mutation)?;
+    if retained_bytes > FORMS_STORE_MUTATION_MAXIMUM_BYTES {
+        return Err("forms-store-mutation-envelope".into());
+    }
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+}
+
+fn prepare_forms_store_mutation<P, M>(base: &P, mutation: M) -> Result<(P, Vec<M>, M), String>
+where
+    M: protocol::Mutation<P> + protocol::OpBinary,
+{
+    admit_forms_store_mutation(&mutation)?;
+    let inverse = protocol::Mutation::inverse(&mutation, base);
+    if inverse.iter().any(|step| admit_forms_store_mutation(step).is_err()) {
+        return Err("forms-store-inverse-mutation-envelope".into());
+    }
+    let diff = protocol::Mutation::diff(&mutation, base).into_parts().0;
+    let post = protocol::MutationDiff::apply(&diff, base).map_err(|_| "forms-store-diff-apply-failed".to_string())?;
+    Ok((post, inverse, mutation))
+}
+
+struct FormsStorePreparationFactory<P, M> {
+    prefix: &'static str,
+    marker: std::marker::PhantomData<fn() -> (P, M)>,
+}
+
+impl<P, M> FormsStorePreparationFactory<P, M> {
+    fn new(prefix: &'static str) -> Self {
+        Self { prefix, marker: std::marker::PhantomData }
+    }
+}
+
+struct FormsStorePreparation<P, M> {
+    prefix: &'static str,
+    base: Option<store::SnapshotRead<P>>,
+    mutation: Option<M>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<P, M>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    retained_bytes: usize,
+    cancelled: bool,
+    closing: bool,
+}
+
+impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for FormsStorePreparationFactory<P, M>
+where
+    P: Clone + Send + Sync + 'static,
+    M: protocol::Mutation<P> + protocol::OpBinary + Send + 'static,
+{
+    fn preflight(&self, mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("forms-store-lane-or-description-envelope".into());
+        }
+        admit_forms_store_mutation(mutation)
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
+        let retained_bytes = forms_store_mutation_retained_bytes(&request.mutation).unwrap_or(FORMS_STORE_MUTATION_MAXIMUM_BYTES.saturating_add(1));
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || retained_bytes > FORMS_STORE_MUTATION_MAXIMUM_BYTES
+        {
+            return Err(request);
+        }
+        Ok(Box::new(FormsStorePreparation {
+            prefix: self.prefix,
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            retained_bytes,
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for FormsStorePreparation<P, M>
+where
+    P: Clone + Send + Sync + 'static,
+    M: protocol::Mutation<P> + protocol::OpBinary + Send + 'static,
+{
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || self.cancelled || self.closing {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "forms-store-base-owner-missing".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "forms-store-mutation-owner-missing".to_string())?;
+        let (post, inverse, forward) = prepare_forms_store_mutation(base.get(), mutation)?;
+        let authority = self.authority.as_ref().ok_or_else(|| "forms-store-authority-missing".to_string())?;
+        let edit = forms_next_edit(self.prefix, forward, inverse, self.description.take(), authority);
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> {
+        self.prepared.as_ref()
+    }
+
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> {
+        self.prepared.take()
+    }
+
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
+        }
+        if self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("forms-store-base-retirement-rejected".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.authority.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+//#endregion 📬️StorePreparation
+
 //#region 🔖️FormsPlayApp
 /// 🧪️ B1: unit struct — every former `FormsPlayRuntime` field now lives in `FormsConfig`, written through
 /// `FormsConfigMutation`s.
@@ -387,15 +725,89 @@ impl ArtifactEditor for FormsPlayApp {
     const DIALECT: Dialect = crate::artifacts::forms::FORMS_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;
 
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(std::sync::Arc::new(FormsStorePreparationFactory::<FormsSnapshot, FormMutation>::new("forms-artifact-retained")))
+    }
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(FormsStorePreparationFactory::<FormsConfig, FormsConfigMutation>::new("forms-config-retained")))
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(FormsBoundedCommandJobFactory::new(&controller))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !FORMS_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id {
+            return Err(Fault::from("forms-command-tool-mismatch"));
+        }
+        let tool_id = request.command.command_id();
+        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, forms_retained_reduce, forms_bounded_extent));
+        let operation_context = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
+            *request.command,
+            request.snapshot,
+            request.config,
+            request.history,
+            request.interaction_state,
+            request.interaction_hover,
+            request.context,
+            operation_context,
+            request.completion,
+            FormsCommand::command_id,
+            FORMS_RETAINED_RAW_BYTES,
+            1,
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: semio_framework_plugin::EditorApp<FormsPlayApp>,
         owner_file: "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.forms.forms@1/*#editor",
         document_schema: "forms.form",
-        factory: "BoundedFirstStepCommandJobFactory",
+        factory: "FormsBoundedCommandJobFactory",
+        factory_type: FormsBoundedCommandJobFactory,
         tools: {
-            "setTryValue" => semio_framework::ToolExecutionContract::bounded_first_step(16_384, 64, 64, 4_096, 7_500),
-            "setTryValueStep" => semio_framework::ToolExecutionContract::bounded_first_step(16_384, 64, 64, 4_096, 7_500),
+            "setTryValue" => forms_bounded_contract(),
+            "setTryValues" => forms_bounded_contract(),
+            "resetTry" => forms_bounded_contract(),
+            "previousStep" => forms_bounded_contract(),
+            "nextStep" => forms_bounded_contract(),
+            "submit" => forms_bounded_contract(),
+            "setLocale" => forms_bounded_contract(),
+            "setContributions" => forms_bounded_contract(),
+            "addStep" => forms_bounded_contract(),
+            "patchStep" => forms_bounded_contract(),
+            "removeStep" => forms_bounded_contract(),
+            "moveStep" => forms_bounded_contract(),
+            "updateForm" => forms_bounded_contract(),
+            "addQuestion" => forms_bounded_contract(),
+            "removeQuestion" => forms_bounded_contract(),
+            "patchQuestions" => forms_bounded_contract(),
+            "patchQuestionOptions" => forms_bounded_contract(),
+            "addQuestionOption" => forms_bounded_contract(),
+            "removeQuestionOption" => forms_bounded_contract(),
+            "patchVectorField" => forms_bounded_contract(),
+            "addVectorField" => forms_bounded_contract(),
+            "removeVectorField" => forms_bounded_contract(),
+            "moveQuestion" => forms_bounded_contract(),
+            "dropQuestionKind" => forms_bounded_contract(),
+            "setSpecJson" => forms_bounded_contract(),
+            "setActiveExample" => forms_bounded_contract(),
+            "exportFixture" => forms_bounded_contract(),
+            "setTryValueStep" => forms_bounded_contract(),
         }
     }
 
@@ -492,6 +904,7 @@ impl ArtifactEditor for FormsPlayApp {
 pub fn create_forms_app() -> AppDefinition {
     Editor::builder(crate::artifacts::forms::FORMS_DIALECT)
         .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
+            .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setLocale", LocalizedLabel::native("Set Locale", "Gebietsschema festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("value", LocalizedLabel::native("Locale", "Gebietsschema"))]) })
             .document(["semio", "forms"])
             .artifact_kind(ArtifactKindSpec {
                 id: "form.dictionary".into(),
@@ -546,6 +959,32 @@ pub fn create_forms_app() -> AppDefinition {
             .view_action("nextStep", LocalizedLabel::native("Next Step", "Nächster Schritt"))
             .view_action("submit", LocalizedLabel::native("Submit", "Absenden"))
             .shell_action("exportFixture", LocalizedLabel::native("Export Fixture", "Fixture exportieren"))
+            .action_interactive_job("setTryValues", InteractiveJobClassification::Migrated)
+            .action_interactive_job("resetTry", InteractiveJobClassification::Migrated)
+            .action_interactive_job("previousStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("nextStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("submit", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("moveStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("updateForm", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addQuestion", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeQuestion", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchQuestions", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchQuestionOptions", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addQuestionOption", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeQuestionOption", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchVectorField", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addVectorField", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeVectorField", InteractiveJobClassification::Migrated)
+            .action_interactive_job("moveQuestion", InteractiveJobClassification::Migrated)
+            .action_interactive_job("dropQuestionKind", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSpecJson", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+            .action_interactive_job("exportFixture", InteractiveJobClassification::Migrated)
             // 📝️ Staged argument forms for the panel-visible create/switch actions.
             .action_args("addQuestion", vec![
                 ActionArgDef::select(
@@ -686,6 +1125,29 @@ mod tests {
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
         assert_eq!(ids.len(), 28, "every FormsCommand row must be covered by every_command()");
+    }
+
+    /// ⚖️ Every generated Forms command has one concrete retained-factory key, proof row, and exact
+    /// nonempty publication contract in the same declaration order.
+    #[test]
+    fn retained_route_dispositions_are_exact_and_exhaustive() {
+        use semio_framework::{ToolCancellationPolicy, ToolExecutionShape, ToolJobFactory};
+        use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+
+        assert_eq!(FormsCommand::TOOL_JOB_IDS, FORMS_RETAINED_TOOL_IDS);
+        assert_eq!(<FormsPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), FORMS_RETAINED_TOOL_IDS.len());
+        assert_eq!(FormsBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), FORMS_RETAINED_TOOL_IDS.len());
+        assert_eq!(forms_bounded_contract().shape, ToolExecutionShape::BoundedFirstStep);
+        assert_eq!(forms_bounded_contract().cancellation, ToolCancellationPolicy::PerOperation);
+
+        let factory = FormsBoundedCommandJobFactory::new("s.forms.forms@1/*#editor");
+        let factory_ids: Vec<&str> = factory.keys().iter().map(|key| key.tool_id.as_str()).collect();
+        assert_eq!(factory_ids, FORMS_RETAINED_TOOL_IDS);
+        for (tool_id, contract) in FORMS_RETAINED_TOOL_IDS.iter().zip(FormsBoundedCommandJobFactory::PUBLICATION_CONTRACTS) {
+            assert_eq!(*tool_id, contract.tool_id);
+            assert!(!contract.lanes.is_empty(), "tool {tool_id} must declare a publication lane");
+            assert!(!contract.lanes.contains(&ArtifactToolPublicationLane::HostOnly) || contract.lanes.len() == 1, "HostOnly must be exclusive for tool {tool_id}");
+        }
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.

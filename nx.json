@@ -123,10 +123,6 @@
       "options": {}
     },
     {
-      "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
-      "options": {}
-    },
-    {
       "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs",
       "options": {}
     }

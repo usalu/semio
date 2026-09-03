@@ -14,7 +14,7 @@ start document
 # stdio.semio.brep.dsl v1` preamble stripped and replaced with the bare `envelope_id()` token —
 # `artifact-mark` below — before recognition, same convention `json.snapshot`'s own grammar uses).
 artifact-mark = "stdio.semio.brep"
-document = artifact-mark schema-line vertices-line edges-line loops-line faces-line shells-line solids-line
+document = artifact-mark schema-line vertices-line edges-line loops-line faces-line shells-line solids-line coedges-line next-label-line
 
 schema-line = "schema" "=" hex
 
@@ -30,15 +30,38 @@ shells-line = "shells" "=" "[" shell-items? "]"
 shell-items = shell {"," shell}*
 solids-line = "solids" "=" "[" solid-items? "]"
 solid-items = solid {"," solid}*
+# 🧱️ Landed alongside `BrepCoedge`/`SemioBrepSnapshot::next_label`
+# (ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME wave W3-A) — the p-curve/ring/label-
+# high-water-mark fields the native `Body` carries that the pre-wave snapshot dropped (see
+# `📸️snapshot/🔁️body/🦀️.rs`'s module doc for the full round-trip rationale).
+coedges-line = "coedges" "=" "[" coedge-items? "]"
+coedge-items = coedge {"," coedge}*
+next-label-line = "nextLabel" "=" number
 
 # Entity value grammars — field order matches `enc_vertex`/`enc_edge`/`enc_loop`/`enc_face`/
-# `enc_shell`/`enc_solid` in `📸️snapshot/🦀️.rs` exactly (the authoritative source).
-vertex = "[" hex "," point3 "]"
-edge = "[" hex "," hex "," hex "," curve "]"
+# `enc_shell`/`enc_solid`/`enc_coedge` in `📸️snapshot/🦀️.rs` exactly (the authoritative source).
+vertex = "[" hex "," point3 "," number "]"
+edge = "[" hex "," hex "," hex "," curve "," number "]"
 brep-loop = "[" hex "," loop-edge-list "]"
-face = "[" hex "," hex "," hex-list "," surface "," bool "]"
+face = "[" hex "," hex "," hex-list "," surface "," bool "," number "]"
 shell = "[" hex "," shell-face-list "]"
 solid = "[" hex "," solid-shell-list "]"
+
+# `BrepCoedge`: `[id,edge,forward,pcurve,prange,loopId,next,prev]`, field order matching
+# `enc_coedge` exactly. `pcurve` is `-` for `None` or `~` followed by a tagged `curve2` for
+# `Some` (`enc_opt_curve2`); `prange` is a plain `[start,end]` number pair (`enc_prange`).
+coedge = "[" hex "," hex "," bool "," opt-curve2 "," prange "," hex "," hex "," hex "]"
+opt-curve2 = "-" | "~" curve2
+prange = "[" number "," number "]"
+
+# `BrepCurve2` (the p-curve type — same tag/bracket convention as `curve` below, one dimension
+# down): `L[origin,direction]` (Line) / `C[center,radius]` (Circle) /
+# `E[center,xAxis,radiusMajor,radiusMinor]` (Ellipse) / `N[controlPoints,weights,degree,knots]`
+# (Nurbs).
+curve2 = "L" "[" point2 "," point2 "]" | "C" "[" point2 "," number "]" | "E" "[" point2 "," point2 "," number "," number "]" | "N" "[" point2-list "," number-list "," number "," number-list "]"
+point2 = "[" number "," number "]"
+point2-list = "[" point2-items? "]"
+point2-items = point2 {"," point2}*
 
 loop-edge = "[" hex "," bool "]"
 loop-edge-list = "[" loop-edge-items? "]"

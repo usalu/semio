@@ -10,7 +10,7 @@
 
 import { Cursor, Icon, Spinner } from "@semio-tech/ui-react";
 import { ICON_NAMES, ICON_CONCEPT_ASSIGNMENTS, type IconName } from "@semio-tech/assets";
-import type { Meta, StoryObj } from "../../🧪️story";
+import type { Meta, StoryObj } from "../../🧪️🐨️story.ts";
 
 // 🖼️#region 🛒️Icons
 const meta = {

@@ -7,7 +7,7 @@
     "schemaVersion": { "const": 1 },
     "contractId": { "const": "draw-submitted-plan-proof-v1" },
     "directoryName": { "const": "📓️submitted-plans" },
-    "filename": { "const": "🔣️.json" },
+    "filename": { "const": "../../../🧪️🪄️draw-source-scenario/🧪️🌿️submitted-proof/🧬️schema/🔣️.json" },
     "fileMode": { "const": 384 },
     "writePolicy": { "const": "exclusive-synced-and-byte-identical-reuse" },
     "nodeCases": {

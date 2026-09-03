@@ -289,16 +289,32 @@ retire_struct!(audio::SemioAudioChannel { samples });
 retire_struct!(audio::SemioAudioTag { key, value });
 retire_struct!(audio::SemioAudioSnapshot { schema, sample_rate, format, channels, tags });
 
-retire_struct!(brep::BrepVertex { id, point });
-retire_struct!(brep::BrepEdge { id, start_vertex, end_vertex, curve });
+retire_struct!(brep::BrepVertex { id, point, tol });
+retire_struct!(brep::BrepEdge { id, start_vertex, end_vertex, curve, tol });
 retire_struct!(brep::BrepLoopEdge { edge, orientation });
 retire_struct!(brep::BrepLoop { id, edges });
-retire_struct!(brep::BrepFace { id, outer_loop, inner_loops, surface, orientation });
+retire_struct!(brep::BrepFace { id, outer_loop, inner_loops, surface, orientation, tol });
 retire_struct!(brep::BrepShellFace { face, orientation });
 retire_struct!(brep::BrepShell { id, faces });
 retire_struct!(brep::BrepSolidShell { shell, is_void });
 retire_struct!(brep::BrepSolid { id, shells });
-retire_struct!(brep::SemioBrepSnapshot { schema, vertices, edges, loops, faces, shells, solids });
+retire_struct!(brep::BrepCoedge { id, edge, forward, pcurve, prange, loop_id, next, prev });
+retire_struct!(brep::SemioBrepSnapshot { schema, vertices, edges, loops, faces, shells, solids, coedges, next_label });
+impl RetireOwned for (f64, f64) {
+    fn retirement(self) -> Box<dyn RetirementCursor> {
+        seq![self.0, self.1]
+    }
+}
+impl RetireOwned for brep::BrepCurve2 {
+    fn retirement(self) -> Box<dyn RetirementCursor> {
+        match self {
+            Self::Line { origin, direction } => seq![origin, direction],
+            Self::Circle { center, radius } => seq![center, radius],
+            Self::Ellipse { center, x_axis, radius_major, radius_minor } => seq![center, x_axis, radius_major, radius_minor],
+            Self::Nurbs { control_points, weights, degree, knots } => seq![control_points, weights, degree, knots],
+        }
+    }
+}
 impl RetireOwned for brep::BrepCurve {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {

@@ -9,7 +9,7 @@
 //!
 //! 🎚️ Shape note: this config facet is small enough that its `Mutation::Diff` IS `OpeningPreferences`
 //! itself — a whole-record diff whose `apply` ignores `base` entirely — so the committed
-//! `🔺️diff/🔣️.json` is the full post-op preferences record, not a sparse per-field delta.
+//! `../✏️repins-the-cad-editor-to-the-drafting-app/🔺️diff/🔣️.json` is the full post-op preferences record, not a sparse per-field delta.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`); the derived encodings come from `fixtures generate`.

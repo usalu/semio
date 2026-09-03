@@ -13,7 +13,7 @@ id = "os-mcp"
 workspace = true
 
 [lib]
-path = "🦀️.rs"
+path = "../../📦️packages/🦀️rust/🦀️.rs"
 # 📚️ This crate carries no ``` doc examples (verified: zero fenced blocks in its sources), so the
 # rustdoc pass has nothing to run — it only re-links every dependency rlib. With several sessions
 # rebuilding `semio-framework`/`semio-framework-ui` concurrently in this shared tree, that link
@@ -40,7 +40,7 @@ semio-framework = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-schema = { path = "../../../../../../🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 # 🎫️ P2-catalog: `LocalizedLabel`/`SurfaceKind` are NOT re-exported at the `semio-framework` crate
-# root (only `IconName`/`Locale`/`Terminology`/`ArtifactDialect` are — `🦀️.rs` lines 15-16, 91-92);
+# root (only `IconName`/`Locale`/`Terminology`/`ArtifactDialect` are — `../../📦️📦️packages/🦀️rust/🦀️.rs` lines 15-16, 91-92);
 # they live in `ui_wgpu::wgpu`, the same crate `🛂️manifest/🦀️.rs` itself imports them from
 # (its own `use ui_wgpu::wgpu::{…, LocalizedLabel, …, SurfaceKind, …};`). `🧫️fixtures` constructs real
 # `AppDefinition`/`WindowKindDefinition` values and needs both directly, so this crate depends on the

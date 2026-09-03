@@ -110,6 +110,32 @@ fn circle2(body: &mut Body, center: (f64, f64), radius: f64) -> Curve2Id {
     body.curves2.insert(Curve2::Circle { center: Pnt2::new(center.0, center.1), radius })
 }
 
+/// 🧱 Attaches an exact planar p-curve to every coedge of `face`'s outer loop, via
+/// [`Surface::project_curve`] (exact for `Line`/`Circle`/`Ellipse` edges on a `Plane` through its
+/// `analytic_pcurve_shortcut`, tolerance-checked fit otherwise) — the general-purpose counterpart
+/// to the hand-derived `line2`/`circle2` + [`set_outer_pcurves`] calls the analytic primitives
+/// (sphere/cylinder/cone/torus) use for their own known-simple edges. `make_box`/
+/// `make_convex_hull`/[`make_planar_face_from_wire`] call this so their planar faces' coedges
+/// carry p-curves too — every coedge must, per `check_missing_pcurves`'s ERROR-level rule
+/// (`✅validation-report/🧪️body/🦀️.rs`), and these builders had no p-curve step at all before
+/// (a wave-1/wave-1 integration gap between this file and validation's stricter check, not a
+/// pre-existing bug in either alone). `prange` is always the edge's own `(0.0, 1.0)` order, per
+/// [`set_outer_pcurves`]'s own documented convention — never reversed for `forward`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn attach_planar_face_pcurves(body: &mut Body, face: FaceId, frame: Frame3, members: &[(EdgeId, bool)], tol: f64) {
+    let surface = Surface::Plane { frame };
+    let pcurves: Vec<(Curve2Id, (f64, f64))> = members
+        .iter()
+        .map(|&(edge_id, _forward)| {
+            let edge = body.edges.get(edge_id).expect("member edge exists");
+            let curve3 = body.curves3.get(edge.curve).expect("edge curve exists").clone();
+            let pcurve = surface.project_curve(&curve3, edge.range, tol);
+            (body.curves2.insert(pcurve), (0.0, 1.0))
+        })
+        .collect();
+    set_outer_pcurves(body, face, &pcurves);
+}
+
 /// 🧱 Stamps `pcurves` (one `(curve2, prange)` pair per coedge, in `attach_face`'s own `members`
 /// order) onto `face`'s outer loop. `prange` always shares its interpolating parameter `s` with
 /// the coedge's underlying [`Edge::range`] — i.e. it is *never* reversed to account for
@@ -166,18 +192,37 @@ pub fn make_box(body: &mut Body, w: f64, d: f64, h: f64, rec: &mut OpRecorder) -
     let ev2 = line_edge(body, corners[2], corners[6], v[2], v[6], tol, rec);
     let ev3 = line_edge(body, corners[3], corners[7], v[3], v[7], tol, rec);
 
-    let s_bottom = body.surfaces.insert(plane_at(corners[0], -Vec3::Z));
-    let s_top = body.surfaces.insert(plane_at(corners[4], Vec3::Z));
-    let s_front = body.surfaces.insert(plane_at(corners[0], -Vec3::Y));
-    let s_back = body.surfaces.insert(plane_at(corners[3], Vec3::Y));
-    let s_left = body.surfaces.insert(plane_at(corners[0], -Vec3::X));
-    let s_right = body.surfaces.insert(plane_at(corners[1], Vec3::X));
-    let bottom = attach_face(body, s_bottom, &[(eb0, false), (eb3, false), (eb2, false), (eb1, false)], false, tol, rec);
-    let top = attach_face(body, s_top, &[(et0, true), (et1, true), (et2, true), (et3, true)], false, tol, rec);
-    let front = attach_face(body, s_front, &[(eb0, true), (ev1, true), (et0, false), (ev0, false)], false, tol, rec);
-    let back = attach_face(body, s_back, &[(eb2, true), (ev3, true), (et2, false), (ev2, false)], false, tol, rec);
-    let left = attach_face(body, s_left, &[(eb3, true), (ev0, true), (et3, false), (ev3, false)], false, tol, rec);
-    let right = attach_face(body, s_right, &[(eb1, true), (ev2, true), (et1, false), (ev1, false)], false, tol, rec);
+    let frame_bottom = Frame3::from_normal(corners[0], -Vec3::Z).expect("plane frame");
+    let frame_top = Frame3::from_normal(corners[4], Vec3::Z).expect("plane frame");
+    let frame_front = Frame3::from_normal(corners[0], -Vec3::Y).expect("plane frame");
+    let frame_back = Frame3::from_normal(corners[3], Vec3::Y).expect("plane frame");
+    let frame_left = Frame3::from_normal(corners[0], -Vec3::X).expect("plane frame");
+    let frame_right = Frame3::from_normal(corners[1], Vec3::X).expect("plane frame");
+    let s_bottom = body.surfaces.insert(Surface::Plane { frame: frame_bottom });
+    let s_top = body.surfaces.insert(Surface::Plane { frame: frame_top });
+    let s_front = body.surfaces.insert(Surface::Plane { frame: frame_front });
+    let s_back = body.surfaces.insert(Surface::Plane { frame: frame_back });
+    let s_left = body.surfaces.insert(Surface::Plane { frame: frame_left });
+    let s_right = body.surfaces.insert(Surface::Plane { frame: frame_right });
+    let bottom_members = [(eb0, false), (eb3, false), (eb2, false), (eb1, false)];
+    let top_members = [(et0, true), (et1, true), (et2, true), (et3, true)];
+    let front_members = [(eb0, true), (ev1, true), (et0, false), (ev0, false)];
+    let back_members = [(eb2, true), (ev3, true), (et2, false), (ev2, false)];
+    let left_members = [(eb3, true), (ev0, true), (et3, false), (ev3, false)];
+    let right_members = [(eb1, true), (ev2, true), (et1, false), (ev1, false)];
+    let bottom = attach_face(body, s_bottom, &bottom_members, false, tol, rec);
+    let top = attach_face(body, s_top, &top_members, false, tol, rec);
+    let front = attach_face(body, s_front, &front_members, false, tol, rec);
+    let back = attach_face(body, s_back, &back_members, false, tol, rec);
+    let left = attach_face(body, s_left, &left_members, false, tol, rec);
+    let right = attach_face(body, s_right, &right_members, false, tol, rec);
+    let tolv = tol.value();
+    attach_planar_face_pcurves(body, bottom, frame_bottom, &bottom_members, tolv);
+    attach_planar_face_pcurves(body, top, frame_top, &top_members, tolv);
+    attach_planar_face_pcurves(body, front, frame_front, &front_members, tolv);
+    attach_planar_face_pcurves(body, back, frame_back, &back_members, tolv);
+    attach_planar_face_pcurves(body, left, frame_left, &left_members, tolv);
+    attach_planar_face_pcurves(body, right, frame_right, &right_members, tolv);
     Ok(finish_solid(body, vec![bottom, top, front, back, left, right], rec))
 }
 
@@ -430,8 +475,11 @@ pub fn make_convex_hull(body: &mut Body, points: &[Pnt3], rec: &mut OpRecorder) 
             };
             members.push((eid, forward));
         }
-        let surface = body.surfaces.insert(plane_at(hull.vertices[boundary[0]], group.normal));
-        faces.push(attach_face(body, surface, &members, false, tol, rec));
+        let frame = Frame3::from_normal(hull.vertices[boundary[0]], group.normal).expect("plane frame");
+        let surface = body.surfaces.insert(Surface::Plane { frame });
+        let face = attach_face(body, surface, &members, false, tol, rec);
+        attach_planar_face_pcurves(body, face, frame, &members, tol.value());
+        faces.push(face);
     }
     Ok(finish_solid(body, faces, rec))
 }
@@ -505,8 +553,11 @@ pub fn make_planar_face_from_wire(body: &mut Body, wire: &Wire, origin: Pnt3, no
     if wire.members.is_empty() {
         return Err(KernelError::InvalidInput("planar face wire is empty".into()));
     }
-    let surface = body.surfaces.insert(plane_at(origin, normal));
-    Ok(attach_face(body, surface, &wire.members, false, Tol::DEFAULT, rec))
+    let frame = Frame3::from_normal(origin, normal).expect("plane frame");
+    let surface = body.surfaces.insert(Surface::Plane { frame });
+    let face = attach_face(body, surface, &wire.members, false, Tol::DEFAULT, rec);
+    attach_planar_face_pcurves(body, face, frame, &wire.members, Tol::DEFAULT.value());
+    Ok(face)
 }
 
 // #endregion 🔖️WiresFaces

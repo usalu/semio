@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.hub.local-bootstrap-idle-admission/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "exchangeDeadlineMs", "idleBeforeAdmissionMs", "frameHex", "payloadHex"],
+  "properties": {
+    "schema": { "const": "semio.hub.local-bootstrap-idle-admission/v1" },
+    "exchangeDeadlineMs": { "const": 15000 },
+    "idleBeforeAdmissionMs": { "type": "integer", "minimum": 15001, "maximum": 60000 },
+    "frameHex": { "type": "string", "pattern": "^[0-9a-f]{10,32768}$" },
+    "payloadHex": { "type": "string", "pattern": "^[0-9a-f]{2,32760}$" }
+  }
+}

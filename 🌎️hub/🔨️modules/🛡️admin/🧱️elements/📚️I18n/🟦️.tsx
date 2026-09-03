@@ -24,12 +24,9 @@ const en = {
   "admin.nav.events": "Events",
 
   "admin.session.title": "Hub admin",
-  "admin.session.description": "This hub instance requires a verified administrator session.",
-  "admin.session.tokenLabel": "Administrator session",
-  "admin.session.tokenPlaceholder": "Paste a session.v1 capability",
-  "admin.session.submit": "Sign in",
+  "admin.session.description": "Administrator access is delivered by the protected local launcher.",
   "admin.session.probing": "Checking admin access…",
-  "admin.session.error": "That token was rejected by the hub.",
+  "admin.session.error": "Administrator access is absent or expired. Start a fresh protected admin session:",
   "admin.session.unreachableTitle": "No hub is answering",
   "admin.session.unreachableDescription": "This page could not reach a hub. Start one, then reload:",
   "admin.session.unreachableHint": "A running hub also serves this admin page itself at /admin on its own port — the separate admin dev server is only for iterating on this UI.",
@@ -71,6 +68,8 @@ const en = {
   "admin.spaces.inviteCopy": "Copy",
   "admin.spaces.inviteCopied": "Copied.",
   "admin.spaces.empty": "No spaces yet.",
+  "admin.spaces.loadMore": "Load more spaces",
+  "admin.spaces.loadMoreMembers": "Load more members",
   "admin.spaces.confirmDelete": "Delete space \"{name}\"? This cannot be undone.",
   "admin.spaces.confirmArchive": "Archive space \"{name}\"?",
   "admin.spaces.cancel": "Cancel",
@@ -132,12 +131,9 @@ const de = {
   "admin.nav.events": "Ereignisse",
 
   "admin.session.title": "Hub-Administration",
-  "admin.session.description": "Diese Hub-Instanz benötigt eine verifizierte Administratorsitzung.",
-  "admin.session.tokenLabel": "Administratorsitzung",
-  "admin.session.tokenPlaceholder": "session.v1-Berechtigung einfügen",
-  "admin.session.submit": "Anmelden",
+  "admin.session.description": "Der geschützte lokale Starter stellt den Administratorzugriff bereit.",
   "admin.session.probing": "Admin-Zugriff wird geprüft…",
-  "admin.session.error": "Dieses Token wurde vom Hub abgelehnt.",
+  "admin.session.error": "Der Administratorzugriff fehlt oder ist abgelaufen. Starte eine neue geschützte Administratorsitzung:",
   "admin.session.unreachableTitle": "Kein Hub erreichbar",
   "admin.session.unreachableDescription": "Diese Seite konnte keinen Hub erreichen. Starte einen und lade neu:",
   "admin.session.unreachableHint": "Ein laufender Hub liefert diese Admin-Seite auch selbst unter /admin auf seinem eigenen Port aus — der separate Admin-Dev-Server dient nur der Arbeit an dieser Oberfläche.",
@@ -179,6 +175,8 @@ const de = {
   "admin.spaces.inviteCopy": "Kopieren",
   "admin.spaces.inviteCopied": "Kopiert.",
   "admin.spaces.empty": "Noch keine Räume.",
+  "admin.spaces.loadMore": "Weitere Räume laden",
+  "admin.spaces.loadMoreMembers": "Weitere Mitglieder laden",
   "admin.spaces.confirmDelete": "Raum \"{name}\" löschen? Dies kann nicht rückgängig gemacht werden.",
   "admin.spaces.confirmArchive": "Raum \"{name}\" archivieren?",
   "admin.spaces.cancel": "Abbrechen",
@@ -240,22 +238,40 @@ export const ADMIN_LOCALES: readonly AdminLocale[] = ["en", "de"];
 
 //#region 🔖️Context
 interface AdminLocaleState {
-  locale: AdminLocale;
+  locale: AdminLocale | undefined;
   setLocale: (locale: AdminLocale) => void;
 }
 
 const AdminLocaleContext = React.createContext<AdminLocaleState | null>(null);
 
-/** 🧭️ Picks the initial locale from `navigator.language` (browser-only; falls back to `en` in any
- * non-browser test/SSR harness) — never a hardcoded default language, per contract §C0. */
-function detectAdminLocale(): AdminLocale {
-  if (typeof navigator === "undefined") return "en";
-  return navigator.language.toLowerCase().startsWith("de") ? "de" : "en";
+/** 🧭️ Accepts only an explicitly selected supported browser locale; unsupported or absent locale
+ * state renders the bilingual chooser instead of silently defaulting to one language. */
+function detectAdminLocale(): AdminLocale | undefined {
+  if (typeof navigator === "undefined") return undefined;
+  for (const language of navigator.languages.length > 0 ? navigator.languages : [navigator.language]) {
+    const normalized = language.toLowerCase();
+    if (normalized === "en" || normalized.startsWith("en-")) return "en";
+    if (normalized === "de" || normalized.startsWith("de-")) return "de";
+  }
+  return undefined;
 }
 
 export function AdminLocaleProvider({ children }: { readonly children: React.ReactNode }): React.ReactElement {
-  const [locale, setLocale] = React.useState<AdminLocale>(detectAdminLocale);
+  const [locale, setLocale] = React.useState<AdminLocale | undefined>(detectAdminLocale);
   const value = React.useMemo<AdminLocaleState>(() => ({ locale, setLocale }), [locale]);
+  if (!locale) {
+    return (
+      <div className="flex h-full w-full items-center justify-center" role="dialog" aria-labelledby="admin-language-title">
+        <div className="flex flex-col gap-single">
+          <h1 id="admin-language-title" className="text-lg font-semibold">Language · Sprache</h1>
+          <div className="flex gap-single">
+            <button type="button" lang="en" onClick={() => setLocale("en")}>English</button>
+            <button type="button" lang="de" onClick={() => setLocale("de")}>Deutsch</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   return <AdminLocaleContext.Provider value={value}>{children}</AdminLocaleContext.Provider>;
 }
 
@@ -270,9 +286,10 @@ export function useAdminLocale(): AdminLocaleState {
  * translation never crashes the page. */
 export function useAdminT(): (key: AdminI18nKey, vars?: Record<string, string | number>) => string {
   const { locale } = useAdminLocale();
+  if (!locale) throw new Error("admin locale must be explicitly selected");
   return React.useCallback(
     (key: AdminI18nKey, vars?: Record<string, string | number>) => {
-      let text = ADMIN_I18N[locale][key] ?? ADMIN_I18N.en[key] ?? key;
+      let text: string = ADMIN_I18N[locale][key];
       if (vars) for (const [name, value] of Object.entries(vars)) text = text.replaceAll(`{${name}}`, String(value));
       return text;
     },

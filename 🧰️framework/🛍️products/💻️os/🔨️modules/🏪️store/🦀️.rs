@@ -9253,7 +9253,7 @@ pub struct ArtifactCodec {
     /// @emoji 🧬️ W5.7: a structural fingerprint of this document kind's field shape —
     /// `crate::os_pack::schema_hash(&spec)` over `P::record_spec()`, or `[0u8; 32]` when `P` has no
     /// `RecordSpec` (hand-written `ArtifactPack` impls, see that trait method's doc). Hub actors
-    /// send this in `ClientFrame::Hello`; the semio_hub pins the first non-zero hash it sees per
+    /// send this in `ClientFrame::SocketHelloV1`; the semio_hub validates it against the durable
     /// `(space, document)` scope and rejects a later mismatching one before `Welcome` — a zero
     /// hash always skips validation (schema-agnostic client). Durable pinning belongs in the db
     /// catalog once it grows a column for it; this in-memory pin is this wave's scope.
@@ -9479,12 +9479,24 @@ pub fn preflight_document_codecs_in_assembly(_assembly: &ArtifactAssemblyTransac
 /// replacement can occur, so registration order never changes decoding behavior.
 #[must_use]
 pub async fn register_document_codec(codec: ArtifactCodec) -> Result<(), DocumentCodecRegistryError> {
-    register_document_codecs(vec![codec]).await
+    register_document_codec_now(codec)
+}
+
+/// ⚡️ Registers one schema codec synchronously for process-entry owners that cannot suspend.
+#[must_use]
+pub fn register_document_codec_now(codec: ArtifactCodec) -> Result<(), DocumentCodecRegistryError> {
+    register_document_codecs_now(vec![codec])
 }
 
 /// 📝️ Registers document codecs only when every descriptor and executable is conflict-free.
 #[must_use]
 pub async fn register_document_codecs(codecs: Vec<ArtifactCodec>) -> Result<(), DocumentCodecRegistryError> {
+    register_document_codecs_now(codecs)
+}
+
+/// ⚡️ Registers document codecs synchronously behind the same atomic publication barrier.
+#[must_use]
+pub fn register_document_codecs_now(codecs: Vec<ArtifactCodec>) -> Result<(), DocumentCodecRegistryError> {
     let assembly = begin_artifact_assembly().map_err(|_| DocumentCodecRegistryError::Unavailable)?;
     register_document_codecs_in_assembly(&assembly, codecs)
 }

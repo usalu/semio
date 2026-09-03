@@ -1,15 +1,18 @@
 // #region Header
 /**
- * @emoji 🧵️ `🟦️backbone-worker.ts` — thin loader for the Rust WASM `store_worker`
- * actor (`store/worker/rs`). When the wasm package is unavailable (vitest/node), falls
- * back to the embedded TypeScript actor twin so dev workflows keep working.
+ * @emoji 🧵️ `🟦️backbone-worker.ts` — browser backbone loader. Authenticated hub
+ * document lifecycles are owned here so D1 issue/exchange/WebSocket authority cannot be bypassed
+ * when the Rust WASM worker resolves; other lanes use Rust when available and the TypeScript twin
+ * otherwise.
  */
 // #endregion Header
 
 import type { ArtifactBootstrapControl, ArtifactBootstrapProgress, ArtifactPresencePeer, ClientFrame, MutationEnvelope, ServerFrame, WireAckStage, WireArtifactBootstrap, WireFrontierSummary, WireLane, WireMutationEnvelope } from "@semio-tech/framework-replication";
-import type { ArtifactActorConfig, ArtifactActorMsg, ArtifactBootstrapWorkerEvent, ArtifactEvent, ArtifactSyncStatus, BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, CommandAckOutcome, DirectoryCommand, DirectoryStreamMessage, PersistenceBinding, RemoteState, SocketGrantReceiptV1 } from "./🟦️";
+import type { ArtifactActorConfig, ArtifactActorMsg, ArtifactBootstrapWorkerEvent, ArtifactEvent, ArtifactSyncStatus, BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, BrowserBrokerPortResponseV1, CommandAckOutcome, DirectoryCommand, DirectoryStreamMessage, PersistenceBinding, RemoteState, SocketGrantReceiptV1 } from "./🟦️";
 import { ArtifactBootstrapAssembler, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodePresencePeer, encodeServerFrame } from "@semio-tech/framework-replication";
-import { DirectoryClient, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, createSocketGrantIssuerV1, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeDocumentPackBytes, decodePackValue, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentPackBytes, encodePackValue, parseSocketGrantReceiptV1, socketGrantProtocolsV1 } from "./🟦️";
+import { DirectoryClient, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, createSocketGrantIssuerV1, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeDocumentPackBytes, decodePackValue, documentRuntimeKeyV1, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentPackBytes, encodePackValue, parseBrowserBrokerPortRequestV1, parseSocketGrantReceiptV1, socketGrantProtocolsV1 } from "./🟦️";
+import type { DocumentOpenIntentV1, DocumentOpenPlanV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { parseDocumentOpenIntentV1, parseDocumentOpenPlanV1, parseDocumentPlanSocketGrantIntentV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 /** 🎚️ config-lane attach (contract freeze §4) — `OpeningPreferences` is a kernel type (domain-neutral
  * framework), never redefined here; see this file's `🔖️ConfigLane` region. */
 import type { OpeningPreferences } from "@semio-tech/framework";
@@ -53,6 +56,58 @@ async function ensureRustHost(): Promise<RustWorkerHost | null> {
 
 const rustHostPromise = ensureRustHost();
 
+type DocumentExecutionOwner = "typescript" | "rust";
+type DocumentExecutionOwnerEntry = Readonly<{ owner: DocumentExecutionOwner; documentId: string; spaceId?: string }>;
+
+const documentExecutionOwners = new Map<string, DocumentExecutionOwnerEntry>();
+
+function documentRuntimeKeyForConfig(config: ArtifactActorConfig): string {
+  const hub = hubBinding(config);
+  return hub === null
+    ? documentRuntimeKeyV1({ kind: "local", documentId: config.documentId })
+    : documentRuntimeKeyV1({ kind: "hub", spaceId: hub.spaceId, documentId: config.documentId });
+}
+
+function ownedDocumentRuntimeKey(documentId: string, spaceId?: string): string | null {
+  if (spaceId !== undefined) return documentRuntimeKeyV1({ kind: "hub", spaceId, documentId });
+  const localKey = documentRuntimeKeyV1({ kind: "local", documentId });
+  if (documentExecutionOwners.has(localKey)) return localKey;
+  const matches = [...documentExecutionOwners].filter(([, entry]) => entry.documentId === documentId);
+  return matches.length === 1 ? matches[0]![0] : matches.length === 0 ? localKey : null;
+}
+
+/** 🛡️ Keeps one document's open/send/close lifecycle on a single execution owner and
+ * reserves every hub-bound document for the authenticated browser D1 transport. */
+function dispatchBackboneWorkerRequest(request: BackboneWorkerRequest, host: RustWorkerHost | null, typescriptDispatch: (request: BackboneWorkerRequest) => void = handleTsRequest): void {
+  const rustDispatch = (value: BackboneWorkerRequest): void => host?.handleRequestBytes(encodeBackboneWorkerRequest(value));
+  if (request.kind === "open") {
+    const next: DocumentExecutionOwner = hubBinding(request) === null && host !== null ? "rust" : "typescript";
+    const runtimeKey = documentRuntimeKeyForConfig(request);
+    const previous = documentExecutionOwners.get(runtimeKey);
+    if (previous !== undefined && previous.owner !== next) {
+      const close: BackboneWorkerRequest = { kind: "close", documentId: request.documentId, ...(previous.spaceId === undefined ? {} : { spaceId: previous.spaceId }) };
+      if (previous.owner === "typescript") typescriptDispatch(close);
+      else rustDispatch(close);
+    }
+    const hub = hubBinding(request);
+    documentExecutionOwners.set(runtimeKey, { owner: next, documentId: request.documentId, ...(hub === null ? {} : { spaceId: hub.spaceId }) });
+    if (next === "typescript") typescriptDispatch(request);
+    else rustDispatch(request);
+    return;
+  }
+  if (request.kind === "send" || request.kind === "close") {
+    const runtimeKey = ownedDocumentRuntimeKey(request.documentId, request.spaceId);
+    if (runtimeKey === null) return;
+    const owner = documentExecutionOwners.get(runtimeKey)?.owner ?? (host === null ? "typescript" : "rust");
+    if (owner === "typescript") typescriptDispatch(request);
+    else rustDispatch(request);
+    if (request.kind === "close") documentExecutionOwners.delete(runtimeKey);
+    return;
+  }
+  if (host === null) typescriptDispatch(request);
+  else rustDispatch(request);
+}
+
 function isBackboneWorkerWireMessage(message: unknown): message is BackboneWorkerWireMessage {
   return typeof message === "object" && message !== null && "wire" in message && (message as BackboneWorkerWireMessage).wire instanceof Uint8Array;
 }
@@ -73,11 +128,7 @@ if (workerScope) {
     if (!isBackboneWorkerWireMessage(messageEvent.data)) return;
     const request = decodeWorkerRequest(messageEvent.data);
     void rustHostPromise.then((host) => {
-      if (host) {
-        host.handleRequestBytes(encodeBackboneWorkerRequest(request));
-        return;
-      }
-      handleTsRequest(request);
+      dispatchBackboneWorkerRequest(request, host);
     });
   };
 }
@@ -160,9 +211,12 @@ async function reconnectForever(signal: AbortSignal, attempt: () => Promise<void
 
 //#region 🔖️DocumentState
 type ArtifactState = {
+  runtimeKey: string;
   config: ArtifactActorConfig;
+  openClientInstanceId: string;
   actor: string;
   hubActorReady: boolean;
+  pendingSocketActorId: string | null;
   channel: BroadcastChannel;
   socket: WebSocket | null;
   /** 🛑️ Aborted once, in {@link closeArtifact} — cancels every in-flight folder/blob fetch this
@@ -219,6 +273,19 @@ type ArtifactState = {
 
 const artifacts = new Map<string, ArtifactState>();
 
+function artifactRuntimeKey(documentId: string, spaceId?: string): string | null {
+  if (spaceId !== undefined) return documentRuntimeKeyV1({ kind: "hub", spaceId, documentId });
+  const localKey = documentRuntimeKeyV1({ kind: "local", documentId });
+  if (artifacts.has(localKey)) return localKey;
+  const matches = [...artifacts].filter(([, state]) => state.config.documentId === documentId);
+  return matches.length === 1 ? matches[0]![0] : matches.length === 0 ? localKey : null;
+}
+
+function artifactState(documentId: string, spaceId?: string): ArtifactState | undefined {
+  const runtimeKey = artifactRuntimeKey(documentId, spaceId);
+  return runtimeKey === null ? undefined : artifacts.get(runtimeKey);
+}
+
 function post(message: BackboneWorkerResponse): void {
   workerScope?.postMessage({ wire: encodeBackboneWorkerResponse(message) });
 }
@@ -229,8 +296,12 @@ function emitEvent(documentId: string, event: ArtifactEvent): void {
 
 const SOCKET_GRANT_REQUEST_TIMEOUT_MS = 10_000;
 const SOCKET_GRANT_REQUEST_LIMIT = 256;
+const DOCUMENT_OPEN_RESPONSE_MAX_BYTES = 64 * 1024;
+const BROWSER_BROKER_PROOF_DOMAIN = new TextEncoder().encode("semio/browser-broker-proof/v1\0");
+const BROWSER_BROKER_PROOF_TTL_MS = 15_000;
 let socketGrantTestIssue: ((baseUrl: string, path: string, signal?: AbortSignal) => Promise<SocketGrantReceiptV1>) | null = null;
 let localBrowserBrokerProof: Uint8Array | undefined;
+let localBrowserBrokerProofExpiresAtMs = 0;
 let localBrowserBrokerQueue: Promise<void> = Promise.resolve();
 let localBrowserBrokerQueued = 0;
 let localBrowserBrokerPort: MessagePort | undefined;
@@ -245,6 +316,32 @@ function bytesHex(value: Uint8Array): string {
   return Array.from(value, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+async function browserBrokerProofDigest(value: Uint8Array): Promise<Uint8Array> {
+  const input = new Uint8Array(BROWSER_BROKER_PROOF_DOMAIN.byteLength + value.byteLength);
+  input.set(BROWSER_BROKER_PROOF_DOMAIN);
+  input.set(value, BROWSER_BROKER_PROOF_DOMAIN.byteLength);
+  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", input));
+  input.fill(0);
+  return digest;
+}
+
+function clearLocalBrowserBrokerProof(): void {
+  localBrowserBrokerProof?.fill(0);
+  localBrowserBrokerProof = undefined;
+  localBrowserBrokerProofExpiresAtMs = 0;
+}
+
+function installLocalBrowserBrokerProof(proof: string): boolean {
+  const decoded = hexBytes(proof);
+  if (!decoded || localBrowserBrokerProof) {
+    decoded?.fill(0);
+    return false;
+  }
+  localBrowserBrokerProof = decoded;
+  localBrowserBrokerProofExpiresAtMs = Date.now() + BROWSER_BROKER_PROOF_TTL_MS;
+  return true;
+}
+
 async function browserBrokerFetch(input: string, init: RequestInit = {}, options: { readonly timeoutMs: number; readonly signal?: AbortSignal }): Promise<FetchTimeoutResponse> {
   if (options.signal?.aborted) throw options.signal.reason ?? new Error("browser broker cancelled");
   if (localBrowserBrokerQueued >= 64) throw new Error("browser broker capacity exceeded");
@@ -255,26 +352,33 @@ async function browserBrokerFetch(input: string, init: RequestInit = {}, options
   await prior;
   try {
     const current = localBrowserBrokerProof;
-    if (!current) throw new Error("browser broker unavailable");
+    if (!current || Date.now() > localBrowserBrokerProofExpiresAtMs) {
+      clearLocalBrowserBrokerProof();
+      throw new Error("browser broker rebootstrap required");
+    }
     const next = crypto.getRandomValues(new Uint8Array(32));
-    const nextDigest = new Uint8Array(await crypto.subtle.digest("SHA-256", next));
+    const nextDigest = await browserBrokerProofDigest(next);
     const currentHex = bytesHex(current);
-    localBrowserBrokerProof = next;
-    current.fill(0);
+    clearLocalBrowserBrokerProof();
     try {
       const response = await fetchWithTimeout(input, {
         ...init,
         headers: { ...(init.headers as Record<string, string> | undefined), "x-semio-browser-broker": currentHex, "x-semio-browser-broker-next": bytesHex(nextDigest) },
       }, options);
-      if (response.headers.get("x-semio-browser-broker-advanced") !== "1" || response.status === 401) {
-        localBrowserBrokerProof?.fill(0);
-        localBrowserBrokerProof = undefined;
+      if (response.headers.get("x-semio-browser-broker-advanced") === "1" && response.status !== 401) {
+        localBrowserBrokerProof = next;
+        localBrowserBrokerProofExpiresAtMs = Date.now() + BROWSER_BROKER_PROOF_TTL_MS;
+      } else {
+        next.fill(0);
+        nextDigest.fill(0);
+        throw new Error("browser broker rebootstrap required");
       }
+      nextDigest.fill(0);
       return response;
-    } catch (error) {
-      localBrowserBrokerProof?.fill(0);
-      localBrowserBrokerProof = undefined;
-      throw error;
+    } catch {
+      next.fill(0);
+      nextDigest.fill(0);
+      throw new Error("browser broker rebootstrap required");
     }
   } finally {
     localBrowserBrokerQueued -= 1;
@@ -286,29 +390,34 @@ function attachLocalBrokerPort(port: MessagePort): void {
   localBrowserBrokerPort?.close();
   localBrowserBrokerPort = port;
   port.onmessage = (event: MessageEvent<unknown>) => {
-    const message = event.data as Record<string, unknown> | null;
-    if (!message || typeof message.kind !== "string") return;
-    if (message.kind === "initialize" && typeof message.proof === "string" && !localBrowserBrokerProof) {
-      localBrowserBrokerProof = hexBytes(message.proof);
+    const message = parseBrowserBrokerPortRequestV1(event.data);
+    if (!message) return;
+    if (message.kind === "initialize") {
+      const response: BrowserBrokerPortResponseV1 = { kind: "initialized", ok: installLocalBrowserBrokerProof(message.proof) };
+      port.postMessage(response);
       return;
     }
-    if (message.kind === "cancel" && typeof message.requestId === "string") {
+    if (message.kind === "cancel") {
       localBrowserBrokerRpcControllers.get(message.requestId)?.abort();
       return;
     }
-    if (message.kind !== "request" || typeof message.requestId !== "string" || message.operation !== "me") return;
+    if (message.kind !== "request") return;
     if (localBrowserBrokerRpcControllers.size >= 64) {
-      port.postMessage({ kind: "response", requestId: message.requestId, status: 503, body: "" });
+      const response: BrowserBrokerPortResponseV1 = { kind: "response", requestId: message.requestId, status: 503, body: "" };
+      port.postMessage(response);
       return;
     }
+    const requestId = message.requestId;
     const controller = new AbortController();
-    localBrowserBrokerRpcControllers.set(message.requestId, controller);
+    localBrowserBrokerRpcControllers.set(requestId, controller);
     void browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 2_000, signal: controller.signal }).then(async (response) => {
       const body = await response.text();
-      port.postMessage({ kind: "response", requestId: message.requestId, status: response.status, body });
-    }).catch(() => {
-      port.postMessage({ kind: "response", requestId: message.requestId, status: 503, body: "" });
-    }).finally(() => localBrowserBrokerRpcControllers.delete(message.requestId));
+      const result: BrowserBrokerPortResponseV1 = { kind: "response", requestId, status: response.status, body };
+      port.postMessage(result);
+    }).catch((error: unknown) => {
+      const result: BrowserBrokerPortResponseV1 = { kind: "response", requestId, status: error instanceof Error && error.message === "browser broker rebootstrap required" ? 428 : 503, body: "" };
+      port.postMessage(result);
+    }).finally(() => localBrowserBrokerRpcControllers.delete(requestId));
   };
   port.start();
 }
@@ -322,9 +431,118 @@ async function requestSocketGrant(baseUrl: string, path: string, signal?: AbortS
   try {
     return parseSocketGrantReceiptV1(await response.json());
   } catch (error) {
-    localBrowserBrokerProof?.fill(0);
-    localBrowserBrokerProof = undefined;
+    clearLocalBrowserBrokerProof();
     throw error;
+  }
+}
+
+type BrowserDocumentSocketAuthorityV1 = Readonly<{
+  receipt: SocketGrantReceiptV1;
+  schema: string;
+  packSchemaHash: readonly number[];
+  surfaceId?: string;
+}>;
+
+async function readDocumentOpenJson(response: Response): Promise<unknown> {
+  const contentLength = Number(response.headers.get("content-length") ?? "0");
+  if (!Number.isSafeInteger(contentLength) || contentLength < 0 || contentLength > DOCUMENT_OPEN_RESPONSE_MAX_BYTES) throw new Error("document open: invalid response");
+  if (!response.body) throw new Error("document open: invalid response");
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let retained = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      retained += value.byteLength;
+      if (retained > DOCUMENT_OPEN_RESPONSE_MAX_BYTES) {
+        await reader.cancel();
+        throw new Error("document open: invalid response");
+      }
+      chunks.push(value);
+    }
+    const bytes = new Uint8Array(retained);
+    let offset = 0;
+    for (const chunk of chunks) {
+      bytes.set(chunk, offset);
+      offset += chunk.byteLength;
+      chunk.fill(0);
+    }
+    try {
+      return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    } finally {
+      bytes.fill(0);
+    }
+  } finally {
+    for (const chunk of chunks) chunk.fill(0);
+  }
+}
+
+function documentOpenPlanAuthority(plan: DocumentOpenPlanV1, intent: DocumentOpenIntentV1, config: ArtifactActorConfig, installed: NonNullable<Extract<PersistenceBinding, { kind: "hub" }>["installedTarget"]>): Omit<BrowserDocumentSocketAuthorityV1, "receipt"> {
+  if (
+    plan.scope.spaceId !== intent.scope.spaceId ||
+    plan.scope.documentId !== intent.scope.documentId ||
+    plan.artifact.schema !== config.schema ||
+    plan.package.pluginId !== installed.package.pluginId ||
+    plan.package.packageId !== installed.package.packageId ||
+    plan.package.version !== installed.package.version ||
+    plan.package.componentSha256 !== installed.package.componentSha256 ||
+    plan.package.componentBlake3 !== installed.package.componentBlake3 ||
+    plan.package.descriptorByteSha256 !== installed.package.descriptorByteSha256 ||
+    plan.artifact.kind !== installed.artifact.kind ||
+    plan.artifact.schema !== installed.artifact.schema ||
+    plan.artifact.packSchemaHash !== installed.artifact.packSchemaHash ||
+    plan.surface.surfaceId !== installed.surface.surfaceId ||
+    plan.surface.appId !== installed.surface.appId ||
+    plan.surface.windowKindId !== installed.surface.windowKindId ||
+    plan.surface.role !== installed.surface.role ||
+    plan.surface.rendererTarget !== installed.surface.rendererTarget ||
+    plan.surface.rendererTarget !== "react" ||
+    intent.requestedSurfaceId !== installed.surface.surfaceId
+  ) throw new Error("document open: authority mismatch");
+  const packSchemaHash = Array.from({ length: 32 }, (_unused, index) => Number.parseInt(plan.artifact.packSchemaHash.slice(index * 2, index * 2 + 2), 16));
+  const configured = config.packSchemaHash;
+  if (configured && configured.some((byte) => byte !== 0) && (configured.length !== 32 || configured.some((byte, index) => byte !== packSchemaHash[index]))) throw new Error("document open: authority mismatch");
+  return { schema: plan.artifact.schema, packSchemaHash, surfaceId: plan.surface.surfaceId };
+}
+
+async function requestDocumentSocketAuthority(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "hub" }>): Promise<BrowserDocumentSocketAuthorityV1> {
+  const grantPath = `/spaces/${encodeURIComponent(binding.spaceId)}/documents/${encodeURIComponent(state.config.documentId)}/socket-grants`;
+  if (socketGrantTestIssue) {
+    const receipt = await socketGrantTestIssue(binding.baseUrl, grantPath, state.docAbort.signal);
+    return { receipt, schema: state.config.schema, packSchemaHash: state.config.packSchemaHash ?? new Array(32).fill(0), ...(binding.installedTarget ? { surfaceId: binding.installedTarget.surface.surfaceId } : {}) };
+  }
+  if (binding.installedTarget === undefined) throw new Error("document open: installed target unavailable");
+  const intent = parseDocumentOpenIntentV1({
+    schema: "semio.hub.document-open-intent/v1",
+    version: 1,
+    scope: { spaceId: binding.spaceId, documentId: state.config.documentId },
+    requestedSurfaceId: binding.installedTarget.surface.surfaceId,
+    clientInstanceId: state.openClientInstanceId,
+  });
+  const openPath = `/spaces/${encodeURIComponent(binding.spaceId)}/documents/${encodeURIComponent(state.config.documentId)}/open-plan`;
+  const openResponse = await browserBrokerFetch(`/_semio/hub${openPath}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(intent) }, { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal: state.docAbort.signal });
+  if (!openResponse.ok) throw new Error("document open: unavailable");
+  let plan: DocumentOpenPlanV1;
+  let authority: Omit<BrowserDocumentSocketAuthorityV1, "receipt">;
+  try {
+    plan = parseDocumentOpenPlanV1(await readDocumentOpenJson(openResponse), Date.now());
+    authority = documentOpenPlanAuthority(plan, intent, state.config, binding.installedTarget);
+  } catch {
+    clearLocalBrowserBrokerProof();
+    throw new Error("document open: invalid plan");
+  }
+  if (state.docAbort.signal.aborted) throw new Error("document open: cancelled");
+  const exchange = parseDocumentPlanSocketGrantIntentV1({ schema: "semio.hub.document-plan-socket-grant-intent/v1", version: 1, planReceipt: plan.receipt });
+  const grantResponse = await browserBrokerFetch(`/_semio/hub${grantPath}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(exchange) }, { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal: state.docAbort.signal });
+  if (!grantResponse.ok) throw new Error("document open: unavailable");
+  try {
+    const receipt = parseSocketGrantReceiptV1(await readDocumentOpenJson(grantResponse));
+    if (receipt.expiresAtMs <= Date.now() || receipt.expiresAtMs > plan.expiresAtUnixMs) throw new Error("document open: invalid grant");
+    return { receipt, ...authority };
+  } catch {
+    clearLocalBrowserBrokerProof();
+    throw new Error("document open: invalid grant");
   }
 }
 
@@ -514,7 +732,7 @@ function fromWireEnvelope(envelope: WireMutationEnvelope): MutationEnvelope {
  * filled; shells never set `peer.color`/`peer.surface` themselves (contract-freeze §C7.4). The TS
  * twin of the Rust actor's `stamp_session`. */
 function stampSession(peer: ArtifactPresencePeer, state: ArtifactState): ArtifactPresencePeer {
-  return { ...peer, color: state.sessionColor ?? undefined, surface: hubBinding(state.config)?.surface };
+  return { ...peer, color: state.sessionColor ?? undefined, surface: hubBinding(state.config)?.installedTarget?.surface.surfaceId };
 }
 
 /** ↩️ Synthesizes a local "undo" envelope from a speculative envelope's own precomputed `inverse` —
@@ -677,22 +895,22 @@ async function writeFolder(state: ArtifactState, binding: Extract<PersistenceBin
  * retry either way, rather than left stranded in `pendingBatches` forever (finding 5 — a dead
  * socket will never deliver that `Ack`). */
 async function connectHubOnce(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "hub" }>): Promise<void> {
-  const grantPath = `/spaces/${encodeURIComponent(binding.spaceId)}/documents/${encodeURIComponent(state.config.documentId)}/socket-grants`;
-  const receipt = await requestSocketGrant(binding.baseUrl, grantPath, state.docAbort.signal);
+  const authority = await requestDocumentSocketAuthority(state, binding);
+  const receipt = authority.receipt;
   if (receipt.expiresAtMs <= Date.now()) throw new Error("backbone-worker: expired socket grant");
-  state.actor = receipt.actorId;
-  state.hubActorReady = true;
-  post({ kind: "socket-actor", documentId: state.config.documentId, actorId: receipt.actorId });
   return new Promise<void>((resolve, reject) => {
     if (state.docAbort.signal.aborted) {
       reject(state.docAbort.signal.reason ?? new Error("backbone-worker: document closed"));
       return;
     }
+    state.actor = "";
+    state.hubActorReady = false;
+    state.pendingSocketActorId = receipt.actorId;
     setRemote(state, { kind: "connecting" });
     const wsBase = binding.baseUrl.replace(/^http/, "ws");
     // 📡️ Presence scope (contract §C0) travels out of band as `?surface=` — no `PresencePeer` wire
     // change (its flag byte is full and the file is peer-leased).
-    const surfaceQuery = binding.surface ? `?surface=${encodeURIComponent(binding.surface)}` : "";
+    const surfaceQuery = authority.surfaceId ? `?surface=${encodeURIComponent(authority.surfaceId)}` : "";
     const socket = new WebSocket(`${wsBase}/spaces/${encodeURIComponent(binding.spaceId)}/documents/${encodeURIComponent(state.config.documentId)}/socket/v1${surfaceQuery}`, [...socketGrantProtocolsV1(receipt)]);
     // 🎞️ Binary frames (`protocol_wire`), not JSON text — see this file's header + `WireBridge` region.
     socket.binaryType = "arraybuffer";
@@ -714,11 +932,11 @@ async function connectHubOnce(state: ArtifactState, binding: Extract<Persistence
         SocketHelloV1: {
           wire_version: 1,
           protocol_version: 1,
-          schema: state.config.schema,
+          schema: authority.schema,
           // 🧬️ W5.7: real hash when the shell supplied one via `ArtifactActorConfig.packSchemaHash`
           // (from the wasm renderer's `document_pack_schema_hash` export); zeros otherwise, which the
           // hub treats as "schema-agnostic client" and never validates.
-          pack_schema_hash: [...(state.config.packSchemaHash ?? new Array(32).fill(0))],
+          pack_schema_hash: [...authority.packSchemaHash],
           resume_token: state.resumeToken,
           frontier: state.frontier,
         },
@@ -726,6 +944,7 @@ async function connectHubOnce(state: ArtifactState, binding: Extract<Persistence
     };
     socket.onmessage = (messageEvent) => {
       state.hubFrameChain = state.hubFrameChain.then(async () => {
+        if (state.socket !== socket) return;
         try {
           const bytes = new Uint8Array(messageEvent.data as ArrayBuffer);
           await handleHubFrame(state, decodeServerFrame(bytes).frame);
@@ -739,6 +958,9 @@ async function connectHubOnce(state: ArtifactState, binding: Extract<Persistence
       state.docAbort.signal.removeEventListener("abort", onAbort);
       if (sustainedHealthTimer != null) clearTimeout(sustainedHealthTimer);
       if (state.socket === socket) state.socket = null;
+      state.actor = "";
+      state.hubActorReady = false;
+      state.pendingSocketActorId = null;
       abortArtifactBootstrap(state);
       requeuePendingBatches(state);
       if (state.docAbort.signal.aborted) {
@@ -1107,7 +1329,20 @@ async function handleHubFrame(state: ArtifactState, frame: ServerFrame): Promise
     // gets — the real wasm host (`👷️worker/🦀️.rs`) wraps every `ArtifactEvent` uniformly
     // with zero per-variant special-casing, so this fallback must match rather than post a
     // one-off top-level `BackboneWorkerResponse` shape the wasm path would never produce.
+    const expectedActor = state.pendingSocketActorId;
+    if (expectedActor === null || frame.Session.actor !== expectedActor) {
+      state.actor = "";
+      state.hubActorReady = false;
+      state.pendingSocketActorId = null;
+      post({ kind: "socket-actor-failed", documentId: state.config.documentId, code: "session-mismatch" });
+      state.socket?.close(1008, "socket actor mismatch");
+      return;
+    }
+    state.actor = expectedActor;
+    state.hubActorReady = true;
+    state.pendingSocketActorId = null;
     state.sessionColor = frame.Session.color;
+    post({ kind: "socket-actor", documentId: state.config.documentId, actorId: expectedActor });
     emitEvent(state.config.documentId, { kind: "session", actor: frame.Session.actor, color: frame.Session.color });
     return;
   }
@@ -1371,13 +1606,17 @@ void putCachedBlob;
 
 //#region 🔖️Lifecycle
 function openArtifact(config: ArtifactActorConfig): void {
-  closeArtifact(config.documentId);
-  const channel = new BroadcastChannel(`semio-doc-${config.documentId}`);
   const hub = hubBinding(config);
+  const runtimeKey = documentRuntimeKeyForConfig(config);
+  closeArtifactRuntime(runtimeKey);
+  const channel = new BroadcastChannel(`semio-doc-${runtimeKey}`);
   const state: ArtifactState = {
+    runtimeKey,
     config,
-    actor: config.actor,
+    openClientInstanceId: crypto.randomUUID(),
+    actor: hub === null ? config.actor : "",
     hubActorReady: hub === null,
+    pendingSocketActorId: null,
     channel,
     socket: null,
     docAbort: new AbortController(),
@@ -1404,7 +1643,7 @@ function openArtifact(config: ArtifactActorConfig): void {
     hlcCounter: 0,
     closed: false,
   };
-  artifacts.set(config.documentId, state);
+  artifacts.set(runtimeKey, state);
   channel.onmessage = (messageEvent) => {
     const envelopes = messageEvent.data as MutationEnvelope[];
     if (Array.isArray(envelopes) && envelopes.length > 0) emitEvent(config.documentId, { kind: "remoteMutations", envelopes });
@@ -1416,12 +1655,16 @@ function openArtifact(config: ArtifactActorConfig): void {
     if (config.watchExternal !== false) watchFolder(state, folder);
     else void state.revalidateFolder();
   }
-  if (hub) connectHub(state, hub);
+  if (hub?.installedTarget === undefined && socketGrantTestIssue === null) {
+    post({ kind: "socket-actor-failed", documentId: config.documentId, code: "installed-target-unavailable" });
+  } else if (hub) {
+    connectHub(state, hub);
+  }
   emitEvent(config.documentId, { kind: "status", ...state.status });
 }
 
-function closeArtifact(documentId: string): void {
-  const state = artifacts.get(documentId);
+function closeArtifactRuntime(runtimeKey: string): void {
+  const state = artifacts.get(runtimeKey);
   if (!state) return;
   state.closed = true;
   abortArtifactBootstrap(state);
@@ -1432,7 +1675,12 @@ function closeArtifact(documentId: string): void {
   state.socket?.close();
   if (state.sanityPollTimer != null) clearTimeout(state.sanityPollTimer);
   state.channel.close();
-  artifacts.delete(documentId);
+  artifacts.delete(runtimeKey);
+}
+
+function closeArtifact(documentId: string, spaceId?: string): void {
+  const runtimeKey = artifactRuntimeKey(documentId, spaceId);
+  if (runtimeKey !== null) closeArtifactRuntime(runtimeKey);
 }
 
 async function handleLocalMsg(state: ArtifactState, message: ArtifactActorMsg): Promise<void> {
@@ -1489,7 +1737,7 @@ async function handleLocalMsg(state: ArtifactState, message: ArtifactActorMsg): 
       break;
     }
     case "detach":
-      closeArtifact(state.config.documentId);
+      closeArtifactRuntime(state.runtimeKey);
       break;
   }
 }
@@ -1502,10 +1750,10 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
       openArtifact(request);
       break;
     case "close":
-      closeArtifact(request.documentId);
+      closeArtifact(request.documentId, request.spaceId);
       break;
     case "send": {
-      const state = artifacts.get(request.documentId);
+      const state = artifactState(request.documentId, request.spaceId);
       if (state) void handleLocalMsg(state, request.message);
       break;
     }
@@ -1530,12 +1778,112 @@ if (import.meta.vitest) {
   const { beforeEach, describe, expect, it, vi } = import.meta.vitest;
 
   beforeEach(() => {
+    clearLocalBrowserBrokerProof();
+    installLocalBrowserBrokerProof("4".repeat(64));
     socketGrantTestIssue = async () => ({
       schema: "semio.hub.socket-grant/v1",
       protocol: "semio.socket.v1",
       grant: `socket.v1.${"1".repeat(32)}.${"2".repeat(64)}`,
       actorId: `hub.v1.${"3".repeat(64)}`,
       expiresAtMs: Number.MAX_SAFE_INTEGER,
+    });
+  });
+
+  describe("browser broker proof ratchet", () => {
+    it("advances only on an explicit acknowledgement and domain-binds the next proof digest", async () => {
+      const originalFetch = globalThis.fetch;
+      const requests: Headers[] = [];
+      (globalThis as unknown as { fetch: unknown }).fetch = async (_input: unknown, init?: RequestInit) => {
+        requests.push(new Headers(init?.headers));
+        return new Response("{}", { status: 200, headers: { "x-semio-browser-broker-advanced": "1" } });
+      };
+      try {
+        await browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 });
+        await browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 });
+        const firstNextDigest = requests[0]!.get("x-semio-browser-broker-next");
+        const secondCurrent = hexBytes(requests[1]!.get("x-semio-browser-broker") ?? "");
+        expect(secondCurrent).toBeDefined();
+        expect(bytesHex(await browserBrokerProofDigest(secondCurrent!))).toBe(firstNextDigest);
+        expect(requests[0]!.get("x-semio-browser-broker")).not.toBe(requests[1]!.get("x-semio-browser-broker"));
+      } finally {
+        clearLocalBrowserBrokerProof();
+        (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
+      }
+    });
+
+    it("requires explicit rebootstrap after a lost acknowledgement, 401, or cancel-after-send", async () => {
+      const originalFetch = globalThis.fetch;
+      let calls = 0;
+      try {
+        (globalThis as unknown as { fetch: unknown }).fetch = async () => {
+          calls += 1;
+          throw new Error("transport detail must be redacted");
+        };
+        await expect(browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("browser broker rebootstrap required");
+        await expect(browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("browser broker rebootstrap required");
+        expect(calls).toBe(1);
+
+        installLocalBrowserBrokerProof("6".repeat(64));
+        (globalThis as unknown as { fetch: unknown }).fetch = async () => {
+          calls += 1;
+          return new Response("unauthorized", { status: 401, headers: { "x-semio-browser-broker-advanced": "1" } });
+        };
+        await expect(browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("browser broker rebootstrap required");
+
+        installLocalBrowserBrokerProof("7".repeat(64));
+        const abort = new AbortController();
+        (globalThis as unknown as { fetch: unknown }).fetch = async (_input: unknown, init?: RequestInit) => {
+          calls += 1;
+          await new Promise<void>((_resolve, reject) => init?.signal?.addEventListener("abort", () => reject(new Error("cancelled")), { once: true }));
+          return new Response("{}");
+        };
+        const pending = browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000, signal: abort.signal });
+        await Promise.resolve();
+        abort.abort();
+        await expect(pending).rejects.toThrow("browser broker rebootstrap required");
+        await expect(browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("browser broker rebootstrap required");
+      } finally {
+        clearLocalBrowserBrokerProof();
+        (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
+      }
+    });
+
+    it("rejects expired, duplicate-initialized, and over-capacity broker work without exposing proof", async () => {
+      const originalFetch = globalThis.fetch;
+      const originalQueued = localBrowserBrokerQueued;
+      let observedCurrent = "";
+      (globalThis as unknown as { fetch: unknown }).fetch = async (_input: unknown, init?: RequestInit) => {
+        observedCurrent = new Headers(init?.headers).get("x-semio-browser-broker") ?? "";
+        return new Response("missing acknowledgement", { status: 200 });
+      };
+      try {
+        expect(installLocalBrowserBrokerProof("8".repeat(64))).toBe(false);
+        await expect(browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("browser broker rebootstrap required");
+        expect(observedCurrent).toBe("4".repeat(64));
+
+        installLocalBrowserBrokerProof("9".repeat(64));
+        localBrowserBrokerProofExpiresAtMs = Date.now() - 1;
+        await expect(browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("browser broker rebootstrap required");
+
+        installLocalBrowserBrokerProof("a".repeat(64));
+        localBrowserBrokerQueued = 64;
+        await expect(browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("browser broker capacity exceeded");
+        expect(observedCurrent).not.toContain("a".repeat(64));
+      } finally {
+        localBrowserBrokerQueued = originalQueued;
+        clearLocalBrowserBrokerProof();
+        (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
+      }
+    });
+
+    it("keeps the private port and proof names out of malicious plugin shard source and transfers before activation", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const pluginShard = await readFile(new URL("./🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts", import.meta.url), "utf8");
+      const shellHost = await readFile(new URL("./🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/🖥️🛸️ShellHost/🟦️.tsx", import.meta.url), "utf8");
+      expect(pluginShard).not.toContain("semio-browser-broker-port");
+      expect(pluginShard).not.toContain("x-semio-browser-broker");
+      expect(shellHost.indexOf("const worker = ensureBackboneWorker();")).toBeLessThan(shellHost.indexOf("void (async () => {\n      const outcome = await installPlugin"));
+      expect(shellHost.indexOf("window.history.replaceState")).toBeLessThan(shellHost.indexOf("loadPluginModuleResilient"));
     });
   });
 
@@ -1582,12 +1930,8 @@ if (import.meta.vitest) {
       expect(rollback.id).not.toBe(envelope.id);
     });
 
-    it("encodeClientFrame/decodeClientFrame round-trip a Hello frame", () => {
-      const frame: ClientFrame = { Hello: { wire_version: 1, protocol_version: 1, schema: "demo/v1", pack_schema_hash: new Array(32).fill(0), actor: "actor-1", token: null, resume_token: null, frontier: null } };
-      const bytes = encodeClientFrame(frame, "command");
-      const decoded = decodeClientFrame(bytes);
-      expect(decoded.lane).toBe("command");
-      expect(decoded.frame).toEqual(frame);
+    it("decodeClientFrame terminally rejects the removed tag-zero Hello carrier", () => {
+      expect(() => decodeClientFrame(new Uint8Array([0, 0]))).toThrow(/unknown tag 0/);
     });
 
     // 🎨️ ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.4:
@@ -1595,7 +1939,12 @@ if (import.meta.vitest) {
     // them themselves. Overwrites whatever the caller handed in, and derives `surface` from the
     // document's own hub binding (`null`/absent for a folder-only document).
     it("stampSession fills color/surface from actor state, overwriting whatever the caller set", () => {
-      const hubConfig: ArtifactActorConfig = { documentId: "doc-1", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1", surface: "s.space.home@1/*#editor" }], actor: "actor-1" };
+      const installedTarget = {
+        package: { pluginId: "s.test", packageId: "s.test.codec", version: "1", componentSha256: "1".repeat(64), componentBlake3: "2".repeat(64), descriptorByteSha256: "3".repeat(64) },
+        artifact: { kind: "test", schema: "demo/v1", packSchemaHash: "4".repeat(64) },
+        surface: { surfaceId: "s.space.home@1/*#editor", appId: "app.test", windowKindId: "window.document", role: "editor" as const, rendererTarget: "react" as const },
+      };
+      const hubConfig: ArtifactActorConfig = { documentId: "doc-1", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1", installedTarget }], actor: "actor-1" };
       const hubState = { config: hubConfig, sessionColor: 7 } as unknown as ArtifactState;
       const peer: ArtifactPresencePeer = { actor: "actor-1", connectedAtMs: 1000, color: 99, surface: "shell-should-never-set-this", views: [] };
       const stamped = stampSession(peer, hubState);
@@ -1650,7 +1999,7 @@ if (import.meta.vitest) {
   async function installFixture(fixture: ArtifactBootstrapFixture, chunked: boolean): Promise<ArtifactState> {
     const config = fixtureConfig(fixture);
     openArtifact(config);
-    const state = artifacts.get(config.documentId)!;
+    const state = artifactState(config.documentId)!;
     await handleHubFrame(state, decodeFixtureFrame(chunked ? fixture.wire.chunkedWelcomeHex : fixture.wire.inlineWelcomeHex));
     if (chunked) {
       for (const chunk of fixture.wire.chunkHex) await handleHubFrame(state, decodeFixtureFrame(chunk));
@@ -1730,7 +2079,7 @@ if (import.meta.vitest) {
       const fixture = await artifactBootstrapFixture();
       const config = fixtureConfig(fixture);
       openArtifact(config);
-      const state = artifacts.get(config.documentId)!;
+      const state = artifactState(config.documentId)!;
       state.currentPack = Uint8Array.of(9);
       state.currentSpr = Uint8Array.of(8);
       const priorFrontier: WireFrontierSummary = { document_id: state.config.documentId, head_edit_ordinal: 1, head_edit_id: "old", last_commit_seq: 1, chain_hash: Array(32).fill(7) };
@@ -1779,7 +2128,7 @@ if (import.meta.vitest) {
       const fixture = await artifactBootstrapFixture();
       const config = fixtureConfig(fixture);
       openArtifact(config);
-      const state = artifacts.get(config.documentId)!;
+      const state = artifactState(config.documentId)!;
       state.config = { ...state.config, bindings: [{ kind: "folder", path: "/tmp/bootstrap-put-failure" }] };
       state.currentPack = Uint8Array.of(1);
       state.currentSpr = Uint8Array.of(2);
@@ -1959,7 +2308,8 @@ if (import.meta.vitest) {
         expect(directoryCommandQueue[0]!.requestId).toBe("r1");
 
         // 🟢️ Hub becomes reachable — any live signal on the stream (a heartbeat here) triggers a flush.
-        (globalThis as unknown as { fetch: unknown }).fetch = async () => ({ ok: true, status: 202, json: async () => ({ events: [] }) });
+        installLocalBrowserBrokerProof("5".repeat(64));
+        (globalThis as unknown as { fetch: unknown }).fetch = async () => new Response(JSON.stringify({ events: [] }), { status: 202, headers: { "content-type": "application/json", "x-semio-browser-broker-advanced": "1" } });
         const socket = FakeDirectoryWebSocket.instances.at(-1)!;
         socket.triggerMessage({ kind: "heartbeat", headSeq: 0 });
         await flushMicrotasks();
@@ -2027,7 +2377,7 @@ if (import.meta.vitest) {
         this.readyState = FakeHubWebSocket.OPEN;
         this.onopen?.();
       }
-      close(): void {
+      close(_code?: number, _reason?: string): void {
         this.readyState = FakeHubWebSocket.CLOSED;
         this.onclose?.();
       }
@@ -2037,9 +2387,270 @@ if (import.meta.vitest) {
       return { documentId, schema: "demo/v1", bindings: [{ kind: "folder", path: `/tmp/${documentId}` }], actor: "actor-1" };
     }
 
+    type BrowserDocumentOpenFixture = {
+      nowMs: number;
+      intent: DocumentOpenIntentV1;
+      installedTarget: NonNullable<Extract<PersistenceBinding, { kind: "hub" }>["installedTarget"]>;
+      plan: DocumentOpenPlanV1;
+      socketGrant: SocketGrantReceiptV1;
+      expected: { httpPaths: [string, string]; webSocketPath: string; protocol: string; helloSchema: string; helloPackSchemaHashByte: number; responseMaxBytes: number; rustWorkerBypassDenied: true; scopeIsolation: { left: { spaceId: string; documentId: string }; right: { spaceId: string; documentId: string }; leftKey: string; rightKey: string; localKey: string }; forbiddenSocketFragments: string[] };
+    };
+
+    async function browserDocumentOpenFixture(): Promise<BrowserDocumentOpenFixture> {
+      const { readFile } = await import("node:fs/promises");
+      return JSON.parse(await readFile(new URL("./🧫️fixtures/📇️directory/📄️browser-document-open-v1.json", import.meta.url), "utf8")) as BrowserDocumentOpenFixture;
+    }
+
+    function currentBrowserDocumentOpenFixture(fixture: BrowserDocumentOpenFixture): { plan: DocumentOpenPlanV1; grant: SocketGrantReceiptV1 } {
+      const now = Date.now();
+      return {
+        plan: { ...structuredClone(fixture.plan), expiresAtUnixMs: now + 30_000 },
+        grant: { ...fixture.socketGrant, expiresAtMs: now + 25_000 },
+      };
+    }
+
+    async function waitForDocumentSocket(): Promise<FakeHubWebSocket> {
+      for (let turn = 0; turn < 64; turn += 1) {
+        const socket = FakeHubWebSocket.instances.at(-1);
+        if (socket) return socket;
+        await new Promise<void>((resolve) => setTimeout(resolve, 0));
+      }
+      throw new Error("browser document-open socket deadline exceeded");
+    }
+
     function notFoundResponse() {
       return { ok: false, status: 404, statusText: "not found", headers: { get: () => null }, json: async () => ({}), text: async () => "" };
     }
+
+    it("browser document open remains D1-owned when the Rust worker resolves", async () => {
+      const fixture = await browserDocumentOpenFixture();
+      const documentId = `${fixture.intent.scope.documentId}-resolved-rust`;
+      const typescriptRequests: BackboneWorkerRequest[] = [];
+      const rustRequests: BackboneWorkerRequest[] = [];
+      const host: RustWorkerHost = {
+        handleRequestBytes: (bytes) => rustRequests.push(decodeBackboneWorkerRequest(bytes)),
+        postReady: () => {},
+      };
+      const dispatch = (request: BackboneWorkerRequest): void => dispatchBackboneWorkerRequest(request, host, (value) => typescriptRequests.push(value));
+      dispatch({ kind: "open", documentId, schema: fixture.plan.artifact.schema, bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }], actor: "caller-selected-actor" });
+      dispatch({ kind: "send", documentId, spaceId: fixture.intent.scope.spaceId, message: { kind: "detach" } });
+      dispatch({ kind: "close", documentId, spaceId: fixture.intent.scope.spaceId });
+      expect(typescriptRequests.map(({ kind }) => kind)).toEqual(["open", "send", "close"]);
+      expect(rustRequests).toHaveLength(0);
+    });
+
+    it("browser document open runtime ownership isolates the same document id across two hub spaces", async () => {
+      const fixture = await browserDocumentOpenFixture();
+      const originalWebSocket = globalThis.WebSocket;
+      const current = currentBrowserDocumentOpenFixture(fixture);
+      (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
+      socketGrantTestIssue = async () => current.grant;
+      const left = fixture.expected.scopeIsolation.left;
+      const right = fixture.expected.scopeIsolation.right;
+      try {
+        openArtifact({ documentId: left.documentId, schema: fixture.installedTarget.artifact.schema, bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: left.spaceId, installedTarget: fixture.installedTarget }], actor: "caller-selected-actor" });
+        openArtifact({ documentId: right.documentId, schema: fixture.installedTarget.artifact.schema, bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: right.spaceId, installedTarget: fixture.installedTarget }], actor: "caller-selected-actor" });
+        expect(documentRuntimeKeyV1({ kind: "hub", ...left })).toBe(fixture.expected.scopeIsolation.leftKey);
+        expect(documentRuntimeKeyV1({ kind: "hub", ...right })).toBe(fixture.expected.scopeIsolation.rightKey);
+        expect(documentRuntimeKeyV1({ kind: "local", documentId: left.documentId })).toBe(fixture.expected.scopeIsolation.localKey);
+        expect(fixture.expected.scopeIsolation.leftKey).not.toBe(fixture.expected.scopeIsolation.rightKey);
+        expect(fixture.expected.scopeIsolation.localKey).not.toBe(fixture.expected.scopeIsolation.leftKey);
+        expect(artifacts.has(fixture.expected.scopeIsolation.leftKey)).toBe(true);
+        expect(artifacts.has(fixture.expected.scopeIsolation.rightKey)).toBe(true);
+        expect(artifactState(left.documentId)).toBeUndefined();
+        closeArtifact(left.documentId, left.spaceId);
+        expect(artifacts.has(fixture.expected.scopeIsolation.leftKey)).toBe(false);
+        expect(artifacts.has(fixture.expected.scopeIsolation.rightKey)).toBe(true);
+      } finally {
+        closeArtifact(left.documentId, left.spaceId);
+        closeArtifact(right.documentId, right.spaceId);
+        socketGrantTestIssue = null;
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
+      }
+    });
+
+    it("browser document open requires exact installed package artifact and surface authority", async () => {
+      const fixture = await browserDocumentOpenFixture();
+      const config: ArtifactActorConfig = {
+        documentId: fixture.intent.scope.documentId,
+        schema: fixture.installedTarget.artifact.schema,
+        bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }],
+        actor: "caller-selected-actor",
+        packSchemaHash: new Array(32).fill(fixture.expected.helloPackSchemaHashByte),
+      };
+      expect(documentOpenPlanAuthority(fixture.plan, fixture.intent, config, fixture.installedTarget).surfaceId).toBe(fixture.installedTarget.surface.surfaceId);
+      const replacements: readonly [string, string, unknown][] = [
+        ["package", "pluginId", "s.foreign"],
+        ["package", "packageId", "s.foreign.codec"],
+        ["package", "version", "9.9.9"],
+        ["package", "componentSha256", "a".repeat(64)],
+        ["package", "componentBlake3", "a".repeat(64)],
+        ["package", "descriptorByteSha256", "a".repeat(64)],
+        ["artifact", "kind", "s.foreign"],
+        ["artifact", "packSchemaHash", "a".repeat(64)],
+        ["surface", "appId", "app.foreign"],
+        ["surface", "windowKindId", "window.foreign"],
+        ["surface", "role", "viewer"],
+        ["surface", "rendererTarget", "wgpu"],
+      ];
+      for (const [section, field, value] of replacements) {
+        const candidate = structuredClone(fixture.plan) as unknown as Record<string, Record<string, unknown>>;
+        candidate[section]![field] = value;
+        expect(() => documentOpenPlanAuthority(candidate as unknown as DocumentOpenPlanV1, fixture.intent, config, fixture.installedTarget)).toThrow("document open: authority mismatch");
+      }
+    });
+
+    it("browser document open uses the authenticated D1 plan and receipt exchange before its credential-free socket", async () => {
+      const fixture = await browserDocumentOpenFixture();
+      const current = currentBrowserDocumentOpenFixture(fixture);
+      const originalFetch = globalThis.fetch;
+      const originalWebSocket = globalThis.WebSocket;
+      const requests: { url: string; headers: Headers; body: string }[] = [];
+      FakeHubWebSocket.instances = [];
+      socketGrantTestIssue = null;
+      (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
+      (globalThis as unknown as { fetch: unknown }).fetch = async (input: string, init?: RequestInit) => {
+        const url = String(input);
+        const body = String(init?.body ?? "");
+        requests.push({ url, headers: new Headers(init?.headers), body });
+        const response = requests.length === 1 ? current.plan : current.grant;
+        return Response.json(response, { headers: { "x-semio-browser-broker-advanced": "1" } });
+      };
+      try {
+        openArtifact({ documentId: fixture.intent.scope.documentId, schema: fixture.plan.artifact.schema, bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }], actor: "caller-selected-actor" });
+        const socket = await waitForDocumentSocket();
+        expect(requests).toHaveLength(2);
+        expect(requests.map(({ url }) => url)).toEqual(fixture.expected.httpPaths.map((path) => `/_semio/hub${path}`));
+        const intent = JSON.parse(requests[0]!.body) as Record<string, unknown>;
+        expect(Object.keys(intent).sort()).toEqual(["clientInstanceId", "requestedSurfaceId", "schema", "scope", "version"]);
+        expect(intent.scope).toEqual(fixture.intent.scope);
+        expect(intent.requestedSurfaceId).toBe(fixture.intent.requestedSurfaceId);
+        expect(intent.clientInstanceId).toMatch(/^[0-9a-f-]{36}$/u);
+        expect(requests[0]!.body).not.toContain(current.plan.receipt);
+        expect(JSON.parse(requests[1]!.body)).toEqual({ schema: "semio.hub.document-plan-socket-grant-intent/v1", version: 1, planReceipt: current.plan.receipt });
+        expect(requests[0]!.headers.get("x-semio-browser-broker")).not.toBe(requests[1]!.headers.get("x-semio-browser-broker"));
+        expect(requests.every(({ headers }) => /^[0-9a-f]{64}$/u.test(headers.get("x-semio-browser-broker") ?? "") && /^[0-9a-f]{64}$/u.test(headers.get("x-semio-browser-broker-next") ?? ""))).toBe(true);
+        expect(socket.url).toBe(`ws://hub.test${fixture.expected.webSocketPath}`);
+        expect(socket.protocols).toEqual([fixture.expected.protocol, current.grant.grant]);
+        for (const forbidden of fixture.expected.forbiddenSocketFragments) expect(socket.url).not.toContain(forbidden);
+        socket.open();
+        expect(socket.sent).toHaveLength(1);
+        const hello = decodeClientFrame(socket.sent[0]!).frame;
+        if (typeof hello === "string" || !("SocketHelloV1" in hello)) throw new Error("expected SocketHelloV1");
+        expect(hello.SocketHelloV1.schema).toBe(fixture.expected.helloSchema);
+        expect(hello.SocketHelloV1.pack_schema_hash).toEqual(new Array(32).fill(fixture.expected.helloPackSchemaHashByte));
+        expect(JSON.stringify(hello)).not.toContain("open.v1.");
+        expect(JSON.stringify(hello)).not.toContain("socket.v1.");
+        const state = artifactState(fixture.intent.scope.documentId, fixture.intent.scope.spaceId)!;
+        expect(state.hubActorReady).toBe(false);
+        expect(state.actor).toBe("");
+        expect(state.pendingSocketActorId).toBe(current.grant.actorId);
+        await handleHubFrame(state, { Session: { actor: current.grant.actorId, color: 7 } });
+        expect(state.hubActorReady).toBe(true);
+        expect(state.actor).toBe(current.grant.actorId);
+        expect(state.pendingSocketActorId).toBeNull();
+      } finally {
+        closeArtifact(fixture.intent.scope.documentId, fixture.intent.scope.spaceId);
+        clearLocalBrowserBrokerProof();
+        (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
+      }
+    });
+
+    it("browser document open withholds activation until an exact authenticated Session and terminally clears a mismatched actor", async () => {
+      const fixture = await browserDocumentOpenFixture();
+      const current = currentBrowserDocumentOpenFixture(fixture);
+      const originalFetch = globalThis.fetch;
+      const originalWebSocket = globalThis.WebSocket;
+      FakeHubWebSocket.instances = [];
+      socketGrantTestIssue = null;
+      (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
+      let effects = 0;
+      (globalThis as unknown as { fetch: unknown }).fetch = async () => {
+        effects += 1;
+        return Response.json(effects === 1 ? current.plan : current.grant, { headers: { "x-semio-browser-broker-advanced": "1" } });
+      };
+      try {
+        openArtifact({ documentId: fixture.intent.scope.documentId, schema: fixture.plan.artifact.schema, bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }], actor: "caller-selected-actor" });
+        const socket = await waitForDocumentSocket();
+        socket.open();
+        const state = artifactState(fixture.intent.scope.documentId, fixture.intent.scope.spaceId)!;
+        expect(state.hubActorReady).toBe(false);
+        expect(state.actor).toBe("");
+        expect(state.pendingSocketActorId).toBe(current.grant.actorId);
+        await handleHubFrame(state, { Session: { actor: `hub.v1.${"f".repeat(64)}`, color: 9 } });
+        expect(socket.readyState).toBe(FakeHubWebSocket.CLOSED);
+        expect(state.hubActorReady).toBe(false);
+        expect(state.actor).toBe("");
+        expect(state.pendingSocketActorId).toBeNull();
+      } finally {
+        closeArtifact(fixture.intent.scope.documentId, fixture.intent.scope.spaceId);
+        clearLocalBrowserBrokerProof();
+        (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
+      }
+    });
+
+    it("browser document open rejects mismatched and max-plus-one plans and cancels before receipt exchange without leaking authority", async () => {
+      const fixture = await browserDocumentOpenFixture();
+      const current = currentBrowserDocumentOpenFixture(fixture);
+      const originalFetch = globalThis.fetch;
+      FakeHubWebSocket.instances = [];
+      socketGrantTestIssue = null;
+      openArtifact({ documentId: fixture.intent.scope.documentId, schema: fixture.plan.artifact.schema, bindings: [], actor: "caller-selected-actor" });
+      const state = artifactState(fixture.intent.scope.documentId)!;
+      state.openClientInstanceId = fixture.intent.clientInstanceId;
+      const binding: Extract<PersistenceBinding, { kind: "hub" }> = { kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget };
+      try {
+        const hostileReceipt = current.plan.receipt;
+        let effects = 0;
+        (globalThis as unknown as { fetch: unknown }).fetch = async () => {
+          effects += 1;
+          return Response.json(current.plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
+        };
+        const unavailable = await requestDocumentSocketAuthority(state, { kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId }).catch((error: unknown) => error as Error);
+        expect(unavailable.message).toBe("document open: installed target unavailable");
+        expect(effects).toBe(0);
+
+        (globalThis as unknown as { fetch: unknown }).fetch = async () => {
+          effects += 1;
+          return Response.json({ ...structuredClone(current.plan), scope: { ...current.plan.scope, spaceId: "foreign" } }, { headers: { "x-semio-browser-broker-advanced": "1" } });
+        };
+        const mismatch = await requestDocumentSocketAuthority(state, binding).catch((error: unknown) => error as Error);
+        expect(mismatch.message).toBe("document open: invalid plan");
+        expect(mismatch.message).not.toContain(hostileReceipt);
+        expect(effects).toBe(1);
+
+        clearLocalBrowserBrokerProof();
+        installLocalBrowserBrokerProof("b".repeat(64));
+        effects = 0;
+        (globalThis as unknown as { fetch: unknown }).fetch = async () => {
+          effects += 1;
+          return new Response("{}", { headers: { "content-length": String(fixture.expected.responseMaxBytes + 1), "x-semio-browser-broker-advanced": "1" } });
+        };
+        const oversized = await requestDocumentSocketAuthority(state, binding).catch((error: unknown) => error as Error);
+        expect(oversized.message).toBe("document open: invalid plan");
+        expect(effects).toBe(1);
+
+        clearLocalBrowserBrokerProof();
+        installLocalBrowserBrokerProof("c".repeat(64));
+        effects = 0;
+        (globalThis as unknown as { fetch: unknown }).fetch = async () => {
+          effects += 1;
+          state.docAbort.abort();
+          return Response.json(current.plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
+        };
+        const cancelled = await requestDocumentSocketAuthority(state, binding).catch((error: unknown) => error as Error);
+        expect(cancelled.message).toBe("document open: cancelled");
+        expect(cancelled.message).not.toContain(hostileReceipt);
+        expect(effects).toBe(1);
+        expect(FakeHubWebSocket.instances).toHaveLength(0);
+      } finally {
+        closeArtifact(fixture.intent.scope.documentId);
+        clearLocalBrowserBrokerProof();
+        (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
+      }
+    });
 
     it("keeps two concurrent document grant actors isolated and rewrites caller envelopes at the wire boundary", async () => {
       FakeHubWebSocket.instances = [];
@@ -2108,7 +2719,7 @@ if (import.meta.vitest) {
 
       try {
         openArtifact(folderOnlyConfig("doc-overlap"));
-        const state = artifacts.get("doc-overlap")!;
+        const state = artifactState("doc-overlap")!;
         await flushMicrotasks(); // let watchFolder's bootstrap read actually START (not settle — it's gated).
         expect(fetchCalls).toBe(1);
 
@@ -2151,7 +2762,7 @@ if (import.meta.vitest) {
 
       try {
         openArtifact(folderOnlyConfig("doc-sanity"));
-        const state = artifacts.get("doc-sanity")!;
+        const state = artifactState("doc-sanity")!;
         await vi.advanceTimersByTimeAsync(0); // bootstrap read.
         expect(fetchCalls).toBe(1);
 
@@ -2241,7 +2852,7 @@ if (import.meta.vitest) {
       const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
       try {
-        const state = artifacts.get("doc-overflow")!;
+        const state = artifactState("doc-overflow")!;
         const makeEnvelope = (index: number): MutationEnvelope => ({
           id: `edit-${index}`,
           actor: "actor-1",
@@ -2281,7 +2892,7 @@ if (import.meta.vitest) {
         const config: ArtifactActorConfig = { documentId: "doc-hub-flush", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
         openArtifact(config);
         await flushSocketGrantTurns();
-        const state = artifacts.get("doc-hub-flush")!;
+        const state = artifactState("doc-hub-flush")!;
         const socket = FakeHubWebSocket.instances.at(-1)!;
         expect(socket.readyState).toBe(FakeHubWebSocket.CONNECTING);
 
@@ -2341,7 +2952,7 @@ if (import.meta.vitest) {
         const config: ArtifactActorConfig = { documentId: "doc-hub-stranded", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
         openArtifact(config);
         await flushSocketGrantTurns();
-        const state = artifacts.get("doc-hub-stranded")!;
+        const state = artifactState("doc-hub-stranded")!;
         const socket = FakeHubWebSocket.instances.at(-1)!;
         socket.open();
 

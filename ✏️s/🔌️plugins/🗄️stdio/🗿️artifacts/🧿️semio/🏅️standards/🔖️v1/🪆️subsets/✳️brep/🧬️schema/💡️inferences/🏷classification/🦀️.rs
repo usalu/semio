@@ -38,9 +38,16 @@ enum UvStatus {
 /// 🏷️ `true` when `uv` lies strictly inside the closed `loop_id` boundary on `face` (winding ≠ 0).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn point_in_loop(body: &Body, face: FaceId, loop_id: LoopId, uv: Pnt2, tol: f64) -> Result<bool, KernelError> {
-    let surface = face_surface(body, face)?;
-    let edge_samples = if matches!(surface, Surface::Plane { .. }) { 0 } else { 16 };
-    Ok(point_in_loop_status(body, face, loop_id, uv, tol, edge_samples)? == UvStatus::Inside)
+    let _ = face_surface(body, face)?;
+    // 🐛 FIX (ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME W2-B): used to special-case
+    // `Surface::Plane` to 1 sample per coedge (its own corner only), assuming every planar face's
+    // boundary is a straight-edge polygon — true for `make_box`, false for a planar face bounded
+    // by an imprinted CIRCLE/ELLIPSE p-curve (e.g. a cylinder-through-plane hole, or the small
+    // disk face on the far side of it): a single-coedge circular loop then degenerated to ONE
+    // sample point, `poly.len() < 3`, unconditionally `Outside`. 16 samples/edge is exact for a
+    // straight edge too (extra collinear points don't change the polygon), so this is a safe,
+    // uniform fix, not a special case.
+    Ok(point_in_loop_status(body, face, loop_id, uv, tol, 16)? == UvStatus::Inside)
 }
 
 /// 🏷️ `true` when `uv` lies inside the face trim (`outer` minus `inner` loops).
@@ -55,11 +62,12 @@ pub fn point_in_face_uv(body: &Body, face: FaceId, uv: Pnt2, tol: f64) -> Result
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn point_in_face_uv_status(body: &Body, face: FaceId, uv: Pnt2, tol: f64) -> Result<UvStatus, KernelError> {
     let face_ent = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity("face".into()))?;
-    let surface = face_surface(body, face)?;
-    let samples = match surface {
-        Surface::Plane { .. } => 0,
-        _ => 16,
-    };
+    let _ = face_surface(body, face)?;
+    // 🐛 See the identical fix + rationale on `point_in_loop` above — a planar face is not
+    // guaranteed to have a straight-edge boundary (an imprinted circular hole/disk is planar and
+    // curved), so a fixed 1-sample-per-coedge shortcut for `Surface::Plane` silently degenerated
+    // to a zero-area "polygon" for those. 16 samples/edge is exact for straight edges too.
+    let samples = 16;
     let Some(outer) = face_ent.outer else {
         return Ok(UvStatus::Outside);
     };
@@ -186,16 +194,27 @@ fn loop_uv_polygon(body: &Body, loop_id: LoopId, surface: &Surface) -> Result<Ve
 }
 
 /// 🏷️ Samples one coedge's boundary into surface `(u, v)` at fractional position `s ∈ [0, 1]`
-/// along its own traversal direction — the stored p-curve when the coedge has one (already
-/// oriented per-coedge, per `Coedge`'s own docstring), reprojecting the shared 3D edge curve
-/// (honoring `forward`, since the underlying curve is always parametrized `v0 → v1` regardless of
-/// this coedge's own direction) only when no p-curve has been produced yet.
+/// along its own traversal direction — the stored p-curve when the coedge has one, reprojecting
+/// the shared 3D edge curve otherwise. Both branches must honor `forward` the same way: a
+/// p-curve's `prange` is stored in the underlying edge's OWN curve order, never reparametrized
+/// per coedge (see `diff::primitives`'s documented convention and `Coedge`'s own docstring), so a
+/// `forward == false` coedge must walk it from `p1` down to `p0` to get a continuous physical
+/// trace — exactly like the no-pcurve fallback below already does for the 3D curve's `range`.
+/// 🐛 FIX (ticket `26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME` W2-B): the p-curve branch used to
+/// ignore `forward` entirely (`p0 + (p1 - p0) * s` regardless of direction), silently producing a
+/// disconnected/malformed trim polygon for any face with a reversed pcurve-bearing coedge — i.e.
+/// nearly every non-planar face, since half of any loop's coedges are reversed by construction.
+/// Found while W2-B's exact boolean pipeline hit spurious `point_in_face_uv`/`point_in_solid`
+/// failures on cylinder/sphere faces; fixed here (not worked around locally) because it silently
+/// affected every consumer of the "one classifier" this file exists to be — sew, mass-properties,
+/// validation's self-intersection probe, and this ticket's own boolean pipeline alike.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn coedge_uv_sample(body: &Body, co: &Coedge, surface: &Surface, s: f64) -> Result<Pnt2, KernelError> {
     if let Some(pcurve_id) = co.pcurve {
         let pcurve = body.curves2.get(pcurve_id).ok_or_else(|| KernelError::MissingEntity("pcurve".into()))?;
         let (p0, p1) = co.prange;
-        return Ok(pcurve.eval(p0 + (p1 - p0) * s));
+        let p = if co.forward { p0 + (p1 - p0) * s } else { p1 - (p1 - p0) * s };
+        return Ok(pcurve.eval(p));
     }
     let edge = body.edges.get(co.edge).ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
     let curve = body.curves3.get(edge.curve).ok_or_else(|| KernelError::MissingEntity("curve".into()))?;
@@ -604,7 +623,7 @@ mod tests {
         let mut body = Body::new();
         let r = 1.5;
         let mut rec = OpRecorder::new();
-        let solid = make_sphere(&mut body, r, 24, &mut rec).unwrap();
+        let solid = make_sphere(&mut body, r, &mut rec).unwrap();
         let sdf = Sdf::Sphere { radius: r, placement: Trsf::IDENTITY };
         let samples = [Pnt3::new(0.3, 0.4, 0.2), Pnt3::new(r + 0.5, 0.0, 0.0), Pnt3::new(-0.9 * r, 0.3, 0.2)];
         for p in samples {
@@ -624,7 +643,7 @@ mod tests {
         let radius = 1.0;
         let height = 3.0;
         let mut rec = OpRecorder::new();
-        let solid = make_cylinder(&mut body, radius, height, 32, &mut rec).unwrap();
+        let solid = make_cylinder(&mut body, radius, height, &mut rec).unwrap();
         let sdf = Sdf::Cylinder { radius, half_height: height * 0.5, placement: Trsf::IDENTITY };
         let outside = Pnt3::new(radius + 1.0, 0.0, height * 0.5);
         assert!(!oracle_inside(&sdf, outside));

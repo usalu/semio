@@ -4,20 +4,20 @@ use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::editor::flow::seed_host_catalogue;
 use crate::editor::flow::FLOW_PLAY_APP_ID;
-use crate::playbook::{handle_generation_action, selected_generation};
+use crate::playbook::{handle_generation_action, selected_generation, PlaybookValues};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde_json::{json, Value};
 
 use flow::{
-use semio_framework_value_derive::{FromValue, ToValue};
     forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},
     FlowEvalSession, FlowHost,
 };
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️SharedDispatch
-fn evaluate_generation_preview(fixture: &FlowSnapshot, config: &FlowConfig, values: &serde_json::Map<String, Value>) -> String {
-    let fixture_json = serde_json::to_string(fixture).unwrap_or_default();
-    let patched = apply_generation_values_to_fixture(&fixture_json, values);
+fn evaluate_generation_preview(fixture: &FlowSnapshot, config: &FlowConfig, values: &PlaybookValues) -> String {
+    let fixture_json = dsl::json::to_json_string(&fixture.to_fixture());
+    let object: dsl::json::Object = values.iter().map(|(key, value)| (key.clone(), dsl::json::from_dsl_value(value))).collect();
+    let patched = apply_generation_values_to_fixture(&fixture_json, &object);
     let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.to_fixture());
     let mut host = FlowHost::from_fixture(patched_fixture);
     seed_host_catalogue(&mut host, &config.catalogue_sections_json);
@@ -26,7 +26,7 @@ fn evaluate_generation_preview(fixture: &FlowSnapshot, config: &FlowConfig, valu
 
 /// 🧬️ Shared body for all five Generate-mode commands — one `playbook` CRUD call, then (for the three
 /// verbs that change which values are active) a fresh preview evaluation seeded into the eval session.
-fn handle_generation(action_id: &str, args: Option<&Value>, fixture: &FlowSnapshot, config: &FlowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, FlowConfigMutation> {
+fn handle_generation(action_id: &str, args: Option<&dsl::DslValue>, fixture: &FlowSnapshot, config: &FlowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, FlowConfigMutation> {
     let spec = flow_fixture_to_form_spec(&fixture.to_fixture());
     let mut generation = config.generation();
     if !handle_generation_action(action_id, args, &mut generation, &spec, FLOW_PLAY_APP_ID) {
@@ -71,5 +71,6 @@ pub struct RenameGeneration {
 }
 
 pub fn handle(payload: &RenameGeneration, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
-    Ok(handle_generation("renameGeneration", Some(&json!({ "id": payload.id, "name": payload.name })), doc.snapshot, cfg.snapshot, session))
+    let args = dsl::DslValue::object([("id".to_string(), dsl::DslValue::String(payload.id.clone())), ("name".to_string(), dsl::DslValue::String(payload.name.clone()))]);
+    Ok(handle_generation("renameGeneration", Some(&args), doc.snapshot, cfg.snapshot, session))
 }

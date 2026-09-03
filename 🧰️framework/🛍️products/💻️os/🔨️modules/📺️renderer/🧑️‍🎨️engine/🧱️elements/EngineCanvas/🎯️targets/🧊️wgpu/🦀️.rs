@@ -1630,7 +1630,7 @@ fn gpu_publish_freshness_uses_the_live_cpu_identity_metrics_document_and_scene()
 #[cfg(test)]
 #[test]
 fn normal_replacement_drains_displaced_renderer_view_texture_before_next_candidate() {
-    let source = include_str!("🦀️.rs");
+    let source = include_str!("../../../⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs");
     let start = source.find("pub(crate) fn realize_step").unwrap_or(0);
     let end = source[start..].find("pub(crate) fn close_active_candidate_step").map(|offset| start + offset).unwrap_or(source.len());
     let mounted = &source[start..end];
@@ -1642,7 +1642,7 @@ fn normal_replacement_drains_displaced_renderer_view_texture_before_next_candida
 #[cfg(test)]
 #[test]
 fn child_and_outer_surface_retirements_require_explicit_field_witnesses() {
-    let source = include_str!("🦀️.rs");
+    let source = include_str!("../../../⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs");
     let start = source.find("struct EngineSurfaceRetirement").unwrap_or(0);
     let end = source[start..].find("//#region 📦️PreparedEngineCanvas").map(|offset| start + offset).unwrap_or(source.len());
     let retirement = &source[start..end];

@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 import { HistoryTable, type HistoryColumn } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "../../🧪️story";
+import type { Meta, StoryObj } from "../../🧪️🐨️story.ts";
 
 // 🗄️#region 🗄️HistoryTable
 const meta = {

@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "genericEmojiIdentities", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "genericEmojiIdentities": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "entries", "expected"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "entries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["path", "nodeKind"],
+              "properties": {
+                "path": { "type": "string", "minLength": 1 },
+                "nodeKind": { "enum": ["directory", "file"] },
+                "reserved": { "type": "boolean" }
+              }
+            }
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "path"],
+              "properties": {
+                "kind": { "enum": ["missing", "generic", "presentation", "spacing", "duplicate"] },
+                "path": { "type": "string", "minLength": 1 },
+                "sibling": { "type": "string", "minLength": 1 },
+                "emoji": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

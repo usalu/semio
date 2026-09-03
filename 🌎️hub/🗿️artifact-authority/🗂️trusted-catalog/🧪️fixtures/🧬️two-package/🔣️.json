@@ -48,6 +48,28 @@
             "artifactSchema": "fixture.document@1",
             "packSchemaHash": "1111111111111111111111111111111111111111111111111111111111111111"
           }
+        ],
+        "openTargets": [
+          {
+            "artifactKind": "fixture.document",
+            "artifactSchema": "fixture.document@1",
+            "packSchemaHash": "1111111111111111111111111111111111111111111111111111111111111111",
+            "surfaceId": "fixture.document@1/*#editor",
+            "appId": "fixture.editor",
+            "windowKindId": "fixture.document",
+            "role": "editor",
+            "rendererTarget": "react"
+          },
+          {
+            "artifactKind": "fixture.document",
+            "artifactSchema": "fixture.document@1",
+            "packSchemaHash": "1111111111111111111111111111111111111111111111111111111111111111",
+            "surfaceId": "fixture.document@1/*#viewer",
+            "appId": "fixture.viewer",
+            "windowKindId": "fixture.document",
+            "role": "viewer",
+            "rendererTarget": "react"
+          }
         ]
       },
       {
@@ -67,7 +89,8 @@
           "byteLength": 1,
           "sha256": "dbc1b4c900ffe48d575b5da5c638040125f65db0fe3e24494b76ea986457d986"
         },
-        "nativeCodecs": []
+        "nativeCodecs": [],
+        "openTargets": []
       }
     ]
   }

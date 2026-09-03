@@ -8,16 +8,13 @@
 use crate::artifacts::flow::schema::{FLOW_DEFAULT_GRID_FACTOR, FLOW_DEFAULT_PROXIMITY_DISTANCE};
 use crate::artifacts::flow::FlowSnapshot;
 use flow::{dag::DagFixture, flow_backed_node_graph_extras, flow_host_with_session, FlowEvalSession, FLOW_LOD_MODE_AUTOMATIC};
-use semio_framework_plugin::{build_node_graph_scene, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "flow-view-main";
 pub const BODY_KEY: &str = "flow.view.main";
 const SURFACE_ID: &str = "flow.view.main";
-/// 👁️ Read-only action-namespace id for this viewer's own scene payload — a fresh constant of its own,
-/// not the mutation-capable module's app id (that module is off limits entirely, contract §2.2).
-const FLOW_VIEW_APP_ID: &str = "flow-view";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -77,34 +74,31 @@ fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<N
     (nodes, edges)
 }
 
-/// 👁️ Pure `FlowSnapshot -> UiNode` read: a fresh, throwaway `FlowEvalSession` built for this call only
+/// 👁️ Pure `FlowSnapshot -> BuiltNode` read: a fresh, throwaway `FlowEvalSession` built for this call only
 /// (never persisted — a viewer has no `Transient`/`Config` lane to hold one), the artifact's own pure
 /// LOD/grid/proximity defaults (`Config = NoConfig` means there is no persisted per-session camera or
 /// canvas state to read), no selection, no preview-off overlay.
-pub fn render(document: &FlowSnapshot) -> UiNode {
+pub fn render(document: &FlowSnapshot) -> UiAssemblyResult<BuiltNode> {
     let live = document.to_fixture();
     let session = FlowEvalSession::new();
     let host = flow_host_with_session(&live, &session);
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
     let viewport = NodeGraphViewport { x: 0.0, y: 0.0, zoom: 1.0 };
-    let fixture_json = serde_json::to_string(document).ok();
+    let fixture_json = Some(dsl::os_pack::json::to_json_string(document));
     let flow_extras = flow_backed_node_graph_extras(&live, FLOW_LOD_MODE_AUTOMATIC, FLOW_DEFAULT_PROXIMITY_DISTANCE, true, false, FLOW_DEFAULT_GRID_FACTOR, Some(&session));
-    build_node_graph_scene(
-        SURFACE_ID,
-        FLOW_VIEW_APP_ID,
-        NodeGraphScene {
-            editable: Some(false),
-            operators: flow_extras.operators,
-            capabilities_json: flow_extras.capabilities_json,
-            lod_json: flow_extras.lod_json,
-            fixture_json: flow_extras.fixture_json.or(fixture_json),
-            eval_json: flow_extras.eval_json,
-            status_json: flow_extras.status_json,
-            selection: Vec::new(),
-            preview_off_json: None,
-            ..NodeGraphScene::base(nodes, edges, viewport)
-        },
-    )
+    let scene = NodeGraphScene {
+        editable: Some(false),
+        operators: flow_extras.operators,
+        capabilities_json: flow_extras.capabilities_json,
+        lod_json: flow_extras.lod_json,
+        fixture_json: flow_extras.fixture_json.or(fixture_json),
+        eval_json: flow_extras.eval_json,
+        status_json: flow_extras.status_json,
+        selection: Vec::new(),
+        preview_off_json: None,
+        ..NodeGraphScene::base(nodes, edges, viewport)
+    };
+    scene_surface(SURFACE_ID, SurfaceKind::NodeGraph, &scene)
 }
 //#endregion 🔖️Render
 
@@ -123,7 +117,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn renders_node_graph_scene_for_the_default_document() {
         let document = FlowSnapshot::default();
-        let json = serde_json::to_string(&render(&document)).expect("render json");
+        let node = render(&document).expect("render");
+        let json = serde_json::to_string(&node).expect("render json");
         assert!(json.contains("node-graph"));
     }
 }

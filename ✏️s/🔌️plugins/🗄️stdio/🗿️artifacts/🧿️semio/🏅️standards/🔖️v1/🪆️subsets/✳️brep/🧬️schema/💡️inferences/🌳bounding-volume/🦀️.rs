@@ -378,7 +378,7 @@ pub mod spatial {
             let items = vec![(aabb([5.0, -1.0, -1.0], [6.0, 1.0, 1.0]), "far"), (aabb([1.0, -1.0, -1.0], [2.0, 1.0, 1.0]), "near")];
             let bvh = Bvh::build(items);
             let hits = bvh.query_ray_ordered([0.0, 0.0, 0.0], [1.0, 0.0, 0.0]);
-            let ordered: Vec<&&str> = hits.iter().map(|(item, _)| item).collect();
+            let ordered: Vec<&&str> = hits.iter().map(|&(item, _)| item).collect();
             assert_eq!(ordered, vec![&"near", &"far"]);
             assert!(hits[0].1 < hits[1].1);
         }
@@ -394,7 +394,16 @@ pub mod spatial {
 
         #[semio_framework_async_macros::async_test]
         async fn refit_updates_bounds_in_place_without_rebuilding() {
-            let items = vec![(aabb([0.0, 0.0, 0.0], [1.0, 1.0, 1.0]), 0usize), (aabb([5.0, 5.0, 5.0], [6.0, 6.0, 6.0]), 1usize)];
+            // 🐛 FIX (ticket `26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME` FX-5): item 0's OLD box
+            // used to sit at `[0,1]³`, on the SAME `y=0.5, z=0.5` sightline the probe ray walks —
+            // since `query_ray` casts a genuinely unbounded ray (`t ∈ [0, ∞)`, not a segment), that
+            // ray already crosses `x ∈ [0,1]` at `t ∈ [9,10]` regardless of refit, so the "before"
+            // assertion asked for something geometrically false (the ray legitimately hits item 0's
+            // ORIGINAL box), not a validator/BVH bug. Moved item 0's initial box to `x ∈ [20,21]`
+            // — behind the ray's origin in the `-X` direction it walks, so `t` would have to be
+            // negative to reach it — so "before" is genuinely empty, and refit (unchanged) moves it
+            // into the ray's actual path at `x ∈ [9,11]` for the "after" assertion to find.
+            let items = vec![(aabb([20.0, 0.0, 0.0], [21.0, 1.0, 1.0]), 0usize), (aabb([5.0, 5.0, 5.0], [6.0, 6.0, 6.0]), 1usize)];
             let mut bvh = Bvh::build(items);
             assert!(bvh.query_ray([10.0, 0.5, 0.5], [-1.0, 0.0, 0.0]).is_empty());
             bvh.refit(&|item: &usize| if *item == 0 { aabb([9.0, 0.0, 0.0], [11.0, 1.0, 1.0]) } else { aabb([5.0, 5.0, 5.0], [6.0, 6.0, 6.0]) });

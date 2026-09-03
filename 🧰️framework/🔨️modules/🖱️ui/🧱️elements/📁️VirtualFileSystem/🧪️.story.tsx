@@ -19,7 +19,7 @@ import {
   type VirtualFileSystemRow,
   type VirtualFileSystemSchema,
 } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "../../🧪️story";
+import type { Meta, StoryObj } from "../../🧪️🐨️story.ts";
 
 // 📁️#region 📁️VirtualFileSystem
 const meta = {

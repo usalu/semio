@@ -617,6 +617,76 @@ export interface PathExclusion {
   readonly reason: string;
 }
 
+/** 🔏️Repository path-identity rules for every non-reserved file and directory. */
+export interface PathEmojiPolicy {
+  readonly inventory: "git-visible";
+  readonly identity: "leading-emoji-sequence";
+  readonly siblingNamespace: "files-and-directories";
+  readonly genericEmojiIdentities: readonly string[];
+  readonly reservedSubtreeDirectoryNames: readonly string[];
+}
+
+/** 📂️One Git-visible path presented to the language-neutral path-emoji statutes. */
+export interface PathEmojiEntry {
+  readonly path: string;
+  readonly nodeKind: "directory" | "file";
+  readonly reserved?: boolean;
+}
+
+export type PathEmojiFindingKind = "missing" | "generic" | "presentation" | "spacing" | "duplicate";
+
+/** ⚠️One deterministic path-emoji statute finding. */
+export interface PathEmojiFinding {
+  readonly kind: PathEmojiFindingKind;
+  readonly path: string;
+  readonly sibling?: string;
+  readonly emoji?: string;
+}
+
+const PATH_EMOJI_SEGMENTER = new Intl.Segmenter("und", { granularity: "grapheme" });
+
+/** 😀️Splits the complete leading emoji sequence from a path segment. */
+export function leadingEmojiIdentity(value: string): Readonly<{ emoji: string; rest: string; first: string }> {
+  let emoji = "", first = "";
+  for (const { segment } of PATH_EMOJI_SEGMENTER.segment(value.normalize("NFC"))) {
+    if (!/[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u20E3]/u.test(segment)) break;
+    if (!first) first = segment;
+    emoji += segment;
+  }
+  return { emoji, rest: value.slice(emoji.length), first };
+}
+
+/** 🪞️Folds presentation selectors for logical path-identity comparisons. */
+export function foldPathEmojiIdentity(value: string): string {
+  return value.normalize("NFC").replaceAll("\uFE0E", "").replaceAll("\uFE0F", "");
+}
+
+/** ⚖️Evaluates path emoji rules in one namespace shared by file and directory siblings. */
+export function pathEmojiStatuteFindings(entries: readonly PathEmojiEntry[], genericEmojiIdentities: readonly string[]): PathEmojiFinding[] {
+  const generic = new Set(genericEmojiIdentities.map(foldPathEmojiIdentity));
+  const seen = new Map<string, PathEmojiEntry>();
+  const findings: PathEmojiFinding[] = [];
+  const sorted = [...entries].filter((entry) => !entry.reserved).sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
+  for (const entry of sorted) {
+    const name = entry.path.split("/").at(-1) ?? "";
+    const identity = leadingEmojiIdentity(name);
+    if (!identity.emoji) {
+      findings.push({ kind: "missing", path: entry.path });
+      continue;
+    }
+    if (generic.has(foldPathEmojiIdentity(identity.first))) findings.push({ kind: "generic", path: entry.path, emoji: identity.first });
+    const firstCodePoint = [...identity.first][0] ?? "";
+    if (firstCodePoint && !/\p{Emoji_Presentation}/u.test(firstCodePoint) && !identity.first.includes("\uFE0F")) findings.push({ kind: "presentation", path: entry.path, emoji: identity.first });
+    if (/^\s/u.test(identity.rest)) findings.push({ kind: "spacing", path: entry.path, emoji: identity.emoji });
+    const parent = entry.path.includes("/") ? entry.path.slice(0, entry.path.lastIndexOf("/")) : "";
+    const key = `${parent}\0${foldPathEmojiIdentity(identity.emoji)}`;
+    const previous = seen.get(key);
+    if (previous) findings.push({ kind: "duplicate", path: entry.path, sibling: previous.path, emoji: foldPathEmojiIdentity(identity.emoji) });
+    else seen.set(key, entry);
+  }
+  return findings;
+}
+
 /** 🦀️ One valid way of writing the entry file's `#[path]` strings — see `Taxonomy.rustEntryPathRules`. */
 export interface RustEntryPathConvention {
   readonly id: string;
@@ -797,6 +867,7 @@ export interface Taxonomy {
   readonly packageSourceDispositions: Readonly<Record<string, PackageSourceDisposition>>;
   readonly generatorContracts: Readonly<Record<string, GeneratorContract>>;
   readonly pathExclusions: Readonly<Record<string, PathExclusion>>;
+  readonly pathEmojiPolicy: PathEmojiPolicy;
   readonly unicodeNormalization: { readonly form: "NFC"; readonly caseFold: "lower"; readonly locale: "und" };
   readonly variationSelectorPolicy: { readonly selector: "\uFE0F"; readonly requiredAfterEmoji: true; readonly comparison: "ignore-selector" };
   readonly collisionPolicy: {
@@ -1432,12 +1503,14 @@ function canonicalSemanticDirectoryName(name: string, taxonomy: Taxonomy): strin
 /** 📁️ Resolves one canonical semantic directory name to its unique global or owner-local registry identifier. */
 export function semanticDirectoryKindId(name: string, taxonomy: Taxonomy = loadTaxonomy(), context: SemanticDirectoryMatchContext = {}): string | null {
   const normalized = canonicalSemanticDirectoryName(name, taxonomy);
+  const identity = leadingEmojiIdentity(normalized);
+  const roleName = identity.emoji ? `${identity.first}${identity.rest}` : normalized;
   const parentKindId = context.parentKindId;
   const matches = Object.entries(taxonomy.semanticDirectoryKinds).filter(([, spec]) => {
     if (spec.parentKindIds && !parentKindId) return false;
     if (spec.parentKindIds && !spec.parentKindIds.includes(parentKindId!)) return false;
-    if (!normalized.startsWith(spec.emoji)) return false;
-    const slug = normalized.slice(spec.emoji.length);
+    if (!roleName.startsWith(spec.emoji)) return false;
+    const slug = roleName.slice(spec.emoji.length);
     return (slug.length === 0 && spec.allowEmojiOnly) || (slug.length > 0 && new RegExp(spec.slugPattern, "u").test(slug));
   });
   const contextual = parentKindId ? matches.filter(([, spec]) => spec.parentKindIds?.includes(parentKindId)) : [];
@@ -1446,7 +1519,7 @@ export function semanticDirectoryKindId(name: string, taxonomy: Taxonomy = loadT
   if (resolved.length > 1) return null;
   const owners = [context.parentKindId, ...(context.ancestorKindIds ?? [])].filter((id): id is string => Boolean(id));
   for (const ownerKindId of owners) {
-    const memberMatches = Object.entries(taxonomy.semanticDirectoryMemberKinds).filter(([, spec]) => spec.ownerKindIds.includes(ownerKindId) && spec.memberNames.includes(normalized));
+    const memberMatches = Object.entries(taxonomy.semanticDirectoryMemberKinds).filter(([, spec]) => spec.ownerKindIds.includes(ownerKindId) && spec.memberNames.includes(roleName));
     if (memberMatches.length > 0) return memberMatches.length === 1 ? memberMatches[0]![0] : null;
   }
   return null;
@@ -2222,6 +2295,7 @@ export interface FixedContractMatchContext {
   readonly parentDirectoryKindId?: string;
   readonly parentFixedDirectoryContractIds?: readonly string[];
   readonly siblingFixedFilenameContractIds?: readonly string[];
+  readonly pathMatcher?: TaxonomyPathMatcher;
 }
 
 function taxonomyPatternExpression(pattern: string): RegExp {
@@ -2323,14 +2397,41 @@ function fixedContractWinner<T extends FixedFilenameContract | FixedDirectoryCon
 export function fixedFilenameContractIdsForPath(path: string, taxonomy: Taxonomy = loadTaxonomy(), context: FixedContractMatchContext = {}): string[] {
   const normalized = path.replaceAll("\\", "/").replace(/^\.\//u, "").normalize(taxonomy.unicodeNormalization.form);
   return fixedContractWinner("filename", Object.entries(taxonomy.fixedFilenameContracts)
-    .filter(([, contract]) => taxonomyPathPatternMatches(normalized, contract.pathPattern) && fixedScopeMatches(contract, normalized, context)));
+    .filter(([, contract]) => (context.pathMatcher?.matches(normalized, contract.pathPattern) ?? taxonomyPathPatternMatches(normalized, contract.pathPattern)) && fixedScopeMatches(contract, normalized, context)));
 }
 
 /** 📁️ Resolves the single deterministic fixed directory winner. */
 export function fixedDirectoryContractIdsForPath(path: string, taxonomy: Taxonomy = loadTaxonomy(), context: FixedContractMatchContext = {}): string[] {
   const normalized = path.replaceAll("\\", "/").replace(/^\.\//u, "").replace(/\/$/u, "").normalize(taxonomy.unicodeNormalization.form);
   return fixedContractWinner("directory", Object.entries(taxonomy.fixedDirectoryContracts)
-    .filter(([, contract]) => taxonomyPathPatternMatches(normalized, contract.pathPattern) && fixedScopeMatches(contract, normalized, context)));
+    .filter(([, contract]) => (context.pathMatcher?.matches(normalized, contract.pathPattern) ?? taxonomyPathPatternMatches(normalized, contract.pathPattern)) && fixedScopeMatches(contract, normalized, context)));
+}
+
+/** 🧵️Invocation-owned fixed-contract resolver that indexes literal basenames and compiles each glob once. */
+export function createFixedContractResolver(taxonomy: Taxonomy = loadTaxonomy()): Readonly<{
+  filenameIdsForPath: (path: string, context?: FixedContractMatchContext) => string[];
+  directoryIdsForPath: (path: string, context?: FixedContractMatchContext) => string[];
+}> {
+  const matcher = createTaxonomyPathMatcher();
+  const index = <T extends FixedFilenameContract | FixedDirectoryContract>(contracts: Readonly<Record<string, T>>) => {
+    const literal = new Map<string, (readonly [string, T])[]>(), wildcard: (readonly [string, T])[] = [];
+    for (const entry of Object.entries(contracts)) {
+      const name = entry[1].pathPattern.slice(entry[1].pathPattern.lastIndexOf("/") + 1);
+      if (/[?*\[]/u.test(name)) wildcard.push(entry);
+      else literal.set(name, [...(literal.get(name) ?? []), entry]);
+    }
+    return (path: string, context: FixedContractMatchContext, kind: "filename" | "directory"): string[] => {
+      const normalized = path.replaceAll("\\", "/").replace(/^\.\//u, "").replace(kind === "directory" ? /\/$/u : /$^/u, "").normalize(taxonomy.unicodeNormalization.form);
+      const name = normalized.slice(normalized.lastIndexOf("/") + 1);
+      const candidates = [...(literal.get(name) ?? []), ...wildcard];
+      return fixedContractWinner(kind, candidates.filter(([, contract]) => matcher.matches(normalized, contract.pathPattern) && fixedScopeMatches(contract, normalized, context)));
+    };
+  };
+  const filenames = index(taxonomy.fixedFilenameContracts), directories = index(taxonomy.fixedDirectoryContracts);
+  return Object.freeze({
+    filenameIdsForPath: (path: string, context: FixedContractMatchContext = {}) => filenames(path, context, "filename"),
+    directoryIdsForPath: (path: string, context: FixedContractMatchContext = {}) => directories(path, context, "directory"),
+  });
 }
 
 /** 🚫️ Resolves an exact fixed-looking path to its schema-owned normalize/relocate decision. */
@@ -3271,6 +3372,14 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     const contract = taxonomy.fixedFilenameContracts[id];
     if (!contract || contract.pathPattern !== pattern || contract.authority !== authority || contract.scope.kind !== "sibling-fixed-filename-contract" || contract.scope.fixedFilenameContractId !== "nx-project-manifest") problems.push(`fixedFilenameContracts.${id} must remain conjunctively scoped through an adjacent exact Nx project manifest.`);
   }
+  const bunPublicationScopes = [
+    ["bun-package-readme", "**/README.md"],
+    ["bun-package-license", "**/LICENSE.md"],
+  ] as const;
+  for (const [id, pattern] of bunPublicationScopes) {
+    const contract = taxonomy.fixedFilenameContracts[id];
+    if (!contract || contract.pathPattern !== pattern || contract.authority !== "Bun package publisher" || contract.scope.kind !== "package-root" || contract.scope.ecosystemId !== "🟦️typescript" || contract.verification !== "bun pm pack --dry-run --ignore-scripts") problems.push(`fixedFilenameContracts.${id} must remain scoped to an exact publishable Bun package root.`);
+  }
   const ticketCargoManifest = taxonomy.fixedFilenameContracts["ticket-cargo-manifest"];
   if (!ticketCargoManifest || ticketCargoManifest.pathPattern !== `${ticketCargoPattern}Cargo.toml` || ticketCargoManifest.authority !== "Cargo" || ticketCargoManifest.scope.kind !== "path-pattern") problems.push("fixedFilenameContracts.ticket-cargo-manifest must remain scoped to governed canonical or embedded ticket paths.");
   const ticketCargoLock = taxonomy.fixedFilenameContracts["ticket-cargo-lock"];
@@ -3349,7 +3458,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       if (!expected.has(id)) problems.push(`packageSourceDispositions[${JSON.stringify(id)}] does not name a source-format fixed/configurable contract.`);
       else if (expected.get(id) !== disposition.contractKind) problems.push(`packageSourceDispositions[${JSON.stringify(id)}].contractKind does not match its registry.`);
       if (!["adapter-source", "tool-metadata"].includes(disposition.disposition)) problems.push(`packageSourceDispositions[${JSON.stringify(id)}].disposition is invalid.`);
-      const TOOL_CONFIG_VALIDATORS: Readonly<Record<string, string>> = { "vitest-configuration": "vitest-config-entry", "tool-config-vitest": "vitest-config", "tool-config-tailwind": "tailwind-config", "tool-config-postcss": "postcss-config", "tool-config-eslint": "eslint-config", "tool-config-dependency-cruiser": "dependency-cruiser-config" };
+      const TOOL_CONFIG_VALIDATORS: Readonly<Record<string, string>> = { "vitest-configuration": "vitest-config-entry", "tool-config-vitest": "vitest-config", "tool-config-tailwind": "tailwind-config", "tool-config-postcss": "postcss-config", "tool-config-eslint": "eslint-config", "tool-config-dependency-cruiser": "dependency-cruiser-config", "pytest-configuration": "root-pytest-config", "eslint-configuration": "root-eslint-config" };
       const configValidatorOwner = TOOL_CONFIG_VALIDATORS[disposition.validator];
       if (!["package-glue", "command-router", ...Object.keys(TOOL_CONFIG_VALIDATORS)].includes(disposition.validator) || (disposition.disposition === "adapter-source") !== (disposition.validator === "package-glue") || (configValidatorOwner !== undefined && id !== configValidatorOwner)) problems.push(`packageSourceDispositions[${JSON.stringify(id)}] disposition/validator pair is invalid.`);
       if (!disposition.authority || !disposition.verification) problems.push(`packageSourceDispositions[${JSON.stringify(id)}] must declare authority and verification.`);
@@ -3508,6 +3617,9 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
   }
   if (taxonomy.unicodeNormalization?.form !== "NFC" || taxonomy.unicodeNormalization?.caseFold !== "lower" || taxonomy.unicodeNormalization?.locale !== "und") problems.push("unicodeNormalization must be NFC/lower/und.");
   if (taxonomy.variationSelectorPolicy?.selector !== "\uFE0F" || taxonomy.variationSelectorPolicy?.requiredAfterEmoji !== true || taxonomy.variationSelectorPolicy?.comparison !== "ignore-selector") problems.push("variationSelectorPolicy is invalid.");
+  if (taxonomy.pathEmojiPolicy?.inventory !== "git-visible" || taxonomy.pathEmojiPolicy?.identity !== "leading-emoji-sequence" || taxonomy.pathEmojiPolicy?.siblingNamespace !== "files-and-directories") problems.push("pathEmojiPolicy inventory, identity, and sibling namespace are invalid.");
+  if (taxonomy.pathEmojiPolicy?.genericEmojiIdentities?.map(foldPathEmojiIdentity).join("\0") !== "📁\0📂\0📄") problems.push("pathEmojiPolicy.genericEmojiIdentities must reject the three generic file/folder glyphs.");
+  if (!Array.isArray(taxonomy.pathEmojiPolicy?.reservedSubtreeDirectoryNames) || new Set(taxonomy.pathEmojiPolicy.reservedSubtreeDirectoryNames.map(foldPathEmojiIdentity)).size !== taxonomy.pathEmojiPolicy.reservedSubtreeDirectoryNames.length) problems.push("pathEmojiPolicy.reservedSubtreeDirectoryNames must be a unique array.");
   const comparisons = ["byte", "nfc", "case-fold", "vs16-fold", "same-kind"];
   if (taxonomy.collisionPolicy?.comparisons?.join("\0") !== comparisons.join("\0")) problems.push(`collisionPolicy.comparisons must be exactly ${comparisons.join(", ")}.`);
   if (taxonomy.collisionPolicy?.maxPathBytes !== 240 || taxonomy.collisionPolicy?.rejectWindowsReservedNames !== true || taxonomy.collisionPolicy?.rejectTrailingDotsAndSpaces !== true) problems.push("collisionPolicy platform constraints must retain maxPathBytes 240 and reject reserved/trailing names.");
@@ -4145,6 +4257,11 @@ function exactOwnerPath(path: unknown): path is string {
   return typeof path === "string" && path.length > 0 && path === path.normalize("NFC") && !path.startsWith("/") && !path.includes("\\") && !/[\u0000-\u001f]/u.test(path) && path.split("/").every((part) => part !== "" && part !== "." && part !== "..") && !["compose", "temp/compose"].some((root) => path === root || path.startsWith(root + "/"));
 }
 
+/** 📖️ Resolves the externally meaningful README/LICENSE basename beneath repository emoji identity. */
+function semanticOwnedSourceBasename(path: string): string {
+  return leadingEmojiIdentity(basename(path)).rest;
+}
+
 //#region 🪪️Reviewed Current Owner Preimages
 /** 📐️ Parses the closed one-row current-source revision grammar without reading any path. */
 export function parseSemanticOwnedCurrentSourceRevisions(input: unknown): Readonly<Record<string, SemanticOwnedCurrentSourceRevision>> {
@@ -4161,7 +4278,7 @@ export function parseSemanticOwnedCurrentSourceRevisions(input: unknown): Readon
     return { sha256: selected.sha256, size: selected.size as number, mode: selected.mode };
   };
   if (row.catalogCaseIndex !== 31 || typeof row.baselineCommit !== "string" || !/^[0-9a-f]{40}$/u.test(row.baselineCommit) || typeof row.baselineBlob !== "string" || !/^[0-9a-f]{40}$/u.test(row.baselineBlob)) return fail(id + " index or baseline identity");
-  if (!exactOwnerPath(row.sourcePath) || /[:*?"<>|]/u.test(row.sourcePath) || !row.sourcePath.endsWith("/README.md") || Buffer.from(row.sourcePath).toString("utf8") !== row.sourcePath) return fail(id + " raw source coordinate");
+  if (!exactOwnerPath(row.sourcePath) || /[:*?"<>|]/u.test(row.sourcePath) || semanticOwnedSourceBasename(row.sourcePath) !== "README.md" || Buffer.from(row.sourcePath).toString("utf8") !== row.sourcePath) return fail(id + " raw source coordinate");
   if (!exactOwnerPath(row.expectationsPath) || /[:*?"<>|]/u.test(row.expectationsPath) || !row.expectationsPath.endsWith(".json") || Buffer.from(row.expectationsPath).toString("utf8") !== row.expectationsPath || typeof row.expectationsSha256 !== "string" || !/^[0-9a-f]{64}$/u.test(row.expectationsSha256)) return fail(id + " expectation identity");
   const baselinePreimage = tuple(row.baselinePreimage, "baseline"), currentPreimage = tuple(row.currentPreimage, "current");
   if (baselinePreimage.sha256 === currentPreimage.sha256) return fail(id + " requires one distinct current preimage");
@@ -4243,7 +4360,7 @@ export function parseSemanticOwnedDocumentCorrections(input: unknown): Readonly<
   const rows = record(input, ["repo-library-script-filename-v1"], "registry");
   for (const [id, value] of Object.entries(rows)) {
     const row = record(value, ["contractKind", "activation", "sourcePath", "destinationPath", "preimage", "postimage", "replacementFixedFilenameContractId", "splices", "rationaleRule"], id);
-    if (row.contractKind !== "exact-owner-content-splices" || row.activation !== "owner-leaf-move" || row.replacementFixedFilenameContractId !== "root-script" || row.rationaleRule !== "owner-script-filename-documentation-v1" || !exactOwnerPath(row.sourcePath) || !row.sourcePath.endsWith("/README.md") || !exactOwnerPath(row.destinationPath) || row.destinationPath !== dirname(row.sourcePath) + "/📃️readme/📝️.md") throw new Error(`Invalid authored document ${id} owner or activation`);
+    if (row.contractKind !== "exact-owner-content-splices" || row.activation !== "owner-leaf-move" || row.replacementFixedFilenameContractId !== "root-script" || row.rationaleRule !== "owner-script-filename-documentation-v1" || !exactOwnerPath(row.sourcePath) || semanticOwnedSourceBasename(row.sourcePath) !== "README.md" || !exactOwnerPath(row.destinationPath) || row.destinationPath !== dirname(row.sourcePath) + "/📃️readme/📝️.md") throw new Error(`Invalid authored document ${id} owner or activation`);
     const preimage = record(row.preimage, ["sha256", "mode", "size"], id + " preimage"), postimage = record(row.postimage, ["sha256", "size"], id + " postimage");
     if (typeof preimage.sha256 !== "string" || !/^[0-9a-f]{64}$/u.test(preimage.sha256) || preimage.mode !== "0644" || !Number.isSafeInteger(preimage.size) || (preimage.size as number) < 0 || typeof postimage.sha256 !== "string" || !/^[0-9a-f]{64}$/u.test(postimage.sha256) || !Number.isSafeInteger(postimage.size) || (postimage.size as number) < 0) throw new Error(`Invalid authored document ${id} preimage or postimage`);
     if (!Array.isArray(row.splices) || row.splices.length !== 10) throw new Error(`Authored document ${id} requires exactly ten filename splices`);
@@ -4359,7 +4476,7 @@ export function semanticExactOwnedFileCatalog(repoRoot: string, taxonomy: Taxono
   const counts = { fixed: 0, license: 0, projected: 0, readme: 0, referenceBindings: 0, total: value.cases.length };
   const cases = value.cases.map((input) => {
     const row = object(input) as unknown as SemanticExactOwnedFileCase;
-    const sourceBasename = typeof row.sourcePath === "string" ? basename(row.sourcePath) : "";
+    const sourceBasename = typeof row.sourcePath === "string" ? semanticOwnedSourceBasename(row.sourcePath) : "";
     if (!exactOwnerPath(row.sourcePath) || !exactOwnerPath(row.destinationPath) || !(contract.sourceBasenames as readonly string[]).includes(sourceBasename) || !contract.allowedDispositions.includes(row.disposition) || !ownerEvidence[row.ownerEvidenceId] || sources.has(row.sourcePath) || destinations.has(row.destinationPath) || Buffer.byteLength(row.destinationPath) > 240) throw new Error("Exact owner catalog has invalid or duplicate source/destination ownership");
     const readme = sourceBasename === "README.md";
     const kind = contract.destinationDirectoryKinds[readme ? "readme" : "license"];

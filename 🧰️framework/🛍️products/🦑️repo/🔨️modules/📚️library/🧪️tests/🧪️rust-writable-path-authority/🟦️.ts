@@ -10,7 +10,7 @@ import ts from "typescript";
 import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustNonRepoJoinBaseSpans } from "../../🔍️discovery/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../../../"), ticket = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧪️🪪️🟢️rust-writable-path-authority/🔣️.json"), "utf8"));
 const priorPath = join(root, vector.semantics.preservedFiniteCheckpoint.path), prior = readFileSync(priorPath, "utf8"), priorSyntax = ts.createSourceFile(priorPath, prior, ts.ScriptTarget.Latest, true);
 const sourcePath = resolve(import.meta.dir, "../../🧹️normalization/🟦️.ts"), source = readFileSync(sourcePath, "utf8"), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
 type Row = { id: string; source: string; targets: string[]; affected: string[]; condition: string; expected: string };
@@ -143,7 +143,7 @@ for (const scenario of [
 ]) test("actual rustc independently proves writable counterexample: " + scenario.id, () => {
   const h = harness(compilers[0]!), row = vector.cases.find((item: Row) => item.id === scenario.id), f = h.fixture(row);
   f.put("🧾️native/🦀️.rs", scenario.entry);
-  const binary = join(f.directory, "🧾️native", process.platform === "win32" ? "🔣️.exe" : "🔣️");
+  const binary = join(f.directory, "🧾️native", process.platform === "win32" ? "🔣️.exe" : "../🧪️🪪️🟢️rust-writable-path-authority/🔣️.json");
   const compile = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "writable_path_authority", join(f.directory, "🧾️native/🦀️.rs"), "-o", binary], { cwd: f.directory, env: { ...process.env, CARGO_MANIFEST_DIR: join(f.directory, "pkg") }, stdout: "pipe", stderr: "pipe" });
   expect(compile.exitCode, compile.stderr.toString()).toBe(0);
   const runtime = Bun.spawnSync([binary], { cwd: f.directory, stdout: "pipe", stderr: "pipe" });

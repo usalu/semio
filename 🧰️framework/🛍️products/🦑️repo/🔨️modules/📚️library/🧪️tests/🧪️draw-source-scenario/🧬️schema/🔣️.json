@@ -90,7 +90,7 @@
       "uniqueItems": true,
       "allOf": [
         { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "Cargo.toml" }, "format": { "const": "toml" } } } },
-        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔣️.json" }, "format": { "const": "json" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "../../🧪️🪄️draw-source-scenario/🧬️schema/🔣️.json" }, "format": { "const": "json" } } } },
         { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "📦️packages/🦀️rust/Cargo.toml" }, "format": { "const": "toml" } } } },
         { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🧪️tests/🦀️reference.rs" }, "format": { "const": "rust" } } } },
         { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "📜️script.ts" }, "format": { "const": "typescript" } } } }

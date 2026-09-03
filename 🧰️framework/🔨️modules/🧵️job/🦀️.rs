@@ -1350,6 +1350,10 @@ pub trait InteractiveJob: Send {
     fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome;
     fn begin_close(&mut self);
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep;
+    /// 🔔️ Registers the wake source that can advance a genuinely blocked close.
+    fn register_close_wake(&self, _waker: &Waker) -> bool {
+        false
+    }
     fn terminal_is_empty(&self) -> bool;
 }
 //#endregion 🧩️InteractiveJob
@@ -2446,6 +2450,15 @@ impl<J> WorkerJobSessionInner<J> {
         self.raise_wake();
     }
 
+    unsafe fn put_authority_quiet(&self, authority: WorkerJobAuthority<J>, phase: u8) {
+        unsafe {
+            let storage = &mut *self.authority.get();
+            assert!(storage.is_none(), "session transition cannot overwrite an authority");
+            *storage = Some(authority);
+        }
+        self.phase.store(phase, Ordering::Release);
+    }
+
     fn raise_wake(&self) {
         if self.wake_pending.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return;
@@ -2881,6 +2894,26 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
 
     pub fn register_wake(&self, waker: &Waker) -> Result<(), WorkerJobContention> {
         self.inner.register_waker(waker)
+    }
+
+    /// 🔔️ Replaces a stale session wake with the exact job-owned close wake when available.
+    pub fn register_close_wake(&self, waker: &Waker) -> Result<bool, WorkerJobContention> {
+        loop {
+            let phase = self.inner.phase();
+            if phase != SESSION_CLOSE {
+                self.take_wake();
+                self.register_wake(waker)?;
+                return Ok(true);
+            }
+            if self.inner.phase.compare_exchange(SESSION_CLOSE, SESSION_TRANSITION, Ordering::AcqRel, Ordering::Acquire).is_err() {
+                continue;
+            }
+            self.inner.wake_pending.store(false, Ordering::Release);
+            let authority = unsafe { self.inner.take_authority() };
+            let registered = authority.job.as_ref().is_some_and(|job| job.register_close_wake(waker));
+            unsafe { self.inner.put_authority_quiet(authority, SESSION_CLOSE) };
+            return Ok(registered);
+        }
     }
 
     pub fn take_wake(&self) -> bool {

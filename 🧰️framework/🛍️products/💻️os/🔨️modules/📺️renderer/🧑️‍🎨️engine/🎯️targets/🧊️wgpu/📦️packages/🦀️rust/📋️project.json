@@ -119,6 +119,21 @@
         "forwardAllArgs": true
       }
     },
+    "native-environment-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts native-environment-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+      }
+    },
+    "native-build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts native-build",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
     "lint": {
       "executor": "nx:run-commands",
       "options": {

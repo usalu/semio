@@ -4,6 +4,13 @@
   "sourceRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
   "projectType": "library",
   "targets": {
+    "test-path-emoji-statutes": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test path-emoji-statutes"
+      }
+    },
     "test-mutation-ticket-role-routing": {
       "executor": "nx:run-commands",
       "options": {

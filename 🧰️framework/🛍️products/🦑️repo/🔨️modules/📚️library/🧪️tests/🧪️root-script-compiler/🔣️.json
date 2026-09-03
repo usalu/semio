@@ -17,15 +17,15 @@
     "missingActiveOutput": "Strict workspace validation requires the missing active output",
     "lookupCount": 26,
     "values": {
-      "POLICY_TS_COMPONENT_LEAF": "🟦️.ts",
+      "POLICY_TS_COMPONENT_LEAF": "../🧪️🟨️root-script-compiler/🟦️.ts",
       "POLICY_RS_COMPONENT_LEAF_NAME": "🦀️.rs",
       "POLICY_GRAMMAR_SPEC_LEAF": "📖️.grammar.semio",
       "POLICY_PROTOCOL_SPEC_LEAF": "📡️.protocol.semio",
       "POLICY_RS_COMPONENT_LEAF": "🦀️.rs",
-      "POLICY_STDIO_TEXT_SPEC_LEAVES": ["📖️.grammar.semio", "🔤️.ebnf", "🅰️.g4", "🔗️.graphql", "🔣️.json", "🛰️.proto", "🦀️.rs", "🟦️.ts"],
-      "POLICY_STDIO_BINARY_SPEC_LEAVES": ["📡️.protocol.semio", "🔠️.abnf", "🥋️.ksy", "🌶️.spicy", "🦀️.rs", "🟦️.ts"],
+      "POLICY_STDIO_TEXT_SPEC_LEAVES": ["📖️.grammar.semio", "🔤️.ebnf", "🅰️.g4", "🔗️.graphql", "../🧪️🟨️root-script-compiler/🔣️.json", "🛰️.proto", "🦀️.rs", "../🧪️🟨️root-script-compiler/🟦️.ts"],
+      "POLICY_STDIO_BINARY_SPEC_LEAVES": ["📡️.protocol.semio", "🔠️.abnf", "🥋️.ksy", "🌶️.spicy", "🦀️.rs", "../🧪️🟨️root-script-compiler/🟦️.ts"],
       "POLICY_GRAMMAR_HONESTY_LEAF_MARKERS": { "🅰️.g4": "DOCUMENT: 'schema' [ ]+", "🔤️.ebnf": "header = 'schema', space,", "📖️.grammar.semio": "payload = *OCTET", "🔠️.abnf": "payload = *OCTET", "📡️.protocol.semio": "payload = *OCTET", "🥋️.ksy": "size-eos: true", "🌶️.spicy": "payload: bytes &eod;" },
-      "POLICY_FACET_MIRROR_DRIFT_SIBLINGS": ["🟦️.ts", "🔗️.graphql", "🔣️.json", "🛰️.proto"]
+      "POLICY_FACET_MIRROR_DRIFT_SIBLINGS": ["../🧪️🟨️root-script-compiler/🟦️.ts", "🔗️.graphql", "../🧪️🟨️root-script-compiler/🔣️.json", "🛰️.proto"]
     }
   },
   "fixtureRetention": { "ownerPath": "📓️root-script-compiler/🧾️runs", "prefix": "🧪️glue-" },

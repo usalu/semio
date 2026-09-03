@@ -1,7 +1,7 @@
 //! 📇️ Directory event log wire contract (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-
 //! STUDIOS, contract C1): `DirectoryEvent`/`DirectoryEventBody` (persisted, backend-assigned dense
 //! `seq`), `DirectoryCommand` (client intent posted to `/directory/commands`), `DirectoryStreamMessage`
-//! (the `/directory/ws` wire envelope), and the read DTOs (`SpaceView`/`MemberView`/`UserView`/
+//! (the `/directory/socket/v1` wire envelope), and the read DTOs (`SpaceView`/`MemberView`/`UserView`/
 //! `ConnectionView`/`DocumentView`/`InviteView`) the hub's REST surface returns. Pure data, no fold
 //! logic — see the module root `../🦀️.rs`'s `DirectoryReadModel`/`fold`. `DirectorySpaceKind`/
 //! `DirectorySpaceVisibility`/`DirectorySpaceRole` mirror `🪐️space`'s `SpaceKind`/`SpaceVisibility`/
@@ -59,7 +59,7 @@ pub enum DirectorySpaceRole {
 
 /// 🎯️ Structural tenant-qualified document identity shared by directory and artifact authority.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DocumentScope {
     pub space_id: String,
     pub document_id: String,
@@ -213,6 +213,188 @@ pub enum DirectoryCommand {
 }
 //#endregion 🔖️Command
 
+//#region 🔖️Admin
+/// 🛡️ One strict administrator intent; actor and authority fields are always server-derived.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
+pub enum AdminIntentV1 {
+    CreateSpace { request_id: String, name: String, space_kind: DirectorySpaceKind, visibility: DirectorySpaceVisibility },
+    RenameSpace { request_id: String, space_id: String, name: String },
+    SetSpaceVisibility { request_id: String, space_id: String, visibility: DirectorySpaceVisibility },
+    ArchiveSpace { request_id: String, space_id: String },
+    DeleteSpace { request_id: String, space_id: String },
+    UpsertSpaceMember { request_id: String, space_id: String, email: String, role: DirectorySpaceRole },
+    RemoveSpaceMember { request_id: String, space_id: String, user_id: String },
+    CreateSpaceInvite { request_id: String, space_id: String, role: DirectorySpaceRole, ttl_secs: u32 },
+    RevokeSpaceInvite { request_id: String, space_id: String, invite_id: String },
+    IssueDocumentShare { request_id: String, scope: DocumentScope, ttl_secs: u32 },
+    RevokeDocumentShare { request_id: String, scope: DocumentScope, share_id: String, reason_code: String },
+    RevokeUserSessions { request_id: String, user_id: String, reason_code: String },
+    KickConnection { request_id: String, sync_session_id: String, reason_code: String },
+    RebuildDirectoryProjections { request_id: String, expected_head_seq: u64 },
+}
+
+impl AdminIntentV1 {
+    /// 🪪️ Returns the caller's bounded idempotency key.
+    pub fn request_id(&self) -> &str {
+        match self {
+            Self::CreateSpace { request_id, .. }
+            | Self::RenameSpace { request_id, .. }
+            | Self::SetSpaceVisibility { request_id, .. }
+            | Self::ArchiveSpace { request_id, .. }
+            | Self::DeleteSpace { request_id, .. }
+            | Self::UpsertSpaceMember { request_id, .. }
+            | Self::RemoveSpaceMember { request_id, .. }
+            | Self::CreateSpaceInvite { request_id, .. }
+            | Self::RevokeSpaceInvite { request_id, .. }
+            | Self::IssueDocumentShare { request_id, .. }
+            | Self::RevokeDocumentShare { request_id, .. }
+            | Self::RevokeUserSessions { request_id, .. }
+            | Self::KickConnection { request_id, .. }
+            | Self::RebuildDirectoryProjections { request_id, .. } => request_id,
+        }
+    }
+}
+
+/// 📍 Terminal or accepted state of one administrator intent.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "kebab-case")]
+pub enum AdminIntentStateV1 {
+    Succeeded,
+    Accepted,
+    Failed,
+    Cancelled,
+}
+
+/// 🧾 Bounded public outcome without capability or private locator material.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct AdminIntentOutcomeV1 {
+    pub code: String,
+    pub durable: bool,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub kick_attempted: Option<u32>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub kick_signalled: Option<u32>,
+}
+
+/// 🎟️ One-display-only secret result, never stored in an audit fact or query projection.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct AdminIntentResultV1 {
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub invite_token: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub share_token: Option<String>,
+}
+
+/// 🧾 Receipt for exactly one accepted administrator intent.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct AdminIntentReceiptV1 {
+    pub operation_id: String,
+    pub correlation_id: String,
+    pub state: AdminIntentStateV1,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub event_seq_first: Option<u64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub event_seq_last: Option<u64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub result: Option<AdminIntentResultV1>,
+    pub outcome: AdminIntentOutcomeV1,
+}
+
+/// ⏳ Observable bounded progress for one running administrator operation.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct AdminOperationProgressV1 {
+    pub completed_events: u64,
+    pub total_events: u64,
+    pub cancel_requested: bool,
+}
+
+/// 🔎 Durable receipt plus optional in-process progress for an expensive operation.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct AdminOperationStatusV1 {
+    pub receipt: AdminIntentReceiptV1,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub progress: Option<AdminOperationProgressV1>,
+}
+
+/// 📄 One bounded cursor page observed at a server wall-clock instant.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct AdminPageV1<T> {
+    pub rows: Vec<T>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub next_cursor: Option<String>,
+    pub observed_at_ms: i64,
+}
+
+/// 🔴️ Trusted subset of a persisted sync-session binding.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct AdminRecordedConnectionV1 {
+    pub sync_session_id: String,
+    pub scope: DocumentScope,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub authenticated_user_id: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub email: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub role: Option<DirectorySpaceRole>,
+    pub connected_at_ms: i64,
+    pub source: String,
+}
+
+/// 📸 Exact page of recorded bindings; it makes no transport-level liveness claim.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct AdminConnectionSnapshotV1 {
+    pub rows: Vec<AdminRecordedConnectionV1>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub next_cursor: Option<String>,
+    pub observed_at_ms: i64,
+    pub source: String,
+    pub head_seq: u64,
+}
+
+/// 🧮 Append-only operation-audit phase.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "lowercase")]
+pub enum AdminOperationAuditPhaseV1 {
+    Accepted,
+    Succeeded,
+    Failed,
+    Cancelled,
+}
+
+/// 📜 Public redacted administrator operation audit fact.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct AdminOperationAuditV1 {
+    pub sequence: u64,
+    pub operation_id: String,
+    pub occurred_at_ms: i64,
+    pub phase: AdminOperationAuditPhaseV1,
+    pub intent_kind: String,
+    pub target_kind: String,
+    pub target_id: String,
+    pub principal_user_id: String,
+    pub principal_session_id: String,
+    pub principal_generation: u64,
+    pub correlation_id: String,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub event_seq_first: Option<u64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub event_seq_last: Option<u64>,
+    pub outcome_code: String,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub reason_code: Option<String>,
+}
+//#endregion 🔖️Admin
+
 //#region 🔖️Views
 /// 🏠️ One space, as the hub's REST/read surface renders it. `role` is the CALLING user's
 /// membership role (server-filled per request), never derived by the pure fold.
@@ -303,6 +485,280 @@ pub struct DocumentDescriptor {
     pub bootstrap_version: u32,
     pub bootstrap_frontier: DocumentFrontier,
     pub bootstrap_snapshot_hash: String,
+}
+
+/// 🧯️ Maximum UTF-8 byte length for one public document-open identity.
+pub const DOCUMENT_OPEN_ID_MAX_BYTES: usize = 256;
+/// 🧯️ Maximum UTF-8 byte length for one client-instance identity.
+pub const DOCUMENT_OPEN_CLIENT_INSTANCE_MAX_BYTES: usize = 128;
+/// ⏳ Maximum lifetime of a document-open plan.
+pub const DOCUMENT_OPEN_PLAN_MAX_TTL_MS: u64 = 30_000;
+/// 🔢 Largest integer that has an exact representation in every v1 implementation.
+pub const DOCUMENT_OPEN_MAX_SAFE_INTEGER: u64 = 9_007_199_254_740_991;
+
+/// 📨 Structural, non-authoritative preference submitted to the protected open-plan command.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentOpenIntentV1 {
+    pub schema: String,
+    pub version: u32,
+    pub scope: DocumentScope,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub requested_surface_id: Option<String>,
+    pub client_instance_id: String,
+}
+
+/// 🖼️ Renderer implementation selected by the verified server catalog.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "lowercase")]
+pub enum DocumentOpenRendererTargetV1 {
+    React,
+    Wgpu,
+    Wasm,
+}
+
+/// 👁️ Server-selected document surface authority.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "lowercase")]
+pub enum DocumentOpenSurfaceRoleV1 {
+    Viewer,
+    Editor,
+}
+
+/// 📦️ Exact verified package projection required by one open plan.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentOpenPackageV1 {
+    pub plugin_id: String,
+    pub package_id: String,
+    pub version: String,
+    pub component_sha256: String,
+    pub component_blake3: String,
+    pub descriptor_byte_sha256: String,
+}
+
+/// 🗂️ Immutable verified-catalog generation selected for one plan.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentOpenCatalogV1 {
+    pub generation_id: String,
+}
+
+/// 🧬️ Exact immutable artifact projection required by one open plan.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentOpenArtifactV1 {
+    pub kind: String,
+    pub schema: String,
+    pub pack_schema_hash: String,
+}
+
+/// 🪟️ One server-selected declared surface.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentOpenSurfaceV1 {
+    pub surface_id: String,
+    pub app_id: String,
+    pub window_kind_id: String,
+    pub role: DocumentOpenSurfaceRoleV1,
+    pub renderer_target: DocumentOpenRendererTargetV1,
+}
+
+/// 🔐️ Effective document operations after catalog and subject policy intersection.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentOpenGrantV1 {
+    pub read: bool,
+    pub write: bool,
+    pub observe: bool,
+}
+
+/// 🏔️ Public immutable bootstrap identity selected for this plan.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentOpenCheckpointV1 {
+    pub checkpoint_id: String,
+    pub descriptor_digest_v1: String,
+    pub baseline_frontier: ArtifactFrontier,
+    pub aggregate_sha256: String,
+}
+
+/// 🔁️ Durable generations that must remain exact until admission.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentOpenRevalidationV1 {
+    pub directory_revision: u64,
+    pub membership_generation: u64,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub session_generation: Option<u64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub share_generation: Option<u64>,
+}
+
+/// 🎫️ Short-lived server-owned open decision. The receipt is exchanged once over protected HTTP.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentOpenPlanV1 {
+    pub schema: String,
+    pub version: u32,
+    pub receipt: String,
+    pub expires_at_unix_ms: u64,
+    pub scope: DocumentScope,
+    pub descriptor_digest_v1: String,
+    pub catalog: DocumentOpenCatalogV1,
+    pub package: DocumentOpenPackageV1,
+    pub artifact: DocumentOpenArtifactV1,
+    pub surface: DocumentOpenSurfaceV1,
+    pub grant: DocumentOpenGrantV1,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub checkpoint: Option<DocumentOpenCheckpointV1>,
+    pub revalidation: DocumentOpenRevalidationV1,
+}
+
+/// 🔄️ Protected command that exchanges one plan receipt for one document socket grant.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentPlanSocketGrantIntentV1 {
+    pub schema: String,
+    pub version: u32,
+    pub plan_receipt: String,
+}
+
+/// 🚫️ Stable redacted open-plan failure vocabulary.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "kebab-case")]
+pub enum DocumentOpenPlanErrorCodeV1 {
+    Denied,
+    NotFound,
+    CatalogUnavailable,
+    ComponentUnavailable,
+    Stale,
+    Expired,
+    AlreadyConsumed,
+    Cancelled,
+    DeadlineExceeded,
+}
+
+/// 🚨️ Public bounded open-plan failure without authority or catalog detail.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentOpenPlanErrorV1 {
+    pub schema: String,
+    pub code: DocumentOpenPlanErrorCodeV1,
+}
+
+fn valid_document_open_text(value: &str, max_bytes: usize) -> bool {
+    !value.is_empty() && value.len() <= max_bytes && !value.chars().any(char::is_control)
+}
+
+fn valid_document_open_hash(value: &str) -> bool {
+    value.len() == 64 && !value.as_bytes().iter().all(|byte| *byte == b'0') && value.as_bytes().iter().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
+}
+
+fn valid_document_open_receipt(value: &str) -> bool {
+    value.strip_prefix("open.v1.").is_some_and(|secret| {
+        let base64_value = |byte| match byte {
+            b'A'..=b'Z' => Some(byte - b'A'),
+            b'a'..=b'z' => Some(byte - b'a' + 26),
+            b'0'..=b'9' => Some(byte - b'0' + 52),
+            b'-' => Some(62),
+            b'_' => Some(63),
+            _ => None,
+        };
+        secret.len() == 43
+            && secret.bytes().all(|byte| base64_value(byte).is_some())
+            && secret.as_bytes().last().and_then(|byte| base64_value(*byte)).is_some_and(|tail| tail & 0b11 == 0)
+    })
+}
+
+impl DocumentOpenIntentV1 {
+    /// ✅ Validates the strict public intent without interpreting its fields as authority.
+    pub fn validate(&self) -> Result<(), DocumentOpenPlanErrorCodeV1> {
+        if self.schema != "semio.hub.document-open-intent/v1"
+            || self.version != 1
+            || !valid_document_open_text(&self.scope.space_id, DOCUMENT_OPEN_ID_MAX_BYTES)
+            || !valid_document_open_text(&self.scope.document_id, DOCUMENT_OPEN_ID_MAX_BYTES)
+            || !valid_document_open_text(&self.client_instance_id, DOCUMENT_OPEN_CLIENT_INSTANCE_MAX_BYTES)
+            || self.requested_surface_id.as_deref().is_some_and(|value| !valid_document_open_text(value, DOCUMENT_OPEN_ID_MAX_BYTES))
+        {
+            return Err(DocumentOpenPlanErrorCodeV1::Denied);
+        }
+        Ok(())
+    }
+}
+
+impl DocumentOpenPlanV1 {
+    /// ✅ Validates a complete receipt-free authority projection at a caller-supplied wall time.
+    pub fn validate(&self, now_ms: u64) -> Result<(), DocumentOpenPlanErrorCodeV1> {
+        let ids = [
+            self.scope.space_id.as_str(),
+            self.scope.document_id.as_str(),
+            self.package.plugin_id.as_str(),
+            self.package.package_id.as_str(),
+            self.package.version.as_str(),
+            self.artifact.kind.as_str(),
+            self.artifact.schema.as_str(),
+            self.surface.surface_id.as_str(),
+            self.surface.app_id.as_str(),
+            self.surface.window_kind_id.as_str(),
+        ];
+        if self.schema != "semio.hub.document-open-plan/v1"
+            || self.version != 1
+            || !valid_document_open_receipt(&self.receipt)
+            || self.expires_at_unix_ms > DOCUMENT_OPEN_MAX_SAFE_INTEGER
+            || self.expires_at_unix_ms <= now_ms
+            || self.expires_at_unix_ms.checked_sub(now_ms).is_none_or(|ttl| ttl > DOCUMENT_OPEN_PLAN_MAX_TTL_MS)
+            || ids.iter().any(|value| !valid_document_open_text(value, DOCUMENT_OPEN_ID_MAX_BYTES))
+            || !valid_document_open_hash(&self.descriptor_digest_v1)
+            || !valid_document_open_hash(&self.catalog.generation_id)
+            || !valid_document_open_hash(&self.package.component_sha256)
+            || !valid_document_open_hash(&self.package.component_blake3)
+            || !valid_document_open_hash(&self.package.descriptor_byte_sha256)
+            || !valid_document_open_hash(&self.artifact.pack_schema_hash)
+            || !self.grant.read
+            || !self.grant.observe
+            || self.grant.write != matches!(self.surface.role, DocumentOpenSurfaceRoleV1::Editor)
+            || self.revalidation.directory_revision == 0
+            || self.revalidation.directory_revision > DOCUMENT_OPEN_MAX_SAFE_INTEGER
+            || self.revalidation.membership_generation == 0
+            || self.revalidation.membership_generation > DOCUMENT_OPEN_MAX_SAFE_INTEGER
+            || (self.revalidation.session_generation.is_some() == self.revalidation.share_generation.is_some())
+            || self.revalidation.session_generation == Some(0)
+            || self.revalidation.session_generation.is_some_and(|generation| generation > DOCUMENT_OPEN_MAX_SAFE_INTEGER)
+            || self.revalidation.share_generation == Some(0)
+            || self.revalidation.share_generation.is_some_and(|generation| generation > DOCUMENT_OPEN_MAX_SAFE_INTEGER)
+        {
+            return Err(DocumentOpenPlanErrorCodeV1::Denied);
+        }
+        if let Some(checkpoint) = &self.checkpoint {
+            if !valid_document_open_text(&checkpoint.baseline_frontier.head_edit_id, DOCUMENT_OPEN_ID_MAX_BYTES)
+                || checkpoint.baseline_frontier.head_edit_ordinal > DOCUMENT_OPEN_MAX_SAFE_INTEGER
+                || checkpoint.baseline_frontier.last_commit_seq > DOCUMENT_OPEN_MAX_SAFE_INTEGER
+            {
+                return Err(DocumentOpenPlanErrorCodeV1::Denied);
+            }
+            if !valid_document_open_hash(&checkpoint.checkpoint_id)
+                || checkpoint.descriptor_digest_v1 != self.descriptor_digest_v1
+                || !valid_document_open_hash(&checkpoint.aggregate_sha256)
+                || checkpoint.baseline_frontier.document_id != self.scope.document_id
+                || checkpoint.baseline_frontier.head_edit_ordinal < checkpoint.baseline_frontier.last_commit_seq
+                || checkpoint.baseline_frontier.chain_hash.0 == [0; 32]
+            {
+                return Err(DocumentOpenPlanErrorCodeV1::Stale);
+            }
+        }
+        Ok(())
+    }
+}
+
+impl DocumentPlanSocketGrantIntentV1 {
+    /// ✅ Validates the exact one-use receipt exchange command shape.
+    pub fn validate(&self) -> Result<(), DocumentOpenPlanErrorCodeV1> {
+        if self.schema != "semio.hub.document-plan-socket-grant-intent/v1" || self.version != 1 || !valid_document_open_receipt(&self.plan_receipt) {
+            return Err(DocumentOpenPlanErrorCodeV1::Denied);
+        }
+        Ok(())
+    }
 }
 
 /// 🚨️ Descriptor values that cannot participate in canonical authority hashing.
@@ -411,7 +867,7 @@ pub fn hex_lower(bytes: &[u8]) -> String {
 
 /// 🏔️ Exact public checkpoint frontier, structurally identical to the replication wire frontier.
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ArtifactFrontier {
     pub document_id: String,
     pub head_edit_ordinal: u64,
@@ -535,7 +991,7 @@ pub struct RebootstrapRequired {
     pub baseline_frontier: ArtifactFrontier,
 }
 
-/// 📡️ One `/directory/ws` text frame (contract C1/C2) — subscribe, then gap-free replay.
+/// 📡️ One `/directory/socket/v1` text frame (contract C1/C2) — subscribe, then gap-free replay.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(tag = "kind", rename_all = "lowercase", rename_all_fields = "camelCase")]
 pub enum DirectoryStreamMessage {
@@ -635,6 +1091,60 @@ mod tests {
         let fixture: ArtifactAuthorityFixture = crate::os_pack::json::from_json_str(include_str!("../../../🧫️fixtures/📇️directory/📄️artifact-authority.json")).expect("artifact authority fixture decodes");
         assert_eq!(hex_lower(&descriptor_digest_encoding_v1(&fixture.descriptor).expect("descriptor encodes")), fixture.descriptor_encoding_hex);
         assert_eq!(descriptor_digest_v1(&fixture.descriptor).expect("descriptor hashes"), fixture.descriptor_digest_v1);
+    }
+
+    #[derive(FromValue)]
+    #[value(rename_all = "camelCase")]
+    struct DocumentOpenPlanFixture {
+        now_ms: u64,
+        descriptor: DocumentDescriptor,
+        descriptor_digest_v1: String,
+        intent: DocumentOpenIntentV1,
+        valid_plan: DocumentOpenPlanV1,
+        exchange_intent: DocumentPlanSocketGrantIntentV1,
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn document_open_plan_v1_matches_language_neutral_fixture() {
+        let fixture: DocumentOpenPlanFixture = crate::os_pack::json::from_json_str(include_str!("../../../🧫️fixtures/📇️directory/📄️document-open-plan-v1.json")).expect("document open plan fixture decodes");
+        assert_eq!(hex_lower(&descriptor_digest_v1(&fixture.descriptor).expect("descriptor hashes").0), fixture.descriptor_digest_v1);
+        assert_eq!(fixture.intent.validate(), Ok(()));
+        assert_eq!(fixture.valid_plan.validate(fixture.now_ms), Ok(()));
+        assert_eq!(fixture.exchange_intent.validate(), Ok(()));
+
+        let mut overlong = fixture.valid_plan.clone();
+        overlong.expires_at_unix_ms = fixture.now_ms + DOCUMENT_OPEN_PLAN_MAX_TTL_MS + 1;
+        assert_eq!(overlong.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
+
+        let encoded = crate::os_pack::json::to_json_string(&fixture.valid_plan);
+        let forged = format!("{},\"actor\":\"caller-selected\"}}", encoded.strip_suffix('}').expect("object"));
+        assert!(crate::os_pack::json::from_json_str::<DocumentOpenPlanV1>(&forged).is_err());
+        let nested_scope = encoded.replace("\"documentId\":\"plan:\u{6771}\u{4eac}\"", "\"documentId\":\"plan:\u{6771}\u{4eac}\",\"actor\":\"caller-selected\"");
+        assert!(crate::os_pack::json::from_json_str::<DocumentOpenPlanV1>(&nested_scope).is_err());
+        let nested_frontier = encoded.replace("\"headEditOrdinal\":2", "\"headEditOrdinal\":2,\"storageKey\":\"private\"");
+        assert!(crate::os_pack::json::from_json_str::<DocumentOpenPlanV1>(&nested_frontier).is_err());
+
+        let mut unicode_control = fixture.valid_plan.clone();
+        unicode_control.surface.app_id = "app.\u{85}hidden".into();
+        assert_eq!(unicode_control.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
+        let mut noncanonical_receipt = fixture.valid_plan.clone();
+        noncanonical_receipt.receipt = "open.v1.AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyB".into();
+        assert_eq!(noncanonical_receipt.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
+        let mut frontier_control = fixture.valid_plan.clone();
+        frontier_control.checkpoint.as_mut().expect("checkpoint").baseline_frontier.head_edit_id = "edit:\u{85}".into();
+        assert_eq!(frontier_control.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
+        let mut frontier_overlong = fixture.valid_plan.clone();
+        frontier_overlong.checkpoint.as_mut().expect("checkpoint").baseline_frontier.head_edit_id = "a".repeat(DOCUMENT_OPEN_ID_MAX_BYTES + 1);
+        assert_eq!(frontier_overlong.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
+        let mut unsafe_expiry = fixture.valid_plan.clone();
+        unsafe_expiry.expires_at_unix_ms = DOCUMENT_OPEN_MAX_SAFE_INTEGER + 1;
+        assert_eq!(unsafe_expiry.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
+        let mut unsafe_frontier = fixture.valid_plan.clone();
+        unsafe_frontier.checkpoint.as_mut().expect("checkpoint").baseline_frontier.head_edit_ordinal = DOCUMENT_OPEN_MAX_SAFE_INTEGER + 1;
+        assert_eq!(unsafe_frontier.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
+        let mut unsafe_revalidation = fixture.valid_plan;
+        unsafe_revalidation.revalidation.directory_revision = DOCUMENT_OPEN_MAX_SAFE_INTEGER + 1;
+        assert_eq!(unsafe_revalidation.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
     }
 }
 //#endregion 🧪️Tests

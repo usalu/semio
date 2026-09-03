@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.mcp.canonical-pair-cache-mount.fixture/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "limits", "binding", "valid", "negativeVectors", "lifecycle"],
+  "properties": {
+    "schema": { "const": "semio.mcp.canonical-pair-cache-mount.fixture/v1" },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pairBytes", "cacheBytes", "entries", "headerBytes", "recordBytes"],
+      "properties": {
+        "pairBytes": { "const": 4194304 },
+        "cacheBytes": { "const": 8388608 },
+        "entries": { "const": 4 },
+        "headerBytes": { "const": 16384 },
+        "recordBytes": { "const": 4096 }
+      }
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hubOrigin", "authorityGeneration", "spaceId", "documentId", "sameDocumentOtherSpace", "descriptorDigest", "checkpointId", "catalogGeneration"],
+      "properties": {
+        "hubOrigin": { "const": "https://hub.invalid" },
+        "authorityGeneration": { "type": "integer", "minimum": 1 },
+        "spaceId": { "const": "space:alpha" },
+        "documentId": { "const": "doc:tokyo" },
+        "sameDocumentOtherSpace": { "const": "space:beta" },
+        "descriptorDigest": { "$ref": "#/$defs/hash" },
+        "checkpointId": { "$ref": "#/$defs/hash" },
+        "catalogGeneration": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "valid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mediaType", "etag", "packHex", "sprHex", "packSha256", "sprSha256", "aggregateSha256", "wireHex"],
+      "properties": {
+        "mediaType": { "const": "application/vnd.semio.canonical-checkpoint-pair.v1" },
+        "etag": { "type": "string", "pattern": "^\"[0-9a-f]{64}\"$" },
+        "packHex": { "type": "string", "pattern": "^[0-9a-f]+$" },
+        "sprHex": { "type": "string", "pattern": "^[0-9a-f]+$" },
+        "packSha256": { "$ref": "#/$defs/hash" },
+        "sprSha256": { "$ref": "#/$defs/hash" },
+        "aggregateSha256": { "$ref": "#/$defs/hash" },
+        "wireHex": { "type": "string", "pattern": "^[0-9a-f]+$" }
+      }
+    },
+    "negativeVectors": {
+      "type": "array",
+      "minItems": 15,
+      "uniqueItems": true,
+      "items": { "enum": ["truncated", "reordered", "duplicate", "oversize-record", "wrong-scope", "wrong-digest", "wrong-checkpoint", "malformed-utf8", "control-character", "bad-pack-hash", "bad-aggregate", "bad-etag", "missing-terminal", "trailing-data", "same-document-other-space"] }
+    },
+    "lifecycle": {
+      "type": "array",
+      "minItems": 8,
+      "uniqueItems": true,
+      "items": { "enum": ["cache-hit", "cache-miss", "stale-completion", "eviction", "revoke", "stream-loss-reconnect", "rebootstrap", "cancel", "restart"] }
+    }
+  },
+  "$defs": {
+    "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

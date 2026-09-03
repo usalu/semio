@@ -124,15 +124,21 @@ pub(super) fn interpolate_params_2d(points: &[Pnt2], params: &[f64]) -> Option<C
 }
 
 /// 🧮 Shared knot placement (averaging, degree ≤3) + per-sample basis evaluation for
-/// [`interpolate_params_3d`]/[`interpolate_params_2d`].
+/// [`interpolate_params_3d`]/[`interpolate_params_2d`]. Clamped ends are `params[0]`/`params[n -
+/// 1]` themselves — NOT a hardcoded `[0, 1]` — so this is correct for any strictly-increasing
+/// `params` array, not only [`centripetal_params`]'s `[0, 1]`-normalized output (a caller that
+/// interpolates at a curve's own domain-scaled `t`, e.g. `[0, 2π]`, used to silently get an
+/// invalid non-monotonic knot vector — `KnotVector::new` rejecting it and every caller here
+/// falling back to a degenerate constant curve — since the padding never matched the interior
+/// knots' actual scale).
 fn fit_basis(params: &[f64], n: usize) -> Option<(KnotVector, Vec<(usize, Vec<f64>)>)> {
     let degree = (n - 1).min(3);
-    let mut knots = vec![0.0; degree + 1];
+    let mut knots = vec![params[0]; degree + 1];
     for j in 1..n - degree {
         let avg: f64 = params[j..j + degree].iter().sum::<f64>() / degree as f64;
         knots.push(avg);
     }
-    knots.extend(std::iter::repeat_n(1.0, degree + 1));
+    knots.extend(std::iter::repeat_n(params[n - 1], degree + 1));
     let kv = KnotVector::new(knots, degree, n)?;
     let rows = params
         .iter()
@@ -211,6 +217,54 @@ pub(super) fn exact_uv(surface: &Surface, p: Pnt3) -> (f64, f64) {
 }
 
 // #endregion 🔖️Analytic
+
+// #region 🔖️Domain
+
+/// 🧮 A surface's own `(u, v)` domain, with any infinite side clamped to a fixed `±10` window —
+/// moved here from `curve_surface` (which needs it for [`line_domain_against_surface`]) so
+/// `surface_surface`'s [`IntCurve`] domain bounding can share it instead of re-deriving its own.
+/// The fallback is a plain constant on EACH side independently (not the previous
+/// `curve_surface`-only version's `other_end + τ`, which silently stayed infinite whenever both
+/// ends of the same axis were infinite at once — true for [`Surface::Plane`]'s `u` **and** `v`,
+/// never exercised there because every `Curve3`/[`Surface::Plane`] pair has its own closed form,
+/// but a real latent gap now that `surface_surface` calls this for a `Curve3::Line` bounded
+/// against a `Surface::Plane`).
+pub(super) fn finite_surface_domain(surface: &Surface) -> ((f64, f64), (f64, f64)) {
+    let ((u0, u1), (v0, v1)) = surface.domain();
+    let bound = |lo: f64, hi: f64| ((if lo.is_finite() { lo } else { -10.0 }), (if hi.is_finite() { hi } else { 10.0 }));
+    (bound(u0, u1), bound(v0, v1))
+}
+
+/// 🧮 Bounds an infinite-domain [`Curve3::Line`] to a finite `t` range that comfortably covers
+/// `surface`'s own [`finite_surface_domain`] extent, padded by that extent's own size (or `1.0`,
+/// whichever is larger) — moved here from `curve_surface` so `surface_surface` can reuse it too.
+pub(super) fn line_domain_against_surface(origin: &Pnt3, dir: &Vec3, surface: &Surface, tol: f64) -> Result<(f64, f64), IntersectError> {
+    let n = dir.norm();
+    if n <= tol {
+        return Err(IntersectError::Degenerate("zero-length line direction".into()));
+    }
+    let unit = *dir * (1.0 / n);
+    let ((u0, u1), (v0, v1)) = finite_surface_domain(surface);
+    let mut lo = f64::INFINITY;
+    let mut hi = f64::NEG_INFINITY;
+    for i in 0..=8 {
+        for j in 0..=8 {
+            let u = u0 + (u1 - u0) * (i as f64 / 8.0);
+            let v = v0 + (v1 - v0) * (j as f64 / 8.0);
+            let p = surface.eval(u, v);
+            let s = (p - *origin).dot(unit);
+            lo = lo.min(s);
+            hi = hi.max(s);
+        }
+    }
+    if !lo.is_finite() || !hi.is_finite() {
+        return Err(IntersectError::Degenerate("unable to bound line against surface".into()));
+    }
+    let pad = ((hi - lo).abs() + 1.0).max(1.0);
+    Ok(((lo - pad) / n, (hi + pad) / n))
+}
+
+// #endregion 🔖️Domain
 
 // #region 🔖️Bezier
 

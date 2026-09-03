@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** @emoji 🧊️ `@semio-tech/framework-renderer-wgpu` task router. */
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, resolve } from "node:path";
 import {
   BundleScript,
   ScriptRouter,
@@ -22,7 +22,7 @@ import {
   frameworkOsPlaygroundDefaultPort,
   loadFrameworkOsPlaygroundCatalog,
 } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { startAssetServer } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🟦️";
+import { startAssetServer } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🟦️.ts";
 import type { PlaygroundAssetSpec } from "../../../../../../🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts";
 
 const repoRoot = getWorkspaceRoot();
@@ -30,6 +30,60 @@ const wasmTarget = "wasm32-unknown-unknown";
 const crateName = "semio-framework-os-renderer-wgpu";
 const outDir = join(repoRoot, ".🧬semio/🦑️repo/⚡️cache/📺️renderer-modules/🧊️wgpu");
 const pluginOutRoot = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules");
+const NATIVE_RUNNER_BENIGN_ENV_KEY = "SEMIO_DIRECT_CHILD_BENIGN";
+const NATIVE_RUNNER_BENIGN_ENV_VALUE = "preserved";
+
+function nativeRunnerEnvironmentKeyIsProtected(key: string): boolean {
+  const normalized = key.toUpperCase();
+  return (
+    normalized === "S_USER" ||
+    normalized === "VITE_S_USER" ||
+    normalized === "S_HUB_URL" ||
+    normalized.includes("TOKEN") ||
+    normalized.includes("SESSION") ||
+    normalized.includes("CREDENTIAL") ||
+    normalized.includes("BEARER") ||
+    normalized.includes("CAPABILITY") ||
+    normalized.includes("AUTHORIZATION") ||
+    normalized.includes("COOKIE")
+  );
+}
+
+function nativeRunnerEnvironment(source: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  const environment: NodeJS.ProcessEnv = {};
+  for (const [key, value] of Object.entries(source)) if (!nativeRunnerEnvironmentKeyIsProtected(key)) environment[key] = value;
+  environment[NATIVE_RUNNER_BENIGN_ENV_KEY] = NATIVE_RUNNER_BENIGN_ENV_VALUE;
+  return environment;
+}
+
+function runNativeBinary(executable: string, args: readonly string[], environment: NodeJS.ProcessEnv): number {
+  return runCmdStatus(executable, [...args], { cwd: repoRoot, env: nativeRunnerEnvironment(environment), ...daemonBudgetOpts() });
+}
+
+function proveNativeRunnerEnvironment(): void {
+  const poisoned = {
+    ...process.env,
+    S_USER: "poison-user",
+    VITE_S_USER: "poison-vite-user",
+    S_HUB_URL: "poison-origin",
+    S_SESSION: "poison-session",
+    NPM_TOKEN: "poison-token",
+    S_LOCAL_CREDENTIAL_FD: "3",
+    AUTHORIZATION: "poison-authorization",
+    COOKIE: "poison-cookie",
+  };
+  const consumer = String.raw`
+const keys = Object.keys(process.env).map(key => key.toUpperCase());
+const protectedKey = key => key === "S_USER" || key === "VITE_S_USER" || key === "S_HUB_URL" || key.includes("TOKEN") || key.includes("SESSION") || key.includes("CREDENTIAL") || key.includes("BEARER") || key.includes("CAPABILITY") || key.includes("AUTHORIZATION") || key.includes("COOKIE");
+process.exit(keys.some(protectedKey) || process.env.SEMIO_DIRECT_CHILD_BENIGN !== "preserved" ? 1 : 0);`;
+  if (runNativeBinary(process.execPath, ["-e", consumer], poisoned) !== 0) throw new Error("ordinary WGPU native runner leaked protected parent environment");
+  const entrypoint = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs"), "utf8");
+  const guard = entrypoint.indexOf("if !protected_credential_environment_is_absent()");
+  const claim = entrypoint.indexOf('claim_inherited_local_hub_credential("native")');
+  const plugin = entrypoint.indexOf('arg_value("--plugin")');
+  if (guard < 0 || claim < 0 || plugin < 0 || guard > claim || guard > plugin) throw new Error("native binary protected-environment guard no longer precedes credential claim and plugin activation");
+  console.log("native-environment-check: poisoned ordinary runner sanitized and binary fail-closed guard precedes credential/plugin activation");
+}
 
 //#region 🌐️ DevServer
 /** @emoji 👥️ Full `process.env` passthrough for the spawned `trunk` child — raw (unprefixed)
@@ -136,8 +190,10 @@ export function decodeAstralEscapes(text: string): string {
 /** @emoji 🧾️ Bundles one browser entry entirely in memory for identical generate/check bytes. */
 export async function renderBrowserEntry(entryPath: string): Promise<string> {
   assertPinnedBunVersion();
-  const runtime = globalThis as typeof globalThis & { Bun: { build(options: { entrypoints: string[]; target: "browser"; format: "esm" }): Promise<{ success: boolean; logs: unknown[]; outputs: { text(): Promise<string> }[] }> } };
-  const result = await runtime.Bun.build({ entrypoints: [entryPath], target: "browser", format: "esm" });
+  const runtime = globalThis as typeof globalThis & {
+    Bun: { build(options: { entrypoints: string[]; target: "browser"; format: "esm"; define: Record<string, string> }): Promise<{ success: boolean; logs: unknown[]; outputs: { text(): Promise<string> }[] }> };
+  };
+  const result = await runtime.Bun.build({ entrypoints: [entryPath], target: "browser", format: "esm", define: { "import.meta.vitest": "undefined" } });
   if (!result.success || result.outputs.length !== 1) throw new Error(`browser bundle render failed for ${entryPath}: ${result.logs.map(String).join("\n")}`);
   return decodeAstralEscapes(await result.outputs[0]!.text());
 }
@@ -158,9 +214,23 @@ export async function renderFrameWorker(bundleRoot: string): Promise<{ path: str
 async function generateFrameWorker(bundleRoot: string): Promise<void> {
   const artifact = await renderFrameWorker(bundleRoot);
   writeFileSync(artifact.path, artifact.content, "utf8");
+  checkFrameWorkerCarrierCensus(bundleRoot);
+}
+
+/** @emoji 🔐️ Rejects shipped worker bytes that retain the deleted bearer/query socket carrier. */
+function checkFrameWorkerCarrierCensus(bundleRoot: string): void {
+  const workerJs = join(bundleRoot, "🟦️typescript/🟨️frame-worker.js");
+  if (!existsSync(workerJs)) throw new Error("🟨️frame-worker.js is missing");
+  const deployed = readFileSync(workerJs, "utf8");
+  const normalized = deployed.toLowerCase();
+  const forbidden = ["/directory/ws?token=", "?token=", "?access_token=", "access_token", "authorization", "bearer ", "credential", "this.token = token", "set_token(", "hub_token", "s_user", "vite_s_user", "s_hub_url", "sessionstorage", "localstorage", "document.cookie"];
+  const residue = forbidden.filter((text) => normalized.includes(text));
+  if (residue.length) throw new Error(`🟨️frame-worker.js retains legacy credential carriers: ${residue.join(", ")}`);
+  for (const required of ["semioWgpuWorkerBootstrap", "duplicate-boot", "InteractiveWorkerScheduler"]) if (!deployed.includes(required)) throw new Error(`🟨️frame-worker.js lacks production worker marker ${required}`);
 }
 
 async function checkFrameWorker(bundleRoot: string): Promise<void> {
+  checkFrameWorkerCarrierCensus(bundleRoot);
   const artifact = await renderFrameWorker(bundleRoot);
   if (!existsSync(artifact.path) || readFileSync(artifact.path, "utf8") !== artifact.content) throw new Error("🟨️frame-worker.js is stale; run the generate-frame-worker target");
 }
@@ -219,6 +289,12 @@ function scaleModePassthroughArgs(segments: readonly string[]): string[] {
   return args;
 }
 
+function nativeBinaryPath(ship: boolean): string {
+  const name = process.platform === "win32" ? "semio-wgpu-native.exe" : "semio-wgpu-native";
+  const targetRoot = process.env.CARGO_TARGET_DIR ? resolve(repoRoot, process.env.CARGO_TARGET_DIR) : join(repoRoot, "target");
+  return join(targetRoot, ship ? "release" : "debug", name);
+}
+
 class NativeBuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const ship = segments.includes("--dist") || segments.includes("--release");
@@ -249,10 +325,7 @@ class NativeRunScript extends BundleScript {
     const ship = segments.includes("--dist") || segments.includes("--release");
     if (segments.includes("--scale")) {
       await new NativeBuildScript(this.root).run(segments);
-      const cargoArgs = ["run"];
-      if (ship) cargoArgs.push("--release");
-      cargoArgs.push("-p", crateName, "--bin", "semio-wgpu-native", "--features", "native-bin", "--", ...scaleModePassthroughArgs(segments));
-      if (runCmdStatus("cargo", cargoArgs, { cwd: repoRoot, env: process.env, ...daemonBudgetOpts() }) !== 0) {
+      if (runNativeBinary(nativeBinaryPath(ship), scaleModePassthroughArgs(segments), process.env) !== 0) {
         throw new Error("native wgpu scale-bench run failed");
       }
       return;
@@ -261,10 +334,8 @@ class NativeRunScript extends BundleScript {
     const buildSegments = segments[0] ? segments : [filterPlugin];
     await new NativeBuildScript(this.root).run(buildSegments);
     ensureAssetServer(filterPlugin);
-    const nativeEnv: NodeJS.ProcessEnv = {
-      ...process.env,
-      SEMIO_PLUGIN_MODULES: pluginOutRoot,
-    };
+    const nativeEnv = nativeRunnerEnvironment(process.env);
+    nativeEnv.SEMIO_PLUGIN_MODULES = pluginOutRoot;
     if (variantAssetSpecs(filterPlugin).length > 0) {
       nativeEnv[SEMIO_ASSET_BASE_URL_ENV] = assetServerBaseUrl();
     }
@@ -274,10 +345,7 @@ class NativeRunScript extends BundleScript {
     // through to `semio-wgpu-native` (boots headless, dumps the widget tree as JSON, exits) instead of
     // opening a real window; an honest way to drive/observe this shell in an environment that cannot.
     const smokeArgs = segments.includes("--smoke") ? ["--smoke"] : [];
-    const cargoArgs = ["run"];
-    if (ship) cargoArgs.push("--release");
-    cargoArgs.push("-p", crateName, "--bin", "semio-wgpu-native", "--features", "native-bin", "--", "--plugin", filterPlugin, ...appArgs, ...smokeArgs);
-    if (runCmdStatus("cargo", cargoArgs, { cwd: repoRoot, env: nativeEnv, ...daemonBudgetOpts() }) !== 0) {
+    if (runNativeBinary(nativeBinaryPath(ship), ["--plugin", filterPlugin, ...appArgs, ...smokeArgs], nativeEnv) !== 0) {
       throw new Error("native wgpu renderer run failed");
     }
   }
@@ -384,6 +452,14 @@ const router = new ScriptRouter(import.meta.dir)
   .register("serve", TrunkServeScript)
   .register("dev", TrunkServeScript)
   .register("native", NativeRunScript)
+  .register(
+    "native-environment-check",
+    class extends BundleScript {
+      run(): void {
+        proveNativeRunnerEnvironment();
+      }
+    },
+  )
   .register("native-build", NativeBuildScript)
   .register("test", TestScript)
   .register("test-native", NativeTestScript)

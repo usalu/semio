@@ -9,7 +9,7 @@ import ts from "typescript";
 const root = resolve(import.meta.dir, "../../../../../../../");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const ticket = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧪️🟨️root-script-compiler/🔣️.json"), "utf8"));
 const text = readFileSync(join(root, "📜️script.ts"), "utf8");
 const source = ts.createSourceFile("📜️script.ts", text, ts.ScriptTarget.Latest, true);
 const functions = source.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && !!node.body);

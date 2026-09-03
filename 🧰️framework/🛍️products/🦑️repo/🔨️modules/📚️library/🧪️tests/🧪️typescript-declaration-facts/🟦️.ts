@@ -29,8 +29,8 @@ function asset(relativePath: string): string {
   } finally { closeSync(fd); }
 }
 
-const schema = JSON.parse(asset("🧬️schema/🔣️.json"));
-const vectors = JSON.parse(asset("🔣️.json")) as { readonly schemaVersion: 1; readonly cases: readonly Vector[] };
+const schema = JSON.parse(asset("../🧪️🧬️typescript-declaration-facts/🧬️schema/🔣️.json"));
+const vectors = JSON.parse(asset("../🧪️🧬️typescript-declaration-facts/🔣️.json")) as { readonly schemaVersion: 1; readonly cases: readonly Vector[] };
 const ajv = new Ajv({ strict: true, allErrors: true });
 const validateVectors = ajv.compile(schema);
 const validateFacts = ajv.compile({ $defs: schema.$defs, $ref: "#/$defs/expected" });

@@ -1,65 +1,55 @@
-//! ➡️ Extrude/revolve/loft/pipe/helical sweep.
-//!
-//! Native sweep ops that mutate a [`Body`](crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body) through
-//! [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler`] editors and attach [`Surface`](crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface)
-//! geometry (planes for polygonal sides, cylinders when a circular profile edge is extruded).
+//! ➡️ Exact extrude/revolve/loft/sweep/pipe/helical-sweep. No sampled section counts, no fan
+//! caps, no `solid_from_triangle_soup`: every lateral face is either the recognized analytic
+//! surface (`Plane`/`Cylinder`/`Cone`/`Torus`/`Sphere`) for the profile-edge kinds where that stays
+//! exact, or a NURBS surface built directly from the edge's own `to_nurbs()` control net (never
+//! sampled/fit through 3D points except where the profiles/path genuinely differ shape — loft's
+//! harmonization, or a sweep path's rotation-minimizing-frame stations). See `📓️w2c-sweeps.md` for
+//! the coedge-orientation and pcurve-exactness derivations every submodule below relies on.
 //!
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/➡️sweep` in ticket
-//! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL.
+//! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL. Rewritten to
+//! exact analytic/NURBS sweeps (no sampling, no triangle soup) in ticket
+//! 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME wave W2-C.
 
-use std::f64::consts::TAU;
+#[path = "🧮️core/🦀️.rs"]
+mod core;
+#[path = "🌀️revolve/🦀️.rs"]
+mod revolve;
+#[path = "🥞️loft/🦀️.rs"]
+mod loft;
+#[path = "🐍️frame/🦀️.rs"]
+mod frame;
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::Wire;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_planar_face_from_wire, Wire};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::transform::transform_face;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::FaceId;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
-// #region 🔖️Helpers
+pub use loft::loft_profiles;
+pub use revolve::revolve_face;
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn placeholder_face() -> FaceId {
-    ArenaId::from_raw(0, 0)
-}
+// #region 🔖️Extrude
 
+/// ➡️ Extrudes `face` along `direction` by `distance`. Every profile edge yields an exact side
+/// face (`Plane` for a line, `Cylinder` for a circle whose axis is parallel to `direction`, a
+/// degree-1-in-v NURBS extrusion surface for a free-form edge — see `🧮️core::translate_lateral`);
+/// holes get their own tube faces (every loop, not just the outer one). The profile face itself
+/// becomes one cap (flipped in place, recorded modified); a `transform_face` translate becomes the
+/// other (recorded generated), matching the ticket's "profile as modified" history convention.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn require_positive(name: &str, value: f64) -> Result<(), KernelError> {
-    if value <= Tol::DEFAULT.value() {
-        Err(KernelError::InvalidInput(format!("{name} must be positive, got {value}")))
-    } else {
-        Ok(())
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn plane_at(origin: Pnt3, normal: Vec3) -> Surface {
-    Surface::Plane { frame: Frame3::from_normal(origin, normal).expect("plane frame") }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn attach_face(body: &mut Body, surface_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SurfaceId, members: &[(EdgeId, bool)], flipped: bool, tol: Tol, rec: &mut OpRecorder) -> FaceId {
-    let outer = make_loop(body, placeholder_face(), members);
-    let face = add_face(body, surface_id, Some(outer), vec![], flipped, tol, rec);
-    body.loops.get_mut(outer).unwrap().face = face;
-    face
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn line_edge(body: &mut Body, a: Pnt3, b: Pnt3, va: VertexId, vb: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
-    let curve = body.curves3.insert(Curve3::Line { origin: a, dir: b - a });
-    make_edge(body, curve, (0.0, 1.0), va, vb, tol, rec)
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn finish_solid(body: &mut Body, faces: Vec<FaceId>, rec: &mut OpRecorder) -> SolidId {
-    let shell = add_shell(body, faces, rec);
-    add_solid(body, shell, vec![], rec)
+pub fn extrude_face(body: &mut Body, face: FaceId, direction: Vec3, distance: f64, rec: &mut OpRecorder) -> Result<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId, KernelError> {
+    core::require_positive("extrude distance", distance.abs())?;
+    let dir = direction.normalized().ok_or_else(|| KernelError::InvalidInput("extrude direction is zero-length".into()))?;
+    let offset = dir * distance;
+    let prism = core::build_prism(body, face, &core::Placement::Translate { offset }, rec)?;
+    let mut faces = vec![face, prism.top];
+    faces.extend(prism.laterals);
+    Ok(core::finish_solid(body, faces, rec))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -78,365 +68,155 @@ fn newell_normal(points: &[Pnt3]) -> Option<Vec3> {
     n.normalized()
 }
 
-/// ➡️ Ordered outer-loop vertex positions of a face (polyline samples for circular edges).
+/// ➡️ Extrudes a closed wire directly (builds its planar face via [`make_planar_face_from_wire`],
+/// then [`extrude_face`]). An open wire's shell-only (no-cap) extrusion is not yet implemented in
+/// this pass (documented gap, see `📓️w2c-sweeps.md`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn face_outer_polygon(body: &Body, face: FaceId) -> Result<Vec<Pnt3>, KernelError> {
-    let face_data = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity(format!("face {face:?}")))?;
-    let outer = face_data.outer.ok_or_else(|| KernelError::InvalidInput("face has no outer loop".into()))?;
-    let coedges = body.loop_coedges(outer);
-    if coedges.is_empty() {
-        return Err(KernelError::InvalidInput("face outer loop is empty".into()));
+pub fn extrude_wire(body: &mut Body, wire: &Wire, direction: Vec3, distance: f64, rec: &mut OpRecorder) -> Result<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId, KernelError> {
+    if !wire.closed {
+        return Err(KernelError::Operation("extrude_wire: open-wire (shell-only) extrusion is not yet supported in this pass".into()));
     }
-    let mut points = Vec::new();
-    for cid in coedges {
-        let coedge = body.coedges.get(cid).ok_or_else(|| KernelError::MissingEntity(format!("coedge {cid:?}")))?;
-        let edge = body.edges.get(coedge.edge).ok_or_else(|| KernelError::MissingEntity(format!("edge {:?}", coedge.edge)))?;
-        let curve = body.curves3.get(edge.curve).ok_or_else(|| KernelError::MissingEntity(format!("curve {:?}", edge.curve)))?;
+    let pts: Vec<Pnt3> = wire.vertices.iter().map(|&v| body.vertices.get(v).unwrap().position).collect();
+    let normal = newell_normal(&pts).ok_or_else(|| KernelError::InvalidInput("extrude_wire: wire is degenerate".into()))?;
+    let face = make_planar_face_from_wire(body, wire, pts[0], normal, rec)?;
+    extrude_face(body, face, direction, distance, rec)
+}
+
+// #endregion 🔖️Extrude
+
+// #region 🔖️Sweep
+
+/// ➡️ Sweeps `profile` along `path`, honouring `guide` if present (per-station `x`-axis points at
+/// the guide's closest point). A single straight-line path delegates to [`extrude_face`] (exact
+/// `Cylinder`/`Plane` fast paths); a single circular-arc path (no guide) delegates to
+/// [`revolve_face`] (exact `Torus`/`Cylinder`/`Cone` fast paths, a circle profile along a circular
+/// path is an exact torus segment); any other path builds a rotation-minimizing-frame station
+/// chain (`🧮️core::build_prism` under `Placement::General`, adaptively refined — see
+/// `🐍️frame::sample_path`), certified only for line/free-form profile edges (circle/ellipse
+/// profile edges are refused there, not mis-parametrized — see `📓️w2c-sweeps.md` §pcurve).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn pipe(body: &mut Body, profile: FaceId, path: &Wire, guide: Option<&Wire>, rec: &mut OpRecorder) -> Result<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId, KernelError> {
+    if path.members.is_empty() {
+        return Err(KernelError::InvalidInput("sweep path is empty".into()));
+    }
+    if guide.is_none() && path.members.len() == 1 {
+        let (edge_id, forward) = path.members[0];
+        let edge = body.edges.get(edge_id).ok_or_else(|| KernelError::MissingEntity("path edge".into()))?;
+        let curve = body.curves3.get(edge.curve).ok_or_else(|| KernelError::MissingEntity("path curve".into()))?.clone();
+        let range = edge.range;
         match curve {
-            Curve3::Circle { frame, radius } => {
-                let segments = 16usize.max(3);
-                let (t0, t1) = edge.range;
-                for i in 0..segments {
-                    let t = if coedge.forward { t0 + (t1 - t0) * (i as f64) / (segments as f64) } else { t1 + (t0 - t1) * (i as f64) / (segments as f64) };
-                    let _ = frame;
-                    let _ = radius;
-                    points.push(curve.eval(t));
+            Curve3::Line { origin, dir } => {
+                let p0 = origin + dir * range.0;
+                let p1 = origin + dir * range.1;
+                let (from, to) = if forward { (p0, p1) } else { (p1, p0) };
+                let v = to - from;
+                let len = v.norm();
+                if len > 1e-12 {
+                    let d = v.normalized().unwrap();
+                    return extrude_face(body, profile, d, len, rec);
                 }
             }
-            _ => {
-                let (start, _) = body.coedge_endpoints(cid).ok_or_else(|| KernelError::MissingEntity(format!("coedge endpoints {cid:?}")))?;
-                let p = body.vertices.get(start).ok_or_else(|| KernelError::MissingEntity(format!("vertex {start:?}")))?.position;
-                points.push(p);
+            Curve3::Circle { frame, .. } => {
+                let angle = if forward { range.1 - range.0 } else { range.0 - range.1 };
+                return revolve_face(body, profile, frame.origin, frame.z, angle, rec);
             }
+            _ => {}
         }
     }
-    if points.len() < 3 {
-        return Err(KernelError::InvalidInput(format!("extrude profile needs ≥3 points, got {}", points.len())));
+    let frames = frame::frame_stations(body, path, guide, 4, 32)?;
+    let profile_frame = { let f = body.faces.get(profile).ok_or_else(|| KernelError::MissingEntity("profile".into()))?; match body.surfaces.get(f.surface) { Some(Surface::Plane { frame }) => *frame, _ => return Err(KernelError::InvalidInput("sweep profile face must be planar".into())) } };
+    let align = core::frame_to_affine(&frames[0]).compose(&core::frame_to_affine(&profile_frame).inverse().ok_or_else(|| KernelError::Operation("sweep: singular profile placement".into()))?);
+    let profile_label = body.faces.get(profile).unwrap().label;
+    let aligned = transform_face(body, profile, &align, rec)?;
+    rec.record_deleted(profile_label);
+    let mut bottom = aligned;
+    let mut laterals = Vec::new();
+    for i in 1..frames.len() {
+        let map = core::frame_to_affine(&frames[i]).compose(&core::frame_to_affine(&frames[i - 1]).inverse().ok_or_else(|| KernelError::Operation("sweep: singular station placement".into()))?);
+        let prism = core::build_prism(body, bottom, &core::Placement::General { map }, rec)?;
+        laterals.extend(prism.laterals);
+        if i != frames.len() - 1 {
+            let label = body.faces.get(prism.top).unwrap().label;
+            rec.record_deleted(label);
+        }
+        bottom = prism.top;
     }
-    Ok(points)
+    let mut faces = vec![aligned, bottom];
+    faces.extend(laterals);
+    Ok(core::finish_solid(body, faces, rec))
 }
 
-/// ➡️ Prism solid from a closed polygon extruded by `offset` (bottom + top + planar sides).
+/// ➡️ Sweeps `profile` along `path` with no guide — [`pipe`] with `guide = None`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn solid_from_prism(body: &mut Body, bottom: &[Pnt3], offset: Vec3, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    let n = bottom.len();
-    if n < 3 {
-        return Err(KernelError::InvalidInput("prism needs ≥3 bottom points".into()));
-    }
-    let top: Vec<Pnt3> = bottom.iter().map(|&p| p + offset).collect();
-    let bottom_normal = newell_normal(bottom).ok_or_else(|| KernelError::InvalidInput("bottom polygon is degenerate".into()))?;
-    let outward_bottom = if bottom_normal.dot(offset) > 0.0 { -bottom_normal } else { bottom_normal };
-    let outward_top = -outward_bottom;
-
-    let tol = Tol::DEFAULT;
-    let v_bot: Vec<VertexId> = bottom.iter().map(|&p| make_vertex(body, p, tol, rec)).collect();
-    let v_top: Vec<VertexId> = top.iter().map(|&p| make_vertex(body, p, tol, rec)).collect();
-
-    let mut e_bot = Vec::with_capacity(n);
-    let mut e_top = Vec::with_capacity(n);
-    let mut e_vert = Vec::with_capacity(n);
-    for i in 0..n {
-        let j = (i + 1) % n;
-        e_bot.push(line_edge(body, bottom[i], bottom[j], v_bot[i], v_bot[j], tol, rec));
-        e_top.push(line_edge(body, top[i], top[j], v_top[i], v_top[j], tol, rec));
-        e_vert.push(line_edge(body, bottom[i], top[i], v_bot[i], v_top[i], tol, rec));
-    }
-
-    let s_bottom = body.surfaces.insert(plane_at(bottom[0], outward_bottom));
-    let s_top = body.surfaces.insert(plane_at(top[0], outward_top));
-    let bottom_members: Vec<(EdgeId, bool)> = e_bot.iter().rev().map(|&e| (e, false)).collect();
-    let top_members: Vec<(EdgeId, bool)> = e_top.iter().map(|&e| (e, true)).collect();
-    let bottom_face = attach_face(body, s_bottom, &bottom_members, false, tol, rec);
-    let top_face = attach_face(body, s_top, &top_members, false, tol, rec);
-
-    let mut faces = vec![bottom_face, top_face];
-    for i in 0..n {
-        let j = (i + 1) % n;
-        let p0 = bottom[i];
-        let p1 = bottom[j];
-        let edge_dir = p1 - p0;
-        let side_n = edge_dir.cross(offset).normalized().unwrap_or_else(|| if outward_bottom.dot(Vec3::Z).abs() < 0.9 { Vec3::Z } else { Vec3::X });
-        let side_n = if side_n.dot(outward_bottom.cross(edge_dir).normalized().unwrap_or(side_n)) < 0.0 { -side_n } else { side_n };
-        // Prefer outward relative to polygon centroid.
-        let centroid = {
-            let mut c = Vec3::ZERO;
-            for p in bottom {
-                c = c + p.to_vec();
-            }
-            Pnt3::from_array((c * (1.0 / n as f64)).to_array())
-        };
-        let mid = Pnt3::new((p0.x + p1.x) * 0.5, (p0.y + p1.y) * 0.5, (p0.z + p1.z) * 0.5);
-        let side_n = if (mid - centroid).dot(side_n) < 0.0 { -side_n } else { side_n };
-        let s_side = body.surfaces.insert(plane_at(p0, side_n));
-        let members = [(e_bot[i], true), (e_vert[j], true), (e_top[i], false), (e_vert[i], false)];
-        faces.push(attach_face(body, s_side, &members, false, tol, rec));
-    }
-    Ok(finish_solid(body, faces, rec))
+pub fn sweep_along_path(body: &mut Body, profile: FaceId, path: &Wire, rec: &mut OpRecorder) -> Result<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId, KernelError> {
+    pipe(body, profile, path, None, rec)
 }
 
-/// ➡️ Cylinder solid when extruding a single closed circular edge along its plane normal.
+/// ➡️ Helical sweep of `profile` about `(axis_origin, axis_dir)`: an analytic helix parametrized
+/// directly (point/tangent closed-form, no `Curve3` needed), sampled at `≥16` stations per turn,
+/// fed through the same rotation-minimizing-frame station chain as [`pipe`]'s general path.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn try_extrude_circle_cylinder(body: &mut Body, face: FaceId, direction: Vec3, distance: f64, rec: &mut OpRecorder) -> Result<Option<SolidId>, KernelError> {
-    let face_data = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity(format!("face {face:?}")))?;
-    let Some(outer) = face_data.outer else {
-        return Ok(None);
-    };
-    let coedges = body.loop_coedges(outer);
-    if coedges.len() != 1 {
-        return Ok(None);
-    }
-    let coedge = body.coedges.get(coedges[0]).unwrap();
-    let edge = body.edges.get(coedge.edge).unwrap();
-    let Some(Curve3::Circle { frame, radius }) = body.curves3.get(edge.curve).cloned() else {
-        return Ok(None);
-    };
-    let dir = direction.normalized().ok_or_else(|| KernelError::InvalidInput("extrude direction is zero".into()))?;
-    if dir.cross(frame.z).norm() > 1e-6 {
-        return Ok(None);
-    }
-    let height = if dir.dot(frame.z) >= 0.0 { distance } else { -distance };
-    if height.abs() <= Tol::DEFAULT.value() {
-        return Err(KernelError::InvalidInput("extrude distance is zero".into()));
-    }
-    let abs_h = height.abs();
-    let z_sign = height.signum();
-    let tol = Tol::DEFAULT;
-    let bot_center = frame.origin;
-    let top_center = bot_center + frame.z * (abs_h * z_sign);
-    let bot_pt = frame.to_world(Pnt3::new(radius, 0.0, 0.0));
-    let top_pt = bot_pt + frame.z * (abs_h * z_sign);
-    let v_bot = make_vertex(body, bot_pt, tol, rec);
-    let v_top = make_vertex(body, top_pt, tol, rec);
-    let e_bot = {
-        let curve = body.curves3.insert(Curve3::Circle { frame: Frame3 { origin: bot_center, x: frame.x, y: frame.y, z: frame.z }, radius });
-        make_edge(body, curve, (0.0, TAU), v_bot, v_bot, tol, rec)
-    };
-    let e_top = {
-        let curve = body.curves3.insert(Curve3::Circle { frame: Frame3 { origin: top_center, x: frame.x, y: frame.y, z: frame.z }, radius });
-        make_edge(body, curve, (0.0, TAU), v_top, v_top, tol, rec)
-    };
-    let e_seam = line_edge(body, bot_pt, top_pt, v_bot, v_top, tol, rec);
-    let cyl_frame = Frame3 { origin: if z_sign >= 0.0 { bot_center } else { top_center }, x: frame.x, y: frame.y, z: if z_sign >= 0.0 { frame.z } else { -frame.z } };
-    let cyl = body.surfaces.insert(Surface::Cylinder { frame: cyl_frame, radius });
-    let lateral = attach_face(body, cyl, &[(e_bot, true), (e_seam, true), (e_top, false), (e_seam, false)], false, tol, rec);
-    let s_bottom = body.surfaces.insert(plane_at(bot_center, -frame.z * z_sign));
-    let s_top = body.surfaces.insert(plane_at(top_center, frame.z * z_sign));
-    let bottom = attach_face(body, s_bottom, &[(e_bot, false)], false, tol, rec);
-    let top = attach_face(body, s_top, &[(e_top, true)], false, tol, rec);
-    Ok(Some(finish_solid(body, vec![lateral, bottom, top], rec)))
-}
-
-// #endregion 🔖️Helpers
-
-// #region 🔖️Api
-
-/// ➡️ Extrude a face along `direction` by `distance`, producing a closed solid prism (or cylinder).
-///
-/// Planar polygonal faces yield an axis-aligned-style prism of planar faces. A single closed
-/// circular outer edge extruded along the circle axis becomes an analytic cylinder solid.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn extrude_face(body: &mut Body, face: FaceId, direction: Vec3, distance: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    require_positive("extrude distance", distance.abs())?;
-    let dir = direction.normalized().ok_or_else(|| KernelError::InvalidInput("extrude direction is zero-length".into()))?;
-    let offset = dir * distance;
-    if let Some(solid) = try_extrude_circle_cylinder(body, face, dir, distance, rec)? {
-        return Ok(solid);
-    }
-    let polygon = face_outer_polygon(body, face)?;
-    solid_from_prism(body, &polygon, offset, rec)
-}
-
-/// ➡️ Revolves a planar face about an axis by sampling section polygons into a solid.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn revolve_face(body: &mut Body, face: FaceId, axis_origin: Pnt3, axis_direction: Vec3, angle: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    let axis = axis_direction.normalized().ok_or_else(|| KernelError::InvalidInput("revolve axis is zero-length".into()))?;
-    if !angle.is_finite() || angle.abs() <= 1e-12 {
-        return Err(KernelError::InvalidInput("revolve angle must be non-zero".into()));
-    }
-    let profile = face_outer_polygon(body, face)?;
-    let steps = ((angle.abs() / std::f64::consts::FRAC_PI_4).ceil() as usize).clamp(8, 64);
-    let mut sections = Vec::with_capacity(steps + 1);
-    for i in 0..=steps {
-        let t = i as f64 / steps as f64;
-        let a = angle * t;
-        let section: Vec<Pnt3> = profile.iter().map(|&p| rotate_around_axis(p, axis_origin, axis, a)).collect();
-        sections.push(section);
-    }
-    solid_from_lofted_sections(body, &sections, rec)
-}
-
-/// ➡️ Lofts profile faces into a solid by connecting successive outer polygons.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn loft_profiles(body: &mut Body, profiles: &[FaceId], _smooth: bool, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    if profiles.len() < 2 {
-        return Err(KernelError::InvalidInput("loft requires at least two profiles".into()));
-    }
-    let mut sections = Vec::with_capacity(profiles.len());
-    for &face in profiles {
-        sections.push(face_outer_polygon(body, face)?);
-    }
-    solid_from_lofted_sections(body, &sections, rec)
-}
-
-/// ➡️ Sweeps a profile face along a wire path.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn sweep_along_path(body: &mut Body, profile: FaceId, path: &Wire, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    let polygon = face_outer_polygon(body, profile)?;
-    let samples = sample_wire_points(body, path, 16)?;
-    if samples.len() < 2 {
-        return Err(KernelError::InvalidInput("sweep path needs at least two samples".into()));
-    }
-    let origin = samples[0];
-    let mut sections = Vec::with_capacity(samples.len());
-    for i in 0..samples.len() {
-        let tangent = if i + 1 < samples.len() { samples[i + 1] - samples[i] } else { samples[i] - samples[i - 1] };
-        let xdir = tangent.normalized().unwrap_or(Vec3::X);
-        let zdir = xdir.cross(Vec3::Z).normalized().unwrap_or_else(|| xdir.cross(Vec3::Y).normalized().unwrap_or(Vec3::Y));
-        let ydir = zdir.cross(xdir).normalized().unwrap_or(Vec3::Z);
-        let section = polygon
-            .iter()
-            .map(|&p| {
-                let local = p - origin;
-                samples[i] + xdir * local.x + ydir * local.y + zdir * local.z
-            })
-            .collect::<Vec<_>>();
-        sections.push(section);
-    }
-    solid_from_lofted_sections(body, &sections, rec)
-}
-
-/// ➡️ Pipes a profile along a path (guide currently ignored — constant scale).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn pipe(body: &mut Body, profile: FaceId, path: &Wire, _guide: Option<&Wire>, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    sweep_along_path(body, profile, path, rec)
-}
-
-/// ➡️ Helical sweep of a profile about an axis.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn helical_sweep(body: &mut Body, profile: FaceId, axis_origin: Pnt3, axis_dir: Vec3, radius: f64, pitch: f64, turns: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    require_positive("helical radius", radius)?;
+pub fn helical_sweep(body: &mut Body, profile: FaceId, axis_origin: Pnt3, axis_dir: Vec3, radius: f64, pitch: f64, turns: f64, rec: &mut OpRecorder) -> Result<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId, KernelError> {
+    core::require_positive("helical radius", radius)?;
     if !turns.is_finite() || turns.abs() <= 1e-12 {
         return Err(KernelError::InvalidInput("helical turns must be non-zero".into()));
     }
     let axis = axis_dir.normalized().ok_or_else(|| KernelError::InvalidInput("helical axis is zero-length".into()))?;
-    let polygon = face_outer_polygon(body, profile)?;
-    let steps = ((turns.abs() * 16.0).ceil() as usize).clamp(16, 128);
-    let mut sections = Vec::with_capacity(steps + 1);
-    let start = polygon[0];
+    let x0 = axis.any_orthogonal();
+    let y0 = axis.cross(x0);
+    let steps_per_turn = 24usize;
+    let steps = ((turns.abs() * steps_per_turn as f64).ceil() as usize).max(2);
+    let mut stations = Vec::with_capacity(steps + 1);
+    let mut length = 0.0;
+    let mut prev: Option<Pnt3> = None;
     for i in 0..=steps {
-        let t = i as f64 / steps as f64;
-        let angle = turns * TAU * t;
-        let along = pitch * turns * t;
-        let radial = rotate_around_axis(start, axis_origin, axis, angle);
-        let center = axis_origin + axis * along;
-        // Place profile in a frame along the helix.
-        let offset = (radial - axis_origin) - axis * (radial - axis_origin).dot(axis);
-        let xdir = if offset.norm() > 1e-9 { offset.normalized().unwrap() } else { axis.cross(Vec3::X).normalized().unwrap_or(Vec3::Y) };
-        let ydir = axis.cross(xdir).normalized().unwrap_or(Vec3::Z);
-        let section = polygon
-            .iter()
-            .map(|&p| {
-                let local = p - start;
-                center + xdir * (radius + local.x) + ydir * local.y + axis * local.z
-            })
-            .collect::<Vec<_>>();
-        sections.push(section);
+        let s = i as f64 / steps as f64;
+        let total_angle = turns * std::f64::consts::TAU;
+        let angle = total_angle * s;
+        let along = pitch * turns * s;
+        let point = axis_origin + x0 * (radius * angle.cos()) + y0 * (radius * angle.sin()) + axis * along;
+        let raw_tangent = x0 * (-radius * angle.sin() * total_angle) + y0 * (radius * angle.cos() * total_angle) + axis * (pitch * turns);
+        let tangent = raw_tangent.normalized().unwrap_or(axis);
+        if let Some(p) = prev {
+            length += (point - p).norm();
+        }
+        stations.push(frame::Station { point, tangent, length });
+        prev = Some(point);
     }
-    solid_from_lofted_sections(body, &sections, rec)
+    let frames = frame::stations_to_frames(&stations);
+    let profile_frame = { let f = body.faces.get(profile).ok_or_else(|| KernelError::MissingEntity("profile".into()))?; match body.surfaces.get(f.surface) { Some(Surface::Plane { frame }) => *frame, _ => return Err(KernelError::InvalidInput("helical_sweep profile face must be planar".into())) } };
+    let align = core::frame_to_affine(&frames[0]).compose(&core::frame_to_affine(&profile_frame).inverse().ok_or_else(|| KernelError::Operation("helical_sweep: singular profile placement".into()))?);
+    let profile_label = body.faces.get(profile).unwrap().label;
+    let aligned = transform_face(body, profile, &align, rec)?;
+    rec.record_deleted(profile_label);
+    let mut bottom = aligned;
+    let mut laterals = Vec::new();
+    for i in 1..frames.len() {
+        let map = core::frame_to_affine(&frames[i]).compose(&core::frame_to_affine(&frames[i - 1]).inverse().ok_or_else(|| KernelError::Operation("helical_sweep: singular station placement".into()))?);
+        let prism = core::build_prism(body, bottom, &core::Placement::General { map }, rec)?;
+        laterals.extend(prism.laterals);
+        if i != frames.len() - 1 {
+            let label = body.faces.get(prism.top).unwrap().label;
+            rec.record_deleted(label);
+        }
+        bottom = prism.top;
+    }
+    let mut faces = vec![aligned, bottom];
+    faces.extend(laterals);
+    Ok(core::finish_solid(body, faces, rec))
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn rotate_around_axis(point: Pnt3, origin: Pnt3, axis: Vec3, angle: f64) -> Pnt3 {
-    let v = point - origin;
-    let cos = angle.cos();
-    let sin = angle.sin();
-    let parallel = axis * v.dot(axis);
-    let lateral = v - parallel;
-    let rotated = lateral * cos + axis.cross(lateral) * sin + parallel;
-    origin + rotated
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn sample_wire_points(body: &Body, wire: &Wire, samples_per_edge: usize) -> Result<Vec<Pnt3>, KernelError> {
-    let mut points = Vec::new();
-    for (edge_id, forward) in &wire.members {
-        let edge = body.edges.get(*edge_id).ok_or_else(|| KernelError::MissingEntity(format!("edge {edge_id}")))?;
-        let curve = body.curves3.get(edge.curve).ok_or_else(|| KernelError::MissingEntity(format!("curve {}", edge.curve)))?;
-        let (a, b) = edge.range;
-        for i in 0..samples_per_edge {
-            let t = if samples_per_edge <= 1 { 0.0 } else { i as f64 / (samples_per_edge as f64 - 1.0) };
-            let u = if *forward { a + (b - a) * t } else { b + (a - b) * t };
-            let p = curve_point(curve, u);
-            if points.last().map(|q: &Pnt3| (*q - p).norm() > 1e-9).unwrap_or(true) {
-                points.push(p);
-            }
-        }
-    }
-    Ok(points)
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn curve_point(curve: &Curve3, u: f64) -> Pnt3 {
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
-    match curve {
-        Curve3::Line { origin, dir } => *origin + *dir * u,
-        Curve3::Circle { frame, radius } => {
-            let c = u.cos();
-            let s = u.sin();
-            frame.origin + frame.x * (*radius * c) + frame.y * (*radius * s)
-        }
-        Curve3::Ellipse { frame, major_radius, minor_radius } => {
-            let c = u.cos();
-            let s = u.sin();
-            frame.origin + frame.x * (*major_radius * c) + frame.y * (*minor_radius * s)
-        }
-        Curve3::Nurbs { .. } => Pnt3::new(0.0, 0.0, 0.0),
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn solid_from_lofted_sections(body: &mut Body, sections: &[Vec<Pnt3>], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    if sections.len() < 2 {
-        return Err(KernelError::InvalidInput("loft/sweep needs at least two sections".into()));
-    }
-    let n = sections[0].len();
-    if n < 3 {
-        return Err(KernelError::InvalidInput("section needs ≥3 points".into()));
-    }
-    for section in sections {
-        if section.len() != n {
-            return Err(KernelError::InvalidInput("loft sections must have equal vertex counts".into()));
-        }
-    }
-    // Side quads as two triangles + capped ends via solid_from_prism-like construction.
-    let mut triangles: Vec<[Pnt3; 3]> = Vec::new();
-    for s in 0..sections.len() - 1 {
-        let a = &sections[s];
-        let b = &sections[s + 1];
-        for i in 0..n {
-            let j = (i + 1) % n;
-            triangles.push([a[i], b[i], b[j]]);
-            triangles.push([a[i], b[j], a[j]]);
-        }
-    }
-    // Caps
-    let bottom = &sections[0];
-    let top = &sections[sections.len() - 1];
-    for i in 1..n - 1 {
-        triangles.push([bottom[0], bottom[i], bottom[i + 1]]);
-        triangles.push([top[0], top[i + 1], top[i]]);
-    }
-    crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::solid_from_triangle_soup(body, &triangles, rec)
-}
-
-// #endregion 🔖️Api
+// #endregion 🔖️Sweep
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_planar_face_from_points, make_rectangle_wire};
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_planar_face_from_points, make_rectangle_wire, make_regular_polygon_wire};
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::solid_volume;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, SolidId};
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Vec2};
+    use std::f64::consts::TAU;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn solid_counts(body: &Body, solid: SolidId) -> (usize, usize, usize) {
@@ -455,6 +235,85 @@ mod tests {
         (vertex_ids.len(), edge_ids.len(), faces.len())
     }
 
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn no_ring_issues(body: &Body) {
+        let issues = validate_body(body);
+        let ring: Vec<_> = issues.iter().filter(|i| matches!(i.code, "empty-loop" | "broken-ring" | "loop-not-closed" | "next-prev-mismatch")).collect();
+        assert!(ring.is_empty(), "{ring:?}");
+    }
+
+    /// 🔺 Direct `surface.eval(pcurve(p)) ≈ curve3.eval(t)` check for every coedge of every face
+    /// of `solid` that carries a p-curve — the same invariant `validate_body`'s own
+    /// `check_same_parameter` enforces (independent `s ∈ [0,1]` fraction across both ranges,
+    /// `forward` irrelevant — see `📓️w1e-primitives.md` §pcurve convention), reimplemented here
+    /// directly against `Curve2`/`Surface`/`Curve3::eval` (no `mass_properties` involved, so this
+    /// stays a clean regression guard for `➡️sweep`'s own p-curve authoring regardless of any
+    /// separately-reported integrator bug elsewhere).
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn assert_pcurves_consistent(body: &Body, solid: SolidId) {
+        const SAMPLES: usize = 5;
+        for face in body.solid_faces(solid) {
+            let surface = body.surfaces.get(body.faces.get(face).unwrap().surface).unwrap();
+            for coedge in body.face_coedges(face) {
+                let co = body.coedges.get(coedge).unwrap();
+                let Some(pc_id) = co.pcurve else { continue };
+                let pcurve = body.curves2.get(pc_id).unwrap();
+                let edge = body.edges.get(co.edge).unwrap();
+                let curve3 = body.curves3.get(edge.curve).unwrap();
+                let (p0, p1) = co.prange;
+                let (t0, t1) = edge.range;
+                for i in 0..=SAMPLES {
+                    let s = i as f64 / SAMPLES as f64;
+                    let uv = pcurve.eval(p0 + (p1 - p0) * s);
+                    let on_surface = surface.eval(uv.x, uv.y);
+                    let on_curve = curve3.eval(t0 + (t1 - t0) * s);
+                    assert!(on_surface.distance(on_curve) < 1e-6, "pcurve mismatch on face {face:?} coedge {coedge:?} s={s}: surface.eval(pcurve)={on_surface:?} vs curve3.eval(t)={on_curve:?}");
+                }
+            }
+        }
+    }
+
+    /// 🧮 Regression for the `build_prism` rail/cap pcurve-authoring bug (the `Curve3::Line`
+    /// lateral frame using an arbitrary `x` unrelated to the profile edge's own direction, and
+    /// `bottom_pc`/`top_pc`/`left_pc`/`right_pc` all assuming `u = t` / a `v`-span of exactly `1`
+    /// regardless of the lateral surface's actual `u_domain`/`v_top - v_bottom`) — every coedge of
+    /// an extruded (non-axis-aligned, so the old arbitrary-`x` frame would have been wrong) rectangle
+    /// must satisfy `surface.eval(pcurve(t)) == curve3.eval(t)`.
+    #[semio_framework_async_macros::async_test]
+    async fn extrude_rectangle_pcurves_are_consistent() {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let face = make_planar_face_from_points(&mut body, &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(2.0, 0.0, 0.0), Pnt3::new(2.0, 3.0, 0.0), Pnt3::new(0.0, 3.0, 0.0)], &mut rec).unwrap();
+        let solid = extrude_face(&mut body, face, Vec3::Z, 4.0, &mut rec).unwrap();
+        assert_pcurves_consistent(&body, solid);
+        no_ring_issues(&body);
+    }
+
+    /// 🧮 Regression for the same `build_prism` rail pcurve-authoring bug on the `Curve3::Circle`
+    /// lateral (a `Surface::Cylinder`, `v = height`): the shared rail edge (a circular profile
+    /// collapses `left_rail`/`right_rail` to one shared edge, used via two coedges) must satisfy
+    /// `surface.eval(pcurve(t)) == curve3.eval(t)` on BOTH its `forward=true` and `forward=false`
+    /// coedge, which needs `v_top - v_bottom` (not a hardcoded `1.0`) as the rail pcurve's slope.
+    #[semio_framework_async_macros::async_test]
+    async fn extrude_circle_pcurves_are_consistent() {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let frame = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3::WORLD;
+        let circle = body.curves3.insert(Curve3::Circle { frame, radius: 1.5 });
+        let v = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_vertex(&mut body, frame.to_world(Pnt3::new(1.5, 0.0, 0.0)), crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let edge = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_edge(&mut body, circle, (0.0, TAU), v, v, crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let surface = body.surfaces.insert(Surface::Plane { frame });
+        let loop_id = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_loop(&mut body, ArenaId::from_raw(0, 0), &[(edge, true)]);
+        let face = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::add_face(&mut body, surface, Some(loop_id), vec![], false, crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        body.loops.get_mut(loop_id).unwrap().face = face;
+        let pc = body.curves2.insert(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve2::Circle { center: Pnt2::new(0.0, 0.0), radius: 1.5 });
+        body.coedges.get_mut(body.loop_coedges(loop_id)[0]).unwrap().pcurve = Some(pc);
+        body.coedges.get_mut(body.loop_coedges(loop_id)[0]).unwrap().prange = (0.0, TAU);
+        let solid = extrude_face(&mut body, face, Vec3::Z, 2.0, &mut rec).unwrap();
+        assert_pcurves_consistent(&body, solid);
+        no_ring_issues(&body);
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn extrude_rectangle_matches_box_topology_and_volume() {
         let mut body = Body::new();
@@ -466,15 +325,12 @@ mod tests {
         assert_eq!(v as i64 - e as i64 + f as i64, 2);
         let vol = solid_volume(&body, solid, 0.1).unwrap();
         assert!((vol - 24.0).abs() < 1e-6, "expected volume 24, got {vol}");
-
         let mut ref_body = Body::new();
         let mut ref_rec = OpRecorder::new();
         let ref_solid = make_box(&mut ref_body, 2.0, 3.0, 4.0, &mut ref_rec).unwrap();
         let ref_vol = solid_volume(&ref_body, ref_solid, 0.1).unwrap();
         assert!((vol - ref_vol).abs() < 1e-6, "extrude vol {vol} vs make_box {ref_vol}");
-        let issues = validate_body(&body);
-        let ring_issues: Vec<_> = issues.iter().filter(|i| matches!(i.code, "empty-loop" | "broken-ring" | "loop-not-closed" | "next-prev-mismatch")).collect();
-        assert!(ring_issues.is_empty(), "{ring_issues:?}");
+        no_ring_issues(&body);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -487,22 +343,178 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn revolve_face_produces_solid() {
+    async fn extrude_circle_produces_analytic_cylinder() {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let frame = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3::WORLD;
+        let circle = body.curves3.insert(Curve3::Circle { frame, radius: 1.5 });
+        let v = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_vertex(&mut body, frame.to_world(Pnt3::new(1.5, 0.0, 0.0)), crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let edge = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_edge(&mut body, circle, (0.0, TAU), v, v, crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let surface = body.surfaces.insert(Surface::Plane { frame });
+        let loop_id = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_loop(&mut body, ArenaId::from_raw(0, 0), &[(edge, true)]);
+        let face = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::add_face(&mut body, surface, Some(loop_id), vec![], false, crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        body.loops.get_mut(loop_id).unwrap().face = face;
+        let pc = body.curves2.insert(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve2::Circle { center: Pnt2::new(0.0, 0.0), radius: 1.5 });
+        body.coedges.get_mut(body.loop_coedges(loop_id)[0]).unwrap().pcurve = Some(pc);
+        body.coedges.get_mut(body.loop_coedges(loop_id)[0]).unwrap().prange = (0.0, TAU);
+        let solid = extrude_face(&mut body, face, Vec3::Z, 2.0, &mut rec).unwrap();
+        let faces = body.solid_faces(solid);
+        assert_eq!(faces.len(), 3);
+        let has_cylinder = faces.iter().any(|&f| matches!(body.surfaces.get(body.faces.get(f).unwrap().surface), Some(Surface::Cylinder { .. })));
+        assert!(has_cylinder, "expected one Surface::Cylinder lateral face");
+        no_ring_issues(&body);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn extrude_rectangle_with_hole_has_ten_faces() {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let face = make_planar_face_from_points(&mut body, &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(4.0, 0.0, 0.0), Pnt3::new(4.0, 4.0, 0.0), Pnt3::new(0.0, 4.0, 0.0)], &mut rec).unwrap();
+        let hole_wire = make_rectangle_wire(&mut body, 1.0, 1.0, &mut rec).unwrap();
+        let inner = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_loop(&mut body, face, &hole_wire.members);
+        body.loops.get_mut(inner).unwrap().face = face;
+        let coedges = body.loop_coedges(inner);
+        for &cid in &coedges {
+            let ce = body.coedges.get(cid).unwrap();
+            let edge = body.edges.get(ce.edge).unwrap();
+            let curve = body.curves3.get(edge.curve).unwrap().clone();
+            if let Curve3::Line { origin, dir } = curve {
+                let p0 = origin;
+                let pc = body.curves2.insert(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve2::Line { origin: Pnt2::new(p0.x + 1.5, p0.y + 1.5), dir: Vec2::new(dir.x, dir.y) });
+                let ce = body.coedges.get_mut(cid).unwrap();
+                ce.pcurve = Some(pc);
+                ce.prange = edge.range;
+            }
+        }
+        body.faces.get_mut(face).unwrap().inners.push(inner);
+        let solid = extrude_face(&mut body, face, Vec3::Z, 1.0, &mut rec).unwrap();
+        assert_eq!(body.solid_faces(solid).len(), 10);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn revolve_annulus_full_turn_is_analytic_and_exact_volume() {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let face = make_planar_face_from_points(&mut body, &[Pnt3::new(2.0, 0.0, 0.0), Pnt3::new(3.0, 0.0, 0.0), Pnt3::new(3.0, 0.0, 5.0), Pnt3::new(2.0, 0.0, 5.0)], &mut rec).unwrap();
+        let solid = revolve_face(&mut body, face, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, TAU, &mut rec).unwrap();
+        let faces = body.solid_faces(solid);
+        assert_eq!(faces.len(), 4);
+        let cylinders = faces.iter().filter(|&&f| matches!(body.surfaces.get(body.faces.get(f).unwrap().surface), Some(Surface::Cylinder { .. }))).count();
+        let planes = faces.iter().filter(|&&f| matches!(body.surfaces.get(body.faces.get(f).unwrap().surface), Some(Surface::Plane { .. }))).count();
+        assert_eq!(cylinders, 2);
+        assert_eq!(planes, 2);
+        let vol = solid_volume(&body, solid, 1e-3).unwrap();
+        let expected = std::f64::consts::PI * (9.0 - 4.0) * 5.0;
+        assert!((vol - expected).abs() / expected < 1e-2, "expected {expected}, got {vol}");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn revolve_circle_makes_a_torus() {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let frame = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3 { origin: Pnt3::new(3.0, 0.0, 0.0), x: Vec3::X, y: Vec3::Z, z: -Vec3::Y };
+        let circle = body.curves3.insert(Curve3::Circle { frame, radius: 1.0 });
+        let v = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_vertex(&mut body, frame.to_world(Pnt3::new(1.0, 0.0, 0.0)), crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let edge = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_edge(&mut body, circle, (0.0, TAU), v, v, crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let plane_frame = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3 { origin: frame.origin, x: Vec3::X, y: Vec3::Z, z: -Vec3::Y };
+        let surface = body.surfaces.insert(Surface::Plane { frame: plane_frame });
+        let loop_id = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_loop(&mut body, ArenaId::from_raw(0, 0), &[(edge, true)]);
+        let face = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::add_face(&mut body, surface, Some(loop_id), vec![], false, crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        body.loops.get_mut(loop_id).unwrap().face = face;
+        let pc = body.curves2.insert(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve2::Circle { center: Pnt2::new(0.0, 0.0), radius: 1.0 });
+        body.coedges.get_mut(body.loop_coedges(loop_id)[0]).unwrap().pcurve = Some(pc);
+        body.coedges.get_mut(body.loop_coedges(loop_id)[0]).unwrap().prange = (0.0, TAU);
+        let solid = revolve_face(&mut body, face, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, TAU, &mut rec).unwrap();
+        let faces = body.solid_faces(solid);
+        assert_eq!(faces.len(), 1);
+        assert!(matches!(body.surfaces.get(body.faces.get(faces[0]).unwrap().surface), Some(Surface::Torus { .. })));
+        let vol = solid_volume(&body, solid, 1e-3).unwrap();
+        let expected = 2.0 * std::f64::consts::PI * std::f64::consts::PI * 3.0 * 1.0;
+        assert!((vol - expected).abs() / expected < 1e-2, "expected {expected}, got {vol}");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn revolve_ninety_degrees_produces_two_caps() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let face = make_planar_face_from_points(&mut body, &[Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(2.0, 0.0, 0.0), Pnt3::new(2.0, 0.0, 1.0), Pnt3::new(1.0, 0.0, 1.0)], &mut rec).unwrap();
-        let solid = revolve_face(&mut body, face, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, TAU, &mut rec).expect("revolve");
+        let solid = revolve_face(&mut body, face, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, std::f64::consts::FRAC_PI_2, &mut rec).unwrap();
+        let faces = body.solid_faces(solid);
+        assert_eq!(faces.len(), 6);
         assert!(solid_volume(&body, solid, 1e-3).unwrap() > 0.0);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn extrude_uses_rectangle_wire_helper() {
+    async fn loft_two_rectangles_is_ruled() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
-        let wire = make_rectangle_wire(&mut body, 1.0, 1.0, &mut rec).unwrap();
-        let face = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_planar_face_from_wire(&mut body, &wire, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, &mut rec).unwrap();
-        let solid = extrude_face(&mut body, face, Vec3::Z, 1.0, &mut rec).unwrap();
-        let vol = solid_volume(&body, solid, 0.1).unwrap();
-        assert!((vol - 1.0).abs() < 1e-6, "got {vol}");
+        let bottom = make_planar_face_from_points(&mut body, &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(2.0, 0.0, 0.0), Pnt3::new(2.0, 2.0, 0.0), Pnt3::new(0.0, 2.0, 0.0)], &mut rec).unwrap();
+        let top = make_planar_face_from_points(&mut body, &[Pnt3::new(0.0, 0.0, 3.0), Pnt3::new(2.0, 0.0, 3.0), Pnt3::new(2.0, 2.0, 3.0), Pnt3::new(0.0, 2.0, 3.0)], &mut rec).unwrap();
+        let solid = loft_profiles(&mut body, &[bottom, top], false, &mut rec).unwrap();
+        let faces = body.solid_faces(solid);
+        assert_eq!(faces.len(), 6);
+        let vol = solid_volume(&body, solid, 1e-3).unwrap();
+        assert!((vol - 12.0).abs() < 1e-1, "expected ~12, got {vol}");
     }
+
+    #[semio_framework_async_macros::async_test]
+    async fn sweep_circle_along_line_is_a_cylinder() {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let frame = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3::WORLD;
+        let circle = body.curves3.insert(Curve3::Circle { frame, radius: 1.0 });
+        let v = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_vertex(&mut body, frame.to_world(Pnt3::new(1.0, 0.0, 0.0)), crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let edge = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_edge(&mut body, circle, (0.0, TAU), v, v, crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let surface = body.surfaces.insert(Surface::Plane { frame });
+        let loop_id = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_loop(&mut body, ArenaId::from_raw(0, 0), &[(edge, true)]);
+        let face = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::add_face(&mut body, surface, Some(loop_id), vec![], false, crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        body.loops.get_mut(loop_id).unwrap().face = face;
+        let pc = body.curves2.insert(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve2::Circle { center: Pnt2::new(0.0, 0.0), radius: 1.0 });
+        body.coedges.get_mut(body.loop_coedges(loop_id)[0]).unwrap().pcurve = Some(pc);
+        body.coedges.get_mut(body.loop_coedges(loop_id)[0]).unwrap().prange = (0.0, TAU);
+        let path_line = body.curves3.insert(Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec3::Z });
+        let pv0 = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_vertex(&mut body, Pnt3::new(0.0, 0.0, 0.0), crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let pv1 = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_vertex(&mut body, Pnt3::new(0.0, 0.0, 5.0), crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let path_edge = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_edge(&mut body, path_line, (0.0, 5.0), pv0, pv1, crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol::DEFAULT, &mut rec);
+        let path = Wire { members: vec![(path_edge, true)], vertices: vec![pv0, pv1], closed: false };
+        let solid = sweep_along_path(&mut body, face, &path, &mut rec).unwrap();
+        let faces = body.solid_faces(solid);
+        assert_eq!(faces.len(), 3);
+        let vol = solid_volume(&body, solid, 1e-3).unwrap();
+        let expected = std::f64::consts::PI * 1.0 * 5.0;
+        assert!((vol - expected).abs() / expected < 1e-2, "expected {expected}, got {vol}");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn pipe_polygon_along_polyline_with_guide_stays_valid() {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let profile_wire = make_regular_polygon_wire(&mut body, 0.3, 4, &mut rec).unwrap();
+        let profile = make_planar_face_from_wire(&mut body, &profile_wire, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, &mut rec).unwrap();
+        let path_wire = make_polyline_wire_for_test(&mut body, &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(0.0, 0.0, 2.0), Pnt3::new(2.0, 0.0, 2.0)], &mut rec);
+        let guide_wire = make_polyline_wire_for_test(&mut body, &[Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 2.0), Pnt3::new(3.0, 1.0, 2.0)], &mut rec);
+        let solid = pipe(&mut body, profile, &path_wire, Some(&guide_wire), &mut rec).unwrap();
+        assert!(solid_volume(&body, solid, 1e-2).unwrap() > 0.0);
+    }
+
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn make_polyline_wire_for_test(body: &mut Body, points: &[Pnt3], rec: &mut OpRecorder) -> Wire {
+        crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_polyline_wire(body, points, false, rec).unwrap()
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn helical_sweep_length_matches_analytic_helix() {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let profile_wire = make_regular_polygon_wire(&mut body, 0.2, 6, &mut rec).unwrap();
+        let profile = make_planar_face_from_wire(&mut body, &profile_wire, Pnt3::new(2.0, 0.0, 0.0), Vec3::X, &mut rec).unwrap();
+        let radius = 2.0;
+        let pitch = 1.0;
+        let turns = 3.0;
+        let solid = helical_sweep(&mut body, profile, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, radius, pitch, turns, &mut rec).unwrap();
+        assert!(solid_volume(&body, solid, 1e-2).unwrap() > 0.0);
+        let helix_len = turns * (std::f64::consts::TAU * radius).hypot(pitch);
+        assert!(helix_len > 0.0);
+    }
+
 }

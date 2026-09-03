@@ -9,9 +9,8 @@
 
 #[cfg(test)]
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{CoedgeId, VertexId};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{EdgeId, FaceId, SolidId};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{EdgeId, FaceId, ShellId, SolidId};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops;
-#[cfg(test)]
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops;
@@ -51,15 +50,34 @@ pub fn solid_volume(body: &Body, solid: SolidId, chord_tol: f64) -> Result<f64, 
     if let Some(v) = try_analytic_sphere_volume(body, solid) {
         return Ok(v);
     }
-    let faces = body.solid_faces(solid);
+    Ok(solid_signed_volume(body, solid, chord_tol)?.abs())
+}
+
+/// 📐 Raw signed volume (no `.abs()`, no analytic fast path) — negative when the solid's outer
+/// shell face normals are net inward-oriented, used by validation's shell-orientation check.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn solid_signed_volume(body: &Body, solid: SolidId, chord_tol: f64) -> Result<f64, KernelError> {
+    shell_signed_volume_over(body, &body.solid_faces(solid), chord_tol)
+}
+
+/// 📐 Raw signed volume contribution of one shell's own faces (e.g. one void/inner shell in
+/// isolation) — validation compares this against the solid's outer shell to confirm a void shell
+/// is correctly inverted relative to the exterior.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn shell_signed_volume(body: &Body, shell: ShellId, chord_tol: f64) -> Result<f64, KernelError> {
+    shell_signed_volume_over(body, &body.shell_faces(shell), chord_tol)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn shell_signed_volume_over(body: &Body, faces: &[FaceId], chord_tol: f64) -> Result<f64, KernelError> {
     if faces.is_empty() {
-        return Err(KernelError::MissingEntity("solid has no faces".into()));
+        return Err(KernelError::MissingEntity("shell has no faces".into()));
     }
     let mut total = 0.0;
-    for face in faces {
+    for &face in faces {
         total += face_volume_contribution(body, face, chord_tol)?;
     }
-    Ok(total.abs())
+    Ok(total)
 }
 
 /// 📐 Total outer surface area of `solid`.
@@ -129,6 +147,226 @@ pub fn solid_bounding_box(body: &Body, solid: SolidId) -> Result<AxisAlignedBox,
         return Err(KernelError::InvalidInput("solid has no geometry samples".into()));
     }
     Ok(AxisAlignedBox { min, max })
+}
+
+/// 📏 Volume, area, centroid and inertia tensor of `solid`, integrated over its TRIMMED support
+/// (ear-clipped UV triangulation per face, adaptive Gauss-Legendre per triangle — see `loop_moments`),
+/// with analytic fast paths for a solid built from exactly one sphere or one 6-planar-face box.
+/// `error_estimate` is the adaptive refinement's own relative volume-error bound, not a guess.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn solid_mass_properties(body: &Body, solid: SolidId, tol: f64) -> Result<MassProperties, KernelError> {
+    if body.solids.get(solid).is_none() {
+        return Err(KernelError::MissingEntity("solid".into()));
+    }
+    if !(tol.is_finite() && tol > 0.0) {
+        return Err(KernelError::InvalidInput("tolerance must be positive and finite".into()));
+    }
+    if let Some(mp) = try_analytic_sphere_mass(body, solid) {
+        return Ok(mp);
+    }
+    if let Some(mp) = try_analytic_box_properties(body, solid) {
+        return Ok(mp);
+    }
+    let faces = body.solid_faces(solid);
+    if faces.is_empty() {
+        return Err(KernelError::MissingEntity("solid has no faces".into()));
+    }
+    let mut totals = [0.0; MOMENT_COMPONENTS];
+    let mut err = 0.0;
+    for face in faces {
+        let (m, e) = face_moments_general(body, face, tol)?;
+        for i in 0..MOMENT_COMPONENTS {
+            totals[i] += m[i];
+        }
+        err += e;
+    }
+    let vol_raw = totals[IDX_VOL];
+    if vol_raw.abs() < 1e-15 {
+        return Err(KernelError::InvalidInput("solid has zero volume".into()));
+    }
+    let sign = vol_raw.signum();
+    let volume = vol_raw.abs();
+    let cx = totals[IDX_MX] / vol_raw;
+    let cy = totals[IDX_MY] / vol_raw;
+    let cz = totals[IDX_MZ] / vol_raw;
+    let jxx2 = totals[IDX_JXX2] * sign;
+    let jyy2 = totals[IDX_JYY2] * sign;
+    let jzz2 = totals[IDX_JZZ2] * sign;
+    let jxy = totals[IDX_JXY] * sign;
+    let jxz = totals[IDX_JXZ] * sign;
+    let jyz = totals[IDX_JYZ] * sign;
+    let ixx = jyy2 + jzz2 - volume * (cy * cy + cz * cz);
+    let iyy = jxx2 + jzz2 - volume * (cx * cx + cz * cz);
+    let izz = jxx2 + jyy2 - volume * (cx * cx + cy * cy);
+    let ixy = jxy - volume * cx * cy;
+    let ixz = jxz - volume * cx * cz;
+    let iyz = jyz - volume * cy * cz;
+    let error_estimate = if volume > 1e-12 { err / volume } else { err };
+    Ok(MassProperties {
+        volume,
+        area: totals[IDX_AREA],
+        centroid: Pnt3::new(cx, cy, cz),
+        inertia: [[ixx, -ixy, -ixz], [-ixy, iyy, -iyz], [-ixz, -iyz, izz]],
+        error_estimate,
+    })
+}
+
+/// 📏 A face's trimmed surface-integral moments (outer loop minus each inner/hole loop), used
+/// uniformly for planar AND curved faces by `solid_mass_properties` — the 6-point rule is already
+/// exact on a flat facet (constant `cross` vector, integrand degree ≤ 3), so no special-casing is
+/// needed the way the legacy `loop_area`/`loop_volume_moments` pair still does for their own
+/// (unrelated, ×6/×24-scaled) callers.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn face_moments_general(body: &Body, face: FaceId, tol: f64) -> Result<([f64; MOMENT_COMPONENTS], f64), KernelError> {
+    let face_ent = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity("face".into()))?;
+    let surface = face_surface(body, face)?;
+    let flipped = face_ent.flipped;
+    let mut total = [0.0; MOMENT_COMPONENTS];
+    let mut err = 0.0;
+    if let Some(outer) = face_ent.outer {
+        let poly = loop_uv_polygon(body, outer, surface, tol)?;
+        let (m, e) = loop_moments(surface, flipped, &poly, tol);
+        for i in 0..MOMENT_COMPONENTS {
+            total[i] += m[i];
+        }
+        err += e;
+    }
+    for &inner in &face_ent.inners {
+        let poly = loop_uv_polygon(body, inner, surface, tol)?;
+        let (m, e) = loop_moments(surface, flipped, &poly, tol);
+        for i in 0..MOMENT_COMPONENTS {
+            total[i] -= m[i];
+        }
+        err += e;
+    }
+    Ok((total, err))
+}
+
+/// 📏 Exact closed-form mass properties when `solid` is a single sphere (any number of Sphere faces
+/// sharing one center/radius, e.g. a seamed sphere with pole faces).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn try_analytic_sphere_mass(body: &Body, solid: SolidId) -> Option<MassProperties> {
+    let faces = body.solid_faces(solid);
+    if faces.is_empty() {
+        return None;
+    }
+    let mut origin: Option<Pnt3> = None;
+    let mut radius: Option<f64> = None;
+    for fid in &faces {
+        let face = body.faces.get(*fid)?;
+        let surf = body.surfaces.get(face.surface)?;
+        let Surface::Sphere { frame, radius: r } = surf else {
+            return None;
+        };
+        match (origin, radius) {
+            (None, None) => {
+                origin = Some(frame.origin);
+                radius = Some(*r);
+            }
+            (Some(o), Some(r0)) if o.distance(frame.origin) < 1e-9 * r0.max(1.0) && (r0 - r).abs() < 1e-9 * r0.max(1.0) => {}
+            _ => return None,
+        }
+    }
+    let r = radius?;
+    let o = origin?;
+    let volume = 4.0 / 3.0 * std::f64::consts::PI * r * r * r;
+    let area = 4.0 * std::f64::consts::PI * r * r;
+    let i = 2.0 / 5.0 * volume * r * r;
+    Some(MassProperties { volume, area, centroid: o, inertia: [[i, 0.0, 0.0], [0.0, i, 0.0], [0.0, 0.0, i]], error_estimate: 0.0 })
+}
+
+/// 📏 Exact closed-form mass properties when `solid` is exactly one rectangular box: 6 planar
+/// faces, 8 distinct vertices, and one corner whose 3 incident edges are mutually orthogonal.
+/// Orientation-agnostic (built from raw vertex adjacency, not face normals), so it works
+/// regardless of any face's `flipped` flag.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn try_analytic_box_properties(body: &Body, solid: SolidId) -> Option<MassProperties> {
+    let faces = body.solid_faces(solid);
+    if faces.len() != 6 {
+        return None;
+    }
+    for &f in &faces {
+        let face = body.faces.get(f)?;
+        let surf = body.surfaces.get(face.surface)?;
+        if !matches!(surf, Surface::Plane { .. }) {
+            return None;
+        }
+    }
+    let mut positions: Vec<Pnt3> = Vec::new();
+    for &f in &faces {
+        for coedge in body.face_coedges(f) {
+            let (v0, _) = body.coedge_endpoints(coedge)?;
+            let p = body.vertices.get(v0)?.position;
+            if !positions.iter().any(|q: &Pnt3| q.distance(p) < 1e-9) {
+                positions.push(p);
+            }
+        }
+    }
+    if positions.len() != 8 {
+        return None;
+    }
+    let origin = positions[0];
+    let mut neighbors: Vec<Pnt3> = Vec::new();
+    for edge_id in solid_unique_edges(body, solid) {
+        let e = body.edges.get(edge_id)?;
+        let v0p = body.vertices.get(e.v0)?.position;
+        let v1p = body.vertices.get(e.v1)?.position;
+        if v0p.distance(origin) < 1e-9 && !neighbors.iter().any(|q: &Pnt3| q.distance(v1p) < 1e-9) {
+            neighbors.push(v1p);
+        } else if v1p.distance(origin) < 1e-9 && !neighbors.iter().any(|q: &Pnt3| q.distance(v0p) < 1e-9) {
+            neighbors.push(v0p);
+        }
+    }
+    if neighbors.len() != 3 {
+        return None;
+    }
+    let (lx, ly, lz) = ((neighbors[0] - origin).norm(), (neighbors[1] - origin).norm(), (neighbors[2] - origin).norm());
+    if lx < 1e-12 || ly < 1e-12 || lz < 1e-12 {
+        return None;
+    }
+    let ux = (neighbors[0] - origin).normalized()?;
+    let uy = (neighbors[1] - origin).normalized()?;
+    let uz = (neighbors[2] - origin).normalized()?;
+    let ortho_tol = 1e-6;
+    if ux.dot(uy).abs() > ortho_tol || uy.dot(uz).abs() > ortho_tol || ux.dot(uz).abs() > ortho_tol {
+        return None;
+    }
+    let volume = lx * ly * lz;
+    let area = 2.0 * (lx * ly + ly * lz + lx * lz);
+    let centroid = origin + (ux * (lx * 0.5) + uy * (ly * 0.5) + uz * (lz * 0.5));
+    let ixx_local = (ly * ly + lz * lz) * volume / 12.0;
+    let iyy_local = (lx * lx + lz * lz) * volume / 12.0;
+    let izz_local = (lx * lx + ly * ly) * volume / 12.0;
+    let r = [[ux.x, uy.x, uz.x], [ux.y, uy.y, uz.y], [ux.z, uy.z, uz.z]];
+    let i_local = [[ixx_local, 0.0, 0.0], [0.0, iyy_local, 0.0], [0.0, 0.0, izz_local]];
+    let inertia = rotate_inertia(&r, &i_local);
+    Some(MassProperties { volume, area, centroid, inertia, error_estimate: 0.0 })
+}
+
+/// 📏 `R * I_local * Rᵀ` — rotates a diagonal local-axis inertia tensor into world axes.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn rotate_inertia(r: &[[f64; 3]; 3], i_local: &[[f64; 3]; 3]) -> [[f64; 3]; 3] {
+    let mut ri = [[0.0; 3]; 3];
+    for i in 0..3 {
+        for j in 0..3 {
+            let mut s = 0.0;
+            for k in 0..3 {
+                s += r[i][k] * i_local[k][j];
+            }
+            ri[i][j] = s;
+        }
+    }
+    let mut result = [[0.0; 3]; 3];
+    for i in 0..3 {
+        for j in 0..3 {
+            let mut s = 0.0;
+            for k in 0..3 {
+                s += ri[i][k] * r[j][k];
+            }
+            result[i][j] = s;
+        }
+    }
+    result
 }
 
 // #endregion 🔖️Solid
@@ -541,20 +779,41 @@ fn gap_1d(a0: f64, a1: f64, b0: f64, b1: f64) -> f64 {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn loop_area(body: &Body, face: FaceId, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId, _chord_tol: f64) -> Result<f64, KernelError> {
+fn loop_area(body: &Body, face: FaceId, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId, chord_tol: f64) -> Result<f64, KernelError> {
     let surface = face_surface(body, face)?;
     let flipped = body.faces.get(face).map(|f| f.flipped).unwrap_or(false);
     match surface {
-        Surface::Plane { frame } => {
+        Surface::Plane { frame } if loop_has_only_straight_edges(body, loop_id) => {
             let pts = loop_positions(body, loop_id)?;
-            Ok(newell_area(&pts, outward_plane_normal(&frame, flipped)))
+            Ok(newell_area(&pts, outward_plane_normal(frame, flipped)))
         }
         _ => {
-            let boundary = loop_uv_polygon(body, loop_id, surface)?;
-            let (m, _err) = loop_moments(surface, flipped, &boundary, _chord_tol.max(1e-5));
+            let boundary = loop_uv_polygon(body, loop_id, surface, chord_tol)?;
+            let (m, _err) = loop_moments(surface, flipped, &boundary, chord_tol.max(1e-5));
             Ok(m[IDX_AREA])
         }
     }
+}
+
+/// 📏 True only when every coedge of `loop_id` walks a straight [`Curve3::Line`] — the fast
+/// one-vertex-per-coedge `loop_positions` path (below) is exact ONLY for such loops. A planar
+/// face's boundary can still carry a curved (`Circle`/`Ellipse`/`Nurbs`) edge — a cylinder's cap,
+/// a plate with a round hole — and `loop_positions` silently degenerates that loop to a 1-4 point
+/// "polygon" (e.g. a cylinder cap's single full-circle coedge collapses to ONE point, zeroing the
+/// cap's whole area/volume contribution): the same under-sampling class of bug as
+/// [`loop_uv_polygon`]'s, just for the OTHER (planar fast-path) branch of `loop_area`/
+/// `loop_volume_moments`. Route those loops through the curvature-adaptive general path instead
+/// (`face_moments_general`'s own doc already notes the general quadrature is exact on a flat facet
+/// too, so this loses nothing but the fast path's cheapness).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn loop_has_only_straight_edges(body: &Body, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId) -> bool {
+    body.loop_coedges(loop_id).into_iter().all(|coedge| {
+        body.coedges
+            .get(coedge)
+            .and_then(|co| body.edges.get(co.edge))
+            .and_then(|edge| body.curves3.get(edge.curve))
+            .is_some_and(|curve| matches!(curve, Curve3::Line { .. }))
+    })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -609,12 +868,22 @@ fn loop_volume_moments(body: &Body, face: FaceId, loop_id: crate::artifacts::sem
     let surface = face_surface(body, face)?;
     let flipped = body.faces.get(face).map(|f| f.flipped).unwrap_or(false);
     match surface {
-        Surface::Plane { .. } => {
+        Surface::Plane { .. } if loop_has_only_straight_edges(body, loop_id) => {
             let pts = loop_positions(body, loop_id)?;
-            Ok(signed_tetra_sum(&pts))
+            let (sv, mx, my, mz) = signed_tetra_sum(&pts);
+            // 🐛 FIX: this fast path derives its sign purely from the loop's own vertex winding,
+            // which never encodes `face.flipped` — the general (non-planar) branch below DOES
+            // negate for `flipped` (`quad_triangle_once` flips `cross(du,dv)`), so a flipped
+            // planar face silently got the wrong-signed volume/moment contribution here, breaking
+            // `solid_signed_volume`'s orientation sign for any solid with a flipped planar face.
+            if flipped {
+                Ok((-sv, -mx, -my, -mz))
+            } else {
+                Ok((sv, mx, my, mz))
+            }
         }
         _ => {
-            let boundary = loop_uv_polygon(body, loop_id, surface)?;
+            let boundary = loop_uv_polygon(body, loop_id, surface, chord_tol)?;
             let (m, _err) = loop_moments(surface, flipped, &boundary, chord_tol.max(1e-5));
             Ok((6.0 * m[IDX_VOL], 24.0 * m[IDX_MX], 24.0 * m[IDX_MY], 24.0 * m[IDX_MZ]))
         }
@@ -688,23 +957,134 @@ fn newell_area(pts: &[Pnt3], normal: Vec3) -> f64 {
     0.5 * area_vec.dot(normal).abs()
 }
 
+/// 📏 UV boundary polygon for a (possibly curved-edge) loop — samples EACH coedge at a
+/// curvature-adaptive point count (not just its start vertex: W1-E's flagged gap, a straight-edge
+/// polygon is exact with one sample per coedge, but any curved-edge loop with few coedges — every
+/// lateral/cap/spherical/toroidal face `🧱️primitives/🦀️.rs` builds — degenerated to a 1-4 point
+/// "polygon" and made `point_in_uv_polygon`/the ear-clip quadrature under/over-integrate).
+/// 🐛 FIX: an earlier pass bumped this from 1 sample/coedge to a FIXED `EDGE_SAMPLES = 8`, which
+/// fixed the degenerate-polygon shape but is still tolerance-blind — a `chord_tol = 1e-3` caller
+/// (`solid_volume`) got an 8-gon inscribed circle whose area already undershoots by ~10% (n=8's
+/// sagitta is a full 7.6% of a r=1.5 circle), regardless of how tight the caller's tolerance is.
+/// The interior quadrature (`integrate_triangle_adaptive`) genuinely refines to `chord_tol`, but
+/// only ever refines WITHIN the ear-clipped boundary's fixed straight-chord approximation, so a
+/// coarse boundary chord caps accuracy no matter how deep the interior recursion goes. Now derives
+/// `n` per-coedge from `chord_tol` via the same closed-form chordal-deviation formula tessellation
+/// uses for edge sampling (`segments_for_chord_deviation`, kept as a separate small copy here per
+/// doctrine — different call shape, `+1` for point count vs segment count, no angular-tol term
+/// since this feeds a quadrature boundary, not a rendered mesh's normal quality).
+/// Prefers the coedge's own p-curve (`Coedge::pcurve`/`prange`, mirroring classification.rs's
+/// `coedge_uv_sample` pattern — kept close per doctrine rather than cross-imported) over
+/// reprojecting the 3D curve, and reads it in the coedge's OWN order regardless of `forward`,
+/// reversing only when `forward == false` (W1-E's binding convention, fixed alongside this pass —
+/// see [`coedge_uv_sample`]'s own doc); the 3D-curve fallback already reverses via `t`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn loop_uv_polygon(body: &Body, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId, surface: &Surface) -> Result<Vec<Pnt2>, KernelError> {
-    let mut poly = Vec::new();
+fn loop_uv_polygon(body: &Body, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId, surface: &Surface, chord_tol: f64) -> Result<Vec<Pnt2>, KernelError> {
+    let mut poly: Vec<Pnt2> = Vec::new();
     let mut prev_u: Option<f64> = None;
-    for coedge in body.loop_coedges(loop_id) {
-        let (v0, _) = body.coedge_endpoints(coedge).ok_or_else(|| KernelError::InvalidInput("open coedge".into()))?;
-        let v = body.vertices.get(v0).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?;
-        let mut uv = surface_uv(surface, v.position);
-        if surface.is_u_periodic() {
-            if let Some(pu) = prev_u {
-                uv.x = unwrap_u(pu, uv.x);
+    let mut prev_was_pole = false;
+    let coedges = body.loop_coedges(loop_id);
+    for (ci, coedge_id) in coedges.iter().enumerate() {
+        let co = body.coedges.get(*coedge_id).ok_or_else(|| KernelError::MissingEntity("coedge".into()))?;
+        let n = coedge_sample_count(body, co, chord_tol).max(2);
+        for i in 0..n {
+            let s = i as f64 / (n - 1) as f64;
+            let mut uv = coedge_uv_sample(body, co, surface, s)?;
+            let is_pole = surface.normal(uv.x, uv.y).is_none();
+            // `s` must reach 1.0 (via `i/(n-1)`, not `i/n`) so each coedge's samples actually span
+            // its own full [0,1]. The last-sample-skip below (mirroring classification.rs's own
+            // `loop_uv_polygon_sampled` pattern, kept close per doctrine) avoids duplicating each
+            // shared vertex twice — EXCEPT at a pole: a cone's apex (or a sphere's own poles) is
+            // where a lune face's seam genuinely re-enters at the OTHER `u` branch (`0` in, `2π`
+            // out), so skipping it here would merge the two branches into one point and let the
+            // boundary "close" via a spurious diagonal across the full angular range instead of
+            // tracing the real (degenerate-width-at-the-pole, but still `0..2π`-wide) rectangle —
+            // same bug class as `tessellation.rs`'s `collect_loop_uv`, see the pole-branch doc below.
+            if i == n - 1 && ci + 1 != coedges.len() && !is_pole {
+                continue;
             }
-            prev_u = Some(uv.x);
+            if surface.is_u_periodic() {
+                // A pole has a meaningless `u`; unwrapping the sample AFTER it against the pole's
+                // own (arbitrary) `u` would drag the departing seam back onto the arriving branch —
+                // don't chain continuity through one (mirrors `tessellation.rs`'s identical fix).
+                if !prev_was_pole {
+                    if let Some(pu) = prev_u {
+                        uv.x = unwrap_u(pu, uv.x);
+                    }
+                }
+                prev_u = Some(uv.x);
+            }
+            prev_was_pole = is_pole;
+            poly.push(uv);
         }
-        poly.push(uv);
     }
     Ok(poly)
+}
+
+/// 📏 Curvature-adaptive point count for one coedge's boundary contribution: exact 2 for a
+/// straight `Line`, chordal-deviation-derived for `Circle`/`Ellipse` (their own radius, or the
+/// major radius as a conservative upper bound for an ellipse's tighter minor-axis curvature), a
+/// generously fine fixed count for `Nurbs` (no cheap closed-form curvature here; this file's
+/// quadrature is not performance-critical enough to warrant the recursive bisection tessellation's
+/// `sample_curve_adaptive` uses).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn coedge_sample_count(body: &Body, co: &crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Coedge, chord_tol: f64) -> usize {
+    let Some(edge) = body.edges.get(co.edge) else { return 8 };
+    let Some(curve) = body.curves3.get(edge.curve) else { return 8 };
+    let (t0, t1) = edge.range;
+    let arc_range = (t1 - t0).abs();
+    let radius = match curve {
+        Curve3::Line { .. } => return 2,
+        Curve3::Circle { radius, .. } => *radius,
+        Curve3::Ellipse { major_radius, .. } => *major_radius,
+        Curve3::Nurbs { .. } => return 32,
+    };
+    segments_for_chord_deviation(radius, arc_range, chord_tol) + 1
+}
+
+/// 📏 Exact segment count for a circular arc of `radius` spanning `arc_range` radians so the chord
+/// deviates from the arc by at most `deflection`: `n = ceil(arc_range / (2·acos(1 − deflection/radius)))`
+/// — same closed form as tessellation's `segments_for_chord_deviation`, minus its angular-tol term
+/// (see [`loop_uv_polygon`]'s doc for why that term doesn't apply here).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn segments_for_chord_deviation(radius: f64, arc_range: f64, deflection: f64) -> usize {
+    if radius <= 0.0 || arc_range <= 0.0 {
+        return 1;
+    }
+    let d = deflection.max(1e-12).min(radius * 1.999);
+    let ratio = (1.0 - d / radius).clamp(-1.0, 1.0);
+    let theta = 2.0 * ratio.acos();
+    if theta <= 1e-9 {
+        return ((arc_range / 1e-9).ceil() as usize).clamp(1, 200_000);
+    }
+    ((arc_range / theta).ceil() as usize).max(1)
+}
+
+/// 📏 One coedge, sampled at `s ∈ [0,1]` in UV — pcurve when present (edge's own order, see
+/// [`loop_uv_polygon`]'s doc), else the 3D edge curve reprojected via `surface_uv`, reversed for a
+/// backward coedge so the walk stays physically continuous.
+/// 🐛 FIX (ticket `26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME` FX-5, same class as W2-B's fix to
+/// `classification.rs`'s own `coedge_uv_sample`): the p-curve branch used to ignore `co.forward`
+/// entirely (`p0 + (p1 - p0) * s` regardless of direction) — `prange` is stored in the underlying
+/// edge's OWN curve order, never reparametrized per coedge, so a `forward == false` coedge must
+/// walk it from `p1` down to `p0`, exactly like the no-pcurve fallback below already does for the
+/// 3D curve's `range`. Left unfixed this silently traced every reversed pcurve-bearing coedge (half
+/// of any non-planar loop) BACKWARDS relative to the rest of the ring, producing a self-crossing
+/// UV boundary polygon whose shoelace/ear-clip quadrature integrates the wrong region — this is
+/// what made the cylinder's general-path volume come out at ~24% of the closed-form value.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn coedge_uv_sample(body: &Body, co: &crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Coedge, surface: &Surface, s: f64) -> Result<Pnt2, KernelError> {
+    if let Some(pcurve_id) = co.pcurve {
+        let pcurve = body.curves2.get(pcurve_id).ok_or_else(|| KernelError::MissingEntity("pcurve".into()))?;
+        let (p0, p1) = co.prange;
+        let p = if co.forward { p0 + (p1 - p0) * s } else { p1 - (p1 - p0) * s };
+        return Ok(pcurve.eval(p));
+    }
+    let edge = body.edges.get(co.edge).ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
+    let curve = body.curves3.get(edge.curve).ok_or_else(|| KernelError::MissingEntity("curve".into()))?;
+    let (t0, t1) = edge.range;
+    let t = if co.forward { t0 + (t1 - t0) * s } else { t1 - (t1 - t0) * s };
+    Ok(surface_uv(surface, curve.eval(t)))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -788,7 +1168,7 @@ fn point_in_uv_polygon(u: f64, v: f64, poly: &[Pnt2]) -> bool {
 // #region 🔖️Samples
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn face_sample_points(body: &Body, face: FaceId) -> Result<Vec<Pnt3>, KernelError> {
+pub fn face_sample_points(body: &Body, face: FaceId) -> Result<Vec<Pnt3>, KernelError> {
     let mut pts = Vec::new();
     for loop_id in body.face_loops(face) {
         for coedge in body.loop_coedges(loop_id) {
@@ -926,12 +1306,16 @@ fn point_in_face_plane(body: &Body, face: FaceId, point: Pnt3) -> Result<bool, K
     let Some(outer) = body.faces.get(face).and_then(|f| f.outer) else {
         return Ok(false);
     };
-    let boundary = loop_uv_polygon(body, outer, surface)?;
+    // No caller-supplied chord tolerance reaches this classification helper; a small fixed
+    // boundary-sampling tolerance is a reasonable default for a point-in-face boolean test (unlike
+    // the mass-integral callers above, which thread the caller's own `tol`/`chord_tol` through).
+    const CLASSIFY_CHORD_TOL: f64 = 1e-4;
+    let boundary = loop_uv_polygon(body, outer, surface, CLASSIFY_CHORD_TOL)?;
     if !point_in_uv_polygon(uv.x, uv.y, &boundary) {
         return Ok(false);
     }
     for inner in &body.faces.get(face).unwrap().inners {
-        let hole = loop_uv_polygon(body, *inner, surface)?;
+        let hole = loop_uv_polygon(body, *inner, surface, CLASSIFY_CHORD_TOL)?;
         if point_in_uv_polygon(uv.x, uv.y, &hole) {
             return Ok(false);
         }
@@ -1131,6 +1515,56 @@ mod tests {
         let face = add_planar_face(&mut body, frame, [Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Pnt3::new(0.0, 1.0, 0.0)], false);
         let area = face_area(&body, face, 0.1).unwrap();
         assert!((area - 1.0).abs() < 1e-9);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn solid_mass_properties_box_uses_the_analytic_fast_path_and_matches_closed_form() {
+        let mut body = Body::new();
+        let solid = make_box_solid(&mut body, Pnt3::new(0.0, 0.0, 0.0), 2.0, 3.0, 4.0);
+        let mp = solid_mass_properties(&body, solid, 1e-4).unwrap();
+        assert!((mp.volume - 24.0).abs() < 1e-9, "volume {}", mp.volume);
+        assert!((mp.area - 52.0).abs() < 1e-9, "area {}", mp.area);
+        assert!((mp.centroid.x - 1.0).abs() < 1e-9 && (mp.centroid.y - 1.5).abs() < 1e-9 && (mp.centroid.z - 2.0).abs() < 1e-9);
+        let expected_ixx = mp.volume * (3.0 * 3.0 + 4.0 * 4.0) / 12.0;
+        assert!((mp.inertia[0][0] - expected_ixx).abs() < 1e-6, "ixx {} expected {expected_ixx}", mp.inertia[0][0]);
+        assert_eq!(mp.error_estimate, 0.0, "the box analytic fast path is exact");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn solid_mass_properties_sphere_matches_closed_form() {
+        let mut body = Body::new();
+        let r = 2.0;
+        let solid = make_uv_sphere(&mut body, r, 12, 8);
+        let mp = solid_mass_properties(&body, solid, 1e-4).unwrap();
+        let expected_vol = 4.0 / 3.0 * PI * r * r * r;
+        let expected_area = 4.0 * PI * r * r;
+        assert!((mp.volume - expected_vol).abs() < 0.02 * expected_vol, "vol {} expected {expected_vol}", mp.volume);
+        assert!((mp.area - expected_area).abs() < 0.02 * expected_area, "area {} expected {expected_area}", mp.area);
+        assert!(mp.centroid.to_vec().norm() < 1e-6, "sphere centroid should be at the origin, got {:?}", mp.centroid);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn solid_mass_properties_cylinder_general_path_matches_closed_form_within_error_estimate() {
+        use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_cylinder;
+        use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let radius = 1.0;
+        let height = 3.0;
+        let solid = make_cylinder(&mut body, radius, height, &mut rec).unwrap();
+        let mp = solid_mass_properties(&body, solid, 1e-4).unwrap();
+        let expected_vol = PI * radius * radius * height;
+        assert!((mp.volume - expected_vol).abs() < 0.05 * expected_vol, "vol {} expected {expected_vol}", mp.volume);
+        assert!(mp.error_estimate.is_finite() && mp.error_estimate >= 0.0);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn distance_solid_solid_overlap_returns_zero_via_real_classifier() {
+        let mut body = Body::new();
+        let a = make_box_solid(&mut body, Pnt3::new(0.0, 0.0, 0.0), 2.0, 2.0, 2.0);
+        let b = make_box_solid(&mut body, Pnt3::new(1.0, 1.0, 1.0), 2.0, 2.0, 2.0);
+        let d = distance_solid_solid(&body, a, b).unwrap();
+        assert_eq!(d, 0.0, "overlapping boxes must report zero distance");
     }
 }
 

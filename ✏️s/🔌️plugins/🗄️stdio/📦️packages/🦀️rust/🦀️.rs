@@ -6262,6 +6262,8 @@ pub mod artifacts {
                                 pub mod topology;
                                 #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/📸️snapshot/➡️vector/🦀️.rs"]
                                 pub mod vector;
+                                #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/📸️snapshot/🔁️body/🦀️.rs"]
+                                pub mod body;
                             }
                             #[path = "."]
                             pub mod diff {
@@ -6288,6 +6290,8 @@ pub mod artifacts {
                                 pub mod sweep;
                                 #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
                                 pub mod text;
+                                #[path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🔁️transform/🦀️.rs"]
+                                pub mod transform;
                             }
                             #[path = "."]
                             pub mod inferences {

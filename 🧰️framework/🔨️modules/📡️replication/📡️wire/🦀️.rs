@@ -46,7 +46,6 @@ impl Lane {
 /// @emoji 📨️ One frame a client sends to the semio_hub.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ClientFrame {
-    Hello { wire_version: u32, protocol_version: u32, schema: String, pack_schema_hash: [u8; 32], actor: crate::ids::ActorId, token: Option<String>, resume_token: Option<String>, frontier: Option<crate::causal::FrontierSummary> },
     SocketHelloV1 { wire_version: u32, protocol_version: u32, schema: String, pack_schema_hash: [u8; 32], resume_token: Option<String>, frontier: Option<crate::causal::FrontierSummary> },
     Commands { batch_id: u64, envelopes: Vec<crate::causal::MutationEnvelope> },
     FrontierAdvertise { frontier: crate::causal::FrontierSummary },
@@ -854,17 +853,6 @@ pub async fn encode_client_frame(frame: &ClientFrame, lane: Lane) -> Vec<u8> {
     let mut out = Vec::new();
     out.push(lane.to_byte().await);
     match frame {
-        ClientFrame::Hello { wire_version, protocol_version, schema, pack_schema_hash, actor, token, resume_token, frontier } => {
-            out.push(0);
-            crate::wire::write_varint_u64(&mut out, *wire_version as u64);
-            crate::wire::write_varint_u64(&mut out, *protocol_version as u64);
-            crate::write_str(&mut out, schema);
-            crate::write_hash32(&mut out, pack_schema_hash);
-            crate::write_str(&mut out, &actor.0);
-            write_opt_str(&mut out, token).await;
-            write_opt_str(&mut out, resume_token).await;
-            write_opt_frontier(&mut out, frontier).await;
-        }
         ClientFrame::SocketHelloV1 { wire_version, protocol_version, schema, pack_schema_hash, resume_token, frontier } => {
             out.push(7);
             crate::wire::write_varint_u64(&mut out, *wire_version as u64);
@@ -919,16 +907,6 @@ pub async fn decode_client_frame(bytes: &[u8]) -> Result<(Lane, ClientFrame), cr
     };
     pos += 1;
     let frame = match tag {
-        0 => ClientFrame::Hello {
-            wire_version: crate::wire::read_varint_u64(bytes, &mut pos)? as u32,
-            protocol_version: crate::wire::read_varint_u64(bytes, &mut pos)? as u32,
-            schema: crate::read_str(bytes, &mut pos)?,
-            pack_schema_hash: crate::read_hash32(bytes, &mut pos)?,
-            actor: crate::ids::ActorId(crate::read_str(bytes, &mut pos)?),
-            token: read_opt_str(bytes, &mut pos).await?,
-            resume_token: read_opt_str(bytes, &mut pos).await?,
-            frontier: read_opt_frontier(bytes, &mut pos).await?,
-        },
         1 => ClientFrame::Commands { batch_id: crate::wire::read_varint_u64(bytes, &mut pos)?, envelopes: read_vec_envelope(bytes, &mut pos).await? },
         2 => ClientFrame::FrontierAdvertise { frontier: crate::causal::decode_frontier(bytes, &mut pos)? },
         3 => ClientFrame::PreviewPublish { key: crate::read_str(bytes, &mut pos)?, seq: crate::wire::read_varint_u64(bytes, &mut pos)?, payload: crate::read_bytes(bytes, &mut pos)? },
@@ -1227,30 +1205,9 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn client_frame_hello_round_trips() {
-        assert_client_round_trips(
-            &ClientFrame::Hello {
-                wire_version: 1,
-                protocol_version: 1,
-                schema: "schema.v1".to_string(),
-                pack_schema_hash: [1u8; 32],
-                actor: crate::ids::ActorId("actor-1".to_string()),
-                token: Some("token".to_string()),
-                resume_token: None,
-                frontier: Some(sample_frontier().await),
-            },
-            Lane::Command,
-        )
-        .await;
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn client_frame_hello_with_no_optionals_round_trips() {
-        assert_client_round_trips(
-            &ClientFrame::Hello { wire_version: 1, protocol_version: 1, schema: "schema.v1".to_string(), pack_schema_hash: [0u8; 32], actor: crate::ids::ActorId("actor-2".to_string()), token: None, resume_token: None, frontier: None },
-            Lane::Command,
-        )
-        .await;
+    async fn client_frame_tag_zero_is_terminally_rejected() {
+        assert!(decode_client_frame(&[0, 0]).await.is_err());
+        assert!(decode_client_frame(include_bytes!("../🧫️fixtures/🧫️wire/🚫️legacy-client-hello-rejected/💾️.bin")).await.is_err());
     }
 
     #[semio_framework_async_macros::async_test]

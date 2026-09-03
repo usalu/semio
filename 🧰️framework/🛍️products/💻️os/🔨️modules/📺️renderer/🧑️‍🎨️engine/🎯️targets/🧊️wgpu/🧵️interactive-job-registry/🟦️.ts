@@ -17,7 +17,7 @@ import {
   type InteractiveJobPage,
   type InteractiveJobUiMessage,
   type InteractiveJobWorkerMessage,
-} from "../🧵️browser-interactive-job-port/🟦️";
+} from "../🧵️browser-interactive-job-port/🟦️.ts";
 
 // #region 🧬️Registry
 export type InteractiveWorkerStep = { readonly deadlineMs: number; readonly fuel: number };

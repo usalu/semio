@@ -67,7 +67,7 @@ mod tests {
         assert_eq!(AddValue::DESCRIPTOR.semantic_kind,"add-value");
         let provenance=AddValue::PROVENANCE;
         assert_eq!(provenance.owner,AddValue::DESCRIPTOR.owner);
-        let scope=protocol::MutationLeafSourceScope{workspace_token:provenance.workspace_token,mutation_root:provenance.mutation_root,taxonomy_path:provenance.taxonomy_path,source_filename:"🦀️.rs",descriptor_filename:"🔣️.json"};
+        let scope=protocol::MutationLeafSourceScope{workspace_token:provenance.workspace_token,mutation_root:provenance.mutation_root,taxonomy_path:provenance.taxonomy_path,source_filename:"../../../🧬️📡️contributed-mutation-wire/🧬️🔀️mutations/➕️add-value/🦀️.rs",descriptor_filename:"../../../🧬️📡️contributed-mutation-wire/🧬️🔀️mutations/➕️add-value/🔣️.json"};
         assert!(protocol::validate_mutation_leaf_source(&AddValue::DESCRIPTOR,&provenance,&scope).is_ok());
         let base=WireTestSnapshot{value:0};
         let mutation=WireTestMutation::AddValue(AddValue{delta:i32::MIN});

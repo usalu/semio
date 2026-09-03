@@ -8,8 +8,8 @@ import ts from "typescript";
 import * as discovery from "../../🔍️discovery/🟦️.ts";
 import * as normalization from "../../🧹️normalization/🟦️.ts";
 
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
-const historical = JSON.parse(readFileSync(join(import.meta.dir, "🧬️energy-source-coordinates/🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧪️🔮️frozen-markdown-coordinates/🔣️.json"), "utf8"));
+const historical = JSON.parse(readFileSync(join(import.meta.dir, "../🧪️🔮️frozen-markdown-coordinates/🧬️energy-source-coordinates/🔣️.json"), "utf8"));
 const libraryRoot = resolve(import.meta.dir, "../.."), root = resolve(libraryRoot, "../../../../..");
 const sha = (bytes: Uint8Array | string): string => createHash("sha256").update(bytes).digest("hex");
 const functions = () => {
@@ -153,7 +153,7 @@ test("a scoped transaction preserves Markdown and escaped JSON history while rew
   const current = plan();
   checkpoint("initial-plan");
   writeFileSync(join(owner, "📝️.md"), "# Historical Markdown Transaction\n\nThis isolated fixture retains all source and recovery evidence; no cleanup is performed.\n", { flag: "wx" });
-  writeFileSync(join(owner, "🔣️.json"), normalization.canonicalJson(current) + "\n", { flag: "wx" });
+  writeFileSync(join(owner, "../🧪️🔮️frozen-markdown-coordinates/🔣️.json"), normalization.canonicalJson(current) + "\n", { flag: "wx" });
   expect(current.unresolved).toEqual([]);
   expect(current.moves).toHaveLength(1);
   expect(current.regenerations).toHaveLength(0);

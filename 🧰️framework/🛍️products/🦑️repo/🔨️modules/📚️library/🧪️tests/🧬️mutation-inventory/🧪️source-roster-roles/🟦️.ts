@@ -7,9 +7,9 @@ import ts from "typescript";
 
 //#region 🧭️Inputs
 const root = resolve(import.meta.dir, "../../../../../../../../");
-const inventorySchemaPath = resolve(import.meta.dir, "../🛂️schema/🔣️.json");
-const vectorsPath = resolve(import.meta.dir, "🔣️.json");
-const vectorsSchemaPath = resolve(import.meta.dir, "🧬️schema/🔣️.json");
+const inventorySchemaPath = resolve(import.meta.dir, "../../🧬️🔀️🌲️mutation-inventory/🛂️schema/🔣️.json");
+const vectorsPath = resolve(import.meta.dir, "../../🧬️🔀️🌲️mutation-inventory/🧪️🐝️source-roster-roles/🔣️.json");
+const vectorsSchemaPath = resolve(import.meta.dir, "../../🧬️🔀️🌲️mutation-inventory/🧪️🐝️source-roster-roles/🧬️schema/🔣️.json");
 const rootScriptPath = resolve(root, "📜️script.ts");
 const inventorySchema = JSON.parse(readFileSync(inventorySchemaPath, "utf8"));
 const vectorsSchema = JSON.parse(readFileSync(vectorsSchemaPath, "utf8"));

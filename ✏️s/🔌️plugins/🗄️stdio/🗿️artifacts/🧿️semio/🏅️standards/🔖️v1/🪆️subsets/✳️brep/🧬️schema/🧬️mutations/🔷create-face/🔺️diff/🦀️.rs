@@ -14,7 +14,7 @@ pub fn diff(payload: &super::CreateFace, base: &SemioBrepSnapshot) -> protocol::
         faces: Some(NamedTripleDiff {
             removed: vec![],
             modified: vec![],
-            added: vec![BrepFace { id: payload.id.clone(), outer_loop: payload.outer_loop.clone(), inner_loops: payload.inner_loops.clone(), surface: payload.surface.clone(), orientation: payload.orientation }],
+            added: vec![BrepFace { id: payload.id.clone(), outer_loop: payload.outer_loop.clone(), inner_loops: payload.inner_loops.clone(), surface: payload.surface.clone(), orientation: payload.orientation, tol: 0.0 }],
         }),
         ..Default::default()
     })

@@ -1,20 +1,26 @@
 //! 🔗️ Authenticated hub descriptor binding for a headless MCP workspace.
 
 use crate::{GatewayError, GatewayErrorCode};
-use semio_framework_async::OperationContext;
+use semio_framework_async::{HostAsyncRuntime, OperationContext};
 use semio_framework_os_kernel::os_directory::{
-    client::{DirectoryClient, DirectoryClientError, DirectoryTransport},
+    client::{DirectoryClient, DirectoryClientError, DirectoryTransport, HubSocketGrantSource, LocalHubCredential},
     descriptor_digest_v1, hex_lower, DirectoryEventBody, DirectoryStreamMessage, DocumentScope, DocumentView, MemberView, SpaceView,
 };
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, PoisonError, RwLock};
+use std::sync::{Arc, Mutex, PoisonError, RwLock};
+
+#[path = "🧩️pair/🦀️.rs"]
+mod pair;
+pub use pair::{CanonicalPairBody, CanonicalPairFetchRequest, CanonicalPairHttpResponse, CanonicalPairMount, CanonicalPairMountError, CanonicalPairMountIdentity, CanonicalPairMountProgress, CanonicalPairMountStage, CanonicalPairTransport};
+#[cfg(not(target_arch = "wasm32"))]
+pub use pair::{NativeCanonicalPairBody, NativeCanonicalPairTransport};
 
 pub const HUB_DESCRIPTOR_INDEX_MAX_DOCUMENTS: usize = 4_096;
 pub const HUB_BINDING_DIAGNOSTIC_MAX_BYTES: usize = 4_096;
-pub const HUB_BINDING_TOKEN_MAX_BYTES: usize = 4_096;
 pub const HUB_BINDING_ID_MAX_BYTES: usize = 512;
 pub const HUB_BINDING_OPERATION_TIMEOUT_MS: u64 = 10_000;
+static NEXT_HUB_AUTHORITY_GENERATION: AtomicU64 = AtomicU64::new(1);
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct AuthorizedDocumentView {
@@ -97,25 +103,36 @@ impl std::fmt::Display for HubBindingError {
 impl std::error::Error for HubBindingError {}
 
 pub struct HubRemoteBinding {
+    hub_origin: String,
     space_id: String,
     state: RwLock<HubRemoteBindingState>,
     progress: RwLock<HubBindingProgress>,
     diagnostic: RwLock<Option<String>>,
     generation: AtomicU64,
+    authority_generation: AtomicU64,
     observed_event_seq: AtomicU64,
     authenticated_user_id: RwLock<Option<String>>,
+    pair_actor: Mutex<pair::CanonicalPairActor>,
+    #[cfg(test)]
+    pair_mount_return_pause: Mutex<Option<(Arc<std::sync::Barrier>, Arc<std::sync::Barrier>)>>,
 }
 
 impl HubRemoteBinding {
-    pub fn new(space_id: impl Into<String>) -> Result<Self, HubBindingError> {
+    pub fn new(hub_origin: &str, space_id: impl Into<String>) -> Result<Self, HubBindingError> {
+        let hub_origin = pair::normalize_hub_origin(hub_origin)?;
         let space_id = space_id.into();
         validate_identity("space id", &space_id)?;
         Ok(Self {
+            pair_actor: Mutex::new(pair::CanonicalPairActor::new(hub_origin.clone())),
+            #[cfg(test)]
+            pair_mount_return_pause: Mutex::new(None),
+            hub_origin,
             space_id,
             state: RwLock::new(HubRemoteBindingState::Unbound),
             progress: RwLock::new(HubBindingProgress { phase: HubBindingPhase::Idle, completed: 0, total: 0 }),
             diagnostic: RwLock::new(None),
             generation: AtomicU64::new(0),
+            authority_generation: AtomicU64::new(0),
             observed_event_seq: AtomicU64::new(0),
             authenticated_user_id: RwLock::new(None),
         })
@@ -177,8 +194,11 @@ impl HubRemoteBinding {
         if self.generation.load(Ordering::SeqCst) != generation {
             return Err(HubBindingError::StaleRefresh);
         }
+        let authority_generation = next_authority_generation()?;
         *self.authenticated_user_id.write().unwrap_or_else(PoisonError::into_inner) = Some(snapshot.authenticated_user_id.clone());
+        self.authority_generation.store(authority_generation, Ordering::SeqCst);
         *self.state.write().unwrap_or_else(PoisonError::into_inner) = HubRemoteBindingState::Ready(snapshot.clone());
+        self.pair_actor.lock().unwrap_or_else(PoisonError::into_inner).descriptor_ready(authority_generation);
         *self.diagnostic.write().unwrap_or_else(PoisonError::into_inner) = None;
         self.set_progress(HubBindingPhase::Ready, snapshot.documents.len(), snapshot.documents.len());
         Ok(snapshot)
@@ -222,7 +242,11 @@ impl HubRemoteBinding {
     }
 
     fn begin_refresh(&self, phase: HubBindingPhase, total: usize) -> u64 {
+        let mut actor = self.pair_actor.lock().unwrap_or_else(PoisonError::into_inner);
         let generation = self.generation.fetch_add(1, Ordering::SeqCst).saturating_add(1);
+        self.authority_generation.store(0, Ordering::SeqCst);
+        actor.invalidate(pair::CanonicalPairActorState::Refreshing);
+        drop(actor);
         *self.state.write().unwrap_or_else(PoisonError::into_inner) = HubRemoteBindingState::Refreshing;
         *self.diagnostic.write().unwrap_or_else(PoisonError::into_inner) = None;
         self.set_progress(phase, 0, total);
@@ -234,7 +258,11 @@ impl HubRemoteBinding {
     }
 
     fn invalidate(&self, diagnostic: &str) {
+        let mut actor = self.pair_actor.lock().unwrap_or_else(PoisonError::into_inner);
         self.generation.fetch_add(1, Ordering::SeqCst);
+        self.authority_generation.store(0, Ordering::SeqCst);
+        actor.invalidate(pair::CanonicalPairActorState::Refreshing);
+        drop(actor);
         let mut state = self.state.write().unwrap_or_else(PoisonError::into_inner);
         *state = HubRemoteBindingState::Refreshing;
         *self.diagnostic.write().unwrap_or_else(PoisonError::into_inner) = Some(bounded_diagnostic(diagnostic));
@@ -242,7 +270,11 @@ impl HubRemoteBinding {
     }
 
     fn revoke(&self, error: HubBindingError) {
+        let mut actor = self.pair_actor.lock().unwrap_or_else(PoisonError::into_inner);
         self.generation.fetch_add(1, Ordering::SeqCst);
+        self.authority_generation.store(0, Ordering::SeqCst);
+        actor.invalidate(pair::CanonicalPairActorState::Revoked);
+        drop(actor);
         *self.state.write().unwrap_or_else(PoisonError::into_inner) = HubRemoteBindingState::Revoked;
         *self.authenticated_user_id.write().unwrap_or_else(PoisonError::into_inner) = None;
         *self.diagnostic.write().unwrap_or_else(PoisonError::into_inner) = Some(bounded_diagnostic(&error.to_string()));
@@ -311,19 +343,22 @@ impl HubRemoteBinding {
 
     #[cfg(test)]
     pub(crate) fn install_snapshot_for_test(&self, snapshot: AuthorizedDescriptorSnapshot) {
+        self.generation.fetch_add(1, Ordering::SeqCst);
+        let authority_generation = next_authority_generation().expect("test authority generation capacity");
         *self.authenticated_user_id.write().unwrap_or_else(PoisonError::into_inner) = Some(snapshot.authenticated_user_id.clone());
+        self.authority_generation.store(authority_generation, Ordering::SeqCst);
         *self.state.write().unwrap_or_else(PoisonError::into_inner) = HubRemoteBindingState::Ready(Arc::new(snapshot));
+        self.pair_actor.lock().unwrap_or_else(PoisonError::into_inner).descriptor_ready(authority_generation);
     }
 }
 
-pub fn validate_hub_origin(base_url: &str, space_id: &str, token: &str) -> Result<(), GatewayError> {
-    if base_url.trim().is_empty() || base_url.len() > 2_048 || !(base_url.starts_with("http://") || base_url.starts_with("https://")) {
-        return Err(GatewayError::new(GatewayErrorCode::InputInvalid, "--hub requires a bounded http(s) URL"));
-    }
+fn next_authority_generation() -> Result<u64, HubBindingError> {
+    NEXT_HUB_AUTHORITY_GENERATION.fetch_update(Ordering::SeqCst, Ordering::SeqCst, |current| current.checked_add(1)).map_err(|_| HubBindingError::CapacityExceeded)
+}
+
+pub fn validate_hub_origin(base_url: &str, space_id: &str) -> Result<(), GatewayError> {
+    pair::normalize_hub_origin(base_url).map_err(|_| GatewayError::new(GatewayErrorCode::InputInvalid, "--hub requires a bounded origin-only http(s) URL"))?;
     validate_identity("space id", space_id).map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, error.to_string()))?;
-    if token.is_empty() || token.len() > HUB_BINDING_TOKEN_MAX_BYTES {
-        return Err(GatewayError::new(GatewayErrorCode::InputInvalid, "--hub requires a non-empty bounded --token"));
-    }
     Ok(())
 }
 
@@ -433,17 +468,22 @@ fn hex_digit(byte: u8) -> Option<u8> {
 pub struct NativeHubBindingDriver {
     cancel: semio_framework_async::CancelToken,
     thread: Option<std::thread::JoinHandle<()>>,
+    runtime: Arc<semio_framework_os_services::TokioHostRuntime>,
+    pair_transport: Arc<NativeCanonicalPairTransport<semio_framework_os_services::TokioHostRuntime>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl NativeHubBindingDriver {
-    pub fn connect(base_url: &str, space_id: &str, token: &str) -> Result<(Arc<HubRemoteBinding>, Self), GatewayError> {
+    pub fn connect(credential: Arc<LocalHubCredential>, base_url: &str, space_id: &str) -> Result<(Arc<HubRemoteBinding>, Self, Arc<dyn HubSocketGrantSource>), GatewayError> {
         use semio_framework_actor::{ActorId, PackageId};
         use semio_framework_async::{HostAsyncRuntime, ProcessKind, ScopeOwner, TraceId, WorkerPoolConfig};
         use semio_framework_os_kernel::os_directory::client::{native::NativeDirectoryTransport, DirectoryStreamTurn};
         use semio_framework_os_services::{ComputePool, TokioHostRuntime};
 
-        validate_hub_origin(base_url, space_id, token)?;
+        validate_hub_origin(base_url, space_id)?;
+        if base_url.trim_end_matches('/') != credential.hub_origin().trim_end_matches('/') {
+            return Err(GatewayError::new(GatewayErrorCode::PermissionDenied, "--hub origin does not match the protected local credential"));
+        }
         let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
         let pool = semio_framework_async::process_worker_pool(WorkerPoolConfig::new(ProcessKind::InteractiveNative, cores));
         let runtime = Arc::new(TokioHostRuntime::with_pool(pool.clone()));
@@ -458,9 +498,10 @@ impl NativeHubBindingDriver {
             PackageId("semio-framework-os-mcp".to_string()),
             ActorId(0x4d43_5001),
         );
-        let client = Arc::new(DirectoryClient::new(transport, base_url));
-        client.set_token(Some(token.to_string()));
-        let binding = Arc::new(HubRemoteBinding::new(space_id).map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, error.to_string()))?);
+        let pair_transport = Arc::new(NativeCanonicalPairTransport::new(transport.clone(), credential.clone()));
+        let client = Arc::new(DirectoryClient::authenticated(transport, credential));
+        let grant_source: Arc<dyn HubSocketGrantSource> = client.clone();
+        let binding = Arc::new(HubRemoteBinding::new(base_url, space_id).map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, error.to_string()))?);
         let cancel = semio_framework_async::CancelToken::root_now();
         let operation_now = runtime.block_on(runtime.now_ms());
         let ctx = OperationContext {
@@ -480,11 +521,23 @@ impl NativeHubBindingDriver {
         let DirectoryStreamTurn::Dial { client: dial_client, since } = stream.turn(&ctx, operation_now) else {
             return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "hub directory stream did not enter its initial dial").retryable());
         };
+        let authority_generation = binding.authority_generation.load(Ordering::SeqCst);
         let connection = dial_client.open_stream_ws(&ctx, since, 1_000).map_err(|_| {
             binding.invalidate_stream();
             GatewayError::new(GatewayErrorCode::PluginUnavailable, "hub directory stream is unavailable; authenticated snapshot was not activated").retryable()
         })?;
-        let _ = stream.complete_dial(operation_now, Ok(connection));
+        match complete_authorized_directory_dial(&mut stream, &binding, &ctx, authority_generation, operation_now, connection) {
+            DirectoryStreamTurn::Idle => {}
+            DirectoryStreamTurn::Closed if ctx.cancel.is_cancelled_now() => {
+                return Err(GatewayError::new(GatewayErrorCode::Cancelled, "hub directory stream activation was cancelled"));
+            }
+            DirectoryStreamTurn::Closed => {
+                return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "hub directory stream authority changed before activation").retryable());
+            }
+            DirectoryStreamTurn::Dial { .. } | DirectoryStreamTurn::Message(_) | DirectoryStreamTurn::ReconnectAt(_) => {
+                return Err(GatewayError::new(GatewayErrorCode::Internal, "hub directory stream returned an invalid activation turn"));
+            }
+        }
 
         let thread_cancel = cancel.clone();
         let thread_binding = binding.clone();
@@ -507,18 +560,37 @@ impl NativeHubBindingDriver {
                     };
                     match stream.turn(&ctx, operation_now) {
                         DirectoryStreamTurn::Dial { client: dial_client, since } => {
-                            thread_binding.invalidate_stream();
+                            if thread_binding.authority_generation.load(Ordering::SeqCst) == 0 {
+                                match thread_runtime.block_on(thread_binding.refresh(thread_client.as_ref(), &ctx, wall_now_ms(), operation_now)) {
+                                    Err(HubBindingError::Unauthorized | HubBindingError::SessionExpired | HubBindingError::MembershipRequired) => break,
+                                    Err(_) => {
+                                        match stream.complete_dial(
+                                            operation_now,
+                                            Err(semio_framework_os_kernel::os_directory::client::TransportError::Io("authenticated authority refresh failed before directory dial".to_string())),
+                                        ) {
+                                            DirectoryStreamTurn::Closed => break,
+                                            DirectoryStreamTurn::ReconnectAt(_) | DirectoryStreamTurn::Idle => {}
+                                            DirectoryStreamTurn::Dial { .. } | DirectoryStreamTurn::Message(_) => break,
+                                        }
+                                        continue;
+                                    }
+                                    Ok(_) => {}
+                                }
+                            }
+                            let authority_generation = thread_binding.authority_generation.load(Ordering::SeqCst);
                             match dial_client.open_stream_ws(&ctx, since, 1_000) {
                                 Ok(connection) => {
-                                    let _ = stream.complete_dial(operation_now, Ok(connection));
-                                    needs_refresh = true;
+                                    match complete_authorized_directory_dial(&mut stream, &thread_binding, &ctx, authority_generation, operation_now, connection) {
+                                        DirectoryStreamTurn::Idle => {}
+                                        DirectoryStreamTurn::Closed => break,
+                                        DirectoryStreamTurn::Dial { .. } | DirectoryStreamTurn::Message(_) | DirectoryStreamTurn::ReconnectAt(_) => break,
+                                    }
                                 }
                                 Err(error) => {
-                                    let _ = stream.complete_dial(operation_now, Err(semio_framework_os_kernel::os_directory::client::TransportError::Io(error.to_string())));
-                                    match thread_runtime.block_on(thread_binding.refresh(thread_client.as_ref(), &ctx, wall_now_ms(), operation_now)) {
-                                        Err(HubBindingError::Unauthorized | HubBindingError::SessionExpired | HubBindingError::MembershipRequired) => break,
-                                        Ok(_) => thread_binding.invalidate_stream(),
-                                        Err(_) => {}
+                                    match stream.complete_dial(operation_now, Err(semio_framework_os_kernel::os_directory::client::TransportError::Io(error.to_string()))) {
+                                        DirectoryStreamTurn::Closed => break,
+                                        DirectoryStreamTurn::ReconnectAt(_) | DirectoryStreamTurn::Idle => {}
+                                        DirectoryStreamTurn::Dial { .. } | DirectoryStreamTurn::Message(_) => break,
                                     }
                                 }
                             }
@@ -549,7 +621,20 @@ impl NativeHubBindingDriver {
                 stream.close();
             })
             .map_err(|_| GatewayError::new(GatewayErrorCode::Internal, "could not start the hub descriptor binding actor"))?;
-        Ok((binding, Self { cancel, thread: Some(thread) }))
+        Ok((binding, Self { cancel, thread: Some(thread), runtime, pair_transport }, grant_source))
+    }
+
+    pub fn mount_canonical_pair(
+        &self,
+        binding: &HubRemoteBinding,
+        scope: &DocumentScope,
+        catalog_generation: Option<u64>,
+        expected: Option<&CanonicalPairMountIdentity>,
+        context: &OperationContext,
+        wall_now_ms: i64,
+        operation_now_ms: u64,
+    ) -> Result<CanonicalPairMount, CanonicalPairMountError> {
+        self.runtime.block_on(binding.mount_canonical_pair(self.pair_transport.as_ref(), scope, catalog_generation, expected, context, wall_now_ms, operation_now_ms))
     }
 }
 
@@ -583,12 +668,31 @@ fn wall_now_ms() -> i64 {
         .unwrap_or(i64::MAX)
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+fn complete_authorized_directory_dial<T: DirectoryTransport + Clone>(
+    stream: &mut semio_framework_os_kernel::os_directory::client::DirectoryStream<T>,
+    binding: &HubRemoteBinding,
+    ctx: &OperationContext,
+    expected_authority_generation: u64,
+    operation_now_ms: u64,
+    connection: T::Ws,
+) -> semio_framework_os_kernel::os_directory::client::DirectoryStreamTurn<T> {
+    if ctx.cancel.is_cancelled_now()
+        || expected_authority_generation == 0
+        || binding.authority_generation.load(Ordering::SeqCst) != expected_authority_generation
+    {
+        stream.close();
+    }
+    stream.complete_dial(operation_now_ms, Ok(connection))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use semio_framework_async::{CancelToken, TraceId};
     use semio_framework_os_kernel::os_directory::client::{DirectoryWsConnection, DirectoryWsPoll, HttpMethod, HttpResponse, TransportError};
     use std::collections::VecDeque;
+    use std::sync::atomic::AtomicUsize;
     use std::sync::Mutex;
 
     #[derive(Clone)]
@@ -599,10 +703,27 @@ mod tests {
 
     struct NoopWs;
 
+    #[derive(Clone)]
+    struct ObservedTransport {
+        closes: Arc<AtomicUsize>,
+    }
+
+    struct ObservedWs {
+        closes: Arc<AtomicUsize>,
+    }
+
     impl DirectoryWsConnection for NoopWs {
         fn send_text(&mut self, _text: String) -> Result<(), TransportError> { Ok(()) }
+        fn send_binary(&mut self, _bytes: Vec<u8>) -> Result<(), TransportError> { Ok(()) }
         fn try_recv_text(&mut self) -> Result<DirectoryWsPoll, TransportError> { Ok(DirectoryWsPoll::Pending) }
         fn close(&mut self) {}
+    }
+
+    impl DirectoryWsConnection for ObservedWs {
+        fn send_text(&mut self, _text: String) -> Result<(), TransportError> { Ok(()) }
+        fn send_binary(&mut self, _bytes: Vec<u8>) -> Result<(), TransportError> { Ok(()) }
+        fn try_recv_text(&mut self) -> Result<DirectoryWsPoll, TransportError> { Ok(DirectoryWsPoll::Pending) }
+        fn close(&mut self) { self.closes.fetch_add(1, Ordering::SeqCst); }
     }
 
     impl DirectoryTransport for RecordingTransport {
@@ -613,7 +734,27 @@ mod tests {
             self.responses.lock().unwrap().pop_front().ok_or_else(|| TransportError::Io("fixture response exhausted".to_string()))
         }
 
-        fn open_ws(&self, _ctx: &OperationContext, _url: &str, _timeout_ms: u64) -> Result<Self::Ws, TransportError> { Ok(NoopWs) }
+        fn issue_socket_grant(&self, _ctx: &OperationContext, _url: &str, _bearer: &str, _body: &[u8], _timeout_ms: u64) -> Result<HttpResponse, TransportError> {
+            Err(TransportError::Io("fixture socket grants are not exercised".into()))
+        }
+
+        fn open_ws(&self, _ctx: &OperationContext, _url: &str, _protocols: &[String], _timeout_ms: u64) -> Result<Self::Ws, TransportError> { Ok(NoopWs) }
+    }
+
+    impl DirectoryTransport for ObservedTransport {
+        type Ws = ObservedWs;
+
+        async fn http(&self, _ctx: &OperationContext, _method: HttpMethod, _url: &str, _bearer: Option<&str>, _body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
+            Err(TransportError::Io("observed transport has no HTTP fixture".to_string()))
+        }
+
+        fn issue_socket_grant(&self, _ctx: &OperationContext, _url: &str, _bearer: &str, _body: &[u8], _timeout_ms: u64) -> Result<HttpResponse, TransportError> {
+            Err(TransportError::Io("observed transport has no socket grant fixture".to_string()))
+        }
+
+        fn open_ws(&self, _ctx: &OperationContext, _url: &str, _protocols: &[String], _timeout_ms: u64) -> Result<Self::Ws, TransportError> {
+            Ok(ObservedWs { closes: self.closes.clone() })
+        }
     }
 
     fn context(deadline_ms: Option<u64>) -> OperationContext {
@@ -632,7 +773,6 @@ mod tests {
         let requests = Arc::new(Mutex::new(Vec::new()));
         let transport = RecordingTransport { responses: Arc::new(Mutex::new(responses)), requests: requests.clone() };
         let client = DirectoryClient::new(transport, "http://hub.invalid");
-        client.set_token(Some("secret-that-must-not-enter-state".to_string()));
         (client, requests)
     }
 
@@ -641,18 +781,18 @@ mod tests {
         let contract = fixture();
         let case = &contract["cases"]["memberReady"];
         let (client, requests) = client_for(case);
-        let binding = HubRemoteBinding::new("space-a").unwrap();
+        let binding = HubRemoteBinding::new("http://hub.invalid", "space-a").unwrap();
         let snapshot = binding.refresh(&client, &context(Some(20_000)), 1_000, 10_000).await.unwrap();
         assert_eq!(snapshot.authenticated_user_id, "user-a");
         assert_eq!(snapshot.documents.len(), 1);
         assert!(snapshot.documents.contains_key(&DocumentScope::new("space-a", "shared-doc")));
         assert_eq!(binding.progress(), HubBindingProgress { phase: HubBindingPhase::Ready, completed: 1, total: 1 });
         assert_eq!(requests.lock().unwrap().as_slice(), &[
-            (HttpMethod::Get, "http://hub.invalid/auth/sessions/me".to_string(), true),
-            (HttpMethod::Get, "http://hub.invalid/directory/spaces/space-a".to_string(), true),
+            (HttpMethod::Get, "http://hub.invalid/auth/sessions/me".to_string(), false),
+            (HttpMethod::Get, "http://hub.invalid/directory/spaces/space-a".to_string(), false),
         ]);
         let rendered = format!("{:?} {:?} {:?}", binding.state(), binding.progress(), binding.diagnostic());
-        assert!(!rendered.contains("secret-that-must-not-enter-state"));
+        assert!(!rendered.contains("session.v1."));
     }
 
     #[tokio::test]
@@ -660,7 +800,7 @@ mod tests {
         let contract = fixture();
         for (case_name, expected) in [("publicWithoutMembership", HubBindingError::MembershipRequired), ("sameDocumentOtherSpace", HubBindingError::InvalidResponse("document escaped the selected space"))] {
             let (client, _) = client_for(&contract["cases"][case_name]);
-            let binding = HubRemoteBinding::new("space-a").unwrap();
+            let binding = HubRemoteBinding::new("http://hub.invalid", "space-a").unwrap();
             let error = binding.refresh(&client, &context(Some(20_000)), 1_000, 10_000).await.unwrap_err();
             assert_eq!(error, expected);
             assert!(!matches!(binding.state(), HubRemoteBindingState::Ready(_)));
@@ -671,18 +811,18 @@ mod tests {
     async fn authenticated_hub_workspace_unauthorized_cancelled_and_deadline_never_publish() {
         let contract = fixture();
         let (client, _) = client_for(&contract["cases"]["expiredToken"]);
-        let binding = HubRemoteBinding::new("space-a").unwrap();
+        let binding = HubRemoteBinding::new("http://hub.invalid", "space-a").unwrap();
         assert_eq!(binding.refresh(&client, &context(Some(20_000)), 1_000, 10_000).await.unwrap_err(), HubBindingError::Unauthorized);
         assert!(matches!(binding.state(), HubRemoteBindingState::Revoked));
 
         let (client, requests) = client_for(&contract["cases"]["memberReady"]);
         let cancelled = context(Some(20_000));
         cancelled.cancel.cancel_now();
-        let binding = HubRemoteBinding::new("space-a").unwrap();
+        let binding = HubRemoteBinding::new("http://hub.invalid", "space-a").unwrap();
         assert_eq!(binding.refresh(&client, &cancelled, 1_000, 10_000).await.unwrap_err(), HubBindingError::Cancelled);
         assert!(requests.lock().unwrap().is_empty());
 
-        let binding = HubRemoteBinding::new("space-a").unwrap();
+        let binding = HubRemoteBinding::new("http://hub.invalid", "space-a").unwrap();
         assert_eq!(binding.refresh(&client, &context(Some(10_000)), 1_000, 10_000).await.unwrap_err(), HubBindingError::DeadlineExceeded);
         assert!(requests.lock().unwrap().is_empty());
     }
@@ -691,7 +831,7 @@ mod tests {
     async fn authenticated_hub_workspace_revocation_and_stream_loss_invalidate_ready_snapshot() {
         let contract = fixture();
         let (client, _) = client_for(&contract["cases"]["memberReady"]);
-        let binding = HubRemoteBinding::new("space-a").unwrap();
+        let binding = HubRemoteBinding::new("http://hub.invalid", "space-a").unwrap();
         binding.refresh(&client, &context(Some(20_000)), 1_000, 10_000).await.unwrap();
         let message = semio_framework_os_kernel::os_pack::json::from_json_str::<DirectoryStreamMessage>(&contract["cases"]["memberRevoked"]["streamMessage"].to_string()).unwrap();
         assert_eq!(binding.observe_stream_message(&message), HubStreamObservation::Revoked);
@@ -699,7 +839,7 @@ mod tests {
         assert!(binding.ready_snapshot(1_000).unwrap_err().retryable);
 
         let (client, _) = client_for(&contract["cases"]["memberReady"]);
-        let binding = HubRemoteBinding::new("space-a").unwrap();
+        let binding = HubRemoteBinding::new("http://hub.invalid", "space-a").unwrap();
         binding.refresh(&client, &context(Some(20_000)), 1_000, 10_000).await.unwrap();
         let refreshing_generation = binding.begin_refresh(HubBindingPhase::Authenticating, 0);
         binding.invalidate_stream();
@@ -708,11 +848,65 @@ mod tests {
         assert!(binding.ready_snapshot(1_000).unwrap_err().retryable);
     }
 
+    #[tokio::test]
+    async fn native_driver_closes_post_open_cancelled_and_stale_authority_dials_once_without_refresh() {
+        let contract = fixture();
+        let (client, requests) = client_for(&contract["cases"]["memberReady"]);
+        let binding = HubRemoteBinding::new("http://hub.invalid", "space-a").unwrap();
+        binding.refresh(&client, &context(Some(20_000)), 1_000, 10_000).await.unwrap();
+        let initial_requests = requests.lock().unwrap().len();
+        let initial_generation = binding.generation.load(Ordering::SeqCst);
+        let authority_generation = binding.authority_generation.load(Ordering::SeqCst);
+
+        let cancelled_closes = Arc::new(AtomicUsize::new(0));
+        let cancelled_client = Arc::new(DirectoryClient::new(ObservedTransport { closes: cancelled_closes.clone() }, "http://hub.invalid"));
+        let mut cancelled_stream = cancelled_client.stream(0);
+        let cancelled = context(Some(20_000));
+        assert!(matches!(cancelled_stream.turn(&cancelled, 10_001), semio_framework_os_kernel::os_directory::client::DirectoryStreamTurn::Dial { .. }));
+        cancelled.cancel.cancel_now();
+        let cancelled_turn = complete_authorized_directory_dial(
+            &mut cancelled_stream,
+            &binding,
+            &cancelled,
+            authority_generation,
+            10_002,
+            ObservedWs { closes: cancelled_closes.clone() },
+        );
+        assert!(matches!(cancelled_turn, semio_framework_os_kernel::os_directory::client::DirectoryStreamTurn::Closed));
+        assert_eq!(cancelled_closes.load(Ordering::SeqCst), 1);
+        assert_eq!(binding.generation.load(Ordering::SeqCst), initial_generation);
+        assert_eq!(binding.authority_generation.load(Ordering::SeqCst), authority_generation);
+        assert!(matches!(binding.state(), HubRemoteBindingState::Ready(_)));
+        assert_eq!(requests.lock().unwrap().len(), initial_requests);
+
+        let stale_closes = Arc::new(AtomicUsize::new(0));
+        let stale_client = Arc::new(DirectoryClient::new(ObservedTransport { closes: stale_closes.clone() }, "http://hub.invalid"));
+        let mut stale_stream = stale_client.stream(0);
+        let active = context(Some(20_000));
+        assert!(matches!(stale_stream.turn(&active, 10_003), semio_framework_os_kernel::os_directory::client::DirectoryStreamTurn::Dial { .. }));
+        binding.invalidate_stream();
+        let invalidated_generation = binding.generation.load(Ordering::SeqCst);
+        let stale_turn = complete_authorized_directory_dial(
+            &mut stale_stream,
+            &binding,
+            &active,
+            authority_generation,
+            10_004,
+            ObservedWs { closes: stale_closes.clone() },
+        );
+        assert!(matches!(stale_turn, semio_framework_os_kernel::os_directory::client::DirectoryStreamTurn::Closed));
+        assert_eq!(stale_closes.load(Ordering::SeqCst), 1);
+        assert_eq!(binding.generation.load(Ordering::SeqCst), invalidated_generation);
+        assert_eq!(binding.authority_generation.load(Ordering::SeqCst), 0);
+        assert!(matches!(binding.state(), HubRemoteBindingState::Refreshing));
+        assert_eq!(requests.lock().unwrap().len(), initial_requests);
+    }
+
     #[test]
     fn authenticated_hub_workspace_fixed_caps_and_scoped_uri_laws() {
-        assert!(validate_hub_origin("https://hub.invalid", "space-a", "").is_err());
-        assert!(validate_hub_origin("https://hub.invalid", "space-a", &"t".repeat(HUB_BINDING_TOKEN_MAX_BYTES)).is_ok());
-        assert!(validate_hub_origin("https://hub.invalid", "space-a", &"t".repeat(HUB_BINDING_TOKEN_MAX_BYTES + 1)).is_err());
+        assert!(validate_hub_origin("https://hub.invalid", "space-a").is_ok());
+        assert!(validate_hub_origin("file:///tmp/hub", "space-a").is_err());
+        assert!(validate_hub_origin(&format!("http://{}", "h".repeat(2_048)), "space-a").is_err());
         let scope = DocumentScope::new("space/a", "dokument/ä");
         let uri = descriptor_resource_uri(&scope);
         assert_eq!(parse_descriptor_resource_uri(&uri), Some(scope));

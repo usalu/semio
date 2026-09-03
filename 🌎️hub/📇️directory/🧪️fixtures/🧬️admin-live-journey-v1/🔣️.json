@@ -1,0 +1,38 @@
+{
+  "schema": "semio.hub.admin-live-journey/v1",
+  "profile": {
+    "profileId": "administrator",
+    "subject": "local-administrator-journey-01",
+    "displayName": "Local Journey Administrator"
+  },
+  "limits": {
+    "journeyMs": 60000,
+    "pollMs": 50,
+    "responseBytes": 65536
+  },
+  "languages": [
+    {
+      "locale": "en",
+      "overview": "Overview",
+      "spaces": "Spaces",
+      "newSpace": "New space"
+    },
+    {
+      "locale": "de",
+      "overview": "Übersicht",
+      "spaces": "Räume",
+      "newSpace": "Neuer Raum"
+    }
+  ],
+  "mutation": {
+    "kind": "create-space",
+    "requestId": "admin-live-journey-create-space",
+    "name": "Bilingual SQLite Journey",
+    "spaceKind": "studio",
+    "visibility": "private"
+  },
+  "operation": {
+    "kind": "rebuild-directory-projections",
+    "requestId": "admin-live-journey-rebuild"
+  }
+}

@@ -519,9 +519,9 @@ pub fn remove_knot(knots: &KnotVector, controls: &[Vec<f64>], u: f64, tol: f64) 
     let scale = |a: &[f64], k: f64| -> Vec<f64> { a.iter().map(|x| x * k).collect() };
     let add = |a: &[f64], b: &[f64]| -> Vec<f64> { a.iter().zip(b).map(|(x, y)| x + y).collect() };
     let dist = |a: &[f64], b: &[f64]| -> f64 { a.iter().zip(b).map(|(x, y)| (x - y).powi(2)).sum::<f64>().sqrt() };
-    let mut temp = vec![vec![0.0; dim]; last - first + 2];
+    let mut temp = vec![vec![0.0; dim]; last - first + 3];
     temp[0] = controls[off].clone();
-    temp[last - first + 1] = controls[last + 1].clone();
+    temp[last - first + 2] = controls[last + 1].clone();
     let mut i = first;
     let mut j = last;
     let mut ii = 1usize;

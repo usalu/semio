@@ -201,7 +201,7 @@ pub fn imperative_catalogue_json(registry: &Registry) -> String {
 
 /// 🧩️ Serializes contribution entries for host bootstrap.
 pub fn contributions_json_from_entries(entries: &[ProgramContributionEntry]) -> String {
-    serde_json::to_string(entries).unwrap_or_else(|_| "[]".into())
+    semio_framework_os_kernel::os_pack::json::to_json_string(&entries.to_vec())
 }
 // #endregion 🔖️ModuleRegistry
 

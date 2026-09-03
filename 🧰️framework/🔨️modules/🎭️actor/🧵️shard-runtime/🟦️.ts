@@ -16,7 +16,7 @@ import { ShardClient, type ShardBudget, type ShardClientOptions, type ShardWorke
 // #endregion 🔌️Imports
 
 //#region 🔖️Defaults
-/** 🌐️ The one shard-worker bundle every pooled-actor consumer boots against — `🟦️.ts`
+/** 🌐️ The one shard-worker bundle every pooled-actor consumer boots against — `../🧵️shard-runtime/🟦️.ts`
  * is the generator, `dev/vite.config.ts`'s `pluginModuleDirNames` is what copies it into a production
  * build's `dist/plugin-modules/_shard/` output. */
 export const SHARD_WORKER_URL = "/plugin-modules/_shard/🟨️shard-worker.js";

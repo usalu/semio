@@ -12,28 +12,25 @@ import { useAdminT } from "../📚️I18n/🟦️.tsx";
 import { useAdminSession } from "../🔑️AdminSession/🟦️.tsx";
 // #endregion 🔌️Adapters
 
-const PAGE_SIZE = 200;
-
-/** 📰️ `GET /admin/api/events?since=&limit=` — a tail view: `since` starts at `0` and advances to the
- * highest `seq` seen after every load, so "load newer" only ever fetches forward. */
+/** 📰️ Bounded opaque-cursor event pages. */
 export function EventsPage(): React.ReactElement {
   const t = useAdminT();
   const { client } = useAdminSession();
   const [events, setEvents] = React.useState<DirectoryEvent[]>([]);
-  const [since, setSince] = React.useState(0);
+  const [cursor, setCursor] = React.useState<string | undefined>();
 
   const load = React.useCallback(() => {
-    client.events(since, PAGE_SIZE).then((rows) => {
-      if (rows.length === 0) return;
-      setEvents((existing) => [...existing, ...rows]);
-      setSince(rows.reduce((max, event) => Math.max(max, event.seq), since));
+    client.events(cursor).then((page) => {
+      if (page.rows.length === 0) return;
+      setEvents((existing) => [...existing, ...page.rows]);
+      setCursor(page.nextCursor);
     });
-  }, [client, since]);
+  }, [client, cursor]);
 
   const initialLoad = React.useCallback((): void => {
-    client.events(0, PAGE_SIZE).then((rows) => {
-      setEvents([...rows]);
-      setSince(rows.reduce((max, event) => Math.max(max, event.seq), 0));
+    client.events().then((page) => {
+      setEvents([...page.rows]);
+      setCursor(page.nextCursor);
     });
   }, [client]);
 

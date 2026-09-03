@@ -45,6 +45,21 @@
         "packSchemaHash": { "$ref": "#/$defs/nonzeroDigest" }
       }
     },
+    "openTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactKind", "artifactSchema", "packSchemaHash", "surfaceId", "appId", "windowKindId", "role", "rendererTarget"],
+      "properties": {
+        "artifactKind": { "$ref": "#/$defs/identity" },
+        "artifactSchema": { "$ref": "#/$defs/identity" },
+        "packSchemaHash": { "$ref": "#/$defs/nonzeroDigest" },
+        "surfaceId": { "$ref": "#/$defs/identity" },
+        "appId": { "$ref": "#/$defs/identity" },
+        "windowKindId": { "$ref": "#/$defs/identity" },
+        "role": { "enum": ["viewer", "editor"] },
+        "rendererTarget": { "enum": ["react", "wgpu", "wasm"] }
+      }
+    },
     "file": {
       "type": "object",
       "additionalProperties": false,
@@ -69,7 +84,7 @@
     "package": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["pluginId", "packageId", "version", "role", "dependencies", "component", "descriptor", "nativeCodecs"],
+      "required": ["pluginId", "packageId", "version", "role", "dependencies", "component", "descriptor", "nativeCodecs", "openTargets"],
       "properties": {
         "pluginId": { "$ref": "#/$defs/identity" },
         "packageId": { "$ref": "#/$defs/identity" },
@@ -78,7 +93,8 @@
         "dependencies": { "type": "array", "maxItems": 256, "items": { "$ref": "#/$defs/dependency" } },
         "component": { "$ref": "#/$defs/component" },
         "descriptor": { "$ref": "#/$defs/file" },
-        "nativeCodecs": { "type": "array", "maxItems": 16384, "items": { "$ref": "#/$defs/codec" } }
+        "nativeCodecs": { "type": "array", "maxItems": 16384, "items": { "$ref": "#/$defs/codec" } },
+        "openTargets": { "type": "array", "maxItems": 1024, "items": { "$ref": "#/$defs/openTarget" } }
       }
     },
     "root": {

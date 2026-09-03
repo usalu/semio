@@ -344,6 +344,15 @@ fn artifact_open_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments: 
     if let Err(error) = require_workspace_has_a_plugin(workspace) {
         return CallToolResult::tool_error(&error);
     }
+    match workspace.authenticated_probe_document_is_known(&artifact_id) {
+        Ok(true) => {
+            if let Err(error) = semio_framework::io::resolve_ready(workspace.ensure_probe_artifact(&artifact_id, serde_json::Value::Null)) {
+                return CallToolResult::tool_error(&error);
+            }
+        }
+        Ok(false) => {}
+        Err(error) => return CallToolResult::tool_error(&error),
+    }
     match workspace.read_artifact_bytes(&artifact_id) {
         Err(error) => CallToolResult::tool_error(&error),
         Ok(None) => CallToolResult::tool_error(&GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}"))),

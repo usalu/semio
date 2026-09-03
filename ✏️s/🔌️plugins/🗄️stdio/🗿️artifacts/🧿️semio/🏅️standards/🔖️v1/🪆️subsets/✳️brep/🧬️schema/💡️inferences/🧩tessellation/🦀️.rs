@@ -21,7 +21,7 @@ use std::collections::HashMap;
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::Wire;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::{CurveKind, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, SurfaceKind};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId, LoopId, SolidId};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{EdgeId, FaceId, LoopId, SolidId};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops;
@@ -31,7 +31,21 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vec
 
 // #region 🔖️Constants
 
-const DEFAULT_ANGULAR_TOL: f64 = 0.35;
+/// 📐 Secondary sanity bound on how far a sampled step may turn (radians), independent of the
+/// caller's chordal `deflection` — guards against pathological near-degenerate segment counts
+/// (e.g. a huge-radius, very-loose-deflection arc reducing to 1-2 segments) rather than driving
+/// resolution itself. `deflection` is meant to be the PRIMARY, caller-controlled accuracy knob
+/// (`segments_for_chord_deviation`, `triangle_needs_refine`) — a tight angular floor (the
+/// previous `0.35`, ~20°) silently overrode it, forcing the same ~18-segment circle regardless of
+/// deflection across a wide, ordinary range (any `deflection` above ~1.5% of the radius), which is
+/// what made `tighter_deflection_yields_more_triangles` observe identical triangle counts for two
+/// very different requested tolerances — a real implementation bug, not a flawed assertion.
+/// Deliberately NOT an exact divisor of `τ` (unlike `π/3`, which forces boundary segment count to
+/// land EXACTLY on the floor with zero headroom, so `triangle_needs_refine`'s later angular check
+/// re-triggers on the very ring it just accepted, cascading into needless interior refinement —
+/// confirmed live via `DEBUG_TESS`, `π/3` made a *coarser* 0.2 deflection produce MORE triangles
+/// than a finer 0.02 one, the opposite of `segments_for_chord_deviation`'s intent).
+const DEFAULT_ANGULAR_TOL: f64 = 1.4;
 const ENDPOINT_TOL: f64 = 1e-9;
 const POLE_WELD_TOL: f64 = 1e-7;
 const MAX_REFINE_ITERS: usize = 8;
@@ -339,31 +353,33 @@ fn append_face_mesh(transfer: &mut MeshTransfer, report: &mut TessellationReport
     let Some(outer_id) = face.outer else {
         return Err(KernelError::InvalidInput(format!("face {face_id} has no outer loop")));
     };
-    let (mut boundary_pos, mut boundary_uv, _boundary_pole) = collect_loop_uv(body, outer_id, surface, edge_cache)?;
-    remove_closing_duplicate_uv(&mut boundary_pos, &mut boundary_uv);
+    let (mut boundary_pos, mut boundary_uv, mut boundary_pole) = collect_loop_uv(body, outer_id, surface, edge_cache)?;
+    remove_closing_duplicate_uv(&mut boundary_pos, &mut boundary_uv, &mut boundary_pole);
     if boundary_pos.len() < 3 {
         return Err(KernelError::Operation(format!("face {face_id} outer loop degenerated to {} points", boundary_pos.len())));
     }
     let outer_count = boundary_pos.len();
     let mut positions = boundary_pos;
     let mut uvs = boundary_uv;
+    let mut poles = boundary_pole;
     let mut hole_ranges: Vec<(usize, usize)> = Vec::new();
     for &inner_id in &face.inners {
-        let (mut hole_pos, mut hole_uv, _hole_pole) = collect_loop_uv(body, inner_id, surface, edge_cache)?;
-        remove_closing_duplicate_uv(&mut hole_pos, &mut hole_uv);
+        let (mut hole_pos, mut hole_uv, mut hole_pole) = collect_loop_uv(body, inner_id, surface, edge_cache)?;
+        remove_closing_duplicate_uv(&mut hole_pos, &mut hole_uv, &mut hole_pole);
         if hole_pos.len() < 3 {
             continue;
         }
         let start = positions.len();
         positions.extend(hole_pos);
         uvs.extend(hole_uv);
+        poles.extend(hole_pole);
         hole_ranges.push((start, positions.len()));
     }
     let mut tris = build_constrained_triangulation(&uvs, (0, outer_count), &hole_ranges)?;
     if !surface.is_planar() {
-        refine_adaptive(surface, &mut positions, &mut uvs, &mut tris, deflection, DEFAULT_ANGULAR_TOL);
+        refine_adaptive(surface, &mut positions, &mut uvs, &mut poles, &mut tris, deflection, DEFAULT_ANGULAR_TOL);
     }
-    weld_and_compact(&mut positions, &mut uvs, &mut tris, POLE_WELD_TOL);
+    weld_and_compact(&mut positions, &mut uvs, &poles, &mut tris, POLE_WELD_TOL);
     let mut indices = flatten_tris(&tris);
     let flipped = face.flipped;
     let desired_at = |uv: (f64, f64)| -> Vec3 {
@@ -412,6 +428,7 @@ fn collect_loop_uv(body: &Body, loop_id: LoopId, surface: &Surface, edge_cache: 
     let mut uvs: Vec<(f64, f64)> = Vec::new();
     let mut poles: Vec<bool> = Vec::new();
     let mut prev: Option<(f64, f64)> = None;
+    let mut prev_is_pole = false;
     for coedge_id in body.loop_coedges(loop_id) {
         let coedge = body.coedges.get(coedge_id).ok_or_else(|| KernelError::MissingEntity(coedge_id.to_string()))?;
         let edge = body.edges.get(coedge.edge).ok_or_else(|| KernelError::MissingEntity(coedge.edge.to_string()))?;
@@ -426,8 +443,16 @@ fn collect_loop_uv(body: &Body, loop_id: LoopId, surface: &Surface, edge_cache: 
                 }
             }
             let (raw_uv, is_pole) = coedge_point_uv(body, surface, coedge, edge, t, p);
-            let uv = unwrap_uv(surface, raw_uv, prev, is_pole);
+            // A pole's own `u` is meaningless and gets pinned to whatever branch we arrived from
+            // (below) — but that pinned value must NOT then anchor the departing seam's own branch
+            // once we leave the pole: a lune-shaped face (sphere/cone) legitimately re-enters the
+            // seam at the OPPOSITE `u` branch after a pole (e.g. `0` in, `2π` out), and treating the
+            // pinned pole value as still-live continuity would wrongly snap that outgoing branch
+            // back to the incoming one, collapsing the whole loop onto a single meridian.
+            let unwrap_ref = if prev_is_pole { None } else { prev };
+            let uv = unwrap_uv(surface, raw_uv, unwrap_ref, is_pole);
             prev = Some(uv);
+            prev_is_pole = is_pole;
             positions.push(p);
             uvs.push(uv);
             poles.push(is_pole);
@@ -485,12 +510,13 @@ fn nearest_branch(x: f64, reference: f64, period: f64) -> f64 {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn remove_closing_duplicate_uv(positions: &mut Vec<Pnt3>, uvs: &mut Vec<(f64, f64)>) {
+fn remove_closing_duplicate_uv(positions: &mut Vec<Pnt3>, uvs: &mut Vec<(f64, f64)>, poles: &mut Vec<bool>) {
     if positions.len() > 2 {
         if let (Some(&first), Some(&last)) = (positions.first(), positions.last()) {
             if first.distance(last) <= ENDPOINT_TOL {
                 positions.pop();
                 uvs.pop();
+                poles.pop();
             }
         }
     }
@@ -563,18 +589,28 @@ fn fix_winding_per_triangle(positions: &[Pnt3], uvs: &[(f64, f64)], indices: &mu
     }
 }
 
-/// 🫧 Collapses coincident 3D vertices (poles, cone apexes — any UV-distinct samples that
-/// evaluate to the same 3D point) into one, dropping the now-degenerate triangles this creates.
-/// Since every triangle that touched the ring around the singularity now shares the one welded
-/// vertex, this *is* the "fan around the pole" the CDT itself has no notion of.
+/// 🫧 Collapses coincident 3D vertices that are BOTH flagged [`is_pole`](coedge_point_uv) (poles,
+/// cone apexes — any UV-distinct samples that evaluate to the same 3D point because the surface's
+/// own parametrization is degenerate there) into one, dropping the now-degenerate triangles this
+/// creates. Since every triangle that touched the ring around the singularity now shares the one
+/// welded vertex, this *is* the "fan around the pole" the CDT itself has no notion of. Crucially
+/// this must NOT weld two non-pole seam-duplicate vertices (e.g. a cylinder's `u=0`/`u=2π` corner,
+/// which lands on the exact same 3D point by periodicity but needs its own distinct UV on each
+/// side of the seam) — welding those collapses two legitimately-separate boundary rectangle
+/// corners into one, letting later triangles reference the wrong UV and blow up chordal deviation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn weld_and_compact(positions: &mut Vec<Pnt3>, uvs: &mut Vec<(f64, f64)>, tris: &mut Vec<Tri>, weld_tol: f64) {
+fn weld_and_compact(positions: &mut Vec<Pnt3>, uvs: &mut Vec<(f64, f64)>, poles: &[bool], tris: &mut Vec<Tri>, weld_tol: f64) {
     let n = positions.len();
     let cell = weld_tol.max(1e-12);
     let key = |p: Pnt3| -> (i64, i64, i64) { ((p.x / cell).round() as i64, (p.y / cell).round() as i64, (p.z / cell).round() as i64) };
     let mut buckets: HashMap<(i64, i64, i64), Vec<usize>> = HashMap::new();
     let mut remap: Vec<usize> = (0..n).collect();
     for i in 0..n {
+        if !poles[i] {
+            let (kx, ky, kz) = key(positions[i]);
+            buckets.entry((kx, ky, kz)).or_default().push(i);
+            continue;
+        }
         let (kx, ky, kz) = key(positions[i]);
         let mut found: Option<usize> = None;
         'outer: for dx in -1..=1 {
@@ -582,7 +618,7 @@ fn weld_and_compact(positions: &mut Vec<Pnt3>, uvs: &mut Vec<(f64, f64)>, tris: 
                 for dz in -1..=1 {
                     if let Some(list) = buckets.get(&(kx + dx, ky + dy, kz + dz)) {
                         for &j in list {
-                            if positions[remap[j]].distance(positions[i]) <= weld_tol {
+                            if poles[j] && positions[remap[j]].distance(positions[i]) <= weld_tol {
                                 found = Some(remap[j]);
                                 break 'outer;
                             }
@@ -938,7 +974,7 @@ fn flatten_tris(tris: &[Tri]) -> Vec<u32> {
 /// strictly interior, never touching a constrained boundary/hole edge) and re-insert it via
 /// [`insert_point_into`], bounded by [`MAX_REFINE_ITERS`] passes and [`MAX_INTERIOR_POINTS`] total.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn refine_adaptive(surface: &Surface, positions: &mut Vec<Pnt3>, uvs: &mut Vec<(f64, f64)>, tris: &mut Vec<Tri>, deflection: f64, angular_tol: f64) {
+fn refine_adaptive(surface: &Surface, positions: &mut Vec<Pnt3>, uvs: &mut Vec<(f64, f64)>, poles: &mut Vec<bool>, tris: &mut Vec<Tri>, deflection: f64, angular_tol: f64) {
     for _ in 0..MAX_REFINE_ITERS {
         let mut candidates: Vec<(f64, f64)> = Vec::new();
         for &t in tris.iter() {
@@ -961,6 +997,7 @@ fn refine_adaptive(surface: &Surface, positions: &mut Vec<Pnt3>, uvs: &mut Vec<(
             let idx = positions.len();
             positions.push(p3);
             uvs.push(uv);
+            poles.push(surface.normal(uv.0, uv.1).is_none());
             insert_point_into(uvs, tris, idx);
             inserted_any = true;
         }
@@ -1012,6 +1049,7 @@ fn triangle_needs_refine(surface: &Surface, positions: &[Pnt3], uvs: &[(f64, f64
 mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::ArenaId;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_cylinder, make_rectangle_wire, make_sphere};
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3};
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
@@ -1071,8 +1109,14 @@ mod tests {
         let outer_members: Vec<(EdgeId, bool)> = (0..4).map(|i| (edges[i], true)).collect();
         let outer = make_loop(body, FaceId::from_raw(0, 0), &outer_members);
         let hole_center = Pnt3::new(2.0, 1.5, 0.0);
-        let hole_v = make_vertex(body, hole_center + Vec3::new(0.5, 0.0, 0.0), tol, rec);
-        let circle_curve = body.curves3.insert(Curve3::Circle { frame: Frame3::from_normal(hole_center, Vec3::Z).unwrap(), radius: 0.5 });
+        let hole_frame = Frame3::from_normal(hole_center, Vec3::Z).unwrap();
+        // `Frame3::from_normal`'s x/y axes are derived from `Vec3::any_orthogonal` (deterministic
+        // but NOT necessarily world X/Y) — the hole vertex must sit at the circle's own t=0 point
+        // (`frame.to_world(radius, 0, 0)`), matching `make_cylinder`/`make_cone`'s own convention
+        // (`w1e-primitives.md`), otherwise the edge's topological endpoint disagrees with its
+        // curve's actual evaluation, which fractures the closed ring at that one sample.
+        let hole_v = make_vertex(body, hole_frame.to_world(Pnt3::new(0.5, 0.0, 0.0)), tol, rec);
+        let circle_curve = body.curves3.insert(Curve3::Circle { frame: hole_frame, radius: 0.5 });
         let hole_edge = make_edge(body, circle_curve, (0.0, std::f64::consts::TAU), hole_v, hole_v, tol, rec);
         let inner = make_loop(body, FaceId::from_raw(0, 0), &[(hole_edge, false)]);
         let surface = body.surfaces.insert(Surface::Plane { frame: Frame3::from_normal(corners[0], Vec3::Z).unwrap() });
@@ -1202,7 +1246,7 @@ mod tests {
     async fn cylinder_shared_edge_vertices_are_reused_exactly() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
-        let solid = make_cylinder(&mut body, 1.0, 2.0, 16, &mut rec).expect("cylinder");
+        let solid = make_cylinder(&mut body, 1.0, 2.0, &mut rec).expect("cylinder");
         let deflection = 0.1;
         let mesh = tessellate_solid(&body, solid, deflection).expect("tessellate cylinder");
         let mut circle_edge = None;
@@ -1229,7 +1273,7 @@ mod tests {
         let (radius, height) = (1.0, 2.0);
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
-        let solid = make_cylinder(&mut body, radius, height, 16, &mut rec).expect("cylinder");
+        let solid = make_cylinder(&mut body, radius, height, &mut rec).expect("cylinder");
         let lateral = body.solid_faces(solid)[0];
         let (mesh, _report) = tessellate_face_with_report(&body, lateral, 0.02).expect("tessellate lateral face");
         let area = triangle_area_sum(&mesh);
@@ -1247,7 +1291,7 @@ mod tests {
     async fn tighter_deflection_yields_more_triangles() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
-        let solid = make_cylinder(&mut body, 1.0, 2.0, 16, &mut rec).expect("cylinder");
+        let solid = make_cylinder(&mut body, 1.0, 2.0, &mut rec).expect("cylinder");
         let coarse = tessellate_solid(&body, solid, 0.2).expect("coarse");
         let fine = tessellate_solid(&body, solid, 0.02).expect("fine");
         assert!(fine.index.len() > coarse.index.len(), "finer deflection must yield more triangles ({} vs {})", fine.index.len(), coarse.index.len());
@@ -1257,7 +1301,7 @@ mod tests {
     async fn report_max_chordal_respects_deflection() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
-        let solid = make_cylinder(&mut body, 1.0, 2.0, 16, &mut rec).expect("cylinder");
+        let solid = make_cylinder(&mut body, 1.0, 2.0, &mut rec).expect("cylinder");
         let deflection = 0.05;
         let (_mesh, report) = tessellate_solid_with_report(&body, solid, deflection).expect("tessellate with report");
         assert!(report.max_chordal <= deflection * 1.05, "max_chordal {} should respect deflection {}", report.max_chordal, deflection);
@@ -1291,7 +1335,7 @@ mod tests {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let radius = 1.0;
-        let solid = make_sphere(&mut body, radius, 16, &mut rec).expect("sphere");
+        let solid = make_sphere(&mut body, radius, &mut rec).expect("sphere");
         for face in body.solid_faces(solid) {
             let mesh = tessellate_face(&body, face, 0.1).expect("tessellate cap");
             let mut extreme = Pnt3::new(0.0, 0.0, 0.0);

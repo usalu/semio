@@ -9,8 +9,8 @@ import ts from "typescript";
 import * as discovery from "../../🔍️discovery/🟦️.ts";
 
 const libraryRoot = resolve(import.meta.dir, "../.."), root = resolve(libraryRoot, "../../../../..");
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧪️📖️🟤️readme-current-source-revision/🔣️.json"), "utf8"));
+const schema = JSON.parse(readFileSync(join(import.meta.dir, "../🧪️📖️🟤️readme-current-source-revision/🧬️schema/🔣️.json"), "utf8"));
 const sha = (bytes: Uint8Array | string): string => createHash("sha256").update(bytes).digest("hex");
 const revision = vector.revisions[vector.revisionId];
 
@@ -39,7 +39,7 @@ function evidence(path: string) {
 
 const catalogBytes = evidence(vector.catalogPath).bytes, originalCatalog = JSON.parse(catalogBytes.toString("utf8"));
 const fixtureAuthorityInput = evidence(vector.fixtureInputs.path), fixtureAuthority = JSON.parse(fixtureAuthorityInput.bytes.toString("utf8"));
-const fixtureSchema = JSON.parse(evidence(posix.dirname(vector.fixtureInputs.path) + "/🧬️schema/🔣️.json").bytes.toString("utf8"));
+const fixtureSchema = JSON.parse(evidence(posix.dirname(vector.fixtureInputs.path) + "../🧪️📖️🟤️readme-current-source-revision/🧬️schema/🔣️.json").bytes.toString("utf8"));
 if (sha(fixtureAuthorityInput.bytes) !== vector.fixtureInputs.sha256 || !new Ajv({ allErrors: true }).compile(fixtureSchema)(fixtureAuthority) || fixtureAuthority.catalog.path !== vector.catalogPath || fixtureAuthority.catalog.sha256 !== vector.catalogSha256 || fixtureAuthority.revision.id !== vector.revisionId) throw new Error("Reviewed fixture authority drift");
 
 /** 🧫️ Maps verified fixture bytes to declared logical evidence without reading the historical live path. */
@@ -116,7 +116,7 @@ test("current source revision neutral grammar agrees with Ajv and independent JS
   expect(new Ajv({ allErrors: true }).compile(schema.definitions.execution)(vector.execution)).toBe(true);
   expect(new Ajv({ allErrors: true }).compile(schema.definitions.fixtureInputs)(vector.fixtureInputs)).toBe(true);
   expect(parseJson(fixtureAuthorityInput.bytes.toString("utf8"), errors, { disallowComments: true, allowTrailingComma: false })).toEqual(fixtureAuthority);
-  expect(parseJson(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"), errors, { disallowComments: true, allowTrailingComma: false })).toEqual(vector);
+  expect(parseJson(readFileSync(join(import.meta.dir, "../🧪️📖️🟤️readme-current-source-revision/🔣️.json"), "utf8"), errors, { disallowComments: true, allowTrailingComma: false })).toEqual(vector);
   expect(errors).toEqual([]);
   expect(validate(vector.revisions), JSON.stringify(validate.errors)).toBe(true);
   for (const row of vector.cases.filter((row: any) => row.phase === "grammar")) {

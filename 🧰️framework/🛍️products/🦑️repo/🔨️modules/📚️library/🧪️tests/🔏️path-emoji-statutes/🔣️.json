@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "genericEmojiIdentities": ["📁️", "📂️", "📄️"],
+  "cases": [
+    {
+      "id": "canonical-and-reserved",
+      "entries": [
+        { "path": "🧰️framework/🦀️component.rs", "nodeKind": "file" },
+        { "path": "🧰️framework/package.json", "nodeKind": "file", "reserved": true },
+        { "path": ".github/workflows/build.yml", "nodeKind": "file", "reserved": true }
+      ],
+      "expected": []
+    },
+    {
+      "id": "missing-generic-presentation-and-spacing",
+      "entries": [
+        { "path": "🧰️framework/component.rs", "nodeKind": "file" },
+        { "path": "🧰️framework/📄️notes.md", "nodeKind": "file" },
+        { "path": "🧰️framework/⚙config", "nodeKind": "directory" },
+        { "path": "🧰️framework/🧪️ tests", "nodeKind": "directory" }
+      ],
+      "expected": [
+        { "kind": "missing", "path": "🧰️framework/component.rs" },
+        { "kind": "presentation", "path": "🧰️framework/⚙config", "emoji": "⚙" },
+        { "kind": "generic", "path": "🧰️framework/📄️notes.md", "emoji": "📄️" },
+        { "kind": "spacing", "path": "🧰️framework/🧪️ tests", "emoji": "🧪️" }
+      ]
+    },
+    {
+      "id": "one-namespace-and-vs16-fold",
+      "entries": [
+        { "path": "🧰️framework/🦀️alpha.rs", "nodeKind": "file" },
+        { "path": "🧰️framework/🦀beta", "nodeKind": "directory" },
+        { "path": "🧰️framework/🦀️🔴️gamma.rs", "nodeKind": "file" },
+        { "path": "🧰️framework/🦀️🔵️delta.rs", "nodeKind": "file" },
+        { "path": "🧰️framework/🧑️‍💻️dev", "nodeKind": "directory" }
+      ],
+      "expected": [
+        { "kind": "duplicate", "path": "🧰️framework/🦀️alpha.rs", "sibling": "🧰️framework/🦀beta", "emoji": "🦀" }
+      ]
+    }
+  ]
+}

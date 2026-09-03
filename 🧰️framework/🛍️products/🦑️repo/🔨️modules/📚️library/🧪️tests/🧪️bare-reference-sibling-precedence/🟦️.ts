@@ -6,7 +6,7 @@ import ts from "typescript";
 const root = resolve(import.meta.dir, "../../../../../../../");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const text = readFileSync(resolve(root, library, "🧹️normalization/🟦️.ts"), "utf8");
-const syntax = ts.createSourceFile("🟦️.ts", text, ts.ScriptTarget.Latest, true);
+const syntax = ts.createSourceFile("../🧪️🎈️bare-reference-sibling-precedence/🟦️.ts", text, ts.ScriptTarget.Latest, true);
 const names = ["resolveReferencePath", "referencePathIndex", "addUniqueIndex", "ancestorReferenceCoordinateRoot", "splitTokenSuffix", "normalizeRelative", "sourceRelative"];
 const declarations = Object.fromEntries(names.map((name) => {
   const found = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) && node.name?.text === name);

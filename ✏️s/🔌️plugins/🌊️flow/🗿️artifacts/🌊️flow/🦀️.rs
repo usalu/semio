@@ -77,7 +77,7 @@ fn widget_params(widget: &Widget) -> Vec<SemioFlowParam> {
     match widget {
         Widget::Neuron { neuron_kind, params, input_ports, output_ports, preview, .. } => vec![
             p("neuronKind", neuron_kind.clone()),
-            p("params", serde_json::to_string(params).unwrap_or_default()),
+            p("params", flow::os_pack::json::to_json_string(params)),
             p("inputPorts", serde_json::to_string(input_ports).unwrap_or_default()),
             p("outputPorts", serde_json::to_string(output_ports).unwrap_or_default()),
             p("preview", preview.to_string()),
@@ -86,10 +86,10 @@ fn widget_params(widget: &Widget) -> Vec<SemioFlowParam> {
         Widget::InputNote { text, .. } => vec![p("text", text.clone())],
         Widget::InputImage { src, .. } => vec![p("src", src.clone())],
         Widget::Variable { name, schema, .. } => vec![p("name", name.clone()), p("schema", schema.clone())],
-        Widget::OutputPreview { preview, expanded, .. } => vec![p("preview", serde_json::to_string(preview).unwrap_or_default()), p("expanded", serde_json::to_string(expanded).unwrap_or_default())],
+        Widget::OutputPreview { preview, expanded, .. } => vec![p("preview", flow::os_pack::json::to_json_string(preview)), p("expanded", flow::os_pack::json::to_json_string(expanded))],
         Widget::OutputAction { action, .. } => vec![p("action", action.clone())],
         Widget::OutputExport { format, .. } => vec![p("format", format.clone())],
-        Widget::Cluster { name, tree, flow: nested, .. } => vec![p("name", name.clone()), p("tree", serde_json::to_string(tree).unwrap_or_default()), p("flow", serde_json::to_string(nested).unwrap_or_default())],
+        Widget::Cluster { name, tree, flow: nested, .. } => vec![p("name", name.clone()), p("tree", flow::os_pack::json::to_json_string(tree)), p("flow", flow::os_pack::json::to_json_string(nested))],
     }
 }
 
@@ -104,7 +104,7 @@ fn widget_from_node(node: &SemioFlowNode) -> Widget {
         "neuron" => Widget::Neuron {
             id,
             neuron_kind: get("neuronKind"),
-            params: serde_json::from_str(&get("params")).unwrap_or_default(),
+            params: flow::os_pack::json::from_json_str(&get("params")).unwrap_or_default(),
             input_ports: serde_json::from_str(&get("inputPorts")).unwrap_or_default(),
             output_ports: serde_json::from_str(&get("outputPorts")).unwrap_or_default(),
             preview: get("preview").parse().unwrap_or(true),
@@ -113,10 +113,10 @@ fn widget_from_node(node: &SemioFlowNode) -> Widget {
         "inputNote" => Widget::InputNote { id, text: get("text") },
         "inputImage" => Widget::InputImage { id, src: get("src") },
         "variable" => Widget::Variable { id, name: get("name"), schema: get("schema") },
-        "outputPreview" => Widget::OutputPreview { id, preview: serde_json::from_str(&get("preview")).unwrap_or_default(), expanded: serde_json::from_str(&get("expanded")).unwrap_or_default() },
+        "outputPreview" => Widget::OutputPreview { id, preview: flow::os_pack::json::from_json_str(&get("preview")).unwrap_or_default(), expanded: flow::os_pack::json::from_json_str(&get("expanded")).unwrap_or_default() },
         "outputAction" => Widget::OutputAction { id, action: get("action") },
         "outputExport" => Widget::OutputExport { id, format: get("format") },
-        "cluster" => Widget::Cluster { id, name: get("name"), tree: serde_json::from_str(&get("tree")).unwrap_or_default(), flow: serde_json::from_str(&get("flow")).unwrap_or_default() },
+        "cluster" => Widget::Cluster { id, name: get("name"), tree: flow::os_pack::json::from_json_str(&get("tree")).unwrap_or_default(), flow: flow::os_pack::json::from_json_str(&get("flow")).unwrap_or_default() },
         other => Widget::InputNote { id, text: format!("[unknown widget kind {other:?}]") },
     }
 }

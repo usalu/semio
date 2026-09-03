@@ -156,3 +156,52 @@ The independent oracle must consume the neutral fixtures with Node `crypto`/JSON
 5. **Medium — readiness has no contract/route:** launch tooling cannot distinguish a listening hub from a securely authenticated, directory/artifact-ready hub.
 6. **Medium — path and namespace policy is absent:** data permissions/symlink checks and devcontainer browser-namespace handling must be explicit before calling the flow zero-touch/cross-platform.
 
+## Current real-hub bootstrap lifetime — RED
+
+Coordinator session `9492` now proves the heap repair cleared the former
+default-stack abort: a direct real hub reached database, directory, CAS,
+coordinator, maintenance, readiness, and HTTP bind. Its first terminal failure
+was then a protected local-bootstrap read deadline before browser/API
+assertions. Current source makes that terminal deterministic.
+
+The initial inherited fd3 exchange is not the failing boundary. The launcher
+installs `LocalFrameReader` before writing either frame and retains early input
+(`🌎️hub/📦️packages/🦀️rust/📜️script.ts:446-503,618-656`). Conversely, the hub
+cannot reach database startup until `open_inherited` has read `initialize`,
+verified `hello`, written `hello-accepted`, and set ready
+(`🌎️hub/🔐️local-bootstrap/🦀️.rs:282-345`; `📦️bin.rs:4931-4949`).
+
+After successful startup, however, `serve_local_bootstrap` creates a fresh
+15-second exchange deadline for **every idle accept** and awaits a frame
+(`🔐️local-bootstrap/🦀️.rs:617-627`). An idle launcher then reaches
+`read_frame`'s timeout (`:787-804`); that error terminates the bootstrap task,
+and the main `select!` cancels the otherwise-ready HTTP server
+(`📦️bin.rs:5018-5041`). This is a production lifetime defect, not an fd3,
+frame-order, or browser assertion failure. The service must wait indefinitely
+(but cancellably/EOF-fail-closed) for the next request, then apply the bounded
+15-second deadline to a request after it begins. The existing request,
+response, cancellation, replay, and redaction bounds must remain intact.
+
+## Idle-admission repair — source-qualified closure
+
+The preceding lifetime RED is source-closed in the current bootstrap reader.
+`serve_local_bootstrap` now delegates an idle accept to `accept_next` without
+manufacturing a request deadline (`🌎️hub/🔐️local-bootstrap/🦀️.rs:618-657`).
+`read_admitted_frame` performs a cancellation-aware, 100-ms bounded idle poll
+for exactly the first frame byte; only after that byte arrives does it create
+the fixed 15-second `IdentityVerificationContext` and bound the remaining
+prefix and payload reads (`:806-840`). EOF and shutdown still fail/terminate
+closed, while malformed or slow admitted frames remain bounded. The original
+startup `initialize`/`hello` handshake continues to use the original bounded
+frame reader, so the repair does not turn first-child admission into an
+unbounded wait.
+
+The new neutral-fixture law idles past the exchange deadline, then proves the
+admitted full frame succeeds with a deadline measured from admission; a second
+case sends one byte, advances past that new deadline, and proves the remaining
+prefix fails (`:972-1006`). It uses a duplex channel and virtual control clock,
+not a larger stack, sleep, skip, or broad timeout. `AdminLiveJourneyCheckScript`
+exact-lists this one fully-qualified law before the real SQLite hub/browser
+journey (`🌎️hub/📦️packages/🦀️rust/📜️script.ts:2522-2533`). Source review finds
+no test-only production bypass or deadline relaxation. No command was run by
+this audit; real protected-journey evidence remains pending a new terminal.

@@ -420,15 +420,35 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vec
 /// (not tessellated/approximated) within that range.
 const PRACTICAL_UNBOUNDED_EXTENT: f64 = 1.0e6;
 
+/// 🗺️ The largest per-span half-angle keeping [`circular_profile_with_span`]'s rational-quadratic
+/// parametrization within `1e-9` of the true `radius·(cos t, sin t)` point at every `t`, mirroring
+/// [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3`]'s
+/// identical fix for [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3::transformed`] —
+/// same leading-order bound `peak ≈ 0.0321·radius·half_span³` (a rational quadratic Bezier's
+/// parameter is a Möbius, not linear, reparametrization of angle), same derivation, same 2×
+/// margin against the series' next term. [`revolve_to_nurbs`]'s non-similarity transform path
+/// needs the `u`-direction sweep to reproduce `Surface::eval`'s pointwise pushforward exactly
+/// (same contract as `Curve3::transformed`), so every [`circular_profile_with_span`] call site
+/// sizes its span with this instead of a fixed 120° cap.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn refined_max_span(radius: f64) -> f64 {
+    let tol = 1e-9;
+    let r = radius.abs().max(1e-9);
+    let half_span = (tol / (0.0321 * r)).cbrt() * 0.5;
+    (2.0 * half_span).min(std::f64::consts::TAU / 3.0)
+}
+
 /// 🗺️ Exact rational-quadratic NURBS control points for a circular arc of `radius` centered at
-/// `center` in a generic 2D `(radial, height)` half-plane, split into `≤120°` spans — the same
+/// `center` in a generic 2D `(radial, height)` half-plane, split every `max_span` — the same
 /// per-span construction [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3::to_nurbs`] uses for `Circle`/`Ellipse`,
 /// generalized to an off-origin circle (a torus's meridian) and reused, at `center = (0,0), radius
-/// = 1`, as the shared angular sweep for every surface of revolution built below.
+/// = 1`, as the shared angular sweep for every surface of revolution built below. Callers that
+/// only need the SHAPE (not a pointwise angle-to-parameter correspondence) can pass a coarse span
+/// like `TAU / 3.0`; [`refined_max_span`] gives the tighter span an exact pointwise pushforward
+/// (`Curve3::transformed`/`Surface::transformed`'s non-similarity paths) needs instead.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn circular_profile(center: (f64, f64), radius: f64, domain: (f64, f64)) -> (KnotVector, Vec<(f64, f64)>, Vec<f64>) {
+fn circular_profile_with_span(center: (f64, f64), radius: f64, domain: (f64, f64), max_span: f64) -> (KnotVector, Vec<(f64, f64)>, Vec<f64>) {
     let span = domain.1 - domain.0;
-    let max_span = std::f64::consts::TAU / 3.0;
     let n_spans = (span.abs() / max_span).ceil().max(1.0) as usize;
     let step = span / n_spans as f64;
     let mut points = Vec::with_capacity(2 * n_spans + 1);
@@ -464,12 +484,17 @@ fn circular_profile(center: (f64, f64), radius: f64, domain: (f64, f64)) -> (Kno
 /// 🗺️ Builds the exact (already `map`-transformed) NURBS surface of revolution swept from a
 /// `(radial, height)` meridian `profile` (its own `profile_knots`/`profile_weights`, in `frame`'s
 /// local plane) around `frame.z` — the shared tensor-product construction behind every analytic
-/// surface kind's non-similarity fallback below: `u` comes from [`circular_profile`]'s unit-circle
-/// sweep, `v` is the caller's own meridian, and each control point's weight is the product of its
-/// `u`- and `v`-direction weights (the standard NURBS revolution rule).
+/// surface kind's non-similarity fallback below: `u` comes from [`circular_profile_with_span`]'s
+/// unit-circle sweep, `v` is the caller's own meridian, and each control point's weight is the
+/// product of its `u`- and `v`-direction weights (the standard NURBS revolution rule). `u`'s span
+/// is refined via [`refined_max_span`] against `u_radius_scale` — the physical radius the caller's
+/// unit-circle `(cx, cy)` gets multiplied by (see each call site) — so a unit-circle angular error
+/// of `angular_error` turns into a WORLD positional error of only `u_radius_scale · angular_error`,
+/// keeping `Surface::eval`'s pointwise pushforward contract (`transformed.eval(u,v) ==
+/// map.apply_point(self.eval(u,v))`) intact for every `(u, v)`, not just at span boundaries.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn revolve_to_nurbs(frame: &Frame3, map: &Affine3, profile_knots: KnotVector, profile: &[(f64, f64)], profile_weights: &[f64]) -> Surface {
-    let (u_knots, u_nodes, u_weights) = circular_profile((0.0, 0.0), 1.0, (0.0, std::f64::consts::TAU));
+fn revolve_to_nurbs(frame: &Frame3, map: &Affine3, profile_knots: KnotVector, profile: &[(f64, f64)], profile_weights: &[f64], u_radius_scale: f64) -> Surface {
+    let (u_knots, u_nodes, u_weights) = circular_profile_with_span((0.0, 0.0), 1.0, (0.0, std::f64::consts::TAU), refined_max_span(u_radius_scale));
     let mut controls: Vec<Vec<Pnt3>> = Vec::with_capacity(u_nodes.len());
     let mut weights: Vec<Vec<f64>> = Vec::with_capacity(u_nodes.len());
     for (&(cx, cy), &uw) in u_nodes.iter().zip(u_weights.iter()) {
@@ -484,6 +509,19 @@ fn revolve_to_nurbs(frame: &Frame3, map: &Affine3, profile_knots: KnotVector, pr
         weights.push(row_w);
     }
     Surface::Nurbs { u_knots, v_knots: profile_knots, controls, weights }
+}
+
+/// 🗺️ [`Frame3::transformed`] divides EVERY axis by `scale` so the frame stays orthonormal — right
+/// for `Sphere`/`Torus`, whose `eval` multiplies all three axes by an already-`scale`-compensated
+/// radius. `Cylinder`/`Cone::eval` instead use `frame.z` as a raw multiplier on `v` itself (no
+/// radius in that term), so dividing `z` by `scale` there would make `transformed.eval(u, v)`
+/// drift from `map.apply_point(self.eval(u, v))` by a `v`-proportional error — `x`/`y` still need
+/// the `1/scale` (they pair with `radius * scale`), only `z` must stay the raw, un-divided
+/// `map.apply_vector(frame.z)` (magnitude `scale`, matching the correct `d(eval)/dv` under `map`).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn axial_frame_transformed(frame: &Frame3, map: &Affine3, scale: f64) -> Frame3 {
+    let radial = frame.transformed(map, scale);
+    Frame3 { origin: radial.origin, x: radial.x, y: radial.y, z: map.apply_vector(frame.z) }
 }
 
 impl Surface {
@@ -513,33 +551,45 @@ impl Surface {
                 weights: weights.clone(),
             },
             Surface::Cylinder { frame, radius } => match map.is_similarity() {
-                Some((_, scale, _)) => Surface::Cylinder { frame: frame.transformed(map, scale), radius: radius * scale },
+                Some((_, scale, _)) => Surface::Cylinder { frame: axial_frame_transformed(frame, map, scale), radius: radius * scale },
                 None => {
                     let knots = KnotVector::new(vec![-PRACTICAL_UNBOUNDED_EXTENT, -PRACTICAL_UNBOUNDED_EXTENT, PRACTICAL_UNBOUNDED_EXTENT, PRACTICAL_UNBOUNDED_EXTENT], 1, 2).unwrap();
                     let profile = [(*radius, -PRACTICAL_UNBOUNDED_EXTENT), (*radius, PRACTICAL_UNBOUNDED_EXTENT)];
-                    revolve_to_nurbs(frame, map, knots, &profile, &[1.0, 1.0])
+                    revolve_to_nurbs(frame, map, knots, &profile, &[1.0, 1.0], *radius)
                 }
             },
             Surface::Cone { frame, half_angle } => match map.is_similarity() {
-                Some((_, scale, _)) => Surface::Cone { frame: frame.transformed(map, scale), half_angle: *half_angle },
+                Some((_, scale, _)) => Surface::Cone { frame: axial_frame_transformed(frame, map, scale), half_angle: *half_angle },
                 None => {
                     let knots = KnotVector::new(vec![0.0, 0.0, PRACTICAL_UNBOUNDED_EXTENT, PRACTICAL_UNBOUNDED_EXTENT], 1, 2).unwrap();
                     let profile = [(0.0, 0.0), (PRACTICAL_UNBOUNDED_EXTENT * half_angle.tan(), PRACTICAL_UNBOUNDED_EXTENT)];
-                    revolve_to_nurbs(frame, map, knots, &profile, &[1.0, 1.0])
+                    // 🧭️ The cone's radius grows unboundedly with `v` (`r(v) = v·tan(half_angle)`), so the
+                    // u-sweep's positional error at any given `v` is exactly `v·tan(half_angle)·angular_error`
+                    // (the `v`-degree-1 blend between the apex, r=0, and the far profile point is affine, so
+                    // it scales the u-error by the SAME `r(v)` a direct construction at that `v` would use —
+                    // verified numerically). Sizing the refinement off `half_angle.tan()` (r at v=1, not the
+                    // impractical `PRACTICAL_UNBOUNDED_EXTENT` edge) keeps span count sane while still giving
+                    // sub-`1e-6` error out to `v` in the hundreds — ample for any query in the surface's own
+                    // "practical" domain.
+                    revolve_to_nurbs(frame, map, knots, &profile, &[1.0, 1.0], half_angle.tan())
                 }
             },
             Surface::Sphere { frame, radius } => match map.is_similarity() {
                 Some((_, scale, _)) => Surface::Sphere { frame: frame.transformed(map, scale), radius: radius * scale },
                 None => {
-                    let (knots, profile, weights) = circular_profile((0.0, 0.0), *radius, (-std::f64::consts::FRAC_PI_2, std::f64::consts::FRAC_PI_2));
-                    revolve_to_nurbs(frame, map, knots, &profile, &weights)
+                    // 🧭️ Both directions are angle-parametrized (`u` AND `v`), so both need
+                    // [`refined_max_span`], not just the shared `u`-sweep inside `revolve_to_nurbs`.
+                    let (knots, profile, weights) =
+                        circular_profile_with_span((0.0, 0.0), *radius, (-std::f64::consts::FRAC_PI_2, std::f64::consts::FRAC_PI_2), refined_max_span(*radius));
+                    revolve_to_nurbs(frame, map, knots, &profile, &weights, *radius)
                 }
             },
             Surface::Torus { frame, major_radius, minor_radius } => match map.is_similarity() {
                 Some((_, scale, _)) => Surface::Torus { frame: frame.transformed(map, scale), major_radius: major_radius * scale, minor_radius: minor_radius * scale },
                 None => {
-                    let (knots, profile, weights) = circular_profile((*major_radius, 0.0), *minor_radius, (0.0, std::f64::consts::TAU));
-                    revolve_to_nurbs(frame, map, knots, &profile, &weights)
+                    let (knots, profile, weights) =
+                        circular_profile_with_span((*major_radius, 0.0), *minor_radius, (0.0, std::f64::consts::TAU), refined_max_span(*minor_radius));
+                    revolve_to_nurbs(frame, map, knots, &profile, &weights, major_radius + minor_radius)
                 }
             },
         }

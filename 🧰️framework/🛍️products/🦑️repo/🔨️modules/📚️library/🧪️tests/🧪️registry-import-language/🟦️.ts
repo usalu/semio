@@ -9,15 +9,15 @@ import { registryCatalogInputPaths, registryStaticImports, scanRegistryCompilerI
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../../");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8")) as {
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧪️📇️registry-import-language/🔣️.json"), "utf8")) as {
   schemaVersion: number; selection: string; fallback: string;
   cases: { id: string; paths: string[]; language: "ts" | "tsx" | "js" | "jsx"; source: string; imports: string[] }[];
   invalid: { id: string; path: string; source: string }[]; liveRegression: string;
   execution: { target: string; command: string; launchName: string; launchCommand: string; launchGroup: string; launchOrder: number };
 };
 
-const dataRoot = join(import.meta.dir, "🧪️imported-data");
-const dataVector = JSON.parse(readFileSync(join(dataRoot, "🔣️.json"), "utf8")) as {
+const dataRoot = join(import.meta.dir, "../🧪️📇️registry-import-language/🧪️imported-data");
+const dataVector = JSON.parse(readFileSync(join(dataRoot, "../🧪️📇️registry-import-language/🔣️.json"), "utf8")) as {
   cases: { id: string; path: string; role: "implementation-entry" | "static-import"; source: string; expected?: { kind: "module" | "json-data"; imports: string[] }; error?: string }[];
   graph: { entries: string[]; dataPath: string; files: { path: string; content: string; mode: number }[] };
 };

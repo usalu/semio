@@ -54,7 +54,7 @@ enum ReleasedBytes { Zero, CommandLayout }
 
 //#region 🧪️CommandCloseLaws
 fn check(id: &str) {
-    let document: Cases = serde_json::from_str(include_str!("🔣️.json")).expect("command-close neutral vectors");
+    let document: Cases = serde_json::from_str(include_str!("../../../../🧬️🧫️mutation-fixtures/🔀️transaction/🧪️tests/🧪️command-close/🔣️.json")).expect("command-close neutral vectors");
     assert_eq!(document.schema_version, 1);
     assert_eq!(document.layout_policy, "command-value-layout-excludes-allocator-overhead");
     assert_eq!(document.cases.len(), 6);

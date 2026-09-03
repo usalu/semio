@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-03T00:11:50.616Z",
-  "commit": "96aa4f8c1211f8f9645b8c7d06c48afec6d95972",
+  "generatedAt": "2026-09-03T15:25:05.508Z",
+  "commit": "7ad363fd1ec91cb0c83cf716bc66522be99a4785",
   "entries": [
     {
       "ecosystem": "js",
@@ -437,6 +437,7 @@
       "users": [
         "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/package.json",
         "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/package.json",
+        "🌎️hub/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"
       ],
@@ -459,12 +460,12 @@
       "name": "brepjs",
       "version": "^18.20.3",
       "kinds": [
-        "production-runtime"
+        "test-oracle"
       ],
       "users": [
         "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json"
       ],
-      "productionReachable": true,
+      "productionReachable": false,
       "oracleIds": [
         "brepjs-occt",
         "brepjs-occt"
@@ -475,12 +476,12 @@
       "name": "brepjs-opencascade",
       "version": "^0.15.6",
       "kinds": [
-        "production-runtime"
+        "repository-tooling"
       ],
       "users": [
         "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json"
       ],
-      "productionReachable": true
+      "productionReachable": false
     },
     {
       "ecosystem": "js",
@@ -1464,11 +1465,12 @@
     {
       "ecosystem": "rust",
       "name": "blake3",
-      "version": "1.8.2",
+      "version": "1",
       "kinds": [
         "test-runner"
       ],
       "users": [
+        "🌎️hub/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🔢️hash/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": false
@@ -2274,6 +2276,7 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/Cargo.toml",
@@ -2328,7 +2331,11 @@
         "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️base/🏭️generator/🦀️serde-json-engine/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🏭️generator/🦀️json-engine/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🏭️generator/🦀️json-engine/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🏭️generator/🦀️json-engine/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🏭️generator/🦀️json-engine/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🏭️generator/🦀️json-engine/Cargo.toml",
         "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/Cargo.toml",
@@ -2367,6 +2374,7 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/Cargo.toml",
@@ -2384,7 +2392,11 @@
         "serde-json-equation-carrier-reader",
         "serde-json-fem2d-carrier-reader",
         "serde-json-fem3d-carrier-reader",
-        "serde-json-semio-document-carrier-reader"
+        "serde-json-semio-brep-carrier-reader",
+        "serde-json-semio-cad-carrier-reader",
+        "serde-json-semio-document-carrier-reader",
+        "serde-json-semio-drawing-carrier-reader",
+        "serde-json-semio-mesh-carrier-reader"
       ]
     },
     {

@@ -20,7 +20,7 @@ import {
   validateCatalogDescriptorPair,
   type CatalogVerificationNode,
   type PluginRegistryEntry,
-} from "./📜️script.ts";
+} from "../📇️registry/📜️script.ts";
 
 const fixtureRoot = join(import.meta.dirname, "🧪️tests", "🧬️catalog-complete");
 const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as {

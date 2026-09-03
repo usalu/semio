@@ -26,27 +26,20 @@ describe("discoverAgentBridgeConfig", () => {
     expect(discoverAgentBridgeConfig({})).toBeNull();
   });
 
-  it("returns null when only one env var is set", () => {
+  it("rejects an environment URL without an in-memory admission proof", () => {
     expect(discoverAgentBridgeConfig({ VITE_SEMIO_BRIDGE_URL: "ws://127.0.0.1:6300/bridge" })).toBeNull();
   });
 
-  it("returns a config when both env vars are set", () => {
-    const config = discoverAgentBridgeConfig({ VITE_SEMIO_BRIDGE_URL: "ws://127.0.0.1:6300/bridge", VITE_SEMIO_BRIDGE_TOKEN: "secret" });
-    expect(config).toEqual({ url: "ws://127.0.0.1:6300/bridge", token: "secret" });
+  it("rejects a poisoned Vite bridge credential", () => {
+    expect(discoverAgentBridgeConfig({ VITE_SEMIO_BRIDGE_URL: "ws://127.0.0.1:6300/bridge?token=secret", VITE_SEMIO_BRIDGE_TOKEN: "secret" })).toBeNull();
   });
 });
 
-describe("bridgeUrlWithToken", () => {
-  it("appends ?token= when the url has no query", () => {
-    expect(bridgeUrlWithToken({ url: "ws://127.0.0.1:6300/bridge", token: "abc" })).toBe("ws://127.0.0.1:6300/bridge?token=abc");
-  });
-
-  it("appends &token= when the url already has a query", () => {
-    expect(bridgeUrlWithToken({ url: "ws://127.0.0.1:6300/bridge?shell=react", token: "abc" })).toBe("ws://127.0.0.1:6300/bridge?shell=react&token=abc");
-  });
-
-  it("percent-encodes the token", () => {
-    expect(bridgeUrlWithToken({ url: "ws://127.0.0.1:6300/bridge", token: "a b/c" })).toBe("ws://127.0.0.1:6300/bridge?token=a%20b%2Fc");
+describe("bridgeProtocols", () => {
+  it("keeps the proof in exact ordered websocket subprotocols and leaves the URL credential-free", () => {
+    const config = { url: "ws://127.0.0.1:6300/bridge", admissionProof: "session.v1.selector.proof" };
+    expect(bridgeProtocols(config)).toEqual(["semio.mcp.bridge.v1", "session.v1.selector.proof"]);
+    expect(config.url).toBe("ws://127.0.0.1:6300/bridge");
   });
 });
 //#endregion 🔖️ConfigDiscovery

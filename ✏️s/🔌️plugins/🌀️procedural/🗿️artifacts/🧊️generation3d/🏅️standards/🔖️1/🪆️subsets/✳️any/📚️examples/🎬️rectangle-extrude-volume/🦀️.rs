@@ -4,7 +4,7 @@ use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "rectangle-extrude-volume";
 pub fn label() -> LocalizedLabel {
-    LocalizedLabel::native("Rectangle Extrude Volume", "Rectangle Extrude Volume")
+    LocalizedLabel::native("Rectangle Extrude Volume", "Rechteck-Extrusionsvolumen")
 }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🧪️rectangle-extrude-volume/🗣️.dsl.semio");

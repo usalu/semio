@@ -626,7 +626,7 @@ let nextGlobalInstanceId = 1;
  * rather than coalescing), lane-blind (an urgent action waited behind a stale background probe), and
  * un-cancellable. Both `serializePerActor` (below, a generic per-key run-this-thunk-serially utility —
  * KEPT with its exact existing signature/contract since `@semio-tech/framework-renderer-react`'s
- * `🟦️.tsx` re-exports it and `🧪️index.test.ts` asserts that generic contract directly, outside
+ * `../⚙️🍊️PluginRuntime/🟦️.tsx` re-exports it and `🧪️index.test.ts` asserts that generic contract directly, outside
  * this packet's lease) and {@link submitPluginTurn} (this file's own internal turn-dispatch seam, used
  * by every real `submitTurn` call site below) now both sit on top of the landed `TurnScheduler` —
  * bounded mailbox, lane priority, latest-wins coalescing, `cancelQueued`/`teardownActor` — instead of

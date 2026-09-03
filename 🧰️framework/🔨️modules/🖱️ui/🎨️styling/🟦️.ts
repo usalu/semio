@@ -755,7 +755,7 @@ export function semioHostHtmlVitePlugin(repoRoot: string, spec: SemioHostHtmlSpe
 
 //#region 🔖️StatusSurfaceHtml
 /** @emoji 🎨️ Light/dark background+foreground hex pair mirrored from {@link PLAYGROUND_PLAY_BOOT_INLINE_STYLE}
- * / {@link PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT} — this file has no `🔣️.json` import, so these are the
+ * / {@link PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT} — this file has no `../🎨️🟠️styling/🔣️.json` import, so these are the
  * canonical values already baked into every other boot surface here, not new ones. */
 const SEMIO_STATUS_SURFACE_COLORS = { lightBg: "#f7f3e3", lightFg: "#001117", darkBg: "#001117", darkFg: "#f7f3e3" } as const;
 

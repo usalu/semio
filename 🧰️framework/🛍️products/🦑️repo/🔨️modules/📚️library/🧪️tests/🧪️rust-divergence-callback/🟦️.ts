@@ -12,9 +12,9 @@ type Capture = { name: string; start: number; end: number };
 type Callback = { start: number; end: number; bodyStart: number; bodyEnd: number; parameter: Capture; macroPath: string; captures: Capture[]; freeVariables: string[] };
 type Row = { id: string; source: string; reason: string; selectedValues: string[]; expectedCandidates: Candidate[]; expectedCallbacks: Callback[]; native: string | null };
 const root = resolve(import.meta.dir, "../../../../../../../"), ticket = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
-const vectorPath = join(import.meta.dir, "🔣️.json"), vector = JSON.parse(readFileSync(vectorPath, "utf8"));
+const vectorPath = join(import.meta.dir, "../🧪️🔵️rust-divergence-callback/🔣️.json"), vector = JSON.parse(readFileSync(vectorPath, "utf8"));
 const rows = vector.cases as Row[], hash = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
-const inputs = [vectorPath, join(import.meta.dir, "🧬️schema/🔣️.json"), join(import.meta.dir, "🟦️.ts")];
+const inputs = [vectorPath, join(import.meta.dir, "../🧪️🔵️rust-divergence-callback/🧬️schema/🔣️.json"), join(import.meta.dir, "../🧪️🔵️rust-divergence-callback/🟦️.ts")];
 const identities = inputs.map((path) => ({ path, sha256: hash(readFileSync(path)) }));
 const runParent = join(ticket, ...vector.retention.parentSegments);
 let helpers: Promise<typeof import("../../🔍️discovery/🟦️.ts")> | undefined;
@@ -182,7 +182,7 @@ for (const row of rows) test("candidate-only callback: " + row.id, async () => {
 });
 
 test("independent syn callback AST, spans, free variables and target tuples match the neutral contract", async () => {
-  const started = performance.now(), owner = runOwner("syn-120s-cold"), manifest = join(owner, "Cargo.toml"), source = join(owner, "🦀️.rs"), target = join(owner, "🏗️target");
+  const started = performance.now(), owner = runOwner("syn-120s-cold"), manifest = join(owner, "Cargo.toml"), source = join(owner, "../🧪️🔵️rust-divergence-callback/🦀️.rs"), target = join(owner, "🏗️target");
   expect(existsSync(target)).toBe(false);
   writeFileSync(manifest, readFileSync(join(root, vector.oracle.manifestInput)), { flag: "wx" });
   writeFileSync(source, readFileSync(join(root, vector.oracle.sourceInput)), { flag: "wx" });
@@ -206,7 +206,7 @@ test("independent syn callback AST, spans, free variables and target tuples matc
 }, 120_000);
 
 for (const row of vector.attributeCompilerCases) test("actual rustc attributed callback validity: " + row.id, () => {
-  const owner = runOwner("attribute-" + row.id), manifestRoot = join(owner, "pkg"), source = join(owner, "🦀️.rs"), binary = join(owner, process.platform === "win32" ? "🔣️.exe" : "🔣️");
+  const owner = runOwner("attribute-" + row.id), manifestRoot = join(owner, "pkg"), source = join(owner, "../🧪️🔵️rust-divergence-callback/🦀️.rs"), binary = join(owner, process.platform === "win32" ? "🔣️.exe" : "../🧪️🔵️rust-divergence-callback/🔣️.json");
   mkdirSync(manifestRoot);
   writeFileSync(source, row.source + "\nfn main() { inspect(); }\n", { flag: "wx" });
   const command = ["rustc", "--edition=2021", "--crate-name", "attributed_callback", source, "-o", binary];
@@ -233,7 +233,7 @@ test("actual rustc executes ordinary and divergent error paths and rejects shado
       mkdirSync(dirname(path), { recursive: true });
       writeFileSync(path, value, { flag: "wx" });
     }
-    const input = join(directory, "🦀️.rs"), binary = join(directory, process.platform === "win32" ? "🔣️.exe" : "🔣️");
+    const input = join(directory, "../🧪️🔵️rust-divergence-callback/🦀️.rs"), binary = join(directory, process.platform === "win32" ? "🔣️.exe" : "../🧪️🔵️rust-divergence-callback/🔣️.json");
     writeFileSync(input, row.source + '\nfn main() { inspect(); println!("ordinary-finished"); }\n', { flag: "wx" });
     const command = ["rustc", "--edition=2021", "--crate-name", "divergence_callback", input, "-o", binary];
     const result = Bun.spawnSync(command, { cwd: directory, env: { ...process.env, CARGO_MANIFEST_DIR: manifestRoot, RUSTC_WRAPPER: "" }, stdout: "pipe", stderr: "pipe", timeout: 4_000 });

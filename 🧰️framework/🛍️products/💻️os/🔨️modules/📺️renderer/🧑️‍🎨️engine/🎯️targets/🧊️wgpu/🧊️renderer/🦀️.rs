@@ -15858,6 +15858,270 @@ async fn boot_runtime(
 }
 
 #[cfg(not(target_arch = "wasm32"))]
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+struct NativeSocketProbeSnapshot(String);
+
+#[cfg(not(target_arch = "wasm32"))]
+impl store::os_store::ArtifactDsl for NativeSocketProbeSnapshot {
+    const EXTENSION: &'static str = "native-socket-probe";
+
+    fn parse_dsl(text: &str) -> Result<Self, store::os_store::TextError> {
+        Ok(Self(text.to_string()))
+    }
+
+    fn print_dsl(&self) -> String {
+        self.0.clone()
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl store::os_store::ArtifactPack for NativeSocketProbeSnapshot {
+    fn encode_pack_with(&self, _options: &store::os_store::PackEncodeOptions) -> Result<Vec<u8>, store::os_store::PackError> {
+        Ok(self.0.as_bytes().to_vec())
+    }
+
+    fn decode_pack_with(bytes: &[u8], _options: &store::os_store::PackDecodeOptions) -> Result<Self, store::os_store::PackError> {
+        String::from_utf8(bytes.to_vec()).map(Self).map_err(|error| store::os_store::PackError::Schema(error.to_string()))
+    }
+
+    fn record_spec() -> Option<store::os_dsl::RecordSpec> {
+        Some(store::os_dsl::RecordSpec::new(
+            Some("native-socket-probe"),
+            store::os_dsl::RecordLayout::Inline,
+            vec![store::os_dsl::FieldSpec::new(0, "value", store::os_dsl::Shape::Value)],
+        ))
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl store::os_store::ToValue for NativeSocketProbeSnapshot {
+    fn to_value(&self) -> store::os_store::DslValue {
+        store::os_store::to_dsl_value(self).expect("native probe snapshot value")
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl store::os_store::FromValue for NativeSocketProbeSnapshot {
+    fn from_value(value: store::os_store::DslValue) -> Result<Self, store::os_store::ValueError> {
+        store::os_store::from_dsl_value(value).map_err(store::os_store::ValueError::new)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+struct NativeSocketProbeDiff(String);
+
+#[cfg(not(target_arch = "wasm32"))]
+impl store::os_store::MutationDiff<NativeSocketProbeSnapshot> for NativeSocketProbeDiff {
+    fn apply(&self, _base: &NativeSocketProbeSnapshot) -> store::os_store::MutationApplyResult<NativeSocketProbeSnapshot> {
+        Ok(NativeSocketProbeSnapshot(self.0.clone()))
+    }
+
+    fn absorb(&mut self, other: Self) {
+        self.0 = other.0;
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl store::os_store::ToValue for NativeSocketProbeDiff {
+    fn to_value(&self) -> store::os_store::DslValue {
+        store::os_store::to_dsl_value(self).expect("native probe diff value")
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl store::os_store::FromValue for NativeSocketProbeDiff {
+    fn from_value(value: store::os_store::DslValue) -> Result<Self, store::os_store::ValueError> {
+        store::os_store::from_dsl_value(value).map_err(store::os_store::ValueError::new)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+enum NativeSocketProbeMutation {
+    Set(String),
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+const NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR: store::os_store::MutationLeafDescriptor = store::os_store::MutationLeafDescriptor {
+    schema_version: 1,
+    owner: "framework/os/renderer/wgpu/native-socket-probe",
+    semantic_kind: "set",
+    display_name: "Set",
+    emoji: "🧪",
+    aggregate_variant: "Set",
+    payload_schema: "native.socket-grant.probe/v1",
+    text_opcode: None,
+    binary_tag: None,
+    invertibility: store::os_store::MutationInvertibility::ExplicitMutation,
+    diff_participation: store::os_store::MutationDiffParticipation::Detect,
+    outcome_classes: &[store::os_store::MutationOutcomeClass::Applied],
+    composition: store::os_store::MutationComposition::Atomic,
+    required_language_surfaces: &[store::os_store::MutationLanguageSurface::Rust],
+};
+
+#[cfg(not(target_arch = "wasm32"))]
+impl store::os_store::Mutation<NativeSocketProbeSnapshot> for NativeSocketProbeMutation {
+    type Diff = NativeSocketProbeDiff;
+    const DESCRIPTORS: &'static [store::os_store::MutationLeafDescriptor] = &[NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR];
+
+    fn descriptor(&self) -> &'static store::os_store::MutationLeafDescriptor {
+        &Self::DESCRIPTORS[0]
+    }
+
+    fn diff(&self, _base: &NativeSocketProbeSnapshot) -> store::os_store::MutationOutcome<NativeSocketProbeDiff> {
+        let Self::Set(value) = self;
+        store::os_store::MutationOutcome::new(NativeSocketProbeDiff(value.clone()))
+    }
+
+    fn inverse(&self, base: &NativeSocketProbeSnapshot) -> Vec<Self> {
+        vec![Self::Set(base.0.clone())]
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl store::os_store::ToValue for NativeSocketProbeMutation {
+    fn to_value(&self) -> store::os_store::DslValue {
+        store::os_store::to_dsl_value(self).expect("native probe mutation value")
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl store::os_store::FromValue for NativeSocketProbeMutation {
+    fn from_value(value: store::os_store::DslValue) -> Result<Self, store::os_store::ValueError> {
+        store::os_store::from_dsl_value(value).map_err(store::os_store::ValueError::new)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl store::os_store::OpText for NativeSocketProbeMutation {
+    fn print_op(&self) -> String {
+        let Self::Set(value) = self;
+        value.clone()
+    }
+
+    fn parse_op(line: &str) -> Result<Self, store::os_store::TextError> {
+        Ok(Self::Set(line.to_string()))
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl store::os_store::OpBinary for NativeSocketProbeMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, store::os_store::ProtocolError> {
+        let Self::Set(value) = self;
+        Ok(value.as_bytes().to_vec())
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, store::os_store::ProtocolError> {
+        String::from_utf8(bytes.to_vec()).map(Self::Set).map_err(|error| store::os_store::ProtocolError::Malformed { what: "native-socket-probe-op", offset: 0, detail: error.to_string() })
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub async fn run_socket_grant_probe() -> i32 {
+    use dsl::os_directory::client::{native::NativeDirectoryTransport, DirectoryClient, DocumentSocketSurfaceExpectationV1};
+    use dsl::os_directory::{DocumentOpenRendererTargetV1, DocumentOpenSurfaceRoleV1};
+    use dsl::os_directory::identity::claimed_local_hub_credential;
+    use dsl::os_spr::{ActorId, ArtifactDiff, ArtifactId, HybridLogicalTimestamp, InverseMutation, MutationEnvelope, MutationId, SchemaId};
+    use dsl::os_store::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactDocumentKey, ArtifactEvent, ArtifactHost, CommandAckOutcome, PersistenceBinding};
+    use semio_framework_actor::{ActorId as DirectoryActorId, PackageId as DirectoryPackageId};
+    use semio_framework_async::{HostAsyncRuntime, ScopeOwner};
+    use semio_framework_os_services::{ComputePool, TokioHostRuntime};
+
+    const PROBE_SCHEMA: &str = "native.socket-grant.probe/v1";
+    let Some(credential) = claimed_local_hub_credential("native") else { return 1 };
+    let _ = dsl::os_store::register_document_codec(dsl::os_store::ArtifactCodec::of::<NativeSocketProbeSnapshot, NativeSocketProbeMutation>(PROBE_SCHEMA)).await;
+    let pool = renderer_worker_pool();
+    let runtime = Arc::new(TokioHostRuntime::with_pool(pool.clone()));
+    let scope = runtime.open_scope_now(ScopeOwner::Service("native_socket_grant_probe"), None);
+    let compute = Arc::new(ComputePool::with_pool(2, pool.clone()));
+    let transport = NativeDirectoryTransport::with_new_http_pool_now(runtime, scope, compute, 1_000_000, 2, DirectoryPackageId("native.socket-grant-probe".into()), DirectoryActorId(0));
+    let client = Arc::new(DirectoryClient::authenticated(transport, credential.clone()));
+    let host = ArtifactHost::new(Arc::new(pool));
+    if host.local_hub_ready() {
+        return 1;
+    }
+    host.set_local_hub_credential(credential.clone());
+    if host.local_hub_ready() {
+        return 1;
+    }
+    host.set_hub_socket_grant_source(client);
+    if !host.local_hub_ready() {
+        return 1;
+    }
+    let document_id = "probe-document";
+    let document_key = ArtifactDocumentKey::hub("probe-space", document_id);
+    if !host.set_document_socket_surface(
+        &document_key,
+        DocumentSocketSurfaceExpectationV1 {
+            artifact_kind: "native.socket-grant.probe".into(),
+            plugin_id: "native.socket-grant.probe".into(),
+            package_id: "native.socket-grant.probe.codec".into(),
+            version: "1.0.0".into(),
+            surface_id: "native.socket-grant.probe.editor".into(),
+            app_id: "native.socket-grant.probe.app".into(),
+            window_kind_id: "native.socket-grant.probe.window".into(),
+            role: DocumentOpenSurfaceRoleV1::Editor,
+            renderer_target: DocumentOpenRendererTargetV1::Wgpu,
+        },
+    ) {
+        return 1;
+    }
+    let channels = host
+        .open(ArtifactActorConfig {
+            document_id: document_id.into(),
+            schema: PROBE_SCHEMA.into(),
+            bindings: vec![PersistenceBinding::Hub {
+                base_url: credential.hub_origin().into(),
+                space_id: "probe-space".into(),
+                surface: Some("native.socket-grant.probe.editor".into()),
+            }],
+            watch_external: false,
+            actor: "untrusted-local-probe".into(),
+        })
+        .await;
+    let mut events = host.subscribe_key(&channels.document_key).await;
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(12);
+    let mut sessions = 0u8;
+    let mut acknowledgements = 0u8;
+    let envelope = |sequence: u8| MutationEnvelope {
+        mutation_id: MutationId(format!("probe-{sequence}")),
+        document_id: ArtifactId(document_id.into()),
+        actor: ActorId("untrusted-local-probe".into()),
+        dependencies: Vec::new(),
+        diff: ArtifactDiff { schema: SchemaId(PROBE_SCHEMA.into()), payload: vec![sequence] },
+        inverse: InverseMutation { schema: SchemaId(PROBE_SCHEMA.into()), payload: Vec::new() },
+        timestamp: HybridLogicalTimestamp::new(0, 0),
+    };
+    if channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: vec![envelope(1)] }).is_err() {
+        host.close_key(&channels.document_key);
+        return 1;
+    }
+    while std::time::Instant::now() < deadline {
+        match events.try_recv() {
+            Ok(ArtifactEvent::Session { .. }) => {
+                sessions += 1;
+                if sessions == 2 && channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: vec![envelope(2)] }).is_err() {
+                    break;
+                }
+            }
+            Ok(ArtifactEvent::CommandOutcome { outcome: CommandAckOutcome::Accepted, .. }) => {
+                acknowledgements += 1;
+                if acknowledgements == 2 {
+                    host.close_key(&channels.document_key);
+                    return 0;
+                }
+            }
+            Ok(_) | Err(tokio::sync::broadcast::error::TryRecvError::Empty) | Err(tokio::sync::broadcast::error::TryRecvError::Lagged(_)) => {}
+            Err(tokio::sync::broadcast::error::TryRecvError::Closed) => break,
+        }
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    }
+    host.close_key(&channels.document_key);
+    1
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 pub fn run_native(plugin_filter: &str, plugin_modules_root: std::path::PathBuf) {
     let event_loop = EventLoop::<winit_app::HostUserEvent>::with_user_event().build().expect("event loop");
     let proxy = event_loop.create_proxy();

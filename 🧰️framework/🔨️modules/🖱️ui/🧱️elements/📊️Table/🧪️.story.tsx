@@ -10,7 +10,7 @@
 
 import { Table, TableAvatar, TableColumn, TableSkeleton } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "../../🧪️story";
+import type { Meta, StoryObj } from "../../🧪️🐨️story.ts";
 
 // 📊️#region 🛎️Table
 const FileCode = createIconComponent("file-code");

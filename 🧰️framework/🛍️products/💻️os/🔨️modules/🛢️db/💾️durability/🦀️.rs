@@ -168,7 +168,7 @@ impl ResumeToken {
         Ok(Frontier { document: ArtifactId(document), head_seq, commit_seq, chain_hash, epoch })
     }
 
-    /// @emoji 🔍️ Borrows the token's wire form, e.g. for embedding in a `protocol_wire::Hello`.
+    /// @emoji 🔍️ Borrows the token's wire form for embedding in `protocol_wire::SocketHelloV1`.
     pub fn as_str(&self) -> &str {
         &self.0
     }

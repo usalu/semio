@@ -497,34 +497,34 @@ mod tests {
     /// distinct new variants: an id-keyed create/delete pair (`create-widget`), a relationship
     /// connect/disconnect pair (`connect-synapse`), and a document-level facet setter
     /// (`update-camera`).
-    #[test]
-    fn create_widget_satisfies_the_inverse_and_absorb_laws() {
+    #[semio_framework_async_macros::async_test]
+    async fn create_widget_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_generation3d_snapshot();
         let mutation = Generation3dMutation::CreateWidget(CreateWidget { index: 0, widget: Widget::InputNote { id: "note-fresh".into(), text: String::new() } });
-        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        protocol::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base);
         let d2 = Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.fixture.v2".into() }).diff(&base);
-        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
-    #[test]
-    fn connect_synapse_satisfies_the_inverse_and_absorb_laws() {
+    #[semio_framework_async_macros::async_test]
+    async fn connect_synapse_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_generation3d_snapshot();
         let mutation = Generation3dMutation::ConnectSynapse(ConnectSynapse { index: 0, synapse: SynapseSpec { id: "e-fresh".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() } });
-        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        protocol::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base);
         let d2 = Generation3dMutation::UpdateCamera(UpdateCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } }).diff(&base);
-        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
-    #[test]
-    fn update_camera_satisfies_the_inverse_and_absorb_laws() {
+    #[semio_framework_async_macros::async_test]
+    async fn update_camera_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_generation3d_snapshot();
         let mutation = Generation3dMutation::UpdateCamera(UpdateCamera { camera: CameraJson { x: 4.0, y: 5.0, zoom: 6.0 } });
-        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        protocol::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base);
         let d2 = Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.fixture.v3".into() }).diff(&base);
-        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
     //#endregion 🧪️MutationLaws
 

@@ -3,6 +3,14 @@
 Date: 2026-09-03
 Ticket: `26/09/02/COMPLETE-SEMIO-END-TO-END`
 
+## SocketGrant S3 Admin Browser Boundary
+
+The browser no longer owns the administrator bearer. `os-hub:dev-secure-admin` issues an `admin-relay` credential through the protected local bootstrap, holds it only in a loopback relay, and opens `/admin/#semio-admin=<one-use-proof>`. The SPA clears the fragment before bootstrap, receives only an opaque host-only `HttpOnly; SameSite=Strict` cookie, and performs same-origin requests without `sessionStorage`, direct `Authorization`, or the former Vite `/admin/api` bypass.
+
+The registered `os-hub:admin-relay-check` gate executes the relay oracle before the focused UI suite. Session `42976` exited zero: one Vitest file and 10/10 tests passed in 14.01 seconds. Runtime coverage includes raw-local denial, one-use bootstrap/replay refusal, cookie expiry, unsafe-request same-origin enforcement, capability redaction, static-shell isolation, explicit unsupported-locale selection, and pending poll abort with no successor after unmount. Entry and stylesheet neutral oracles also passed 4 and 5 laws respectively.
+
+The source launch seed registers both the relay gate and `os-hub:dev-secure-admin`. Permanent launch regeneration is still red at session `87007` because unrelated plugin catalog discovery reports zero host metadata rows, so no generated launch freshness claim is made for these new entries.
+
 ## Outcome
 
 The workspace Tailwind source census now recognizes the canonical shared UI stylesheet at `🧰️framework/🔨️modules/🖱️ui/🎨️.css`. It no longer names or specially excludes the deleted React-target stylesheet.
@@ -43,4 +51,3 @@ The build still emits non-fatal pre-existing asset-resolution, browser-externali
 ## Hygiene
 
 Scoped `git diff --check` passed. The generated admin `📤️dist` directory was moved to the macOS Trash after verification and is recoverable there as `semio-hub-admin-dist-20260903-0442`.
-

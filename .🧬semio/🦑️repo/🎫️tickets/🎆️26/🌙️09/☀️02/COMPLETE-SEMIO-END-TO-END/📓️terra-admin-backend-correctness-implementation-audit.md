@@ -189,3 +189,44 @@ These are proposed verification laws. They have not been run in this audit.
 5. **Production identity substrate.** The current process still lacks a production verifier and protected development bootstrap registration; Sol-A consumes a verified session when one exists but does not make the configured launch able to issue one.
 
 **Blocker order:** (1) land Sol-A backend/schema/backend-parity correction; (2) install protected local relay/direct-child authority so admin REST becomes browser-safe; (3) land SocketGrant S1/S2 and atomic sync-session admission, then an explicit admin first-frame stream if still needed; (4) complete verified catalog/server-owned descriptor/open plan and native mounting; (5) complete P2-D retention/reference deletion before any destructive artifact control; (6) prove the integrated relay/socket/catalog/CAS/native/admin journey with the focused laws and a real two-profile browser oracle.
+
+## Current registered-gate re-read — portable laws first, PostgreSQL honest last
+
+The current `os-hub:admin-backend-check` target is uncacheable and registered both in the hub
+project and the launch list (`🌎️hub/📦️packages/🦀️rust/📋️project.json:87-93`,
+`.vscode/launch.json:4411-4418`). Its script first runs the neutral admin-intent oracle, then
+uses `cargo test … --list` to resolve every selected suffix to exactly one fully-qualified test
+name; a nonzero listing status or anything other than one match throws before execution
+(`📜️script.ts:2260-2283`). The six portable laws execute with those resolved FQNs and `--exact`
+before the relay/SPA checks, all-feature hub check, and final PostgreSQL-specific law
+(`:2284-2288`). There is no skip or catch path around any selected stage.
+
+The PostgreSQL list/preflight itself happens before the portable execution, but it is a compile/list
+operation and does not start a container. The real PostgreSQL test is intentionally terminal-last:
+its fixture unconditionally invokes `docker run postgres:16-alpine`, asserts the command status,
+and waits only for a real connection (`🌎️hub/📇️directory/🐘️postgres/🦀️.rs:2120-2138`). If Docker
+or PostgreSQL is unavailable, `expect`/`assert!` makes the exact Cargo law fail; `runCargo` throws
+on any nonzero exit, so the final passed message cannot print (`📚️library/🟦️.ts:1758-1765,2733-2736`).
+That is an honest external terminal failure, not a pass, skip, or advisory.
+
+No Cargo stage was run in this reread while the shared target lock is occupied. This is current
+source/gate evidence only.
+
+### Portable-before-PostgreSQL re-read — source-qualified
+
+Current `AdminBackendCheckScript` resolves seven suffixes through `cargo test
+--all-features … --list`, accepts only lines ending in `: test`, and throws on
+either a nonzero list status or any count other than one (`🌎️hub/📦️packages/🦀️rust/📜️script.ts:2437-2460`).
+It exact-runs the six portable laws first, then the relay and SPA checks and
+the all-feature hub check, and only then exact-runs the PostgreSQL law
+(`:2461-2466`). There is no catch, conditional, or success message preceding
+that final command. The PostgreSQL `--list` preflight deliberately still comes
+before portable execution, so a compile/list failure is an honest early
+failure; it is not a runtime PostgreSQL availability probe.
+
+The terminal PostgreSQL test unconditionally starts a disposable
+`postgres:16-alpine` through Docker and asserts command and connection success
+(`🌎️hub/📇️directory/🐘️postgres/🦀️.rs:2120-2137,2192-2195`). An absent Docker
+daemon/image or unreachable server therefore makes exact Cargo return nonzero,
+which propagates out of `runCargo`; it cannot become a skip or printed pass.
+No Cargo command was run in this audit.

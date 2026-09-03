@@ -62,11 +62,11 @@ mod tests {
     use flow::Widget;
     use semio_framework_plugin::PluginApp;
 
-    #[test]
-    fn set_active_example_via_string_action_loads_fixture() {
+    #[semio_framework_async_macros::async_test]
+    async fn set_active_example_via_string_action_loads_fixture() {
         let _serial = crate::editor::generation3d::test_support::lock();
-        let mut app = app_with_registry();
-        app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_FILLET })), &semio_framework_plugin::testkit::meta("local")).expect("set example");
+        let mut app = app_with_registry().await;
+        app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_FILLET })), &semio_framework_plugin::testkit::meta("local")).await.expect("set example");
         let projection = app.snapshot().expect("snapshot");
         assert!(projection
             .fixture
@@ -75,12 +75,12 @@ mod tests {
             .any(|widget| crate::artifacts::generation3d::widget_id(widget).contains("fillet") || matches!(widget, Widget::Neuron { neuron_kind, .. } if neuron_kind.contains("fillet") || neuron_kind.contains("box"))));
     }
 
-    #[test]
-    fn unknown_example_id_is_a_no_op() {
+    #[semio_framework_async_macros::async_test]
+    async fn unknown_example_id_is_a_no_op() {
         let _serial = crate::editor::generation3d::test_support::lock();
-        let mut app = app();
+        let mut app = app().await;
         let before = app.snapshot().expect("snapshot");
-        dispatch(&mut app, Generation3dCommand::SetActiveExample(SetActiveExample { example_id: "not-a-real-example".into() }));
+        dispatch(&mut app, Generation3dCommand::SetActiveExample(SetActiveExample { example_id: "not-a-real-example".into() })).await;
         assert_eq!(app.snapshot().expect("snapshot"), before);
     }
 }

@@ -22,7 +22,7 @@ fn descriptor_and_provenance_are_direct() {
     assert_eq!(provenance.owner, AddValue::DESCRIPTOR.owner);
     assert_eq!(provenance.source_path, format!("{}/🦀️.rs", provenance.owner));
     assert_eq!(provenance.descriptor_path, format!("{}/🔣️.json", provenance.owner));
-    let scope = protocol::MutationLeafSourceScope { workspace_token: provenance.workspace_token, mutation_root: provenance.mutation_root, taxonomy_path: provenance.taxonomy_path, source_filename: "🦀️.rs", descriptor_filename: "🔣️.json" };
+    let scope = protocol::MutationLeafSourceScope { workspace_token: provenance.workspace_token, mutation_root: provenance.mutation_root, taxonomy_path: provenance.taxonomy_path, source_filename: "../../🧬️📡️contributed-mutation-wire/🧪️tests/🦀️.rs", descriptor_filename: "🔣️.json" };
     assert!(protocol::validate_mutation_leaf_source(&AddValue::DESCRIPTOR, &provenance, &scope).is_ok());
 }
 

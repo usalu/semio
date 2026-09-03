@@ -24,7 +24,7 @@ where M: Mutation<S> + SemanticMutation<S>, L: MutationLeaf {
     assert_eq!(provenance.source_path, format!("{}/🦀️.rs", provenance.owner));
     assert_eq!(provenance.descriptor_path, format!("{}/🔣️.json", provenance.owner));
     assert!(provenance.owner.ends_with("/🧬️mutations/📝️set-value"));
-    let scope = protocol::MutationLeafSourceScope { workspace_token: provenance.workspace_token, mutation_root: provenance.mutation_root, taxonomy_path: provenance.taxonomy_path, source_filename: "🦀️.rs", descriptor_filename: "🔣️.json" };
+    let scope = protocol::MutationLeafSourceScope { workspace_token: provenance.workspace_token, mutation_root: provenance.mutation_root, taxonomy_path: provenance.taxonomy_path, source_filename: "../../🛰️declaration-channels/🧪️tests/🦀️.rs", descriptor_filename: "🔣️.json" };
     assert!(protocol::validate_mutation_leaf_source(&L::DESCRIPTOR, &provenance, &scope).is_ok());
     let mut wrong = provenance;
     wrong.source_path = "macro-template/🦀️.rs";

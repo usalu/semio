@@ -26,9 +26,12 @@ pub mod identity;
 use std::collections::BTreeMap;
 
 pub use schema::{
-    descriptor_digest_encoding_v1, descriptor_digest_v1, hex_lower, ArtifactBlobRef, ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, ArtifactRetention, CheckpointId, ConnectionView, DescriptorDigestError, DirectoryActor, DirectoryActorKind,
-    DirectoryCommand, DirectoryConnectionPhase, DirectoryPresenceActor, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, DocumentFrontier, DocumentOwner, DocumentScope, DocumentView, Hlc, InviteView, PublishedArtifactBlob,
-    PublishedArtifactCheckpoint, RebootstrapRequired, DESCRIPTOR_DIGEST_V1_DOMAIN,
+    descriptor_digest_encoding_v1, descriptor_digest_v1, hex_lower, AdminConnectionSnapshotV1, AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1, AdminOperationAuditPhaseV1, AdminOperationAuditV1,
+    AdminOperationProgressV1, AdminOperationStatusV1, AdminPageV1, AdminRecordedConnectionV1, ArtifactBlobRef, ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, ArtifactRetention, CheckpointId, ConnectionView, DescriptorDigestError, DirectoryActor,
+    DirectoryActorKind, DirectoryCommand, DirectoryConnectionPhase, DirectoryPresenceActor, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, DocumentFrontier, DocumentOpenArtifactV1, DocumentOpenCatalogV1,
+    DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenPlanErrorCodeV1, DocumentOpenPlanErrorV1, DocumentOpenPlanV1, DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1,
+    DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1, DocumentOwner, DocumentPlanSocketGrantIntentV1, DocumentScope, DocumentView, Hlc, InviteView, PublishedArtifactBlob, PublishedArtifactCheckpoint, RebootstrapRequired,
+    DESCRIPTOR_DIGEST_V1_DOMAIN, DOCUMENT_OPEN_ID_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, DOCUMENT_OPEN_PLAN_MAX_TTL_MS,
 };
 pub use schema::{DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, MemberView, SpaceView, UserView};
 

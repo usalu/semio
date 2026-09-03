@@ -15,7 +15,7 @@
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { PlaygroundEntry } from "./📜️script.ts";
+import type { PlaygroundEntry } from "../📇️registry/📜️script.ts";
 
 const SEED_REL_PATH = ".vscode/🧩️launch.seed.jsonc";
 /** @emoji 📄️ Repo-relative path of the generated output, shared with `📜️script.ts`'s freshness gate. */

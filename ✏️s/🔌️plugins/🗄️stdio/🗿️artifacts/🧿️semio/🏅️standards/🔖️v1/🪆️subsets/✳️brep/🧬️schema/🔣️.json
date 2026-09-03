@@ -10,7 +10,9 @@
     "loops": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "📸️snapshot/🔣️.json#/$defs/brepLoop" } },
     "faces": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "📸️snapshot/🔣️.json#/$defs/brepFace" } },
     "shells": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "📸️snapshot/🔣️.json#/$defs/brepShell" } },
-    "solids": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "📸️snapshot/🔣️.json#/$defs/brepSolid" } }
+    "solids": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "📸️snapshot/🔣️.json#/$defs/brepSolid" } },
+    "coedges": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "📸️snapshot/🔣️.json#/$defs/brepCoedge" } },
+    "nextLabel": { "type": "integer", "x-semio-state": "artifact" }
   },
-  "required": ["schema", "vertices", "edges", "loops", "faces", "shells", "solids"]
+  "required": ["schema", "vertices", "edges", "loops", "faces", "shells", "solids", "coedges", "nextLabel"]
 }

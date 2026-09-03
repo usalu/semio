@@ -9,7 +9,7 @@ description = "Declarative app plugin SDK for semio framework WASM components"
 workspace = true
 
 [lib]
-path = "🦀️.rs"
+path = "../../📦️packages/🦀️rust/🦀️.rs"
 
 [features]
 default = []
@@ -71,7 +71,7 @@ serde_json = "1.0.140"
 wit-bindgen = { version = "0.57.1", default-features = false, features = ["macros", "realloc", "async", "std", "macro-string"] }
 # 🌱️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01): `ArtifactApp::Snapshot`/
 # `Config`/`Draft`/`Presence`/`Transient` now bound on `ToValue`/`FromValue` instead of
-# `Serialize`/`DeserializeOwned` (`🦀️.rs`'s trait definitions). Promoted from
+# `Serialize`/`DeserializeOwned` (`../../📦️📦️packages/🦀️rust/🦀️.rs`'s trait definitions). Promoted from
 # `[dev-dependencies]` because the crate's own production defaults (`NoConfig`/`NoPresence`/
 # `NoTransient`, `crate::local_interaction`'s `InteractionConfigMutation`) derive `ToValue`/
 # `FromValue` directly now, not only the test fixtures.

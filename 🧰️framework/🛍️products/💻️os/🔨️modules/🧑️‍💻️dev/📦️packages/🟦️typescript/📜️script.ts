@@ -3297,7 +3297,7 @@ async function runCollabE2eVerify(): Promise<void> {
     const pageErrors: string[] = [];
     /** 🔬️ Full browser-side visibility for whichever page this is attached to: every `console.*` level
      * (not just uncaught exceptions), failed HTTP requests, and the lifecycle + received frames of every
-     * WebSocket the page opens (the `/directory/ws` subscription in particular) — printed immediately so
+     * WebSocket the page opens (the `/directory/socket/v1` subscription in particular) — printed immediately so
      * they interleave chronologically with the harness's own `STEP n:` lines in the run log, instead of
      * being buffered and dumped out of order at the end. Added per the ticket's w4-h diagnosis: the prior
      * harness only captured `pageerror`, so a silently-caught `console.warn`/`console.error` inside

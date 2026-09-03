@@ -1,7 +1,7 @@
 {
   "$id": "https://semio.tech/schema/os/directory/component.json",
   "title": "Directory",
-  "description": "Directory event log wire contract (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS, contract C1): the hub's control-plane events, the client-issued commands that produce them, the `/directory/ws` stream envelope, and the REST read DTOs.",
+  "description": "Directory event log wire contract (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS, contract C1): the hub's control-plane events, the client-issued commands that produce them, the `/directory/socket/v1` stream envelope, and the REST read DTOs.",
   "$comment": "🧭️ Deviation from contract-freeze.md's C1 prose: `space.created`'s space-kind field and `create-space`'s space-kind field are named `spaceKind`, not the prose's bare `kind` — both bodies are internally tagged (`#[serde(tag = \"kind\")]`) so a same-named payload field would collide with the discriminator on the wire. Flagged as a sharedFileRequest in lane 0-A's report for the coordinator to fold back into contract-freeze.md.",
   "$defs": {
     "DirectorySpaceKind": { "type": "string", "enum": ["atelier", "studio", "archive"] },
@@ -276,6 +276,269 @@
           }
         }
       ]
+    },
+    "AdminIntentV1": {
+      "type": "object",
+      "required": ["kind", "requestId"],
+      "discriminator": { "propertyName": "kind" },
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "requestId", "name", "spaceKind", "visibility"],
+          "properties": {
+            "kind": { "const": "create-space" },
+            "requestId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "name": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "spaceKind": { "$ref": "#/$defs/DirectorySpaceKind" },
+            "visibility": { "$ref": "#/$defs/DirectorySpaceVisibility" }
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["kind", "requestId", "spaceId", "name"],
+          "properties": {
+            "kind": { "const": "rename-space" },
+            "requestId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "spaceId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "name": { "type": "string", "minLength": 1, "maxLength": 256 }
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["kind", "requestId", "spaceId", "visibility"],
+          "properties": {
+            "kind": { "const": "set-space-visibility" },
+            "requestId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "spaceId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "visibility": { "$ref": "#/$defs/DirectorySpaceVisibility" }
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["kind", "requestId", "spaceId"],
+          "properties": {
+            "kind": { "enum": ["archive-space", "delete-space"] },
+            "requestId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "spaceId": { "type": "string", "minLength": 1, "maxLength": 256 }
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["kind", "requestId", "spaceId", "email", "role"],
+          "properties": {
+            "kind": { "const": "upsert-space-member" },
+            "requestId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "spaceId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "email": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "role": { "$ref": "#/$defs/DirectorySpaceRole" }
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["kind", "requestId", "spaceId", "userId"],
+          "properties": {
+            "kind": { "const": "remove-space-member" },
+            "requestId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "spaceId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "userId": { "type": "string", "minLength": 1, "maxLength": 256 }
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["kind", "requestId", "spaceId", "role", "ttlSecs"],
+          "properties": {
+            "kind": { "const": "create-space-invite" },
+            "requestId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "spaceId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "role": { "$ref": "#/$defs/DirectorySpaceRole" },
+            "ttlSecs": { "type": "integer", "minimum": 1, "maximum": 31536000 }
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["kind", "requestId", "spaceId", "inviteId"],
+          "properties": {
+            "kind": { "const": "revoke-space-invite" },
+            "requestId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "spaceId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "inviteId": { "type": "string", "minLength": 1, "maxLength": 256 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "requestId", "scope", "ttlSecs"],
+          "properties": {
+            "kind": { "const": "issue-document-share" },
+            "requestId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "scope": { "$ref": "#/$defs/DocumentScope" },
+            "ttlSecs": { "type": "integer", "minimum": 1, "maximum": 31536000 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "requestId", "scope", "shareId", "reasonCode"],
+          "properties": {
+            "kind": { "const": "revoke-document-share" },
+            "requestId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "scope": { "$ref": "#/$defs/DocumentScope" },
+            "shareId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "reasonCode": { "type": "string", "minLength": 1, "maxLength": 256 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "requestId", "userId", "reasonCode"],
+          "properties": {
+            "kind": { "const": "revoke-user-sessions" },
+            "requestId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "userId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "reasonCode": { "type": "string", "minLength": 1, "maxLength": 256 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "requestId", "syncSessionId", "reasonCode"],
+          "properties": {
+            "kind": { "const": "kick-connection" },
+            "requestId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "syncSessionId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "reasonCode": { "type": "string", "minLength": 1, "maxLength": 256 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "requestId", "expectedHeadSeq"],
+          "properties": {
+            "kind": { "const": "rebuild-directory-projections" },
+            "requestId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "expectedHeadSeq": { "type": "integer", "minimum": 0 }
+          }
+        }
+      ]
+    },
+    "AdminIntentStateV1": {
+      "type": "string",
+      "enum": ["succeeded", "accepted", "failed", "cancelled"]
+    },
+    "AdminIntentOutcomeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "durable"],
+      "properties": {
+        "code": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "durable": { "type": "boolean" },
+        "kickAttempted": { "type": "integer", "minimum": 0 },
+        "kickSignalled": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "AdminIntentResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "inviteToken": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "shareToken": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "AdminIntentReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operationId", "correlationId", "state", "outcome"],
+      "properties": {
+        "operationId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "correlationId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "state": { "$ref": "#/$defs/AdminIntentStateV1" },
+        "eventSeqFirst": { "type": "integer", "minimum": 1 },
+        "eventSeqLast": { "type": "integer", "minimum": 1 },
+        "result": { "$ref": "#/$defs/AdminIntentResultV1" },
+        "outcome": { "$ref": "#/$defs/AdminIntentOutcomeV1" }
+      }
+    },
+    "AdminOperationProgressV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["completedEvents", "totalEvents", "cancelRequested"],
+      "properties": {
+        "completedEvents": { "type": "integer", "minimum": 0 },
+        "totalEvents": { "type": "integer", "minimum": 0 },
+        "cancelRequested": { "type": "boolean" }
+      }
+    },
+    "AdminOperationStatusV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["receipt"],
+      "properties": {
+        "receipt": { "$ref": "#/$defs/AdminIntentReceiptV1" },
+        "progress": { "$ref": "#/$defs/AdminOperationProgressV1" }
+      }
+    },
+    "AdminRecordedConnectionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["syncSessionId", "scope", "connectedAtMs", "source"],
+      "properties": {
+        "syncSessionId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "scope": { "$ref": "#/$defs/DocumentScope" },
+        "authenticatedUserId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "email": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "role": { "$ref": "#/$defs/DirectorySpaceRole" },
+        "connectedAtMs": { "type": "integer" },
+        "source": { "const": "recorded-sync-session" }
+      }
+    },
+    "AdminConnectionSnapshotV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rows", "observedAtMs", "source", "headSeq"],
+      "properties": {
+        "rows": { "type": "array", "maxItems": 100, "items": { "$ref": "#/$defs/AdminRecordedConnectionV1" } },
+        "nextCursor": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "observedAtMs": { "type": "integer" },
+        "source": { "const": "recorded-sync-sessions" },
+        "headSeq": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "AdminOperationAuditPhaseV1": {
+      "type": "string",
+      "enum": ["accepted", "succeeded", "failed", "cancelled"]
+    },
+    "AdminOperationAuditV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sequence", "operationId", "occurredAtMs", "phase", "intentKind", "targetKind", "targetId", "principalUserId", "principalSessionId", "principalGeneration", "correlationId", "outcomeCode"],
+      "properties": {
+        "sequence": { "type": "integer", "minimum": 1 },
+        "operationId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "occurredAtMs": { "type": "integer" },
+        "phase": { "$ref": "#/$defs/AdminOperationAuditPhaseV1" },
+        "intentKind": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "targetKind": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "targetId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "principalUserId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "principalSessionId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "principalGeneration": { "type": "integer", "minimum": 1 },
+        "correlationId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "eventSeqFirst": { "type": "integer", "minimum": 1 },
+        "eventSeqLast": { "type": "integer", "minimum": 1 },
+        "outcomeCode": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "reasonCode": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "AdminOperationAuditPageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rows", "observedAtMs"],
+      "properties": {
+        "rows": { "type": "array", "maxItems": 100, "items": { "$ref": "#/$defs/AdminOperationAuditV1" } },
+        "nextCursor": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "observedAtMs": { "type": "integer" }
+      }
     },
     "ConnectionView": {
       "type": "object",

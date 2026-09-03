@@ -119,17 +119,17 @@ pub fn read_optional_geometry(input: &Dictionary, key: &str) -> Option<GeometryH
     input.get(key).and_then(|value| value.as_dictionary()).and_then(|dict| dict.get("handle").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).map(|handle| GeometryHandle(handle.to_string())))
 }
 
-pub fn read_xyz_dict(dict: &Dictionary) -> Result<Vec3, EvalError> {
-    Ok([
-        dict.get("x").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap_or(0.0),
-        dict.get("y").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap_or(0.0),
-        dict.get("z").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap_or(0.0),
-    ])
+/// 🚫️ Requires all three axes present and numeric — a missing/malformed `x`/`y`/`z` is a real
+/// caller error, never a silent `0.0` (audit §13.2: silent defaults hide bad input as valid
+/// geometry). `label` names the offending field in the error.
+pub fn read_xyz_dict(dict: &Dictionary, label: &str) -> Result<Vec3, EvalError> {
+    let axis = |name: &str| dict.get(name).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput(format!("{label}.{name}")));
+    Ok([axis("x")?, axis("y")?, axis("z")?])
 }
 
 pub fn read_xyz(input: &Dictionary, key: &str) -> Result<Vec3, EvalError> {
     let dict = input.get(key).and_then(|value| value.as_dictionary()).ok_or_else(|| EvalError::MissingInput(key.into()))?;
-    read_xyz_dict(dict)
+    read_xyz_dict(dict, key)
 }
 
 pub fn read_list(input: &Dictionary, key: &str) -> Result<Dictionary, EvalError> {
@@ -148,7 +148,7 @@ pub fn read_point_list(input: &Dictionary, key: &str) -> Result<Vec<Vec3>, EvalE
         .into_iter()
         .map(|index| {
             let dict = list.get(&index.to_string()).and_then(|value| value.as_dictionary()).ok_or_else(|| EvalError::InvalidInput(format!("{key}[{index}] must be a point")))?;
-            read_xyz_dict(dict)
+            read_xyz_dict(dict, &format!("{key}[{index}]"))
         })
         .collect()
 }
@@ -164,6 +164,17 @@ pub fn read_geometry_list(input: &Dictionary, key: &str) -> Result<Vec<GeometryH
         .collect()
 }
 
+/// 🕳️ Like [`read_geometry_list`] but treats a genuinely ABSENT `key` as an empty list — for
+/// optional list inputs only. A present-but-malformed value (wrong schema, a non-geometry entry)
+/// still propagates its `EvalError` instead of silently becoming empty, unlike a bare
+/// `.unwrap_or_default()` on the strict reader would (audit §13.2).
+pub fn read_geometry_list_or_empty(input: &Dictionary, key: &str) -> Result<Vec<GeometryHandle>, EvalError> {
+    if input.get(key).is_none() {
+        return Ok(Vec::new());
+    }
+    read_geometry_list(input, key)
+}
+
 pub fn read_nested_point_lists(input: &Dictionary, key: &str) -> Result<Vec<Vec<Vec3>>, EvalError> {
     let list = read_list(input, key)?;
     list_indices(&list)
@@ -174,7 +185,7 @@ pub fn read_nested_point_lists(input: &Dictionary, key: &str) -> Result<Vec<Vec<
                 .into_iter()
                 .map(|sub_index| {
                     let dict = sub.get(&sub_index.to_string()).and_then(|value| value.as_dictionary()).ok_or_else(|| EvalError::InvalidInput(format!("{key}[{index}][{sub_index}] must be a point")))?;
-                    read_xyz_dict(dict)
+                    read_xyz_dict(dict, &format!("{key}[{index}][{sub_index}]"))
                 })
                 .collect()
         })

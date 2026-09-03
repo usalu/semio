@@ -2,7 +2,9 @@
 
 use super::adapters::{bounded_message, AUTHORITY_MAX_CODEC_TEXT_BYTES, TRUSTED_CATALOG_MAX_CODECS, TRUSTED_CATALOG_MAX_PACKAGES};
 use super::{AcceptedArtifactOperation, ArtifactPair, ArtifactValidationStage, AuthorityError, AuthorityProgress, AuthorityProgressStage, OperationContext, TrustedArtifactCatalog, TrustedArtifactCodec, TrustedArtifactIdentity};
-use directory::os_directory::hex_lower;
+use directory::os_directory::{
+    hex_lower, DocumentDescriptor, DocumentOpenArtifactV1, DocumentOpenGrantV1, DocumentOpenPackageV1, DocumentOpenRendererTargetV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1,
+};
 use directory::os_store::{self, ArtifactCodec};
 use semio_framework::{from_dsl_value, to_dsl_value, DslValue, PackageDescriptor, PackageRole, Version};
 use semio_framework_hash::{Hasher, Sha256};
@@ -31,6 +33,8 @@ pub const TRUSTED_RELATIVE_PATH_MAX_BYTES: usize = 1024;
 pub const TRUSTED_PACKAGE_MAX_DEPENDENCIES: usize = 256;
 /// 🧯️ Maximum selectable profiles in one bundle.
 pub const TRUSTED_BUNDLE_MAX_PROFILES: usize = 256;
+/// 🧯 Maximum immutable document-open selections retained by one catalog generation.
+pub const TRUSTED_CATALOG_MAX_OPEN_TARGETS: usize = 1024;
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -61,6 +65,34 @@ struct BundleCodec {
     pack_schema_hash: String,
 }
 
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+enum BundleOpenRole {
+    Viewer,
+    Editor,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+enum BundleRendererTarget {
+    React,
+    Wgpu,
+    Wasm,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct BundleOpenTarget {
+    artifact_kind: String,
+    artifact_schema: String,
+    pack_schema_hash: String,
+    surface_id: String,
+    app_id: String,
+    window_kind_id: String,
+    role: BundleOpenRole,
+    renderer_target: BundleRendererTarget,
+}
+
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct BundleFile {
@@ -89,6 +121,7 @@ struct BundlePackage {
     component: BundleComponent,
     descriptor: BundleFile,
     native_codecs: Vec<BundleCodec>,
+    open_targets: Vec<BundleOpenTarget>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -212,6 +245,17 @@ impl TrustedArtifactCodec for VerifiedNativeArtifactCodec {
 pub struct VerifiedTrustedCatalog {
     packages: Box<[VerifiedTrustedPackage]>,
     codecs: Box<[VerifiedNativeArtifactCodec]>,
+    open_targets: Box<[VerifiedDocumentOpenSelectionV1]>,
+    generation_id: String,
+}
+
+/// 🧬 One exact document-open choice retained only after the complete catalog verifies.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct VerifiedDocumentOpenSelectionV1 {
+    pub package: DocumentOpenPackageV1,
+    pub artifact: DocumentOpenArtifactV1,
+    pub surface: DocumentOpenSurfaceV1,
+    pub grant: DocumentOpenGrantV1,
 }
 
 impl VerifiedTrustedCatalog {
@@ -224,6 +268,35 @@ impl VerifiedTrustedCatalog {
     pub fn codec_count(&self) -> usize {
         self.codecs.len()
     }
+
+    /// 🪪 Returns the number of exact catalog-backed open choices in this immutable generation.
+    pub fn open_target_count(&self) -> usize {
+        self.open_targets.len()
+    }
+
+    /// 🧬 Returns the neutral SHA-256 identity of the sorted immutable open-target projection.
+    pub fn generation_id(&self) -> &str {
+        &self.generation_id
+    }
+
+    /// 🎯 Resolves one exact descriptor, subject role, and optional surface preference without fallback.
+    pub fn resolve_document_open(&self, descriptor: &DocumentDescriptor, requested_surface_id: Option<&str>, writable: bool) -> Option<VerifiedDocumentOpenSelectionV1> {
+        let role = if writable { DocumentOpenSurfaceRoleV1::Editor } else { DocumentOpenSurfaceRoleV1::Viewer };
+        let mut matches = self.open_targets.iter().filter(|selection| {
+            selection.package.plugin_id == descriptor.owner.plugin_id
+                && selection.package.package_id == descriptor.owner.package_id
+                && selection.package.version == descriptor.owner.version
+                && selection.package.component_sha256 == descriptor.owner.package_hash
+                && selection.artifact.kind == descriptor.artifact_kind
+                && selection.artifact.schema == descriptor.artifact_schema
+                && selection.artifact.pack_schema_hash == descriptor.pack_schema_hash
+                && selection.surface.role == role
+                && requested_surface_id.is_none_or(|requested| selection.surface.surface_id == requested)
+        });
+        let selected = matches.next()?.clone();
+        matches.next().is_none().then_some(selected)
+    }
+
 }
 
 impl TrustedArtifactCatalog for VerifiedTrustedCatalog {
@@ -261,6 +334,7 @@ impl TrustedCatalogLoader {
         let mut retained_descriptor_bytes = 0u64;
         let mut packages = Vec::with_capacity(order.len());
         let mut codecs = Vec::new();
+        let mut open_targets = Vec::new();
         let mut registration_codecs = Vec::new();
         let mut resolved_paths = BTreeSet::from([bundle_path.clone()]);
         let mut consumed_bindings = BTreeSet::new();
@@ -273,7 +347,10 @@ impl TrustedCatalogLoader {
                 return Err(catalog("trusted file resolves to a path already used by the selected closure"));
             }
             let component_bytes = read_bounded(&component_path, TRUSTED_COMPONENT_MAX_BYTES, context).await?;
-            retained_component_bytes = retained_component_bytes.checked_add(u64::try_from(component_bytes.len()).map_err(catalog_error)?).filter(|bytes| *bytes <= TRUSTED_COMPONENT_CLOSURE_MAX_BYTES).ok_or_else(|| AuthorityError::ResourceLimit("trusted component closure byte"))?;
+            retained_component_bytes = retained_component_bytes
+                .checked_add(u64::try_from(component_bytes.len()).map_err(catalog_error)?)
+                .filter(|bytes| *bytes <= TRUSTED_COMPONENT_CLOSURE_MAX_BYTES)
+                .ok_or_else(|| AuthorityError::ResourceLimit("trusted component closure byte"))?;
             verify_length(record.component.byte_length, component_bytes.len())?;
             let (component_sha256, component_blake3) = dual_hash(&component_bytes, context).await?;
             verify_digest(&record.component.sha256, component_sha256, "component sha256")?;
@@ -285,7 +362,10 @@ impl TrustedCatalogLoader {
                 return Err(catalog("trusted file resolves to a path already used by the selected closure"));
             }
             let descriptor_bytes = read_bounded(&descriptor_path, TRUSTED_DESCRIPTOR_MAX_BYTES, context).await?;
-            retained_descriptor_bytes = retained_descriptor_bytes.checked_add(u64::try_from(descriptor_bytes.len()).map_err(catalog_error)?).filter(|bytes| *bytes <= TRUSTED_DESCRIPTOR_CLOSURE_MAX_BYTES).ok_or_else(|| AuthorityError::ResourceLimit("trusted descriptor closure byte"))?;
+            retained_descriptor_bytes = retained_descriptor_bytes
+                .checked_add(u64::try_from(descriptor_bytes.len()).map_err(catalog_error)?)
+                .filter(|bytes| *bytes <= TRUSTED_DESCRIPTOR_CLOSURE_MAX_BYTES)
+                .ok_or_else(|| AuthorityError::ResourceLimit("trusted descriptor closure byte"))?;
             verify_length(record.descriptor.byte_length, descriptor_bytes.len())?;
             let descriptor_sha256 = sha256(&descriptor_bytes, context).await?;
             verify_digest(&record.descriptor.sha256, descriptor_sha256, "descriptor sha256")?;
@@ -319,8 +399,54 @@ impl TrustedCatalogLoader {
                 registration_codecs.push(binding.codec.clone());
                 codecs.push(VerifiedNativeArtifactCodec { identity, codec: binding.codec.clone() });
             }
-            if binding_map.keys().any(|key| key.plugin_id == record.plugin_id && key.package_id == record.package_id && !record.native_codecs.iter().any(|codec| key.artifact_kind == codec.artifact_kind && key.artifact_schema == codec.artifact_schema)) {
+            if binding_map
+                .keys()
+                .any(|key| key.plugin_id == record.plugin_id && key.package_id == record.package_id && !record.native_codecs.iter().any(|codec| key.artifact_kind == codec.artifact_kind && key.artifact_schema == codec.artifact_schema))
+            {
                 return Err(catalog("selected package has an undeclared native codec binding"));
+            }
+            for target in &record.open_targets {
+                if open_targets.len() >= TRUSTED_CATALOG_MAX_OPEN_TARGETS {
+                    return Err(AuthorityError::ResourceLimit("trusted document-open target count"));
+                }
+                let declared = record.native_codecs.iter().any(|codec| {
+                    codec.artifact_kind == target.artifact_kind && codec.artifact_schema == target.artifact_schema && codec.pack_schema_hash == target.pack_schema_hash
+                });
+                if !declared {
+                    return Err(catalog("document-open target has no exact verified native codec"));
+                }
+                let role = match target.role {
+                    BundleOpenRole::Viewer => DocumentOpenSurfaceRoleV1::Viewer,
+                    BundleOpenRole::Editor => DocumentOpenSurfaceRoleV1::Editor,
+                };
+                let renderer_target = match target.renderer_target {
+                    BundleRendererTarget::React => DocumentOpenRendererTargetV1::React,
+                    BundleRendererTarget::Wgpu => DocumentOpenRendererTargetV1::Wgpu,
+                    BundleRendererTarget::Wasm => DocumentOpenRendererTargetV1::Wasm,
+                };
+                let selection = VerifiedDocumentOpenSelectionV1 {
+                    package: DocumentOpenPackageV1 {
+                        plugin_id: record.plugin_id.clone(),
+                        package_id: record.package_id.clone(),
+                        version: record.version.clone(),
+                        component_sha256: hex_lower(&component_sha256),
+                        component_blake3: hex_lower(&component_blake3),
+                        descriptor_byte_sha256: hex_lower(&descriptor_sha256),
+                    },
+                    artifact: DocumentOpenArtifactV1 { kind: target.artifact_kind.clone(), schema: target.artifact_schema.clone(), pack_schema_hash: target.pack_schema_hash.clone() },
+                    surface: DocumentOpenSurfaceV1 {
+                        surface_id: target.surface_id.clone(),
+                        app_id: target.app_id.clone(),
+                        window_kind_id: target.window_kind_id.clone(),
+                        role,
+                        renderer_target,
+                    },
+                    grant: DocumentOpenGrantV1 { read: true, write: matches!(role, DocumentOpenSurfaceRoleV1::Editor), observe: true },
+                };
+                if open_targets.iter().any(|existing| document_open_target_sort_key(existing) == document_open_target_sort_key(&selection)) {
+                    return Err(catalog("document-open target identity is duplicated"));
+                }
+                open_targets.push(selection);
             }
             report_package_progress(context, position, 3, total_units)?;
             packages.push(VerifiedTrustedPackage {
@@ -340,7 +466,9 @@ impl TrustedCatalogLoader {
         if codecs.is_empty() {
             return Err(catalog("selected profile exposes no executable artifact codec"));
         }
-        let catalog = VerifiedTrustedCatalog { packages: packages.into_boxed_slice(), codecs: codecs.into_boxed_slice() };
+        sort_open_targets(&mut open_targets);
+        let generation_id = document_open_catalog_generation(&open_targets)?;
+        let catalog = VerifiedTrustedCatalog { packages: packages.into_boxed_slice(), codecs: codecs.into_boxed_slice(), open_targets: open_targets.into_boxed_slice(), generation_id };
         context.report(AuthorityProgress { stage: AuthorityProgressStage::CatalogResolved, completed_units: total_units, total_units })?;
         let assembly = os_store::begin_artifact_assembly().map_err(catalog_error)?;
         os_store::preflight_document_codecs_in_assembly(&assembly, &registration_codecs).map_err(catalog_error)?;
@@ -376,14 +504,90 @@ fn valid_identity(value: &str) -> bool {
     !value.is_empty() && value.len() <= TRUSTED_IDENTITY_MAX_BYTES && value.trim() == value
 }
 
+fn valid_open_identity(value: &str) -> bool {
+    valid_identity(value) && !value.chars().any(char::is_control)
+}
+
+fn document_open_target_sort_key(target: &VerifiedDocumentOpenSelectionV1) -> [&str; 15] {
+    let role = match target.surface.role {
+        DocumentOpenSurfaceRoleV1::Viewer => "viewer",
+        DocumentOpenSurfaceRoleV1::Editor => "editor",
+    };
+    let renderer = match target.surface.renderer_target {
+        DocumentOpenRendererTargetV1::React => "react",
+        DocumentOpenRendererTargetV1::Wgpu => "wgpu",
+        DocumentOpenRendererTargetV1::Wasm => "wasm",
+    };
+    [
+        &target.package.plugin_id,
+        &target.package.package_id,
+        &target.package.version,
+        &target.package.component_sha256,
+        &target.package.component_blake3,
+        &target.package.descriptor_byte_sha256,
+        &target.artifact.kind,
+        &target.artifact.schema,
+        &target.artifact.pack_schema_hash,
+        &target.surface.surface_id,
+        &target.surface.app_id,
+        &target.surface.window_kind_id,
+        role,
+        renderer,
+        if target.grant.write { "111" } else { "101" },
+    ]
+}
+
+fn sort_open_targets(targets: &mut [VerifiedDocumentOpenSelectionV1]) {
+    targets.sort_by(|left, right| document_open_target_sort_key(left).cmp(&document_open_target_sort_key(right)));
+}
+
+fn append_document_open_catalog_field(output: &mut Vec<u8>, value: &[u8]) -> Result<(), AuthorityError> {
+    let length = u64::try_from(value.len()).map_err(catalog_error)?;
+    output.extend_from_slice(&length.to_be_bytes());
+    output.extend_from_slice(value);
+    Ok(())
+}
+
+fn document_open_catalog_generation(targets: &[VerifiedDocumentOpenSelectionV1]) -> Result<String, AuthorityError> {
+    let mut encoded = Vec::new();
+    encoded.extend_from_slice(b"semio/hub/openable-document-catalog/v1\0");
+    encoded.extend_from_slice(&u32::try_from(targets.len()).map_err(catalog_error)?.to_be_bytes());
+    for target in targets {
+        let role = match target.surface.role {
+            DocumentOpenSurfaceRoleV1::Viewer => b"viewer".as_slice(),
+            DocumentOpenSurfaceRoleV1::Editor => b"editor".as_slice(),
+        };
+        let renderer = match target.surface.renderer_target {
+            DocumentOpenRendererTargetV1::React => b"react".as_slice(),
+            DocumentOpenRendererTargetV1::Wgpu => b"wgpu".as_slice(),
+            DocumentOpenRendererTargetV1::Wasm => b"wasm".as_slice(),
+        };
+        for value in [
+            target.package.plugin_id.as_bytes(),
+            target.package.package_id.as_bytes(),
+            target.package.version.as_bytes(),
+            decode_digest(&target.package.component_sha256, "open target component sha256")?.as_slice(),
+            decode_digest(&target.package.component_blake3, "open target component blake3")?.as_slice(),
+            decode_digest(&target.package.descriptor_byte_sha256, "open target descriptor sha256")?.as_slice(),
+            target.artifact.kind.as_bytes(),
+            target.artifact.schema.as_bytes(),
+            decode_digest(&target.artifact.pack_schema_hash, "open target pack schema hash")?.as_slice(),
+            target.surface.surface_id.as_bytes(),
+            target.surface.app_id.as_bytes(),
+            target.surface.window_kind_id.as_bytes(),
+            role,
+            renderer,
+            [u8::from(target.grant.read), u8::from(target.grant.write), u8::from(target.grant.observe)].as_slice(),
+        ] {
+            append_document_open_catalog_field(&mut encoded, value)?;
+        }
+    }
+    Ok(hex_lower(&Sha256::digest(&encoded)))
+}
+
 fn valid_package_id(value: &str) -> bool {
     let Some(name) = value.strip_prefix("semio:") else { return false };
-    !name.is_empty()
-        && value.len() <= TRUSTED_IDENTITY_MAX_BYTES
-        && !name.starts_with('-')
-        && !name.ends_with('-')
-        && !name.contains("--")
-        && name.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
+    !name.is_empty() && value.len() <= TRUSTED_IDENTITY_MAX_BYTES && !name.starts_with('-') && !name.ends_with('-') && !name.contains("--") && name.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
 }
 
 fn ensure_count(actual: usize, maximum: usize, resource: &'static str) -> Result<(), AuthorityError> {
@@ -424,6 +628,7 @@ fn validate_bundle(bundle: &Bundle, profile_id: &str) -> Result<Vec<usize>, Auth
         Version::parse(&package.version).map_err(catalog_error)?;
         ensure_count(package.dependencies.len(), TRUSTED_PACKAGE_MAX_DEPENDENCIES, "trusted dependency count")?;
         ensure_count(package.native_codecs.len(), TRUSTED_CATALOG_MAX_CODECS, "trusted codec count")?;
+        ensure_count(package.open_targets.len(), TRUSTED_CATALOG_MAX_OPEN_TARGETS, "trusted document-open target count")?;
         validate_file(&BundleFile { path: package.component.path.clone(), byte_length: package.component.byte_length, sha256: package.component.sha256.clone() }, TRUSTED_COMPONENT_MAX_BYTES)?;
         decode_digest(&package.component.blake3, "component blake3")?;
         validate_file(&package.descriptor, TRUSTED_DESCRIPTOR_MAX_BYTES)?;
@@ -442,6 +647,20 @@ fn validate_bundle(bundle: &Bundle, profile_id: &str) -> Result<Vec<usize>, Auth
         for codec in &package.native_codecs {
             if !valid_identity(&codec.artifact_kind) || !valid_identity(&codec.artifact_schema) || decode_digest(&codec.pack_schema_hash, "pack schema hash")? == [0; 32] || !codec_kinds.insert(codec.artifact_kind.as_str()) {
                 return Err(catalog("trusted native codec identity is empty, zero, or duplicated"));
+            }
+        }
+        let mut open_target_keys = BTreeSet::new();
+        for target in &package.open_targets {
+            if !valid_open_identity(&target.artifact_kind)
+                || !valid_open_identity(&target.artifact_schema)
+                || !valid_open_identity(&target.surface_id)
+                || !valid_open_identity(&target.app_id)
+                || !valid_open_identity(&target.window_kind_id)
+                || decode_digest(&target.pack_schema_hash, "open target pack schema hash")? == [0; 32]
+                || !package.native_codecs.iter().any(|codec| codec.artifact_kind == target.artifact_kind && codec.artifact_schema == target.artifact_schema && codec.pack_schema_hash == target.pack_schema_hash)
+                || !open_target_keys.insert((target.artifact_kind.as_str(), target.artifact_schema.as_str(), target.surface_id.as_str(), target.role as u8))
+            {
+                return Err(catalog("trusted document-open target is invalid, unbound, or duplicated"));
             }
         }
     }
@@ -836,6 +1055,9 @@ mod tests {
         let mut fixture = fixture_json();
         let mut bundle = fixture["bundle"].take();
         bundle["packages"][0]["nativeCodecs"][0]["artifactSchema"] = schema.clone().into();
+        for target in bundle["packages"][0]["openTargets"].as_array_mut().expect("open targets") {
+            target["artifactSchema"] = schema.clone().into();
+        }
         let component = [b'a', b'b', b'c'];
         for index in 0..2 {
             let component_path = root.join(bundle["packages"][index]["component"]["path"].as_str().expect("component path"));
@@ -872,15 +1094,7 @@ mod tests {
     }
 
     fn fixture_codec(schema: &str, pack_schema_hash: [u8; 32]) -> ArtifactCodec {
-        ArtifactCodec {
-            schema: schema.to_string(),
-            extension: "fixture",
-            pack_schema_hash,
-            compile_dsl: fixture_compile,
-            print_mirror: fixture_print,
-            edit_text_from_envelope: fixture_edit,
-            apply_ops_binary: fixture_apply,
-        }
+        ArtifactCodec { schema: schema.to_string(), extension: "fixture", pack_schema_hash, compile_dsl: fixture_compile, print_mirror: fixture_print, edit_text_from_envelope: fixture_edit, apply_ops_binary: fixture_apply }
     }
 
     async fn expect_load_error(fixture: &FixtureDirectory, bindings: &[NativeCodecBinding], control: &TestControl) -> AuthorityError {
@@ -932,11 +1146,70 @@ mod tests {
         assert_eq!(editor.descriptor().manifest.version, editor.version());
         assert_eq!(Sha256::digest(editor.descriptor_bytes()), *editor.descriptor_sha256());
         assert_eq!(catalog.codec_count(), 1);
+        assert_eq!(catalog.open_target_count(), 2);
+        assert_eq!(catalog.generation_id().len(), 64);
+        let descriptor = DocumentDescriptor {
+            space_id: "space".into(),
+            document_id: "document".into(),
+            artifact_kind: "fixture.document".into(),
+            artifact_schema: fixture.schema.clone(),
+            owner: directory::os_directory::DocumentOwner {
+                plugin_id: "fixture.editor".into(),
+                package_id: "semio:fixture-editor".into(),
+                version: "1.2.3".into(),
+                package_hash: fixture_json()["componentSha256"].as_str().expect("component sha256").into(),
+            },
+            pack_schema_hash: "11".repeat(32),
+            bootstrap_version: 1,
+            bootstrap_frontier: directory::os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 },
+            bootstrap_snapshot_hash: "33".repeat(32),
+        };
+        let editor = catalog.resolve_document_open(&descriptor, Some("fixture.document@1/*#editor"), true).expect("exact editor target");
+        assert_eq!(editor.surface.role, DocumentOpenSurfaceRoleV1::Editor);
+        assert!(editor.grant.write);
+        let viewer = catalog.resolve_document_open(&descriptor, Some("fixture.document@1/*#viewer"), false).expect("exact viewer target");
+        assert_eq!(viewer.surface.role, DocumentOpenSurfaceRoleV1::Viewer);
+        assert!(!viewer.grant.write);
+        assert!(catalog.resolve_document_open(&descriptor, Some("fixture.document@1/*#viewer"), true).is_none());
+        assert!(catalog.resolve_document_open(&descriptor, None, true).is_some());
         assert!(document_codec(&fixture.schema).await.expect("codec registry").is_some());
         let progress = control.progress.lock().expect("progress lock");
         assert_eq!(progress.first().map(|entry| entry.stage), Some(AuthorityProgressStage::Preflight));
         assert_eq!(progress.last().map(|entry| entry.stage), Some(AuthorityProgressStage::CatalogResolved));
         assert!(progress.iter().all(|entry| entry.completed_units <= entry.total_units));
+    }
+
+    #[tokio::test]
+    async fn verified_trusted_catalog_document_open_generation_and_resolution_are_exact() {
+        let fixture = prepared_fixture();
+        let catalog = TrustedCatalogLoader::load(&fixture.bundle_path, "fixture", &[fixture.binding()], &TestControl::new().context()).await.expect("verified catalog");
+        let descriptor = DocumentDescriptor {
+            space_id: "space".into(),
+            document_id: "document".into(),
+            artifact_kind: "fixture.document".into(),
+            artifact_schema: fixture.schema.clone(),
+            owner: directory::os_directory::DocumentOwner {
+                plugin_id: "fixture.editor".into(),
+                package_id: "semio:fixture-editor".into(),
+                version: "1.2.3".into(),
+                package_hash: fixture_json()["componentSha256"].as_str().expect("component sha256").into(),
+            },
+            pack_schema_hash: "11".repeat(32),
+            bootstrap_version: 1,
+            bootstrap_frontier: directory::os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 },
+            bootstrap_snapshot_hash: "33".repeat(32),
+        };
+        assert_eq!(catalog.open_target_count(), 2);
+        assert_eq!(catalog.generation_id().len(), 64);
+        assert!(catalog.generation_id().bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f')));
+        let editor = catalog.resolve_document_open(&descriptor, Some("fixture.document@1/*#editor"), true).expect("editor");
+        assert_eq!(editor.surface.role, DocumentOpenSurfaceRoleV1::Editor);
+        assert_eq!(editor.grant, DocumentOpenGrantV1 { read: true, write: true, observe: true });
+        let viewer = catalog.resolve_document_open(&descriptor, Some("fixture.document@1/*#viewer"), false).expect("viewer");
+        assert_eq!(viewer.surface.role, DocumentOpenSurfaceRoleV1::Viewer);
+        assert_eq!(viewer.grant, DocumentOpenGrantV1 { read: true, write: false, observe: true });
+        assert!(catalog.resolve_document_open(&descriptor, Some("fixture.document@1/*#viewer"), true).is_none());
+        assert!(catalog.resolve_document_open(&descriptor, Some("foreign"), false).is_none());
     }
 
     #[test]
@@ -947,15 +1220,8 @@ mod tests {
         let canonical = descriptor_bytes("fixture.editor", "semio:fixture-editor", "1.2.3", component_sha256, Some("fixture.document@1"), Some(("fixture.base", "1.0.0")));
         decode_package_descriptor(&canonical).unwrap_or_else(|error| panic!("canonical descriptor must decode: {error}"));
 
-        let conflicting = decode_package_descriptor(&descriptor_bytes(
-            "fixture.editor",
-            "semio:other-package",
-            "1.2.3",
-            component_sha256,
-            Some("fixture.document@1"),
-            Some(("fixture.base", "1.0.0")),
-        ))
-        .expect("structurally valid conflicting descriptor");
+        let conflicting =
+            decode_package_descriptor(&descriptor_bytes("fixture.editor", "semio:other-package", "1.2.3", component_sha256, Some("fixture.document@1"), Some(("fixture.base", "1.0.0")))).expect("structurally valid conflicting descriptor");
         assert!(validate_descriptor(&bundle.packages[0], &conflicting, &bundle.packages).expect_err("package mismatch").to_string().contains("identity"));
 
         let mut unknown = os_store::pack_rt::decode_wire_value(&canonical).expect("canonical value");
@@ -1009,6 +1275,13 @@ mod tests {
         let error = expect_load_error(&zero, &[zero.binding()], &control).await;
         assert!(error.to_string().contains("zero"));
         assert!(document_codec(&zero.schema).await.expect("codec registry").is_none());
+
+        let mut detached_open_target = prepared_fixture();
+        detached_open_target.bundle["packages"][0]["openTargets"][0]["packSchemaHash"] = "12".repeat(32).into();
+        detached_open_target.persist_bundle();
+        let error = expect_load_error(&detached_open_target, &[detached_open_target.binding()], &control).await;
+        assert!(error.to_string().contains("open target"));
+        assert!(document_codec(&detached_open_target.schema).await.expect("codec registry").is_none());
 
         let mismatch = prepared_fixture();
         let binding = NativeCodecBinding::new("fixture.editor", "semio:fixture-editor", "fixture.document", fixture_codec(&mismatch.schema, [0x12; 32]));

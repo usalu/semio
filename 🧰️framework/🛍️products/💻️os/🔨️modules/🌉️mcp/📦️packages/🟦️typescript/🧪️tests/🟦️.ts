@@ -2,7 +2,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../../📦️packages/🟦️typescript");
 
 /** @emoji 🧪️ Vitest for `@semio-tech/framework-os-mcp` — in-source tests (`import.meta.vitest`) on
  * the pure surface in `../../🟦️.ts`, plus three real-process integration suites that spawn
@@ -14,7 +14,7 @@ export default defineConfig({
   root,
   resolve: {
     alias: {
-      "@semio-tech/framework-os-mcp": resolve(root, "🟦️.ts"),
+      "@semio-tech/framework-os-mcp": resolve(root, "../../../📦️packages/🟦️typescript/🧪️🧪️🏔️🦋️tests/🟦️.ts"),
     },
   },
   test: {

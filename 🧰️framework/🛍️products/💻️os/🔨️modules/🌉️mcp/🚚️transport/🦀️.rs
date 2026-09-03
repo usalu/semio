@@ -33,6 +33,7 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex, Weak};
 
 use semio_framework_async::{Job, Lane, ProcessKind, WorkerPool, WorkerPoolConfig, WorkerSubmitErrorKind};
+use semio_framework_os_kernel::os_directory::client::LocalHubCredential;
 
 //#region 🔖️McpTransport
 /// 🔌️ Drives one [`McpServer`] to completion over the synchronous stdio channel. The retained HTTP
@@ -122,22 +123,50 @@ impl<R: BufRead, W: Write, L: Write> McpTransport for StdioTransport<R, W, L> {
 /// transport-local because it is an HTTP-framing concern the stdio-only `protocol.rs` never needs.
 pub const HEADER_MISMATCH: i64 = -32020;
 
-/// ⚙️ `HttpTransport` construction options — bind address (default `127.0.0.1:6300`, never
-/// `0.0.0.0`), the required `/mcp` bearer token, the SEPARATE `/bridge` query-string token (P1c —
-/// freshly minted per process start, distinct secret from the MCP bearer, see
-/// `📓️sol-P1c-packet.md`'s design), and an explicit `Origin` allowlist beyond the always-allowed
-/// loopback/`null` set (shared by both endpoints).
+#[derive(Clone)]
+pub(crate) enum HttpAdmission {
+    Credential(Arc<LocalHubCredential>),
+    #[cfg(test)]
+    Fixture(Arc<[u8]>),
+}
+
+impl std::fmt::Debug for HttpAdmission {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str("<protected-http-admission>")
+    }
+}
+
+impl HttpAdmission {
+    pub(crate) fn authorizes_capability(&self, candidate: &str) -> bool {
+        match self {
+            Self::Credential(credential) => credential.authorizes_capability(candidate),
+            #[cfg(test)]
+            Self::Fixture(expected) => constant_time_eq(candidate.as_bytes(), expected),
+        }
+    }
+
+    fn authorizes_bearer_header(&self, header: &str) -> bool {
+        header.strip_prefix("Bearer ").is_some_and(|candidate| self.authorizes_capability(candidate))
+    }
+}
+
+/// ⚙️ HTTP and bridge admission share the protected process-entry credential without copying it
+/// into an argv-, URL-, file-, or transport-owned string.
 #[derive(Debug, Clone)]
 pub struct HttpTransportOptions {
     pub bind_addr: SocketAddr,
-    pub bearer_token: String,
-    pub bridge_token: String,
     pub allowed_origins: Vec<String>,
+    admission: HttpAdmission,
 }
 
 impl HttpTransportOptions {
-    pub fn new(bearer_token: impl Into<String>, bridge_token: impl Into<String>) -> Self {
-        Self { bind_addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 6300), bearer_token: bearer_token.into(), bridge_token: bridge_token.into(), allowed_origins: Vec::new() }
+    pub fn new(credential: Arc<LocalHubCredential>) -> Self {
+        Self { bind_addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 6300), allowed_origins: Vec::new(), admission: HttpAdmission::Credential(credential) }
+    }
+
+    #[cfg(test)]
+    fn fixture(capability: &str) -> Self {
+        Self { bind_addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 6300), allowed_origins: Vec::new(), admission: HttpAdmission::Fixture(Arc::from(capability.as_bytes())) }
     }
 
     pub fn bind_addr(mut self, addr: SocketAddr) -> Self {
@@ -195,7 +224,7 @@ impl HttpEventPublisher {
 #[derive(Clone)]
 struct HttpState {
     server: Arc<Mutex<McpServer>>,
-    bearer_token: Arc<str>,
+    admission: HttpAdmission,
     allowed_origins: Arc<Vec<String>>,
     events: Arc<Mutex<EventLog>>,
 }
@@ -237,9 +266,9 @@ impl HttpTransport {
     #[cfg(test)]
     pub(crate) fn router(&self, server: McpServer) -> (Router, HttpEventPublisher, crate::bridge::BridgeHandle) {
         let events = Arc::new(Mutex::new(EventLog::default()));
-        let state = HttpState { server: Arc::new(Mutex::new(server)), bearer_token: Arc::from(self.options.bearer_token.as_str()), allowed_origins: Arc::new(self.options.allowed_origins.clone()), events: events.clone() };
+        let state = HttpState { server: Arc::new(Mutex::new(server)), admission: self.options.admission.clone(), allowed_origins: Arc::new(self.options.allowed_origins.clone()), events: events.clone() };
         let mcp_router = Router::new().route("/mcp", post(handle_post).get(handle_get)).with_state(state);
-        let (bridge_router, bridge_handle) = crate::bridge::server::bridge_router(self.options.bridge_token.clone(), self.options.allowed_origins.clone());
+        let (bridge_router, bridge_handle) = crate::bridge::server::bridge_router(self.options.admission.clone(), self.options.allowed_origins.clone());
         let router = mcp_router.merge(bridge_router);
         (router, HttpEventPublisher { events }, bridge_handle)
     }
@@ -640,7 +669,6 @@ struct HttpTransportState {
     request_credits: FixedByteCredits,
     response_credits: FixedByteCredits,
     http: HttpState,
-    bridge_token: Arc<str>,
     bridge: crate::bridge::BridgeHandle,
 }
 
@@ -658,8 +686,7 @@ impl HttpTransportState {
             io_cursor: 0,
             request_credits: FixedByteCredits::new(HTTP_CONNECTION_CAPACITY * HTTP_REQUEST_BYTES),
             response_credits: FixedByteCredits::new(HTTP_CONNECTION_CAPACITY * HTTP_RESPONSE_BYTES),
-            http: HttpState { server: Arc::new(Mutex::new(server)), bearer_token: Arc::from(options.bearer_token.as_str()), allowed_origins: Arc::new(options.allowed_origins.clone()), events },
-            bridge_token: Arc::from(options.bridge_token.as_str()),
+            http: HttpState { server: Arc::new(Mutex::new(server)), admission: options.admission.clone(), allowed_origins: Arc::new(options.allowed_origins.clone()), events },
             bridge,
         }
     }
@@ -933,7 +960,7 @@ impl HttpTransportState {
         if request_end > connection.ingress.len() {
             return ConnectionTurn::Keep(HttpConnectionPhase::ReadHttp);
         }
-        let response = match dispatch_owned_http(&self.http, &self.bridge_token, &connection.parser, &connection.ingress[..request_end]) {
+        let response = match dispatch_owned_http(&self.http, &connection.parser, &connection.ingress[..request_end]) {
             Ok(response) => response,
             Err(reason) => return ConnectionTurn::Terminal(reason),
         };
@@ -1351,10 +1378,8 @@ fn owned_header_matches(head: &ParsedHttpHead, name: &str, expected: &str) -> bo
     head.header(name).is_some_and(|value| value.split(',').any(|part| part.trim().eq_ignore_ascii_case(expected)))
 }
 
-fn owned_bearer_matches(head: &ParsedHttpHead, expected: &str) -> bool {
-    let Some(value) = head.header("authorization") else { return false };
-    let Some(token) = value.strip_prefix("Bearer ") else { return false };
-    constant_time_eq(token.as_bytes(), expected.as_bytes())
+fn owned_bearer_matches(head: &ParsedHttpHead, admission: &HttpAdmission) -> bool {
+    head.header("authorization").is_some_and(|value| admission.authorizes_bearer_header(value))
 }
 
 fn serialize_json_capped<T: serde::Serialize>(value: &T, cap: usize) -> Result<Vec<u8>, HttpTerminalReason> {
@@ -1389,7 +1414,7 @@ fn owned_json_rpc_error(status: u16, reason: &str, id: JsonRpcId, code: i64, mes
     build_http_response(status, reason, Some("application/json"), body, &[], false)
 }
 
-fn dispatch_owned_http(state: &HttpState, bridge_token: &str, head: &ParsedHttpHead, request: &[u8]) -> Result<OwnedHttpResponse, HttpTerminalReason> {
+fn dispatch_owned_http(state: &HttpState, head: &ParsedHttpHead, request: &[u8]) -> Result<OwnedHttpResponse, HttpTerminalReason> {
     let method = head.method.as_deref().ok_or(HttpTerminalReason::Malformed)?;
     let path = head.path.as_deref().ok_or(HttpTerminalReason::Malformed)?;
     let origin = head.header("origin");
@@ -1397,12 +1422,12 @@ fn dispatch_owned_http(state: &HttpState, bridge_token: &str, head: &ParsedHttpH
         return build_http_response(403, "Forbidden", Some("text/plain"), b"origin not allowed".to_vec(), &[], false);
     }
     if path.starts_with("/bridge") {
-        return dispatch_owned_bridge_handshake(bridge_token, head);
+        return dispatch_owned_bridge_handshake(&state.admission, head);
     }
     if path != "/mcp" {
         return build_http_response(404, "Not Found", Some("text/plain"), b"not found".to_vec(), &[], false);
     }
-    if !owned_bearer_matches(head, &state.bearer_token) {
+    if !owned_bearer_matches(head, &state.admission) {
         return build_http_response(401, "Unauthorized", Some("text/plain"), b"missing or invalid bearer token".to_vec(), &[], false);
     }
     match method {
@@ -1459,14 +1484,16 @@ fn dispatch_owned_get(state: &HttpState, head: &ParsedHttpHead) -> Result<OwnedH
     build_http_response(200, "OK", Some("text/event-stream"), body.bytes, &[("Cache-Control", "no-cache")], false)
 }
 
-fn dispatch_owned_bridge_handshake(bridge_token: &str, head: &ParsedHttpHead) -> Result<OwnedHttpResponse, HttpTerminalReason> {
+fn dispatch_owned_bridge_handshake(admission: &HttpAdmission, head: &ParsedHttpHead) -> Result<OwnedHttpResponse, HttpTerminalReason> {
     if head.method.as_deref() != Some("GET") {
         return build_http_response(405, "Method Not Allowed", Some("text/plain"), b"method not allowed".to_vec(), &[], false);
     }
-    let path = head.path.as_deref().ok_or(HttpTerminalReason::Malformed)?;
-    let provided = path.split_once('?').and_then(|(_, query)| query.split('&').find_map(|part| part.strip_prefix("token="))).unwrap_or_default();
-    if !constant_time_eq(provided.as_bytes(), bridge_token.as_bytes()) {
-        return build_http_response(401, "Unauthorized", Some("text/plain"), b"invalid bridge token".to_vec(), &[], false);
+    if head.path.as_deref() != Some("/bridge") || head.header_occurrences("sec-websocket-protocol") != 1 {
+        return build_http_response(401, "Unauthorized", Some("text/plain"), b"invalid bridge admission".to_vec(), &[], false);
+    }
+    let protocols = head.header("sec-websocket-protocol").map(|value| value.split(',').map(str::trim).collect::<Vec<_>>()).unwrap_or_default();
+    if protocols.len() != 2 || protocols[0] != "semio.mcp.bridge.v1" || !admission.authorizes_capability(protocols[1]) {
+        return build_http_response(401, "Unauthorized", Some("text/plain"), b"invalid bridge admission".to_vec(), &[], false);
     }
     if !owned_header_matches(head, "upgrade", "websocket") || !owned_header_matches(head, "connection", "upgrade") || head.header("sec-websocket-version") != Some("13") {
         return build_http_response(426, "Upgrade Required", Some("text/plain"), b"websocket version 13 required".to_vec(), &[("Sec-WebSocket-Version", "13")], false);
@@ -1477,7 +1504,7 @@ fn dispatch_owned_bridge_handshake(bridge_token: &str, head: &ParsedHttpHead) ->
     let key = head.header("sec-websocket-key").ok_or(HttpTerminalReason::Malformed)?;
     websocket_key_nonce(key).ok_or(HttpTerminalReason::Malformed)?;
     let accept = websocket_accept(key);
-    build_http_response(101, "Switching Protocols", None, Vec::new(), &[("Upgrade", "websocket"), ("Sec-WebSocket-Accept", &accept)], true)
+    build_http_response(101, "Switching Protocols", None, Vec::new(), &[("Upgrade", "websocket"), ("Sec-WebSocket-Accept", &accept), ("Sec-WebSocket-Protocol", "semio.mcp.bridge.v1")], true)
 }
 
 fn websocket_accept(key: &str) -> String {
@@ -1710,8 +1737,8 @@ pub(crate) fn origin_allowed(origin: Option<&str>, allowed_origins: &[String]) -
     }
 }
 
-/// 🔓️ Also used by `🧵️bridge`'s `?token=` comparison (`pub(crate)`) — one constant-time comparison
-/// helper, not duplicated.
+/// 🔓️ Also used by `🧵️bridge`'s protected subprotocol comparison (`pub(crate)`) — one
+/// constant-time comparison helper, not duplicated.
 pub(crate) fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
     if a.len() != b.len() {
         return false;
@@ -1724,10 +1751,9 @@ pub(crate) fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
 }
 
 #[cfg(test)]
-fn bearer_matches(headers: &HeaderMap, expected: &str) -> bool {
+fn bearer_matches(headers: &HeaderMap, admission: &HttpAdmission) -> bool {
     let Some(value) = headers.get(axum::http::header::AUTHORIZATION).and_then(|value| value.to_str().ok()) else { return false };
-    let Some(token) = value.strip_prefix("Bearer ") else { return false };
-    constant_time_eq(token.as_bytes(), expected.as_bytes())
+    admission.authorizes_bearer_header(value)
 }
 
 #[cfg(test)]
@@ -1742,7 +1768,7 @@ fn reject_by_origin(headers: &HeaderMap, state: &HttpState) -> Option<Response> 
 
 #[cfg(test)]
 fn reject_by_bearer(headers: &HeaderMap, state: &HttpState) -> Option<Response> {
-    if bearer_matches(headers, &state.bearer_token) {
+    if bearer_matches(headers, &state.admission) {
         None
     } else {
         Some((StatusCode::UNAUTHORIZED, "missing or invalid bearer token").into_response())
@@ -1983,7 +2009,8 @@ mod quick {
             assert!(websocket_key_nonce(invalid).is_none(), "invalid key accepted: {invalid}");
         }
         let head = owned_bridge_head(&["dGhlIHNhbXBsZSBub25jZQ==", "dGhlIHNhbXBsZSBub25jZQ=="]);
-        assert!(matches!(dispatch_owned_bridge_handshake("bridge-token", &head), Err(HttpTerminalReason::Malformed)));
+        let admission = HttpAdmission::Fixture(Arc::from(b"bridge-token".as_slice()));
+        assert!(matches!(dispatch_owned_bridge_handshake(&admission, &head), Err(HttpTerminalReason::Malformed)));
     }
 
     #[test]
@@ -2205,7 +2232,7 @@ mod quick {
         let (stream, remote) = listener.accept().unwrap();
         stream.set_nonblocking(true).unwrap();
         listener.set_nonblocking(true).unwrap();
-        let options = HttpTransportOptions::new("test-token", "bridge-token").bind_addr(address);
+        let options = HttpTransportOptions::fixture("test-token").bind_addr(address);
         let events = Arc::new(Mutex::new(EventLog::default()));
         let bridge = crate::bridge::BridgeHandle::new();
         let mut state = HttpTransportState::new(listener, fresh_server(), &options, events, bridge);
@@ -2251,8 +2278,8 @@ mod quick {
     fn owned_bridge_head(keys: &[&str]) -> ParsedHttpHead {
         let mut head = ParsedHttpHead::new();
         head.method = Some("GET".into());
-        head.path = Some("/bridge?token=bridge-token".into());
-        for (name, value) in [("upgrade", "websocket"), ("connection", "Upgrade"), ("sec-websocket-version", "13")].into_iter().chain(keys.iter().copied().map(|value| ("sec-websocket-key", value))) {
+        head.path = Some("/bridge".into());
+        for (name, value) in [("upgrade", "websocket"), ("connection", "Upgrade"), ("sec-websocket-version", "13"), ("sec-websocket-protocol", "semio.mcp.bridge.v1, bridge-token")].into_iter().chain(keys.iter().copied().map(|value| ("sec-websocket-key", value))) {
             head.headers[head.header_count] = Some(OwnedHeader { name: name.into(), value: value.into() });
             head.header_count += 1;
         }
@@ -2305,13 +2332,13 @@ mod long {
     }
 
     fn transport() -> HttpTransport {
-        HttpTransport::new(HttpTransportOptions::new("test-token", "bridge-token"))
+        HttpTransport::new(HttpTransportOptions::fixture("test-token"))
     }
 
     fn test_driver(server: McpServer) -> (HttpTestDriver, HttpEventPublisher) {
         let transport = transport();
         let events = Arc::new(Mutex::new(EventLog::default()));
-        let state = HttpState { server: Arc::new(Mutex::new(server)), bearer_token: Arc::from(transport.options.bearer_token.as_str()), allowed_origins: Arc::new(transport.options.allowed_origins.clone()), events: events.clone() };
+        let state = HttpState { server: Arc::new(Mutex::new(server)), admission: transport.options.admission.clone(), allowed_origins: Arc::new(transport.options.allowed_origins.clone()), events: events.clone() };
         (HttpTestDriver { state }, HttpEventPublisher { events })
     }
 
@@ -2351,7 +2378,7 @@ mod long {
         let body = serde_json::to_vec(&serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "ping" })).unwrap();
         let (owned_state, _) = test_driver(fresh_server());
         let head = owned_head("POST", "/mcp", &[("authorization", "Bearer test-token")], body.len());
-        let owned = dispatch_owned_http(&owned_state.state, "bridge-token", &head, &body).unwrap();
+        let owned = dispatch_owned_http(&owned_state.state, &head, &body).unwrap();
         assert!(owned.bytes.starts_with(b"HTTP/1.1 200 OK\r\n"));
 
         let (axum_driver, _) = test_driver(fresh_server());
@@ -2365,11 +2392,13 @@ mod long {
 
     #[test]
     fn owned_bridge_handshake_matches_current_rfc_message_close_and_error_contracts() {
-        let head = owned_head("GET", "/bridge?token=bridge-token", &[("connection", "Upgrade"), ("upgrade", "websocket"), ("sec-websocket-version", "13"), ("sec-websocket-key", "dGhlIHNhbXBsZSBub25jZQ==")], 0);
-        let response = dispatch_owned_bridge_handshake("bridge-token", &head).unwrap();
+        let head = owned_head("GET", "/bridge", &[("connection", "Upgrade"), ("upgrade", "websocket"), ("sec-websocket-version", "13"), ("sec-websocket-key", "dGhlIHNhbXBsZSBub25jZQ=="), ("sec-websocket-protocol", "semio.mcp.bridge.v1, test-token")], 0);
+        let admission = HttpAdmission::Fixture(Arc::from(b"test-token".as_slice()));
+        let response = dispatch_owned_bridge_handshake(&admission, &head).unwrap();
         let text = String::from_utf8(response.bytes).unwrap();
         assert!(text.starts_with("HTTP/1.1 101 Switching Protocols\r\n"));
         assert!(text.contains("Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo="));
+        assert!(text.contains("Sec-WebSocket-Protocol: semio.mcp.bridge.v1"));
 
         let hello = super::quick::masked_client_frame(
             0x2,
@@ -2577,7 +2606,7 @@ mod long {
         use tokio_tungstenite::tungstenite::client::IntoClientRequest;
         use tokio_tungstenite::tungstenite::Message as TungsteniteMessage;
 
-        let transport = HttpTransport::new(HttpTransportOptions::new("mcp-bearer", "bridge-secret"));
+        let transport = HttpTransport::new(HttpTransportOptions::fixture("mcp-bearer"));
         let (router, _events, bridge_handle) = transport.router(fresh_server());
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
@@ -2592,7 +2621,10 @@ mod long {
         assert_eq!(mcp_client, 200);
 
         // Hello -> Welcome.
-        let (mut socket, _response) = tokio_tungstenite::connect_async(format!("ws://{addr}/bridge?token=bridge-secret")).await.expect("client connects with the correct bridge token");
+        let mut bridge_request = format!("ws://{addr}/bridge").into_client_request().unwrap();
+        bridge_request.headers_mut().insert("sec-websocket-protocol", "semio.mcp.bridge.v1, mcp-bearer".parse().unwrap());
+        let (mut socket, response) = tokio_tungstenite::connect_async(bridge_request).await.expect("client connects with protected bridge admission");
+        assert_eq!(response.headers().get("sec-websocket-protocol").and_then(|value| value.to_str().ok()), Some("semio.mcp.bridge.v1"));
         let hello = ShellToGateway::Hello { bridge_version: BRIDGE_VERSION, shell_kind: ShellKind::React, shell_session_id: "shell-live".into(), principal_actor: "agent:local".into(), flags: BridgeFlags::NONE };
         socket.send(TungsteniteMessage::Binary(hello.encode().into())).await.unwrap();
         let welcome_bytes = match socket.next().await.unwrap().unwrap() {
@@ -2625,11 +2657,14 @@ mod long {
         drop(socket);
 
         // Wrong token is rejected before the upgrade completes.
-        let wrong_token = tokio_tungstenite::connect_async(format!("ws://{addr}/bridge?token=nope")).await;
+        let mut wrong_request = format!("ws://{addr}/bridge").into_client_request().unwrap();
+        wrong_request.headers_mut().insert("sec-websocket-protocol", "semio.mcp.bridge.v1, nope".parse().unwrap());
+        let wrong_token = tokio_tungstenite::connect_async(wrong_request).await;
         assert!(wrong_token.is_err(), "a mismatched bridge token must never complete the websocket handshake");
 
         // Bad Origin is rejected before the upgrade completes.
-        let mut bad_origin_request = format!("ws://{addr}/bridge?token=bridge-secret").into_client_request().unwrap();
+        let mut bad_origin_request = format!("ws://{addr}/bridge").into_client_request().unwrap();
+        bad_origin_request.headers_mut().insert("sec-websocket-protocol", "semio.mcp.bridge.v1, mcp-bearer".parse().unwrap());
         bad_origin_request.headers_mut().insert("origin", "https://evil.example".parse().unwrap());
         let bad_origin = tokio_tungstenite::connect_async(bad_origin_request).await;
         assert!(bad_origin.is_err(), "a non-loopback Origin must never complete the websocket handshake");

@@ -1746,18 +1746,30 @@ mod native_pool {
         }
 
         /// ⏰️ Enqueues one finite job when the pool's monotonic clock reaches `deadline_ms`.
-        /// Waiting consumes no worker, lane permit, or admission slot.
+        /// Waiting consumes no worker, lane permit, or admission slot. Transient lane contention
+        /// retains the exact closure behind one timer-wheel callback until admission succeeds.
         pub fn submit_at(&self, deadline_ms: u64, lane: Lane, job: Job) {
             let pool = self.clone();
             self.inner.wheel.schedule_callback(
                 deadline_ms,
                 Box::new(move || {
-                    if !pool.is_shutdown() {
-                        pool.submit(lane, job);
-                    }
+                    Self::submit_retained_timer_job(pool, lane, job);
                 }),
             );
             self.inner.notify_idle();
+        }
+
+        fn submit_retained_timer_job(pool: WorkerPool, lane: Lane, job: Job) {
+            let Err(error) = pool.try_submit(lane, job) else { return };
+            let kind = error.kind();
+            let job = error.into_job();
+            match kind {
+                WorkerSubmitErrorKind::Contended | WorkerSubmitErrorKind::Saturated => {
+                    let retry = pool.clone();
+                    pool.callback_at(pool.now_ms().saturating_add(1), move || Self::submit_retained_timer_job(retry, lane, job));
+                }
+                WorkerSubmitErrorKind::Shutdown | WorkerSubmitErrorKind::Poisoned => drop(job),
+            }
         }
 
         /// 🔔️ Registers one bounded owner callback directly with the pool timer wheel. Unlike
@@ -1954,17 +1966,29 @@ mod wasm_pool {
         }
 
         /// ⏰️ Enqueues one finite job after a host-driven pump reaches `deadline_ms`.
-        /// Waiting consumes no logical worker or permit.
+        /// Waiting consumes no logical worker or permit. Transient cooperative contention retains
+        /// the exact closure behind one timer-wheel callback until admission succeeds.
         pub fn submit_at(&self, deadline_ms: u64, lane: Lane, job: Job) {
             let pool = self.clone();
             self.inner.wheel.schedule_callback(
                 deadline_ms,
                 Box::new(move || {
-                    if !pool.is_shutdown() {
-                        pool.submit(lane, job);
-                    }
+                    Self::submit_retained_timer_job(pool, lane, job);
                 }),
             );
+        }
+
+        fn submit_retained_timer_job(pool: WorkerPool, lane: Lane, job: Job) {
+            let Err(error) = pool.try_submit(lane, job) else { return };
+            let kind = error.kind();
+            let job = error.into_job();
+            match kind {
+                WorkerSubmitErrorKind::Contended | WorkerSubmitErrorKind::Saturated => {
+                    let retry = pool.clone();
+                    pool.callback_at(pool.now_ms().saturating_add(1), move || Self::submit_retained_timer_job(retry, lane, job));
+                }
+                WorkerSubmitErrorKind::Shutdown | WorkerSubmitErrorKind::Poisoned => drop(job),
+            }
         }
 
         /// 🔔️ Cooperative counterpart of native [`WorkerPool::callback_at`].

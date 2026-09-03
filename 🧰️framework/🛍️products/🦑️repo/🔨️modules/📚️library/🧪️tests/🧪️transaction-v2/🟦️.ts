@@ -264,7 +264,7 @@ async function activeReferenceFixture(name: string): Promise<Fixture> {
 
 function symlinkFixture(name: string): Fixture {
   return fixture(name, { "🟦️target.ts": "export const target = true;\n" }, (row) => {
-    const link = join(row.workspace, "🧪️link", "🟦️.ts");
+    const link = join(row.workspace, "🧪️link", "../🧪️🧿️transaction-v2/🟦️.ts");
     mkdirSync(dirname(link), { recursive: true });
     symlinkSync("../🟦️target.ts", link);
   });
@@ -927,7 +927,7 @@ describe("transaction plan journal v2 aggregate", () => {
     const stale = await activeReferenceFixture("stale-resume"), forged = await activeReferenceFixture("forged-resume"), missing = referenceFixture("missing-resume");
     try {
       const stalePlan = plan(stale);
-      writeFileSync(join(stale.workspace, "🧪️subject", "🟦️.ts"), "export const value = 2;\n");
+      writeFileSync(join(stale.workspace, "🧪️subject", "../🧪️🧿️transaction-v2/🟦️.ts"), "export const value = 2;\n");
       const staleTransaction = snapshot(transactionRoot(stale)), staleWorkspace = snapshot(stale.workspace);
       expect(() => applyTaxonomyPlan(stalePlan, { repoRoot: stale.repoRoot, ticketDir: stale.ticketDir, expectedBaselineCommit: stale.baselineCommit, resumeJournal: attemptJournal(stale, stalePlan) })).toThrow(/resume-state-drift/u);
       expect(snapshot(transactionRoot(stale))).toEqual(staleTransaction);
@@ -949,7 +949,7 @@ describe("transaction plan journal v2 aggregate", () => {
     const generator = generatorFixture("stale-generator"), embedded = embeddedFixture("stale-reference");
     try {
       const generatorPlan = plan(generator);
-      writeFileSync(join(generator.workspace, "🧪️generator", "🟦️.ts"), "export const input = false;\n");
+      writeFileSync(join(generator.workspace, "🧪️generator", "../🧪️🧿️transaction-v2/🟦️.ts"), "export const input = false;\n");
       const generatorTransaction = snapshot(transactionRoot(generator)), generatorWorkspace = snapshot(generator.workspace);
       expect(() => applyTaxonomyPlan(generatorPlan, { repoRoot: generator.repoRoot, ticketDir: generator.ticketDir, expectedBaselineCommit: generator.baselineCommit })).toThrow(/Regeneration input preimage changed/u);
       expect(snapshot(transactionRoot(generator))).toEqual(generatorTransaction);

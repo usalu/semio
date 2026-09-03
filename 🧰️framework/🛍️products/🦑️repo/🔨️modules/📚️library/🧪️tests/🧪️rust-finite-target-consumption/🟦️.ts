@@ -11,7 +11,7 @@ import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRust
 
 const root = resolve(import.meta.dir, "../../../../../../../");
 const ticket = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧪️🦋️rust-finite-target-consumption/🔣️.json"), "utf8"));
 const sourcePath = resolve(import.meta.dir, "../../🧹️normalization/🟦️.ts");
 const source = readFileSync(sourcePath, "utf8"), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
 const marker = "rust-finite-manifest-targets";
@@ -313,7 +313,7 @@ test("actual rustc proves cancelled symlink steps target different bytes from no
   const row = vector.cases.find((item: Row) => item.id === "cancelled-symlink-ancestor") as Row, f = fixture(row);
   const nativeSource = 'fn main() { let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")); let actual = root.join("../alias/../foreign").join("item.json"); println!("{}", std::fs::read_to_string(actual).unwrap().trim()); }\n';
   f.put("🧾️native/🦀️.rs", nativeSource);
-  const binary = join(f.directory, "🧾️native", process.platform === "win32" ? "🔣️.exe" : "🔣️");
+  const binary = join(f.directory, "🧾️native", process.platform === "win32" ? "🔣️.exe" : "../🧪️🦋️rust-finite-target-consumption/🔣️.json");
   const compile = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "finite_path_identity", join(f.directory, "🧾️native/🦀️.rs"), "-o", binary], { cwd: f.directory, env: { ...process.env, CARGO_MANIFEST_DIR: join(f.directory, "pkg") }, stdout: "pipe", stderr: "pipe" });
   expect(compile.exitCode, compile.stderr.toString()).toBe(0);
   const execution = Bun.spawnSync([binary], { cwd: f.directory, stdout: "pipe", stderr: "pipe" });
@@ -326,7 +326,7 @@ test("actual rustc proves cancelled symlink steps target different bytes from no
 test("actual rustc resolves raw module ownership paths before lexical cancellation", () => {
   const row = vector.cases.find((item: Row) => item.id === "cancelled-module-ownership-edge") as Row, f = fixture(row);
   f.put("🧾️native/🦀️.rs", '#[path = "../pkg/entry.rs"] mod owner;\nfn main() { println!("{}", owner::origin()); }\n');
-  const binary = join(f.directory, "🧾️native", process.platform === "win32" ? "🔣️.exe" : "🔣️");
+  const binary = join(f.directory, "🧾️native", process.platform === "win32" ? "🔣️.exe" : "../🧪️🦋️rust-finite-target-consumption/🔣️.json");
   const compile = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "finite_source_identity", join(f.directory, "🧾️native/🦀️.rs"), "-o", binary], { cwd: f.directory, env: { ...process.env, CARGO_MANIFEST_DIR: join(f.directory, "pkg") }, stdout: "pipe", stderr: "pipe" });
   expect(compile.exitCode, compile.stderr.toString()).toBe(0);
   const execution = Bun.spawnSync([binary], { cwd: f.directory, stdout: "pipe", stderr: "pipe" });
@@ -339,7 +339,7 @@ test("actual rustc resolves raw module ownership paths before lexical cancellati
 test("actual rustc proves inherited env macro provenance is part of physical source authority", () => {
   const row = vector.cases.find((item: Row) => item.id === "inherited-env-macro") as Row, f = fixture(row);
   f.put("🧾️native/🦀️.rs", '#[path = "../pkg/entry.rs"] mod owner;\nfn main() { owner::run(); }\n');
-  const binary = join(f.directory, "🧾️native", process.platform === "win32" ? "🔣️.exe" : "🔣️");
+  const binary = join(f.directory, "🧾️native", process.platform === "win32" ? "🔣️.exe" : "../🧪️🦋️rust-finite-target-consumption/🔣️.json");
   const compile = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "finite_macro_identity", join(f.directory, "🧾️native/🦀️.rs"), "-o", binary], { cwd: f.directory, env: { ...process.env, CARGO_MANIFEST_DIR: join(f.directory, "pkg") }, stdout: "pipe", stderr: "pipe" });
   expect(compile.exitCode, compile.stderr.toString()).toBe(0);
   const execution = Bun.spawnSync([binary], { cwd: f.directory, stdout: "pipe", stderr: "pipe" });

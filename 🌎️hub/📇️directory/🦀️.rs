@@ -212,6 +212,7 @@ pub mod model {
         pub document_id: String,
         pub surface: String,
         pub user_id: Option<String>,
+        pub authenticated_email: Option<String>,
         pub space_role: Option<SpaceRole>,
         pub client_label: String,
         pub connected_at: i64,
@@ -281,9 +282,56 @@ pub mod model {
         pub correlation_id: String,
         pub peer_class: String,
     }
+
+    /// @emoji 🧾️ One append-only administrator operation fact before backend sequence assignment.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct NewAdminOperationAuditRecord {
+        pub request_id: String,
+        pub intent_digest: String,
+        pub operation_id: String,
+        pub occurred_at: i64,
+        pub phase: String,
+        pub intent_kind: String,
+        pub target_kind: String,
+        pub target_id: String,
+        pub principal_user_id: String,
+        pub principal_session_id: String,
+        pub principal_generation: u64,
+        pub correlation_id: String,
+        pub event_seq_first: Option<u64>,
+        pub event_seq_last: Option<u64>,
+        pub outcome_code: String,
+        pub reason_code: Option<String>,
+    }
+
+    /// @emoji 📜️ One durable, backend-ordered administrator operation audit fact.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct AdminOperationAuditRecord {
+        pub sequence: u64,
+        pub fact: NewAdminOperationAuditRecord,
+    }
+
+    /// 🔢️ Constant-space administrator overview projection owned by the backend.
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+    pub struct AdminDirectoryOverviewCounts {
+        pub spaces: u64,
+        pub users: u64,
+        pub connections: u64,
+    }
+
+    /// 🏠️ One storage-folded administrator space-list row.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct AdminSpaceSummaryRecord {
+        pub space: SpaceRecord,
+        pub member_count: u64,
+        pub document_count: u64,
+        pub active_connections: u64,
+        pub updated_at: i64,
+    }
 }
 //#endregion 🔖️Model
 
+use crate::artifact_authority::chunk_cas::{ArtifactCasDeleteFence, ArtifactCasDeleteOutcome, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation, ArtifactChunkCasStorage};
 use directory::os_directory::{
     descriptor_digest_v1, ArtifactBlobRef, ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole,
     DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, Hlc, PublishedArtifactBlob, PublishedArtifactCheckpoint,
@@ -295,7 +343,6 @@ use semio_framework_hash::Sha256;
 use std::collections::HashMap;
 use std::fmt;
 use std::sync::Arc;
-use crate::artifact_authority::chunk_cas::{ArtifactCasDeleteFence, ArtifactCasDeleteOutcome, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation, ArtifactChunkCasStorage};
 
 /// 🧯️ Immutable per-document checkpoint-lineage ceiling shared by every backend.
 pub const ARTIFACT_CHECKPOINT_LINEAGE_MAX: u64 = 16_384;
@@ -303,6 +350,15 @@ pub const ARTIFACT_CHECKPOINT_LINEAGE_MAX: u64 = 16_384;
 pub const DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS: u64 = 1_000_000;
 /// 📖️ Immutable maximum number of public directory events returned by one read.
 pub const DIRECTORY_EVENT_READ_MAX: usize = 10_000;
+pub const ACTIVE_SYNC_SESSION_READ_MAX: usize = 4_096;
+/// 🛡️ Exact public administrator request-body ceiling.
+pub const ADMIN_INTENT_REQUEST_MAX_BYTES: usize = 8 * 1024;
+/// 📄 Exact administrator query page ceiling.
+pub const ADMIN_PAGE_MAX: usize = 100;
+/// 📄️ One public page plus one private continuation probe.
+pub const ADMIN_PAGE_FETCH_MAX: usize = ADMIN_PAGE_MAX + 1;
+/// 🛡️ Exact serialized administrator response ceiling.
+pub const ADMIN_RESPONSE_MAX_BYTES: usize = 64 * 1024;
 /// 🌐️ Largest exact integer shared by the Rust, JSON, and TypeScript contracts.
 pub const DIRECTORY_WIRE_INTEGER_MAX: u64 = 9_007_199_254_740_991;
 /// 🔑️ Fixed UTF-8 byte ceiling for one backend-private immutable blob locator.
@@ -744,7 +800,7 @@ pub trait LocalBootstrapTransport: Send + Sync + 'static {
     fn run_id(&self) -> &str;
     fn is_ready(&self) -> bool;
     fn request_cancelled(&self, request_id: &str) -> bool;
-    fn accept<'a>(&'a self, context: &'a IdentityVerificationContext<'a>) -> LocalBootstrapAcceptFuture<'a>;
+    fn accept<'a>(&'a self, control: &'a dyn IdentityVerificationControl) -> LocalBootstrapAcceptFuture<'a>;
     fn issue<'a>(&'a self, request: &'a VerifiedLocalBootstrapRequest, session: &'a IssuedAuthSession, context: &'a IdentityVerificationContext<'a>) -> LocalBootstrapIssueFuture<'a>;
     fn reject<'a>(&'a self, request_id: &'a str, code: LocalBootstrapRejectCode, context: &'a IdentityVerificationContext<'a>) -> LocalBootstrapTerminalFuture<'a>;
     fn cancel<'a>(&'a self, request_id: &'a str) -> LocalBootstrapTerminalFuture<'a>;
@@ -797,16 +853,7 @@ pub(crate) fn prepare_auth_session(issue: &AuthSessionIssue, now: i64) -> Direct
 pub(crate) fn prepare_share_token(scope: &DocumentScope, ttl_secs: i64, now: i64) -> DirectoryResult<IssuedShareToken> {
     let (created_at, expires_at) = capability_window(now, ttl_secs)?;
     let capability = ShareCapability::mint()?;
-    let record = ShareTokenRecord {
-        id: time_ordered_id(),
-        selector: capability.selector().to_string(),
-        secret_digest: capability.secret_digest(),
-        scope: scope.clone(),
-        created_at,
-        expires_at,
-        revoked_at: None,
-        revoked_reason: None,
-    };
+    let record = ShareTokenRecord { id: time_ordered_id(), selector: capability.selector().to_string(), secret_digest: capability.secret_digest(), scope: scope.clone(), created_at, expires_at, revoked_at: None, revoked_reason: None };
     Ok(IssuedShareToken { record, capability })
 }
 
@@ -864,6 +911,50 @@ pub(crate) fn auth_audit(
         correlation_id: correlation_id.to_string(),
         peer_class: peer_class.to_string(),
     })
+}
+
+pub(crate) fn validate_admin_operation_audit(fact: &NewAdminOperationAuditRecord) -> DirectoryResult<()> {
+    for (value, field) in [
+        (&fact.request_id, "admin request id"),
+        (&fact.intent_digest, "admin intent digest"),
+        (&fact.operation_id, "admin operation id"),
+        (&fact.intent_kind, "admin intent kind"),
+        (&fact.target_kind, "admin target kind"),
+        (&fact.target_id, "admin target id"),
+        (&fact.principal_user_id, "admin principal user"),
+        (&fact.principal_session_id, "admin principal session"),
+        (&fact.correlation_id, "admin correlation"),
+        (&fact.outcome_code, "admin outcome"),
+    ] {
+        validate_bounded_auth_text(value, field, AUTH_TEXT_MAX_BYTES)?;
+    }
+    if !matches!(fact.phase.as_str(), "accepted" | "succeeded" | "failed" | "cancelled") {
+        return Err(DirectoryError::Conflict("admin operation phase is invalid".into()));
+    }
+    if fact.intent_digest.len() != 64 || !fact.intent_digest.bytes().all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()) {
+        return Err(DirectoryError::Conflict("admin intent digest must be 64 lowercase hex digits".into()));
+    }
+    if fact.principal_generation == 0 {
+        return Err(DirectoryError::Conflict("admin principal generation must be nonzero".into()));
+    }
+    if fact.event_seq_first.is_some() != fact.event_seq_last.is_some() || fact.event_seq_first.zip(fact.event_seq_last).is_some_and(|(first, last)| first == 0 || first > last) {
+        return Err(DirectoryError::Conflict("admin operation event range is invalid".into()));
+    }
+    if let Some(reason) = fact.reason_code.as_deref() {
+        validate_bounded_auth_text(reason, "admin reason", AUTH_TEXT_MAX_BYTES)?;
+    }
+    Ok(())
+}
+
+pub(crate) fn same_admin_operation_request(existing: &NewAdminOperationAuditRecord, candidate: &NewAdminOperationAuditRecord) -> bool {
+    existing.request_id == candidate.request_id
+        && existing.intent_digest == candidate.intent_digest
+        && existing.intent_kind == candidate.intent_kind
+        && existing.target_kind == candidate.target_kind
+        && existing.target_id == candidate.target_id
+        && existing.principal_user_id == candidate.principal_user_id
+        && existing.principal_session_id == candidate.principal_session_id
+        && existing.principal_generation == candidate.principal_generation
 }
 //#endregion 🔖️Capabilities
 
@@ -1251,14 +1342,8 @@ fn actor_user_id(actor: &DirectoryActor) -> DirectoryResult<&str> {
 pub async fn decide(dir: &HubDirectories, actor: &DirectoryActor, command: DirectoryCommand, clock: &mut HubClock) -> DirectoryResult<Decision> {
     match command {
         DirectoryCommand::CreateSpace { name, space_kind, visibility } => {
-            let owner_user_id = actor_user_id(actor)?.to_string();
             let space_id = time_ordered_id();
-            let owner_role = if space_kind == DirectorySpaceKind::Archive { DirectorySpaceRole::Spectator } else { DirectorySpaceRole::Author };
-            let events = vec![
-                new_event(clock, actor, Some(space_id.clone()), Some(owner_user_id.clone()), DirectoryEventBody::SpaceCreated { space_id: space_id.clone(), name, space_kind, visibility, owner_user_id: owner_user_id.clone() }),
-                new_event(clock, actor, Some(space_id.clone()), Some(owner_user_id.clone()), DirectoryEventBody::MemberUpserted { space_id, user_id: owner_user_id, role: owner_role }),
-            ];
-            Ok(Decision { events, result: None })
+            decide_create_space(actor, space_id, name, space_kind, visibility, clock)
         }
         DirectoryCommand::RenameSpace { space_id, name } => {
             require_space(dir, &space_id).await?;
@@ -1319,12 +1404,12 @@ pub async fn decide(dir: &HubDirectories, actor: &DirectoryActor, command: Direc
         DirectoryCommand::CreateInvite { space_id, role, ttl_secs } => {
             require_space(dir, &space_id).await?;
             let ttl_secs = i64::try_from(ttl_secs).map_err(|_| DirectoryError::Conflict("invite ttl exceeds the signed storage boundary".into()))?;
-            let issued = dir.issue_invite(&space_id, role_from_wire(role), ttl_secs, &time_ordered_id()).await?;
+            let issued = dir.issue_invite_as(&space_id, role_from_wire(role), ttl_secs, Some(actor_user_id(actor)?), &time_ordered_id()).await?;
             Ok(Decision { events: Vec::new(), result: Some(CommandResult { invite_token: Some(issued.capability.expose_once()) }) })
         }
         DirectoryCommand::RevokeInvite { space_id, invite_id } => {
             require_space(dir, &space_id).await?;
-            dir.revoke_invite(&invite_id, "directory-command", &time_ordered_id()).await?;
+            dir.revoke_invite_as(&invite_id, "directory-command", Some(actor_user_id(actor)?), &time_ordered_id()).await?;
             Ok(Decision { events: Vec::new(), result: None })
         }
         DirectoryCommand::AnnounceDocument { descriptor } => {
@@ -1338,6 +1423,17 @@ pub async fn decide(dir: &HubDirectories, actor: &DirectoryActor, command: Direc
             }
         }
     }
+}
+
+fn decide_create_space(actor: &DirectoryActor, space_id: String, name: String, space_kind: DirectorySpaceKind, visibility: DirectorySpaceVisibility, clock: &mut HubClock) -> DirectoryResult<Decision> {
+    validate_bounded_auth_text(&space_id, "space id", AUTH_TEXT_MAX_BYTES)?;
+    let owner_user_id = actor_user_id(actor)?.to_string();
+    let owner_role = if space_kind == DirectorySpaceKind::Archive { DirectorySpaceRole::Spectator } else { DirectorySpaceRole::Author };
+    let events = vec![
+        new_event(clock, actor, Some(space_id.clone()), Some(owner_user_id.clone()), DirectoryEventBody::SpaceCreated { space_id: space_id.clone(), name, space_kind, visibility, owner_user_id: owner_user_id.clone() }),
+        new_event(clock, actor, Some(space_id.clone()), Some(owner_user_id.clone()), DirectoryEventBody::MemberUpserted { space_id, user_id: owner_user_id, role: owner_role }),
+    ];
+    Ok(Decision { events, result: None })
 }
 
 /// 🛡️ Server-only retention policy intent; it is deliberately absent from `DirectoryCommand`.
@@ -1422,7 +1518,7 @@ async fn decide_verified_checkpoint(dir: &HubDirectories, actor: &DirectoryActor
 /// `tokio::sync::Mutex<HubClock>` (dense, gap-free `seq` — two concurrent commands can never
 /// interleave their `append_events` calls) and every persisted event (plus connection/presence
 /// messages the caller publishes directly) fans out on one `broadcast` channel every
-/// `/directory/ws` connection subscribes to (contract C2).
+/// `/directory/socket/v1` connection subscribes to (contract C2).
 pub struct DirectoryService {
     dir: Arc<HubDirectories>,
     write: tokio::sync::Mutex<HubClock>,
@@ -1488,7 +1584,13 @@ impl DirectoryService {
         let observed_generation = u64::from_be_bytes(token.0[1..9].try_into().unwrap_or([0; 8]));
         let after_generation = u64::from_be_bytes(token.0[9..17].try_into().unwrap_or([0; 8]));
         let object_offset = usize::try_from(u32::from_be_bytes(token.0[17..21].try_into().unwrap_or([0; 4]))).unwrap_or(usize::MAX);
-        if !valid_mac || token.0[0] > 1 || token_execute != execute || observed_generation == 0 || after_generation > observed_generation || object_offset > ARTIFACT_CAS_SWEEP_PAGE_MAX * crate::artifact_authority::chunk_cas::ARTIFACT_CAS_OWNERSHIP_MAX_OBJECTS {
+        if !valid_mac
+            || token.0[0] > 1
+            || token_execute != execute
+            || observed_generation == 0
+            || after_generation > observed_generation
+            || object_offset > ARTIFACT_CAS_SWEEP_PAGE_MAX * crate::artifact_authority::chunk_cas::ARTIFACT_CAS_OWNERSHIP_MAX_OBJECTS
+        {
             return Err(crate::artifact_authority::AuthorityError::Store("artifact CAS sweep continuation is invalid".into()));
         }
         Ok(ArtifactCasSweepPosition { execute, observed_generation, after_generation, object_offset })
@@ -1506,6 +1608,21 @@ impl DirectoryService {
             let _ = self.tx.send(DirectoryStreamMessage::Event { event: event.clone() });
         }
         Ok((persisted, decision.result))
+    }
+
+    /// 🆔️ Appends an administrator-created space under its pre-audited stable resource id.
+    pub async fn execute_create_space_with_id(&self, actor: DirectoryActor, space_id: String, name: String, space_kind: DirectorySpaceKind, visibility: DirectorySpaceVisibility) -> DirectoryResult<Vec<DirectoryEvent>> {
+        let mut clock = self.write.lock().await;
+        if self.dir.get_space(&space_id).await?.is_some() {
+            return Err(DirectoryError::Conflict("administrator space id already exists".into()));
+        }
+        let decision = decide_create_space(&actor, space_id, name, space_kind, visibility, &mut clock)?;
+        let persisted = self.dir.append_events(&decision.events).await?;
+        drop(clock);
+        for event in &persisted {
+            let _ = self.tx.send(DirectoryStreamMessage::Event { event: event.clone() });
+        }
+        Ok(persisted)
     }
 
     /// 🏛️ Serializes a trusted server authority decision with its atomic event/projection append.
@@ -1579,7 +1696,7 @@ impl DirectoryService {
     }
 
     /// @emoji 📡️ A fresh receiver over every future published `DirectoryStreamMessage` (events,
-    /// connection phases, presence, heartbeats) — `bin.rs`'s `/directory/ws` handler subscribes
+    /// connection phases, presence, heartbeats) — `bin.rs`'s `/directory/socket/v1` handler subscribes
     /// once per connection, then replays `events_since(?since=)` before switching to live receive
     /// (contract C2's "subscribe, then replay, gap-free").
     pub fn subscribe(&self) -> tokio::sync::broadcast::Receiver<DirectoryStreamMessage> {
@@ -1594,7 +1711,12 @@ impl DirectoryService {
     }
 
     /// 🧹️ Sweeps only historical dedicated-CAS candidates after an immediate ledger recheck.
-    pub async fn sweep_artifact_cas<S: ArtifactChunkCasStorage>(&self, storage: &S, request: ArtifactCasSweepRequest, context: &crate::artifact_authority::OperationContext<'_>) -> Result<ArtifactCasSweepResult, crate::artifact_authority::AuthorityError> {
+    pub async fn sweep_artifact_cas<S: ArtifactChunkCasStorage>(
+        &self,
+        storage: &S,
+        request: ArtifactCasSweepRequest,
+        context: &crate::artifact_authority::OperationContext<'_>,
+    ) -> Result<ArtifactCasSweepResult, crate::artifact_authority::AuthorityError> {
         if request.max_objects == 0 || request.max_objects > ARTIFACT_CAS_SWEEP_OBJECT_MAX {
             return Err(crate::artifact_authority::AuthorityError::ResourceLimit("artifact CAS sweep object"));
         }
@@ -1630,7 +1752,11 @@ impl DirectoryService {
         digest.update(b"semio.hub.artifact-cas.sweep-result.v1\0");
         while examined < request.max_objects as u64 {
             context.checkpoint()?;
-            let page = self.dir.artifact_cas_sweep_candidates(cursor, position.observed_generation, ARTIFACT_CAS_SWEEP_PAGE_MAX).await.map_err(|error| crate::artifact_authority::AuthorityError::Store(crate::artifact_authority::adapters::bounded_message(error)))?;
+            let page = self
+                .dir
+                .artifact_cas_sweep_candidates(cursor, position.observed_generation, ARTIFACT_CAS_SWEEP_PAGE_MAX)
+                .await
+                .map_err(|error| crate::artifact_authority::AuthorityError::Store(crate::artifact_authority::adapters::bounded_message(error)))?;
             if page.observed_generation != position.observed_generation || object_offset > page.objects.len() {
                 return Err(crate::artifact_authority::AuthorityError::Store("artifact CAS sweep continuation position is invalid".into()));
             }
@@ -1659,11 +1785,7 @@ impl DirectoryService {
                         eligible += 1;
                         digest.update(&[3]);
                     }
-                    context.report_committed(crate::artifact_authority::AuthorityProgress {
-                        stage: crate::artifact_authority::AuthorityProgressStage::CasSweep,
-                        completed_units: examined,
-                        total_units: request.max_objects as u64,
-                    });
+                    context.report_committed(crate::artifact_authority::AuthorityProgress { stage: crate::artifact_authority::AuthorityProgressStage::CasSweep, completed_units: examined, total_units: request.max_objects as u64 });
                     semio_framework_async::yield_once().await;
                     continue;
                 }
@@ -1688,8 +1810,7 @@ impl DirectoryService {
                         }
                         let renewal_now_ms = context.now_ms();
                         let renewal_expires_at_ms = renewal_now_ms.saturating_add(ARTIFACT_CAS_DELETE_LEASE_TTL_MS).min(context.deadline_ms());
-                        let renewed = renewal_expires_at_ms > renewal_now_ms
-                            && self.dir.renew_artifact_cas_delete_fence(&fence, renewal_now_ms, renewal_expires_at_ms).await.is_ok();
+                        let renewed = renewal_expires_at_ms > renewal_now_ms && self.dir.renew_artifact_cas_delete_fence(&fence, renewal_now_ms, renewal_expires_at_ms).await.is_ok();
                         let still_unreferenced = if renewed {
                             match self.dir.validate_artifact_cas_delete_fence(&fence, context.now_ms()).await {
                                 Ok(value) => value,
@@ -1714,8 +1835,14 @@ impl DirectoryService {
                             };
                             release.map_err(|error| crate::artifact_authority::AuthorityError::Store(crate::artifact_authority::adapters::bounded_message(error)))?;
                             match outcome {
-                                ArtifactCasDeleteOutcome::Deleted => { deleted += 1; digest.update(&[1]); }
-                                ArtifactCasDeleteOutcome::Missing => { missing += 1; digest.update(&[2]); }
+                                ArtifactCasDeleteOutcome::Deleted => {
+                                    deleted += 1;
+                                    digest.update(&[1]);
+                                }
+                                ArtifactCasDeleteOutcome::Missing => {
+                                    missing += 1;
+                                    digest.update(&[2]);
+                                }
                             }
                         } else {
                             protected += 1;
@@ -1725,11 +1852,7 @@ impl DirectoryService {
                     }
                 }
                 drop(_write);
-                context.report_committed(crate::artifact_authority::AuthorityProgress {
-                    stage: crate::artifact_authority::AuthorityProgressStage::CasSweep,
-                    completed_units: examined,
-                    total_units: request.max_objects as u64,
-                });
+                context.report_committed(crate::artifact_authority::AuthorityProgress { stage: crate::artifact_authority::AuthorityProgressStage::CasSweep, completed_units: examined, total_units: request.max_objects as u64 });
                 semio_framework_async::yield_once().await;
             }
             if object_offset < page_object_count {
@@ -1786,7 +1909,8 @@ impl<S: ArtifactChunkCasStorage> crate::artifact_authority::VerifiedCheckpointPu
         context.checkpoint()?;
         let now_ms = context.now_ms();
         let expires_at_ms = context.deadline_ms().saturating_add(crate::artifact_authority::chunk_cas::ARTIFACT_CAS_RESERVATION_GRACE_MS).min(now_ms.saturating_add(ARTIFACT_CAS_RESERVATION_MAX_TTL_MS));
-        let reservation = self.service
+        let reservation = self
+            .service
             .reserve_artifact_cas(DirectoryActor { kind: DirectoryActorKind::System, id: self.actor_id.clone() }, plan.clone(), expires_at_ms, now_ms)
             .await
             .map_err(|error| crate::artifact_authority::AuthorityError::Publication(crate::artifact_authority::adapters::bounded_message(error)))?;
@@ -1818,8 +1942,14 @@ impl<S: ArtifactChunkCasStorage> crate::artifact_authority::VerifiedCheckpointPu
 /// `OS_HUB_STORAGE_BACKEND`).
 pub trait HubDirectory: Send + Sync + 'static {
     //#region ShareTokens
-    async fn issue_share_token(&self, scope: &DocumentScope, ttl_secs: i64, correlation_id: &str) -> DirectoryResult<IssuedShareToken>;
-    async fn revoke_share_token(&self, scope: &DocumentScope, share_id: &str, reason: &str, correlation_id: &str) -> DirectoryResult<()>;
+    async fn issue_share_token_as(&self, scope: &DocumentScope, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<IssuedShareToken>;
+    async fn issue_share_token(&self, scope: &DocumentScope, ttl_secs: i64, correlation_id: &str) -> DirectoryResult<IssuedShareToken> {
+        self.issue_share_token_as(scope, ttl_secs, None, correlation_id).await
+    }
+    async fn revoke_share_token_as(&self, scope: &DocumentScope, share_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()>;
+    async fn revoke_share_token(&self, scope: &DocumentScope, share_id: &str, reason: &str, correlation_id: &str) -> DirectoryResult<()> {
+        self.revoke_share_token_as(scope, share_id, reason, None, correlation_id).await
+    }
     async fn authenticate_share(&self, scope: &DocumentScope, capability: &ShareCapability) -> DirectoryResult<bool>;
     async fn authenticate_share_binding(&self, scope: &DocumentScope, capability: &ShareCapability) -> DirectoryResult<Option<ShareTokenRecord>>;
     async fn socket_share_binding(&self, share_id: &str, selector: &str, scope: &DocumentScope, now_ms: i64) -> DirectoryResult<SocketShareBindingStatus>;
@@ -1833,6 +1963,7 @@ pub trait HubDirectory: Send + Sync + 'static {
     async fn get_user_by_email(&self, email: &str) -> DirectoryResult<Option<UserRecord>>;
     async fn get_user_by_sso_subject(&self, provider: &str, subject: &str) -> DirectoryResult<Option<UserRecord>>;
     async fn list_users(&self, limit: i64, offset: i64) -> DirectoryResult<Vec<UserRecord>>;
+    async fn admin_overview_counts(&self) -> DirectoryResult<AdminDirectoryOverviewCounts>;
     //#endregion
 
     //#region Spaces
@@ -1842,6 +1973,8 @@ pub trait HubDirectory: Send + Sync + 'static {
     async fn get_space(&self, space_id: &str) -> DirectoryResult<Option<SpaceRecord>>;
     async fn list_spaces_for_user(&self, user_id: &str) -> DirectoryResult<Vec<(SpaceRecord, SpaceRole)>>;
     async fn list_spaces(&self, limit: i64, offset: i64) -> DirectoryResult<Vec<SpaceRecord>>;
+    async fn list_admin_space_summaries_page(&self, space_id: Option<&str>, offset: usize, limit: usize) -> DirectoryResult<Vec<AdminSpaceSummaryRecord>>;
+    async fn list_admin_space_members_page(&self, space_id: &str, offset: usize, limit: usize) -> DirectoryResult<Vec<(UserRecord, SpaceRole)>>;
     /// @emoji 🧑️‍🤝️‍🧑️ The current member roster — `decide` reads this to enforce the atelier/
     /// archive laws and to compute `archive-space`'s demote-every-author events.
     async fn list_members(&self, space_id: &str) -> DirectoryResult<Vec<(UserRecord, SpaceRole)>>;
@@ -1851,6 +1984,7 @@ pub trait HubDirectory: Send + Sync + 'static {
     //#region Documents
     async fn get_document_descriptor(&self, scope: &DocumentScope) -> DirectoryResult<Option<DocumentDescriptor>>;
     async fn list_document_descriptors(&self, space_id: &str) -> DirectoryResult<Vec<DocumentDescriptor>>;
+    async fn list_document_descriptors_page(&self, space_id: Option<&str>, offset: usize, limit: usize) -> DirectoryResult<Vec<DocumentDescriptor>>;
     async fn get_artifact_checkpoint(&self, scope: &DocumentScope, checkpoint_id: ArtifactHash) -> DirectoryResult<Option<PublishedArtifactCheckpoint>>;
     /// 🔐️ Internal authority read model; never serialized through directory wire DTOs.
     async fn get_verified_artifact_checkpoint(&self, scope: &DocumentScope, checkpoint_id: ArtifactHash) -> DirectoryResult<Option<ArtifactCheckpoint>>;
@@ -1911,13 +2045,30 @@ pub trait HubDirectory: Send + Sync + 'static {
     async fn list_auth_audit(&self, limit: usize, offset: usize) -> DirectoryResult<Vec<AuthAuditRecord>>;
     //#endregion
 
+    //#region AdminOperations
+    /// 🧾 Appends exactly one accepted or terminal administrator operation fact.
+    async fn append_admin_operation_audit(&self, fact: &NewAdminOperationAuditRecord) -> DirectoryResult<AdminOperationAuditRecord>;
+    /// 🔎 Reads the at-most-two facts for one bounded idempotency request key.
+    async fn admin_operation_audit_for_request(&self, request_id: &str) -> DirectoryResult<Vec<AdminOperationAuditRecord>>;
+    /// 🎯 Reads the at-most-two facts for one server-issued operation identifier.
+    async fn admin_operation_audit_for_operation(&self, operation_id: &str) -> DirectoryResult<Vec<AdminOperationAuditRecord>>;
+    /// 📄 Reads one backend-ordered bounded operation-audit page.
+    async fn list_admin_operation_audit(&self, after_sequence: u64, limit: usize) -> DirectoryResult<Vec<AdminOperationAuditRecord>>;
+    //#endregion
+
     //#region Invites
     // 🎟️ Not event-sourced (contract's decider laws) — only redemption is (`invite.redeemed`, see
     // `DirectoryService::redeem_invite`). `create_invite`/`revoke_invite` are called directly by
     // `decide` as its one documented write exception (`//#region 🔖️Decider`).
-    async fn issue_invite(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, correlation_id: &str) -> DirectoryResult<IssuedInvite>;
+    async fn issue_invite_as(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<IssuedInvite>;
+    async fn issue_invite(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, correlation_id: &str) -> DirectoryResult<IssuedInvite> {
+        self.issue_invite_as(space_id, role, ttl_secs, None, correlation_id).await
+    }
     async fn authenticate_invite(&self, capability: &InviteCapability) -> DirectoryResult<Option<InviteRecord>>;
-    async fn revoke_invite(&self, invite_id: &str, reason: &str, correlation_id: &str) -> DirectoryResult<()>;
+    async fn revoke_invite_as(&self, invite_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()>;
+    async fn revoke_invite(&self, invite_id: &str, reason: &str, correlation_id: &str) -> DirectoryResult<()> {
+        self.revoke_invite_as(invite_id, reason, None, correlation_id).await
+    }
     async fn list_invites(&self, space_id: &str) -> DirectoryResult<Vec<InviteRecord>>;
     //#endregion
 
@@ -1933,6 +2084,7 @@ pub trait HubDirectory: Send + Sync + 'static {
         document_id: &str,
         surface: &str,
         user_id: Option<&str>,
+        authenticated_email: Option<&str>,
         space_role: Option<SpaceRole>,
         client_label: &str,
     ) -> DirectoryResult<SyncSessionRecord>;
@@ -1940,7 +2092,10 @@ pub trait HubDirectory: Send + Sync + 'static {
     async fn list_sync_sessions_for_document(&self, document_id: &str) -> DirectoryResult<Vec<SyncSessionRecord>>;
     /// @emoji 🟢️ Every still-open session, optionally scoped to one space — the admin connections
     /// view and the per-space presence roster both read this instead of iterating documents.
-    async fn list_active_sync_sessions(&self, space_id: Option<&str>) -> DirectoryResult<Vec<SyncSessionRecord>>;
+    async fn list_active_sync_sessions_page(&self, space_id: Option<&str>, offset: usize, limit: usize) -> DirectoryResult<Vec<SyncSessionRecord>>;
+    async fn list_active_sync_sessions(&self, space_id: Option<&str>, limit: usize) -> DirectoryResult<Vec<SyncSessionRecord>> {
+        self.list_active_sync_sessions_page(space_id, 0, limit).await
+    }
     /// @emoji 🧹️ Marks every still-open session closed — called once at hub boot, before any real
     /// connection lands, to clear crash residue from the previous process (a session that never got
     /// its `disconnected_at` because the hub was killed mid-connection).
@@ -1956,7 +2111,7 @@ pub trait HubDirectory: Send + Sync + 'static {
     /// (`//#region 🔖️Projections`) in the same transaction before committing.
     async fn append_events(&self, events: &[NewDirectoryEvent]) -> DirectoryResult<Vec<DirectoryEvent>>;
     /// @emoji 📜️ Every event with `seq > since_seq`, ascending, capped at `limit` — backs both
-    /// `GET /directory/events?since=` and `/directory/ws`'s post-subscribe replay (contract C2).
+    /// `GET /directory/events?since=` and `/directory/socket/v1`'s post-subscribe replay (contract C2).
     async fn events_since(&self, since_seq: u64, limit: usize) -> DirectoryResult<Vec<DirectoryEvent>>;
     /// @emoji 🔝️ The current log length (0 when empty) — `DirectoryStreamMessage::Heartbeat`'s
     /// `head_seq` and the admin overview's `headSeq` both read this.
@@ -2029,25 +2184,25 @@ impl ::core::convert::From<neo4j::Neo4jDirectory> for HubDirectories {
 }
 
 impl HubDirectory for HubDirectories {
-    async fn issue_share_token(&self, scope: &DocumentScope, ttl_secs: i64, correlation_id: &str) -> DirectoryResult<IssuedShareToken> {
+    async fn issue_share_token_as(&self, scope: &DocumentScope, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<IssuedShareToken> {
         match self {
             #[cfg(feature = "sqlite")]
-            Self::Sqlite(inner) => inner.issue_share_token(scope, ttl_secs, correlation_id).await,
+            Self::Sqlite(inner) => inner.issue_share_token_as(scope, ttl_secs, actor_user_id, correlation_id).await,
             #[cfg(feature = "postgres")]
-            Self::Postgres(inner) => inner.issue_share_token(scope, ttl_secs, correlation_id).await,
+            Self::Postgres(inner) => inner.issue_share_token_as(scope, ttl_secs, actor_user_id, correlation_id).await,
             #[cfg(feature = "neo4j")]
-            Self::Neo4j(inner) => inner.issue_share_token(scope, ttl_secs, correlation_id).await,
+            Self::Neo4j(inner) => inner.issue_share_token_as(scope, ttl_secs, actor_user_id, correlation_id).await,
         }
     }
 
-    async fn revoke_share_token(&self, scope: &DocumentScope, share_id: &str, reason: &str, correlation_id: &str) -> DirectoryResult<()> {
+    async fn revoke_share_token_as(&self, scope: &DocumentScope, share_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()> {
         match self {
             #[cfg(feature = "sqlite")]
-            Self::Sqlite(inner) => inner.revoke_share_token(scope, share_id, reason, correlation_id).await,
+            Self::Sqlite(inner) => inner.revoke_share_token_as(scope, share_id, reason, actor_user_id, correlation_id).await,
             #[cfg(feature = "postgres")]
-            Self::Postgres(inner) => inner.revoke_share_token(scope, share_id, reason, correlation_id).await,
+            Self::Postgres(inner) => inner.revoke_share_token_as(scope, share_id, reason, actor_user_id, correlation_id).await,
             #[cfg(feature = "neo4j")]
-            Self::Neo4j(inner) => inner.revoke_share_token(scope, share_id, reason, correlation_id).await,
+            Self::Neo4j(inner) => inner.revoke_share_token_as(scope, share_id, reason, actor_user_id, correlation_id).await,
         }
     }
 
@@ -2139,6 +2294,17 @@ impl HubDirectory for HubDirectories {
         }
     }
 
+    async fn admin_overview_counts(&self) -> DirectoryResult<AdminDirectoryOverviewCounts> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.admin_overview_counts().await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.admin_overview_counts().await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.admin_overview_counts().await,
+        }
+    }
+
     async fn get_space(&self, space_id: &str) -> DirectoryResult<Option<SpaceRecord>> {
         match self {
             #[cfg(feature = "sqlite")]
@@ -2169,6 +2335,34 @@ impl HubDirectory for HubDirectories {
             Self::Postgres(inner) => inner.list_spaces(limit, offset).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(inner) => inner.list_spaces(limit, offset).await,
+        }
+    }
+
+    async fn list_admin_space_summaries_page(&self, space_id: Option<&str>, offset: usize, limit: usize) -> DirectoryResult<Vec<AdminSpaceSummaryRecord>> {
+        if limit == 0 || limit > ADMIN_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("administrator space page limit must be 1..={ADMIN_PAGE_FETCH_MAX}")));
+        }
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.list_admin_space_summaries_page(space_id, offset, limit).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.list_admin_space_summaries_page(space_id, offset, limit).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.list_admin_space_summaries_page(space_id, offset, limit).await,
+        }
+    }
+
+    async fn list_admin_space_members_page(&self, space_id: &str, offset: usize, limit: usize) -> DirectoryResult<Vec<(UserRecord, SpaceRole)>> {
+        if limit == 0 || limit > ADMIN_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("administrator member page limit must be 1..={ADMIN_PAGE_FETCH_MAX}")));
+        }
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.list_admin_space_members_page(space_id, offset, limit).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.list_admin_space_members_page(space_id, offset, limit).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.list_admin_space_members_page(space_id, offset, limit).await,
         }
     }
 
@@ -2213,6 +2407,20 @@ impl HubDirectory for HubDirectories {
             Self::Postgres(inner) => inner.list_document_descriptors(space_id).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(inner) => inner.list_document_descriptors(space_id).await,
+        }
+    }
+
+    async fn list_document_descriptors_page(&self, space_id: Option<&str>, offset: usize, limit: usize) -> DirectoryResult<Vec<DocumentDescriptor>> {
+        if limit == 0 || limit > ADMIN_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("administrator document page limit must be 1..={ADMIN_PAGE_FETCH_MAX}")));
+        }
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.list_document_descriptors_page(space_id, offset, limit).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.list_document_descriptors_page(space_id, offset, limit).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.list_document_descriptors_page(space_id, offset, limit).await,
         }
     }
 
@@ -2469,14 +2677,58 @@ impl HubDirectory for HubDirectories {
         }
     }
 
-    async fn issue_invite(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, correlation_id: &str) -> DirectoryResult<IssuedInvite> {
+    async fn append_admin_operation_audit(&self, fact: &NewAdminOperationAuditRecord) -> DirectoryResult<AdminOperationAuditRecord> {
         match self {
             #[cfg(feature = "sqlite")]
-            Self::Sqlite(inner) => inner.issue_invite(space_id, role, ttl_secs, correlation_id).await,
+            Self::Sqlite(inner) => inner.append_admin_operation_audit(fact).await,
             #[cfg(feature = "postgres")]
-            Self::Postgres(inner) => inner.issue_invite(space_id, role, ttl_secs, correlation_id).await,
+            Self::Postgres(inner) => inner.append_admin_operation_audit(fact).await,
             #[cfg(feature = "neo4j")]
-            Self::Neo4j(inner) => inner.issue_invite(space_id, role, ttl_secs, correlation_id).await,
+            Self::Neo4j(inner) => inner.append_admin_operation_audit(fact).await,
+        }
+    }
+
+    async fn admin_operation_audit_for_request(&self, request_id: &str) -> DirectoryResult<Vec<AdminOperationAuditRecord>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.admin_operation_audit_for_request(request_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.admin_operation_audit_for_request(request_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.admin_operation_audit_for_request(request_id).await,
+        }
+    }
+
+    async fn admin_operation_audit_for_operation(&self, operation_id: &str) -> DirectoryResult<Vec<AdminOperationAuditRecord>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.admin_operation_audit_for_operation(operation_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.admin_operation_audit_for_operation(operation_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.admin_operation_audit_for_operation(operation_id).await,
+        }
+    }
+
+    async fn list_admin_operation_audit(&self, after_sequence: u64, limit: usize) -> DirectoryResult<Vec<AdminOperationAuditRecord>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.list_admin_operation_audit(after_sequence, limit).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.list_admin_operation_audit(after_sequence, limit).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.list_admin_operation_audit(after_sequence, limit).await,
+        }
+    }
+
+    async fn issue_invite_as(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<IssuedInvite> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.issue_invite_as(space_id, role, ttl_secs, actor_user_id, correlation_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.issue_invite_as(space_id, role, ttl_secs, actor_user_id, correlation_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.issue_invite_as(space_id, role, ttl_secs, actor_user_id, correlation_id).await,
         }
     }
 
@@ -2491,14 +2743,14 @@ impl HubDirectory for HubDirectories {
         }
     }
 
-    async fn revoke_invite(&self, invite_id: &str, reason: &str, correlation_id: &str) -> DirectoryResult<()> {
+    async fn revoke_invite_as(&self, invite_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()> {
         match self {
             #[cfg(feature = "sqlite")]
-            Self::Sqlite(inner) => inner.revoke_invite(invite_id, reason, correlation_id).await,
+            Self::Sqlite(inner) => inner.revoke_invite_as(invite_id, reason, actor_user_id, correlation_id).await,
             #[cfg(feature = "postgres")]
-            Self::Postgres(inner) => inner.revoke_invite(invite_id, reason, correlation_id).await,
+            Self::Postgres(inner) => inner.revoke_invite_as(invite_id, reason, actor_user_id, correlation_id).await,
             #[cfg(feature = "neo4j")]
-            Self::Neo4j(inner) => inner.revoke_invite(invite_id, reason, correlation_id).await,
+            Self::Neo4j(inner) => inner.revoke_invite_as(invite_id, reason, actor_user_id, correlation_id).await,
         }
     }
 
@@ -2522,16 +2774,17 @@ impl HubDirectory for HubDirectories {
         document_id: &str,
         surface: &str,
         user_id: Option<&str>,
+        authenticated_email: Option<&str>,
         space_role: Option<SpaceRole>,
         client_label: &str,
     ) -> DirectoryResult<SyncSessionRecord> {
         match self {
             #[cfg(feature = "sqlite")]
-            Self::Sqlite(inner) => inner.record_sync_session_open(auth_session_id, authorization_generation, actor_id, space_id, document_id, surface, user_id, space_role, client_label).await,
+            Self::Sqlite(inner) => inner.record_sync_session_open(auth_session_id, authorization_generation, actor_id, space_id, document_id, surface, user_id, authenticated_email, space_role, client_label).await,
             #[cfg(feature = "postgres")]
-            Self::Postgres(inner) => inner.record_sync_session_open(auth_session_id, authorization_generation, actor_id, space_id, document_id, surface, user_id, space_role, client_label).await,
+            Self::Postgres(inner) => inner.record_sync_session_open(auth_session_id, authorization_generation, actor_id, space_id, document_id, surface, user_id, authenticated_email, space_role, client_label).await,
             #[cfg(feature = "neo4j")]
-            Self::Neo4j(inner) => inner.record_sync_session_open(auth_session_id, authorization_generation, actor_id, space_id, document_id, surface, user_id, space_role, client_label).await,
+            Self::Neo4j(inner) => inner.record_sync_session_open(auth_session_id, authorization_generation, actor_id, space_id, document_id, surface, user_id, authenticated_email, space_role, client_label).await,
         }
     }
 
@@ -2557,14 +2810,17 @@ impl HubDirectory for HubDirectories {
         }
     }
 
-    async fn list_active_sync_sessions(&self, space_id: Option<&str>) -> DirectoryResult<Vec<SyncSessionRecord>> {
+    async fn list_active_sync_sessions_page(&self, space_id: Option<&str>, offset: usize, limit: usize) -> DirectoryResult<Vec<SyncSessionRecord>> {
+        if limit == 0 || limit > ACTIVE_SYNC_SESSION_READ_MAX {
+            return Err(DirectoryError::Conflict(format!("active sync-session limit must be 1..={ACTIVE_SYNC_SESSION_READ_MAX}")));
+        }
         match self {
             #[cfg(feature = "sqlite")]
-            Self::Sqlite(inner) => inner.list_active_sync_sessions(space_id).await,
+            Self::Sqlite(inner) => inner.list_active_sync_sessions_page(space_id, offset, limit).await,
             #[cfg(feature = "postgres")]
-            Self::Postgres(inner) => inner.list_active_sync_sessions(space_id).await,
+            Self::Postgres(inner) => inner.list_active_sync_sessions_page(space_id, offset, limit).await,
             #[cfg(feature = "neo4j")]
-            Self::Neo4j(inner) => inner.list_active_sync_sessions(space_id).await,
+            Self::Neo4j(inner) => inner.list_active_sync_sessions_page(space_id, offset, limit).await,
         }
     }
 
@@ -2645,10 +2901,13 @@ impl HubDirectory for HubDirectories {
 mod tests {
     use super::sqlite::SqliteDirectory;
     use super::*;
-    use crate::artifact_authority::chunk_cas::{artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1, ArtifactCasObjectKind, ArtifactChunkBlobStore, FsArtifactChunkCasStorage, MemoryArtifactChunkCasStorage};
+    use crate::artifact_authority::chunk_cas::{
+        artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1, ArtifactCasObjectKind, ArtifactChunkBlobStore, FsArtifactChunkCasStorage, MemoryArtifactChunkCasStorage,
+    };
     use crate::artifact_authority::{ArtifactBlobIntegrity, ArtifactPair, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, AuthorityProgressStage, ImmutableArtifactBlobStore, OperationContext, StagedArtifactBlob};
     use db::db_storage::{DbIoPageWriter, MemoryStorage as GenericMemoryStorage, PayloadStorage, DB_IO_PAGE_BYTES};
     use directory::{DslValue, FromValue, ToValue};
+    use std::collections::BTreeSet;
     use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
     use std::sync::Arc;
 
@@ -2751,12 +3010,12 @@ mod tests {
     async fn identity_verifier_port_honors_progress_cancel_deadline_and_provider_error() {
         let assertion = IdentityAssertion::new(b"signed-test-assertion".to_vec().into_boxed_slice()).expect("bounded assertion");
         let success = IdentityProbe { now: 10, cancelled: false, progress: std::sync::Mutex::new(Vec::new()) };
-        let verified = TestIdentityVerifier { fail: false }
-            .verify(&assertion, &IdentityVerificationContext { deadline_ms: 10, control: &success })
-            .await
-            .expect("verified identity");
+        let verified = TestIdentityVerifier { fail: false }.verify(&assertion, &IdentityVerificationContext { deadline_ms: 10, control: &success }).await.expect("verified identity");
         assert_eq!(verified.subject, "test-subject");
-        assert_eq!(success.progress.into_inner().expect("success progress"), vec![IdentityVerificationProgress { completed_units: 0, total_units: 2 }, IdentityVerificationProgress { completed_units: 1, total_units: 2 }, IdentityVerificationProgress { completed_units: 2, total_units: 2 }]);
+        assert_eq!(
+            success.progress.into_inner().expect("success progress"),
+            vec![IdentityVerificationProgress { completed_units: 0, total_units: 2 }, IdentityVerificationProgress { completed_units: 1, total_units: 2 }, IdentityVerificationProgress { completed_units: 2, total_units: 2 }]
+        );
 
         let cancelled = IdentityProbe { now: 10, cancelled: true, progress: std::sync::Mutex::new(Vec::new()) };
         assert!(matches!(TestIdentityVerifier { fail: false }.verify(&assertion, &IdentityVerificationContext { deadline_ms: 10, control: &cancelled }).await, Err(DirectoryError::Conflict(_))));
@@ -2989,7 +3248,16 @@ mod tests {
         }
     }
 
-    async fn stage_reserved_checkpoint<S: ArtifactChunkCasStorage>(service: &DirectoryService, storage: Arc<S>, actor: DirectoryActor, checkpoint: &ArtifactCheckpoint, pair: &ArtifactPair, expires_at_ms: u64, now_ms: u64, context: &OperationContext<'_>) -> DirectoryResult<ArtifactCasReservation> {
+    async fn stage_reserved_checkpoint<S: ArtifactChunkCasStorage>(
+        service: &DirectoryService,
+        storage: Arc<S>,
+        actor: DirectoryActor,
+        checkpoint: &ArtifactCheckpoint,
+        pair: &ArtifactPair,
+        expires_at_ms: u64,
+        now_ms: u64,
+        context: &OperationContext<'_>,
+    ) -> DirectoryResult<ArtifactCasReservation> {
         let plan = prepare_artifact_cas_ownership_v1(checkpoint, pair).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
         let reservation = service.reserve_artifact_cas(actor, plan, expires_at_ms, now_ms).await?;
         let coordinator_id = *reservation.coordinator_id();
@@ -3008,19 +3276,11 @@ mod tests {
         let digest = |kind: &str, object: usize| ArtifactHash(Sha256::digest(format!("sweep-continuation:{index}:{kind}:{object}").as_bytes()));
         let pack_manifest_id = digest("pack-manifest", 0);
         let spr_manifest_id = digest("spr-manifest", 0);
-        let mut objects: Vec<_> = (0..object_count.saturating_sub(2))
-            .map(|object| ArtifactCasObjectKey { space_id: "sweep-space".into(), kind: ArtifactCasObjectKind::Chunk, digest: digest("chunk", object) })
-            .collect();
+        let mut objects: Vec<_> = (0..object_count.saturating_sub(2)).map(|object| ArtifactCasObjectKey { space_id: "sweep-space".into(), kind: ArtifactCasObjectKind::Chunk, digest: digest("chunk", object) }).collect();
         objects.push(ArtifactCasObjectKey { space_id: "sweep-space".into(), kind: ArtifactCasObjectKind::Manifest, digest: pack_manifest_id });
         objects.push(ArtifactCasObjectKey { space_id: "sweep-space".into(), kind: ArtifactCasObjectKind::Manifest, digest: spr_manifest_id });
         objects.sort_by_key(|object| (object.kind, object.digest.0));
-        ArtifactCasOwnershipPlanV1 {
-            scope: DocumentScope::new("sweep-space", format!("sweep-document-{index}")),
-            checkpoint_id: digest("checkpoint", 0),
-            pack_manifest_id,
-            spr_manifest_id,
-            objects,
-        }
+        ArtifactCasOwnershipPlanV1 { scope: DocumentScope::new("sweep-space", format!("sweep-document-{index}")), checkpoint_id: digest("checkpoint", 0), pack_manifest_id, spr_manifest_id, objects }
     }
 
     fn artifact_event(seq: u64, body: DirectoryEventBody) -> DirectoryEvent {
@@ -3069,6 +3329,98 @@ mod tests {
         let events = vec![new_event(&mut clock, &seed_actor, None, Some("u-owner".into()), DirectoryEventBody::UserCreated { user_id: "u-owner".into(), email: "u-owner@example.com".into(), display_name: "Owner".into() })];
         dir.append_events(&events).await.expect("seed owner user");
         Arc::new(HubDirectories::from(dir))
+    }
+
+    fn admin_audit_fact(request_id: &str, digest_byte: &str, phase: &str, outcome: &str) -> NewAdminOperationAuditRecord {
+        NewAdminOperationAuditRecord {
+            request_id: request_id.into(),
+            intent_digest: digest_byte.repeat(64),
+            operation_id: format!("operation:{request_id}"),
+            occurred_at: 1,
+            phase: phase.into(),
+            intent_kind: "delete-space".into(),
+            target_kind: "space".into(),
+            target_id: "space:one".into(),
+            principal_user_id: "user:admin".into(),
+            principal_session_id: "session:admin".into(),
+            principal_generation: 7,
+            correlation_id: "correlation:admin".into(),
+            event_seq_first: None,
+            event_seq_last: None,
+            outcome_code: outcome.into(),
+            reason_code: None,
+        }
+    }
+
+    #[tokio::test]
+    async fn admin_operation_audit_concurrent_first_writer_is_idempotent_and_first_terminal_wins() {
+        let directory = fresh_dir().await;
+        let accepted = admin_audit_fact("request:race", "1", "accepted", "accepted");
+        let barrier = Arc::new(tokio::sync::Barrier::new(33));
+        let mut writers = Vec::new();
+        for _ in 0..32 {
+            let directory = directory.clone();
+            let accepted = accepted.clone();
+            let barrier = barrier.clone();
+            writers.push(tokio::spawn(async move {
+                barrier.wait().await;
+                directory.append_admin_operation_audit(&accepted).await
+            }));
+        }
+        barrier.wait().await;
+        let mut sequences = BTreeSet::new();
+        for writer in writers {
+            sequences.insert(writer.await.expect("race writer").expect("idempotent append").sequence);
+        }
+        assert_eq!(sequences.len(), 1);
+        assert_eq!(directory.admin_operation_audit_for_request("request:race").await.expect("race audit").len(), 1);
+        let collision = admin_audit_fact("request:race", "2", "accepted", "accepted");
+        assert!(matches!(directory.append_admin_operation_audit(&collision).await, Err(DirectoryError::Conflict(_))));
+
+        let cancelled = admin_audit_fact("request:race", "1", "cancelled", "operator-cancelled");
+        let failed = admin_audit_fact("request:race", "1", "failed", "late-failure");
+        assert_eq!(directory.append_admin_operation_audit(&cancelled).await.expect("cancel terminal").fact.phase, "cancelled");
+        assert!(matches!(directory.append_admin_operation_audit(&failed).await, Err(DirectoryError::Conflict(_))), "a different later terminal cannot masquerade as the winning cancellation");
+        assert_eq!(directory.append_admin_operation_audit(&cancelled).await.expect("idempotent winning terminal").fact.phase, "cancelled");
+        let operation_rows = directory.admin_operation_audit_for_operation("operation:request:race").await.expect("operation-id status lookup");
+        assert_eq!(operation_rows.len(), 2);
+        assert!(operation_rows.iter().all(|row| row.fact.request_id == "request:race"));
+        let rows = directory.list_admin_operation_audit(0, ADMIN_PAGE_MAX).await.expect("bounded audit page");
+        assert_eq!(rows.len(), 2);
+        assert!(directory.list_admin_operation_audit(0, ADMIN_PAGE_MAX + 1).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn admin_bounded_overview_space_and_document_projections_enforce_exact_page_boundary() {
+        let directory = fresh_dir().await;
+        let service = DirectoryService::new(directory.clone(), 64);
+        let owner = user_actor("u-owner");
+        let space_id = create_space(&service, &owner, DirectorySpaceKind::Studio).await;
+        for index in 0..=ADMIN_PAGE_MAX {
+            service.execute(owner.clone(), DirectoryCommand::AnnounceDocument { descriptor: descriptor(&space_id, &format!("document:{index:03}")) }).await.expect("announce bounded-page document");
+        }
+
+        assert_eq!(directory.admin_overview_counts().await.expect("constant-space overview counts"), AdminDirectoryOverviewCounts { spaces: 1, users: 1, connections: 0 },);
+        let spaces = directory.list_admin_space_summaries_page(None, 0, ADMIN_PAGE_FETCH_MAX).await.expect("bounded space summary page");
+        assert_eq!(spaces.len(), 1);
+        assert_eq!(spaces[0].member_count, 1);
+        assert_eq!(spaces[0].document_count, u64::try_from(ADMIN_PAGE_FETCH_MAX).expect("page maximum fits u64"));
+        assert_eq!(spaces[0].active_connections, 0);
+        assert_eq!(directory.list_admin_space_summaries_page(Some(&space_id), 0, 1).await.expect("exact space summary").len(), 1);
+        assert_eq!(directory.list_admin_space_members_page(&space_id, 0, ADMIN_PAGE_FETCH_MAX).await.expect("bounded member page").len(), 1);
+        assert!(directory.list_admin_space_summaries_page(None, 0, 0).await.is_err());
+        assert!(directory.list_admin_space_summaries_page(None, 0, ADMIN_PAGE_FETCH_MAX + 1).await.is_err());
+        assert!(directory.list_admin_space_members_page(&space_id, 0, 0).await.is_err());
+        assert!(directory.list_admin_space_members_page(&space_id, 0, ADMIN_PAGE_FETCH_MAX + 1).await.is_err());
+        let first = directory.list_document_descriptors_page(None, 0, ADMIN_PAGE_FETCH_MAX).await.expect("page plus continuation probe");
+        assert_eq!(first.len(), ADMIN_PAGE_FETCH_MAX);
+        assert_eq!(first.first().expect("first descriptor").document_id, "document:000");
+        assert_eq!(first.last().expect("continuation descriptor").document_id, "document:100");
+        let continuation = directory.list_document_descriptors_page(Some(&space_id), ADMIN_PAGE_MAX, ADMIN_PAGE_FETCH_MAX).await.expect("scoped continuation page");
+        assert_eq!(continuation.len(), 1);
+        assert_eq!(continuation[0].document_id, "document:100");
+        assert!(directory.list_document_descriptors_page(None, 0, 0).await.is_err());
+        assert!(directory.list_document_descriptors_page(None, 0, ADMIN_PAGE_FETCH_MAX + 1).await.is_err());
     }
 
     async fn create_space(service: &DirectoryService, owner: &DirectoryActor, kind: DirectorySpaceKind) -> String {
@@ -3198,7 +3550,10 @@ mod tests {
         stage_control.now_ms.store(401, Ordering::SeqCst);
         let cancel = ArtifactCasProbe::new(401, Some(1));
         let cancel_context = OperationContext::new(10_000, AuthorityLimits::maximum(), &cancel);
-        assert!(matches!(service.sweep_artifact_cas(storage.as_ref(), ArtifactCasSweepRequest { execute: true, max_objects: ARTIFACT_CAS_SWEEP_OBJECT_MAX, continuation: None }, &cancel_context).await, Err(crate::artifact_authority::AuthorityError::Cancelled)));
+        assert!(matches!(
+            service.sweep_artifact_cas(storage.as_ref(), ArtifactCasSweepRequest { execute: true, max_objects: ARTIFACT_CAS_SWEEP_OBJECT_MAX, continuation: None }, &cancel_context).await,
+            Err(crate::artifact_authority::AuthorityError::Cancelled)
+        ));
         let progress = cancel.progress.lock().expect("cancel progress");
         let swept: Vec<_> = progress.iter().filter(|item| item.stage == AuthorityProgressStage::CasSweep).copied().collect();
         assert_eq!(swept.len(), 1);
@@ -3234,7 +3589,10 @@ mod tests {
         let storage = MemoryArtifactChunkCasStorage::default();
         let probe = ArtifactCasProbe::new(201, None);
         let context = OperationContext::new(10_000, AuthorityLimits::maximum(), &probe);
-        assert!(matches!(service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum + 1, continuation: None }, &context).await, Err(crate::artifact_authority::AuthorityError::ResourceLimit("artifact CAS sweep object"))));
+        assert!(matches!(
+            service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum + 1, continuation: None }, &context).await,
+            Err(crate::artifact_authority::AuthorityError::ResourceLimit("artifact CAS sweep object"))
+        ));
         let first = service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum, continuation: None }, &context).await.expect("first bounded sweep");
         let continuation = first.continuation.expect("first sweep continuation");
         assert_eq!(first.examined_objects, law["expectedExaminedPerRequest"][0].as_u64().expect("first examined"));
@@ -3271,10 +3629,7 @@ mod tests {
         let storage = FailingAdvanceArtifactCas(MemoryArtifactChunkCasStorage::default());
         let probe = ArtifactCasProbe::new(201, None);
         let context = OperationContext::new(10_000, AuthorityLimits::maximum(), &probe);
-        assert!(matches!(
-            service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: 1, continuation: None }, &context).await,
-            Err(crate::artifact_authority::AuthorityError::Cancelled)
-        ));
+        assert!(matches!(service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: 1, continuation: None }, &context).await, Err(crate::artifact_authority::AuthorityError::Cancelled)));
         service.reserve_artifact_cas(system, plan, 400, 201).await.expect("failure cleanup releases live lease immediately");
     }
 
@@ -3320,10 +3675,7 @@ mod tests {
         let reservation = reserve_service.reserve_artifact_cas(system.clone(), live_plan, 10_000, 5_301).await.expect("reserve after deletion lease expiry");
         let rewrite_control = ArtifactCasProbe::new(5_301, None);
         let rewrite_context = OperationContext::new(20_000, AuthorityLimits::maximum(), &rewrite_control);
-        storage
-            .advance_physical_epoch(*reservation.coordinator_id(), &space_id, reservation.physical_epoch(), &rewrite_context)
-            .await
-            .expect("advance raced reservation epoch before stage");
+        storage.advance_physical_epoch(*reservation.coordinator_id(), &space_id, reservation.physical_epoch(), &rewrite_context).await.expect("advance raced reservation epoch before stage");
         let blobs = ArtifactChunkBlobStore::new(storage.clone());
         let pack = blobs.stage(&space_id, ArtifactBlobIntegrity { sha256: live.pack.sha256, byte_length: live.pack.byte_length }, &pair.pack, &rewrite_context).await.expect("stage raced pack");
         let spr = blobs.stage(&space_id, ArtifactBlobIntegrity { sha256: live.spr.sha256, byte_length: live.spr.byte_length }, &pair.spr, &rewrite_context).await.expect("stage raced SPR");
@@ -3411,7 +3763,9 @@ mod tests {
         let mut old = spawn("old-sweep");
         let entered = root.join("old-delete-entered");
         for _ in 0..4_000 {
-            if entered.exists() { break; }
+            if entered.exists() {
+                break;
+            }
             assert!(old.try_wait().expect("poll old sweep child").is_none(), "old sweep child exited before conditional deletion");
             tokio::time::sleep(std::time::Duration::from_millis(5)).await;
         }

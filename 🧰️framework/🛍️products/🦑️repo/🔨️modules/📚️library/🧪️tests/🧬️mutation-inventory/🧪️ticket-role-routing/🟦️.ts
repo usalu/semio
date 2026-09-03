@@ -29,7 +29,7 @@ type Case = {
 };
 
 type Vectors = { readonly schemaVersion: 1; readonly cases: readonly Case[] };
-const root = resolve(import.meta.dir, "../../../../../../../../"), schemaPath = resolve(import.meta.dir, "🧬️schema/🔣️.json"), vectorsPath = resolve(import.meta.dir, "🔣️.json"), rootScriptPath = resolve(root, "📜️script.ts"), normalizationPath = resolve(import.meta.dir, "../../../🧹️normalization/🟦️.ts");
+const root = resolve(import.meta.dir, "../../../../../../../../"), schemaPath = resolve(import.meta.dir, "../../🧬️🔀️🌲️mutation-inventory/🧪️🎫️ticket-role-routing/🧬️schema/🔣️.json"), vectorsPath = resolve(import.meta.dir, "../../🧬️🔀️🌲️mutation-inventory/🧪️🎫️ticket-role-routing/🔣️.json"), rootScriptPath = resolve(root, "📜️script.ts"), normalizationPath = resolve(import.meta.dir, "../../../🧹️normalization/🟦️.ts");
 const schema = JSON.parse(readFileSync(schemaPath, "utf8")), vectors = JSON.parse(readFileSync(vectorsPath, "utf8")) as Vectors;
 
 /** 🧪️ Projects supplied role facts only; it does not construct a source roster. */

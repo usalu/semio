@@ -8,4 +8,6 @@ type SemioBrepArtifact {
   faces: [BrepFace!]! @state(class: ARTIFACT)
   shells: [BrepShell!]! @state(class: ARTIFACT)
   solids: [BrepSolid!]! @state(class: ARTIFACT)
+  coedges: [BrepCoedge!]! @state(class: ARTIFACT)
+  nextLabel: Int! @state(class: ARTIFACT)
 }

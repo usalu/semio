@@ -1,0 +1,26 @@
+{
+  "schema": "semio.mcp.canonical-pair-cache-mount.fixture/v1",
+  "limits": { "pairBytes": 4194304, "cacheBytes": 8388608, "entries": 4, "headerBytes": 16384, "recordBytes": 4096 },
+  "binding": {
+    "hubOrigin": "https://hub.invalid",
+    "authorityGeneration": 7,
+    "spaceId": "space:alpha",
+    "documentId": "doc:tokyo",
+    "sameDocumentOtherSpace": "space:beta",
+    "descriptorDigest": "1111111111111111111111111111111111111111111111111111111111111111",
+    "checkpointId": "2222222222222222222222222222222222222222222222222222222222222222",
+    "catalogGeneration": 9
+  },
+  "valid": {
+    "mediaType": "application/vnd.semio.canonical-checkpoint-pair.v1",
+    "etag": "\"7135321061d8ca1c40e085b4b89e856be0b59018827c3d33dbebee2a197271d8\"",
+    "packHex": "0314253647",
+    "sprHex": "072441",
+    "packSha256": "37a74a7a85b6aa70d6d6b826b93e91565daf3a42aa51ae3c5db1f5f6129c1deb",
+    "sprSha256": "0f1f4a255a81a102cf68ab6209128f7b266ecad4d85d154e2d4dbe2646984e0b",
+    "aggregateSha256": "4f6f9a23a28a28a3faa8e5fb57922f201f1c25b4b1630ebaded9aa02026afe78",
+    "wireHex": "0000011801000000010000000b73706163653a616c70686100000009646f633a746f6b796f1111111111111111111111111111111111111111111111111111111111111111222222222222222222222222222222222222222222222222222222222222222200000009646f633a746f6b796f000000000000000700000006656469743a370000000000000006333333333333333333333333333333333333333333333333333333333333333337a74a7a85b6aa70d6d6b826b93e91565daf3a42aa51ae3c5db1f5f6129c1deb00000000000000050f1f4a255a81a102cf68ab6209128f7b266ecad4d85d154e2d4dbe2646984e0b00000000000000034f6f9a23a28a28a3faa8e5fb57922f201f1c25b4b1630ebaded9aa02026afe7800000017020100000000000000000000000000000005031425364700000015020200000001000000000000000000000003072441000000020300"
+  },
+  "negativeVectors": ["truncated", "reordered", "duplicate", "oversize-record", "wrong-scope", "wrong-digest", "wrong-checkpoint", "malformed-utf8", "control-character", "bad-pack-hash", "bad-aggregate", "bad-etag", "missing-terminal", "trailing-data", "same-document-other-space"],
+  "lifecycle": ["cache-hit", "cache-miss", "stale-completion", "eviction", "revoke", "stream-loss-reconnect", "rebootstrap", "cancel", "restart"]
+}

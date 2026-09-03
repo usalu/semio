@@ -49,6 +49,14 @@
         "command": "bun ./📜️script.ts test exhaustive"
       }
     },
+    "canonical-pair-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts canonical-pair-check"
+      }
+    },
     "dev": {
       "executor": "nx:run-commands",
       "options": {

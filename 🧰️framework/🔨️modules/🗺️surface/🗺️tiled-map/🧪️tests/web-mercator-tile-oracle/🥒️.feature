@@ -10,7 +10,7 @@ Feature: Web-Mercator projection and slippy-tile selection agree with a third-pa
   and XYZ tile numbers independently of this repository, from the same published spec.
 
   The full vector set (projection points, tile numbers, tile bounding boxes) lives in the sibling
-  `local://🔣️.json`, generated once from `mercantile` and frozen. Both the `🐍️.py` oracle
+  `local://🔣️.json`, generated once from `mercantile` and frozen. Both the `../../🧪️🧪️🏔️🦋️tests/🕸️web-mercator-tile-oracle/🐍️.py` oracle
   adapter (re-derives every value from `mercantile` and asserts it still matches the frozen fixture)
   and the crate's own `tests/🗺️tiled_map_mercator_oracle.rs` integration test (asserts this
   repository's Rust implementation matches the same frozen fixture) read that one file, so oracle and

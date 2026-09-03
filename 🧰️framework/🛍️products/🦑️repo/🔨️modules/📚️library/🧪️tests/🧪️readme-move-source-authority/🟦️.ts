@@ -9,8 +9,8 @@ import ts from "typescript";
 
 const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "🧹️normalization/🟦️.ts");
 const source = readFileSync(sourcePath, "utf8"), tree = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧪️🪪️🍋️readme-move-source-authority/🔣️.json"), "utf8"));
+const schema = JSON.parse(readFileSync(join(import.meta.dir, "../🧪️🪪️🍋️readme-move-source-authority/🧬️schema/🔣️.json"), "utf8"));
 const sha = (value: string | Uint8Array): string => createHash("sha256").update(value).digest("hex");
 const compilers = [
   { name: "Bun", compile: (code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code) },
@@ -107,7 +107,7 @@ function implementation(compiler: typeof compilers[number], adapters: Record<str
 const apis = compilers.map((compiler) => ({ compiler, api: implementation(compiler) }));
 
 test("move source authority has a closed neutral grammar with independent JSON and file-hash parity", () => {
-  expect(getNodeValue(parseTree(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"))!)).toEqual(vector);
+  expect(getNodeValue(parseTree(readFileSync(join(import.meta.dir, "../🧪️🪪️🍋️readme-move-source-authority/🔣️.json"), "utf8"))!)).toEqual(vector);
   expect(new Ajv({ allErrors: true }).compile(schema.definitions.execution)(vector.execution)).toBe(true);
   expect(new Ajv({ allErrors: true }).compile(schema.definitions.strictCompilation)(vector.strictCompilation)).toBe(true);
   const validate = new Ajv({ allErrors: true }).compile(schema);

@@ -26,6 +26,7 @@ use semio_framework_plugin_host::OwnedRuntime;
 /// object-safe async trait, not inherent) into method-call scope for `undo_probe_mutation`/
 /// `redo_probe_mutation` below.
 use store::SpaceMember as _;
+use semio_framework_os_kernel::os_directory::client::LocalHubCredential;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
@@ -167,6 +168,11 @@ pub fn load_package_descriptor(owner_root: &Path) -> Result<semio_framework::Pac
 /// `os.agent.probe/v1` is namespaced under `os.agent.*` precisely so it can never collide with a real
 /// plugin schema id.
 pub const PROBE_SCHEMA: &str = "os.agent.probe/v1";
+pub const PROBE_PACK_SCHEMA_HASH: &str = "9fab7cb8b71dabede955b4257fa06e2908642e0904f124b6230479f8a153041e";
+
+fn probe_record_spec() -> store::os_dsl::RecordSpec {
+    store::os_dsl::RecordSpec::new(Some("probe"), store::os_dsl::RecordLayout::Inline, vec![store::os_dsl::FieldSpec::new(0, "value", store::os_dsl::Shape::Value)])
+}
 
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct ProbeSnapshot(pub serde_json::Value);
@@ -190,6 +196,10 @@ impl store::ArtifactPack for ProbeSnapshot {
 
     fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         serde_json::from_slice(bytes).map(ProbeSnapshot).map_err(|error| store::PackError::Schema(error.to_string()))
+    }
+
+    fn record_spec() -> Option<store::os_dsl::RecordSpec> {
+        Some(probe_record_spec())
     }
 }
 
@@ -325,7 +335,7 @@ pub type ProbeStore = store::ArtifactStore<ProbeSnapshot, ProbeMutation>;
 pub fn ensure_probe_codec_registered() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
-        let _ = store::register_document_codec(store::ArtifactCodec::of::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA));
+        store::register_document_codec_now(store::ArtifactCodec::of::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA)).expect("register MCP probe codec");
     });
 }
 
@@ -424,20 +434,20 @@ fn close_probe_store_to_terminal(mut probe_store: ProbeStore) {
 
 //#region 🔖️Binding
 /// 🗃️ Which durable place this workspace's artifacts synchronize with — the two shapes
-/// `📋️master.md` §2.1 names (`--folder <dir>` / `--hub <url> --space <id> --token <t>`), kept as our
+/// `📋️master.md` §2.1 names (`--folder <dir>` / `--hub <url> --space <id>`), kept as our
 /// own small enum (rather than exposing `store::sync::PersistenceBinding` directly at this crate's
 /// public surface) only so `bin.rs`'s argv parsing has a single obvious constructor to build.
 #[derive(Clone)]
 pub enum WorkspaceOrigin {
     Folder { path: PathBuf },
-    Hub { base_url: String, space_id: String, token: String },
+    Hub { base_url: String, space_id: String },
 }
 
 impl std::fmt::Debug for WorkspaceOrigin {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Folder { path } => formatter.debug_struct("Folder").field("path", path).finish(),
-            Self::Hub { base_url, space_id, .. } => formatter.debug_struct("Hub").field("base_url", base_url).field("space_id", space_id).field("token", &"[REDACTED]").finish(),
+            Self::Hub { base_url, space_id } => formatter.debug_struct("Hub").field("base_url", base_url).field("space_id", space_id).finish(),
         }
     }
 }
@@ -446,7 +456,7 @@ impl WorkspaceOrigin {
     fn persistence_binding(&self) -> store::sync::PersistenceBinding {
         match self {
             WorkspaceOrigin::Folder { path } => store::sync::PersistenceBinding::Folder { path: path.clone() },
-            WorkspaceOrigin::Hub { base_url, space_id, token } => store::sync::PersistenceBinding::Hub { base_url: base_url.clone(), space_id: space_id.clone(), token: Some(token.clone()), surface: None },
+            WorkspaceOrigin::Hub { base_url, space_id } => store::sync::PersistenceBinding::Hub { base_url: base_url.clone(), space_id: space_id.clone(), surface: None },
         }
     }
 
@@ -455,6 +465,13 @@ impl WorkspaceOrigin {
     /// itself fans mutations out over the websocket, which `ArtifactHost` already handles.
     fn watch_external(&self) -> bool {
         matches!(self, WorkspaceOrigin::Folder { .. })
+    }
+
+    fn artifact_document_key(&self, document_id: &str) -> store::sync::ArtifactDocumentKey {
+        match self {
+            WorkspaceOrigin::Folder { .. } => store::sync::ArtifactDocumentKey::local(document_id),
+            WorkspaceOrigin::Hub { space_id, .. } => store::sync::ArtifactDocumentKey::hub(space_id, document_id),
+        }
     }
 
     pub fn describe(&self) -> String {
@@ -1180,7 +1197,7 @@ impl Drop for HeadlessWorkspace {
         drop(self.hub_driver.take());
         let probes = std::mem::take(&mut *self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner));
         for (artifact_id, probe_store) in probes {
-            self.artifact_host.close(&artifact_id);
+            self.artifact_host.close_key(&self.origin.artifact_document_key(&artifact_id));
             close_probe_store_to_terminal(probe_store);
         }
     }
@@ -1213,25 +1230,41 @@ impl HeadlessWorkspace {
         Ok(Self::new(WorkspaceOrigin::Folder { path }, principal, scopes, catalog))
     }
 
-    pub fn open_hub(base_url: String, space_id: String, token: String, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>) -> Result<Self, GatewayError> {
-        remote::validate_hub_origin(&base_url, &space_id, &token)?;
+    pub fn open_hub(base_url: String, space_id: String, credential: Arc<LocalHubCredential>, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>) -> Result<Self, GatewayError> {
+        remote::validate_hub_origin(&base_url, &space_id)?;
         #[cfg(not(target_arch = "wasm32"))]
         {
-            let (binding, driver) = NativeHubBindingDriver::connect(&base_url, &space_id, &token)?;
-            let mut workspace = Self::new(WorkspaceOrigin::Hub { base_url, space_id, token }, principal, scopes, catalog);
+            let (binding, driver, grant_source) = NativeHubBindingDriver::connect(credential.clone(), &base_url, &space_id)?;
+            let mut workspace = Self::new(WorkspaceOrigin::Hub { base_url, space_id }, principal, scopes, catalog);
+            workspace.artifact_host.set_local_hub_credential(credential);
+            workspace.artifact_host.set_hub_socket_grant_source(grant_source);
             workspace.hub_binding = Some(binding);
             workspace.hub_driver = Some(driver);
             Ok(workspace)
         }
         #[cfg(target_arch = "wasm32")]
         {
-            let _ = (base_url, space_id, token, principal, scopes, catalog);
+            let _ = (base_url, space_id, credential, principal, scopes, catalog);
             Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "native hub directory transport is unavailable on wasm32").retryable())
         }
     }
 
     pub fn origin(&self) -> &WorkspaceOrigin {
         &self.origin
+    }
+
+    pub fn authenticated_probe_document_is_known(&self, artifact_id: &str) -> Result<bool, GatewayError> {
+        if !matches!(self.origin, WorkspaceOrigin::Hub { .. }) {
+            return Ok(false);
+        }
+        let snapshot = self.hub_snapshot()?;
+        let Some(document) = snapshot.documents.values().find(|document| document.scope.document_id == artifact_id) else {
+            return Ok(false);
+        };
+        if document.view.descriptor.artifact_schema != PROBE_SCHEMA || document.view.descriptor.pack_schema_hash != PROBE_PACK_SCHEMA_HASH {
+            return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("artifact `{artifact_id}` is not the authenticated MCP probe schema")).retryable());
+        }
+        Ok(true)
     }
 
     fn actor_label(&self) -> String {
@@ -1276,6 +1309,10 @@ impl HeadlessWorkspace {
     /// with neither an open store nor a persisted row. Same race fix as `workspace_artifact_ids` —
     /// see that method's own doc.
     pub fn read_artifact_bytes(&self, artifact_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
+        if let Some(probe_store) = self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(artifact_id) {
+            let files = semio_framework::io::resolve_ready(probe_store.snapshot_pack()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("snapshotting `{artifact_id}`: {error}")))?;
+            return Ok(Some((files.pack, files.spr)));
+        }
         if matches!(self.origin, WorkspaceOrigin::Hub { .. }) {
             let snapshot = self.hub_snapshot()?;
             let known = snapshot.documents.keys().any(|scope| scope.document_id == artifact_id);
@@ -1284,10 +1321,6 @@ impl HeadlessWorkspace {
             } else {
                 Ok(None)
             };
-        }
-        if let Some(probe_store) = self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(artifact_id) {
-            let files = semio_framework::io::resolve_ready(probe_store.snapshot_pack()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("snapshotting `{artifact_id}`: {error}")))?;
-            return Ok(Some((files.pack, files.spr)));
         }
         match &self.origin {
             WorkspaceOrigin::Folder { path } => {
@@ -1336,7 +1369,7 @@ impl HeadlessWorkspace {
                 .dispatch(store::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(initial)], description: Some("os.agent headless seed".to_string()) })
                 .await
                 .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("seeding `{artifact_id}`: {error}")))?;
-            self.artifact_host.send(artifact_id, store::sync::ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).await;
+            self.artifact_host.send_key(&self.origin.artifact_document_key(artifact_id), store::sync::ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).await;
         }
         let applied_edit_ids = probe_store.applied_edit_ids();
         let head_edit_id = applied_edit_ids.last().cloned().unwrap_or_default();
@@ -1362,7 +1395,7 @@ impl HeadlessWorkspace {
         let cursor = applied_edit_ids.len().to_string();
         self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(artifact_id.to_string(), probe_store);
         dispatched.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("applying mutation to `{artifact_id}`: {error}")))?;
-        self.artifact_host.send(artifact_id, store::sync::ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).await;
+        self.artifact_host.send_key(&self.origin.artifact_document_key(artifact_id), store::sync::ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).await;
         Ok(RevisionStamp { artifact_id: artifact_id.to_string(), head_edit_id, cursor })
     }
 
@@ -1793,6 +1826,12 @@ fn base64_encode(bytes: &[u8]) -> String {
 mod quick {
     use super::*;
 
+    #[test]
+    fn probe_pack_schema_hash_matches_the_cross_process_descriptor_contract() {
+        let actual = store::os_pack::schema_hash(&probe_record_spec()).iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+        assert_eq!(actual, PROBE_PACK_SCHEMA_HASH);
+    }
+
     fn empty_catalog() -> Arc<Catalog> {
         Arc::new(crate::compile(&crate::CatalogSource::default(), semio_framework::Locale::En, semio_framework::Terminology::Native).expect("empty catalog source compiles"))
     }
@@ -1813,10 +1852,10 @@ mod quick {
             observed_event_seq: 8,
             documents: HashMap::from([(scope, document)]),
         };
-        let binding = Arc::new(HubRemoteBinding::new("space-a").unwrap());
+        let binding = Arc::new(HubRemoteBinding::new("https://hub.invalid", "space-a").unwrap());
         binding.install_snapshot_for_test(snapshot);
         let mut workspace = HeadlessWorkspace::new(
-            WorkspaceOrigin::Hub { base_url: "https://hub.invalid".to_string(), space_id: "space-a".to_string(), token: "secret-never-rendered".to_string() },
+            WorkspaceOrigin::Hub { base_url: "https://hub.invalid".to_string(), space_id: "space-a".to_string() },
             "forged-local-principal".to_string(),
             vec!["admin".to_string()],
             empty_catalog(),

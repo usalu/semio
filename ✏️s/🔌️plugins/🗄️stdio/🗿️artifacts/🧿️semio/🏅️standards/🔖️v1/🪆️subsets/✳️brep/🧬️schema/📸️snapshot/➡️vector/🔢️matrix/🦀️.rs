@@ -8,6 +8,7 @@
 //! under `➡️vector` (its sole dependency) since no target stub was pre-mounted for it.
 
 use super::{Pnt3, Vec3};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::polynomial::solve_cubic;
 
 // #region 🔖️Mat
 
@@ -407,6 +408,25 @@ impl Affine3 {
         };
         Some((Quat::from_mat3(&rotation_matrix), scale, is_reflection))
     }
+    /// 🧭️ The largest singular value of `linear` — how much the map can stretch a unit vector in
+    /// its worst direction, the correct factor to scale a tolerance radius by after transforming
+    /// the geometry it bounds. Exact and cheap (`= uniform_scale`) for a similarity; otherwise the
+    /// largest root of `MᵀM`'s cubic characteristic polynomial (`M = linear`, symmetric positive
+    /// semi-definite, so every root is real and ≥ 0), square-rooted.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn max_singular_value(&self) -> f64 {
+        if let Some((_, scale, _)) = self.is_similarity() {
+            return scale;
+        }
+        let mtm = self.linear.transpose().mul(&self.linear);
+        let m = &mtm.rows;
+        let trace = m[0][0] + m[1][1] + m[2][2];
+        let minor = |i: usize, j: usize| m[i][i] * m[j][j] - m[i][j] * m[j][i];
+        let sum_minors = minor(0, 1) + minor(0, 2) + minor(1, 2);
+        let det = mtm.determinant();
+        let roots = solve_cubic(1.0, -trace, sum_minors, -det);
+        roots.into_iter().fold(0.0_f64, f64::max).max(0.0).sqrt()
+    }
 }
 
 // #endregion 🔖️Affine
@@ -658,6 +678,18 @@ mod tests {
         let via_normal = a.apply_normal(n).normalized().unwrap();
         let via_vector = a.apply_vector(n).normalized().unwrap();
         assert!((via_normal - via_vector).norm() < 1e-9);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn affine_max_singular_value_matches_scale_for_similarity() {
+        let a = Affine3::from_trsf(&Trsf { rotation: Quat::from_axis_angle(Vec3::new(0.1, 1.0, 0.2), 0.5), translation: Vec3::ZERO, scale: 4.2 });
+        assert!((a.max_singular_value() - 4.2).abs() < 1e-9);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn affine_max_singular_value_matches_largest_scale_factor_for_diagonal_scale() {
+        let a = Affine3::scaling(Pnt3::new(0.0, 0.0, 0.0), Vec3::new(2.0, 5.0, 3.0));
+        assert!((a.max_singular_value() - 5.0).abs() < 1e-9);
     }
 
     mod quick {

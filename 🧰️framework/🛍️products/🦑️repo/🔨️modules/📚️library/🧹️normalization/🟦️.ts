@@ -2206,9 +2206,20 @@ function splitLeadingEmoji(value: string): { emoji: string; rest: string } {
   return { emoji: first, rest: value.slice(first.length) };
 }
 
+function splitLeadingEmojiIdentity(value: string): { sequence: string; first: string; rest: string } {
+  let sequence = "", first = "";
+  for (const { segment } of SEGMENTER.segment(value.normalize("NFC"))) {
+    if (!isEmojiGrapheme(segment)) break;
+    if (!first) first = segment;
+    sequence += segment;
+  }
+  return { sequence, first, rest: value.slice(sequence.length) };
+}
+
 function matchDirectoryKind(name: string, taxonomy: LoadedTaxonomy, parentKindId?: string, ancestorKindIds: readonly string[] = []): { kind: { readonly id: string; readonly emoji: string } | null; slug: string; ambiguous: readonly string[] } {
   const normalized = name.normalize("NFC");
-  const leading = splitLeadingEmoji(normalized);
+  const identity = splitLeadingEmojiIdentity(normalized);
+  const leading = { emoji: identity.first, rest: identity.rest };
   const contextAllows = (kind: LoadedTaxonomy["directoryKinds"][number]): boolean => (kind.parentKindIds?.length ?? 0) === 0 || (parentKindId !== undefined && kind.parentKindIds?.includes(parentKindId) === true);
   if (leading.emoji) {
     const global = taxonomy.directoryKinds.filter((kind) => emojiFold(kind.emoji) === emojiFold(leading.emoji) && ((leading.rest.length === 0 && kind.allowEmojiOnly) || kind.slugRegex.test(leading.rest)));
@@ -2220,7 +2231,7 @@ function matchDirectoryKind(name: string, taxonomy: LoadedTaxonomy, parentKindId
     if (ordinary.length === 1) return { kind: ordinary[0], slug: leading.rest, ambiguous: [] };
     const contexts = [parentKindId, ...ancestorKindIds].filter((kindId, index, rows): kindId is string => Boolean(kindId) && rows.indexOf(kindId) === index);
     const overlays = Object.entries(taxonomy.schema.semanticDirectoryMemberKinds)
-      .filter(([, spec]) => spec.memberNames.some((memberName) => emojiFold(memberName) === emojiFold(normalized)))
+      .filter(([, spec]) => spec.memberNames.some((memberName) => emojiFold(memberName) === emojiFold(`${identity.first}${identity.rest}`)))
       .map(([id, spec]) => ({ id, distance: contexts.findIndex((kindId) => spec.ownerKindIds.includes(kindId)) }))
       .filter((entry) => entry.distance >= 0)
       .sort((left, right) => left.distance - right.distance || left.id.localeCompare(right.id));
@@ -2945,8 +2956,8 @@ function contentOf(repoRoot: string, row: CandidatePath): { readonly kind: Taxon
 function packageLocation(path: string, taxonomy: LoadedTaxonomy): { readonly owner: string; readonly packageRoot: string; readonly ecosystemId: string | null; readonly rule: PackageBoundaryRule | null } | null {
   const parts = path.split("/");
   const packageIndex = parts.findIndex((part) => {
-    const leading = splitLeadingEmoji(part);
-    return leading.rest === "packages" && taxonomy.directoryKinds.some((kind) => kind.id === "packages" && emojiFold(kind.emoji) === emojiFold(leading.emoji));
+    const leading = splitLeadingEmojiIdentity(part);
+    return leading.rest === "packages" && taxonomy.directoryKinds.some((kind) => kind.id === "packages" && emojiFold(kind.emoji) === emojiFold(leading.first));
   });
   if (packageIndex >= 0) {
     const owner = parts.slice(0, packageIndex).join("/");
@@ -2964,10 +2975,10 @@ function packageLocation(path: string, taxonomy: LoadedTaxonomy): { readonly own
   const generatorCrateKind = taxonomy.directoryKinds.find((kind) => kind.id === "generator-crate");
   const crateIndex = generatorKind && generatorCrateKind ? parts.findIndex((part, index) => {
     if (index === 0) return false;
-    const leading = splitLeadingEmoji(part);
-    if (emojiFold(leading.emoji) !== emojiFold(generatorCrateKind.emoji)) return false;
-    const parentLeading = splitLeadingEmoji(parts[index - 1]);
-    return parentLeading.rest === "generator" && emojiFold(parentLeading.emoji) === emojiFold(generatorKind.emoji);
+    const leading = splitLeadingEmojiIdentity(part);
+    if (emojiFold(leading.first) !== emojiFold(generatorCrateKind.emoji)) return false;
+    const parentLeading = splitLeadingEmojiIdentity(parts[index - 1]);
+    return parentLeading.rest === "generator" && emojiFold(parentLeading.first) === emojiFold(generatorKind.emoji);
   }) : -1;
   if (crateIndex < 0) return null;
   const ecosystemId = "🦀️rust";
@@ -3249,7 +3260,8 @@ function canonicalDirectory(path: string, parentCanonical: string, parentKindId:
     const message = match.ambiguous.length > 1 ? `Directory semantic kind is ambiguous: ${match.ambiguous.join(", ")}` : "Directory has no registered semantic kind";
     return { path: parentCanonical ? `${parentCanonical}/${name}` : name, kindId: null, violations: [violation(match.ambiguous.length > 1 ? "directory-kind-ambiguous" : "directory-kind-unresolved", path, message)] };
   }
-  const canonicalName = `${match.kind.emoji}${match.slug}`.normalize("NFC");
+  const identity = splitLeadingEmojiIdentity(name);
+  const canonicalName = identity.sequence !== identity.first ? name : `${match.kind.emoji}${match.slug}`.normalize("NFC");
   return { path: parentCanonical ? `${parentCanonical}/${canonicalName}` : canonicalName, kindId: match.kind.id, violations: [] };
 }
 
@@ -3284,6 +3296,11 @@ function canonicalFile(
   if (!resolvedKind.kind) {
     const message = resolvedKind.ambiguous.length > 1 ? `File kind is ambiguous: ${resolvedKind.ambiguous.join(", ")}` : "No file kind owns the longest extension chain";
     return { path: parentCanonical ? `${parentCanonical}/${basename(path).normalize("NFC")}` : basename(path).normalize("NFC"), fileKind: null, stem: null, violations: [violation(resolvedKind.ambiguous.length > 1 ? "file-kind-ambiguous" : "file-kind-unresolved", path, message)] };
+  }
+  const sourceIdentity = splitLeadingEmojiIdentity(resolvedKind.stem);
+  if (sourceIdentity.sequence !== sourceIdentity.first && emojiFold(sourceIdentity.first) === emojiFold(resolvedKind.kind.emoji)) {
+    const preserved = basename(path).normalize("NFC");
+    return { path: parentCanonical ? `${parentCanonical}/${preserved}` : preserved, fileKind: resolvedKind.kind.id, stem: sourceIdentity.rest || null, violations: [] };
   }
   const leadingSemantic = splitLeadingEmoji(resolvedKind.stem);
   const semanticEvidence = leadingSemantic.emoji || "";

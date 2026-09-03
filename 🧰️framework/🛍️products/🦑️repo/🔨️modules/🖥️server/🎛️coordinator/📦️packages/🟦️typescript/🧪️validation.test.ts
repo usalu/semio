@@ -1,6 +1,6 @@
 //#region 🔌️Adapters
 import { describe, expect, it } from "vitest";
-import { ownedSchema as z } from "./🟦️validation";
+import { ownedSchema as z } from "./🟦️✅️validation.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧪️Fixtures

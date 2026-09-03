@@ -8,7 +8,7 @@
 import * as React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsContent, TabsList, TabsTrigger } from "@semio-tech/ui-react";
 import { ADMIN_LOCALES, useAdminLocale, useAdminT, type AdminI18nKey, type AdminLocale } from "../📚️I18n/🟦️.tsx";
-import { AdminTokenForm, useAdminSession } from "../🔑️AdminSession/🟦️.tsx";
+import { AdminAccessGate, useAdminSession } from "../🔑️AdminSession/🟦️.tsx";
 import { OverviewPage } from "../🏠️OverviewPage/🟦️.tsx";
 import { SpacesPage } from "../🏛️SpacesPage/🟦️.tsx";
 import { UsersPage } from "../🙋️UsersPage/🟦️.tsx";
@@ -54,7 +54,7 @@ export function AdminApp(): React.ReactElement {
         <header className="flex items-center justify-end border-b p-single">
           <LocaleSwitch />
         </header>
-        <AdminTokenForm />
+        <AdminAccessGate />
       </div>
     );
   }

@@ -343,6 +343,25 @@ fn newton_uv(surface: &Surface, target: Pnt3, mut u: f64, mut v: f64, domain: ((
     (u, v)
 }
 
+/// 🧭️ 2D Newton seeds within one Bézier patch `[u0,u1]×[v0,v1]` — a single (midpoint) seed can
+/// converge to the wrong stationary point of a 2D distance landscape (multiple local minima, or a
+/// saddle redirecting Newton away from the true minimum), mirroring
+/// [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops::span_seeds`]'s
+/// identical fix for the 1D curve case. A 5×5 interior grid (25 seeds) reliably separates the
+/// handful of basins a single bicubic-or-lower patch's distance function can have.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn patch_seeds(u0: f64, u1: f64, v0: f64, v1: f64) -> [(f64, f64); 25] {
+    let mut seeds = [(0.0, 0.0); 25];
+    let mut k = 0;
+    for i in 0..5 {
+        for j in 0..5 {
+            seeds[k] = (u0 + (u1 - u0) * (i as f64 + 0.5) / 5.0, v0 + (v1 - v0) * (j as f64 + 0.5) / 5.0);
+            k += 1;
+        }
+    }
+    seeds
+}
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn closest_on_nurbs_surface(surface: &Surface, domain: ((f64, f64), (f64, f64)), target: Pnt3, tol: f64) -> ClosestUv {
     let Surface::Nurbs { u_knots, v_knots, controls, weights } = surface else {
@@ -367,12 +386,14 @@ fn closest_on_nurbs_surface(surface: &Surface, domain: ((f64, f64), (f64, f64)),
         if lower_bound > best.distance + tol {
             continue;
         }
-        let seed_u = 0.5 * (u0.max(u_dom.0) + u1.min(u_dom.1));
-        let seed_v = 0.5 * (v0.max(v_dom.0) + v1.min(v_dom.1));
-        let (ru, rv) = newton_uv(surface, target, seed_u, seed_v, domain);
-        let candidate = eval_candidate(surface, ru, rv, target);
-        if candidate.distance < best.distance {
-            best = candidate;
+        let (ulo, uhi) = (u0.max(u_dom.0), u1.min(u_dom.1));
+        let (vlo, vhi) = (v0.max(v_dom.0), v1.min(v_dom.1));
+        for (seed_u, seed_v) in patch_seeds(ulo, uhi, vlo, vhi) {
+            let (ru, rv) = newton_uv(surface, target, seed_u, seed_v, domain);
+            let candidate = eval_candidate(surface, ru, rv, target);
+            if candidate.distance < best.distance {
+                best = candidate;
+            }
         }
     }
     best
@@ -478,7 +499,12 @@ mod tests {
         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
         let s = Surface::Cylinder { frame, radius: 1.0 };
         let angle = -0.01_f64;
-        let target = Pnt3::new(2.0 * angle.cos(), 2.0 * angle.sin(), 0.0);
+        // 🐛 Placed via `frame.to_world` (the frame's OWN local axes), not raw world `cos`/`sin` —
+        // `Frame3::from_normal`'s `x`/`y` come from `Vec3::any_orthogonal` (for `normal = Z` that's
+        // `x = (0,1,0), y = (-1,0,0)`, a 90°-rotated basis, not world `X`/`Y`), so a world-angle-`(-0.01)`
+        // point sits at LOCAL angle `-0.01 - π/2`, nowhere near this cylinder's own `u = 0`/`TAU` seam —
+        // the test was inadvertently probing the middle of the domain instead of the seam it names.
+        let target = frame.to_world(Pnt3::new(2.0 * angle.cos(), 2.0 * angle.sin(), 0.0));
         let cp = closest_uv(&s, ((0.0, std::f64::consts::TAU), (-5.0, 5.0)), target, 1e-9);
         let expected = std::f64::consts::TAU + angle;
         assert!((cp.u - expected).abs() < 1e-6, "seam wrap failed: u={}, expected near {expected}", cp.u);

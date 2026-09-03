@@ -6,7 +6,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { Taxonomy } from "../../../🔍️discovery/🟦️.ts";
 import type { TaxonomySourceInventory, TaxonomySourceObservation } from "../../../🧹️normalization/🟦️.ts";
-import { sourceFileFactByteCompare, sourceFileFactOracleKind } from "../🧪️source-file-facts/🟦️";
+import { sourceFileFactByteCompare, sourceFileFactOracleKind } from "../../🧬️🔀️🌲️mutation-inventory/🧪️source-file-facts/🟦️.ts";
 
 //#region 🧭️Inputs
 const root = (() => {
@@ -23,8 +23,8 @@ const ticket = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙�
 const descriptorRelative = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️.schema.json";
 const taxonomyRelative = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
 const rootScriptPath = join(root, "📜️script.ts");
-const schema = JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8"));
-const vectors = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8")) as {
+const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️🔀️🌲️mutation-inventory/🧪️🚪️source-index-capture/🧬️schema/🔣️.json"), "utf8"));
+const vectors = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️🔀️🌲️mutation-inventory/🧪️🚪️source-index-capture/🔣️.json"), "utf8")) as {
   readonly schemaVersion: 1;
   readonly expectedRoots: readonly string[];
   readonly existingEvidence: readonly string[];
@@ -44,7 +44,7 @@ function fixture(): string {
 
 /** 🧫️ Writes an owned relative fixture file. */
 function writeFixture(rootPath: string, path: string, bytes: string | Uint8Array): void {
-  if (!path || path.includes("\\") || path.split("/").some((part) => !part || part === "." || part === ".." || part.toLocaleLowerCase("en-US") === "compose")) throw new Error(`unsafe fixture path: ${path}`);
+  if (!path || path.includes("\\") || path.split("/").some((part) => !part || part === "" || part === "../../🧬️🔀️🌲️mutation-inventory" || part.toLocaleLowerCase("en-US") === "compose")) throw new Error(`unsafe fixture path: ${path}`);
   const target = join(rootPath, ...path.split("/"));
   mkdirSync(dirname(target), { recursive: true });
   writeFileSync(target, bytes, { flag: "wx" });

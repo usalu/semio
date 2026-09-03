@@ -33,9 +33,9 @@ function input(path: string): Buffer {
 }
 
 if (join(root, owner) !== import.meta.dir) throw new Error("Wrong test owner");
-input(owner + "/🟦️.ts");
-const vector = JSON.parse(input(owner + "/🔣️.json").toString("utf8"));
-const grammar = JSON.parse(input(owner + "/🧬️schema/🔣️.json").toString("utf8"));
+input(owner + "../🧪️🍊️reference-coordinate-progress/🟦️.ts");
+const vector = JSON.parse(input(owner + "../🧪️🍊️reference-coordinate-progress/🔣️.json").toString("utf8"));
+const grammar = JSON.parse(input(owner + "../🧪️🍊️reference-coordinate-progress/🧬️schema/🔣️.json").toString("utf8"));
 const source = input(sourcePath).toString("utf8");
 input(library + "/🔍️discovery/🟦️.ts");
 input(library + "/🔣️taxonomy.json");
@@ -134,7 +134,7 @@ function execute(compiler: typeof compiled[number], row: Case, withProgress = tr
 test("neutral coordinate progress contract has independent schema and directory-order parity", () => {
   const validate = new Ajv({ strict: false, allErrors: true }).compile(grammar);
   expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
-  expect(parseJsonc(input(owner + "/🔣️.json").toString("utf8"))).toEqual(vector);
+  expect(parseJsonc(input(owner + "../🧪️🍊️reference-coordinate-progress/🔣️.json").toString("utf8"))).toEqual(vector);
   expect(new Set(vector.cases.map((row: Case) => row.id)).size).toBe(vector.cases.length);
   expect(validate({ ...vector, unknown: true })).toBe(false);
   expect(validate({ ...vector, semantics: { ...vector.semantics, current: "attempted-candidates" } })).toBe(false);

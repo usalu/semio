@@ -60,9 +60,8 @@ const WILDCARD_SCOPE_PREFIXES: [&str; 4] = ["fs.read:", "fs.write:", "http:", "s
 //#endregion 🔖️ScopeTable
 
 //#region 🔖️AgentPrincipal
-/// 🪪️ `📋️master.md` §3.4: `AgentPrincipal{id, kind: Agent, scopes, delegated_by, hub_token}` — `kind`
-/// is implicit (this type only ever represents an agent principal) and `hub_token` is deferred with
-/// the rest of hub identity (D7); `label` is this packet's own addition, a human-readable name for
+/// 🪪️ MCP agent identity and delegated scopes. Hub authority stays in the sealed process-entry
+/// credential and is never copied into this serializable principal; `label` is a human-readable name for
 /// audit/approval UI (`AgentAuditEvent.principal` carries `id`, not `label`).
 #[derive(Clone, Debug, PartialEq)]
 pub struct AgentPrincipal {

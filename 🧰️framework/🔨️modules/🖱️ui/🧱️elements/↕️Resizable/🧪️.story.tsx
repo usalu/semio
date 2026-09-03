@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "../../🧪️story";
+import type { Meta, StoryObj } from "../../🧪️🐨️story.ts";
 
 // 🔷️#region 🪬️Resizable
 const meta = {

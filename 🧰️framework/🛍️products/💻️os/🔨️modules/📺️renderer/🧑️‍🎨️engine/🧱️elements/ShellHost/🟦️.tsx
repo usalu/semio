@@ -121,6 +121,8 @@ import {
 import {
   type BackboneWorkerRequest,
   type BackboneWorkerResponse,
+  type BrowserBrokerPortRequestV1,
+  type BrowserBrokerPortResponseV1,
   buildFileBackboneUri,
   buildFolderBackboneUri,
   buildFrameworkSyncUtilities,
@@ -134,6 +136,7 @@ import {
   encodeMutationEnvelopesPack,
   encodePackValue,
   FRAMEWORK_SYNC_CONTROLLER_ID,
+  parseBrowserBrokerPortResponseV1,
   type PersistenceBinding,
   DirectoryHttpError,
   type DirectoryCommand,
@@ -163,8 +166,8 @@ class LocalBrowserBrokerPort {
 
   constructor(private readonly port: MessagePort) {
     port.onmessage = (event: MessageEvent<unknown>) => {
-      const message = event.data as Record<string, unknown> | null;
-      if (!message || message.kind !== "response" || typeof message.requestId !== "string" || typeof message.status !== "number" || typeof message.body !== "string") return;
+      const message = parseBrowserBrokerPortResponseV1(event.data);
+      if (!message || message.kind !== "response") return;
       const pending = this.pending.get(message.requestId);
       if (!pending) return;
       clearTimeout(pending.timer);
@@ -181,7 +184,8 @@ class LocalBrowserBrokerPort {
     const requestId = crypto.randomUUID();
     return new Promise((resolve, reject) => {
       const abort = (): void => {
-        this.port.postMessage({ kind: "cancel", requestId });
+        const message: BrowserBrokerPortRequestV1 = { kind: "cancel", requestId };
+        this.port.postMessage(message);
         const pending = this.pending.get(requestId);
         if (!pending) return;
         clearTimeout(pending.timer);
@@ -191,7 +195,8 @@ class LocalBrowserBrokerPort {
       const timer = setTimeout(abort, 2_000);
       this.pending.set(requestId, { resolve, reject, timer, signal, abort });
       signal?.addEventListener("abort", abort, { once: true });
-      this.port.postMessage({ kind: "request", requestId, operation: "me" });
+      const message: BrowserBrokerPortRequestV1 = { kind: "request", requestId, operation: "me" };
+      this.port.postMessage(message);
     });
   }
 
@@ -1334,7 +1339,7 @@ function FrameworkOsShellInner({
    * persisted identity, show an offline chip... never blocks the UI thread"). */
   const [identityOffline, setIdentityOffline] = useState(false);
   /** 🪪️ REST-only client for the identity boot handshake (`me`/`mintSession`) — distinct from the
-   * directory-lane's persistent `/directory/ws` subscription, which the shell never opens itself (§C6:
+   * directory-lane's persistent `/directory/socket/v1` subscription, which the shell never opens itself (§C6:
    * `🟦️backbone-worker.ts`'s `🔖️Directory` region is the only socket owner). Re-created only if the
    * hub base url or token actually changes. */
   const localBrowserBrokerRef = useRef<LocalBrowserBrokerPort | null>(null);
@@ -1423,13 +1428,19 @@ function FrameworkOsShellInner({
     worker.postMessage({ kind: "semio-browser-broker-port", port: brokerChannel.port2 }, [brokerChannel.port2]);
     localBrowserBrokerRef.current = new LocalBrowserBrokerPort(brokerChannel.port1);
     if (localBrowserBrokerProof) {
-      brokerChannel.port1.postMessage({ kind: "initialize", proof: localBrowserBrokerProof });
+      const message: BrowserBrokerPortRequestV1 = { kind: "initialize", proof: localBrowserBrokerProof };
+      brokerChannel.port1.postMessage(message);
       localBrowserBrokerProof = undefined;
     }
     worker.onmessage = (messageEvent: MessageEvent<BackboneWorkerResponse | { readonly wire: Uint8Array }>) => {
       const message = "wire" in messageEvent.data ? decodeBackboneWorkerResponse(messageEvent.data.wire) : messageEvent.data;
       if (message.kind === "socket-actor") {
         socketActorReadyRef.current.get(message.documentId)?.resolve(message.actorId);
+        socketActorReadyRef.current.delete(message.documentId);
+        return;
+      }
+      if (message.kind === "socket-actor-failed") {
+        socketActorReadyRef.current.get(message.documentId)?.reject(new Error(`socket actor unavailable (${message.code})`));
         socketActorReadyRef.current.delete(message.documentId);
         return;
       }
@@ -1450,7 +1461,7 @@ function FrameworkOsShellInner({
         } else if (message.events && message.events.length > 0) {
           // 📇️ Defense-in-depth (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS
           // w4-h): the ORIGINATING client folds its own accepted command's events directly instead of
-          // depending entirely on the live `/directory/ws` broadcast finding its way back to the same
+          // depending entirely on the live `/directory/socket/v1` broadcast finding its way back to the same
           // socket — correct only if that subscription is guaranteed already-open at command-issue
           // time, which a fresh page load racing identity bootstrap does not guarantee. The live
           // broadcast path (`directory-message` above) still folds the same events for every OTHER
@@ -1793,6 +1804,11 @@ function FrameworkOsShellInner({
             dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "running" });
           } catch (bootError) {
             console.error("Framework OS boot failed", bootError);
+            try {
+              const parsed = JSON.parse(bootError instanceof Error ? bootError.message : String(bootError));
+              const bytes = parsed?.val && typeof parsed.val === "object" ? Object.values(parsed.val as Record<string, number>) : undefined;
+              if (bytes) console.error("[DEBUG] boot fault text", new TextDecoder().decode(Uint8Array.from(bytes)));
+            } catch {}
             dispatch({ type: "SET_ERROR", value: bootError instanceof Error ? bootError.message : String(bootError) });
             return "failed";
           }
@@ -5520,7 +5536,7 @@ function FrameworkOsShellInner({
           const currentIdentity = identityRef.current;
           const dataDir = hubEnv?.dataDir;
           const folder: PersistenceBinding[] = dataDir ? [{ kind: "folder", path: `${dataDir}/spaces/${spaceId}` }] : [];
-          const bindings: PersistenceBinding[] = currentIdentity ? [{ kind: "hub", baseUrl: currentIdentity.hubBaseUrl, spaceId, surface: canonicalSurfaceId(SPACE_INDEX_DIALECT, "editor") }, ...folder] : folder;
+          const bindings: PersistenceBinding[] = currentIdentity ? [{ kind: "hub", baseUrl: currentIdentity.hubBaseUrl, spaceId }, ...folder] : folder;
           const socketActor = currentIdentity
             ? new Promise<string>((resolve, reject) => socketActorReadyRef.current.set(S_SPACE_INDEX_DOCUMENT_ID, { resolve, reject }))
             : null;

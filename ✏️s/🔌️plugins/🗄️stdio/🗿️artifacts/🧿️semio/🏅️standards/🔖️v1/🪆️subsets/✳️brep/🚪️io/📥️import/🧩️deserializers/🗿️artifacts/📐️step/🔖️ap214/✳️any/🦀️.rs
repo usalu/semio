@@ -330,7 +330,7 @@ impl ArtifactDeserializer for SemioBrepFromStep {
                 let args = args_for_type(e, "VERTEX_POINT").expect("has_type just confirmed VERTEX_POINT");
                 let point_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| step_err(format!("VERTEX_POINT #{}: vertex_geometry not a reference", e.id)))?;
                 let point = resolver.point(point_ref).map_err(step_err)?;
-                vertices.push(BrepVertex { id: format!("v{}", e.id), point });
+                vertices.push(BrepVertex { id: format!("v{}", e.id), point, tol: 0.0 });
             }
             if has_type(e, "EDGE_CURVE") {
                 let args = args_for_type(e, "EDGE_CURVE").expect("has_type just confirmed EDGE_CURVE");
@@ -338,7 +338,7 @@ impl ArtifactDeserializer for SemioBrepFromStep {
                 let end_ref = args.get(2).and_then(as_ref_id).ok_or_else(|| step_err(format!("EDGE_CURVE #{}: edge_end not a reference", e.id)))?;
                 let curve_ref = args.get(3).and_then(as_ref_id).ok_or_else(|| step_err(format!("EDGE_CURVE #{}: edge_geometry not a reference", e.id)))?;
                 let curve = resolver.curve(curve_ref).map_err(step_err)?;
-                edges.push(BrepEdge { id: format!("e{}", e.id), start_vertex: format!("v{start_ref}"), end_vertex: format!("v{end_ref}"), curve });
+                edges.push(BrepEdge { id: format!("e{}", e.id), start_vertex: format!("v{start_ref}"), end_vertex: format!("v{end_ref}"), curve, tol: 0.0 });
             }
             if has_type(e, "EDGE_LOOP") {
                 let args = args_for_type(e, "EDGE_LOOP").expect("has_type just confirmed EDGE_LOOP");
@@ -381,7 +381,7 @@ impl ArtifactDeserializer for SemioBrepFromStep {
                 let surface_ref = args.get(2).and_then(as_ref_id).ok_or_else(|| step_err(format!("ADVANCED_FACE #{}: face_geometry not a reference", e.id)))?;
                 let surface = resolver.surface(surface_ref).map_err(step_err)?;
                 let orientation = matches!(args.get(3), Some(StepValue::Enum(s)) if s == "T");
-                faces.push(BrepFace { id: format!("f{}", e.id), outer_loop, inner_loops, surface, orientation });
+                faces.push(BrepFace { id: format!("f{}", e.id), outer_loop, inner_loops, surface, orientation, tol: 0.0 });
             }
             if has_type(e, "CLOSED_SHELL") || has_type(e, "OPEN_SHELL") {
                 let args = args_for_type(e, "CLOSED_SHELL").or_else(|| args_for_type(e, "OPEN_SHELL")).expect("has_type just confirmed a shell type");
@@ -408,7 +408,7 @@ impl ArtifactDeserializer for SemioBrepFromStep {
             }
         }
 
-        Ok(SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices, edges, loops, faces, shells, solids })
+        Ok(SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices, edges, loops, faces, shells, solids, coedges: Vec::new(), next_label: 0 })
     }
 }
 //#endregion 🔖️Deserializer

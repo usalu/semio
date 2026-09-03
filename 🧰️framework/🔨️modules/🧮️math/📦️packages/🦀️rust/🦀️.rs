@@ -1,6 +1,6 @@
 //! 🧮️ The semio math framework: one crate for every mathematical domain the OS kernel, the s-modules and the plugins compute with.
 //!
-//! Each domain is a `🦀️.rs` in the owner tree; this entry file is pure wiring.
+//! Each domain is a `../../../🧮️math/📦️packages/🦀️rust/🦀️.rs` in the owner tree; this entry file is pure wiring.
 
 // 🔀️ R3/R7 (math-dedyn): `async fn` in a public trait warns because auto trait bounds (`Send`)
 // cannot be named on it — answered STRUCTURALLY here, not by the compiler's suggested `+ Send`.
@@ -37,7 +37,7 @@ extern crate semio_framework_geometry as geometry;
 // `dsl` (Jack) relocated to `🧰️framework/🔨️modules/🕸️graph/🗣️dsl` — see that wave's report for
 // the framework/plugin split hypothesis, measured and rejected (real internal coupling), and the
 // domain-neutral reasoning for keeping it whole in the framework `🕸️graph` module.
-#[path = "../../🎯️sampling/🦀️.rs"]
+#[path = "../../../🧮️math/🎯️sampling/🦀️.rs"]
 pub mod sampling;
 
 // 🧩️ `wfc` dissolved into the Assembly artifact

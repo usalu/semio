@@ -90,14 +90,14 @@ function CreateSpaceDialog({ open, onOpenChange, onCreate }: { readonly open: bo
 //#endregion 🔖️CreateDialog
 
 //#region 🔖️MembersPanel
-function MembersPanel({ spaceId, detail, onChanged }: { readonly spaceId: string; readonly detail: AdminSpaceDetail; readonly onChanged: () => void }): React.ReactElement {
+function MembersPanel({ spaceId, detail, loadingMore, onLoadMore, onChanged }: { readonly spaceId: string; readonly detail: AdminSpaceDetail; readonly loadingMore: boolean; readonly onLoadMore: (cursor: string) => void; readonly onChanged: () => void }): React.ReactElement {
   const t = useAdminT();
   const { client } = useAdminSession();
   const [email, setEmail] = React.useState("");
   const [role, setRole] = React.useState<DirectorySpaceRole>("author");
   const [inviteToken, setInviteToken] = React.useState<string | null>(null);
 
-  const memberColumns: TableColumn<AdminSpaceDetail["members"][number]>[] = [
+  const memberColumns: TableColumn<AdminSpaceDetail["members"]["rows"][number]>[] = [
     { id: "email", header: t("admin.spaces.email"), accessor: (row) => row.email || row.userId },
     { id: "role", header: t("admin.spaces.role"), accessor: (row) => (row.role === "author" ? t("admin.spaces.roleAuthor") : t("admin.spaces.roleSpectator")) },
     {
@@ -109,7 +109,7 @@ function MembersPanel({ spaceId, detail, onChanged }: { readonly spaceId: string
           icon="trash"
           text={t("admin.spaces.remove")}
           variant="ghost"
-          onClick={() => client.command({ kind: "remove-member", spaceId, userId: row.userId }).then(onChanged)}
+          onClick={() => client.removeSpaceMember(spaceId, row.userId).then(onChanged)}
         />
       ),
     },
@@ -118,7 +118,17 @@ function MembersPanel({ spaceId, detail, onChanged }: { readonly spaceId: string
   return (
     <div className="flex flex-col gap-single border-t p-single" data-slot="admin-space-members">
       <h3 className="text-sm font-semibold text-emphasized">{t("admin.spaces.membersTitle")}</h3>
-      <Table columns={memberColumns} data={[...detail.members]} getRowId={(row) => `user:${row.userId}`} rowDragProps={(row) => ({ "data-row-id": `user:${row.userId}` }) as React.HTMLAttributes<HTMLTableRowElement>} rowHeight="compact" />
+      <Table columns={memberColumns} data={[...detail.members.rows]} getRowId={(row) => `user:${row.userId}`} rowDragProps={(row) => ({ "data-row-id": `user:${row.userId}` }) as React.HTMLAttributes<HTMLTableRowElement>} rowHeight="compact" />
+      {detail.members.nextCursor ? (
+        <Button
+          id={`admin-space-members-load-more-${spaceId}`}
+          icon="arrow-down"
+          text={t("admin.spaces.loadMoreMembers")}
+          variant="ghost"
+          disabled={loadingMore}
+          onClick={() => onLoadMore(detail.members.nextCursor!)}
+        />
+      ) : null}
       <div className="flex items-end gap-single">
         <label className="flex flex-col gap-single text-sm" htmlFor={`admin-space-member-email-${spaceId}`}>
           {t("admin.spaces.email")}
@@ -142,7 +152,7 @@ function MembersPanel({ spaceId, detail, onChanged }: { readonly spaceId: string
           text={t("admin.spaces.addMember")}
           disabled={email.trim().length === 0}
           onClick={() => {
-            client.command({ kind: "upsert-member", spaceId, email: email.trim(), role }).then(() => {
+            client.upsertSpaceMember(spaceId, email.trim(), role).then(() => {
               setEmail("");
               onChanged();
             });
@@ -156,8 +166,8 @@ function MembersPanel({ spaceId, detail, onChanged }: { readonly spaceId: string
           text={t("admin.spaces.inviteCreate")}
           variant="ghost"
           onClick={() => {
-            client.command({ kind: "create-invite", spaceId, role, ttlSecs: INVITE_TTL_SECS }).then((response) => {
-              const token = (response.result as { inviteToken?: string } | undefined)?.inviteToken;
+            client.createSpaceInvite(spaceId, role, INVITE_TTL_SECS).then((response) => {
+              const token = response.result?.inviteToken;
               setInviteToken(token ?? null);
             });
           }}
@@ -183,27 +193,58 @@ function MembersPanel({ spaceId, detail, onChanged }: { readonly spaceId: string
 //#endregion 🔖️MembersPanel
 
 /** 🏛️ `GET /admin/api/spaces` as a `Table`, a create dialog, per-row rename/visibility/archive/delete
- * actions (all via `POST /admin/api/commands`, actor kind `admin` — bypasses the member-authorship
- * authz `/directory/commands` enforces, per contract §C2), and an expandable members sub-table
+ * actions (all via strict `POST /admin/api/intents` variants whose principal is server-derived),
+ * and an expandable members sub-table
  * (`GET /admin/api/spaces/{id}`) with upsert-by-email, remove, and an invite-link action. Rows carry
  * `data-row-id="space:<id>"` per contract §C0's test-id grammar. */
 export function SpacesPage(): React.ReactElement {
   const t = useAdminT();
   const { client } = useAdminSession();
   const [spaces, setSpaces] = React.useState<SpaceView[] | null>(null);
+  const [spacesCursor, setSpacesCursor] = React.useState<string | null>(null);
+  const [loadingSpaces, setLoadingSpaces] = React.useState(false);
   const [expandedId, setExpandedId] = React.useState<string | null>(null);
   const [detail, setDetail] = React.useState<AdminSpaceDetail | null>(null);
+  const [loadingMembers, setLoadingMembers] = React.useState(false);
   const [createOpen, setCreateOpen] = React.useState(false);
 
-  const loadSpaces = React.useCallback(() => {
-    client.spaces().then((rows) => setSpaces([...rows])).catch(() => setSpaces([]));
+  const loadSpaces = React.useCallback((cursor?: string, append = false) => {
+    setLoadingSpaces(true);
+    void client
+      .spaces(cursor)
+      .then((page) => {
+        setSpaces((current) => (append && current ? [...current, ...page.rows] : [...page.rows]));
+        setSpacesCursor(page.nextCursor ?? null);
+      })
+      .catch(() => {
+        if (!append) {
+          setSpaces([]);
+          setSpacesCursor(null);
+        }
+      })
+      .finally(() => setLoadingSpaces(false));
   }, [client]);
 
-  React.useEffect(loadSpaces, [loadSpaces]);
+  React.useEffect(() => {
+    loadSpaces();
+  }, [loadSpaces]);
 
   const loadDetail = React.useCallback(
-    (spaceId: string) => {
-      client.space(spaceId).then(setDetail).catch(() => setDetail(null));
+    (spaceId: string, cursor?: string, append = false) => {
+      setLoadingMembers(true);
+      void client
+        .space(spaceId, cursor)
+        .then((next) => {
+          setDetail((current) =>
+            append && current?.id === next.id
+              ? { ...next, members: { ...next.members, rows: [...current.members.rows, ...next.members.rows] } }
+              : next,
+          );
+        })
+        .catch(() => {
+          if (!append) setDetail(null);
+        })
+        .finally(() => setLoadingMembers(false));
     },
     [client],
   );
@@ -244,7 +285,7 @@ export function SpacesPage(): React.ReactElement {
             variant="ghost"
             onClick={() => {
               const next = window.prompt(t("admin.spaces.rename"), row.name);
-              if (next && next.trim().length > 0) client.command({ kind: "rename-space", spaceId: row.id, name: next.trim() }).then(refreshExpanded);
+              if (next && next.trim().length > 0) client.renameSpace(row.id, next.trim()).then(refreshExpanded);
             }}
           />
           <Button
@@ -254,7 +295,7 @@ export function SpacesPage(): React.ReactElement {
             variant="ghost"
             onClick={() => {
               const next: DirectorySpaceVisibility = row.visibility === "public" ? "private" : "public";
-              client.command({ kind: "set-visibility", spaceId: row.id, visibility: next }).then(refreshExpanded);
+              client.setSpaceVisibility(row.id, next).then(refreshExpanded);
             }}
           />
           <Button
@@ -263,7 +304,7 @@ export function SpacesPage(): React.ReactElement {
             text={t("admin.spaces.archive")}
             variant="ghost"
             onClick={() => {
-              if (window.confirm(t("admin.spaces.confirmArchive", { name: row.name }))) client.command({ kind: "archive-space", spaceId: row.id }).then(refreshExpanded);
+              if (window.confirm(t("admin.spaces.confirmArchive", { name: row.name }))) client.archiveSpace(row.id).then(refreshExpanded);
             }}
           />
           <Button
@@ -272,7 +313,7 @@ export function SpacesPage(): React.ReactElement {
             text={t("admin.spaces.delete")}
             variant="ghost"
             onClick={() => {
-              if (window.confirm(t("admin.spaces.confirmDelete", { name: row.name }))) client.command({ kind: "delete-space", spaceId: row.id }).then(refreshExpanded);
+              if (window.confirm(t("admin.spaces.confirmDelete", { name: row.name }))) client.deleteSpace(row.id).then(refreshExpanded);
             }}
           />
         </div>
@@ -295,8 +336,11 @@ export function SpacesPage(): React.ReactElement {
         onRowClick={(row) => toggleExpanded(row.id)}
         selectedRows={expandedId ? new Set([`space:${expandedId}`]) : undefined}
       />
-      {expandedId && detail ? <MembersPanel spaceId={expandedId} detail={detail} onChanged={refreshExpanded} /> : null}
-      <CreateSpaceDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={(name, kind, visibility) => client.command({ kind: "create-space", name, spaceKind: kind, visibility }).then(loadSpaces)} />
+      {spacesCursor ? <Button id="admin-spaces-load-more" icon="arrow-down" text={t("admin.spaces.loadMore")} variant="ghost" disabled={loadingSpaces} onClick={() => loadSpaces(spacesCursor, true)} /> : null}
+      {expandedId && detail ? (
+        <MembersPanel spaceId={expandedId} detail={detail} loadingMore={loadingMembers} onLoadMore={(cursor) => loadDetail(expandedId, cursor, true)} onChanged={refreshExpanded} />
+      ) : null}
+      <CreateSpaceDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={(name, kind, visibility) => client.createSpace(name, kind, visibility).then(loadSpaces)} />
     </div>
   );
 }

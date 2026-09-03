@@ -84,7 +84,7 @@ pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSes
     let host = host_from_snapshot(fixture, config, session);
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
     let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
-    let fixture_json = serde_json::to_string(fixture).ok();
+    let fixture_json = Some(dsl::json::to_json_string(&fixture.to_fixture()));
     // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "graph" domain's live selection
     // is framework-owned `InteractionState` now, and `ArtifactApp::render` is not threaded an
     // `InteractionView` this wave — the scene's selection payload drops to empty rather than showing

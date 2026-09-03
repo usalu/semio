@@ -12,4 +12,6 @@ message SemioBrepArtifact {
   repeated semio.s_stdio_semio_brep.snapshot.BrepFace faces = 5;
   repeated semio.s_stdio_semio_brep.snapshot.BrepShell shells = 6;
   repeated semio.s_stdio_semio_brep.snapshot.BrepSolid solids = 7;
+  repeated semio.s_stdio_semio_brep.snapshot.BrepCoedge coedges = 8;
+  uint64 next_label = 9;
 }

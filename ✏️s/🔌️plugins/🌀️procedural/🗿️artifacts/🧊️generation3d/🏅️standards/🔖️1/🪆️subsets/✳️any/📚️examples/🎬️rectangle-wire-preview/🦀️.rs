@@ -4,7 +4,7 @@ use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "rectangle-wire-preview";
 pub fn label() -> LocalizedLabel {
-    LocalizedLabel::native("Rectangle Wire Preview", "Rectangle Wire Preview")
+    LocalizedLabel::native("Rectangle Wire Preview", "Rechteck-Draht Vorschau")
 }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🧪️rectangle-wire-preview/🗣️.dsl.semio");

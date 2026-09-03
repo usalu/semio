@@ -5,6 +5,18 @@
  * config scans for `import.meta.vitest` suites). */
 
 export type {
+  AdminConnectionSnapshotV1,
+  AdminIntentOutcomeV1,
+  AdminIntentReceiptV1,
+  AdminIntentResultV1,
+  AdminIntentStateV1,
+  AdminIntentV1,
+  AdminOperationAuditPhaseV1,
+  AdminOperationAuditV1,
+  AdminOperationProgressV1,
+  AdminOperationStatusV1,
+  AdminPageV1,
+  AdminRecordedConnectionV1,
   ArtifactBlobRef,
   ArtifactCheckpoint,
   ArtifactFrontier,

@@ -1,6 +1,6 @@
 // #region 🔌️Adapters
 import { Form } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "../../🧪️story";
+import type { Meta, StoryObj } from "../../🧪️🐨️story.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧾️FormMatrix

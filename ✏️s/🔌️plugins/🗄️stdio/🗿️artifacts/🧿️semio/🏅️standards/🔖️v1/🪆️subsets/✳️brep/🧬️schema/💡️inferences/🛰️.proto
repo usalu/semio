@@ -1,14 +1,36 @@
 syntax = "proto3";
-// 💡️ SemioBrepInference facet mirror — see the sibling 🦀️.rs for the real source of
-// truth. `tessellation`/`massProperties` are deliberately absent (see that file's module doc
-// comment for why).
+// 💡️ SemioBrepInference facet mirror — see the sibling 🦀️.rs for the real source of truth.
 package semio.s_stdio_semio_brep.inference;
+
+import "../📸️snapshot/🛰️.proto";
 
 message BrepValidationDiagnostic {
   string code = 1;
   string message = 2;
 }
 
+message Vec3 { double x = 1; double y = 2; double z = 3; }
+message BrepFaceGroup { uint32 start = 1; uint32 count = 2; string entity_id = 3; }
+message BrepEdgeGroup { uint32 start = 1; uint32 count = 2; string entity_id = 3; }
+enum BrepSurfaceKind { PLANE = 0; CYLINDER = 1; CONE = 2; SPHERE = 3; TORUS = 4; NURBS = 5; }
+enum BrepCurveKind { LINE = 0; CIRCLE = 1; ELLIPSE = 2; NURBS_CURVE = 3; }
+message BrepFaceInfo { string entity_id = 1; BrepSurfaceKind surface_kind = 2; double area = 3; Vec3 normal = 4; }
+message BrepEdgeInfo { string entity_id = 1; BrepCurveKind curve_kind = 2; double length = 3; }
+message BrepMeshTransfer {
+  repeated float position = 1;
+  repeated float normal = 2;
+  repeated uint32 index = 3;
+  repeated float edges = 4;
+  repeated float points = 5;
+  repeated BrepFaceGroup face_groups = 6;
+  repeated BrepEdgeGroup edge_groups = 7;
+  repeated BrepFaceInfo face_infos = 8;
+  repeated BrepEdgeInfo edge_infos = 9;
+}
+message BrepMassProperties { double volume = 1; double area = 2; semio.s_stdio_semio_brep.snapshot.SemioPoint3 centroid = 3; double error_estimate = 4; }
+
 message SemioBrepInference {
   repeated BrepValidationDiagnostic validation_report = 1;
+  BrepMeshTransfer tessellation = 2;
+  BrepMassProperties mass_properties = 3;
 }

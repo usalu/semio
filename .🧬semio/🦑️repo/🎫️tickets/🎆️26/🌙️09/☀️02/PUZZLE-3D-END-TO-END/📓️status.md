@@ -695,3 +695,105 @@ Two things worth keeping from it:
 2. `SEMIO_PLUGIN_PROFILE=wasm-release S_OS_PORT=6081 bun dev:puzzle:3d` — from a real terminal.
 3. `fillBuildTick` still needs `PuzzleCommandWork::step` to receive the app instance; until then the
    fill slider commits real values while the planner does not advance under the migrated path.
+
+## `fillBuildTick` — all three candidate routes tested, all three fail
+
+Rather than assert "it needs a trait change", each way it could have been wired was checked against
+source. All fail, for different reasons:
+
+**Route 1 — exact proof (add to `PUZZLE3D_RETAINED_TOOL_IDS`).** Dispatch resolves
+`QualifiedToolProof::AppOwned` → `A::build_tool_job` → `Puzzle3dPrecomputeCommandWork`. That Work's
+`fillBuildTick` arm (editor `🦀️.rs:6116-6118`) sets `emit.ui_scope` and nothing else. `PuzzleCommandWork::step`
+(`🎮️commands/🧵️retained/🦀️.rs:42-49`) receives command/snapshot/config/interaction/hover and **never the
+app**, so the Work cannot reach `app.precompute` to call `poll_fill_job`/`enqueue_fill_job`. Result:
+a job that runs, sets a UI scope, and silently never spawns the planner. **Fails silently — the worst
+outcome.**
+
+**Route 2 — generic proof (migrate WITHOUT adding to the retained ids).** Dispatch resolves
+`QualifiedToolProof::Bounded` → `TypedCommandFullOperationJob`. Its Reducer phase
+(`🔌️plugin/🦀️.rs:~16430`) is:
+```rust
+TypedCommandFullOperationPhase::Reducer => {
+    cx.set_stage("typed-command-reducer");
+    …
+    self.fault(cx, b"generic bounded proof has no resumable app-owned reducer job")
+```
+**Fails loudly at runtime.** A generic proof never reaches `ArtifactEditor::handle`.
+
+**Route 3 — lean on `handle`, which does reach an app.** `handle` (editor `🦀️.rs:6766`) already
+special-cases `fillBuildTick` and obtains an app through `with_puzzle3d_app_for(&cfg.snapshot, …)`.
+But that helper (`:2168`) is:
+```rust
+fn with_puzzle3d_app_for<R>(config: &Puzzle3dConfig, f: impl FnOnce(&Puzzle3dPlayApp) -> R) -> R {
+    let app = Puzzle3dPlayApp::default();
+    if !config.fill_checkpoint.is_empty() { app.precompute.borrow_mut().restore_persisted_fill(&config.fill_checkpoint); }
+    f(&app)
+}
+```
+It builds a **fresh app reconstructed from the persisted checkpoint**, not the live session. That is
+why the function it calls is `fill_build_tick_cached`, whose own docstring says it "polls a restored
+immutable fill plan" — it deliberately does **not** spawn. A job enqueued on a throwaway app would
+publish into an instance nobody reads.
+
+**Therefore:** the live precompute session reaches the tick only through `Puzzle3dActionCtx` on the
+legacy action path (`ctx.app.precompute`, `🎮️commands/🪣️fill-build-tick/🦀️.rs:22-30`), and that path is
+closed to any non-`Migrated` action by `validate_ui_dispatch_classification`. Closing the loop needs
+the live app threaded into the bounded-work path — a `PuzzleCommandWork::step` signature change
+touching every `Work` impl in 2d, 3d and 5d. Genuine design work, correctly recorded in the fixture
+as semantic rather than wiring, and not something to write without a compiler.
+
+`setFillCount` is unaffected: it emits a real `SetFillRequest` config mutation and its `handle` arm
+legitimately uses the reconstructed app plus the checkpoint, which is exactly what a commit needs.
+
+## Blocked by an external writer — repair proven, but it does not survive (2026-09-03 20:33)
+
+A `bun -e` applier for ticket `26/04/08/ENFORCE-UNIQUE-SEMANTIC-EMOJIS-ACROSS-REPOSITORY`, run by a
+**Codex/ChatGPT app-server (PID 66250)** — not any Claude session — re-applies its rename plan on every
+invocation. The plan is not a fixed point, so each run re-prefixes names that still match:
+`📦️packages` → `📦️📦️packages` → `📦️📦️📦️packages`, up to five deep, plus glued variants.
+
+### The repair works. It is the surviving that fails.
+
+Same 24 directories restored **three times in 20 minutes**:
+
+| time | event |
+|---|---|
+| 20:05 | 24 dirs restored, 59 manifests repaired → **`cargo metadata` exit 0**, first loadable workspace in over an hour |
+| 20:19 | 15 of those 24 corrupted again |
+| 20:22 | 15 TS files / 88 path literals repaired |
+| 20:25 | same 24 dirs restored again |
+| 20:29 | build fails on `📦️📦️packages` in `🏪️store/📜️store.ts` — a file already repaired |
+| 20:33 | final pass: 24 dirs + 41 files; `cargo metadata` exit 0 again |
+
+A `wasm-release` plugin build needs 30+ uninterrupted minutes. Corruption re-enters in under 15.
+
+### Repair method (validated, in `🔨️restore-emoji-corruption.py`)
+
+1. **Directories first, then text.** An "exists on disk" guard is *actively wrong* while corrupted
+   directories exist — it happily accepts them and bakes the corrupted names in permanently.
+2. **git is the only oracle.** `git ls-files` contains zero doubled-emoji names, so any on-disk name
+   carrying one is corruption and the tracked path with the same ASCII skeleton is its true name.
+   Neither the rename plan (itself compounded: `🟦️Bauteilbeschriftungen.ts` → `🟦️🧩️🟦️…`) nor the
+   on-disk state is trustworthy.
+3. **Class-2 only** — same emoji token repeated. Single-glued renames (`🔺️⚙️mesh-engine`,
+   `🎨️🟠️styling`) are the enforcement ticket's *intent* and must be left alone. A peer's broader
+   912-move restore reverted those too; blocking that was correct.
+4. Two bugs found in my own repair, both silent: the existence check tested only `isdir`, skipping
+   file literals like `"…/🦀️.rs"`; and manifests were repaired before `.ts`/`.rs` sources, which
+   carry the same corruption in imports and `#[path]`.
+
+Rejected: building from an isolated copy — ~31G of source plus a cold `wasm-release` build, slower
+than the corruption cycle.
+
+### Standing decision required
+
+Stop PID 66250. Nothing else unblocks this, and no repair holds while it runs. Killing another
+application's process was not taken unilaterally; it is the user's call.
+
+### Puzzle3d state, unaffected by the incident
+
+`framework-surface` (fixed here), `-editor`, `-os-flow`@wasm, `-os-kernel --lib`@wasm,
+`plugin-puzzle`, `plugin-stdio` all compiled before the corruption. `setActiveExample` and
+`setFillCount` migrated, four registry sync points verified on disk. Remaining functional gap:
+`fillBuildTick` needs the live app threaded into `PuzzleCommandWork::step` — all three alternative
+wirings tested and shown to fail, one of them silently.

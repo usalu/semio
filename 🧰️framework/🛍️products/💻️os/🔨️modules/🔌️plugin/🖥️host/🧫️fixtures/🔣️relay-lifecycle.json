@@ -1,0 +1,68 @@
+{
+  "$schema": "./🧬️relay-lifecycle.schema.json",
+  "schemaVersion": 1,
+  "capacities": {
+    "mountedRelaySlots": 16,
+    "replaySeedSlots": 256,
+    "replayRefusalSlots": 512,
+    "pageBytes": 4096
+  },
+  "ingressCases": [
+    {
+      "🪪️id": "interactive-overtakes-earlier-background",
+      "frames": [
+        { "actor": 201, "lane": "background", "sequence": 1, "fuel": 201 },
+        { "actor": 202, "lane": "interactive", "sequence": 2, "fuel": 202 }
+      ],
+      "expectedActors": [202, 201],
+      "maxFramesPerDrive": 1
+    }
+  ],
+  "traces": [
+    {
+      "🪪️id": "replay-first-fault-wins",
+      "machine": "replay",
+      "generation": 1,
+      "initial": "CaptureKind",
+      "events": ["fault:capture-kind", "cancel", "release", "release", "release", "release", "release"],
+      "expected": { "state": "Empty", "firstReason": "fault:capture-kind", "cancelAdmissions": 0, "releaseOpportunities": 5, "callerOutput": null },
+      "accounting": { "seedPagesBefore": 0, "seedPagesAfter": 0, "abiBytesBefore": 0, "abiBytesAfter": 0 }
+    },
+    {
+      "🪪️id": "relay-abandoned-blocked-wake",
+      "machine": "relay",
+      "generation": 7,
+      "initial": "Running",
+      "events": ["drop:7", "blocked", "wake", "release", "release"],
+      "expected": { "state": "Empty", "firstReason": "detached", "cancelAdmissions": 1, "releaseOpportunities": 2, "callerOutput": null },
+      "accounting": { "seedPagesBefore": 0, "seedPagesAfter": 0, "abiBytesBefore": 0, "abiBytesAfter": 0 }
+    },
+    {
+      "🪪️id": "relay-live-terminal-caller-output",
+      "machine": "relay",
+      "generation": 8,
+      "initial": "Running",
+      "events": ["terminal:exact-output", "reap-other", "caller-release"],
+      "expected": { "state": "Empty", "firstReason": "caller", "cancelAdmissions": 0, "releaseOpportunities": 1, "callerOutput": "exact-output" },
+      "accounting": { "seedPagesBefore": 0, "seedPagesAfter": 0, "abiBytesBefore": 0, "abiBytesAfter": 0 }
+    },
+    {
+      "🪪️id": "relay-stale-generation-refused",
+      "machine": "relay",
+      "generation": 11,
+      "initial": "Running",
+      "events": ["drop:10"],
+      "expected": { "state": "Running", "firstReason": null, "cancelAdmissions": 0, "releaseOpportunities": 0, "callerOutput": null },
+      "accounting": { "seedPagesBefore": 0, "seedPagesAfter": 0, "abiBytesBefore": 0, "abiBytesAfter": 0 }
+    },
+    {
+      "🪪️id": "relay-max-plus-one-refused",
+      "machine": "relay",
+      "generation": 12,
+      "initial": "Empty",
+      "events": ["reserve:16", "reserve:1"],
+      "expected": { "state": "CapacityRefused", "firstReason": null, "cancelAdmissions": 0, "releaseOpportunities": 0, "callerOutput": null },
+      "accounting": { "seedPagesBefore": 0, "seedPagesAfter": 0, "abiBytesBefore": 0, "abiBytesAfter": 0 }
+    }
+  ]
+}

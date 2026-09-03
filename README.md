@@ -1,33 +1,33 @@
 <p align="center">
     <a href="https://docs.semio-tech.com">
       <picture>
-          <source media="(prefers-color-scheme: dark)" srcset="compose/asset/logo/🔣️logo_dark.svg">
-          <source media="(prefers-color-scheme: light)" srcset="compose/asset/logo/🔣️logo.svg">
-          <img alt="compose" href="https://github.com/usalu/semio/" src="compose/asset/logo/🔣️logo.svg">
+          <source media="(prefers-color-scheme: dark)" srcset="🧰️framework/🔨️modules/🖼️assets/🪧️logos/🔣️logo_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="🧰️framework/🔨️modules/🖼️assets/🪧️logos/🔣️logo.svg">
+          <img alt="compose" src="🧰️framework/🔨️modules/🖼️assets/🪧️logos/🔣️logo.svg">
       </picture>
     </a>
     <br/>
-    <a href="https://play.semio-tech.com"><img src="compose/asset/badge/🔣️site-🔣️play.svg" alt="A free online playground to toy with compose without login."></a>
-    <a href="https://docs.semio-tech.com"><img src="compose/asset/badge/🔣️site-doc🔣️s.svg" alt="The documentation page to learn compose."></a>
-    <a href="https://js.semio-tech.com"><img src="compose/asset/badge/🔣️dev-j🔣️s.svg" alt="The elements Storybook for shared javascript UI elements."></a>
-    <a href="https://discord.gg/m6nnf6pQRc"><img src="https://img.shields.io/discord/1338232508264747130?style=flat-square&color=ff344f" alt="Discord"></a>
+    <a href="https://play.semio-tech.com"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️site-play.svg" alt="A free online playground to toy with compose without login."></a>
+    <a href="https://docs.semio-tech.com"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️site-docs.svg" alt="The documentation page to learn compose."></a>
+    <a href="https://js.semio-tech.com"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️dev-js.svg" alt="The elements Storybook for shared javascript UI elements."></a>
+    <a href="https://discord.gg/m6nnf6pQRc"><img src="🧰️framework/🔨️modules/assets/📛️badge/🔣️discord.svg" alt="Discord"></a>
     <br/>
-     <a href="https://github.com/usalu/semio"><img src="compose/asset/badge/repo-compose.svg" alt="The repository."></a>
-    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="compose/asset/badge/🔣️cite-zenodo.svg" alt="Cite"></a>
-    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="compose/asset/badge/🔣️license-agpl-v3.svg" alt="Affero General Public License v3.0 or later"></a>
+     <a href="https://github.com/usalu/semio"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️repo-semio.svg" alt="The repository."></a>
+    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️cite-zenodo.svg" alt="Cite"></a>
+    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️license-agpl-v3.svg" alt="Affero General Public License v3.0 or later"></a>
     <br/>
-    <a href="https://eg-ice-25.semio-tech.com"><img src="compose/asset/badge/🔣️presentation-egice25.svg" alt="The presentation of our latest research paper on LLMs with compose."></a>
-    <a href="https://doi.org/10.17868/strath.00093288"><img src="compose/asset/badge/🔣️latest-re🔣️search.svg" alt="The latest research paper on LLMs with compose."></a>
-    <a href="https://eg-ice-23.semio-tech.com"><img src="compose/asset/badge/🔣️presentation-egice23.svg" alt="The presentation of our previous research paper on formalizing architecture."></a>
+    <a href="https://eg-ice-25.semio-tech.com"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️presentation-egice25.svg" alt="The presentation of our latest research paper on LLMs with compose."></a>
+    <a href="https://doi.org/10.17868/strath.00093288"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️latest-research.svg" alt="The latest research paper on LLMs with compose."></a>
+    <a href="https://eg-ice-23.semio-tech.com"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️presentation-egice23.svg" alt="The presentation of our previous research paper on formalizing architecture."></a>
     <br/>
-    <a href="https://play.semio-tech.com"><img src="compose/asset/badge/🔣️ui-browser.svg" alt="Browser"></a>
-    <a href="https://www.grasshopper3d.com/"><img src="compose/asset/badge/🔣️ui-grasshopper.svg" alt="Grasshopper"></a>
-    <a href="https://www.microsoft.com/windows/windows-11"><img src="compose/asset/badge/🔣️ui-window🔣️s.svg" alt="Windows"></a>
-    <a href="https://apple.com/macos"><img src="compose/asset/badge/🔣️ui-maco🔣️s.svg" alt="macOS"></a>
+    <a href="https://play.semio-tech.com"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️ui-browser.svg" alt="Browser"></a>
+    <a href="https://www.grasshopper3d.com/"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️ui-grasshopper.svg" alt="Grasshopper"></a>
+    <a href="https://www.microsoft.com/windows/windows-11"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️ui-windows.svg" alt="Windows"></a>
+    <a href="https://apple.com/macos"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️ui-macos.svg" alt="macOS"></a>
     <br/>
-    <a href="https://www.typescriptlang.org/"><img src="compose/asset/badge/🔣️powered-by-typescript.svg" alt="Typescript"></a>
-    <a href="https://www.python.org/"><img src="compose/asset/badge/🔣️powered-by-python.svg" alt="Python"></a>
-    <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="compose/asset/badge/🔣️powered-by-csharp.svg" alt="C#"></a>
+    <a href="https://www.typescriptlang.org/"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️powered-by-typescript.svg" alt="Typescript"></a>
+    <a href="https://www.python.org/"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️powered-by-python.svg" alt="Python"></a>
+    <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️powered-by-csharp.svg" alt="C#"></a>
     <br/>
     <br/>
     <i>🧩️ Design-Information-Modeling for Kit-of-Parts 🏘️ </i>
@@ -131,31 +131,31 @@ Let me walk you through 🚶️
 
 It is the digital pencil for sketching plans and digital scalpel for building models in compose ✍️
 
-![sketchpad demo](compose/asset/image/🖼️sketchpad-demo.gif)
+![sketchpad demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/🖼️sketchpad-demo.gif)
 
 ## 👥️ studio [↑](#%EF%B8%8F-products-)
 
 A studio is a synchronous collaboriation environment for teams to work together in compose 🤝️
 
-![compose studio Demo](compose/asset/image/🖼️studio-demo.png)
+![compose studio Demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/🖼️studio-demo.png)
 
 ## ☁️ cloud [↑](#%EF%B8%8F-products-)
 
 Use any file-hosting platform as an asynchronous Common-Data-Environment 📁️
 
-![Cloud Demo](compose/asset/image/🖼️cloud-demo.png)
+![Cloud Demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/🖼️cloud-demo.png)
 
 ## 🤖️ assistant [↑](#%EF%B8%8F-products-)
 
 The assistant helps you on every step in the design process with compose ✍️
 
-![compose assistant Demo](compose/asset/image/🖼️assistant-demo.png)
+![compose assistant Demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/🖼️assistant-demo.png)
 
 ## 🦗️ [🦗️compose.gh](https://docs.semio-tech.com/manual/grasshopper) [↑](#%EF%B8%8F-products-)
 
 A batteries-included [Grasshopper](https://www.grasshopper3d.com) program for compose ⚡️
 
-![compose Grasshopper Demo](compose/asset/image/🖼️grasshopper-demo.png)
+![compose Grasshopper Demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/🖼️grasshopper-demo.png)
 
 ## 🦏️ 📐️compose.3dm [↑](#%EF%B8%8F-products-)
 
@@ -165,13 +165,13 @@ A Grasshopper-based integration of [Rhino](https://www.rhino3d.com) and compose 
 
 A Grasshopper-based integration of [Wasp](https://www.food4rhino.com/en/app/wasp) and compose 🔀️
 
-![Wasp Demo](compose/asset/image/🖼️wasp-demo.png)
+![Wasp Demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/🖼️wasp-demo.png)
 
 ## 🦌️ compose.monoceros [↑](#%EF%B8%8F-products-)
 
 A Grasshopper-based integration of [Monoceros](https://monoceros.sub.digital) and compose 🔀️
 
-![Monoceros Demo](compose/asset/image/🖼️monoceros-demo.png)
+![Monoceros Demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/🖼️monoceros-demo.png)
 
 ## 🐞️ compose.ladybug [↑](#%EF%B8%8F-products-)
 
@@ -374,19 +374,19 @@ Even if 95% of the codebase follows those principles, there are good reasons for
 
 The monorepo organizes its code into distinct technologies, each serving a specific domain in the ecosystem:
 
-### [👤️ compose](compose/README.md) [↑](#-technologies-)
+### 👤️ compose [↑](#-technologies-)
 
 The core design-information-modeling technology, containing the main schema, engines, and domain implementations.
 
-### [🧰️ repo](repo/README.md) [↑](#-technologies-)
+### [🧰️ repo](🧰️framework/🛍️products/🦑️repo/📝️📖️README.md) [↑](#-technologies-)
 
 Infrastructure and tooling for the monorepo, including CLI, vscode integrations, MCP servers, and generic utilities.
 
-### [🔬️ coda](coda/README.md) [↑](#-technologies-)
+### 🔬️ coda [↑](#-technologies-)
 
 A research project introducing an AI-first design assistant, bridging the semantic graph with interactive UI.
 
-### [🧩️ elements](elements/README.md) [↑](#-technologies-)
+### [🧩️ elements](🧰️framework/🔨️modules/🖱️ui/📝️📖️README.md) [↑](#-technologies-)
 
 Shared React UI components and layouts used across the browser-based applications within the monorepo.
 
@@ -715,15 +715,15 @@ All automation, CI runs, and agent workflows are controlled through the canonica
 The root `package.json` uses Nx to orchestrate the command pipeline, and delegates bundle builds, tests, and publishing to Nx targets (`bun nx run …`).
 Git hooks are not installed by this repo; run `bun run lint`, `bun run format`, and `bun run test` explicitly before pushing. `bun ./📜️script.ts setup git` removes any legacy pre-commit or post-commit hooks that would block commits, rebases, or squashes.
 
-# 🏘️ [Examples](compose/examples) [↑](#-overview)
+# 🏘️ Examples [↑](#-overview)
 
-## 🚀️ [Starter](compose/example/starters) [↑](#%EF%B8%8F-examples-)
+## 🚀️ Starter [↑](#%EF%B8%8F-examples-)
 
-## 👋️ [Hello compose](compose/example/hello-compose) [↑](#%EF%B8%8F-examples-)
+## 👋️ Hello compose [↑](#%EF%B8%8F-examples-)
 
-## 🌈️ [Geometry](compose/example/geometry) [↑](#%EF%B8%8F-examples-)
+## 🌈️ Geometry [↑](#%EF%B8%8F-examples-)
 
-## 🫀️ [Metabolism](compose/example/metabolism) [↑](#%EF%B8%8F-examples-)
+## 🫀️ Metabolism [↑](#%EF%B8%8F-examples-)
 
 # 💯️ Brand [↑](#-overview)
 
@@ -741,8 +741,6 @@ Git hooks are not installed by this repo; run `bun run lint`, `bun run format`, 
 - Multiple unicode directly after each other 🥇️🥈️🥉️
 
 ## 🌈️ Colors [↑](#-brand-)
-
-![Palette](compose/asset/list/🖼️palette.png)
 
 | Name                                   | Hex     | RGB         | HSL              | HSV (or HSB)     | CMYK          | Color            |
 | -------------------------------------- | ------- | ----------- | ---------------- | ---------------- | ------------- | ---------------- |
@@ -804,8 +802,6 @@ We use it e.g. for:
 
 Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can come together for an invertible theme in a semantically meaningfull way? Well, here is how you achieve it with 33 colors 🤯️
 
-![Grayscale](compose/asset/list/🖼️grayscale.png)
-
 ## 📄️ Typography [↑](#-brand-)
 
 > [!NOTE]
@@ -828,7 +824,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 > [!TIP]
 > In the end of a section you can give the curious reader a summarizing question to think about the consequences and a link to more resources 🤔️
 
-### 🔡️ [Typesetting](compose/asset/README.md#fonts) [↑](#-typography-)
+### 🔡️ [Typesetting](🧰️framework/🔨️modules/🖼️assets/README.md) [↑](#-typography-)
 
 - Sans serif: [Anta](https://fonts.google.com/specimen/Anta) 🖨️
 - Serif: [Kelly Slab](https://fonts.google.com/specimen/Kelly+Slab) ✍️
@@ -853,11 +849,11 @@ As a reference, different type of components have usually different licenses:
 - templates: [CC0 - No Rights Reserved](https://creativecommons.org/public-domain/cc0/)
 - assets: [CC BY-ND 4.0 - Attribution-NoDerivatives 4.0 International](https://creativecommons.org/licenses/by-nd/4.0/)
 
-If you have any questions, please don't hesitate to get in touch with [us over email](mail@semio-tech.com) 📧️
+If you have any questions, please don't hesitate to get in touch with [us over email](mailto:mail@semio-tech.com) 📧️
 
 # 🔒️ Security
 
-If you have any security vulnerabilities or concerns, please contact [us over email](security@semio-tech.com) and don't open an issue, discussion or write into our public discord server 🥷️
+If you have any security vulnerabilities or concerns, please contact [us over email](mailto:security@semio-tech.com) and don't open an issue, discussion or write into our public discord server 🥷️
 
 # ✨️ [Contributors](https://github.com/usalu/semio/pulse/monthly) [↑](#-overview)
 
@@ -865,7 +861,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
   <tbody>
     <tr style="border: none;">
       <td align="center" valign="top" width="145px" style="border: none;"><a href="https://github.com/usalu">
-        <img src=".🧬semio/🦑️repo/👤️/usalu/avatar-round-90x90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
+        <img src=".🧬semio/🦑️repo/🧑️‍💻️devs/🐙️ueli/avatar-round-90x90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
         <br />
         <sub><b>Ueli Saluz</b></sub>
         <br />
@@ -893,49 +889,34 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-starters-" title="🚀️Starters"><sub>🚀️<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kinansarak">
-        <img src=".🧬semio/🦑️repo/👤️/kinansarak/avatar-round-90x90.png" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
+        <img src=".🧬semio/🦑️repo/🧑️‍💻️devs/🐳️ kinan/avatar-round-90x90.png" width="90px" alt="Kinan Sarakbi" style="border-radius: 50%;"/>
         <br />
-        <sub><b>KinanSarak</b></sub></a>
+        <sub><b>Kinan Sarakbi</b></sub></a>
         <br />
         <a href="#-composedocs-" title="📚️compose/docs"><sub>📚️<sub></a>
         <a href="#-hello-compose-" title="👋️ Hello compose"><sub>👋️<sub></a>
         <a href="#-composegrasshopper-" title="🦗️compose/grasshopper"><sub>🦗️<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/EinMysterium">
-        <img src=".🧬semio/🦑️repo/👤️/EinMysterium/avatar-round-90x90.png" width="90px" alt="EinMysterium" style="border-radius: 50%;"/>
+        <img src=".🧬semio/🦑️repo/🧑️‍💻️devs/🦊️christian/avatar-round-90x90.png" width="90px" alt="Christian Hödtke" style="border-radius: 50%;"/>
         <br />
         <sub><b>Christian Hödtke</b></sub></a>
         <br />
         <a href="#-composegrasshopper-" title="🦗️compose/grasshopper"><sub>🦗️<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/AdrianoCelentano">
-        <img src=".🧬semio/🦑️repo/👤️/AdrianoCelentano/avatar-round-90x90.png" width="90px" alt="AdrianoCelentano" style="border-radius: 50%;"/>
+        <img src=".🧬semio/🦑️repo/🧑️‍💻️devs/🦅️adrian/avatar-round-90x90.png" width="90px" alt="Adrian Schäfer" style="border-radius: 50%;"/>
         <br />
         <sub><b>AdrianoCelentano</b></sub></a>
         <br />
         <a href="#-composejs-" title="🟨️compose/js"><sub>🟨️<sub></a>
       </td>
-      <td align="center" valign="top" width="145px"><a href="https://github.com/ellumpine">
-        <img src=".🧬semio/🦑️repo/👤️/ellumpine/avatar-round-90x90.png" width="90px" alt="ellumpine" style="border-radius: 50%;"/>
-        <br />
-        <sub><b>ellumpine</b></sub></a>
-        <br />
-        <a href="#-composegrasshopper-" title="🦗️compose/grasshopper"><sub>🦗️<sub></a>
-        <a href="#-composeladybug-" title="🐞️ladybug"><sub>🐞️<sub></a>
-      </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kaatzjo">
-        <img src=".🧬semio/🦑️repo/👤️/kaatzjo/avatar-round-90x90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
+        <img src=".🧬semio/🦑️repo/🧑️‍💻️devs/🦉️jonathan/avatar-round-90x90.png" width="90px" alt="Jonathan Kaatz" style="border-radius: 50%;"/>
         <br />
-        <sub><b>kaatzjo</b></sub></a>
+        <sub><b>Jonathan Kaatz</b></sub></a>
         <br />
         <a href="#-composeengine-" title="⚙️compose/engine"><sub>⚙️<sub></a> 
-      </td>
-      <td align="center" valign="top" width="145px"><a href="https://github.com/pizzadizza">
-        <img src=".🧬semio/🦑️repo/👤️/pizzadizza/avatar-round-90x90.png" width="90px" alt="pizzadizza" style="border-radius: 50%;"/>
-        <br />
-        <sub><b>pizzadizza</b></sub></a>
-        <br />
-        <a href="#-composeassistant-" title="🤖️compose/assistant"><sub>🤖️<sub></a> 
       </td>
     </tr>
 </table>
@@ -943,9 +924,3 @@ If you have any security vulnerabilities or concerns, please contact [us over em
 # 📊️ [Stats](https://stats.docs.semio-tech.com)
 
 We use [Goatcounter](https://www.goatcounter.com) for gaining insights about our [docs](#-composedocs-) 📈️
-
-<p align="center">
-    <a href="https://github.com/usalu/semio"><img src="https://myhits.vercel.app/api/hit/https%3A%2F%2Fgithub.com%2Fusalu%2Fcompose?color=gray&label=views&size=small" alt="views"/></a>
-</p>
-
-![Pixel](https://stats.docs.semio-tech.com/count?p=https://github.com/usalu/semio)

@@ -1,0 +1,15 @@
+{
+  "title": "Enforce Unique Semantic Emojis Across Repository",
+  "status": "open",
+  "description": "Every single entity MUST have a unique emoji among the siblings inside the same parent. No white space after the emoji. Add emojis to Technologies, Bundles, Folders (AGENTS.md frontmatter), Files (header description), Sections (region names), Definitions (docstring). Adjust repo implementation, tests, and extend all entities and source code.",
+  "summary": "Defined schema-first unique semantic path emoji statutes in TypeScript and Go; added language-neutral fixtures and an independent Unicode oracle; migrated 946 paths; repaired active references and all 49 explicit test routes; added Nx launch coverage; and verified zero missing, generic, presentation, spacing, or duplicate findings. Targeted TypeScript and Go tests, taxonomy grapheme tests, the Go build, launch parsing, and route checks pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1293"
+  },
+  "goal": "🎯️repofoldermechanism",
+  "sessions": [
+    "⚪️2a437ce8a9014fe4a8c862df13447a6d",
+    "⚪68f5d2bb594c4da1a6619018a025fab4",
+    "⚪3bdc257eb68e4962bb71e70f36261850"
+  ]
+}

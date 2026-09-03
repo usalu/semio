@@ -100,44 +100,18 @@ export const agentUiLabel = registerUiTranslationBundles({
 //#endregion 🌐️Labels
 
 //#region 🔖️DiscoverConfig
-export type AgentBridgeConfig = { readonly url: string; readonly token: string };
+export type AgentBridgeConfig = { readonly url: string; readonly admissionProof: string };
 
-/** 🔎️ Discovers the bridge's `ws://host:port/bridge` URL + bearer token for a BROWSER shell.
- *
- * The gateway's CLI mints its bridge token loopback-only per `📋️master.md` §2.1; a browser tab
- * has no filesystem access to read it. Verified by reading `🌉️mcp/🦀️.rs` and
- * `🌉️mcp/📦️bin.rs` directly before writing this file: `run_http` does not yet mount
- * `bridge::server::bridge_router()` into the real HTTP process at all (only `/mcp` is served —
- * P1b's report §2.4/§5 calls the `/bridge` route a still-unmounted skeleton), and no
- * `~/.semio/agent/bridge-token`-style file is written anywhere in this crate today. There is
- * therefore no live gateway a browser can dial yet, dev-server-injected config or not — see the
- * P10 report's "port/token discovery" section. This function reads the one seam a dev server CAN
- * inject at build/launch time, mirroring `ShellHost/🟦️.tsx`'s `readViteSEnv` idiom
- * (guarded for non-Vite embeds where `import.meta.env` is absent): `VITE_SEMIO_BRIDGE_URL` /
- * `VITE_SEMIO_BRIDGE_TOKEN`. Returns `null` (never throws) when either is unset — `useAgentBridge`
- * treats `null` as "stay disabled, never attempt a connection". */
+/** 🔎️ Environment discovery is intentionally disabled because bridge admission is a protected
+ * in-memory value supplied by the local supervisor, never a Vite/environment credential carrier. */
 export function discoverAgentBridgeConfig(source?: Readonly<Record<string, string | undefined>>): AgentBridgeConfig | null {
-  const env =
-    source ??
-    (() => {
-      try {
-        return (import.meta as unknown as { readonly env?: Readonly<Record<string, string | undefined>> }).env ?? {};
-      } catch {
-        return {};
-      }
-    })();
-  const url = env.VITE_SEMIO_BRIDGE_URL;
-  const token = env.VITE_SEMIO_BRIDGE_TOKEN;
-  if (!url || !token) return null;
-  return { url, token };
+  void source;
+  return null;
 }
 
-/** 🔗️ Appends `?token=…` to a bridge URL exactly once, matching `📋️master.md` §2.1's
- * `ws://127.0.0.1:<port>/bridge?token=…` shape — tolerant of a caller-supplied URL that already
- * carries other query params. */
-export function bridgeUrlWithToken(config: AgentBridgeConfig): string {
-  const separator = config.url.includes("?") ? "&" : "?";
-  return `${config.url}${separator}token=${encodeURIComponent(config.token)}`;
+/** 🔗️ Exact ordered websocket subprotocols keep admission out of URLs, logs, and referrers. */
+export function bridgeProtocols(config: AgentBridgeConfig): readonly ["semio.mcp.bridge.v1", string] {
+  return ["semio.mcp.bridge.v1", config.admissionProof];
 }
 //#endregion 🔖️DiscoverConfig
 
@@ -430,7 +404,7 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
       setStatus(reconnectAttemptRef.current > 0 ? "reconnecting" : "connecting");
       let socket: WebSocket;
       try {
-        socket = new WebSocket(bridgeUrlWithToken(config as AgentBridgeConfig));
+        socket = new WebSocket(config.url, [...bridgeProtocols(config)]);
       } catch (error) {
         setLastError(error instanceof Error ? error.message : "failed to open bridge socket");
         scheduleReconnect();
@@ -487,7 +461,7 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
       setStatus("disabled");
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config?.url, config?.token, shellKind, shellSessionId, principalActor, send]);
+  }, [config?.url, config?.admissionProof, shellKind, shellSessionId, principalActor, send]);
 
   return { status, shellState, presence, pendingApprovals, lastError, dispatch, resolveApproval };
 }

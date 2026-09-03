@@ -371,6 +371,7 @@ impl Clone for ProgramBridgeBackend {
 #[derive(Clone)]
 pub struct ProgramBridgeEntry {
     pub plugin_id: String,
+    pub package_id: Option<String>,
     pub manifest: PluginManifest,
     backend: ProgramBridgeBackend,
 }
@@ -383,7 +384,7 @@ impl ProgramBridgeEntry {
         let manifest_json = manifest_fn.call0(&JsValue::NULL).map_err(|_| "manifest call failed")?.as_string().ok_or("manifest not string")?;
         let manifest: PluginManifest = serde_json::from_str(&manifest_json).map_err(|err| format!("manifest parse: {err}"))?;
         let _create_app = get_fn(&handle, "createApp")?;
-        Ok(Self { plugin_id, manifest, backend: ProgramBridgeBackend::Js(Rc::new(handle)) })
+        Ok(Self { plugin_id, package_id: None, manifest, backend: ProgramBridgeBackend::Js(Rc::new(handle)) })
     }
 
     /// 🎠️ H3-wgpu-native — no longer instantiates anything (see `load_wasm_plugins` below, item 3
@@ -393,8 +394,8 @@ impl ProgramBridgeEntry {
     /// packet still in flight). The kernel thread only ever sees `wasm_path` once `create_app` is
     /// actually called.
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn from_wasm(plugin_id: String, wasm_path: std::path::PathBuf, manifest: PluginManifest) -> Result<Self, String> {
-        Ok(Self { plugin_id: plugin_id.clone(), manifest, backend: ProgramBridgeBackend::Wasm { client: KernelClient::get(), wasm_path } })
+    pub fn from_wasm(plugin_id: String, package_id: Option<String>, wasm_path: std::path::PathBuf, manifest: PluginManifest) -> Result<Self, String> {
+        Ok(Self { plugin_id: plugin_id.clone(), package_id, manifest, backend: ProgramBridgeBackend::Wasm { client: KernelClient::get(), wasm_path } })
     }
 
     /// 🎠️ H3-wgpu-native — replaces the old `Arc<WasmPluginRuntime>`-returning `wasm_runtime()`.
@@ -699,8 +700,8 @@ pub fn parse_plugin_entries(plugins: JsValue) -> Result<Vec<ProgramBridgeEntry>,
 // 🐛️ `generated_plugin_hosts` is declared at the crate root (below, outside this inline `program_bridge`
 // module) and re-exported here — a `#[path]` file-module declared *inside* an inline `mod` block resolves
 // relative to a virtual `<enclosing-file-dir>/program_bridge/` directory that has no real counterpart on
-// disk, and POSIX path resolution requires every component a `..` traverses through (even one that's
-// lexically cancelled out) to actually exist; no number of `..`s fixes that. Declaring it at the crate
+// disk, and POSIX path resolution requires every component a `../../../🌉️ProgramBridge/🎯️targets` traverses through (even one that's
+// lexically cancelled out) to actually exist; no number of `../../../🌉️ProgramBridge/🎯️targets`s fixes that. Declaring it at the crate
 // root instead (where `program_bridge/`'s directory is real) and re-exporting preserves the
 // `crate::program_bridge::{PluginHostConfig, ...}` path every call site already depends on.
 pub use crate::generated_plugin_hosts::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, resolve_registry_plugin_id, PluginHostConfig};
@@ -755,8 +756,8 @@ pub async fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Pa
             }
             return Err(format!("{}: no .wasm artifact found", plugin_dir.display()));
         };
-        let manifest = read_descriptor_manifest(&plugin_dir, &plugin_id).await;
-        match ProgramBridgeEntry::from_wasm(plugin_id.clone(), path, manifest) {
+        let (manifest, package_id) = read_descriptor_manifest(&plugin_dir, &plugin_id).await;
+        match ProgramBridgeEntry::from_wasm(plugin_id.clone(), package_id, path, manifest) {
             Ok(entry) => entries.push(entry),
             Err(error) if space_mode => eprintln!("[DEBUG] load_wasm_plugins: skipping {plugin_id}: {error}"),
             Err(error) => return Err(error),
@@ -775,30 +776,33 @@ pub async fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Pa
 /// a plugin without a descriptor until E1 lands and W3 migrates real plugins to emit one; nothing in
 /// this repo does yet (`WasmtimeRuntime`'s own tests confirm no `.wasm` here exports `world actor`).
 #[cfg(not(target_arch = "wasm32"))]
-async fn read_descriptor_manifest(plugin_dir: &std::path::Path, plugin_id: &str) -> PluginManifest {
+async fn read_descriptor_manifest(plugin_dir: &std::path::Path, plugin_id: &str) -> (PluginManifest, Option<String>) {
     let descriptor_path = plugin_dir.join("🔣️.json");
     if let Ok(semio_framework_os_services::NativeIoValue::Bytes(mut bytes)) = crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(descriptor_path.clone())).await {
         if let Some(page) = bytes.single_page() {
             let descriptor = serde_json::from_slice::<semio_framework::manifest::PackageDescriptor>(page);
             let _ = bytes.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
             if let Ok(descriptor) = descriptor {
-                return descriptor.manifest;
+                return (descriptor.manifest, Some(descriptor.package_id));
             }
         }
         eprintln!("[DEBUG] load_wasm_plugins: {} exists but failed to parse as PackageDescriptor", descriptor_path.display());
     }
     eprintln!("[DEBUG] load_wasm_plugins: no descriptor for {plugin_id} yet (packet E1-describe/W3 seam) — loading with an empty manifest, no eager instantiation");
-    PluginManifest {
-        plugin_id: plugin_id.to_string(),
-        label: plugin_id.to_string(),
-        version: String::new(),
-        apps: Vec::new(),
-        examples: Vec::new(),
-        capabilities: Vec::new(),
-        topic_contributions: Vec::new(),
-        commands: Vec::new(),
-        artifact_kinds: Vec::new(),
-        dependencies: Vec::new(),
-        contributions: Vec::new(),
-    }
+    (
+        PluginManifest {
+            plugin_id: plugin_id.to_string(),
+            label: plugin_id.to_string(),
+            version: String::new(),
+            apps: Vec::new(),
+            examples: Vec::new(),
+            capabilities: Vec::new(),
+            topic_contributions: Vec::new(),
+            commands: Vec::new(),
+            artifact_kinds: Vec::new(),
+            dependencies: Vec::new(),
+            contributions: Vec::new(),
+        },
+        None,
+    )
 }

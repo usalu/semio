@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 import { Textarea } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "../../🧪️story";
+import type { Meta, StoryObj } from "../../🧪️🐨️story.ts";
 import { nakagin } from "../../../../../.storybook/fixture/nakagin";
 
 // 📝️#region 🎏️Textarea

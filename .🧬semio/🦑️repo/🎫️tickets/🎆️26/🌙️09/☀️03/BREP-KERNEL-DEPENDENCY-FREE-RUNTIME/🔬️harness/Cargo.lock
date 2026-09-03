@@ -23,6 +23,8 @@ version = "0.0.0"
 dependencies = [
  "semio-framework-async-macros",
  "semio-framework-geometry",
+ "semio-framework-hash",
+ "semio-framework-mesh-engine",
  "semio-framework-number",
  "semio-framework-os-kernel",
  "semio-framework-pack",
@@ -332,6 +334,14 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async",
  "semio-framework-trace",
+]
+
+[[package]]
+name = "semio-framework-mesh-engine"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-io-base64",
+ "semio-framework-pack",
 ]
 
 [[package]]

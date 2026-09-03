@@ -11,7 +11,9 @@
     "storybook": {
       "id": "styling",
       "titlePrefix": "🎨️styling",
-      "sourceRoots": ["📦️packages/🟦️typescript"]
+      "sourceRoots": [
+        "📦️packages/🟦️typescript"
+      ]
     }
   },
   "exports": {

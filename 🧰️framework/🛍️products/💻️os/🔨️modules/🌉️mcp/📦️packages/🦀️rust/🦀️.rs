@@ -9,7 +9,7 @@
 // (not also `dsl`/`protocol`, `🏃️run`'s own convention) because this crate's own `🧭️protocol` facet
 // (P1a, the MCP JSON-RPC protocol core) already owns the name `protocol` at this crate's root;
 // `semio_framework_os_kernel`'s crate-root glob re-exports (`os_dsl::*`/`os_store::*`/`os_spr::*`,
-// verified in that crate's own `🦀️.rs`) make every item `🏠️workspace` needs (`ArtifactDsl`,
+// verified in that crate's own `../../📦️📦️packages/🦀️rust/🦀️.rs`) make every item `🏠️workspace` needs (`ArtifactDsl`,
 // `ArtifactPack`, `Mutation`, `MutationDiff`, `OpText`, `OpBinary`, `ArtifactStore`,
 // `create_document_envelope`, `TextError`, `TextSpan`, `sync::*`) reachable through this one alias.
 extern crate semio_framework_os_kernel as store;

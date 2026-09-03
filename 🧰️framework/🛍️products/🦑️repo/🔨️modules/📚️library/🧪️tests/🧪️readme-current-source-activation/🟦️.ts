@@ -10,8 +10,8 @@ import * as discovery from "../../🔍️discovery/🟦️.ts";
 import * as normalization from "../../🧹️normalization/🟦️.ts";
 
 const library = resolve(import.meta.dir, "../.."), root = resolve(library, "../../../../..");
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧪️📖️readme-current-source-activation/🔣️.json"), "utf8"));
+const schema = JSON.parse(readFileSync(join(import.meta.dir, "../🧪️📖️readme-current-source-activation/🧬️schema/🔣️.json"), "utf8"));
 const sha = (bytes: string | Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 const observations = new Map<string, { bytes: Buffer; mode: number; sha256: string; size: number }>();
 const outcomes: any[] = [];
@@ -52,7 +52,7 @@ const capture = (path: string) => {
 const revisionInput = capture(vector.revisionInput), revisionVector = JSON.parse(revisionInput.bytes.toString("utf8"));
 const revision = revisionVector.revisions[vector.revisionId], catalogInput = capture(vector.catalogPath), catalogDocument = JSON.parse(catalogInput.bytes.toString("utf8"));
 const fixtureAuthorityInput = capture(revisionVector.fixtureInputs.path), fixtureAuthority = JSON.parse(fixtureAuthorityInput.bytes.toString("utf8"));
-const fixtureSchema = JSON.parse(capture(posix.dirname(revisionVector.fixtureInputs.path) + "/🧬️schema/🔣️.json").bytes.toString("utf8"));
+const fixtureSchema = JSON.parse(capture(posix.dirname(revisionVector.fixtureInputs.path) + "../🧪️📖️readme-current-source-activation/🧬️schema/🔣️.json").bytes.toString("utf8"));
 if (fixtureAuthorityInput.sha256 !== revisionVector.fixtureInputs.sha256 || !new Ajv({ allErrors: true }).compile(fixtureSchema)(fixtureAuthority) || fixtureAuthority.catalog.path !== vector.catalogPath || fixtureAuthority.catalog.sha256 !== vector.catalogSha256 || fixtureAuthority.revision.id !== vector.revisionId) throw new Error("Reviewed activation fixture authority drift");
 
 /** 🧫️ Captures only retained reviewed payloads before installing declared logical paths inside isolated repositories. */
@@ -206,7 +206,7 @@ function revisionDigest(): string {
 test("neutral activation inputs retain exact baseline provenance and independent JSON and digest parity", () => {
   const validate = new Ajv({ allErrors: true }).compile(schema);
   expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
-  expect(getNodeValue(parseTree(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"))!)).toEqual(vector);
+  expect(getNodeValue(parseTree(readFileSync(join(import.meta.dir, "../🧪️📖️readme-current-source-activation/🔣️.json"), "utf8"))!)).toEqual(vector);
   expect(revisionInput.sha256).toBe(vector.revisionInputSha256);
   expect(catalogInput.sha256).toBe(vector.catalogSha256);
   expect({ sha256: currentInput.sha256, size: currentInput.size, mode: currentInput.mode }).toEqual({ ...revision.currentPreimage, mode: 0o644 });

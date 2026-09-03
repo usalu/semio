@@ -27,7 +27,7 @@ use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
     app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
-    ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, EditorApp, Effect, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec,
+    ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, EditorApp, Effect, Emit, ExampleSource, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec,
     InteractionDefinition, InteractionRef, InteractionTopology, InteractiveJobClassification, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
     TopologyNode, UtilityDefinition, WindowMeasure,
 };
@@ -1215,14 +1215,24 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("mod+shift+z", "redo")
             .config(Generation3dPlayApp::config_spec())
             .io(semio_framework::io::resolve_ready(generation3d_io()))
-            // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a
-            // bare `AppDefinition`, not the old `App { definition, examples }` — there is no
-            // `.example(...)`/`.workflow(...)` on this builder, so the eight
-            // `PROCEDURAL_EXAMPLE_*` app-level example registrations and the no-op
-            // `.workflow("generation3d", …)` call are dropped here (not silently: reported in this
-            // packet's migration report). The subset's own `📚️examples/🎬️<slug>` facets (eight real
-            // examples, pre-existing) are the modern, role-agnostic replacement surface for this.
             .build_definition()
+}
+
+/// 📚️ The eight bundled `📚️examples/🎬️<slug>` fixtures, in `schema::is_generation3d_example_id`'s
+/// order — plugged into `.editor_with_examples::<Generation3dPlayApp>(create_generation3d_app(), …)`
+/// at the plugin root so the react shell's example dropdown (`NavbarExampleSelect/🟦️.tsx`, fed by
+/// `activePluginManifest.examples`) stops being hidden for `generation3d`.
+pub fn examples() -> Vec<ExampleSource> {
+    vec![
+        crate::examples::art_generation3d_hexagonal_mushroom_column::source(),
+        crate::examples::art_generation3d_rectangle_extrude_volume::source(),
+        crate::examples::art_generation3d_sphere_cut_with_torus::source(),
+        crate::examples::art_generation3d_box_fillet_preview::source(),
+        crate::examples::art_generation3d_sphere_box_fuse::source(),
+        crate::examples::art_generation3d_face_sweep_extrude::source(),
+        crate::examples::art_generation3d_rectangle_wire_preview::source(),
+        crate::examples::art_generation3d_box_shell_preview::source(),
+    ]
 }
 //#endregion 🔖️Manifest
 
@@ -1917,28 +1927,28 @@ pub(crate) mod testkit {
         semio_framework_plugin::App { definition: create_generation3d_app(), examples: Vec::new() }
     }
 
-    pub fn app() -> Generation3dApp {
-        new_app::<EditorApp<Generation3dPlayApp>>()
+    pub async fn app() -> Generation3dApp {
+        new_app::<EditorApp<Generation3dPlayApp>>().await
     }
 
-    pub fn app_with_registry() -> Generation3dApp {
-        new_app_with_registry::<EditorApp<Generation3dPlayApp>>(generation3d_app_manifest_for_testkit)
+    pub async fn app_with_registry() -> Generation3dApp {
+        new_app_with_registry::<EditorApp<Generation3dPlayApp>>(generation3d_app_manifest_for_testkit).await
     }
 
-    pub fn dispatch(app: &mut Generation3dApp, command: Generation3dCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+    pub async fn dispatch(app: &mut Generation3dApp, command: Generation3dCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
     }
 
-    pub fn render(app: &mut Generation3dApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+    pub async fn render(app: &mut Generation3dApp, body_key: &str) -> String {
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
     }
 
     /// 🧵️ A `flowEvalTick` chain self-dispatches via `requestedEffects`, which only the JS renderer
     /// drains in production — a test has to do that draining itself.
-    pub fn drain_flow_eval_ticks(app: &mut Generation3dApp) {
-        app.pending_effects();
+    pub async fn drain_flow_eval_ticks(app: &mut Generation3dApp) {
+        app.pending_effects().await;
         for _ in 0..1000 {
-            let result = app.dispatch_typed(Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {}), &meta("local")).expect("flowEvalTick");
+            let result = app.dispatch_typed(Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {}), &meta("local")).await.expect("flowEvalTick");
             if !result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "flowEvalTick")) {
                 return;
             }
@@ -1977,20 +1987,20 @@ mod tests {
             .insert("integer", flow::neural::Value::Atom(flow::neural::Atom::Integer(7)))
             .insert("nested", flow::neural::Value::Dictionary(flow::neural::Dictionary::new().insert("text", flow::neural::Value::Atom(flow::neural::Atom::String("production".into())))));
         vec![
-            create_widget(0, flow::Widget::Neuron { id: "created-widget".into(), neuron_kind: "law".into(), params, input_ports: vec!["in".into()], output_ports: vec!["out".into()], preview: true }),
-            update_widget(flow::Widget::Cluster { id: "replace-target".into(), name: "After Replacement".into(), tree: Default::default(), flow: Default::default() }),
-            delete_widget("delete-target".into()),
-            connect_synapse(0, flow::SynapseSpec { id: "created-synapse".into(), from: "created-widget".into(), to: "replace-target".into(), from_port: "out".into(), to_port: "in".into() }),
-            update_synapse(flow::SynapseSpec { id: "update-synapse".into(), from: "replace-target".into(), to: "move-target".into(), from_port: "new-out".into(), to_port: "new-in".into() }),
-            disconnect_synapse("disconnect-synapse".into()),
-            move_widget("move-target".into(), flow::WidgetLayout { x: 31.0, y: -17.0 }),
-            delete_widget_position("clear-target".into()),
-            update_camera(flow::CameraJson { x: 9.0, y: 8.0, zoom: 1.75 }),
-            change_schema("flow.fixture.production-retained".into()),
-            create_generation(flow::playbook::FormGeneration { id: "created-generation".into(), name: "Created".into(), values: serde_json::Map::new() }),
-            delete_generation("delete-generation".into()),
-            rename_generation("rename-generation".into(), "After Rename".into()),
-            change_generation_value("change-generation".into(), "deep-answer".into(), serde_json::json!({"object": {"array": [1.0, false, "retained"]}})),
+            Generation3dMutation::CreateWidget(create_widget::CreateWidget { index: 0, widget: flow::Widget::Neuron { id: "created-widget".into(), neuron_kind: "law".into(), params, input_ports: vec!["in".into()], output_ports: vec!["out".into()], preview: true } }),
+            Generation3dMutation::UpdateWidget(update_widget::UpdateWidget { widget: flow::Widget::Cluster { id: "replace-target".into(), name: "After Replacement".into(), tree: Default::default(), flow: Default::default() } }),
+            Generation3dMutation::DeleteWidget(delete_widget::DeleteWidget { id: "delete-target".into() }),
+            Generation3dMutation::ConnectSynapse(connect_synapse::ConnectSynapse { index: 0, synapse: flow::SynapseSpec { id: "created-synapse".into(), from: "created-widget".into(), to: "replace-target".into(), from_port: "out".into(), to_port: "in".into() } }),
+            Generation3dMutation::UpdateSynapse(update_synapse::UpdateSynapse { synapse: flow::SynapseSpec { id: "update-synapse".into(), from: "replace-target".into(), to: "move-target".into(), from_port: "new-out".into(), to_port: "new-in".into() } }),
+            Generation3dMutation::DisconnectSynapse(disconnect_synapse::DisconnectSynapse { id: "disconnect-synapse".into() }),
+            Generation3dMutation::MoveWidget(move_widget::MoveWidget { id: "move-target".into(), layout: flow::WidgetLayout { x: 31.0, y: -17.0 } }),
+            Generation3dMutation::DeleteWidgetPosition(delete_widget_position::DeleteWidgetPosition { id: "clear-target".into() }),
+            Generation3dMutation::UpdateCamera(update_camera::UpdateCamera { camera: flow::CameraJson { x: 9.0, y: 8.0, zoom: 1.75 } }),
+            Generation3dMutation::ChangeSchema(change_schema::ChangeSchema { new_schema: "flow.fixture.production-retained".into() }),
+            Generation3dMutation::CreateGeneration(create_generation::CreateGeneration { generation: flow::playbook::FormGeneration { id: "created-generation".into(), name: "Created".into(), values: serde_json::Map::new() } }),
+            Generation3dMutation::DeleteGeneration(delete_generation::DeleteGeneration { id: "delete-generation".into() }),
+            Generation3dMutation::RenameGeneration(rename_generation::RenameGeneration { id: "rename-generation".into(), new_name: "After Rename".into() }),
+            Generation3dMutation::ChangeGenerationValue(change_generation_value::ChangeGenerationValue { id: "change-generation".into(), question_id: "deep-answer".into(), new_value: serde_json::json!({"object": {"array": [1.0, false, "retained"]}}) }),
         ]
     }
 
@@ -2260,10 +2270,10 @@ mod tests {
     }
     //#endregion 🔖️CommandSurface
 
-    #[test]
-    fn declared_actions_bridge_to_commands() {
+    #[semio_framework_async_macros::async_test]
+    async fn declared_actions_bridge_to_commands() {
         let _serial = test_support::lock();
-        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<Generation3dPlayApp>>(testkit::generation3d_app_manifest_for_testkit);
+        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<Generation3dPlayApp>>(testkit::generation3d_app_manifest_for_testkit).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2291,8 +2301,8 @@ mod tests {
         assert!(json.contains("3d.generation"), "artifact kind missing from the manifest");
     }
 
-    #[test]
-    fn each_example_loads_distinct_fixture_and_preview_geometry() {
+    #[semio_framework_async_macros::async_test]
+    async fn each_example_loads_distinct_fixture_and_preview_geometry() {
         use crate::artifacts::generation3d::schema::*;
         use crate::artifacts::generation3d::widget_id;
         let _serial = test_support::lock();
@@ -2308,28 +2318,29 @@ mod tests {
         ];
         let mut signatures = std::collections::BTreeSet::new();
         for example_id in examples {
-            let mut app = app();
-            app.dispatch_typed(Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_framework_plugin::testkit::meta("local")).expect("set example");
+            let mut app = app().await;
+            app.dispatch_typed(Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_framework_plugin::testkit::meta("local")).await.expect("set example");
             let signature = format!("{:?}", app.snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| widget_id(widget).to_string()).collect::<std::collections::BTreeSet<_>>());
             assert!(signatures.insert(signature.clone()), "duplicate fixture signature for {example_id}: {signature}");
         }
     }
 
-    #[test]
-    fn refresh_pending_effects_arms_flow_eval_tick_chain() {
+    #[semio_framework_async_macros::async_test]
+    async fn refresh_pending_effects_arms_flow_eval_tick_chain() {
         let _serial = test_support::lock();
-        let mut app = app();
+        let mut app = app().await;
         app.dispatch_typed(Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::artifacts::generation3d::schema::PROCEDURAL_EXAMPLE_SPHERE_TORUS.into() }), &semio_framework_plugin::testkit::meta("local"))
+            .await
             .expect("set example");
-        let effects = app.pending_effects();
+        let effects = app.pending_effects().await;
         assert!(effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "flowEvalTick")));
-        drain_flow_eval_ticks(&mut app);
+        drain_flow_eval_ticks(&mut app).await;
     }
 
-    #[test]
-    fn undo_redo_round_trips_flow_graph_edits() {
+    #[semio_framework_async_macros::async_test]
+    async fn undo_redo_round_trips_flow_graph_edits() {
         let _serial = test_support::lock();
-        let mut app = app();
+        let mut app = app().await;
         let before = app.snapshot().expect("snapshot").fixture.widgets.len();
         semio_framework_plugin::testkit::assert_undo_redo_round_trip(
             &mut app,
@@ -2337,13 +2348,14 @@ mod tests {
             |app| app.snapshot().expect("snapshot").fixture.widgets.len(),
             before,
             before + 1,
-        );
+        )
+        .await;
     }
 
-    #[test]
-    fn two_instances_converge_disjoint_widget_moves() {
+    #[semio_framework_async_macros::async_test]
+    async fn two_instances_converge_disjoint_widget_moves() {
         let _serial = test_support::lock();
-        let widgets: Vec<String> = app().snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::artifacts::generation3d::widget_id(widget).to_string()).collect();
+        let widgets: Vec<String> = app().await.snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::artifacts::generation3d::widget_id(widget).to_string()).collect();
         assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
         let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
         semio_framework_plugin::testkit::assert_two_instances_converge::<semio_framework_plugin::EditorApp<Generation3dPlayApp>, (Option<f64>, Option<f64>)>(
@@ -2354,25 +2366,26 @@ mod tests {
                 let layout = &app.snapshot().expect("snapshot").fixture.layout;
                 (layout.get(&w0).map(|entry| entry.x), layout.get(&w1).map(|entry| entry.x))
             },
-        );
+        )
+        .await;
     }
 
-    #[test]
-    fn generation3d_labels_translate_catalogue_and_inspector_in_german() {
+    #[semio_framework_async_macros::async_test]
+    async fn generation3d_labels_translate_catalogue_and_inspector_in_german() {
         let _serial = test_support::lock();
-        let mut app = app();
-        app.dispatch_typed(Generation3dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }), &semio_framework_plugin::testkit::meta("local")).expect("set locale");
-        let catalogue = testkit::render(&mut app, catalogue_panel::GENERATION_3D_PLAY_BODY_CATALOGUE);
+        let mut app = app().await;
+        app.dispatch_typed(Generation3dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }), &semio_framework_plugin::testkit::meta("local")).await.expect("set locale");
+        let catalogue = testkit::render(&mut app, catalogue_panel::GENERATION_3D_PLAY_BODY_CATALOGUE).await;
         assert!(catalogue.contains("\"Elemente\""));
-        let inspector = testkit::render(&mut app, inspection_panel::GENERATION_3D_PLAY_BODY_INSPECTION);
+        let inspector = testkit::render(&mut app, inspection_panel::GENERATION_3D_PLAY_BODY_INSPECTION).await;
         assert!(inspector.contains("Elemente:"));
     }
 
     /// 🕹️ The runtime graph-selection route persists through an exactly owned interaction store.
-    #[test]
-    fn generation3d_interaction_selection_owns_its_persisted_history() {
+    #[semio_framework_async_macros::async_test]
+    async fn generation3d_interaction_selection_owns_its_persisted_history() {
         let _serial = test_support::lock();
-        let mut app = app_with_registry();
+        let mut app = app_with_registry().await;
         let node_id = app
             .snapshot()
             .expect("snapshot")
@@ -2385,31 +2398,32 @@ mod tests {
         let targets = serde_json::to_string(&vec![semio_framework_plugin::InteractionTarget { granularity: "node".into(), id: node_id.clone() }]).expect("selection targets");
         let args = serde_json::json!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" });
         app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&args), &semio_framework_plugin::testkit::meta("local"))
+            .await
             .expect("interaction selection persists");
-        assert_eq!(app.interaction_state().selection.get("graph").map(|selection| selection.ids.as_slice()), Some([node_id].as_slice()));
+        assert_eq!(app.interaction_state().await.selection.get("graph").map(|selection| selection.ids.as_slice()), Some([node_id].as_slice()));
     }
 
     /// 🕹️ `context_menu` carries no `InteractionView` (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM,
     /// same discovered gap as `render`), so `has_selection` is always false now and the destructive
     /// `delete-selection` row (conditioned on a real selection) never appears; this test now only pins
     /// the disclosure budget.
-    #[test]
-    fn context_menu_grouped_disclosure_stays_within_budget() {
+    #[semio_framework_async_macros::async_test]
+    async fn context_menu_grouped_disclosure_stays_within_budget() {
         let _serial = test_support::lock();
-        let mut app = app_with_registry();
+        let mut app = app_with_registry().await;
         let widgets: Vec<String> = app.snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::artifacts::generation3d::widget_id(widget).to_string()).collect();
         assert!(!widgets.is_empty(), "default fixture needs at least one widget for the test");
         let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
-        let menu = app.context_menu(&request);
+        let menu = app.context_menu(&request).await;
         assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
         assert!(!menu.is_empty(), "grouped disclosure menu should not be empty");
     }
 
-    #[test]
-    fn sun_measures_are_exposed_on_preview_windows() {
+    #[semio_framework_async_macros::async_test]
+    async fn sun_measures_are_exposed_on_preview_windows() {
         let _serial = test_support::lock();
-        let mut app = app();
-        let measures = app.window_measures();
+        let mut app = app().await;
+        let measures = app.window_measures().await;
         assert!(measures.contains_key(edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW));
         assert!(measures.contains_key(generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW));
     }
@@ -2420,10 +2434,38 @@ mod tests {
     /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — these tests exercise
     /// `PreviewPipeline`/`MeshBridge` functions above, all of which are app
     /// behavior (they construct or take a [`Generation3dConfig`]), so the tests travel with them.
-    use ui_wgpu::wgpu::kernel_3d_scene::{aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Mesh3d, Vec3};
+    use ui_wgpu::wgpu::kernel_3d_scene::{aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Vec3};
 
     fn test_serial() -> MutexGuard<'static, ()> {
         test_support::lock()
+    }
+
+    /// 🌉️ Decodes one preview mesh record's `data` field (a `pack::json`/`serde_json::Value` fragment
+    /// off the wire) into `MeshData` through its first-party `FromValue` codec — `MeshData` no longer
+    /// derives `serde::Deserialize` in a non-`#[cfg(test)]` build of its own crate (`🔺️mesh-engine/🦀️.rs`'s
+    /// `#[cfg_attr(test, derive(Serialize, Deserialize))]` only activates inside that crate's OWN test
+    /// build, never for a downstream consumer like this one), so `serde_json::from_value` cannot reach
+    /// it here; round-trip through the wire text and `dsl::json::from_json_str` instead, exactly like
+    /// production's `mesh_data_for_preview_handle` (above) does.
+    fn mesh_data_from_json(value: &Value) -> semio_framework_plugin::MeshData {
+        dsl::json::from_json_str(&serde_json::to_string(value).expect("mesh data json text")).expect("mesh data")
+    }
+
+    /// 🌉️ `Mesh3d` (a plain positions/normals/indices struct) no longer exists —
+    /// `ui_wgpu::wgpu::kernel_3d_scene`'s mesh API is now a generation/revision-keyed write-token/lease
+    /// pair (`mesh3d_begin`/`mesh3d_write_vec3`/`mesh3d_seal`) meant for the shared render-owned mesh
+    /// arena, not for a one-off AABB check. This test only ever needed the bounding box of the raw
+    /// position buffer, so compute it directly instead of standing up a lease.
+    fn aabb_of_positions(positions: &[f32]) -> ([f32; 3], [f32; 3]) {
+        let mut min = [f32::INFINITY; 3];
+        let mut max = [f32::NEG_INFINITY; 3];
+        for vertex in positions.chunks_exact(3) {
+            for axis in 0..3 {
+                min[axis] = min[axis].min(vertex[axis]);
+                max[axis] = max[axis].max(vertex[axis]);
+            }
+        }
+        (min, max)
     }
 
     fn preview_payload_from_evaluated_fixture(fixture: &flow::FlowFixture, cfg: &Generation3dConfig) -> (String, String) {
@@ -2448,7 +2490,7 @@ mod tests {
         for mesh in &meshes {
             let id = mesh.get("id").and_then(|value| value.as_str()).unwrap_or("");
             assert!(id.starts_with("eval-"), "mesh id must be tessellated eval handle, got {id}");
-            let data: semio_framework::MeshData = serde_json::from_value(mesh.get("data").cloned().unwrap_or_default()).expect("mesh data");
+            let data = mesh_data_from_json(&mesh.get("data").cloned().unwrap_or_default());
             assert!(data.positions.len() >= 9, "mesh has too few positions");
             assert!(data.indices.len() >= 3, "mesh has too few indices");
             assert!(!data.edge_positions.is_empty(), "brep preview should include edge geometry");
@@ -2467,12 +2509,12 @@ mod tests {
         for instance in instances {
             let mesh_id = instance.get("meshId").or_else(|| instance.get("mesh_id")).and_then(|value| value.as_str()).unwrap_or("eval-missing");
             let mesh = meshes.iter().find(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id)).expect("mesh record");
-            let data: semio_framework::MeshData = serde_json::from_value(mesh.get("data").cloned().unwrap_or_default()).expect("mesh data");
-            let mesh3d = Mesh3d::from_buffers(data.positions, data.normals, data.indices);
+            let data = mesh_data_from_json(&mesh.get("data").cloned().unwrap_or_default());
+            let (mesh_aabb_min, mesh_aabb_max) = aabb_of_positions(&data.positions);
             let position = instance.get("position").and_then(|value| value.as_array()).map_or([0.0, 0.0, 0.0], |items| [items[0].as_f64().unwrap_or(0.0) as f32, items[1].as_f64().unwrap_or(0.0) as f32, items[2].as_f64().unwrap_or(0.0) as f32]);
             assert_eq!(position, [0.0, 0.0, 0.0], "preview instances stay in world space");
             let model = Instance3d::model_from_trs(position, [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]);
-            let (min, max) = transform_aabb(model, mesh3d.aabb_min, mesh3d.aabb_max);
+            let (min, max) = transform_aabb(model, mesh_aabb_min, mesh_aabb_max);
             if aabb_intersects_frustum(&planes, min, max) {
                 visible += 1;
             }
@@ -2485,7 +2527,7 @@ mod tests {
         let _serial = test_serial();
         let mesh = semio_framework_plugin::MeshData::default();
         let document = generation3d_document_from_mesh(&mesh).expect("dwg mesh import document");
-        let projection: Generation3dSnapshot = serde_json::from_value(document).expect("parseable projection");
+        let projection: Generation3dSnapshot = <Generation3dSnapshot as protocol::FromValue>::from_value(protocol::json::to_dsl_value(&document)).expect("parseable projection");
         assert_eq!(projection.fixture.schema, "flow.fixture");
     }
 
@@ -2493,24 +2535,24 @@ mod tests {
     fn generation3d_mesh_bridges_round_trip_through_obj_glb_stl_codecs() {
         let _serial = test_serial();
         use semio_framework_plugin::{GlbExporter, GlbImporter, MeshExporter, MeshImporter, ObjExporter, ObjImporter, StlExporter, StlImporter};
-        let document_json = serde_json::to_value(crate::artifacts::generation3d::schema::default_snapshot()).expect("projection json");
+        let document_json: Value = serde_json::from_str(&dsl::json::to_json_string(&crate::artifacts::generation3d::schema::default_snapshot())).expect("projection json");
         let mesh = generation3d_mesh_from_document(&dsl::DslValue::from(&document_json)).expect("mesh from document");
         assert!(!mesh.positions.is_empty());
 
         let obj_bytes = ObjExporter.export(&mesh).expect("obj export");
         let obj_mesh = ObjImporter.import(&obj_bytes).expect("obj import");
         let obj_document = generation3d_document_from_mesh(&obj_mesh).expect("obj document from mesh");
-        let _: Generation3dSnapshot = serde_json::from_value(obj_document).expect("parseable obj projection");
+        let _: Generation3dSnapshot = <Generation3dSnapshot as protocol::FromValue>::from_value(protocol::json::to_dsl_value(&obj_document)).expect("parseable obj projection");
 
         let glb_bytes = GlbExporter.export(&mesh).expect("glb export");
         let glb_mesh = GlbImporter.import(&glb_bytes).expect("glb import");
         let glb_document = generation3d_document_from_mesh(&glb_mesh).expect("glb document from mesh");
-        let _: Generation3dSnapshot = serde_json::from_value(glb_document).expect("parseable glb projection");
+        let _: Generation3dSnapshot = <Generation3dSnapshot as protocol::FromValue>::from_value(protocol::json::to_dsl_value(&glb_document)).expect("parseable glb projection");
 
         let stl_bytes = StlExporter.export(&mesh).expect("stl export");
         let stl_mesh = StlImporter.import(&stl_bytes).expect("stl import");
         let stl_document = generation3d_document_from_mesh(&stl_mesh).expect("stl document from mesh");
-        let _: Generation3dSnapshot = serde_json::from_value(stl_document).expect("parseable stl projection");
+        let _: Generation3dSnapshot = <Generation3dSnapshot as protocol::FromValue>::from_value(protocol::json::to_dsl_value(&stl_document)).expect("parseable stl projection");
     }
 
     #[test]
@@ -2521,7 +2563,7 @@ mod tests {
         let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.fixture, &config);
         let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("meshes");
         assert!(!meshes.is_empty(), "rectangle wire preview should tessellate curve edges");
-        let data: semio_framework::MeshData = serde_json::from_value(meshes[0].get("data").cloned().unwrap_or_default()).expect("mesh data");
+        let data = mesh_data_from_json(&meshes[0].get("data").cloned().unwrap_or_default());
         assert!(data.indices.is_empty(), "wire preview has no shaded triangles");
         assert!(data.edge_positions.len() >= 6, "curve preview should include edge polylines");
         assert!(!instances_json.is_empty());
@@ -2566,7 +2608,7 @@ mod tests {
         let (meshes_json, _) = preview_payload_from_evaluated_fixture(&projection.fixture, &config);
         let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("meshes");
         assert!(!meshes.is_empty());
-        let data: semio_framework::MeshData = serde_json::from_value(meshes[0].get("data").cloned().unwrap_or_default()).expect("mesh data");
+        let data = mesh_data_from_json(&meshes[0].get("data").cloned().unwrap_or_default());
         assert!(data.indices.is_empty());
         assert!(!data.edge_positions.is_empty());
     }
@@ -2769,5 +2811,30 @@ mod tests {
         assert!(!widget_previews(&slider));
     }
     //#endregion 🔖️EngineComputeTests
+
+    //#region 🔖️ExamplesTests
+    /// 📚️ Ticket 26/09/03/PROCEDURAL-3D-END-TO-END — `examples()` (wired at the plugin root via
+    /// `.editor_with_examples::<Generation3dPlayApp>(create_generation3d_app(), …examples())`) must
+    /// carry the same eight ids, in the same order, as the `setActiveExample` select options this app
+    /// declares — otherwise the navbar dropdown and the action's own arg picker disagree.
+    #[test]
+    fn examples_match_set_active_example_select_options() {
+        let definition = create_generation3d_app();
+        let select_ids: Vec<String> = definition
+            .window_kinds
+            .iter()
+            .flat_map(|window| window.actions.iter())
+            .find(|action| action.id == "setActiveExample")
+            .and_then(|action| action.args.first())
+            .and_then(|arg| match arg.control() {
+                semio_framework::ActionArgControl::Select { options } => Some(options.into_iter().map(|option| option.value).collect::<Vec<_>>()),
+                _ => None,
+            })
+            .expect("setActiveExample must declare a Select arg");
+        let example_ids: Vec<String> = examples().into_iter().map(|source| source.id().to_string()).collect();
+        assert_eq!(example_ids.len(), 8);
+        assert_eq!(example_ids, select_ids);
+    }
+    //#endregion 🔖️ExamplesTests
 }
 //#endregion 🧪️Tests

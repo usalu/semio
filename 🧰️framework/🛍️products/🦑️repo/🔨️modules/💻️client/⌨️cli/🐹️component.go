@@ -51,6 +51,7 @@ import (
 	"sync"
 	"text/template"
 	"time"
+	"unicode"
 	"unicode/utf8"
 )
 
@@ -15823,13 +15824,34 @@ const (
 	BreachSystemDevcontainerVscodeSettingsOutside      Statute = "system/devcontainer/vscode/settings-outside-devcontainer"
 	BreachSystemDevcontainerVscodeExtensionsOutside    Statute = "system/devcontainer/vscode/extensions-outside-devcontainer"
 	BreachFolderIllegalEmpty                           Statute = "folder/illegal/empty"
+	BreachFolderNameMissingEmoji                       Statute = "folder/name/missing-emoji"
+	BreachFolderNameGenericEmoji                       Statute = "folder/name/generic-emoji"
+	BreachFolderNameNoncanonicalEmojiPresentation      Statute = "folder/name/noncanonical-emoji-presentation"
+	BreachFolderNameWhitespaceAfterEmoji               Statute = "folder/name/whitespace-after-emoji"
+	BreachFolderNameEmojiNotUnique                     Statute = "folder/name/emoji-not-unique"
 	BreachFileIllegalUseGodfile                        Statute = "file/illegal/use-godfile"
+	BreachFileNameMissingEmoji                         Statute = "file/name/missing-emoji"
+	BreachFileNameGenericEmoji                         Statute = "file/name/generic-emoji"
+	BreachFileNameNoncanonicalEmojiPresentation        Statute = "file/name/noncanonical-emoji-presentation"
+	BreachFileNameWhitespaceAfterEmoji                 Statute = "file/name/whitespace-after-emoji"
+	BreachFileNameEmojiNotUnique                       Statute = "file/name/emoji-not-unique"
 	BreachComposeNoUiDependency                        Statute = "compose/import/no-ui-dependency"
 	BreachDependencyBoundaryDirectImport               Statute = "dependency-boundary/import/direct-third-party"
 	BreachComposeDescriptionMissingEmoji               Statute = "compose/description/missing-emoji"
 	BreachComposeDescriptionEmojiNotUnique             Statute = "compose/description/emoji-not-unique"
 	BreachCodeRustRegionComment                        Statute = "code/rust/region-comment-instead-of-mod"
 )
+
+// 🔏️pathEmojiStatuteMeta returns the shared high-priority contract for path identity statutes.
+func pathEmojiStatuteMeta(kind Statute) StatuteMeta {
+	return StatuteMeta{
+		Kind:        kind,
+		Priority:    BreachPriorityHigh,
+		Reason:      "Every non-reserved file and folder requires a canonical, non-generic leading emoji identity unique among all siblings",
+		Solution:    "Rename the entry with a semantic sibling-unique emoji prefix and update every reference",
+		Autofixable: false,
+	}
+}
 
 // 📊️statuteInfoTable holds the data fields for a statuteInfoTable record.
 var statuteInfoTable = map[Statute]StatuteMeta{
@@ -16210,6 +16232,11 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 		Solution:    "Remove the empty folder",
 		Autofixable: true,
 	},
+	BreachFolderNameMissingEmoji:                  pathEmojiStatuteMeta(BreachFolderNameMissingEmoji),
+	BreachFolderNameGenericEmoji:                  pathEmojiStatuteMeta(BreachFolderNameGenericEmoji),
+	BreachFolderNameNoncanonicalEmojiPresentation: pathEmojiStatuteMeta(BreachFolderNameNoncanonicalEmojiPresentation),
+	BreachFolderNameWhitespaceAfterEmoji:          pathEmojiStatuteMeta(BreachFolderNameWhitespaceAfterEmoji),
+	BreachFolderNameEmojiNotUnique:                pathEmojiStatuteMeta(BreachFolderNameEmojiNotUnique),
 	BreachFileIllegalUseGodfile: {
 		Kind:        BreachFileIllegalUseGodfile,
 		Priority:    BreachPriorityHigh,
@@ -16217,6 +16244,11 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 		Solution:    "Add the file to .🧬semio/🦑️repo/📁️files.json or remove it",
 		Autofixable: false,
 	},
+	BreachFileNameMissingEmoji:                  pathEmojiStatuteMeta(BreachFileNameMissingEmoji),
+	BreachFileNameGenericEmoji:                  pathEmojiStatuteMeta(BreachFileNameGenericEmoji),
+	BreachFileNameNoncanonicalEmojiPresentation: pathEmojiStatuteMeta(BreachFileNameNoncanonicalEmojiPresentation),
+	BreachFileNameWhitespaceAfterEmoji:          pathEmojiStatuteMeta(BreachFileNameWhitespaceAfterEmoji),
+	BreachFileNameEmojiNotUnique:                pathEmojiStatuteMeta(BreachFileNameEmojiNotUnique),
 	BreachComposeNoUiDependency: {
 		Kind:        BreachComposeNoUiDependency,
 		Priority:    BreachPriorityHigh,
@@ -18645,6 +18677,17 @@ var policies = []PolicyDef{
 		Priority:    BreachPriorityLow,
 		Groups: []Territory{
 			{
+				Name:        "Name",
+				Description: "Folder emoji identity breaches",
+				Kinds: []Statute{
+					BreachFolderNameMissingEmoji,
+					BreachFolderNameGenericEmoji,
+					BreachFolderNameNoncanonicalEmojiPresentation,
+					BreachFolderNameWhitespaceAfterEmoji,
+					BreachFolderNameEmojiNotUnique,
+				},
+			},
+			{
 				Name:        "Illegal",
 				Description: "Illegal folder breachs",
 				Groups: []Territory{
@@ -18667,6 +18710,17 @@ var policies = []PolicyDef{
 		Scopes:      []string{"**/*"},
 		Priority:    BreachPriorityHigh,
 		Groups: []Territory{
+			{
+				Name:        "Name",
+				Description: "File emoji identity breaches",
+				Kinds: []Statute{
+					BreachFileNameMissingEmoji,
+					BreachFileNameGenericEmoji,
+					BreachFileNameNoncanonicalEmojiPresentation,
+					BreachFileNameWhitespaceAfterEmoji,
+					BreachFileNameEmojiNotUnique,
+				},
+			},
 			{
 				Name:        "Illegal",
 				Description: "Illegal file breachs",
@@ -20664,12 +20718,293 @@ func systemPolicy(ctx *PolicyContext) []Breach {
 	return ctx.FilterIgnored(breachs)
 }
 
+// 🔏️pathEmojiEntry is one language-neutral file or directory identity fact.
+type pathEmojiEntry struct {
+	Path     string `json:"path"`
+	NodeKind string `json:"nodeKind"`
+	Reserved bool   `json:"reserved,omitempty"`
+}
+
+// ⚠️pathEmojiFinding is one deterministic naming statute result.
+type pathEmojiFinding struct {
+	Kind    string `json:"kind"`
+	Path    string `json:"path"`
+	Sibling string `json:"sibling,omitempty"`
+	Emoji   string `json:"emoji,omitempty"`
+}
+
+// 🪞️foldPathEmojiIdentity removes presentation selectors from a logical emoji identity.
+func foldPathEmojiIdentity(value string) string {
+	return strings.ReplaceAll(strings.ReplaceAll(value, "\uFE0E", ""), "\uFE0F", "")
+}
+
+// 😀️leadingPathEmojiIdentity extracts every contiguous leading emoji grapheme.
+func leadingPathEmojiIdentity(value string) (string, string, string) {
+	first, rest := extractEntityEmoji(value)
+	if first == "" {
+		return "", value, ""
+	}
+	identity := first
+	for {
+		next, remaining := extractEntityEmoji(rest)
+		if next == "" {
+			break
+		}
+		identity += next
+		rest = remaining
+	}
+	return identity, rest, first
+}
+
+// ⚖️pathEmojiStatuteFindings evaluates the shared file/folder sibling namespace.
+func pathEmojiStatuteFindings(entries []pathEmojiEntry, genericEmojiIdentities []string) []pathEmojiFinding {
+	generic := map[string]bool{}
+	for _, emoji := range genericEmojiIdentities {
+		generic[foldPathEmojiIdentity(emoji)] = true
+	}
+	sort.Slice(entries, func(i, j int) bool { return entries[i].Path < entries[j].Path })
+	seen := map[string]pathEmojiEntry{}
+	findings := []pathEmojiFinding{}
+	for _, entry := range entries {
+		if entry.Reserved {
+			continue
+		}
+		name := entry.Path
+		if index := strings.LastIndex(name, "/"); index >= 0 {
+			name = name[index+1:]
+		}
+		identity, rest, first := leadingPathEmojiIdentity(name)
+		if identity == "" {
+			findings = append(findings, pathEmojiFinding{Kind: "missing", Path: entry.Path})
+			continue
+		}
+		if generic[foldPathEmojiIdentity(first)] {
+			findings = append(findings, pathEmojiFinding{Kind: "generic", Path: entry.Path, Emoji: first})
+		}
+		if emojiText(first) != strings.ReplaceAll(first, "\uFE0E", "") && !strings.Contains(first, "\uFE0F") {
+			findings = append(findings, pathEmojiFinding{Kind: "presentation", Path: entry.Path, Emoji: first})
+		}
+		if rest != "" {
+			firstRest, _ := utf8DecodeRuneInString(rest)
+			if unicode.IsSpace(firstRest) {
+				findings = append(findings, pathEmojiFinding{Kind: "spacing", Path: entry.Path, Emoji: identity})
+			}
+		}
+		parent := ""
+		if index := strings.LastIndex(entry.Path, "/"); index >= 0 {
+			parent = entry.Path[:index]
+		}
+		key := parent + "\x00" + foldPathEmojiIdentity(identity)
+		if previous, ok := seen[key]; ok {
+			findings = append(findings, pathEmojiFinding{Kind: "duplicate", Path: entry.Path, Sibling: previous.Path, Emoji: foldPathEmojiIdentity(identity)})
+		} else {
+			seen[key] = entry
+		}
+	}
+	return findings
+}
+
+// 🔡️utf8DecodeRuneInString isolates the standard-library decoding call for path spacing checks.
+func utf8DecodeRuneInString(value string) (rune, int) {
+	for _, character := range value {
+		return character, len(string(character))
+	}
+	return 0, 0
+}
+
+type pathEmojiFixedContract struct {
+	PathPattern string `json:"pathPattern"`
+	Scope       struct {
+		Kind                     string `json:"kind"`
+		EcosystemID              string `json:"ecosystemId"`
+		FixedFilenameContractID  string `json:"fixedFilenameContractId"`
+		FixedDirectoryContractID string `json:"fixedDirectoryContractId"`
+		Path                     string `json:"path"`
+	} `json:"scope"`
+}
+
+type pathEmojiTaxonomy struct {
+	PathEmojiPolicy struct {
+		GenericEmojiIdentities        []string `json:"genericEmojiIdentities"`
+		ReservedSubtreeDirectoryNames []string `json:"reservedSubtreeDirectoryNames"`
+	} `json:"pathEmojiPolicy"`
+	FixedFilenameContracts  map[string]pathEmojiFixedContract `json:"fixedFilenameContracts"`
+	FixedDirectoryContracts map[string]pathEmojiFixedContract `json:"fixedDirectoryContracts"`
+	PathExclusions          map[string]struct {
+		Path string `json:"path"`
+	} `json:"pathExclusions"`
+}
+
+func pathEmojiPackageContext(root, path string) (bool, string) {
+	parts := strings.Split(path, "/")
+	parent := parts[:len(parts)-1]
+	packagesIndex := -1
+	for index := len(parent) - 1; index >= 0; index-- {
+		_, rest, first := leadingPathEmojiIdentity(parent[index])
+		if rest == "packages" && foldPathEmojiIdentity(first) == foldPathEmojiIdentity("📦️") {
+			packagesIndex = index
+			break
+		}
+	}
+	ecosystemID := ""
+	if packagesIndex >= 0 && packagesIndex+1 < len(parent) {
+		ecosystemID = parent[packagesIndex+1]
+	}
+	_, manifestError := os.Lstat(filepath.Join(root, filepath.FromSlash(strings.Join(parent, "/")), "package.json"))
+	packageRoot := packagesIndex == len(parent)-2 || filepath.Base(path) == "package.json" || manifestError == nil
+	return packageRoot, ecosystemID
+}
+
+func pathEmojiContractApplies(root, path string, contract pathEmojiFixedContract, taxonomy pathEmojiTaxonomy) bool {
+	matched, err := glob.Match(contract.PathPattern, path)
+	if err != nil || !matched {
+		return false
+	}
+	switch contract.Scope.Kind {
+	case "exact-path":
+		return path == contract.Scope.Path
+	case "repository-root":
+		return !strings.Contains(path, "/")
+	case "package-root":
+		packageRoot, ecosystemID := pathEmojiPackageContext(root, path)
+		return packageRoot && ecosystemID == contract.Scope.EcosystemID
+	case "sibling-fixed-filename-contract":
+		sibling, ok := taxonomy.FixedFilenameContracts[contract.Scope.FixedFilenameContractID]
+		if !ok {
+			return false
+		}
+		siblingPath := filepath.Join(root, filepath.FromSlash(filepath.ToSlash(filepath.Dir(path))), filepath.Base(sibling.PathPattern))
+		_, siblingError := os.Lstat(siblingPath)
+		return siblingError == nil
+	case "fixed-directory-contract":
+		parent, ok := taxonomy.FixedDirectoryContracts[contract.Scope.FixedDirectoryContractID]
+		return ok && pathEmojiContractApplies(root, filepath.ToSlash(filepath.Dir(path)), parent, taxonomy)
+	default:
+		return true
+	}
+}
+
+func pathEmojiInventory(ctx *PolicyContext) ([]pathEmojiEntry, []string, error) {
+	data, err := os.ReadFile(filepath.Join(ctx.RootDir, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "📚️library", "🔣️🌷️taxonomy.json"))
+	if err != nil {
+		return nil, nil, err
+	}
+	var taxonomy pathEmojiTaxonomy
+	if err := json.Unmarshal(data, &taxonomy); err != nil {
+		return nil, nil, err
+	}
+	output, err := exec.Command("git", "-C", ctx.RootDir, "ls-files", "-co", "--exclude-standard", "-z").Output()
+	if err != nil {
+		return nil, nil, err
+	}
+	rawFiles := strings.Split(string(output), "\x00")
+	files := []string{}
+	directories := map[string]bool{}
+	for _, rawFile := range rawFiles {
+		if rawFile == "" {
+			continue
+		}
+		file := strings.TrimSuffix(NormalizePath(rawFile), "/")
+		if file == "" {
+			continue
+		}
+		info, statError := os.Lstat(filepath.Join(ctx.RootDir, filepath.FromSlash(file)))
+		if statError != nil {
+			continue
+		}
+		if info.IsDir() {
+			directories[file] = true
+		} else {
+			files = append(files, file)
+		}
+		for parent := filepath.ToSlash(filepath.Dir(file)); parent != "." && parent != ""; parent = filepath.ToSlash(filepath.Dir(parent)) {
+			directories[parent] = true
+		}
+	}
+	reservedSubtrees := map[string]bool{}
+	for _, name := range taxonomy.PathEmojiPolicy.ReservedSubtreeDirectoryNames {
+		reservedSubtrees[foldPathEmojiIdentity(name)] = true
+	}
+	isExcluded := func(path string) bool {
+		for _, exclusion := range taxonomy.PathExclusions {
+			if strings.HasPrefix(path+"/", exclusion.Path) {
+				return true
+			}
+		}
+		return false
+	}
+	underReserved := func(path string) bool {
+		parts := strings.Split(path, "/")
+		for _, part := range parts[:len(parts)-1] {
+			_, rest, _ := leadingPathEmojiIdentity(part)
+			if reservedSubtrees[foldPathEmojiIdentity(part)] || reservedSubtrees[foldPathEmojiIdentity(rest)] {
+				return true
+			}
+		}
+		return false
+	}
+	isReservedSubtreeName := func(path string) bool {
+		name := path
+		if index := strings.LastIndex(name, "/"); index >= 0 {
+			name = name[index+1:]
+		}
+		_, rest, _ := leadingPathEmojiIdentity(name)
+		return reservedSubtrees[foldPathEmojiIdentity(name)] || reservedSubtrees[foldPathEmojiIdentity(rest)]
+	}
+	contractReserved := func(path string, contracts map[string]pathEmojiFixedContract) bool {
+		for _, contract := range contracts {
+			if pathEmojiContractApplies(ctx.RootDir, path, contract, taxonomy) {
+				return true
+			}
+		}
+		return false
+	}
+	entries := []pathEmojiEntry{}
+	for directory := range directories {
+		if !isExcluded(directory) {
+			entries = append(entries, pathEmojiEntry{Path: directory, NodeKind: "directory", Reserved: underReserved(directory) || isReservedSubtreeName(directory) || contractReserved(directory, taxonomy.FixedDirectoryContracts)})
+		}
+	}
+	for _, file := range files {
+		file = NormalizePath(file)
+		if file != "" && !isExcluded(file) {
+			entries = append(entries, pathEmojiEntry{Path: file, NodeKind: "file", Reserved: underReserved(file) || contractReserved(file, taxonomy.FixedFilenameContracts)})
+		}
+	}
+	return entries, taxonomy.PathEmojiPolicy.GenericEmojiIdentities, nil
+}
+
+func pathEmojiBreaches(ctx *PolicyContext, nodeKind string) []Breach {
+	entries, generic, err := pathEmojiInventory(ctx)
+	if err != nil {
+		return nil
+	}
+	byPath := map[string]string{}
+	for _, entry := range entries {
+		byPath[entry.Path] = entry.NodeKind
+	}
+	kinds := map[string]map[string]Statute{
+		"directory": {"missing": BreachFolderNameMissingEmoji, "generic": BreachFolderNameGenericEmoji, "presentation": BreachFolderNameNoncanonicalEmojiPresentation, "spacing": BreachFolderNameWhitespaceAfterEmoji, "duplicate": BreachFolderNameEmojiNotUnique},
+		"file":      {"missing": BreachFileNameMissingEmoji, "generic": BreachFileNameGenericEmoji, "presentation": BreachFileNameNoncanonicalEmojiPresentation, "spacing": BreachFileNameWhitespaceAfterEmoji, "duplicate": BreachFileNameEmojiNotUnique},
+	}
+	breachs := []Breach{}
+	for _, finding := range pathEmojiStatuteFindings(entries, generic) {
+		if byPath[finding.Path] != nodeKind {
+			continue
+		}
+		summary := "Path \"" + finding.Path + "\" breaches the " + finding.Kind + " emoji statute"
+		breachs = append(breachs, ctx.CreateBreach(summary, kinds[nodeKind][finding.Kind], finding.Path, 0, 0, finding.Path))
+	}
+	return breachs
+}
+
 // ­ƒôüfolderPolicy holds the data fields for a folderPolicy record.
 func folderPolicy(ctx *PolicyContext) []Breach {
 	if ctx.Scope.Kind != ScopeRepo {
 		return nil
 	}
 	var breachs []Breach
+	breachs = append(breachs, pathEmojiBreaches(ctx, "directory")...)
 	excludePrefixes := []string{
 		".git/",
 		".🧬semio/🦑️repo/",
@@ -20778,6 +21113,7 @@ func filePolicy(ctx *PolicyContext) []Breach {
 		return nil
 	}
 	var breachs []Breach
+	breachs = append(breachs, pathEmojiBreaches(ctx, "file")...)
 	godfile, err := loadGodfile()
 	if err != nil {
 		return breachs

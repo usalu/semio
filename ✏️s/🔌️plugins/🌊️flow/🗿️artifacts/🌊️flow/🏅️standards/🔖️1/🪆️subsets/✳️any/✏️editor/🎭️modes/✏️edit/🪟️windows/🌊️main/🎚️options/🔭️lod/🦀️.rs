@@ -2,10 +2,11 @@
 //! Its command handler lives in `🎮️commands/🔭️set-lod-mode`.
 
 use crate::editor::flow::config::FlowConfig;
-use crate::editor::flow::flow_action;
 use crate::editor::flow::terminology::FlowPlayLabels;
+use crate::editor::flow::FLOW_PLAY_APP_ID;
 use flow::{dag::dag_lod_scale_json, FLOW_LOD_MODE_AUTOMATIC};
-use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
+use semio_framework::optional_json_to_dsl;
+use semio_framework_plugin::{ActionDescriptor, MeasureSelectItem, WindowMeasure};
 use serde_json::{json, Value};
 
 //#region 🔖️Measure
@@ -16,7 +17,8 @@ pub fn measure(config: &FlowConfig, labels: &FlowPlayLabels) -> WindowMeasure {
         let name = lod.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
         Some(MeasureSelectItem { id: id.clone(), value: id, label: name })
     }));
-    WindowMeasure::Select { id: "flow-play-measures.lod".into(), label: Some(labels.lod_mode.into()), value: config.lod_mode.clone(), items, on_change: flow_action("setLodMode", Some(json!({ "value": config.lod_mode }))) }
+    let on_change = ActionDescriptor { controller_id: FLOW_PLAY_APP_ID.into(), action: "setLodMode".into(), args: optional_json_to_dsl(Some(json!({ "value": config.lod_mode }))) };
+    WindowMeasure::Select { id: "flow-play-measures.lod".into(), label: Some(labels.lod_mode.into()), value: config.lod_mode.clone(), items, on_change }
 }
 //#endregion 🔖️Measure
 

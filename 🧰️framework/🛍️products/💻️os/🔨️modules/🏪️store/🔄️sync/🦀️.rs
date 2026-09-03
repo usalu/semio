@@ -84,7 +84,7 @@ pub enum PersistenceBinding {
     /// a `*.json` path uses the single-blob `file://` export format.
     Folder { path: std::path::PathBuf },
     /// @emoji ☁️ A semio_hub node reachable over WebSocket
-    /// (`remote://host:port` → `ws://host:port/spaces/{space_id}/documents/{id}/ws`).
+    /// (`remote://host:port` → `ws://host:port/spaces/{space_id}/documents/{id}/socket/v1`).
     Hub {
         base_url: String,
         space_id: String,
@@ -108,6 +108,40 @@ pub struct ArtifactActorConfig {
     pub watch_external: bool,
     /// @emoji 🖋️ The authoring actor id used for semio_hub `Hello`/presence and operation origin filtering.
     pub actor: String,
+}
+
+/// 🗝️ Exact process-local identity for one open artifact actor. Hub documents are keyed by
+/// their complete authority scope; local-only documents occupy a separate namespace.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub enum ArtifactDocumentKey {
+    Local { document_id: String },
+    Hub { space_id: String, document_id: String },
+}
+
+impl ArtifactDocumentKey {
+    pub fn local(document_id: impl Into<String>) -> Self {
+        Self::Local { document_id: document_id.into() }
+    }
+
+    pub fn hub(space_id: impl Into<String>, document_id: impl Into<String>) -> Self {
+        Self::Hub { space_id: space_id.into(), document_id: document_id.into() }
+    }
+
+    pub fn for_config(config: &ArtifactActorConfig) -> Self {
+        let mut hub_spaces = config.bindings.iter().filter_map(|binding| match binding {
+            PersistenceBinding::Hub { space_id, .. } => Some(space_id.as_str()),
+            PersistenceBinding::Folder { .. } => None,
+        });
+        let Some(space_id) = hub_spaces.next() else { return Self::local(config.document_id.clone()) };
+        assert!(hub_spaces.all(|candidate| candidate == space_id), "one artifact actor cannot span hub spaces");
+        Self::hub(space_id, config.document_id.clone())
+    }
+
+    pub fn document_id(&self) -> &str {
+        match self {
+            Self::Local { document_id } | Self::Hub { document_id, .. } => document_id,
+        }
+    }
 }
 
 /// @emoji 📨️ Caller → actor control messages, sent on the {@link ArtifactChannels} command channel.
@@ -752,7 +786,7 @@ async fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_sp
 }
 
 /// @emoji 🔗️ Derives a semio_hub WebSocket URL: `remote://host:port` (or `http(s)://`, `ws(s)://`) →
-/// `ws(s)://host:port/spaces/{space_id}/documents/{document_id}/ws`, with an out-of-band
+/// `ws(s)://host:port/spaces/{space_id}/documents/{document_id}/socket/v1`, with an out-of-band
 /// `?surface=` appended when the binding carries one (contract §C0's presence scope, ticket
 /// 26/08/16/HUB-SPACES-…: `(space_id, document_id, surface)` — `surface` rides outside the wire
 /// protocol rather than widening `PresencePeer`'s already-full flag byte).
@@ -760,9 +794,11 @@ async fn hub_ws_url(base_url: &str, space_id: &str, document_id: &str, surface: 
     let secure = base_url.starts_with("https://") || base_url.starts_with("wss://");
     let authority = base_url.split_once("://").map(|(_, rest)| rest).unwrap_or(base_url).split('/').next().unwrap_or(base_url);
     let scheme = if secure { "wss" } else { "ws" };
+    let space_id = crate::os_directory::client::encode_url_component(space_id);
+    let document_id = crate::os_directory::client::encode_url_component(document_id);
     match surface {
-        Some(surface) => format!("{scheme}://{authority}/spaces/{space_id}/documents/{document_id}/ws?surface={surface}"),
-        None => format!("{scheme}://{authority}/spaces/{space_id}/documents/{document_id}/ws"),
+        Some(surface) => format!("{scheme}://{authority}/spaces/{space_id}/documents/{document_id}/socket/v1?surface={}", crate::os_directory::client::encode_url_component(surface)),
+        None => format!("{scheme}://{authority}/spaces/{space_id}/documents/{document_id}/socket/v1"),
     }
 }
 //#endregion 🔖️Endpoints
@@ -1001,6 +1037,7 @@ impl PresenceHeartbeatProducer {
 /// to your `ArtifactStore`, and send control messages (or wakes) on `cmd_tx`.
 pub struct ArtifactChannels {
     pub cmd_tx: ArtifactMailboxSender,
+    pub document_key: ArtifactDocumentKey,
     #[cfg(not(target_arch = "wasm32"))]
     pub runner: ArtifactActorRunnerTicket,
     /// @emoji 🔗️ The store-side backbone end. The caller owns store attachment:
@@ -1010,6 +1047,7 @@ pub struct ArtifactChannels {
 
 struct OpenDocument {
     generation: u64,
+    cancel: semio_framework_async::CancelToken,
     cmd_tx: ArtifactMailboxSender,
     events: broadcast::Sender<ArtifactEvent>,
     presence: PresenceHeartbeatProducer,
@@ -1018,7 +1056,8 @@ struct OpenDocument {
 }
 
 struct ArtifactHostState {
-    documents: std::collections::HashMap<String, OpenDocument>,
+    documents: std::collections::HashMap<ArtifactDocumentKey, OpenDocument>,
+    document_socket_surfaces: std::collections::HashMap<ArtifactDocumentKey, crate::os_directory::client::DocumentSocketSurfaceExpectationV1>,
     #[cfg(not(target_arch = "wasm32"))]
     closing: std::collections::HashMap<u64, ArtifactActorRunnerHandle>,
     next_generation: u64,
@@ -1029,6 +1068,7 @@ impl ArtifactHostState {
     fn new() -> Self {
         Self {
             documents: std::collections::HashMap::new(),
+            document_socket_surfaces: std::collections::HashMap::new(),
             #[cfg(not(target_arch = "wasm32"))]
             closing: std::collections::HashMap::new(),
             next_generation: 1,
@@ -1049,6 +1089,8 @@ pub struct ArtifactHost {
     inner: std::sync::Arc<std::sync::Mutex<ArtifactHostState>>,
     pool: std::sync::Arc<semio_framework_async::WorkerPool>,
     credential: std::sync::Arc<std::sync::RwLock<Option<std::sync::Arc<crate::os_directory::client::LocalHubCredential>>>>,
+    socket_grant_source: std::sync::Arc<std::sync::RwLock<Option<std::sync::Arc<dyn crate::os_directory::client::HubSocketGrantSource>>>>,
+    cancel: semio_framework_async::CancelToken,
 }
 
 impl Clone for ArtifactHost {
@@ -1056,7 +1098,7 @@ impl Clone for ArtifactHost {
         let mut state = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         state.host_references = state.host_references.checked_add(1).expect("artifact host reference capacity exhausted");
         drop(state);
-        Self { inner: self.inner.clone(), pool: self.pool.clone(), credential: self.credential.clone() }
+        Self { inner: self.inner.clone(), pool: self.pool.clone(), credential: self.credential.clone(), socket_grant_source: self.socket_grant_source.clone(), cancel: self.cancel.clone() }
     }
 }
 
@@ -1064,24 +1106,67 @@ impl ArtifactHost {
     /// @emoji 🧩️ Creates a host on the process WorkerPool; callers must inject the same pool
     /// used by their service and renderer runtimes.
     pub fn new(pool: std::sync::Arc<semio_framework_async::WorkerPool>) -> Self {
-        Self { inner: std::sync::Arc::new(std::sync::Mutex::new(ArtifactHostState::new())), pool, credential: std::sync::Arc::new(std::sync::RwLock::new(None)) }
+        Self {
+            inner: std::sync::Arc::new(std::sync::Mutex::new(ArtifactHostState::new())),
+            pool,
+            credential: std::sync::Arc::new(std::sync::RwLock::new(None)),
+            socket_grant_source: std::sync::Arc::new(std::sync::RwLock::new(None)),
+            cancel: semio_framework_async::CancelToken::root_now(),
+        }
     }
 
     pub fn set_local_hub_credential(&self, credential: std::sync::Arc<crate::os_directory::client::LocalHubCredential>) {
         *self.credential.write().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(credential);
     }
 
+    pub fn set_hub_socket_grant_source(&self, source: std::sync::Arc<dyn crate::os_directory::client::HubSocketGrantSource>) {
+        *self.socket_grant_source.write().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(source);
+    }
+
+    /// 🎯 Binds the exact native plugin/surface selection before this document actor is opened.
+    pub fn set_document_socket_surface(&self, document_key: &ArtifactDocumentKey, surface: crate::os_directory::client::DocumentSocketSurfaceExpectationV1) -> bool {
+        if !matches!(document_key, ArtifactDocumentKey::Hub { .. }) {
+            return false;
+        }
+        let mut state = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if state.documents.contains_key(document_key) || state.document_socket_surfaces.contains_key(document_key) {
+            return false;
+        }
+        state.document_socket_surfaces.insert(document_key.clone(), surface);
+        true
+    }
+
+    pub fn local_hub_ready(&self) -> bool {
+        self.credential.read().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
+            && self.socket_grant_source.read().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
+    }
+
     /// @emoji 🚀️ Spawns (or replaces) the actor for `config.document_id` and returns the channels the
     /// caller wires into its store. Idempotent per id: opening an already-open id closes the old actor.
     pub async fn open(&self, config: ArtifactActorConfig) -> ArtifactChannels {
         let document_id = config.document_id.clone();
-        let _ = self.close(&document_id);
+        let document_key = ArtifactDocumentKey::for_config(&config);
+        let document_socket_surface = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).document_socket_surfaces.remove(&document_key);
+        let _ = self.close_key(&document_key);
         let generation = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).claim_generation();
         let (channel_backbone, remote) = ChannelBackbone::pair(&format!("actor://{document_id}")).await;
         let (cmd_tx, cmd_rx) = artifact_mailbox_pair();
         let (event_tx, _event_rx) = broadcast::channel(256);
+        let document_cancel = self.cancel.child_now();
         #[cfg(not(target_arch = "wasm32"))]
-        let runner = spawn_actor(self.pool.clone(), generation, config, remote, cmd_rx, event_tx.clone(), self.credential.clone()).await;
+        let runner = spawn_actor(
+            self.pool.clone(),
+            generation,
+            config,
+            remote,
+            cmd_rx,
+            event_tx.clone(),
+            self.credential.clone(),
+            self.socket_grant_source.clone(),
+            document_socket_surface,
+            document_cancel.clone(),
+        )
+        .await;
         // 🌉️ Narrowed to match `mod wasm_actor`'s own gate: it is a browser WebSocket/`web_sys`
         // bridge, and `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too. On the WASI
         // component target neither actor exists — `native_actor` is `tokio_tungstenite`/
@@ -1108,17 +1193,19 @@ impl ArtifactHost {
         let runner_ticket = runner.issue_ticket(self.inner.clone());
         let entry = OpenDocument {
             generation,
+            cancel: document_cancel,
             cmd_tx: cmd_tx.clone(),
             events: event_tx,
             presence: PresenceHeartbeatProducer::default(),
             #[cfg(not(target_arch = "wasm32"))]
             runner: runner.clone(),
         };
-        self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).documents.insert(document_id, entry);
+        self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).documents.insert(document_key.clone(), entry);
         #[cfg(not(target_arch = "wasm32"))]
         runner.start();
         ArtifactChannels {
             cmd_tx,
+            document_key,
             #[cfg(not(target_arch = "wasm32"))]
             runner: runner_ticket,
             channel_backbone,
@@ -1128,8 +1215,12 @@ impl ArtifactHost {
     /// @emoji 📬️ A fresh event receiver for `document_id`. If the document is not open the receiver's
     /// sender is dropped, so it simply reports closed.
     pub async fn subscribe(&self, document_id: &str) -> broadcast::Receiver<ArtifactEvent> {
+        self.subscribe_key(&ArtifactDocumentKey::local(document_id)).await
+    }
+
+    pub async fn subscribe_key(&self, document_key: &ArtifactDocumentKey) -> broadcast::Receiver<ArtifactEvent> {
         let guard = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        match guard.documents.get(document_id) {
+        match guard.documents.get(document_key) {
             Some(document) => document.events.subscribe(),
             None => {
                 let (_tx, rx) = broadcast::channel(1);
@@ -1140,7 +1231,11 @@ impl ArtifactHost {
 
     /// @emoji 🔔️ Sends a control message to a document's actor (e.g. a presence heartbeat or a wake).
     pub async fn send(&self, document_id: &str, message: ArtifactActorMsg) {
-        if let Some(document) = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).documents.get(document_id) {
+        self.send_key(&ArtifactDocumentKey::local(document_id), message).await;
+    }
+
+    pub async fn send_key(&self, document_key: &ArtifactDocumentKey, message: ArtifactActorMsg) {
+        if let Some(document) = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).documents.get(document_key) {
             let _ = document.cmd_tx.send(message);
         }
     }
@@ -1149,8 +1244,12 @@ impl ArtifactHost {
     /// Returns `true` only when the host actually queued a publish; faster offers are coalesced onto
     /// the document's producer and cannot flood the preview lane.
     pub fn presence_heartbeat(&self, document_id: &str, now_ms: u64, peer: PresencePeer) -> bool {
+        self.presence_heartbeat_key(&ArtifactDocumentKey::local(document_id), now_ms, peer)
+    }
+
+    pub fn presence_heartbeat_key(&self, document_key: &ArtifactDocumentKey, now_ms: u64, peer: PresencePeer) -> bool {
         let mut state = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let Some(document) = state.documents.get_mut(document_id) else { return false };
+        let Some(document) = state.documents.get_mut(document_key) else { return false };
         let Some(peer) = document.presence.offer(now_ms, peer) else { return false };
         let sent = document.cmd_tx.send(ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(peer) }).is_ok();
         sent
@@ -1161,8 +1260,13 @@ impl ArtifactHost {
     // 🚫️async: E1 pure lock/remove + sync channel send, no real suspension point — consumed by
     // `impl Drop` (sync-only external trait); see R9.
     pub fn close(&self, document_id: &str) -> Option<u64> {
-        let document = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).documents.remove(document_id);
+        self.close_key(&ArtifactDocumentKey::local(document_id))
+    }
+
+    pub fn close_key(&self, document_key: &ArtifactDocumentKey) -> Option<u64> {
+        let document = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).documents.remove(document_key);
         if let Some(document) = document {
+            document.cancel.cancel_now();
             #[cfg(not(target_arch = "wasm32"))]
             {
                 let generation = document.generation;
@@ -1192,7 +1296,7 @@ impl ArtifactHost {
     /// @emoji 🧹️ Ids of every currently-open document.
     // 🚫️async: E1 pure lock-and-collect consumed by `impl Drop` (sync-only external trait) — see
     // R9. No I/O, no suspension point.
-    pub fn open_artifacts(&self) -> Vec<String> {
+    pub fn open_artifacts(&self) -> Vec<ArtifactDocumentKey> {
         self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).documents.keys().cloned().collect()
     }
 }
@@ -1207,8 +1311,9 @@ impl Drop for ArtifactHost {
         if !is_last_host {
             return;
         }
-        for document_id in self.open_artifacts() {
-            self.close(&document_id);
+        self.cancel.cancel_now();
+        for document_key in self.open_artifacts() {
+            self.close_key(&document_key);
         }
     }
 }
@@ -1224,12 +1329,26 @@ mod native_actor {
     use std::sync::Arc;
     use std::time::Duration;
     use tokio::time::Instant;
-    use tokio_tungstenite::tungstenite::Message;
+    use tokio_tungstenite::tungstenite::{client::IntoClientRequest, Message};
 
     type WsStream = tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
     type WsSink = futures::stream::SplitSink<WsStream, Message>;
     type WsRead = futures::stream::SplitStream<WsStream>;
-    type ConnectFuture = std::pin::Pin<Box<dyn std::future::Future<Output = Result<WsStream, ()>> + Send>>;
+    struct ConnectedDocumentSocket {
+        stream: WsStream,
+        socket_actor: String,
+        authority: crate::os_directory::client::DocumentSocketAuthorityV1,
+    }
+
+    struct WipeSocketHeader(String);
+
+    impl Drop for WipeSocketHeader {
+        fn drop(&mut self) {
+            unsafe { self.0.as_mut_vec().fill(0) };
+        }
+    }
+
+    type ConnectFuture = std::pin::Pin<Box<dyn std::future::Future<Output = Result<ConnectedDocumentSocket, ()>> + Send>>;
 
     struct HubConn {
         write: WsSink,
@@ -1353,7 +1472,14 @@ mod native_actor {
         hub_base_url: Option<String>,
         hub_space_id: Option<String>,
         credential: Arc<std::sync::RwLock<Option<Arc<crate::os_directory::client::LocalHubCredential>>>>,
+        socket_grant_source: Arc<std::sync::RwLock<Option<Arc<dyn crate::os_directory::client::HubSocketGrantSource>>>>,
+        document_socket_surface: Option<crate::os_directory::client::DocumentSocketSurfaceExpectationV1>,
+        operation_cancel: semio_framework_async::CancelToken,
         hub_surface: Option<String>,
+        socket_actor: Option<String>,
+        socket_actor_confirmed: bool,
+        socket_authority: Option<crate::os_directory::client::DocumentSocketAuthorityV1>,
+        socket_authority_deadline: Option<Instant>,
         /// @emoji 🎨️ This connection's hub-assigned session color (`ServerFrame::Session.color`) —
         /// `None` until the hub sends it (or for a folder-only document, which never connects to a
         /// hub). Stamped onto every outbound `PresenceHeartbeat` via {@link stamp_session}.
@@ -1363,7 +1489,7 @@ mod native_actor {
         /// @emoji 🏔️ Last frontier the semio_hub reported (`Welcome.server_frontier` / `Commands.frontier` /
         /// `Ack.frontier`) — the wire-v2 replacement for the old `hub_version: i64` counter.
         server_frontier: Option<crate::os_spr::RuntimeFrontierSummary>,
-        /// @emoji 🎟️ The semio_hub's last `Welcome.resume_token`, echoed back on the next `Hello` after a
+        /// @emoji 🎟️ The semio_hub's last `Welcome.resume_token`, echoed in the next `SocketHelloV1` after a
         /// reconnect so the semio_hub can resume rather than replay from scratch.
         resume_token: Option<String>,
         pending_resume_token: Option<String>,
@@ -1398,7 +1524,17 @@ mod native_actor {
     }
 
     impl ArtifactActor {
-        pub(super) async fn new(pool: Arc<semio_framework_async::WorkerPool>, config: ArtifactActorConfig, remote: ChannelBackboneRemote, cmd_rx: ArtifactMailboxReceiver, events: broadcast::Sender<ArtifactEvent>) -> Self {
+        pub(super) async fn new(
+            pool: Arc<semio_framework_async::WorkerPool>,
+            config: ArtifactActorConfig,
+            remote: ChannelBackboneRemote,
+            cmd_rx: ArtifactMailboxReceiver,
+            events: broadcast::Sender<ArtifactEvent>,
+            credential: Arc<std::sync::RwLock<Option<Arc<crate::os_directory::client::LocalHubCredential>>>>,
+            socket_grant_source: Arc<std::sync::RwLock<Option<Arc<dyn crate::os_directory::client::HubSocketGrantSource>>>>,
+            document_socket_surface: Option<crate::os_directory::client::DocumentSocketSurfaceExpectationV1>,
+            operation_cancel: semio_framework_async::CancelToken,
+        ) -> Self {
             let mut folder = None;
             let mut folder_watch_path = None;
             let mut hub_base_url = None;
@@ -1436,7 +1572,14 @@ mod native_actor {
                 hub_base_url,
                 hub_space_id,
                 credential,
+                socket_grant_source,
+                document_socket_surface,
+                operation_cancel,
                 hub_surface,
+                socket_actor: None,
+                socket_actor_confirmed: false,
+                socket_authority: None,
+                socket_authority_deadline: None,
                 session_color: None,
                 semio_hub: None,
                 connect_future: None,
@@ -1482,6 +1625,7 @@ mod native_actor {
                 return ArtifactDrive::MoreWork;
             }
             if self.closing {
+                self.operation_cancel.cancel_now();
                 if let Some(mut pending) = self.artifact_bootstrap.take() {
                     pending.assembler.abort();
                 }
@@ -1567,8 +1711,12 @@ mod native_actor {
                     let _ = self.relay_one_backbone().await;
                 }
                 ArtifactDrivePhase::Status => {
+                    if self.socket_authority_deadline.is_some_and(|deadline| deadline <= Instant::now()) {
+                        self.invalidate_socket_authority().await;
+                        return ArtifactDrive::MoreWork;
+                    }
                     self.emit_status_if_changed().await;
-                    return ArtifactDrive::Idle { deadline: [self.reconnect_at, self.fs_deadline].into_iter().flatten().min() };
+                    return ArtifactDrive::Idle { deadline: [self.reconnect_at, self.fs_deadline, self.socket_authority_deadline].into_iter().flatten().min() };
                 }
             }
             ArtifactDrive::MoreWork
@@ -1771,6 +1919,24 @@ mod native_actor {
             }
         }
 
+        fn clear_socket_epoch(&mut self) {
+            self.socket_actor = None;
+            self.socket_actor_confirmed = false;
+            self.socket_authority = None;
+            self.socket_authority_deadline = None;
+            self.session_color = None;
+        }
+
+        async fn invalidate_socket_authority(&mut self) {
+            self.abort_artifact_bootstrap();
+            self.requeue_pending_batches();
+            if let Some(mut connection) = self.semio_hub.take() {
+                let _ = tokio::time::timeout(Duration::from_millis(4), connection.write.close()).await;
+            }
+            self.clear_socket_epoch();
+            self.schedule_reconnect().await;
+        }
+
         async fn fail_artifact_bootstrap(&mut self, detail: impl Into<String>) {
             self.abort_artifact_bootstrap();
             self.requeue_pending_batches();
@@ -1782,6 +1948,7 @@ mod native_actor {
                 op_index: None,
             }));
             self.semio_hub = None;
+            self.clear_socket_epoch();
             self.schedule_reconnect().await;
         }
 
@@ -1812,31 +1979,111 @@ mod native_actor {
             if self.connect_future.is_some() {
                 return;
             }
+            if self.credential.read().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
+                self.schedule_reconnect().await;
+                return;
+            }
+            let Some(source) = self.socket_grant_source.read().unwrap_or_else(std::sync::PoisonError::into_inner).clone() else {
+                self.schedule_reconnect().await;
+                return;
+            };
             let space_id = self.hub_space_id.clone().unwrap_or_default();
-            let url = hub_ws_url(&base_url, &space_id, &self.document_id, self.hub_surface.as_deref()).await;
+            let document_id = self.document_id.clone();
+            let surface = self.hub_surface.clone();
+            let schema = self.schema.clone();
+            let Some(pack_schema_hash) = crate::os_store::document_codec(&schema).await.ok().flatten().map(|codec| codec.pack_schema_hash) else {
+                self.schedule_reconnect().await;
+                return;
+            };
+            let expectation = crate::os_directory::client::DocumentSocketExpectationV1 {
+                artifact_schema: schema,
+                pack_schema_hash,
+                requested_surface_id: surface,
+                surface: self.document_socket_surface.clone(),
+            };
+            let client_instance_id = format!("native-document-{:016x}", self.hlc_seed);
+            let operation_cancel = self.operation_cancel.child_now();
             self.set_remote_state(RemoteState::Connecting).await;
-            self.connect_future = Some(Box::pin(async move { tokio_tungstenite::connect_async(url).await.map(|(stream, _response)| stream).map_err(|_| ()) }));
+            self.connect_future = Some(Box::pin(async move {
+                let ctx = semio_framework_async::OperationContext {
+                    actor: 0,
+                    generation: 0,
+                    trace: semio_framework_async::TraceId(0),
+                    lane: 1,
+                    deadline_ms: None,
+                    cancel: operation_cancel,
+                    capability: None,
+                };
+                let admission_ctx = ctx.clone();
+                let admission =
+                    tokio::task::spawn_blocking(move || source.admit_document_socket(&admission_ctx, &space_id, &document_id, &expectation, &client_instance_id, 5_000)).await.map_err(|_| ())?.map_err(|_| ())?;
+                if ctx.cancel.is_cancelled_now() || admission.authority.expires_at_unix_ms <= now_ms().await {
+                    return Err(());
+                }
+                if base_url.trim_end_matches('/') != admission.authority.hub_origin.trim_end_matches('/') {
+                    return Err(());
+                }
+                let url = hub_ws_url(&admission.authority.hub_origin, &admission.authority.scope.space_id, &admission.authority.scope.document_id, Some(&admission.authority.surface.surface_id)).await;
+                let crate::os_directory::client::DocumentSocketAdmissionV1 { mut socket, authority } = admission;
+                let mut request = url.into_client_request().map_err(|_| ())?;
+                let protocol_header = WipeSocketHeader(format!("{}, {}", socket.protocol, socket.grant));
+                request.headers_mut().insert("Sec-WebSocket-Protocol", protocol_header.0.parse().map_err(|_| ())?);
+                let (mut stream, response) = tokio::time::timeout(Duration::from_secs(5), tokio_tungstenite::connect_async(request)).await.map_err(|_| ())?.map_err(|_| ())?;
+                if response.headers().get("Sec-WebSocket-Protocol").and_then(|value| value.to_str().ok()) != Some("semio.socket.v1") {
+                    let _ = stream.close(None).await;
+                    return Err(());
+                }
+                if ctx.cancel.is_cancelled_now() || authority.expires_at_unix_ms <= now_ms().await {
+                    let _ = stream.close(None).await;
+                    return Err(());
+                }
+                let socket_actor = std::mem::take(&mut socket.actor_id);
+                Ok(ConnectedDocumentSocket { stream, socket_actor, authority })
+            }));
         }
 
-        async fn finish_connect_hub(&mut self, connection: Result<WsStream, ()>) {
+        async fn finish_connect_hub(&mut self, connection: Result<ConnectedDocumentSocket, ()>) {
             match connection {
-                Ok(stream) => {
+                Ok(ConnectedDocumentSocket { mut stream, socket_actor, authority }) => {
+                    let local_schema_hash = crate::os_store::document_codec(&self.schema).await.ok().flatten().map(|codec| codec.pack_schema_hash);
+                    let now = now_ms().await;
+                    if self.operation_cancel.is_cancelled_now()
+                        || authority.expires_at_unix_ms <= now
+                        || authority.hub_origin.trim_end_matches('/') != self.hub_base_url.as_deref().unwrap_or_default().trim_end_matches('/')
+                        || authority.scope.space_id != self.hub_space_id.as_deref().unwrap_or_default()
+                        || authority.scope.document_id != self.document_id
+                        || authority.artifact.schema != self.schema
+                        || local_schema_hash != Some(authority.pack_schema_hash)
+                        || self.hub_surface.as_ref().is_some_and(|surface| surface != &authority.surface.surface_id)
+                        || self.document_socket_surface.as_ref().is_some_and(|surface| !authority.matches_surface(surface))
+                    {
+                        let _ = stream.close(None).await;
+                        self.clear_socket_epoch();
+                        self.schedule_reconnect().await;
+                        return;
+                    }
+                    let pack_schema_hash = authority.pack_schema_hash;
                     let (write, read) = stream.split();
                     self.semio_hub = Some(HubConn { write, read });
+                    self.socket_actor = Some(socket_actor);
+                    self.socket_actor_confirmed = false;
+                    self.hub_surface = Some(authority.surface.surface_id.clone());
+                    self.socket_authority_deadline = Some(Instant::now() + Duration::from_millis(authority.expires_at_unix_ms.saturating_sub(now)));
+                    self.socket_authority = Some(authority);
+                    self.session_color = None;
                     self.backoff_ms = 500;
-                    let hello = ClientFrame::Hello {
+                    let hello = ClientFrame::SocketHelloV1 {
                         wire_version: 1,
                         protocol_version: 1,
                         schema: self.schema.clone(),
-                        pack_schema_hash: crate::os_store::document_codec(&self.schema).await.ok().flatten().map_or([0u8; 32], |codec| codec.pack_schema_hash),
-                        actor: ActorId(self.actor.clone()),
-                        token: self.hub_token.clone(),
+                        pack_schema_hash,
                         resume_token: self.resume_token.clone(),
                         frontier: self.server_frontier.clone(),
                     };
                     self.send_client_frame(hello, Lane::Command).await;
                 }
                 Err(()) => {
+                    self.clear_socket_epoch();
                     self.schedule_reconnect().await;
                 }
             }
@@ -1850,6 +2097,10 @@ mod native_actor {
         }
 
         async fn on_hub_message(&mut self, message: Option<Result<Message, tokio_tungstenite::tungstenite::Error>>) {
+            if self.socket_authority_deadline.is_some_and(|deadline| deadline <= Instant::now()) {
+                self.invalidate_socket_authority().await;
+                return;
+            }
             match message {
                 Some(Ok(Message::Binary(bytes))) => {
                     match decode_server_frame(&bytes).await {
@@ -1865,6 +2116,7 @@ mod native_actor {
                     self.abort_artifact_bootstrap();
                     self.requeue_pending_batches();
                     self.semio_hub = None;
+                    self.clear_socket_epoch();
                     self.schedule_reconnect().await;
                 }
             }
@@ -1958,6 +2210,7 @@ mod native_actor {
                     op_index: None,
                 }));
                 self.semio_hub = None;
+                self.clear_socket_epoch();
                 self.schedule_reconnect().await;
                 return Ok(());
             }
@@ -1991,6 +2244,68 @@ mod native_actor {
         #[cfg(test)]
         pub(super) fn queue_test_outbox(&mut self, envelopes: Vec<MutationEnvelope>) {
             self.queue_outbox(envelopes);
+        }
+
+        #[cfg(test)]
+        pub(super) fn install_test_socket_actor(&mut self, actor: &str) {
+            self.socket_actor = Some(actor.into());
+            self.socket_actor_confirmed = false;
+        }
+
+        #[cfg(test)]
+        pub(super) async fn connect_test_socket(&mut self, url: &str, actor: &str) {
+            let (stream, _) = tokio_tungstenite::connect_async(url).await.expect("test socket connects");
+            let (write, read) = stream.split();
+            self.semio_hub = Some(HubConn { write, read });
+            self.socket_actor = Some(actor.into());
+            self.socket_actor_confirmed = false;
+            self.session_color = None;
+            self.send_client_frame(
+                ClientFrame::SocketHelloV1 {
+                    wire_version: 1,
+                    protocol_version: 1,
+                    schema: self.schema.clone(),
+                    pack_schema_hash: crate::os_store::document_codec(&self.schema).await.ok().flatten().map_or([0u8; 32], |codec| codec.pack_schema_hash),
+                    resume_token: self.resume_token.clone(),
+                    frontier: self.server_frontier.clone(),
+                },
+                Lane::Command,
+            )
+            .await;
+        }
+
+        #[cfg(test)]
+        pub(super) fn socket_epoch_test_state(&self) -> (Option<String>, bool, usize, Vec<String>) {
+            (self.socket_actor.clone(), self.socket_actor_confirmed, self.pending_batches.len(), self.outbox.iter().map(|envelope| envelope.actor.0.clone()).collect())
+        }
+
+        #[cfg(test)]
+        pub(super) fn expire_test_socket_authority(&mut self) {
+            self.socket_authority_deadline = Some(Instant::now());
+        }
+
+        #[cfg(test)]
+        pub(super) async fn fail_test_connection(&mut self) {
+            self.on_hub_message(None).await;
+        }
+
+        #[cfg(test)]
+        pub(super) async fn fail_test_bootstrap(&mut self) {
+            self.fail_artifact_bootstrap("injected bootstrap failure").await;
+        }
+
+        #[cfg(test)]
+        pub(super) async fn run_test_connect_attempt(&mut self) {
+            self.start_connect_hub().await;
+            if let Some(future) = self.connect_future.take() {
+                let outcome = future.await;
+                self.finish_connect_hub(outcome).await;
+            }
+        }
+
+        #[cfg(test)]
+        pub(super) async fn relay_test_envelope(&mut self, envelope: MutationEnvelope) {
+            self.relay_operations_to_hub(std::slice::from_ref(&envelope)).await;
         }
 
         #[cfg(test)]
@@ -2074,7 +2389,7 @@ mod native_actor {
                         self.fail_artifact_bootstrap("tail arrived before artifact bootstrap completion").await;
                         return;
                     }
-                    if origin != ActorId(self.actor.clone()) {
+                    if self.socket_actor.as_deref() != Some(origin.0.as_str()) {
                         let converted = envelopes;
                         self.persist_operations(&converted).await;
                         if !self.deliver_remote_operations(converted).await {
@@ -2094,7 +2409,7 @@ mod native_actor {
                     self.handle_ack(batch_id, stages).await;
                 }
                 ServerFrame::Preview { actor, key, seq, payload } => {
-                    if actor != ActorId(self.actor.clone()) {
+                    if self.socket_actor.as_deref() != Some(actor.0.as_str()) {
                         self.emit(ArtifactEvent::Preview { actor: actor.0, key, seq, payload });
                     }
                 }
@@ -2112,8 +2427,14 @@ mod native_actor {
                     self.emit(ArtifactEvent::Presence { peers });
                 }
                 ServerFrame::Session { actor, color } => {
+                    if self.socket_actor.as_deref() != Some(actor.as_str()) {
+                        self.fail_artifact_bootstrap("socket receipt actor mismatch").await;
+                        return;
+                    }
+                    self.socket_actor_confirmed = true;
                     self.session_color = Some(color);
                     self.emit(ArtifactEvent::Session { actor, color });
+                    self.flush_outbox().await;
                 }
                 ServerFrame::CreditGrant { .. } => {
                     // 🪙️ Command-lane credit-based flow control: no client-side backpressure
@@ -2168,7 +2489,16 @@ mod native_actor {
             if envelopes.is_empty() {
                 return;
             }
-            if self.semio_hub.is_none() || self.artifact_bootstrap.is_some() || self.required_tail_frontier.is_some() {
+            if self.socket_authority_deadline.is_some_and(|deadline| deadline <= Instant::now()) {
+                self.queue_outbox(envelopes.iter().cloned());
+                self.invalidate_socket_authority().await;
+                return;
+            }
+            let Some(socket_actor) = self.socket_actor.clone() else {
+                self.queue_outbox(envelopes.iter().cloned());
+                return;
+            };
+            if !self.socket_actor_confirmed || self.semio_hub.is_none() || self.artifact_bootstrap.is_some() || self.required_tail_frontier.is_some() {
                 self.queue_outbox(envelopes.iter().cloned());
                 return;
             }
@@ -2177,7 +2507,7 @@ mod native_actor {
             let mut wire_envelopes: Vec<MutationEnvelope> = Vec::new();
             for envelope in envelopes {
                 let timestamp = next_timestamp(self.hlc_seed, &mut self.hlc_counter).await;
-                wire_envelopes.push(MutationEnvelope { timestamp, ..envelope.clone() });
+                wire_envelopes.push(MutationEnvelope { actor: ActorId(socket_actor.clone()), timestamp, ..envelope.clone() });
             }
             self.pending_batches.insert(batch_id, envelopes.to_vec());
             self.send_client_frame(ClientFrame::Commands { batch_id, envelopes: wire_envelopes }, Lane::Command).await;
@@ -2190,6 +2520,10 @@ mod native_actor {
         }
 
         async fn send_raw(&mut self, message: Message) {
+            if self.socket_authority_deadline.is_some_and(|deadline| deadline <= Instant::now()) {
+                self.invalidate_socket_authority().await;
+                return;
+            }
             let mut failed = false;
             if let Some(conn) = self.semio_hub.as_mut() {
                 if !matches!(tokio::time::timeout(Duration::from_millis(4), conn.write.send(message)).await, Ok(Ok(()))) {
@@ -2200,6 +2534,7 @@ mod native_actor {
                 self.abort_artifact_bootstrap();
                 self.requeue_pending_batches();
                 self.semio_hub = None;
+                self.clear_socket_epoch();
                 self.schedule_reconnect().await;
             }
         }
@@ -2798,9 +3133,12 @@ mod native_actor {
         cmd_rx: ArtifactMailboxReceiver,
         events: broadcast::Sender<ArtifactEvent>,
         credential: Arc<std::sync::RwLock<Option<Arc<crate::os_directory::client::LocalHubCredential>>>>,
+        socket_grant_source: Arc<std::sync::RwLock<Option<Arc<dyn crate::os_directory::client::HubSocketGrantSource>>>>,
+        document_socket_surface: Option<crate::os_directory::client::DocumentSocketSurfaceExpectationV1>,
+        operation_cancel: semio_framework_async::CancelToken,
     ) -> ArtifactActorRunnerHandle {
         let mailbox = cmd_rx.close_handle();
-        let actor = ArtifactActor::new(pool.clone(), config, remote, cmd_rx, events, credential).await;
+        let actor = ArtifactActor::new(pool.clone(), config, remote, cmd_rx, events, credential, socket_grant_source, document_socket_surface, operation_cancel).await;
         let runner = Arc::new(ActorRunner {
             pool,
             generation,
@@ -3060,6 +3398,62 @@ mod native_actor {
         }
 
         #[semio_framework_async_macros::async_test]
+        async fn hub_document_actor_and_surface_authority_are_isolated_by_full_scope() {
+            let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+            pool.shutdown();
+            let host = ArtifactHost::new(pool);
+            let space_a = ArtifactDocumentKey::hub("space-a", "shared-document");
+            let space_b = ArtifactDocumentKey::hub("space-b", "shared-document");
+            let surface = crate::os_directory::client::DocumentSocketSurfaceExpectationV1 {
+                artifact_kind: "fixture".into(),
+                plugin_id: "fixture.plugin".into(),
+                package_id: "fixture.package".into(),
+                version: "1.0.0".into(),
+                surface_id: "fixture.editor".into(),
+                app_id: "fixture.app".into(),
+                window_kind_id: "fixture.window".into(),
+                role: crate::os_directory::DocumentOpenSurfaceRoleV1::Editor,
+                renderer_target: crate::os_directory::DocumentOpenRendererTargetV1::Wgpu,
+            };
+            assert!(host.set_document_socket_surface(&space_a, surface.clone()));
+            assert!(host.set_document_socket_surface(&space_b, surface));
+            assert!(!host.set_document_socket_surface(&ArtifactDocumentKey::local("shared-document"), crate::os_directory::client::DocumentSocketSurfaceExpectationV1 {
+                artifact_kind: "fixture".into(), plugin_id: "fixture.plugin".into(), package_id: "fixture.package".into(), version: "1.0.0".into(), surface_id: "fixture.editor".into(), app_id: "fixture.app".into(), window_kind_id: "fixture.window".into(), role: crate::os_directory::DocumentOpenSurfaceRoleV1::Editor, renderer_target: crate::os_directory::DocumentOpenRendererTargetV1::Wgpu,
+            }));
+            let channels_a = host
+                .open(ArtifactActorConfig {
+                    document_id: "shared-document".into(),
+                    schema: "fixture/v1".into(),
+                    bindings: vec![PersistenceBinding::Hub { base_url: "http://127.0.0.1:1".into(), space_id: "space-a".into(), surface: Some("fixture.editor".into()) }],
+                    watch_external: false,
+                    actor: "fixture-a".into(),
+                })
+                .await;
+            let channels_b = host
+                .open(ArtifactActorConfig {
+                    document_id: "shared-document".into(),
+                    schema: "fixture/v1".into(),
+                    bindings: vec![PersistenceBinding::Hub { base_url: "http://127.0.0.1:1".into(), space_id: "space-b".into(), surface: Some("fixture.editor".into()) }],
+                    watch_external: false,
+                    actor: "fixture-b".into(),
+                })
+                .await;
+            assert_eq!(channels_a.document_key, space_a);
+            assert_eq!(channels_b.document_key, space_b);
+            {
+                let state = host.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                assert_eq!(state.documents.len(), 2);
+                assert!(state.documents.contains_key(&space_a));
+                assert!(state.documents.contains_key(&space_b));
+                assert!(state.document_socket_surfaces.is_empty());
+            }
+            assert!(host.close_key(&space_a).is_some());
+            assert!(!host.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).documents.contains_key(&space_a));
+            assert!(host.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).documents.contains_key(&space_b));
+            assert!(host.close_key(&space_b).is_some());
+        }
+
+        #[semio_framework_async_macros::async_test]
         async fn host_close_registry_survives_external_ticket_until_return() {
             let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
             pool.shutdown();
@@ -3176,7 +3570,6 @@ mod wasm_actor {
         events: broadcast::Sender<ArtifactEvent>,
         hub_base_url: Option<String>,
         hub_space_id: Option<String>,
-        hub_token: Option<String>,
         hub_surface: Option<String>,
         /// @emoji 🎨️ See the native actor's matching field — same role, wasm side.
         session_color: Option<u8>,
@@ -3199,47 +3592,7 @@ mod wasm_actor {
 
     impl WasmActor {
         async fn connect(&mut self) {
-            let Some(base_url) = self.hub_base_url.clone() else { return };
-            let space_id = self.hub_space_id.clone().unwrap_or_default();
-            let url = hub_ws_url(&base_url, &space_id, &self.document_id, self.hub_surface.as_deref()).await;
-            let Ok(ws) = WebSocket::new(&url) else { return };
-            ws.set_binary_type(BinaryType::Arraybuffer);
-
-            let incoming = self.incoming_tx.clone();
-            let onmessage = Closure::wrap(Box::new(move |event: MessageEvent| {
-                if let Some(buffer) = event.data().dyn_ref::<js_sys::ArrayBuffer>() {
-                    let _ = incoming.send(WasmIncoming::Binary(js_sys::Uint8Array::new(buffer).to_vec()));
-                }
-            }) as Box<dyn FnMut(MessageEvent)>);
-            ws.set_onmessage(Some(onmessage.as_ref().unchecked_ref()));
-            self._closures.push(onmessage);
-
-            let hello = ClientFrame::Hello {
-                wire_version: 1,
-                protocol_version: 1,
-                schema: self.schema.clone(),
-                pack_schema_hash: crate::os_store::document_codec(&self.schema).await.ok().flatten().map_or([0u8; 32], |codec| codec.pack_schema_hash),
-                actor: ActorId(self.actor.clone()),
-                token: self.hub_token.clone(),
-                resume_token: self.resume_token.clone(),
-                frontier: self.server_frontier.clone(),
-            };
-            let mut hello_bytes = encode_client_frame(&hello, Lane::Command).await;
-            let ws_for_open = ws.clone();
-            let onopen = Closure::wrap(Box::new(move || {
-                let _ = ws_for_open.send_with_u8_array(&mut hello_bytes);
-            }) as Box<dyn FnMut()>);
-            ws.set_onopen(Some(onopen.as_ref().unchecked_ref()));
-            self._open_closures.push(onopen);
-
-            let incoming = self.incoming_tx.clone();
-            let onclose = Closure::wrap(Box::new(move || {
-                let _ = incoming.send(WasmIncoming::Closed);
-            }) as Box<dyn FnMut()>);
-            ws.set_onclose(Some(onclose.as_ref().unchecked_ref()));
-            self._close_closures.push(onclose);
-
-            self.ws = Some(ws);
+            let _ = (&self.hub_base_url, &self.hub_space_id, &self.hub_surface);
         }
 
         async fn send_frame(&self, frame: &ClientFrame, lane: Lane) {
@@ -3582,14 +3935,12 @@ mod wasm_actor {
         let (incoming_tx, mut incoming_rx) = mpsc::unbounded_channel::<WasmIncoming>();
         let mut hub_base_url = None;
         let mut hub_space_id = None;
-        let mut hub_token = None;
         let mut hub_surface = None;
         for binding in &config.bindings {
-            if let PersistenceBinding::Hub { base_url, space_id, token, surface } = binding {
+            if let PersistenceBinding::Hub { base_url, space_id, surface } = binding {
                 if hub_base_url.is_none() {
                     hub_base_url = Some(base_url.clone());
                     hub_space_id = Some(space_id.clone());
-                    hub_token = token.clone();
                     hub_surface = surface.clone();
                 }
             }
@@ -3603,7 +3954,6 @@ mod wasm_actor {
             events,
             hub_base_url,
             hub_space_id,
-            hub_token,
             hub_surface,
             session_color: None,
             ws: None,
@@ -4499,6 +4849,116 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     #[semio_framework_async_macros::async_test]
+    async fn native_terminal_connection_failure_clears_receipt_actor_before_reissue() {
+        use futures::StreamExt;
+        use tokio_tungstenite::tungstenite::Message;
+
+        async fn connect(
+            actor: &mut native_actor::ArtifactActor,
+            receipt_actor: &str,
+        ) -> tokio_tungstenite::WebSocketStream<tokio::net::TcpStream> {
+            let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.expect("bind test socket");
+            let url = format!("ws://{}", listener.local_addr().expect("test socket address"));
+            let accepted = tokio::spawn(async move {
+                let (stream, _) = listener.accept().await.expect("accept test socket");
+                tokio_tungstenite::accept_async(stream).await.expect("upgrade test socket")
+            });
+            actor.connect_test_socket(&url, receipt_actor).await;
+            accepted.await.expect("test socket task")
+        }
+
+        async fn receive_frame(socket: &mut tokio_tungstenite::WebSocketStream<tokio::net::TcpStream>) -> ClientFrame {
+            let message = tokio::time::timeout(std::time::Duration::from_secs(1), socket.next()).await.expect("client frame deadline").expect("client frame owner").expect("client frame");
+            let Message::Binary(bytes) = message else { panic!("expected binary client frame") };
+            crate::os_spr::decode_client_frame(&bytes).await.expect("decode client frame").1
+        }
+
+        let (_, remote) = ChannelBackbone::pair("native-actor-epoch-test").await;
+        let (_, receiver) = artifact_mailbox_pair();
+        let (events, _) = broadcast::channel(8);
+        let mut actor = native_actor::ArtifactActor::new(
+            test_pool(),
+            ArtifactActorConfig { document_id: "demo".into(), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: false, actor: "local-only".into() },
+            remote,
+            receiver,
+            events,
+            Arc::new(std::sync::RwLock::new(None)),
+            Arc::new(std::sync::RwLock::new(None)),
+            None,
+            semio_framework_async::CancelToken::root_now(),
+        )
+        .await;
+        let stale = "hub.v1.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        let fresh = "hub.v1.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+        actor.install_test_socket_actor(stale);
+        actor.inject_hub_frame(ServerFrame::Session { actor: ActorId(stale.into()), color: 3 }).await;
+        assert_eq!(actor.socket_epoch_test_state(), (Some(stale.into()), true, 0, Vec::new()));
+        actor.fail_test_bootstrap().await;
+        assert_eq!(actor.socket_epoch_test_state(), (None, false, 0, Vec::new()));
+        let first = sample_operation_envelope("after-bootstrap-failure", 1).await;
+        let first_actor = first.actor.0.clone();
+        actor.relay_test_envelope(first).await;
+        assert_eq!(actor.socket_epoch_test_state(), (None, false, 0, vec![first_actor]));
+
+        actor.install_test_socket_actor(stale);
+        actor.inject_hub_frame(ServerFrame::Session { actor: ActorId(stale.into()), color: 4 }).await;
+        actor.fail_test_connection().await;
+        assert_eq!(actor.socket_epoch_test_state().0, None);
+        assert!(!actor.socket_epoch_test_state().1);
+        let second = sample_operation_envelope("after-eof", 2).await;
+        let second_actor = second.actor.0.clone();
+        actor.relay_test_envelope(second).await;
+        assert_eq!(actor.socket_epoch_test_state(), (None, false, 0, vec![first_actor, second_actor]));
+
+        let mut socket = connect(&mut actor, fresh).await;
+        assert!(matches!(receive_frame(&mut socket).await, ClientFrame::SocketHelloV1 { .. }));
+        let before_session = sample_operation_envelope("before-fresh-session", 3).await;
+        let before_session_actor = before_session.actor.0.clone();
+        actor.relay_test_envelope(before_session).await;
+        assert_eq!(actor.socket_epoch_test_state(), (Some(fresh.into()), false, 0, vec![first_actor, second_actor, before_session_actor]));
+        assert!(tokio::time::timeout(std::time::Duration::from_millis(30), socket.next()).await.is_err(), "queued mutations cannot cross the socket before Session confirms the receipt actor");
+        actor.inject_hub_frame(ServerFrame::Session { actor: ActorId(fresh.into()), color: 5 }).await;
+        let first_batch = receive_frame(&mut socket).await;
+        let ClientFrame::Commands { batch_id, envelopes } = first_batch else { panic!("fresh Session must flush one command batch") };
+        assert_eq!(envelopes.len(), 3);
+        assert!(envelopes.iter().all(|envelope| envelope.actor.0 == fresh));
+        assert!(tokio::time::timeout(std::time::Duration::from_millis(30), socket.next()).await.is_err(), "each queued mutation is sent exactly once after Session");
+        assert_eq!(actor.socket_epoch_test_state(), (Some(fresh.into()), true, 1, Vec::new()));
+        actor
+            .inject_hub_frame(ServerFrame::Ack {
+                batch_id,
+                stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }],
+                frontier: bootstrap_frontier("demo", 3, "after-session", 3, 0x66),
+            })
+            .await;
+        assert_eq!(actor.socket_epoch_test_state(), (Some(fresh.into()), true, 0, Vec::new()));
+
+        actor.fail_test_connection().await;
+        let reconnected = "hub.v1.cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc";
+        let queued_during_reconnect = sample_operation_envelope("during-reconnect", 4).await;
+        actor.relay_test_envelope(queued_during_reconnect).await;
+        let mut reconnected_socket = connect(&mut actor, reconnected).await;
+        assert!(matches!(receive_frame(&mut reconnected_socket).await, ClientFrame::SocketHelloV1 { .. }));
+        assert!(tokio::time::timeout(std::time::Duration::from_millis(30), reconnected_socket.next()).await.is_err(), "reconnect cannot flush before its own Session");
+        actor.inject_hub_frame(ServerFrame::Session { actor: ActorId(reconnected.into()), color: 6 }).await;
+        let ClientFrame::Commands { envelopes, .. } = receive_frame(&mut reconnected_socket).await else { panic!("reconnect Session must flush queued mutation") };
+        assert_eq!(envelopes.len(), 1);
+        assert_eq!(envelopes[0].actor.0, reconnected);
+        assert!(tokio::time::timeout(std::time::Duration::from_millis(30), reconnected_socket.next()).await.is_err(), "reconnect flush is exactly once");
+        assert_eq!(actor.socket_epoch_test_state(), (Some(reconnected.into()), true, 1, Vec::new()));
+
+        actor.expire_test_socket_authority();
+        let after_expiry = sample_operation_envelope("after-authority-expiry", 5).await;
+        actor.relay_test_envelope(after_expiry).await;
+        let (socket_actor, confirmed, pending, queued) = actor.socket_epoch_test_state();
+        assert_eq!((socket_actor, confirmed, pending), (None, false, 0));
+        assert_eq!(queued.len(), 2, "unacknowledged and post-expiry mutations stay queued for a fresh plan");
+        let terminal = tokio::time::timeout(std::time::Duration::from_secs(1), reconnected_socket.next()).await.expect("expired authority closes promptly");
+        assert!(!matches!(terminal, Some(Ok(Message::Binary(_)))), "expired plan authority cannot carry another command");
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[semio_framework_async_macros::async_test]
     async fn native_bootstrap_commits_pair_before_failed_local_replay_then_restarts_without_duplicate() {
         use crate::os_store::Backbone;
         let (bootstrap, pair) = demo_artifact_bootstrap(true).await;
@@ -4513,6 +4973,10 @@ mod tests {
             remote,
             receiver,
             events,
+            Arc::new(std::sync::RwLock::new(None)),
+            Arc::new(std::sync::RwLock::new(None)),
+            None,
+            semio_framework_async::CancelToken::root_now(),
         )
         .await;
         let local = sample_operation_envelope("pending-local", 8).await;
@@ -4584,6 +5048,10 @@ mod tests {
                 remote,
                 receiver,
                 events,
+                Arc::new(std::sync::RwLock::new(None)),
+                Arc::new(std::sync::RwLock::new(None)),
+                None,
+                semio_framework_async::CancelToken::root_now(),
             )
             .await;
             (actor, channel)
@@ -4689,14 +5157,111 @@ mod tests {
     //#region 🧪️Helpers
     #[semio_framework_async_macros::async_test]
     async fn hub_ws_url_derives_ws_endpoint_from_remote_uri() {
-        assert_eq!(hub_ws_url("remote://host:6070", "studio-1", "doc-1", None).await, "ws://host:6070/spaces/studio-1/documents/doc-1/ws");
-        assert_eq!(hub_ws_url("https://semio_hub.example.com", "studio-1", "doc-2", None).await, "wss://semio_hub.example.com/spaces/studio-1/documents/doc-2/ws");
-        assert_eq!(hub_ws_url("ws://127.0.0.1:5000/prefix", "studio-1", "d", None).await, "ws://127.0.0.1:5000/spaces/studio-1/documents/d/ws");
+        assert_eq!(hub_ws_url("remote://host:6070", "studio-1", "doc-1", None).await, "ws://host:6070/spaces/studio-1/documents/doc-1/socket/v1");
+        assert_eq!(hub_ws_url("https://semio_hub.example.com", "studio-1", "doc-2", None).await, "wss://semio_hub.example.com/spaces/studio-1/documents/doc-2/socket/v1");
+        assert_eq!(hub_ws_url("ws://127.0.0.1:5000/prefix", "studio-1", "d", None).await, "ws://127.0.0.1:5000/spaces/studio-1/documents/d/socket/v1");
         assert_eq!(
-            hub_ws_url("remote://host:6070", "studio-1", "doc-1", Some("s.space.home@1/*#editor")).await,
-            "ws://host:6070/spaces/studio-1/documents/doc-1/ws?surface=s.space.home@1/*#editor",
+            hub_ws_url("remote://host:6070", "studio /東京?", "doc#ä", Some("s.space.home@1/*#editor")).await,
+            "ws://host:6070/spaces/studio%20%2F%E6%9D%B1%E4%BA%AC%3F/documents/doc%23%C3%A4/socket/v1?surface=s.space.home%401%2F%2A%23editor",
             "ticket 26/08/16/HUB-SPACES-…: surface travels out of band as ?surface= on the document WS URL"
         );
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[semio_framework_async_macros::async_test]
+    async fn hostile_hub_binding_cannot_receive_a_credential_bound_document_grant() {
+        use crate::os_directory::client::{
+            DirectoryClientError, DocumentSocketAdmissionV1, DocumentSocketAuthorityV1, HubSocketGrantSource, LocalHubCredential, SocketGrantReceiptV1,
+        };
+        use crate::os_directory::{
+            DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenGrantV1, DocumentOpenPackageV1, DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1,
+            DocumentOpenSurfaceV1, DocumentScope,
+        };
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        struct BoundSource {
+            admissions: AtomicUsize,
+            trusted_origin: String,
+        }
+
+        impl HubSocketGrantSource for BoundSource {
+            fn admit_document_socket(
+                &self,
+                _ctx: &semio_framework_async::OperationContext,
+                space_id: &str,
+                document_id: &str,
+                expectation: &crate::os_directory::client::DocumentSocketExpectationV1,
+                _client_instance_id: &str,
+                _timeout_ms: u64,
+            ) -> Result<DocumentSocketAdmissionV1, DirectoryClientError> {
+                self.admissions.fetch_add(1, Ordering::SeqCst);
+                Ok(DocumentSocketAdmissionV1 {
+                    socket: SocketGrantReceiptV1 {
+                        schema: "semio.hub.socket-grant/v1".into(),
+                        protocol: "semio.socket.v1".into(),
+                        grant: format!("socket.v1.{}.{}", "1".repeat(32), "2".repeat(64)),
+                        actor_id: format!("hub.v1.{}", "3".repeat(64)),
+                        expires_at_ms: i64::MAX,
+                    },
+                    authority: DocumentSocketAuthorityV1 {
+                        hub_origin: self.trusted_origin.clone(),
+                        expires_at_unix_ms: u64::try_from(i64::MAX).expect("positive max"),
+                        scope: DocumentScope::new(space_id, document_id),
+                        descriptor_digest_v1: "4".repeat(64),
+                        catalog: DocumentOpenCatalogV1 { generation_id: "5".repeat(64) },
+                        package: DocumentOpenPackageV1 {
+                            plugin_id: "trusted.plugin".into(),
+                            package_id: "trusted.package".into(),
+                            version: "1.0.0".into(),
+                            component_sha256: "6".repeat(64),
+                            component_blake3: "7".repeat(64),
+                            descriptor_byte_sha256: "8".repeat(64),
+                        },
+                        artifact: DocumentOpenArtifactV1 { kind: "trusted.document".into(), schema: expectation.artifact_schema.clone(), pack_schema_hash: "1".repeat(64) },
+                        pack_schema_hash: [0x11; 32],
+                        surface: DocumentOpenSurfaceV1 {
+                            surface_id: "trusted.surface".into(),
+                            app_id: "trusted.app".into(),
+                            window_kind_id: "trusted.window".into(),
+                            role: DocumentOpenSurfaceRoleV1::Editor,
+                            renderer_target: DocumentOpenRendererTargetV1::Wgpu,
+                        },
+                        grant: DocumentOpenGrantV1 { read: true, write: true, observe: true },
+                        checkpoint: None,
+                        revalidation: DocumentOpenRevalidationV1 { directory_revision: 1, membership_generation: 1, session_generation: Some(1), share_generation: None },
+                    },
+                })
+            }
+        }
+
+        let hostile = tokio::net::TcpListener::bind("127.0.0.1:0").await.expect("hostile listener");
+        let hostile_origin = format!("http://{}", hostile.local_addr().expect("hostile address"));
+        let source = Arc::new(BoundSource { admissions: AtomicUsize::new(0), trusted_origin: "http://127.0.0.1:1".into() });
+        let (_, remote) = ChannelBackbone::pair("hostile-binding-test").await;
+        let (_, receiver) = artifact_mailbox_pair();
+        let (events, _) = broadcast::channel(8);
+        let mut actor = native_actor::ArtifactActor::new(
+            test_pool(),
+            ArtifactActorConfig {
+                document_id: "document".into(),
+                schema: "demo/v1".into(),
+                bindings: vec![PersistenceBinding::Hub { base_url: hostile_origin, space_id: "space".into(), surface: Some("trusted.surface".into()) }],
+                watch_external: false,
+                actor: "local-untrusted".into(),
+            },
+            remote,
+            receiver,
+            events,
+            Arc::new(std::sync::RwLock::new(Some(Arc::new(LocalHubCredential::test("http://127.0.0.1:1", &format!("session.v1.{}.{}", "a".repeat(32), "b".repeat(64))))))),
+            Arc::new(std::sync::RwLock::new(Some(source.clone()))),
+            None,
+            semio_framework_async::CancelToken::root_now(),
+        )
+        .await;
+        actor.run_test_connect_attempt().await;
+        assert_eq!(source.admissions.load(Ordering::SeqCst), 1);
+        assert!(tokio::time::timeout(std::time::Duration::from_millis(50), hostile.accept()).await.is_err(), "hostile binding receives no dial or grant header");
+        assert_eq!(actor.socket_epoch_test_state(), (None, false, 0, Vec::new()));
     }
 
     /// 🎨️ ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.4: both
@@ -4800,7 +5365,7 @@ mod tests {
         write_client(
             &fixtures_dir,
             "📦️client-hello.bin",
-            &ClientFrame::Hello { wire_version: 1, protocol_version: 1, schema: "demo/v1".to_string(), pack_schema_hash: [7u8; 32], actor: ActorId("actor-1".to_string()), token: Some("token-1".to_string()), resume_token: None, frontier: None },
+            &ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema: "demo/v1".to_string(), pack_schema_hash: [7u8; 32], resume_token: None, frontier: None },
             Lane::Command,
         )
         .await;
@@ -4947,7 +5512,7 @@ mod tests {
         let (cmd_tx, cmd_rx) = artifact_mailbox_pair();
         let (events, _) = broadcast::channel(1);
         let runner = native_actor::retained_turn_fixtures::fixture_runner_handle(host.pool.clone(), 1, cmd_rx.close_handle());
-        host.inner.lock().unwrap().documents.insert("doc".into(), OpenDocument { generation: 1, cmd_tx, events, presence: PresenceHeartbeatProducer::default(), runner });
+        host.inner.lock().unwrap().documents.insert(ArtifactDocumentKey::local("doc"), OpenDocument { generation: 1, cancel: semio_framework_async::CancelToken::root_now(), cmd_tx, events, presence: PresenceHeartbeatProducer::default(), runner });
 
         let first = sample_presence_peer_with_interaction().await;
         assert!(host.presence_heartbeat("doc", 500, first.clone()));
@@ -5149,7 +5714,7 @@ mod tests {
             // Expect Hello first.
             let requested_ordinal = match read.next().await {
                 Some(Ok(WsMessage::Binary(bytes))) => match decode_client_frame(&bytes).await {
-                    Ok((_, ClientFrame::Hello { frontier, .. })) => frontier.map_or(0, |frontier| frontier.head_edit_ordinal),
+                    Ok((_, ClientFrame::SocketHelloV1 { frontier, .. })) => frontier.map_or(0, |frontier| frontier.head_edit_ordinal),
                     _ => return,
                 },
                 _ => return,
@@ -5234,7 +5799,7 @@ mod tests {
                 .open(ArtifactActorConfig {
                     document_id: "shared".into(),
                     schema: "demo/v1".into(),
-                    bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
+                    bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
                     watch_external: false,
                     actor: "A".into(),
                 })
@@ -5247,7 +5812,7 @@ mod tests {
                 .open(ArtifactActorConfig {
                     document_id: "shared".into(),
                     schema: "demo/v1".into(),
-                    bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
+                    bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
                     watch_external: false,
                     actor: "B".into(),
                 })
@@ -5286,7 +5851,7 @@ mod tests {
                 .open(ArtifactActorConfig {
                     document_id: "catchup".into(),
                     schema: "demo/v1".into(),
-                    bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
+                    bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
                     watch_external: false,
                     actor: "A".into(),
                 })
@@ -5308,7 +5873,7 @@ mod tests {
                 .open(ArtifactActorConfig {
                     document_id: "catchup".into(),
                     schema: "demo/v1".into(),
-                    bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }],
+                    bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }],
                     watch_external: false,
                     actor: "B".into(),
                 })
@@ -5341,7 +5906,7 @@ mod tests {
                 .open(ArtifactActorConfig {
                     document_id: "drain".into(),
                     schema: "demo/v1".into(),
-                    bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
+                    bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
                     watch_external: false,
                     actor: "B".into(),
                 })
@@ -5355,7 +5920,7 @@ mod tests {
                 .open(ArtifactActorConfig {
                     document_id: "drain".into(),
                     schema: "demo/v1".into(),
-                    bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }],
+                    bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }],
                     watch_external: false,
                     actor: "A".into(),
                 })
@@ -5388,7 +5953,7 @@ mod tests {
                 .open(ArtifactActorConfig {
                     document_id: "outcome".into(),
                     schema: "demo/v1".into(),
-                    bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }],
+                    bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }],
                     watch_external: false,
                     actor: "A".into(),
                 })
@@ -5421,7 +5986,7 @@ mod tests {
                 .open(ArtifactActorConfig {
                     document_id: "preview".into(),
                     schema: "demo/v1".into(),
-                    bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
+                    bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
                     watch_external: false,
                     actor: "A".into(),
                 })
@@ -5432,7 +5997,7 @@ mod tests {
                 .open(ArtifactActorConfig {
                     document_id: "preview".into(),
                     schema: "demo/v1".into(),
-                    bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }],
+                    bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }],
                     watch_external: false,
                     actor: "B".into(),
                 })

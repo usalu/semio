@@ -1,11 +1,11 @@
 {
-  "tokens": "🔣️.json",
+  "tokens": "../🎨️🟠️styling/🔣️.json",
   "adapters": [
     {
       "id": "js-tailwind",
       "description": "Tailwind v4 @theme fragments + @font-face for @semio-tech/ui-styling",
       "generator": "script.ts generate",
-      "outputs": ["🤖️generated/palette-fonts.css", "🤖️generated/palette-🎨️theme.css", "🤖️generated/palette-presence.css", "🎨️palette.css", "🤖️generated/🟦️tokens.generated.ts"]
+      "outputs": ["🤖️generated/palette-fonts.css", "🤖️generated/palette-🎨️theme.css", "🤖️generated/palette-presence.css", "../🎨️🟠️styling/🎨️palette.css", "🤖️generated/🟦️tokens.generated.ts"]
     },
     {
       "id": "dotnet-elements-styling",

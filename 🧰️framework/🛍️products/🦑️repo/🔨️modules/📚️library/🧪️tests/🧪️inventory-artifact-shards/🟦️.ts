@@ -11,7 +11,7 @@ import { inventoryTaxonomy } from "../../🧹️normalization/🟦️.ts";
 const repoRoot = resolve(import.meta.dir, "../../../../../../../");
 const ticketRoot = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧪️🗿️inventory-artifact-shards/🔣️.json"), "utf8"));
 type Violation = { path: string; code: string; severity: "error" | "warning"; message: string };
 const byteCompare = (left: string, right: string) => Buffer.compare(Buffer.from(left), Buffer.from(right));
 const sha = (value: string | Uint8Array) => createHash("sha256").update(value).digest("hex");
@@ -156,7 +156,7 @@ test("the real inventory producer publishes locale-different violation order los
 test("publication verifies canonical violations and rejects inconsistent replacement before writing", async () => {
   const { publishTaxonomyInventoryArtifactShards, validateTaxonomyInventoryArtifactShards } = await import("../../../../../../../📜️script.ts");
   const root = mkdtempSync(join(ticketRoot, "🧪️inventory-order-publication-")), dataRoot = join(root, "📊️inventory");
-  const source = inventory(vector.cases[0].rows), inputPath = join(root, "🔣️.json");
+  const source = inventory(vector.cases[0].rows), inputPath = join(root, "../🧪️🗿️inventory-artifact-shards/🔣️.json");
   writeFileSync(inputPath, JSON.stringify(source));
   const manifest = publishTaxonomyInventoryArtifactShards(dataRoot, source);
   const path = join(dataRoot, "📊️shards/🔣️.json"), before = readFileSync(path);

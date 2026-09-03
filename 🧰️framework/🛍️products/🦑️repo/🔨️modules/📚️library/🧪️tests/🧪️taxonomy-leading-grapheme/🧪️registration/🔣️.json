@@ -3,7 +3,7 @@
   "contractId": "taxonomy-leading-grapheme-registration-v1",
   "command": "taxonomy-leading-grapheme",
   "target": "test-taxonomy-leading-grapheme",
-  "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️taxonomy-leading-grapheme.ts",
+  "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️🌳️taxonomy-leading-grapheme/🟦️.ts",
   "runner": "runTestBudgeted",
   "budget": "default",
   "launchName": "🧹clean🧩️taxonomy🧪️taxonomy-leading-grapheme",

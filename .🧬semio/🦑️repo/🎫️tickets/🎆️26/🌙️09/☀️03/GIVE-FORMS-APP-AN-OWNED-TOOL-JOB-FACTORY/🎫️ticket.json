@@ -1,0 +1,13 @@
+{
+  "title": "Give Forms App an Owned Tool Job Factory",
+  "emoji": "📋️",
+  "status": "open",
+  "description": "Fix the forms editor runtime dispatch defect by adding an app-owned ArtifactOwnedToolJobFactory covering every forms tool, honest publication contracts derived from each command handler, Artifact/Config lane ArtifactStoreOneItemPreparationFactory implementations where required, factory_type wiring in bounded proofs, registry overrides, and an exact-and-exhaustive retained route disposition test. Verify the baseline missing-owned-reducer behavior, forms library tests, wasm32-wasip2 check, regenerated forms descriptor, and plugin registry check.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2608"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": [
+    "⚪e82297281caf460ca6af7c95e8690b51"
+  ]
+}

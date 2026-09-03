@@ -108,7 +108,7 @@
       "content": "[workspace]\nresolver = \"2\"\nmembers = [\n  \"{{sourceRoot}}/🔄️fsm/📦️packages/🦀️rust\",\n  \"{{sourceRoot}}/🔄️fsm/✨️macros/📦️packages/🦀️rust\",\n]\n"
     },
     {
-      "path": "🔣️.json",
+      "path": "../🧪️🪄️draw-source-scenario/🔣️.json",
       "format": "json",
       "content": "{\n  \"schemaVersion\": 1,\n  \"entries\": [\n    { \"id\": \"fsm-macros\", \"users\": [\"{{sourceRoot}}/🔄️fsm/📦️packages/🦀️rust/Cargo.toml\"] },\n    { \"id\": \"proc-macro2\", \"users\": [\"{{sourceRoot}}/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml\"] },\n    { \"id\": \"quote\", \"users\": [\"{{sourceRoot}}/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml\"] },\n    { \"id\": \"async\", \"users\": [\"{{sourceRoot}}/🔄️fsm/📦️packages/🦀️rust/Cargo.toml\"] },\n    { \"id\": \"dispatch\", \"users\": [\"{{sourceRoot}}/🔄️fsm/📦️packages/🦀️rust/Cargo.toml\"] },\n    { \"id\": \"syn\", \"users\": [\"{{sourceRoot}}/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml\"] },\n    { \"id\": \"serde\", \"users\": [\"{{sourceRoot}}/🔄️fsm/📦️packages/🦀️rust/Cargo.toml\"] },\n    { \"id\": \"serde-json\", \"users\": [\"{{sourceRoot}}/🔄️fsm/📦️packages/🦀️rust/Cargo.toml\"] }\n  ]\n}\n"
     },

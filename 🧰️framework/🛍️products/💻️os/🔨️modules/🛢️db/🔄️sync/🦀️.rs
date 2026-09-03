@@ -18,7 +18,7 @@
 //! 🎯️ Design choice (`ResumeToken` receive path): `ResumeToken` exposes `encode(&Frontier)
 //! -> ResumeToken` and `ResumeToken::decode(&self) -> Frontier`, but no public constructor from an
 //! arbitrary wire string (its inner field is private to `db_core`) — so this crate cannot
-//! reconstruct a `ResumeToken` from `protocol::ClientFrame::Hello.resume_token: Option<String>` to
+//! reconstruct a `ResumeToken` from `protocol::ClientFrame::SocketHelloV1.resume_token: Option<String>` to
 //! call its type-safe `decode`. Rather than duplicating `db_core`'s private parsing logic (a
 //! frozen, un-editable crate this wave), this crate uses `Hello.frontier:
 //! Option<protocol::RuntimeFrontierSummary>` — a separate, always-decodable field on the very same
@@ -278,7 +278,7 @@ pub async fn decide_bootstrap(state: &ArtifactSyncState, snapshots: &impl db_sto
 
 //#region 🔖️ResumeToken
 /// @emoji 🎫️ Issues a fresh resume token for `frontier` — the send-path half of resume tokens (see
-/// module doc for why the receive path uses `Hello.frontier` instead). `Welcome.resume_token` is
+/// module doc for why the receive path uses `SocketHelloV1.frontier` instead). `Welcome.resume_token` is
 /// always populated from this.
 pub async fn issue_resume_token(frontier: &Frontier) -> Result<String, DbError> {
     Ok(ResumeToken::encode(frontier)?.as_str().to_string())
@@ -2513,10 +2513,10 @@ pub async fn build_welcome(state: &ArtifactSyncState, plan: &BootstrapPlan, sess
     Ok(WelcomeResponse { welcome, follow_up })
 }
 
-/// @emoji 👋️ The top-level entry point for a `protocol::ClientFrame::Hello`: replays `document`'s
+/// @emoji 👋️ The top-level entry point for a `protocol::ClientFrame::SocketHelloV1`: replays `document`'s
 /// current sync state, decides a bootstrap plan against `hello_frontier` (the replica's advertised
 /// `RuntimeFrontierSummary`, `None` for a totally fresh replica — see module doc for why this
-/// crate reads `Hello.frontier` rather than decoding `Hello.resume_token`), and lowers it to a
+/// crate reads `SocketHelloV1.frontier` rather than decoding `SocketHelloV1.resume_token`), and lowers it to a
 /// `WelcomeResponse`.
 #[cfg(test)]
 pub async fn handle_hello(

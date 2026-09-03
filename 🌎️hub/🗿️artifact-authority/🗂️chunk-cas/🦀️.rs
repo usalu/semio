@@ -305,7 +305,11 @@ pub fn encode_artifact_cas_manifest_v1(manifest: &ArtifactCasManifestV1) -> Resu
     for (index, chunk) in manifest.chunks.iter().enumerate() {
         let expected_length = if index + 1 == manifest.chunks.len() {
             let remainder = manifest.raw_byte_length % ARTIFACT_CAS_CHUNK_BYTES as u64;
-            if remainder == 0 { ARTIFACT_CAS_CHUNK_BYTES as u64 } else { remainder }
+            if remainder == 0 {
+                ARTIFACT_CAS_CHUNK_BYTES as u64
+            } else {
+                remainder
+            }
         } else {
             ARTIFACT_CAS_CHUNK_BYTES as u64
         };
@@ -365,7 +369,12 @@ pub fn decode_artifact_cas_manifest_v1(bytes: &[u8], expected_space_id: &str, ex
     let raw_byte_length = u64_field(&mut cursor)?;
     let chunk_bytes = u32_field(&mut cursor)?;
     let chunk_count = usize::try_from(u32_field(&mut cursor)?).map_err(|_| AuthorityError::ResourceLimit("artifact CAS chunk count"))?;
-    if space_id != expected_space_id || raw_byte_length > AUTHORITY_MAX_PAIR_BYTES || chunk_bytes != ARTIFACT_CAS_CHUNK_BYTES as u32 || chunk_count > ARTIFACT_CAS_MAX_CHUNKS || chunk_count as u64 != raw_byte_length.div_ceil(ARTIFACT_CAS_CHUNK_BYTES as u64) {
+    if space_id != expected_space_id
+        || raw_byte_length > AUTHORITY_MAX_PAIR_BYTES
+        || chunk_bytes != ARTIFACT_CAS_CHUNK_BYTES as u32
+        || chunk_count > ARTIFACT_CAS_MAX_CHUNKS
+        || chunk_count as u64 != raw_byte_length.div_ceil(ARTIFACT_CAS_CHUNK_BYTES as u64)
+    {
         return Err(AuthorityError::BlobIntegrity("artifact CAS manifest shape"));
     }
     let mut chunks = Vec::with_capacity(chunk_count);
@@ -375,7 +384,11 @@ pub fn decode_artifact_cas_manifest_v1(bytes: &[u8], expected_space_id: &str, ex
         let chunk_id = ArtifactHash(cursor.field(Some(32))?.try_into().map_err(|_| AuthorityError::BlobIntegrity("artifact CAS chunk hash"))?);
         let expected_length = if index + 1 == chunk_count {
             let remainder = raw_byte_length % ARTIFACT_CAS_CHUNK_BYTES as u64;
-            if remainder == 0 { ARTIFACT_CAS_CHUNK_BYTES as u64 } else { remainder }
+            if remainder == 0 {
+                ARTIFACT_CAS_CHUNK_BYTES as u64
+            } else {
+                remainder
+            }
         } else {
             ARTIFACT_CAS_CHUNK_BYTES as u64
         };
@@ -407,13 +420,7 @@ pub fn prepare_artifact_cas_manifest_v1(space_id: &str, raw: &[u8]) -> Result<Ar
             chunk_id: chunk_id(space_id, bytes)?,
         });
     }
-    let manifest = ArtifactCasManifestV1 {
-        space_id: space_id.to_string(),
-        raw_sha256: ArtifactHash(Sha256::digest(raw)),
-        raw_byte_length: raw.len() as u64,
-        chunk_bytes: ARTIFACT_CAS_CHUNK_BYTES as u32,
-        chunks,
-    };
+    let manifest = ArtifactCasManifestV1 { space_id: space_id.to_string(), raw_sha256: ArtifactHash(Sha256::digest(raw)), raw_byte_length: raw.len() as u64, chunk_bytes: ARTIFACT_CAS_CHUNK_BYTES as u32, chunks };
     let manifest_bytes = encode_artifact_cas_manifest_v1(&manifest)?;
     let manifest_id = ArtifactHash(Sha256::digest(&manifest_bytes));
     Ok(ArtifactCasManifestPlan { manifest, manifest_bytes, manifest_id })
@@ -455,11 +462,7 @@ fn validate_ownership_plan(plan: &ArtifactCasOwnershipPlanV1) -> Result<(), Auth
 pub fn prepare_artifact_cas_ownership_v1(checkpoint: &ArtifactCheckpoint, pair: &ArtifactPair) -> Result<ArtifactCasOwnershipPlanV1, AuthorityError> {
     let pack = prepare_artifact_cas_manifest_v1(&checkpoint.scope.space_id, &pair.pack)?;
     let spr = prepare_artifact_cas_manifest_v1(&checkpoint.scope.space_id, &pair.spr)?;
-    if checkpoint.pack.sha256 != pack.manifest.raw_sha256
-        || checkpoint.pack.byte_length != pack.manifest.raw_byte_length
-        || checkpoint.spr.sha256 != spr.manifest.raw_sha256
-        || checkpoint.spr.byte_length != spr.manifest.raw_byte_length
-    {
+    if checkpoint.pack.sha256 != pack.manifest.raw_sha256 || checkpoint.pack.byte_length != pack.manifest.raw_byte_length || checkpoint.spr.sha256 != spr.manifest.raw_sha256 || checkpoint.spr.byte_length != spr.manifest.raw_byte_length {
         return Err(AuthorityError::BlobIntegrity("artifact CAS ownership raw identity"));
     }
     let mut objects = Vec::with_capacity(pack.manifest.chunks.len() + spr.manifest.chunks.len() + 2);
@@ -469,13 +472,7 @@ pub fn prepare_artifact_cas_ownership_v1(checkpoint: &ArtifactCheckpoint, pair: 
     objects.push(ArtifactCasObjectKey { space_id: checkpoint.scope.space_id.clone(), kind: ArtifactCasObjectKind::Manifest, digest: spr.manifest_id });
     objects.sort_by_key(|object| (object.kind, object.digest.0));
     objects.dedup();
-    let plan = ArtifactCasOwnershipPlanV1 {
-        scope: checkpoint.scope.clone(),
-        checkpoint_id: checkpoint.checkpoint_id,
-        pack_manifest_id: pack.manifest_id,
-        spr_manifest_id: spr.manifest_id,
-        objects,
-    };
+    let plan = ArtifactCasOwnershipPlanV1 { scope: checkpoint.scope.clone(), checkpoint_id: checkpoint.checkpoint_id, pack_manifest_id: pack.manifest_id, spr_manifest_id: spr.manifest_id, objects };
     validate_ownership_plan(&plan)?;
     Ok(plan)
 }
@@ -605,21 +602,30 @@ impl MemoryArtifactChunkCasStorage {
 impl ArtifactChunkCasStorage for MemoryArtifactChunkCasStorage {
     async fn configure_coordinator(&self, coordinator_id: [u8; 32], context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()?;
-        if coordinator_id == [0; 32] { return Err(AuthorityError::Store("artifact CAS coordinator identity is invalid".into())); }
+        if coordinator_id == [0; 32] {
+            return Err(AuthorityError::Store("artifact CAS coordinator identity is invalid".into()));
+        }
         let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         match state.coordinator_id {
             Some(current) if current != coordinator_id => Err(AuthorityError::Store("artifact CAS coordinator identity mismatch".into())),
             Some(_) => Ok(()),
-            None => { state.coordinator_id = Some(coordinator_id); Ok(()) }
+            None => {
+                state.coordinator_id = Some(coordinator_id);
+                Ok(())
+            }
         }
     }
 
     async fn advance_physical_epoch(&self, coordinator_id: [u8; 32], space_id: &str, epoch: u64, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()?;
-        if epoch == 0 { return Err(AuthorityError::Store("artifact CAS physical epoch is invalid".into())); }
+        if epoch == 0 {
+            return Err(AuthorityError::Store("artifact CAS physical epoch is invalid".into()));
+        }
         let space = space_digest(space_id)?;
         let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if state.coordinator_id != Some(coordinator_id) { return Err(AuthorityError::Store("artifact CAS coordinator identity mismatch".into())); }
+        if state.coordinator_id != Some(coordinator_id) {
+            return Err(AuthorityError::Store("artifact CAS coordinator identity mismatch".into()));
+        }
         state.physical_epochs.entry(space).and_modify(|current| *current = (*current).max(epoch)).or_insert(epoch);
         Ok(())
     }
@@ -685,39 +691,59 @@ fn open_artifact_cas_leaf(path: &Path, write: bool, create: bool) -> std::io::Re
     const O_CLOEXEC: i32 = 0x8_0000;
     #[cfg(not(any(target_os = "linux", target_os = "android")))]
     const O_CLOEXEC: i32 = 0x0100_0000;
-    unsafe extern "C" { fn open(path: *const core::ffi::c_char, flags: i32, ...) -> i32; }
+    unsafe extern "C" {
+        fn open(path: *const core::ffi::c_char, flags: i32, ...) -> i32;
+    }
     let path = std::ffi::CString::new(path.as_os_str().as_bytes()).map_err(|_| std::io::Error::new(std::io::ErrorKind::InvalidInput, "artifact CAS path contains NUL"))?;
     let flags = (if write { 2 } else { 0 }) | O_NOFOLLOW | O_CLOEXEC | (if create { O_CREATE } else { 0 });
     let descriptor = unsafe { open(path.as_ptr(), flags, 0o600 as core::ffi::c_int) };
-    if descriptor < 0 { Err(std::io::Error::last_os_error()) } else { Ok(unsafe { std::fs::File::from_raw_fd(descriptor) }) }
+    if descriptor < 0 {
+        Err(std::io::Error::last_os_error())
+    } else {
+        Ok(unsafe { std::fs::File::from_raw_fd(descriptor) })
+    }
 }
 
 #[cfg(windows)]
 fn open_artifact_cas_leaf(path: &Path, write: bool, create: bool) -> std::io::Result<std::fs::File> {
-    use std::os::windows::fs::OpenOptionsExt as _;
     use std::os::windows::fs::MetadataExt as _;
+    use std::os::windows::fs::OpenOptionsExt as _;
     const FILE_FLAG_OPEN_REPARSE_POINT: u32 = 0x0020_0000;
     const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x0000_0400;
     let mut options = std::fs::OpenOptions::new();
     options.read(true).write(write).create(create).truncate(false).custom_flags(FILE_FLAG_OPEN_REPARSE_POINT);
     let file = options.open(path)?;
-    if file.metadata()?.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT != 0 { Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "artifact CAS leaf is a reparse point")) } else { Ok(file) }
+    if file.metadata()?.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT != 0 {
+        Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "artifact CAS leaf is a reparse point"))
+    } else {
+        Ok(file)
+    }
 }
 
 #[cfg(unix)]
 fn try_lock_file(file: std::fs::File) -> std::io::Result<Option<ArtifactCasFileFence>> {
     use std::os::fd::AsRawFd as _;
-    unsafe extern "C" { fn flock(fd: i32, operation: i32) -> i32; }
-    if unsafe { flock(file.as_raw_fd(), 2 | 4) } == 0 { return Ok(Some(ArtifactCasFileFence(file))); }
+    unsafe extern "C" {
+        fn flock(fd: i32, operation: i32) -> i32;
+    }
+    if unsafe { flock(file.as_raw_fd(), 2 | 4) } == 0 {
+        return Ok(Some(ArtifactCasFileFence(file)));
+    }
     let error = std::io::Error::last_os_error();
-    if matches!(error.kind(), std::io::ErrorKind::WouldBlock) { Ok(None) } else { Err(error) }
+    if matches!(error.kind(), std::io::ErrorKind::WouldBlock) {
+        Ok(None)
+    } else {
+        Err(error)
+    }
 }
 
 #[cfg(unix)]
 impl Drop for ArtifactCasFileFence {
     fn drop(&mut self) {
         use std::os::fd::AsRawFd as _;
-        unsafe extern "C" { fn flock(fd: i32, operation: i32) -> i32; }
+        unsafe extern "C" {
+            fn flock(fd: i32, operation: i32) -> i32;
+        }
         let _ = unsafe { flock(self.0.as_raw_fd(), 8) };
     }
 }
@@ -725,20 +751,44 @@ impl Drop for ArtifactCasFileFence {
 #[cfg(windows)]
 fn try_lock_file(file: std::fs::File) -> std::io::Result<Option<ArtifactCasFileFence>> {
     use std::os::windows::io::AsRawHandle as _;
-    #[repr(C)] struct Overlapped { internal: usize, internal_high: usize, offset: u32, offset_high: u32, event: *mut core::ffi::c_void }
-    unsafe extern "system" { fn LockFileEx(file: *mut core::ffi::c_void, flags: u32, reserved: u32, low: u32, high: u32, overlapped: *mut Overlapped) -> i32; }
+    #[repr(C)]
+    struct Overlapped {
+        internal: usize,
+        internal_high: usize,
+        offset: u32,
+        offset_high: u32,
+        event: *mut core::ffi::c_void,
+    }
+    unsafe extern "system" {
+        fn LockFileEx(file: *mut core::ffi::c_void, flags: u32, reserved: u32, low: u32, high: u32, overlapped: *mut Overlapped) -> i32;
+    }
     let mut overlapped = Overlapped { internal: 0, internal_high: 0, offset: 0, offset_high: 0, event: std::ptr::null_mut() };
-    if unsafe { LockFileEx(file.as_raw_handle(), 2 | 1, 0, 1, 0, &mut overlapped) } != 0 { return Ok(Some(ArtifactCasFileFence(file))); }
+    if unsafe { LockFileEx(file.as_raw_handle(), 2 | 1, 0, 1, 0, &mut overlapped) } != 0 {
+        return Ok(Some(ArtifactCasFileFence(file)));
+    }
     let error = std::io::Error::last_os_error();
-    if matches!(error.raw_os_error(), Some(33 | 158)) { Ok(None) } else { Err(error) }
+    if matches!(error.raw_os_error(), Some(33 | 158)) {
+        Ok(None)
+    } else {
+        Err(error)
+    }
 }
 
 #[cfg(windows)]
 impl Drop for ArtifactCasFileFence {
     fn drop(&mut self) {
         use std::os::windows::io::AsRawHandle as _;
-        #[repr(C)] struct Overlapped { internal: usize, internal_high: usize, offset: u32, offset_high: u32, event: *mut core::ffi::c_void }
-        unsafe extern "system" { fn UnlockFileEx(file: *mut core::ffi::c_void, reserved: u32, low: u32, high: u32, overlapped: *mut Overlapped) -> i32; }
+        #[repr(C)]
+        struct Overlapped {
+            internal: usize,
+            internal_high: usize,
+            offset: u32,
+            offset_high: u32,
+            event: *mut core::ffi::c_void,
+        }
+        unsafe extern "system" {
+            fn UnlockFileEx(file: *mut core::ffi::c_void, reserved: u32, low: u32, high: u32, overlapped: *mut Overlapped) -> i32;
+        }
         let mut overlapped = Overlapped { internal: 0, internal_high: 0, offset: 0, offset_high: 0, event: std::ptr::null_mut() };
         let _ = unsafe { UnlockFileEx(self.0.as_raw_handle(), 0, 1, 0, &mut overlapped) };
     }
@@ -822,8 +872,13 @@ impl FsArtifactChunkCasStorage {
                 let file = open_artifact_cas_leaf(&path, true, true)?;
                 Self::validate_opened_leaf(&path, &file).map_err(|_| std::io::Error::new(std::io::ErrorKind::InvalidInput, "artifact CAS lock changed during open"))?;
                 try_lock_file(file)
-            }).await.map_err(|_| AuthorityError::Store("artifact CAS filesystem fence worker failed".into()))?.map_err(|error| AuthorityError::Store(format!("artifact CAS filesystem fence lock failed: {error}")))?;
-            if let Some(fence) = attempt { return Ok(fence); }
+            })
+            .await
+            .map_err(|_| AuthorityError::Store("artifact CAS filesystem fence worker failed".into()))?
+            .map_err(|error| AuthorityError::Store(format!("artifact CAS filesystem fence lock failed: {error}")))?;
+            if let Some(fence) = attempt {
+                return Ok(fence);
+            }
             tokio::time::sleep(std::time::Duration::from_millis(5)).await;
         }
     }
@@ -832,7 +887,9 @@ impl FsArtifactChunkCasStorage {
         let mut bytes = Vec::with_capacity(domain.len() + 72);
         bytes.extend_from_slice(domain);
         bytes.extend_from_slice(&coordinator_id);
-        if let Some(epoch) = epoch { bytes.extend_from_slice(&epoch.to_be_bytes()); }
+        if let Some(epoch) = epoch {
+            bytes.extend_from_slice(&epoch.to_be_bytes());
+        }
         let checksum = Sha256::digest(&bytes);
         bytes.extend_from_slice(&checksum);
         bytes
@@ -857,10 +914,16 @@ impl FsArtifactChunkCasStorage {
     #[cfg(windows)]
     fn replace_fence(from: &Path, to: &Path) -> std::io::Result<()> {
         use std::os::windows::ffi::OsStrExt as _;
-        unsafe extern "system" { fn MoveFileExW(existing: *const u16, replacement: *const u16, flags: u32) -> i32; }
+        unsafe extern "system" {
+            fn MoveFileExW(existing: *const u16, replacement: *const u16, flags: u32) -> i32;
+        }
         let from: Vec<u16> = from.as_os_str().encode_wide().chain([0]).collect();
         let to: Vec<u16> = to.as_os_str().encode_wide().chain([0]).collect();
-        if unsafe { MoveFileExW(from.as_ptr(), to.as_ptr(), 1 | 8) } != 0 { Ok(()) } else { Err(std::io::Error::last_os_error()) }
+        if unsafe { MoveFileExW(from.as_ptr(), to.as_ptr(), 1 | 8) } != 0 {
+            Ok(())
+        } else {
+            Err(std::io::Error::last_os_error())
+        }
     }
 
     #[cfg(unix)]
@@ -898,7 +961,9 @@ impl FsArtifactChunkCasStorage {
             let file = open_artifact_cas_leaf(&path, false, false).map_err(|_| AuthorityError::Store("artifact CAS filesystem object not found".to_string()))?;
             Self::validate_opened_leaf(&path, &file)?;
             Ok::<_, AuthorityError>(file)
-        }).await.map_err(|_| AuthorityError::Store("artifact CAS filesystem object open worker failed".into()))??;
+        })
+        .await
+        .map_err(|_| AuthorityError::Store("artifact CAS filesystem object open worker failed".into()))??;
         let file = tokio::fs::File::from_std(std_file);
         let metadata = file.metadata().await.map_err(|_| AuthorityError::Store("artifact CAS filesystem object metadata failed".to_string()))?;
         if !metadata.is_file() || metadata.len() > key.kind.maximum_bytes() as u64 {
@@ -915,7 +980,9 @@ impl FsArtifactChunkCasStorage {
 impl ArtifactChunkCasStorage for FsArtifactChunkCasStorage {
     async fn configure_coordinator(&self, coordinator_id: [u8; 32], context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()?;
-        if coordinator_id == [0; 32] { return Err(AuthorityError::Store("artifact CAS coordinator identity is invalid".into())); }
+        if coordinator_id == [0; 32] {
+            return Err(AuthorityError::Store("artifact CAS coordinator identity is invalid".into()));
+        }
         let _fence = self.acquire_file_fence(&self.root.join("coordinator.lock"), context).await?;
         let path = self.root.join("coordinator-v1");
         match std::fs::symlink_metadata(&path) {
@@ -932,20 +999,32 @@ impl ArtifactChunkCasStorage for FsArtifactChunkCasStorage {
 
     async fn advance_physical_epoch(&self, coordinator_id: [u8; 32], space_id: &str, epoch: u64, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()?;
-        if epoch == 0 { return Err(AuthorityError::Store("artifact CAS physical epoch is invalid".into())); }
+        if epoch == 0 {
+            return Err(AuthorityError::Store("artifact CAS physical epoch is invalid".into()));
+        }
         let coordinator = Self::read_fence(&self.root.join("coordinator-v1")).map_err(|_| AuthorityError::Store("artifact CAS coordinator is not configured".into()))?;
-        if Self::decode_fence(&coordinator, ARTIFACT_CAS_COORDINATOR_DOMAIN_V1, false)?.0 != coordinator_id { return Err(AuthorityError::Store("artifact CAS coordinator identity mismatch".into())); }
+        if Self::decode_fence(&coordinator, ARTIFACT_CAS_COORDINATOR_DOMAIN_V1, false)?.0 != coordinator_id {
+            return Err(AuthorityError::Store("artifact CAS coordinator identity mismatch".into()));
+        }
         let space_root = self.root.join(hex_lower(&space_digest(space_id)?.0));
         tokio::fs::create_dir_all(&space_root).await.map_err(|_| AuthorityError::Store("artifact CAS filesystem space create failed".into()))?;
         Self::validate_directory(&space_root)?;
         let _fence = self.acquire_file_fence(&space_root.join("fence.lock"), context).await?;
         let path = space_root.join("fence-v1");
         let current = match std::fs::symlink_metadata(&path) {
-            Ok(_) => { let (current_id, current_epoch) = Self::decode_fence(&Self::read_fence(&path)?, ARTIFACT_CAS_PHYSICAL_FENCE_DOMAIN_V1, true)?; if current_id != coordinator_id { return Err(AuthorityError::Store("artifact CAS coordinator identity mismatch".into())); } current_epoch }
+            Ok(_) => {
+                let (current_id, current_epoch) = Self::decode_fence(&Self::read_fence(&path)?, ARTIFACT_CAS_PHYSICAL_FENCE_DOMAIN_V1, true)?;
+                if current_id != coordinator_id {
+                    return Err(AuthorityError::Store("artifact CAS coordinator identity mismatch".into()));
+                }
+                current_epoch
+            }
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => 0,
             Err(_) => return Err(AuthorityError::Store("artifact CAS filesystem physical epoch read failed".into())),
         };
-        if epoch > current { Self::write_fence(&path, &Self::encode_fence(ARTIFACT_CAS_PHYSICAL_FENCE_DOMAIN_V1, coordinator_id, Some(epoch)))?; }
+        if epoch > current {
+            Self::write_fence(&path, &Self::encode_fence(ARTIFACT_CAS_PHYSICAL_FENCE_DOMAIN_V1, coordinator_id, Some(epoch)))?;
+        }
         context.checkpoint()
     }
 
@@ -997,7 +1076,9 @@ impl ArtifactChunkCasStorage for FsArtifactChunkCasStorage {
         let _physical_fence = self.acquire_file_fence(&space_root.join("fence.lock"), context).await?;
         let metadata = Self::read_fence(&space_root.join("fence-v1"))?;
         let (coordinator_id, physical_epoch) = Self::decode_fence(&metadata, ARTIFACT_CAS_PHYSICAL_FENCE_DOMAIN_V1, true)?;
-        if &coordinator_id != fence.coordinator_id() || physical_epoch != fence.physical_epoch() { return Err(AuthorityError::Store("artifact CAS deletion fence is stale".into())); }
+        if &coordinator_id != fence.coordinator_id() || physical_epoch != fence.physical_epoch() {
+            return Err(AuthorityError::Store("artifact CAS deletion fence is stale".into()));
+        }
         self.validate_object_parents(key)?;
         let object_path = self.object_path(key)?;
         Self::reject_symlink(&object_path)?;
@@ -1066,23 +1147,31 @@ impl SqliteArtifactChunkCasStorage {
 impl ArtifactChunkCasStorage for SqliteArtifactChunkCasStorage {
     async fn configure_coordinator(&self, coordinator_id: [u8; 32], context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()?;
-        if coordinator_id == [0; 32] { return Err(AuthorityError::Store("artifact CAS coordinator identity is invalid".into())); }
+        if coordinator_id == [0; 32] {
+            return Err(AuthorityError::Store("artifact CAS coordinator identity is invalid".into()));
+        }
         let connection = self.connection.clone();
         tokio::task::spawn_blocking(move || -> Result<(), AuthorityError> {
             let mut connection = connection.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             let tx = connection.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate).map_err(|_| AuthorityError::Store("artifact CAS SQLite transaction failed".into()))?;
             tx.execute("INSERT OR IGNORE INTO hub_artifact_cas_coordinator(singleton, coordinator_id) VALUES (1, ?1)", [coordinator_id.as_slice()]).map_err(|_| AuthorityError::Store("artifact CAS SQLite coordinator write failed".into()))?;
             let current: Vec<u8> = tx.query_row("SELECT coordinator_id FROM hub_artifact_cas_coordinator WHERE singleton = 1", [], |row| row.get(0)).map_err(|_| AuthorityError::Store("artifact CAS SQLite coordinator read failed".into()))?;
-            if current != coordinator_id { return Err(AuthorityError::Store("artifact CAS coordinator identity mismatch".into())); }
+            if current != coordinator_id {
+                return Err(AuthorityError::Store("artifact CAS coordinator identity mismatch".into()));
+            }
             tx.commit().map_err(|_| AuthorityError::Store("artifact CAS SQLite commit failed".into()))?;
             Ok(())
-        }).await.map_err(|_| AuthorityError::Store("artifact CAS SQLite worker failed".into()))??;
+        })
+        .await
+        .map_err(|_| AuthorityError::Store("artifact CAS SQLite worker failed".into()))??;
         context.checkpoint()
     }
 
     async fn advance_physical_epoch(&self, coordinator_id: [u8; 32], space_id: &str, epoch: u64, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()?;
-        if epoch == 0 { return Err(AuthorityError::Store("artifact CAS physical epoch is invalid".into())); }
+        if epoch == 0 {
+            return Err(AuthorityError::Store("artifact CAS physical epoch is invalid".into()));
+        }
         let connection = self.connection.clone();
         let space = space_digest(space_id)?.0.to_vec();
         let epoch = i64::try_from(epoch).map_err(|_| AuthorityError::Store("artifact CAS physical epoch overflow".into()))?;
@@ -1113,29 +1202,28 @@ impl ArtifactChunkCasStorage for SqliteArtifactChunkCasStorage {
             use rusqlite::OptionalExtension as _;
             let mut connection = connection.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             let transaction = connection.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate).map_err(|_| AuthorityError::Store("artifact CAS SQLite transaction failed".to_string()))?;
-            let inserted = transaction.execute(
-                "INSERT OR IGNORE INTO hub_artifact_cas_object(space_digest, kind, object_digest, bytes, byte_length) VALUES (?1, ?2, ?3, ?4, ?5)",
-                rusqlite::params![tenant, kind, digest, expected, length],
-            ).map_err(|_| AuthorityError::Store("artifact CAS SQLite insert failed".to_string()))? == 1;
-            let stored_length: Option<i64> = transaction.query_row(
-                "SELECT byte_length FROM hub_artifact_cas_object WHERE space_digest = ?1 AND kind = ?2 AND object_digest = ?3",
-                rusqlite::params![tenant, kind, digest],
-                |row| row.get(0),
-            ).optional().map_err(|_| AuthorityError::Store("artifact CAS SQLite length read failed".to_string()))?;
+            let inserted = transaction
+                .execute("INSERT OR IGNORE INTO hub_artifact_cas_object(space_digest, kind, object_digest, bytes, byte_length) VALUES (?1, ?2, ?3, ?4, ?5)", rusqlite::params![tenant, kind, digest, expected, length])
+                .map_err(|_| AuthorityError::Store("artifact CAS SQLite insert failed".to_string()))?
+                == 1;
+            let stored_length: Option<i64> = transaction
+                .query_row("SELECT byte_length FROM hub_artifact_cas_object WHERE space_digest = ?1 AND kind = ?2 AND object_digest = ?3", rusqlite::params![tenant, kind, digest], |row| row.get(0))
+                .optional()
+                .map_err(|_| AuthorityError::Store("artifact CAS SQLite length read failed".to_string()))?;
             if stored_length != Some(length) {
                 return Err(AuthorityError::Store("artifact CAS immutable key collision".to_string()));
             }
-            let stored: Vec<u8> = transaction.query_row(
-                "SELECT bytes FROM hub_artifact_cas_object WHERE space_digest = ?1 AND kind = ?2 AND object_digest = ?3",
-                rusqlite::params![tenant, kind, digest],
-                |row| row.get(0),
-            ).map_err(|_| AuthorityError::Store("artifact CAS SQLite object read failed".to_string()))?;
+            let stored: Vec<u8> = transaction
+                .query_row("SELECT bytes FROM hub_artifact_cas_object WHERE space_digest = ?1 AND kind = ?2 AND object_digest = ?3", rusqlite::params![tenant, kind, digest], |row| row.get(0))
+                .map_err(|_| AuthorityError::Store("artifact CAS SQLite object read failed".to_string()))?;
             if stored != expected {
                 return Err(AuthorityError::Store("artifact CAS immutable key collision".to_string()));
             }
             transaction.commit().map_err(|_| AuthorityError::Store("artifact CAS SQLite commit failed".to_string()))?;
             Ok(if inserted { ArtifactCasPutOutcome::Inserted } else { ArtifactCasPutOutcome::AlreadyPresent })
-        }).await.map_err(|_| AuthorityError::Store("artifact CAS SQLite worker failed".to_string()))??;
+        })
+        .await
+        .map_err(|_| AuthorityError::Store("artifact CAS SQLite worker failed".to_string()))??;
         context.checkpoint()?;
         Ok(outcome)
     }
@@ -1150,20 +1238,20 @@ impl ArtifactChunkCasStorage for SqliteArtifactChunkCasStorage {
         let bytes = tokio::task::spawn_blocking(move || -> Result<Vec<u8>, AuthorityError> {
             use rusqlite::OptionalExtension as _;
             let connection = connection.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            let length: i64 = connection.query_row(
-                "SELECT byte_length FROM hub_artifact_cas_object WHERE space_digest = ?1 AND kind = ?2 AND object_digest = ?3",
-                rusqlite::params![tenant, kind, digest],
-                |row| row.get(0),
-            ).optional().map_err(|_| AuthorityError::Store("artifact CAS SQLite length read failed".to_string()))?.ok_or_else(|| AuthorityError::Store("artifact CAS object not found".to_string()))?;
+            let length: i64 = connection
+                .query_row("SELECT byte_length FROM hub_artifact_cas_object WHERE space_digest = ?1 AND kind = ?2 AND object_digest = ?3", rusqlite::params![tenant, kind, digest], |row| row.get(0))
+                .optional()
+                .map_err(|_| AuthorityError::Store("artifact CAS SQLite length read failed".to_string()))?
+                .ok_or_else(|| AuthorityError::Store("artifact CAS object not found".to_string()))?;
             if length < 0 || usize::try_from(length).ok().is_none_or(|length| length > maximum) {
                 return Err(AuthorityError::ResourceLimit("artifact CAS object byte"));
             }
-            connection.query_row(
-                "SELECT bytes FROM hub_artifact_cas_object WHERE space_digest = ?1 AND kind = ?2 AND object_digest = ?3",
-                rusqlite::params![tenant, kind, digest],
-                |row| row.get(0),
-            ).map_err(|_| AuthorityError::Store("artifact CAS SQLite object read failed".to_string()))
-        }).await.map_err(|_| AuthorityError::Store("artifact CAS SQLite worker failed".to_string()))??;
+            connection
+                .query_row("SELECT bytes FROM hub_artifact_cas_object WHERE space_digest = ?1 AND kind = ?2 AND object_digest = ?3", rusqlite::params![tenant, kind, digest], |row| row.get(0))
+                .map_err(|_| AuthorityError::Store("artifact CAS SQLite object read failed".to_string()))
+        })
+        .await
+        .map_err(|_| AuthorityError::Store("artifact CAS SQLite worker failed".to_string()))??;
         validate_object(key, &bytes)?;
         context.checkpoint()?;
         Ok(bytes)
@@ -1184,15 +1272,22 @@ impl ArtifactChunkCasStorage for SqliteArtifactChunkCasStorage {
             use rusqlite::OptionalExtension as _;
             let mut connection = connection.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             let transaction = connection.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate).map_err(|_| AuthorityError::Store("artifact CAS SQLite transaction failed".into()))?;
-            let current: Option<i64> = transaction.query_row("SELECT physical_epoch FROM hub_artifact_cas_space_fence WHERE coordinator_id = ?1 AND space_digest = ?2", rusqlite::params![coordinator_id.as_slice(), tenant], |row| row.get(0)).optional().map_err(|_| AuthorityError::Store("artifact CAS SQLite physical epoch read failed".into()))?;
-            if current != Some(physical_epoch) { return Err(AuthorityError::Store("artifact CAS deletion fence is stale".into())); }
-            let deleted = transaction.execute(
-                "DELETE FROM hub_artifact_cas_object WHERE space_digest = ?1 AND kind = ?2 AND object_digest = ?3",
-                rusqlite::params![tenant, kind, digest],
-            ).map_err(|_| AuthorityError::Store("artifact CAS SQLite delete failed".to_string()))? == 1;
+            let current: Option<i64> = transaction
+                .query_row("SELECT physical_epoch FROM hub_artifact_cas_space_fence WHERE coordinator_id = ?1 AND space_digest = ?2", rusqlite::params![coordinator_id.as_slice(), tenant], |row| row.get(0))
+                .optional()
+                .map_err(|_| AuthorityError::Store("artifact CAS SQLite physical epoch read failed".into()))?;
+            if current != Some(physical_epoch) {
+                return Err(AuthorityError::Store("artifact CAS deletion fence is stale".into()));
+            }
+            let deleted = transaction
+                .execute("DELETE FROM hub_artifact_cas_object WHERE space_digest = ?1 AND kind = ?2 AND object_digest = ?3", rusqlite::params![tenant, kind, digest])
+                .map_err(|_| AuthorityError::Store("artifact CAS SQLite delete failed".to_string()))?
+                == 1;
             transaction.commit().map_err(|_| AuthorityError::Store("artifact CAS SQLite commit failed".into()))?;
             Ok(deleted)
-        }).await.map_err(|_| AuthorityError::Store("artifact CAS SQLite worker failed".to_string()))??;
+        })
+        .await
+        .map_err(|_| AuthorityError::Store("artifact CAS SQLite worker failed".to_string()))??;
         Ok(if deleted { ArtifactCasDeleteOutcome::Deleted } else { ArtifactCasDeleteOutcome::Missing })
     }
 }
@@ -1208,7 +1303,8 @@ impl PostgresArtifactChunkCasStorage {
     /// 🔌️ Connects and bootstraps the dedicated CAS table.
     pub async fn connect(database_url: &str) -> Result<Self, AuthorityError> {
         let pool = sqlx_postgres::PgPoolOptions::new().max_connections(16).connect(database_url).await.map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL connect failed".to_string()))?;
-        sqlx_core::query::query("CREATE TABLE IF NOT EXISTS hub_artifact_cas_object (
+        sqlx_core::query::query(
+            "CREATE TABLE IF NOT EXISTS hub_artifact_cas_object (
             space_digest BYTEA NOT NULL CHECK(octet_length(space_digest) = 32),
             kind TEXT NOT NULL CHECK(kind IN ('chunk', 'manifest')),
             object_digest BYTEA NOT NULL CHECK(octet_length(object_digest) = 32),
@@ -1217,8 +1313,15 @@ impl PostgresArtifactChunkCasStorage {
             PRIMARY KEY(space_digest, kind, object_digest),
             CHECK(byte_length = octet_length(bytes)),
             CHECK((kind = 'chunk' AND byte_length BETWEEN 1 AND 262144) OR (kind = 'manifest' AND byte_length BETWEEN 1 AND 65536))
-        )").execute(&pool).await.map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL schema failed".to_string()))?;
-        sqlx_core::query::query("CREATE TABLE IF NOT EXISTS hub_artifact_cas_coordinator (singleton BOOLEAN PRIMARY KEY DEFAULT TRUE CHECK(singleton), coordinator_id BYTEA NOT NULL CHECK(octet_length(coordinator_id) = 32))").execute(&pool).await.map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL coordinator schema failed".into()))?;
+        )",
+        )
+        .execute(&pool)
+        .await
+        .map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL schema failed".to_string()))?;
+        sqlx_core::query::query("CREATE TABLE IF NOT EXISTS hub_artifact_cas_coordinator (singleton BOOLEAN PRIMARY KEY DEFAULT TRUE CHECK(singleton), coordinator_id BYTEA NOT NULL CHECK(octet_length(coordinator_id) = 32))")
+            .execute(&pool)
+            .await
+            .map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL coordinator schema failed".into()))?;
         sqlx_core::query::query("CREATE TABLE IF NOT EXISTS hub_artifact_cas_space_fence (coordinator_id BYTEA NOT NULL CHECK(octet_length(coordinator_id) = 32), space_digest BYTEA NOT NULL CHECK(octet_length(space_digest) = 32), physical_epoch BIGINT NOT NULL CHECK(physical_epoch >= 1), updated_at_ms BIGINT NOT NULL, PRIMARY KEY(coordinator_id, space_digest))").execute(&pool).await.map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL fence schema failed".into()))?;
         Ok(Self { pool })
     }
@@ -1228,23 +1331,41 @@ impl PostgresArtifactChunkCasStorage {
 impl ArtifactChunkCasStorage for PostgresArtifactChunkCasStorage {
     async fn configure_coordinator(&self, coordinator_id: [u8; 32], context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()?;
-        if coordinator_id == [0; 32] { return Err(AuthorityError::Store("artifact CAS coordinator identity is invalid".into())); }
+        if coordinator_id == [0; 32] {
+            return Err(AuthorityError::Store("artifact CAS coordinator identity is invalid".into()));
+        }
         let mut transaction = self.pool.begin().await.map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL transaction failed".into()))?;
-        sqlx_core::query::query("INSERT INTO hub_artifact_cas_coordinator(singleton, coordinator_id) VALUES (TRUE, $1) ON CONFLICT(singleton) DO NOTHING").bind(coordinator_id.as_slice()).execute(&mut *transaction).await.map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL coordinator write failed".into()))?;
-        let (current,): (Vec<u8>,) = sqlx_core::query_as::query_as("SELECT coordinator_id FROM hub_artifact_cas_coordinator WHERE singleton FOR UPDATE").fetch_one(&mut *transaction).await.map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL coordinator read failed".into()))?;
-        if current != coordinator_id { return Err(AuthorityError::Store("artifact CAS coordinator identity mismatch".into())); }
+        sqlx_core::query::query("INSERT INTO hub_artifact_cas_coordinator(singleton, coordinator_id) VALUES (TRUE, $1) ON CONFLICT(singleton) DO NOTHING")
+            .bind(coordinator_id.as_slice())
+            .execute(&mut *transaction)
+            .await
+            .map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL coordinator write failed".into()))?;
+        let (current,): (Vec<u8>,) = sqlx_core::query_as::query_as("SELECT coordinator_id FROM hub_artifact_cas_coordinator WHERE singleton FOR UPDATE")
+            .fetch_one(&mut *transaction)
+            .await
+            .map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL coordinator read failed".into()))?;
+        if current != coordinator_id {
+            return Err(AuthorityError::Store("artifact CAS coordinator identity mismatch".into()));
+        }
         transaction.commit().await.map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL commit failed".into()))?;
         Ok(())
     }
 
     async fn advance_physical_epoch(&self, coordinator_id: [u8; 32], space_id: &str, epoch: u64, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()?;
-        if epoch == 0 { return Err(AuthorityError::Store("artifact CAS physical epoch is invalid".into())); }
+        if epoch == 0 {
+            return Err(AuthorityError::Store("artifact CAS physical epoch is invalid".into()));
+        }
         let tenant = space_digest(space_id)?.0.to_vec();
         let epoch = i64::try_from(epoch).map_err(|_| AuthorityError::Store("artifact CAS physical epoch overflow".into()))?;
         let mut transaction = self.pool.begin().await.map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL transaction failed".into()))?;
-        let (current,): (Vec<u8>,) = sqlx_core::query_as::query_as("SELECT coordinator_id FROM hub_artifact_cas_coordinator WHERE singleton FOR UPDATE").fetch_one(&mut *transaction).await.map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL coordinator read failed".into()))?;
-        if current != coordinator_id { return Err(AuthorityError::Store("artifact CAS coordinator identity mismatch".into())); }
+        let (current,): (Vec<u8>,) = sqlx_core::query_as::query_as("SELECT coordinator_id FROM hub_artifact_cas_coordinator WHERE singleton FOR UPDATE")
+            .fetch_one(&mut *transaction)
+            .await
+            .map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL coordinator read failed".into()))?;
+        if current != coordinator_id {
+            return Err(AuthorityError::Store("artifact CAS coordinator identity mismatch".into()));
+        }
         sqlx_core::query::query("INSERT INTO hub_artifact_cas_space_fence(coordinator_id, space_digest, physical_epoch, updated_at_ms) VALUES ($1,$2,$3,$4) ON CONFLICT(coordinator_id, space_digest) DO UPDATE SET physical_epoch = GREATEST(hub_artifact_cas_space_fence.physical_epoch, excluded.physical_epoch), updated_at_ms = excluded.updated_at_ms").bind(coordinator_id.as_slice()).bind(tenant).bind(epoch).bind(i64::try_from(context.now_ms()).unwrap_or(i64::MAX)).execute(&mut *transaction).await.map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL physical epoch advance failed".into()))?;
         transaction.commit().await.map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL commit failed".into()))?;
         context.checkpoint()
@@ -1258,9 +1379,23 @@ impl ArtifactChunkCasStorage for PostgresArtifactChunkCasStorage {
         let length = i64::try_from(bytes.len()).map_err(|_| AuthorityError::ResourceLimit("artifact CAS object byte"))?;
         let mut transaction = self.pool.begin().await.map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL transaction failed".to_string()))?;
         let inserted = sqlx_core::query::query("INSERT INTO hub_artifact_cas_object(space_digest, kind, object_digest, bytes, byte_length) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING")
-            .bind(&tenant).bind(key.kind.name()).bind(&digest).bind(bytes).bind(length).execute(&mut *transaction).await.map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL insert failed".to_string()))?.rows_affected() == 1;
+            .bind(&tenant)
+            .bind(key.kind.name())
+            .bind(&digest)
+            .bind(bytes)
+            .bind(length)
+            .execute(&mut *transaction)
+            .await
+            .map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL insert failed".to_string()))?
+            .rows_affected()
+            == 1;
         let row: (i64, Vec<u8>) = sqlx_core::query_as::query_as("SELECT byte_length, bytes FROM hub_artifact_cas_object WHERE space_digest = $1 AND kind = $2 AND object_digest = $3")
-            .bind(&tenant).bind(key.kind.name()).bind(&digest).fetch_one(&mut *transaction).await.map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL object read failed".to_string()))?;
+            .bind(&tenant)
+            .bind(key.kind.name())
+            .bind(&digest)
+            .fetch_one(&mut *transaction)
+            .await
+            .map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL object read failed".to_string()))?;
         if row.0 != length || row.1 != bytes {
             return Err(AuthorityError::Store("artifact CAS immutable key collision".to_string()));
         }
@@ -1274,12 +1409,22 @@ impl ArtifactChunkCasStorage for PostgresArtifactChunkCasStorage {
         let tenant = space_digest(&key.space_id)?.0.to_vec();
         let digest = key.digest.0.to_vec();
         let length: (i64,) = sqlx_core::query_as::query_as("SELECT byte_length FROM hub_artifact_cas_object WHERE space_digest = $1 AND kind = $2 AND object_digest = $3")
-            .bind(&tenant).bind(key.kind.name()).bind(&digest).fetch_one(&self.pool).await.map_err(|_| AuthorityError::Store("artifact CAS object not found".to_string()))?;
+            .bind(&tenant)
+            .bind(key.kind.name())
+            .bind(&digest)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|_| AuthorityError::Store("artifact CAS object not found".to_string()))?;
         if length.0 < 0 || usize::try_from(length.0).ok().is_none_or(|length| length > key.kind.maximum_bytes()) {
             return Err(AuthorityError::ResourceLimit("artifact CAS object byte"));
         }
         let row: (Vec<u8>,) = sqlx_core::query_as::query_as("SELECT bytes FROM hub_artifact_cas_object WHERE space_digest = $1 AND kind = $2 AND object_digest = $3")
-            .bind(&tenant).bind(key.kind.name()).bind(&digest).fetch_one(&self.pool).await.map_err(|_| AuthorityError::Store("artifact CAS object not found".to_string()))?;
+            .bind(&tenant)
+            .bind(key.kind.name())
+            .bind(&digest)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|_| AuthorityError::Store("artifact CAS object not found".to_string()))?;
         validate_object(key, &row.0)?;
         context.checkpoint()?;
         Ok(row.0)
@@ -1293,10 +1438,24 @@ impl ArtifactChunkCasStorage for PostgresArtifactChunkCasStorage {
         let tenant = space_digest(&key.space_id)?.0.to_vec();
         let digest = key.digest.0.to_vec();
         let mut transaction = self.pool.begin().await.map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL transaction failed".into()))?;
-        let current: Option<(i64,)> = sqlx_core::query_as::query_as("SELECT physical_epoch FROM hub_artifact_cas_space_fence WHERE coordinator_id = $1 AND space_digest = $2 FOR UPDATE").bind(fence.coordinator_id().as_slice()).bind(&tenant).fetch_optional(&mut *transaction).await.map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL physical epoch read failed".into()))?;
-        if current != Some((i64::try_from(fence.physical_epoch()).map_err(|_| AuthorityError::Store("artifact CAS physical epoch overflow".into()))?,)) { return Err(AuthorityError::Store("artifact CAS deletion fence is stale".into())); }
+        let current: Option<(i64,)> = sqlx_core::query_as::query_as("SELECT physical_epoch FROM hub_artifact_cas_space_fence WHERE coordinator_id = $1 AND space_digest = $2 FOR UPDATE")
+            .bind(fence.coordinator_id().as_slice())
+            .bind(&tenant)
+            .fetch_optional(&mut *transaction)
+            .await
+            .map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL physical epoch read failed".into()))?;
+        if current != Some((i64::try_from(fence.physical_epoch()).map_err(|_| AuthorityError::Store("artifact CAS physical epoch overflow".into()))?,)) {
+            return Err(AuthorityError::Store("artifact CAS deletion fence is stale".into()));
+        }
         let deleted = sqlx_core::query::query("DELETE FROM hub_artifact_cas_object WHERE space_digest = $1 AND kind = $2 AND object_digest = $3")
-            .bind(&tenant).bind(key.kind.name()).bind(&digest).execute(&mut *transaction).await.map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL delete failed".to_string()))?.rows_affected() == 1;
+            .bind(&tenant)
+            .bind(key.kind.name())
+            .bind(&digest)
+            .execute(&mut *transaction)
+            .await
+            .map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL delete failed".to_string()))?
+            .rows_affected()
+            == 1;
         transaction.commit().await.map_err(|_| AuthorityError::Store("artifact CAS PostgreSQL commit failed".into()))?;
         Ok(if deleted { ArtifactCasDeleteOutcome::Deleted } else { ArtifactCasDeleteOutcome::Missing })
     }
@@ -1327,24 +1486,39 @@ impl Neo4jArtifactChunkCasStorage {
 impl ArtifactChunkCasStorage for Neo4jArtifactChunkCasStorage {
     async fn configure_coordinator(&self, coordinator_id: [u8; 32], context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()?;
-        if coordinator_id == [0; 32] { return Err(AuthorityError::Store("artifact CAS coordinator identity is invalid".into())); }
-        let mut result = self.graph.execute(neo4rs::query("MERGE (c:ArtifactCasCoordinator {id: 'singleton'}) ON CREATE SET c.coordinatorId = $coordinator RETURN c.coordinatorId AS coordinator").param("coordinator", coordinator_id.to_vec())).await.map_err(|_| AuthorityError::Store("artifact CAS Neo4j coordinator write failed".into()))?;
+        if coordinator_id == [0; 32] {
+            return Err(AuthorityError::Store("artifact CAS coordinator identity is invalid".into()));
+        }
+        let mut result = self
+            .graph
+            .execute(neo4rs::query("MERGE (c:ArtifactCasCoordinator {id: 'singleton'}) ON CREATE SET c.coordinatorId = $coordinator RETURN c.coordinatorId AS coordinator").param("coordinator", coordinator_id.to_vec()))
+            .await
+            .map_err(|_| AuthorityError::Store("artifact CAS Neo4j coordinator write failed".into()))?;
         let row = result.next().await.map_err(|_| AuthorityError::Store("artifact CAS Neo4j coordinator read failed".into()))?.ok_or_else(|| AuthorityError::Store("artifact CAS Neo4j coordinator returned no row".into()))?;
         let current: neo4rs::BoltBytes = row.get("coordinator").map_err(|_| AuthorityError::Store("artifact CAS Neo4j coordinator decode failed".into()))?;
-        if current.value.as_ref() != coordinator_id { return Err(AuthorityError::Store("artifact CAS coordinator identity mismatch".into())); }
+        if current.value.as_ref() != coordinator_id {
+            return Err(AuthorityError::Store("artifact CAS coordinator identity mismatch".into()));
+        }
         context.checkpoint()
     }
 
     async fn advance_physical_epoch(&self, coordinator_id: [u8; 32], space_id: &str, epoch: u64, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()?;
-        if epoch == 0 { return Err(AuthorityError::Store("artifact CAS physical epoch is invalid".into())); }
+        if epoch == 0 {
+            return Err(AuthorityError::Store("artifact CAS physical epoch is invalid".into()));
+        }
         let space = hex_lower(&space_digest(space_id)?.0);
         let key = format!("{}:{space}", hex_lower(&coordinator_id));
         let mut transaction = self.graph.start_txn().await.map_err(|_| AuthorityError::Store("artifact CAS Neo4j transaction failed".into()))?;
-        let mut identity = transaction.execute(neo4rs::query("MATCH (c:ArtifactCasCoordinator {id: 'singleton'}) SET c.lockNonce = coalesce(c.lockNonce, 0) + 1 RETURN c.coordinatorId AS coordinator")).await.map_err(|_| AuthorityError::Store("artifact CAS Neo4j coordinator read failed".into()))?;
+        let mut identity = transaction
+            .execute(neo4rs::query("MATCH (c:ArtifactCasCoordinator {id: 'singleton'}) SET c.lockNonce = coalesce(c.lockNonce, 0) + 1 RETURN c.coordinatorId AS coordinator"))
+            .await
+            .map_err(|_| AuthorityError::Store("artifact CAS Neo4j coordinator read failed".into()))?;
         let row = identity.next(transaction.handle()).await.map_err(|_| AuthorityError::Store("artifact CAS Neo4j coordinator read failed".into()))?.ok_or_else(|| AuthorityError::Store("artifact CAS coordinator is not configured".into()))?;
         let current: neo4rs::BoltBytes = row.get("coordinator").map_err(|_| AuthorityError::Store("artifact CAS Neo4j coordinator decode failed".into()))?;
-        if current.value.as_ref() != coordinator_id { return Err(AuthorityError::Store("artifact CAS coordinator identity mismatch".into())); }
+        if current.value.as_ref() != coordinator_id {
+            return Err(AuthorityError::Store("artifact CAS coordinator identity mismatch".into()));
+        }
         drop(identity);
         transaction.run(neo4rs::query("MERGE (f:ArtifactCasSpaceFence {key: $key}) ON CREATE SET f.coordinatorId = $coordinator, f.spaceDigest = $space, f.physicalEpoch = $epoch, f.updatedAtMs = $now ON MATCH SET f.physicalEpoch = CASE WHEN f.physicalEpoch < $epoch THEN $epoch ELSE f.physicalEpoch END, f.updatedAtMs = $now").param("key", key).param("coordinator", coordinator_id.to_vec()).param("space", space).param("epoch", i64::try_from(epoch).map_err(|_| AuthorityError::Store("artifact CAS physical epoch overflow".into()))?).param("now", i64::try_from(context.now_ms()).unwrap_or(i64::MAX))).await.map_err(|_| AuthorityError::Store("artifact CAS Neo4j physical epoch advance failed".into()))?;
         transaction.commit().await.map_err(|_| AuthorityError::Store("artifact CAS Neo4j commit failed".into()))?;
@@ -1370,7 +1544,11 @@ impl ArtifactChunkCasStorage for Neo4jArtifactChunkCasStorage {
 
     async fn get(&self, key: &ArtifactCasObjectKey, context: &OperationContext<'_>) -> Result<Vec<u8>, AuthorityError> {
         context.checkpoint()?;
-        let mut result = self.graph.execute(neo4rs::query("MATCH (o:ArtifactCasObject {key: $key}) RETURN o.byteLength AS length, o.bytes AS bytes").param("key", Self::key(key)?)).await.map_err(|_| AuthorityError::Store("artifact CAS Neo4j read failed".to_string()))?;
+        let mut result = self
+            .graph
+            .execute(neo4rs::query("MATCH (o:ArtifactCasObject {key: $key}) RETURN o.byteLength AS length, o.bytes AS bytes").param("key", Self::key(key)?))
+            .await
+            .map_err(|_| AuthorityError::Store("artifact CAS Neo4j read failed".to_string()))?;
         let row = result.next().await.map_err(|_| AuthorityError::Store("artifact CAS Neo4j read failed".to_string()))?.ok_or_else(|| AuthorityError::Store("artifact CAS object not found".to_string()))?;
         let length: i64 = row.get("length").map_err(|_| AuthorityError::Store("artifact CAS Neo4j length decode failed".to_string()))?;
         if length < 0 || usize::try_from(length).ok().is_none_or(|length| length > key.kind.maximum_bytes()) {
@@ -1574,8 +1752,12 @@ mod tests {
     }
 
     impl AuthorityOperationControl for TestControl {
-        fn now_ms(&self) -> u64 { self.now.load(Ordering::SeqCst) }
-        fn is_cancelled(&self) -> bool { self.cancelled.load(Ordering::SeqCst) }
+        fn now_ms(&self) -> u64 {
+            self.now.load(Ordering::SeqCst)
+        }
+        fn is_cancelled(&self) -> bool {
+            self.cancelled.load(Ordering::SeqCst)
+        }
         fn report(&self, _: AuthorityProgress) {}
     }
 
@@ -1636,12 +1818,15 @@ mod tests {
     fn artifact_chunk_cas_ownership_codec_is_canonical_scoped_and_locator_exact() {
         let pair = ArtifactPair { pack: bytes(ARTIFACT_CAS_CHUNK_BYTES + 1), spr: bytes(1) };
         let mut checkpoint = ArtifactCheckpoint {
-            scope: DocumentScope::new("space-a", "document-a"), checkpoint_id: ArtifactHash([3; 32]), parent_checkpoint_id: None,
+            scope: DocumentScope::new("space-a", "document-a"),
+            checkpoint_id: ArtifactHash([3; 32]),
+            parent_checkpoint_id: None,
             descriptor_digest_v1: ArtifactHash([4; 32]),
             baseline_frontier: directory::os_directory::ArtifactFrontier { document_id: "document-a".into(), head_edit_ordinal: 1, head_edit_id: "edit-1".into(), last_commit_seq: 1, chain_hash: ArtifactHash([5; 32]) },
             pack: directory::os_directory::ArtifactBlobRef { sha256: ArtifactHash(Sha256::digest(&pair.pack)), byte_length: pair.pack.len() as u64, storage_key: String::new() },
             spr: directory::os_directory::ArtifactBlobRef { sha256: ArtifactHash(Sha256::digest(&pair.spr)), byte_length: pair.spr.len() as u64, storage_key: String::new() },
-            aggregate_sha256: ArtifactHash([6; 32]), published_at_ms: 1,
+            aggregate_sha256: ArtifactHash([6; 32]),
+            published_at_ms: 1,
         };
         let plan = prepare_artifact_cas_ownership_v1(&checkpoint, &pair).expect("ownership plan");
         let encoded = encode_artifact_cas_ownership_v1(&plan).expect("ownership encoding");
@@ -1702,7 +1887,9 @@ mod tests {
     #[tokio::test]
     async fn artifact_chunk_cas_filesystem_roundtrip_restart_and_collision_checks() {
         let root = std::env::temp_dir().join(format!("semio-artifact-cas-{}", std::process::id()));
-        if root.exists() { std::fs::remove_dir_all(&root).expect("clean stale fixture") }
+        if root.exists() {
+            std::fs::remove_dir_all(&root).expect("clean stale fixture")
+        }
         let storage = Arc::new(FsArtifactChunkCasStorage::open(&root).await.expect("open filesystem CAS"));
         storage_roundtrip_law(storage).await;
         let reopened = Arc::new(FsArtifactChunkCasStorage::open(&root).await.expect("reopen filesystem CAS"));
@@ -1737,28 +1924,20 @@ mod tests {
             return;
         }
         let root = std::env::temp_dir().join(format!("semio-artifact-cas-process-fence-{}", std::process::id()));
-        if root.exists() { std::fs::remove_dir_all(&root).expect("clean process fence fixture") }
+        if root.exists() {
+            std::fs::remove_dir_all(&root).expect("clean process fence fixture")
+        }
         let storage = FsArtifactChunkCasStorage::open(&root).await.expect("open parent filesystem CAS");
         let control = control();
         let context = OperationContext::new(10, AuthorityLimits::maximum(), &control);
         storage.configure_coordinator([7; 32], &context).await.expect("configure process coordinator");
         storage.advance_physical_epoch([7; 32], "process-race-space", 1, &context).await.expect("activate parent epoch");
         let raw = b"cross-process-fence";
-        let key = ArtifactCasObjectKey {
-            space_id: "process-race-space".into(),
-            kind: ArtifactCasObjectKind::Chunk,
-            digest: artifact_cas_chunk_id_v1("process-race-space", raw).expect("process object digest"),
-        };
+        let key = ArtifactCasObjectKey { space_id: "process-race-space".into(), kind: ArtifactCasObjectKind::Chunk, digest: artifact_cas_chunk_id_v1("process-race-space", raw).expect("process object digest") };
         storage.put_if_absent(&key, raw, &context).await.expect("store process object");
         let executable = std::env::current_exe().expect("test executable");
         let spawn = |epoch: u64| {
-            std::process::Command::new(&executable)
-                .arg("artifact_chunk_cas_filesystem_process_epoch_fences_stale_delete")
-                .arg("--test-threads=1")
-                .env(ROOT_ENV, &root)
-                .env(EPOCH_ENV, epoch.to_string())
-                .spawn()
-                .expect("spawn filesystem fence child")
+            std::process::Command::new(&executable).arg("artifact_chunk_cas_filesystem_process_epoch_fences_stale_delete").arg("--test-threads=1").env(ROOT_ENV, &root).env(EPOCH_ENV, epoch.to_string()).spawn().expect("spawn filesystem fence child")
         };
         let mut second = spawn(2);
         let mut third = spawn(3);
@@ -1778,13 +1957,19 @@ mod tests {
         use std::os::unix::fs::symlink;
         let root = std::env::temp_dir().join(format!("semio-artifact-cas-symlink-{}", std::process::id()));
         let outside = std::env::temp_dir().join(format!("semio-artifact-cas-symlink-outside-{}", std::process::id()));
-        if root.exists() { std::fs::remove_dir_all(&root).expect("clean symlink root") }
-        if outside.exists() { std::fs::remove_dir_all(&outside).expect("clean symlink outside") }
+        if root.exists() {
+            std::fs::remove_dir_all(&root).expect("clean symlink root")
+        }
+        if outside.exists() {
+            std::fs::remove_dir_all(&outside).expect("clean symlink outside")
+        }
         std::fs::create_dir_all(&outside).expect("create symlink outside");
         let storage = FsArtifactChunkCasStorage::open(&root).await.expect("open symlink fixture CAS");
         let descriptor_test = open_artifact_cas_leaf(&root.join("descriptor-flags"), true, true).expect("open descriptor flag fixture");
         use std::os::fd::AsRawFd as _;
-        unsafe extern "C" { fn fcntl(fd: i32, command: i32, ...) -> i32; }
+        unsafe extern "C" {
+            fn fcntl(fd: i32, command: i32, ...) -> i32;
+        }
         assert_ne!(unsafe { fcntl(descriptor_test.as_raw_fd(), 1) } & 1, 0, "artifact CAS leaf descriptor is close-on-exec");
         drop(descriptor_test);
         let control = control();

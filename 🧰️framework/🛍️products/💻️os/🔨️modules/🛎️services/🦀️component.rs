@@ -41,7 +41,7 @@ use std::task::{Context, Poll, Wake, Waker};
 use semio_framework_actor::{ActorId, PackageId};
 use semio_framework_async::{
     block_on, oneshot, select2, CancelState, CancelToken, ChannelPolicy, Either, HostAsyncRuntime, HostFuture, Lane, OperationContext, OwnedPermit, ProcessKind, ScopeDrainReport, ScopeHandle, ScopeId, ScopeOwner, Semaphore, WorkerPool,
-    WorkerPoolConfig,
+    WorkerPoolConfig, WorkerSubmitErrorKind,
 };
 use semio_framework_job::{
     default_now_us, Generation as JobGeneration, InteractiveJob, InteractiveStage, OperationId, StepOutcome, BACKGROUND_LANE_FUEL, BACKGROUND_LANE_WALL_US, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US,
@@ -690,7 +690,6 @@ impl ComputePool {
     /// enqueue a fresh closure on the context lane. The admission permit spans the whole job. Cancellation is checked
     /// before admission and inside every step, while an absolute deadline cancels the job and returns
     /// [`ComputeError::DeadlineExceeded`].
-    #[cfg(test)]
     pub async fn run_job<J: InteractiveJob + 'static, R: HostAsyncRuntime>(&self, runtime: &R, _scope: &ScopeHandle, ctx: OperationContext, job: J) -> Result<StepOutcome, ComputeError> {
         let lane = Lane::from_context_lane(ctx.lane);
         let Some(permit) = self.acquire_job_permit(runtime, &ctx).await? else { return Ok(StepOutcome::Cancelled) };
@@ -715,18 +714,18 @@ impl ComputePool {
                 return Err(ComputeError::WorkerLost);
             }
         };
-        let (result_tx, result_rx) = oneshot::channel();
-        let state = Arc::new(Mutex::new(ComputeJobDriveState { session, lane, retained_outcome: None, sender: Some(result_tx), _permit: permit }));
+        let (result_tx, result_rx) = oneshot::channel::<Result<StepOutcome, ComputeError>>();
+        let state = Arc::new(Mutex::new(ComputeJobDriveState { session, lane, retained_outcome: None, sender: Some(result_tx), closing: false, _permit: permit }));
         schedule_compute_job_step(&self.pool, state);
         match ctx.deadline_ms {
             Some(deadline_ms) => match select2(result_rx, runtime.sleep_until(deadline_ms)).await {
-                Either::Left(result) => result.map_err(|_| ComputeError::WorkerLost),
+                Either::Left(result) => result.map_err(|_| ComputeError::WorkerLost)?,
                 Either::Right(()) => {
                     ctx.cancel.cancel().await;
                     Err(ComputeError::DeadlineExceeded)
                 }
             },
-            None => result_rx.await.map_err(|_| ComputeError::WorkerLost),
+            None => result_rx.await.map_err(|_| ComputeError::WorkerLost)?,
         }
     }
 
@@ -780,16 +779,15 @@ impl ComputePool {
     }
 }
 
-#[cfg(test)]
-struct ComputeJobDriveState<J> {
+struct ComputeJobDriveState<J: InteractiveJob + 'static> {
     session: semio_framework_job::MountedWorkerJobSession<J>,
     lane: Lane,
     retained_outcome: Option<StepOutcome>,
-    sender: Option<oneshot::Sender<StepOutcome>>,
+    sender: Option<oneshot::Sender<Result<StepOutcome, ComputeError>>>,
+    closing: bool,
     _permit: OwnedPermit,
 }
 
-#[cfg(test)]
 fn compute_job_budget(lane: Lane) -> (InteractiveStage, u64, u64) {
     match lane {
         Lane::Interactive => (InteractiveStage::InteractiveStep, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US),
@@ -799,45 +797,103 @@ fn compute_job_budget(lane: Lane) -> (InteractiveStage, u64, u64) {
     }
 }
 
-#[cfg(test)]
 fn schedule_compute_job_step<J: InteractiveJob + 'static>(pool: &WorkerPool, state: Arc<Mutex<ComputeJobDriveState<J>>>) {
     let next_pool = pool.clone();
     let lane = state.lock().expect("ComputeJobDriveState mutex poisoned").lane;
-    pool.submit(
-        lane,
-        Box::new(move || {
-            let terminal = {
+    let retry_state = state.clone();
+    let job = Box::new(move || {
+            let (terminal, finished) = {
                 let mut state = state.lock().expect("ComputeJobDriveState mutex poisoned");
-                if let Some(outcome) = state.retained_outcome.as_mut() {
+                if state.closing {
+                    let step = state.session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                    (None, matches!(step, semio_framework_job::WorkerJobCloseStep::Complete) && state.session.terminal_is_empty())
+                } else if let Some(outcome) = state.retained_outcome.as_mut() {
                     let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
                     if outcome.terminal_is_empty() {
                         state.retained_outcome = None;
                         let _ = state.session.resume();
                     }
-                    None
+                    (None, false)
                 } else {
                     let lane = state.lane;
                     match state.session.pump_one(&next_pool, lane) {
                         Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
                             let outcome = state.session.take_checked_out_outcome().expect("mounted compute session checked out one exact outcome");
                             if outcome.is_terminal() {
-                                Some((state.sender.take().expect("terminal compute job has a result sender"), outcome))
+                                state.session.begin_close();
+                                state.closing = true;
+                                (Some((state.sender.take().expect("terminal compute job has a result sender"), Ok(outcome))), false)
                             } else {
                                 state.retained_outcome = Some(outcome);
-                                None
+                                (None, false)
                             }
                         }
-                        Ok(_) | Err(_) => None,
+                        Ok(_) => (None, false),
+                        Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(semio_framework_job::WorkerJobSubmitFault::Pool(
+                            WorkerSubmitErrorKind::Contended | WorkerSubmitErrorKind::Saturated,
+                        ))) => (None, false),
+                        Err(_) => {
+                            state.session.begin_close();
+                            state.closing = true;
+                            (state.sender.take().map(|sender| (sender, Err(ComputeError::WorkerLost))), false)
+                        }
                     }
                 }
             };
             if let Some((sender, outcome)) = terminal {
                 let _ = sender.send(outcome);
-            } else {
+            }
+            if !finished {
                 schedule_compute_job_step(&next_pool, state);
             }
-        }),
-    );
+        });
+    match pool.try_submit(lane, job) {
+        Ok(()) => {}
+        Err(error) => match error.kind() {
+            WorkerSubmitErrorKind::Contended | WorkerSubmitErrorKind::Saturated => {
+                let retry_pool = pool.clone();
+                let retained = error.into_job();
+                pool.callback_at(pool.now_ms().saturating_add(1), move || submit_retained_compute_job(retry_pool, lane, retained, retry_state));
+            }
+            WorkerSubmitErrorKind::Shutdown | WorkerSubmitErrorKind::Poisoned => fail_compute_job_state(retry_state),
+        },
+    }
+}
+
+fn submit_retained_compute_job<J: InteractiveJob + 'static>(pool: WorkerPool, lane: Lane, job: semio_framework_async::Job, state: Arc<Mutex<ComputeJobDriveState<J>>>) {
+    match pool.try_submit(lane, job) {
+        Ok(()) => {}
+        Err(error) => match error.kind() {
+            WorkerSubmitErrorKind::Contended | WorkerSubmitErrorKind::Saturated => {
+                let retry = pool.clone();
+                let retained = error.into_job();
+                pool.callback_at(pool.now_ms().saturating_add(1), move || submit_retained_compute_job(retry, lane, retained, state));
+            }
+            WorkerSubmitErrorKind::Shutdown | WorkerSubmitErrorKind::Poisoned => fail_compute_job_state(state),
+        },
+    }
+}
+
+fn fail_compute_job_state<J: InteractiveJob + 'static>(state: Arc<Mutex<ComputeJobDriveState<J>>>) {
+    let mut state = state.lock().expect("ComputeJobDriveState mutex poisoned");
+    if let Some(outcome) = state.retained_outcome.as_mut() {
+        while !outcome.terminal_is_empty() {
+            let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        }
+        state.retained_outcome = None;
+        let _ = state.session.resume();
+    }
+    state.session.begin_close();
+    for _ in 0..semio_framework_job::JOB_PAYLOAD_OPERATION_PAGES.saturating_mul(4).saturating_add(8) {
+        match state.session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+            semio_framework_job::WorkerJobCloseStep::Complete => break,
+            semio_framework_job::WorkerJobCloseStep::Blocked => break,
+            semio_framework_job::WorkerJobCloseStep::Pending { .. } => {}
+        }
+    }
+    if let Some(sender) = state.sender.take() {
+        let _ = sender.send(Err(ComputeError::WorkerLost));
+    }
 }
 //#endregion 🧮️ComputePool
 
@@ -2441,6 +2497,18 @@ mod tests {
         let outcome = pool.run_job(&runtime, &scope, ctx, NeverCompleteComputeJob { closing: false }).await;
         assert_eq!(outcome, Err(ComputeError::DeadlineExceeded), "a non-terminal job must stop at its absolute deadline");
         assert!(cancel.is_cancelled().await, "deadline propagation must cancel the running job");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn stopped_compute_pool_returns_worker_lost_and_releases_the_job_owner() {
+        let runtime = TokioHostRuntime::with_pool(test_pool(1));
+        let workers = test_pool(1);
+        workers.shutdown();
+        let pool = ComputePool::with_pool(1, workers);
+        let scope = runtime.open_scope(ScopeOwner::Service("compute-stopped"), None).await;
+        let ctx = test_ctx(0, scope.cancel.clone()).await;
+        let outcome = pool.run_job(&runtime, &scope, ctx, NeverCompleteComputeJob { closing: false }).await;
+        assert_eq!(outcome, Err(ComputeError::WorkerLost));
     }
 
     /// 🌀️ A self-contained cooperative yield with no tokio `rt`-feature dependency (this crate no

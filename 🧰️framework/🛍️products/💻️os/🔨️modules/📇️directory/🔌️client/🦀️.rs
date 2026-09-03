@@ -1,7 +1,7 @@
 //! 🔌️ Directory hub client (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS,
 //! contract §C2/§C6) — the Rust twin of lane 1-C's TypeScript `DirectoryClient`, talking the SAME
 //! frozen hub HTTP/WS surface: `POST /directory/commands`, `GET /directory/spaces[/{id}]`,
-//! `GET /directory/events`, `GET /directory/ws`, `GET /auth/sessions/me`, `POST /auth/sessions`.
+//! `GET /directory/events`, `GET /directory/socket/v1`, and `GET /auth/sessions/me`.
 //! No concrete HTTP/WS client type ever appears in a public signature here (CLAUDE.md: external
 //! libraries sit behind our own interface) — `DirectoryTransport`/`DirectoryWsConnection` are the
 //! seam, mirroring `🎒️pack/🌐️http`'s `RangeTransport` and this crate's own `🏪️store/🔄️sync`
@@ -18,7 +18,11 @@
 //! (this crate names it nowhere), and every native HTTP call is now admitted onto that crate's
 //! bounded `ComputePool` semaphore instead of an unbounded `std::thread::spawn` per call.
 
-use super::schema::{DirectoryCommand, DirectoryEvent, DirectoryStreamMessage, DocumentView, InviteView, MemberView, SpaceView};
+use super::schema::{
+    DirectoryCommand, DirectoryEvent, DirectoryStreamMessage, DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1,
+    DocumentOpenPackageV1, DocumentOpenPlanV1, DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1,
+    DocumentPlanSocketGrantIntentV1, DocumentScope, DocumentView, InviteView, MemberView, SpaceView,
+};
 use crate::os_dsl::{DslValue, FromValue, ToValue, ValueError};
 use semio_framework_async::OperationContext;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -111,11 +115,11 @@ impl<T> DirectoryConnectionPlatform for T {}
 pub trait DirectoryTransport: DirectoryTransportPlatform {
     type Ws: DirectoryWsConnection;
     async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError>;
-    fn issue_directory_socket_grant(&self, ctx: &OperationContext, url: &str, bearer: &str, timeout_ms: u64) -> Result<HttpResponse, TransportError>;
+    fn issue_socket_grant(&self, ctx: &OperationContext, url: &str, bearer: &str, body: &[u8], timeout_ms: u64) -> Result<HttpResponse, TransportError>;
     fn open_ws(&self, ctx: &OperationContext, url: &str, protocols: &[String], timeout_ms: u64) -> Result<Self::Ws, TransportError>;
 }
 
-/// 🔌️ One open `/directory/ws` connection. Sequential by construction (`DirectoryStream` never
+/// 🔌️ One open `/directory/socket/v1` connection. Sequential by construction (`DirectoryStream` never
 /// calls `send_text`/`try_recv_text` concurrently), so a single stream/sink object suffices — no
 /// split halves needed the way `🏪️store/🔄️sync`'s bidirectional relay requires.
 pub trait DirectoryWsConnection: DirectoryConnectionPlatform {
@@ -264,14 +268,96 @@ pub struct SessionMintResponse {
     pub user_id: String,
 }
 
-#[derive(Clone, FromValue)]
+#[derive(FromValue)]
 #[value(rename_all = "camelCase")]
-struct SocketGrantReceiptV1 {
-    schema: String,
-    protocol: String,
-    grant: String,
-    actor_id: String,
-    expires_at_ms: i64,
+pub struct SocketGrantReceiptV1 {
+    pub schema: String,
+    pub protocol: String,
+    pub grant: String,
+    pub actor_id: String,
+    pub expires_at_ms: i64,
+}
+
+impl Drop for SocketGrantReceiptV1 {
+    fn drop(&mut self) {
+        wipe_string(&mut self.grant);
+    }
+}
+
+/// 🔐 Receipt-free server-selected authority retained by a native document connection.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DocumentSocketAuthorityV1 {
+    pub hub_origin: String,
+    pub expires_at_unix_ms: u64,
+    pub scope: DocumentScope,
+    pub descriptor_digest_v1: String,
+    pub catalog: DocumentOpenCatalogV1,
+    pub package: DocumentOpenPackageV1,
+    pub artifact: DocumentOpenArtifactV1,
+    pub pack_schema_hash: [u8; 32],
+    pub surface: DocumentOpenSurfaceV1,
+    pub grant: DocumentOpenGrantV1,
+    pub checkpoint: Option<DocumentOpenCheckpointV1>,
+    pub revalidation: DocumentOpenRevalidationV1,
+}
+
+impl DocumentSocketAuthorityV1 {
+    pub fn matches_surface(&self, expected: &DocumentSocketSurfaceExpectationV1) -> bool {
+        self.artifact.kind == expected.artifact_kind
+            && self.package.plugin_id == expected.plugin_id
+            && self.package.package_id == expected.package_id
+            && self.package.version == expected.version
+            && self.surface.surface_id == expected.surface_id
+            && self.surface.app_id == expected.app_id
+            && self.surface.window_kind_id == expected.window_kind_id
+            && self.surface.role == expected.role
+            && self.surface.renderer_target == expected.renderer_target
+    }
+}
+
+/// 🎫 One exchanged socket grant and its receipt-free open authority.
+pub struct DocumentSocketAdmissionV1 {
+    pub socket: SocketGrantReceiptV1,
+    pub authority: DocumentSocketAuthorityV1,
+}
+
+/// 🎯 Exact local plugin/surface identity that a server-selected plan must authorize before exchange.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentSocketSurfaceExpectationV1 {
+    pub artifact_kind: String,
+    pub plugin_id: String,
+    pub package_id: String,
+    pub version: String,
+    pub surface_id: String,
+    pub app_id: String,
+    pub window_kind_id: String,
+    pub role: DocumentOpenSurfaceRoleV1,
+    pub renderer_target: DocumentOpenRendererTargetV1,
+}
+
+/// 🧬 Local codec and optional UI selection expected from a server-authoritative open plan.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentSocketExpectationV1 {
+    pub artifact_schema: String,
+    pub pack_schema_hash: [u8; 32],
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub requested_surface_id: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub surface: Option<DocumentSocketSurfaceExpectationV1>,
+}
+
+pub trait HubSocketGrantSource: Send + Sync {
+    fn admit_document_socket(
+        &self,
+        ctx: &OperationContext,
+        space_id: &str,
+        document_id: &str,
+        expectation: &DocumentSocketExpectationV1,
+        client_instance_id: &str,
+        timeout_ms: u64,
+    ) -> Result<DocumentSocketAdmissionV1, DirectoryClientError>;
 }
 //#endregion 🔖️Wire
 
@@ -282,17 +368,76 @@ fn decode_json_bytes<R: FromValue>(bytes: &[u8]) -> Result<R, DirectoryClientErr
     crate::os_pack::json::from_json_str(text).map_err(DirectoryClientError::from)
 }
 
+fn wipe_string(value: &mut String) -> usize {
+    let len = value.len();
+    unsafe { value.as_mut_vec().fill(0) };
+    len
+}
+
+struct WipeDocumentPlanSocketGrantIntent(DocumentPlanSocketGrantIntentV1);
+
+impl Drop for WipeDocumentPlanSocketGrantIntent {
+    fn drop(&mut self) {
+        wipe_string(&mut self.0.plan_receipt);
+    }
+}
+
+fn lower_hex(bytes: &[u8]) -> bool {
+    bytes.iter().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(byte))
+}
+
 fn valid_socket_grant(value: &str) -> bool {
-    value.len() == 107
-        && value.starts_with("socket.v1.")
-        && value[10..42].bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
-        && value.as_bytes().get(42) == Some(&b'.')
-        && value[43..].bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+    let bytes = value.as_bytes();
+    bytes.len() == 107 && bytes.get(..10) == Some(b"socket.v1.".as_slice()) && bytes.get(10..42).is_some_and(lower_hex) && bytes.get(42) == Some(&b'.') && bytes.get(43..107).is_some_and(lower_hex)
 }
 
 fn valid_socket_actor(value: &str) -> bool {
-    value.len() == 71 && value.starts_with("hub.v1.") && value[7..].bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+    let bytes = value.as_bytes();
+    bytes.len() == 71 && bytes.get(..7) == Some(b"hub.v1.".as_slice()) && bytes.get(7..71).is_some_and(lower_hex)
 }
+
+fn decode_lower_hex_32(value: &str) -> Option<[u8; 32]> {
+    if value.len() != 64 || !lower_hex(value.as_bytes()) {
+        return None;
+    }
+    let digit = |byte| match byte {
+        b'0'..=b'9' => Some(byte - b'0'),
+        b'a'..=b'f' => Some(byte - b'a' + 10),
+        _ => None,
+    };
+    let mut decoded = [0u8; 32];
+    for (index, pair) in value.as_bytes().chunks_exact(2).enumerate() {
+        decoded[index] = digit(pair[0])? << 4 | digit(pair[1])?;
+    }
+    Some(decoded)
+}
+
+/// 🔗 UTF-8 byte percent-encoding shared by protected HTTP scope and document WebSocket URLs.
+pub fn encode_url_component(value: &str) -> String {
+    let mut encoded = String::with_capacity(value.len());
+    for byte in value.bytes() {
+        if byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.' | b'~') {
+            encoded.push(char::from(byte));
+        } else {
+            encoded.push_str(&format!("%{byte:02X}"));
+        }
+    }
+    encoded
+}
+
+const DOCUMENT_ADMISSION_RESPONSE_MAX_BYTES: usize = 64 * 1024;
+
+#[cfg(not(target_arch = "wasm32"))]
+fn emit_socket_grant_probe(path: &str, grant: &str) {
+    if std::env::var("SEMIO_DIRECT_CHILD_PROBE").ok().as_deref() != Some("1") {
+        return;
+    }
+    let digest = semio_framework_hash::Sha256::digest(&grant.as_bytes()[10..42]);
+    eprintln!("[semio-directory-client] socket-grant-selector-digest {path} {}", digest.iter().map(|byte| format!("{byte:02x}")).collect::<String>());
+}
+
+#[cfg(target_arch = "wasm32")]
+fn emit_socket_grant_probe(_path: &str, _grant: &str) {}
 
 fn wall_now_ms() -> i64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| i64::try_from(duration.as_millis()).unwrap_or(i64::MAX))
@@ -310,11 +455,101 @@ fn directory_socket_hello_v1() -> Vec<u8> {
 
 //#region 🔖️Client
 /// 📇️ Talks the hub's directory REST/WS surface over an injected `DirectoryTransport`. Holds the
-/// current bearer token in an `RwLock` so a long-lived client (one per shell session) can be
-/// re-authenticated in place after a mint/restore without callers re-constructing it.
+/// protected local credential and socket-grant authority without serializing either into bindings.
 pub struct LocalHubCredential {
     hub_origin: String,
     capability: Box<[u8]>,
+}
+
+struct WipeBytes<'a> {
+    bytes: Vec<u8>,
+    observer: Option<&'a std::sync::atomic::AtomicUsize>,
+}
+
+struct WipeSecretText(String);
+
+impl Drop for WipeSecretText {
+    fn drop(&mut self) {
+        wipe_string(&mut self.0);
+    }
+}
+
+impl Drop for WipeBytes<'_> {
+    fn drop(&mut self) {
+        let len = self.bytes.len();
+        self.bytes.fill(0);
+        if let Some(observer) = self.observer {
+            observer.fetch_add(self.bytes.iter().filter(|byte| **byte == 0).count().min(len), std::sync::atomic::Ordering::SeqCst);
+        }
+    }
+}
+
+fn read_local_hub_credential_frame<'a, R: std::io::Read>(pipe: &mut R, observer: Option<&'a std::sync::atomic::AtomicUsize>) -> Result<WipeBytes<'a>, DirectoryClientError> {
+    let mut length = [0u8; 4];
+    pipe.read_exact(&mut length).map_err(|_| DirectoryClientError::Unauthorized)?;
+    let length = u32::from_be_bytes(length) as usize;
+    if length == 0 || length > 16 * 1024 {
+        return Err(DirectoryClientError::Unauthorized);
+    }
+    let mut bytes = WipeBytes { bytes: vec![0u8; length], observer };
+    pipe.read_exact(&mut bytes.bytes).map_err(|_| DirectoryClientError::Unauthorized)?;
+    let mut trailing = WipeBytes { bytes: vec![0u8; 1], observer };
+    if pipe.read(&mut trailing.bytes).map_err(|_| DirectoryClientError::Unauthorized)? != 0 {
+        return Err(DirectoryClientError::Unauthorized);
+    }
+    Ok(bytes)
+}
+
+struct WipeDslValue<'a> {
+    value: DslValue,
+    observer: Option<&'a std::sync::atomic::AtomicUsize>,
+}
+
+impl Drop for WipeDslValue<'_> {
+    fn drop(&mut self) {
+        let wiped = wipe_dsl_value(&mut self.value);
+        if let Some(observer) = self.observer {
+            observer.fetch_add(wiped, std::sync::atomic::Ordering::SeqCst);
+        }
+    }
+}
+
+fn wipe_dsl_value(value: &mut DslValue) -> usize {
+    match value {
+        DslValue::String(value) => wipe_string(value),
+        DslValue::Array(values) => values.iter_mut().map(wipe_dsl_value).sum(),
+        DslValue::Object(entries) => entries.iter_mut().map(|(key, value)| wipe_string(key) + wipe_dsl_value(value)).sum(),
+        DslValue::Null | DslValue::Bool(_) | DslValue::Number(_) => 0,
+    }
+}
+
+fn decode_local_hub_credential(bytes: &[u8], expected_class: &str, observer: Option<&std::sync::atomic::AtomicUsize>) -> Result<LocalHubCredential, DirectoryClientError> {
+    let mut decoded = WipeDslValue { value: decode_json_bytes::<DslValue>(bytes)?, observer };
+    let field = |name: &str| decoded.value.get(name).and_then(|value| value.as_str()).ok_or(DirectoryClientError::Unauthorized);
+    let schema = field("schema")?;
+    let client_class = field("clientClass")?;
+    let hub_origin = field("hubOrigin")?;
+    let capability = field("capability")?;
+    let expires_at_ms = decoded.value.get("expiresAtMs").and_then(|value| value.as_i64()).ok_or(DirectoryClientError::Unauthorized)?;
+    if schema != "semio.local.consumer-credential/v1"
+        || client_class != expected_class
+        || !hub_origin.strip_prefix("http://127.0.0.1:").is_some_and(|port| port.parse::<u16>().is_ok())
+        || expires_at_ms <= wall_now_ms()
+        || !valid_session_capability(capability)
+    {
+        return Err(DirectoryClientError::Unauthorized);
+    }
+    let hub_origin = hub_origin.to_string();
+    let DslValue::Object(entries) = &mut decoded.value else { return Err(DirectoryClientError::Unauthorized) };
+    let capability = entries
+        .iter_mut()
+        .find_map(|(key, value)| (key == "capability").then_some(value))
+        .and_then(|value| match value {
+            DslValue::String(value) => Some(std::mem::take(value).into_bytes().into_boxed_slice()),
+            _ => None,
+        })
+        .ok_or(DirectoryClientError::Unauthorized)?;
+    Ok(LocalHubCredential { hub_origin, capability })
 }
 
 impl std::fmt::Debug for LocalHubCredential {
@@ -332,63 +567,55 @@ impl Drop for LocalHubCredential {
 impl LocalHubCredential {
     #[cfg(not(target_arch = "wasm32"))]
     pub fn read_inherited(expected_class: &str) -> Result<Self, DirectoryClientError> {
-        use std::io::Read;
-
         #[cfg(unix)]
         let mut pipe = {
             use std::os::fd::FromRawFd;
+            unsafe extern "C" {
+                fn fcntl(fd: i32, command: i32, ...) -> i32;
+            }
+            const F_GETFD: i32 = 1;
+            const F_SETFD: i32 = 2;
+            const FD_CLOEXEC: i32 = 1;
+            let flags = unsafe { fcntl(3, F_GETFD) };
+            if flags < 0 || unsafe { fcntl(3, F_SETFD, flags | FD_CLOEXEC) } < 0 {
+                return Err(DirectoryClientError::Unauthorized);
+            }
             unsafe { std::fs::File::from_raw_fd(3) }
         };
         #[cfg(windows)]
         let mut pipe = inherited_windows_file()?;
-        let mut length = [0u8; 4];
-        pipe.read_exact(&mut length).map_err(|_| DirectoryClientError::Unauthorized)?;
-        let length = u32::from_be_bytes(length) as usize;
-        if length == 0 || length > 16 * 1024 {
-            return Err(DirectoryClientError::Unauthorized);
-        }
-        let mut bytes = vec![0u8; length];
-        pipe.read_exact(&mut bytes).map_err(|_| DirectoryClientError::Unauthorized)?;
-        let mut trailing = [0u8; 1];
-        if pipe.read(&mut trailing).map_err(|_| DirectoryClientError::Unauthorized)? != 0 {
-            bytes.fill(0);
-            return Err(DirectoryClientError::Unauthorized);
-        }
-        let value: DslValue = decode_json_bytes(&bytes)?;
-        bytes.fill(0);
-        let field = |name: &str| value.get(name).and_then(|value| value.as_str()).ok_or(DirectoryClientError::Unauthorized);
-        let schema = field("schema")?;
-        let client_class = field("clientClass")?;
-        let hub_origin = field("hubOrigin")?;
-        let capability = field("capability")?;
-        let expires_at_ms = value.get("expiresAtMs").and_then(|value| value.as_i64()).ok_or(DirectoryClientError::Unauthorized)?;
-        if schema != "semio.local.consumer-credential/v1"
-            || client_class != expected_class
-            || !hub_origin.strip_prefix("http://127.0.0.1:").is_some_and(|port| port.parse::<u16>().is_ok())
-            || expires_at_ms <= wall_now_ms()
-            || !valid_session_capability(capability)
-        {
-            return Err(DirectoryClientError::Unauthorized);
-        }
-        Ok(Self { hub_origin: hub_origin.to_string(), capability: capability.as_bytes().into() })
+        let bytes = read_local_hub_credential_frame(&mut pipe, None)?;
+        decode_local_hub_credential(&bytes.bytes, expected_class, None)
     }
 
     #[cfg(test)]
-    fn test(hub_origin: &str, capability: &str) -> Self {
+    pub(crate) fn test(hub_origin: &str, capability: &str) -> Self {
         Self { hub_origin: hub_origin.to_string(), capability: capability.as_bytes().into() }
     }
 
     pub(crate) fn capability(&self) -> Result<&str, DirectoryClientError> {
         std::str::from_utf8(&self.capability).map_err(|_| DirectoryClientError::Unauthorized)
     }
+
+    pub fn hub_origin(&self) -> &str {
+        &self.hub_origin
+    }
+
+    pub fn authorizes_capability(&self, candidate: &str) -> bool {
+        if candidate.len() != self.capability.len() {
+            return false;
+        }
+        candidate.as_bytes().iter().zip(self.capability.iter()).fold(0u8, |difference, (left, right)| difference | (left ^ right)) == 0
+    }
+
+    pub fn authorizes_bearer_header(&self, header: &str) -> bool {
+        header.strip_prefix("Bearer ").is_some_and(|candidate| self.authorizes_capability(candidate))
+    }
 }
 
 fn valid_session_capability(value: &str) -> bool {
-    value.len() == 108
-        && value.starts_with("session.v1.")
-        && value[11..43].bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
-        && value.as_bytes().get(43) == Some(&b'.')
-        && value[44..].bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+    let bytes = value.as_bytes();
+    bytes.len() == 108 && bytes.get(..11) == Some(b"session.v1.".as_slice()) && bytes.get(11..43).is_some_and(lower_hex) && bytes.get(43) == Some(&b'.') && bytes.get(44..108).is_some_and(lower_hex)
 }
 
 #[cfg(windows)]
@@ -398,8 +625,10 @@ fn inherited_windows_file() -> Result<std::fs::File, DirectoryClientError> {
     type Handle = *mut c_void;
     unsafe extern "C" {
         fn _get_osfhandle(fd: i32) -> isize;
+        fn _close(fd: i32) -> i32;
         fn GetCurrentProcess() -> Handle;
         fn DuplicateHandle(source_process: Handle, source: Handle, target_process: Handle, target: *mut Handle, access: u32, inherit: i32, options: u32) -> i32;
+        fn CloseHandle(handle: Handle) -> i32;
     }
     let source = unsafe { _get_osfhandle(3) };
     if source == -1 {
@@ -407,7 +636,12 @@ fn inherited_windows_file() -> Result<std::fs::File, DirectoryClientError> {
     }
     let process = unsafe { GetCurrentProcess() };
     let mut duplicate: Handle = std::ptr::null_mut();
-    if unsafe { DuplicateHandle(process, source as Handle, process, &mut duplicate, 0, 0, 2) } == 0 || duplicate.is_null() {
+    let duplicated = unsafe { DuplicateHandle(process, source as Handle, process, &mut duplicate, 0, 0, 2) } != 0 && !duplicate.is_null();
+    let closed = unsafe { _close(3) } == 0;
+    if !duplicated || !closed {
+        if duplicated {
+            unsafe { CloseHandle(duplicate) };
+        }
         return Err(DirectoryClientError::Unauthorized);
     }
     Ok(unsafe { std::fs::File::from_raw_handle(duplicate) })
@@ -484,23 +718,147 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         if ctx.cancel.is_cancelled_now() {
             return Err(DirectoryClientError::Cancelled);
         }
+        let mut receipt = self.issue_socket_grant(ctx, "/directory/socket-grants", b"{}", timeout_ms)?;
+        if ctx.cancel.is_cancelled_now() {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let url = directory_ws_url(&self.base_url, since);
+        let mut protocols = vec![std::mem::take(&mut receipt.protocol), std::mem::take(&mut receipt.grant)];
+        let connection = self.transport.open_ws(ctx, &url, &protocols, timeout_ms);
+        wipe_string(&mut protocols[1]);
+        let mut connection = connection?;
+        if ctx.cancel.is_cancelled_now() {
+            connection.close();
+            return Err(DirectoryClientError::Cancelled);
+        }
+        if let Err(error) = connection.send_binary(directory_socket_hello_v1()) {
+            connection.close();
+            return Err(error.into());
+        }
+        if ctx.cancel.is_cancelled_now() {
+            connection.close();
+            return Err(DirectoryClientError::Cancelled);
+        }
+        Ok(connection)
+    }
+
+    fn protected_post(&self, ctx: &OperationContext, path: &str, body: &[u8], timeout_ms: u64) -> Result<WipeBytes<'static>, DirectoryClientError> {
+        if ctx.cancel.is_cancelled_now() {
+            return Err(DirectoryClientError::Cancelled);
+        }
         let credential = self.credential.as_ref().ok_or(DirectoryClientError::Unauthorized)?;
-        let response = self.transport.issue_directory_socket_grant(ctx, &self.url("/directory/socket-grants"), credential.capability()?, timeout_ms)?;
+        let origin = credential.hub_origin().trim_end_matches('/');
+        if self.base_url.trim_end_matches('/') != origin || !path.starts_with('/') || path.starts_with("//") {
+            return Err(DirectoryClientError::Unauthorized);
+        }
+        let url = format!("{origin}{path}");
+        let response = self.transport.issue_socket_grant(ctx, &url, credential.capability()?, body, timeout_ms.clamp(1, 5_000))?;
+        let response_body = WipeBytes { bytes: response.body, observer: None };
+        if ctx.cancel.is_cancelled_now() {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        if response_body.bytes.len() > DOCUMENT_ADMISSION_RESPONSE_MAX_BYTES {
+            return Err(DirectoryClientError::Decode("protected document admission response exceeded 64 KiB".into()));
+        }
         if response.status == 401 {
             return Err(DirectoryClientError::Unauthorized);
         }
         if !(200..=299).contains(&response.status) {
-            return Err(DirectoryClientError::Http { status: response.status, body: String::from_utf8_lossy(&response.body).into_owned() });
+            return Err(DirectoryClientError::Http { status: response.status, body: "protected document admission rejected".into() });
         }
-        let receipt: SocketGrantReceiptV1 = decode_json_bytes(&response.body)?;
+        Ok(response_body)
+    }
+
+    fn issue_socket_grant(&self, ctx: &OperationContext, path: &str, body: &[u8], timeout_ms: u64) -> Result<SocketGrantReceiptV1, DirectoryClientError> {
+        let response_body = self.protected_post(ctx, path, body, timeout_ms)?;
+        let receipt: SocketGrantReceiptV1 = decode_json_bytes(&response_body.bytes).map_err(|_| DirectoryClientError::Decode("socket grant receipt invalid".into()))?;
         if receipt.schema != "semio.hub.socket-grant/v1" || receipt.protocol != "semio.socket.v1" || !valid_socket_grant(&receipt.grant) || !valid_socket_actor(&receipt.actor_id) || receipt.expires_at_ms <= wall_now_ms() {
             return Err(DirectoryClientError::Decode("socket grant receipt binding invalid".into()));
         }
-        let url = directory_ws_url(&self.base_url, since);
-        let protocols = vec![receipt.protocol, receipt.grant];
-        let mut connection = self.transport.open_ws(ctx, &url, &protocols, timeout_ms)?;
-        connection.send_binary(directory_socket_hello_v1())?;
-        Ok(connection)
+        emit_socket_grant_probe(path, &receipt.grant);
+        Ok(receipt)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl<T: DirectoryTransport + Send + Sync> HubSocketGrantSource for DirectoryClient<T> {
+    fn admit_document_socket(
+        &self,
+        ctx: &OperationContext,
+        space_id: &str,
+        document_id: &str,
+        expectation: &DocumentSocketExpectationV1,
+        client_instance_id: &str,
+        timeout_ms: u64,
+    ) -> Result<DocumentSocketAdmissionV1, DirectoryClientError> {
+        let scope = DocumentScope::new(space_id, document_id);
+        let intent = DocumentOpenIntentV1 {
+            schema: "semio.hub.document-open-intent/v1".into(),
+            version: 1,
+            scope: scope.clone(),
+            requested_surface_id: expectation.requested_surface_id.clone(),
+            client_instance_id: client_instance_id.to_string(),
+        };
+        if intent.validate().is_err() || expectation.artifact_schema.is_empty() {
+            return Err(DirectoryClientError::Decode("document open intent invalid".into()));
+        }
+        let prefix = format!("/spaces/{}/documents/{}", encode_url_component(space_id), encode_url_component(document_id));
+        let intent_body = crate::os_pack::json::to_json_string(&intent).into_bytes();
+        let plan_body = self.protected_post(ctx, &format!("{prefix}/open-plan"), &intent_body, timeout_ms)?;
+        let mut plan: DocumentOpenPlanV1 = decode_json_bytes(&plan_body.bytes).map_err(|_| DirectoryClientError::Decode("document open plan response invalid".into()))?;
+        let now_ms = u64::try_from(wall_now_ms()).map_err(|_| DirectoryClientError::Decode("document open clock invalid".into()))?;
+        let pack_schema_hash = decode_lower_hex_32(&plan.artifact.pack_schema_hash);
+        let surface_matches = expectation.surface.as_ref().is_none_or(|expected| {
+            plan.artifact.kind == expected.artifact_kind
+                && plan.package.plugin_id == expected.plugin_id
+                && plan.package.package_id == expected.package_id
+                && plan.package.version == expected.version
+                && plan.surface.surface_id == expected.surface_id
+                && plan.surface.app_id == expected.app_id
+                && plan.surface.window_kind_id == expected.window_kind_id
+                && plan.surface.role == expected.role
+                && plan.surface.renderer_target == expected.renderer_target
+        }) && expectation.requested_surface_id.as_ref().is_none_or(|surface| plan.surface.surface_id == *surface);
+        if plan.validate(now_ms).is_err()
+            || plan.scope != scope
+            || plan.artifact.schema != expectation.artifact_schema
+            || pack_schema_hash != Some(expectation.pack_schema_hash)
+            || !surface_matches
+        {
+            wipe_string(&mut plan.receipt);
+            return Err(DirectoryClientError::Decode("document open plan binding invalid".into()));
+        }
+        if ctx.cancel.is_cancelled_now() {
+            wipe_string(&mut plan.receipt);
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let exchange = WipeDocumentPlanSocketGrantIntent(DocumentPlanSocketGrantIntentV1 {
+            schema: "semio.hub.document-plan-socket-grant-intent/v1".into(),
+            version: 1,
+            plan_receipt: std::mem::take(&mut plan.receipt),
+        });
+        let exchange_body = WipeBytes { bytes: crate::os_pack::json::to_json_string(&exchange.0).into_bytes(), observer: None };
+        let socket = self.issue_socket_grant(ctx, &format!("{prefix}/socket-grants"), &exchange_body.bytes, timeout_ms)?;
+        if ctx.cancel.is_cancelled_now() {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let pack_schema_hash = pack_schema_hash.ok_or_else(|| DirectoryClientError::Decode("document open plan schema hash invalid".into()))?;
+        let credential_origin = self.credential.as_ref().ok_or(DirectoryClientError::Unauthorized)?.hub_origin().trim_end_matches('/');
+        let authority = DocumentSocketAuthorityV1 {
+            hub_origin: credential_origin.to_string(),
+            expires_at_unix_ms: plan.expires_at_unix_ms,
+            scope: plan.scope,
+            descriptor_digest_v1: plan.descriptor_digest_v1,
+            catalog: plan.catalog,
+            package: plan.package,
+            artifact: plan.artifact,
+            pack_schema_hash,
+            surface: plan.surface,
+            grant: plan.grant,
+            checkpoint: plan.checkpoint,
+            revalidation: plan.revalidation,
+        };
+        Ok(DocumentSocketAdmissionV1 { socket, authority })
     }
 }
 //#endregion 🔖️Client
@@ -511,7 +869,7 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
 pub const HUB_RECONNECT_MIN_MS: u64 = 500;
 pub const HUB_RECONNECT_MAX_MS: u64 = 30_000;
 
-/// 🔗️ `remote://host:port` / `http(s)://…` → `ws(s)://host:port/directory/ws?token=&since=`
+/// 🔗️ `remote://host:port` / `http(s)://…` → `ws(s)://host:port/directory/socket/v1?since=`
 /// (contract §C2). Pure and independently testable, mirroring `🏪️store/🔄️sync`'s `hub_ws_url`.
 pub fn directory_ws_url(base_url: &str, since: u64) -> String {
     let secure = base_url.starts_with("https://") || base_url.starts_with("wss://");
@@ -535,7 +893,7 @@ pub enum DirectoryStreamTurn<T: DirectoryTransport> {
     Closed,
 }
 
-/// 🔁️ `GET /directory/ws?since=` with auto-reconnect that resumes from the last `seq`/`headSeq`
+/// 🔁️ `GET /directory/socket/v1?since=` with auto-reconnect that resumes from the last `seq`/`headSeq`
 /// this stream has observed — never re-subscribes from the caller's original `since` after a
 /// drop, so the hub replays only the gap.
 pub struct DirectoryStream<T: DirectoryTransport> {
@@ -568,6 +926,9 @@ impl<T: DirectoryTransport + Clone> DirectoryStream<T> {
     pub fn complete_dial(&mut self, now_ms: u64, result: Result<T::Ws, TransportError>) -> DirectoryStreamTurn<T> {
         self.dialing = false;
         if self.closed {
+            if let Ok(mut connection) = result {
+                connection.close();
+            }
             return DirectoryStreamTurn::Closed;
         }
         match result {
@@ -648,7 +1009,7 @@ impl<T: DirectoryTransport + Clone> DirectoryStream<T> {
 /// method type unusable.
 #[cfg(all(feature = "ureq", feature = "sync", not(target_arch = "wasm32")))]
 pub mod native {
-    use super::{DirectoryTransport, DirectoryWsConnection, DirectoryWsPoll, HttpMethod, HttpResponse, TransportError};
+    use super::{DirectoryTransport, DirectoryWsConnection, DirectoryWsPoll, HttpMethod, HttpResponse, LocalHubCredential, TransportError};
     use semio_framework_actor::{ActorId, PackageId};
     use semio_framework_async::{HostAsyncRuntime, HostFuture, OperationContext, ScopeHandle};
     use semio_framework_os_services::{AsyncHttpTransport, ComputeError, ComputePool, HttpBody, HttpPool, HttpPoolError, HttpRequest as PoolHttpRequest, HttpResponseHead, TokioHostRuntime};
@@ -864,6 +1225,31 @@ pub mod native {
         pub fn new_now(runtime: Arc<R>, scope: ScopeHandle, http_pool: Arc<HttpPool>, package: PackageId, actor: ActorId) -> Self {
             Self { runtime, scope, http_pool, package, actor }
         }
+
+        /// 🛡️ Starts one protected bounded binary GET without exposing bearer text to the caller.
+        pub async fn fetch_protected_stream(&self, ctx: &OperationContext, credential: &LocalHubCredential, url: &str, accept: &str) -> Result<(HttpResponseHead, semio_framework_os_services::HttpPoolBody), TransportError>
+        where
+            R: 'static,
+        {
+            if ctx.cancel.is_cancelled().await {
+                return Err(TransportError::Cancelled);
+            }
+            let origin = credential.hub_origin().trim_end_matches('/');
+            if !url.strip_prefix(origin).is_some_and(|path| path.starts_with('/') && !path.starts_with("//")) || !matches!(accept, "application/vnd.semio.canonical-checkpoint-pair.v1") {
+                return Err(TransportError::Io("protected binary request authority mismatch".into()));
+            }
+            let bearer = credential.capability().map_err(|_| TransportError::Io("protected binary credential was invalid".into()))?;
+            let request = PoolHttpRequest { method: "GET".to_string(), url: url.to_string(), headers: vec![("Authorization".to_string(), format!("Bearer {bearer}")), ("Accept".to_string(), accept.to_string())], body: Vec::new() };
+            self.http_pool.fetch(self.runtime.as_ref(), &self.scope, ctx.clone(), self.package.clone(), self.actor, request).await.map_err(|error| {
+                if matches!(error, HttpPoolError::Compute(ComputeError::DeadlineExceeded)) {
+                    TransportError::DeadlineExceeded
+                } else if ctx.cancel.is_cancelled_now() {
+                    TransportError::Cancelled
+                } else {
+                    TransportError::Io(error.to_string())
+                }
+            })
+        }
     }
 
     impl NativeDirectoryTransport<TokioHostRuntime> {
@@ -901,20 +1287,25 @@ pub mod native {
             }
         }
 
-        fn issue_directory_socket_grant(&self, ctx: &OperationContext, url: &str, bearer: &str, timeout_ms: u64) -> Result<HttpResponse, TransportError> {
+        fn issue_socket_grant(&self, ctx: &OperationContext, url: &str, bearer: &str, body: &[u8], timeout_ms: u64) -> Result<HttpResponse, TransportError> {
             if ctx.cancel.is_cancelled_now() {
                 return Err(TransportError::Cancelled);
             }
             let timeout = Duration::from_millis(timeout_ms.max(1));
             let agent = ureq::AgentBuilder::new().timeout_connect(timeout).timeout_read(timeout).timeout_write(timeout).build();
-            let response = match agent.post(url).set("Authorization", &format!("Bearer {bearer}")).set("Content-Type", "application/json").send_bytes(b"{}") {
+            let authorization = super::WipeSecretText(format!("Bearer {bearer}"));
+            let response = match agent.post(url).set("Authorization", &authorization.0).set("Content-Type", "application/json").send_bytes(body) {
                 Ok(response) => response,
                 Err(ureq::Error::Status(_, response)) => response,
                 Err(error) => return Err(TransportError::Io(error.to_string())),
             };
             let status = response.status();
             let mut body = Vec::new();
-            response.into_reader().take(16 * 1024).read_to_end(&mut body).map_err(|error| TransportError::Io(error.to_string()))?;
+            response
+                .into_reader()
+                .take((super::DOCUMENT_ADMISSION_RESPONSE_MAX_BYTES + 1) as u64)
+                .read_to_end(&mut body)
+                .map_err(|error| TransportError::Io(error.to_string()))?;
             Ok(HttpResponse { status, body })
         }
 
@@ -1084,7 +1475,7 @@ pub mod browser {
             Ok(HttpResponse { status, body: bytes })
         }
 
-        fn issue_directory_socket_grant(&self, _ctx: &OperationContext, _url: &str, _bearer: &str, _timeout_ms: u64) -> Result<HttpResponse, TransportError> {
+        fn issue_socket_grant(&self, _ctx: &OperationContext, _url: &str, _bearer: &str, _body: &[u8], _timeout_ms: u64) -> Result<HttpResponse, TransportError> {
             Err(TransportError::Io("browser directory socket issuance requires the TypeScript credential relay".into()))
         }
 
@@ -1148,7 +1539,7 @@ pub mod test_support {
     use super::{DirectoryWsConnection, DirectoryWsPoll, HttpMethod, HttpResponse, TransportError};
     use semio_framework_async::OperationContext;
     use std::collections::VecDeque;
-    use std::sync::atomic::{AtomicU32, Ordering};
+    use std::sync::atomic::{AtomicBool, AtomicU32, AtomicUsize, Ordering};
     use std::sync::{Arc, Mutex};
 
     #[derive(Clone, Debug, PartialEq)]
@@ -1156,6 +1547,7 @@ pub mod test_support {
         pub method: HttpMethod,
         pub url: String,
         pub bearer: Option<String>,
+        pub body: Vec<u8>,
     }
 
     #[derive(Clone, Default)]
@@ -1164,6 +1556,11 @@ pub mod test_support {
         pub requests: Arc<Mutex<Vec<RecordedRequest>>>,
         pub ws_outcomes: Arc<Mutex<VecDeque<Result<VecDeque<Result<Option<String>, TransportError>>, TransportError>>>>,
         pub ws_urls: Arc<Mutex<Vec<String>>>,
+        pub ws_closes: Arc<AtomicUsize>,
+        pub ws_sends: Arc<AtomicUsize>,
+        pub cancel_after_grant: Arc<AtomicBool>,
+        pub cancel_after_grant_number: Arc<AtomicUsize>,
+        pub cancel_after_open: Arc<AtomicBool>,
         /// 🧪️ Cooperative yield points `http()` passes through (checking `ctx.cancel` at each one)
         /// BEFORE touching `responses`/`requests` — 0 (the default) keeps every existing test's
         /// synchronous-looking behavior unchanged; a cancellation test sets this > 0 so an
@@ -1188,7 +1585,18 @@ pub mod test_support {
 
     // 🔀️ `pub` (was private): now named in `impl DirectoryTransport for FakeTransport`'s public
     // `type Ws = FakeWs;` associated type.
-    pub struct FakeWs(VecDeque<Result<Option<String>, TransportError>>);
+    pub struct FakeWs {
+        frames: VecDeque<Result<Option<String>, TransportError>>,
+        closes: Option<Arc<AtomicUsize>>,
+        sends: Option<Arc<AtomicUsize>>,
+    }
+
+    impl FakeWs {
+        /// 🧪️ Creates a late-dial socket whose close is observable by the cancellation law.
+        pub fn with_close_observer(closes: Arc<AtomicUsize>) -> Self {
+            Self { frames: VecDeque::new(), closes: Some(closes), sends: None }
+        }
+    }
 
     impl DirectoryWsConnection for FakeWs {
         fn send_text(&mut self, _text: String) -> Result<(), TransportError> {
@@ -1196,11 +1604,14 @@ pub mod test_support {
         }
 
         fn send_binary(&mut self, _bytes: Vec<u8>) -> Result<(), TransportError> {
+            if let Some(sends) = &self.sends {
+                sends.fetch_add(1, Ordering::SeqCst);
+            }
             Ok(())
         }
 
         fn try_recv_text(&mut self) -> Result<DirectoryWsPoll, TransportError> {
-            match self.0.pop_front() {
+            match self.frames.pop_front() {
                 Some(Ok(Some(text))) => Ok(DirectoryWsPoll::Text(text)),
                 Some(Ok(None)) => Ok(DirectoryWsPoll::Closed),
                 Some(Err(error)) => Err(error),
@@ -1208,7 +1619,11 @@ pub mod test_support {
             }
         }
 
-        fn close(&mut self) {}
+        fn close(&mut self) {
+            if let Some(closes) = &self.closes {
+                closes.fetch_add(1, Ordering::SeqCst);
+            }
+        }
     }
 
     impl super::DirectoryTransport for FakeTransport {
@@ -1223,16 +1638,24 @@ pub mod test_support {
             if ctx.cancel.is_cancelled().await {
                 return Err(TransportError::Cancelled);
             }
-            self.requests.lock().unwrap().push(RecordedRequest { method, url: url.to_string(), bearer: bearer.map(str::to_string) });
+            self.requests.lock().unwrap().push(RecordedRequest { method, url: url.to_string(), bearer: bearer.map(str::to_string), body: Vec::new() });
             self.responses.lock().unwrap().pop_front().unwrap_or_else(|| Err(TransportError::Io("no scripted response".to_string())))
         }
 
-        fn issue_directory_socket_grant(&self, ctx: &OperationContext, url: &str, bearer: &str, _timeout_ms: u64) -> Result<HttpResponse, TransportError> {
+        fn issue_socket_grant(&self, ctx: &OperationContext, url: &str, bearer: &str, body: &[u8], _timeout_ms: u64) -> Result<HttpResponse, TransportError> {
             if ctx.cancel.is_cancelled_now() {
                 return Err(TransportError::Cancelled);
             }
-            self.requests.lock().unwrap().push(RecordedRequest { method: HttpMethod::Post, url: url.to_string(), bearer: Some(bearer.to_string()) });
-            self.responses.lock().unwrap().pop_front().unwrap_or_else(|| Err(TransportError::Io("no scripted response".to_string())))
+            let request_number = {
+                let mut requests = self.requests.lock().unwrap();
+                requests.push(RecordedRequest { method: HttpMethod::Post, url: url.to_string(), bearer: Some(bearer.to_string()), body: body.to_vec() });
+                requests.len()
+            };
+            let response = self.responses.lock().unwrap().pop_front().unwrap_or_else(|| Err(TransportError::Io("no scripted response".to_string())));
+            if self.cancel_after_grant.load(Ordering::SeqCst) || self.cancel_after_grant_number.load(Ordering::SeqCst) == request_number {
+                ctx.cancel.cancel_now();
+            }
+            response
         }
 
         fn open_ws(&self, ctx: &OperationContext, url: &str, _protocols: &[String], _timeout_ms: u64) -> Result<Self::Ws, TransportError> {
@@ -1241,7 +1664,10 @@ pub mod test_support {
             }
             self.ws_urls.lock().unwrap().push(url.to_string());
             let frames = self.ws_outcomes.lock().unwrap().pop_front().unwrap_or_else(|| Err(TransportError::Io("no scripted ws".to_string())))?;
-            Ok(FakeWs(frames))
+            if self.cancel_after_open.load(Ordering::SeqCst) {
+                ctx.cancel.cancel_now();
+            }
+            Ok(FakeWs { frames, closes: Some(self.ws_closes.clone()), sends: Some(self.ws_sends.clone()) })
         }
     }
 }
@@ -1251,6 +1677,7 @@ mod tests {
     use super::test_support::FakeTransport;
     use super::*;
     use semio_framework_async::{CancelToken, TraceId};
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     fn root_ctx() -> OperationContext {
         OperationContext { actor: 0, generation: 0, trace: TraceId(0), lane: 0, deadline_ms: None, cancel: CancelToken::root_now(), capability: None }
@@ -1260,16 +1687,259 @@ mod tests {
         Arc::new(DirectoryClient::authenticated(transport, Arc::new(LocalHubCredential::test("http://hub.local", capability))))
     }
 
+    #[test]
+    fn decoded_consumer_credential_moves_success_secret_and_wipes_every_invalid_field() {
+        let capability = format!("session.v1.{}.{}", "a".repeat(32), "b".repeat(64));
+        let schema = "semio.local.consumer-credential/v1";
+        let client_class = "native";
+        let hub_origin = "http://127.0.0.1:8787";
+        let decoded_keys_len = "schema".len() + "clientClass".len() + "hubOrigin".len() + "capability".len() + "expiresAtMs".len();
+        let success_wipe_len = decoded_keys_len + schema.len() + client_class.len() + hub_origin.len();
+        let envelope = serde_json::to_vec(&serde_json::json!({
+            "schema": schema,
+            "clientClass": client_class,
+            "hubOrigin": hub_origin,
+            "capability": capability,
+            "expiresAtMs": wall_now_ms() + 30_000
+        }))
+        .expect("external JSON credential oracle");
+        let success_wipes = AtomicUsize::new(0);
+        let credential = decode_local_hub_credential(&envelope, "native", Some(&success_wipes)).expect("valid credential");
+        assert_eq!(credential.capability().expect("credential capability"), capability);
+        assert_eq!(success_wipes.load(Ordering::SeqCst), success_wipe_len, "success wipes every decoded key and non-secret string while moving the sole capability allocation");
+
+        let invalid_wipes = AtomicUsize::new(0);
+        assert!(matches!(decode_local_hub_credential(&envelope, "mcp", Some(&invalid_wipes)), Err(DirectoryClientError::Unauthorized)));
+        assert_eq!(invalid_wipes.load(Ordering::SeqCst), success_wipe_len + capability.len(), "invalid-after-decode wipes every decoded string byte including the capability");
+    }
+
+    #[test]
+    fn non_ascii_capability_crossing_a_fixed_boundary_is_denied_without_panicking_and_fully_wiped() {
+        use std::io::Cursor;
+
+        let capability = format!("session.v1.{}é.{}", "a".repeat(31), "b".repeat(63));
+        assert_eq!(capability.len(), 108);
+        let schema = "semio.local.consumer-credential/v1";
+        let client_class = "native";
+        let hub_origin = "http://127.0.0.1:8787";
+        let decoded_keys_len = "schema".len() + "clientClass".len() + "hubOrigin".len() + "capability".len() + "expiresAtMs".len();
+        let expected_wipe_len = decoded_keys_len + schema.len() + client_class.len() + hub_origin.len() + capability.len();
+        let envelope = serde_json::to_vec(&serde_json::json!({
+            "schema": schema,
+            "clientClass": client_class,
+            "hubOrigin": hub_origin,
+            "capability": capability,
+            "expiresAtMs": wall_now_ms() + 30_000
+        }))
+        .expect("external JSON credential oracle");
+        let mut framed = Vec::with_capacity(4 + envelope.len());
+        framed.extend_from_slice(&u32::try_from(envelope.len()).expect("bounded envelope").to_be_bytes());
+        framed.extend_from_slice(&envelope);
+        let raw_wipes = AtomicUsize::new(0);
+        let mut cursor = Cursor::new(framed);
+        let raw = read_local_hub_credential_frame(&mut cursor, Some(&raw_wipes)).expect("complete frame");
+        let decoded_wipes = AtomicUsize::new(0);
+        assert!(matches!(decode_local_hub_credential(&raw.bytes, client_class, Some(&decoded_wipes)), Err(DirectoryClientError::Unauthorized)));
+        drop(raw);
+        assert_eq!(decoded_wipes.load(Ordering::SeqCst), expected_wipe_len);
+        assert_eq!(raw_wipes.load(Ordering::SeqCst), envelope.len() + 1);
+    }
+
+    #[test]
+    fn inherited_frame_reader_wipes_exactly_every_allocated_body_and_trailing_probe_byte() {
+        use std::io::Cursor;
+
+        let partial_wipes = AtomicUsize::new(0);
+        let mut partial = Cursor::new([8u32.to_be_bytes().as_slice(), b"abc"].concat());
+        assert!(matches!(read_local_hub_credential_frame(&mut partial, Some(&partial_wipes)), Err(DirectoryClientError::Unauthorized)));
+        assert_eq!(partial_wipes.load(Ordering::SeqCst), 8);
+
+        let complete_wipes = AtomicUsize::new(0);
+        let mut complete = Cursor::new([4u32.to_be_bytes().as_slice(), b"body"].concat());
+        drop(read_local_hub_credential_frame(&mut complete, Some(&complete_wipes)).expect("complete frame"));
+        assert_eq!(complete_wipes.load(Ordering::SeqCst), 5);
+
+        let trailing_wipes = AtomicUsize::new(0);
+        let mut trailing = Cursor::new([4u32.to_be_bytes().as_slice(), b"body", b"x"].concat());
+        assert!(matches!(read_local_hub_credential_frame(&mut trailing, Some(&trailing_wipes)), Err(DirectoryClientError::Unauthorized)));
+        assert_eq!(trailing_wipes.load(Ordering::SeqCst), 5);
+    }
+
     async fn push_grant(transport: &FakeTransport) {
         transport
-            .push_response(FakeTransport::json_response(200, &serde_json::json!({
-                "schema": "semio.hub.socket-grant/v1",
-                "protocol": "semio.socket.v1",
-                "grant": format!("socket.v1.{}.{}", "1".repeat(32), "2".repeat(64)),
-                "actorId": format!("hub.v1.{}", "3".repeat(64)),
-                "expiresAtMs": wall_now_ms() + 30_000
-            })).await)
+            .push_response(
+                FakeTransport::json_response(
+                    200,
+                    &serde_json::json!({
+                        "schema": "semio.hub.socket-grant/v1",
+                        "protocol": "semio.socket.v1",
+                        "grant": format!("socket.v1.{}.{}", "1".repeat(32), "2".repeat(64)),
+                        "actorId": format!("hub.v1.{}", "3".repeat(64)),
+                        "expiresAtMs": wall_now_ms() + 30_000
+                    }),
+                )
+                .await,
+            )
             .await;
+    }
+
+    async fn push_document_plan(transport: &FakeTransport, space_id: &str, document_id: &str, schema: &str, surface_id: &str) -> String {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/📇️directory/📄️document-open-plan-v1.json")).expect("neutral plan fixture");
+        let mut plan = fixture["validPlan"].clone();
+        plan["expiresAtUnixMs"] = serde_json::json!(u64::try_from(wall_now_ms()).expect("wall clock") + 20_000);
+        plan["scope"] = serde_json::json!({ "spaceId": space_id, "documentId": document_id });
+        plan["artifact"]["schema"] = serde_json::json!(schema);
+        plan["surface"]["surfaceId"] = serde_json::json!(surface_id);
+        plan["checkpoint"]["baselineFrontier"]["documentId"] = serde_json::json!(document_id);
+        let receipt = plan["receipt"].as_str().expect("fixture receipt").to_string();
+        transport.push_response(FakeTransport::json_response(200, &plan).await).await;
+        receipt
+    }
+
+    fn document_expectation(schema: &str, surface_id: Option<&str>) -> DocumentSocketExpectationV1 {
+        DocumentSocketExpectationV1 {
+            artifact_schema: schema.to_string(),
+            pack_schema_hash: [0x11; 32],
+            requested_surface_id: surface_id.map(str::to_string),
+            surface: surface_id.map(|surface_id| DocumentSocketSurfaceExpectationV1 {
+                artifact_kind: "s.gis:gismap".into(),
+                plugin_id: "s.gis:地図".into(),
+                package_id: "s.gis.gismap:codec".into(),
+                version: "1.0.0:β".into(),
+                surface_id: surface_id.to_string(),
+                app_id: "app.gis".into(),
+                window_kind_id: "window.document".into(),
+                role: DocumentOpenSurfaceRoleV1::Editor,
+                renderer_target: DocumentOpenRendererTargetV1::React,
+            }),
+        }
+    }
+
+    #[test]
+    fn url_components_percent_encode_utf8_punctuation_without_aliases() {
+        assert_eq!(encode_url_component("space /東京?#"), "space%20%2F%E6%9D%B1%E4%BA%AC%3F%23");
+        assert_eq!(encode_url_component("a-z_A.9~"), "a-z_A.9~");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn native_document_admission_issues_validates_and_exchanges_exactly_once() {
+        let transport = FakeTransport::default();
+        let space_id = "space /東京?";
+        let document_id = "document#ä";
+        let surface_id = "surface /editor?#";
+        let receipt = push_document_plan(&transport, space_id, document_id, "demo/v1", surface_id).await;
+        push_grant(&transport).await;
+        let client = authenticated_client(transport.clone(), "protected-session");
+        let expectation = document_expectation("demo/v1", Some(surface_id));
+
+        let admission = client
+            .admit_document_socket(&root_ctx(), space_id, document_id, &expectation, "native-instance", 30_000)
+            .expect("document admission");
+        assert_eq!(admission.authority.scope, DocumentScope::new(space_id, document_id));
+        assert_eq!(admission.authority.artifact.schema, "demo/v1");
+        assert_eq!(admission.authority.surface.surface_id, surface_id);
+        assert_eq!(admission.authority.pack_schema_hash, [0x11; 32]);
+        assert_eq!(admission.authority.package.plugin_id, "s.gis:地図");
+        assert_eq!(admission.authority.package.package_id, "s.gis.gismap:codec");
+        assert_eq!(admission.authority.package.version, "1.0.0:β");
+        assert_eq!(admission.authority.surface.app_id, "app.gis");
+        assert_eq!(admission.authority.surface.window_kind_id, "window.document");
+        assert_eq!(admission.authority.surface.renderer_target, DocumentOpenRendererTargetV1::React);
+
+        let requests = transport.requests.lock().unwrap();
+        assert_eq!(requests.len(), 2);
+        assert_eq!(requests[0].url, "http://hub.local/spaces/space%20%2F%E6%9D%B1%E4%BA%AC%3F/documents/document%23%C3%A4/open-plan");
+        assert_eq!(requests[1].url, "http://hub.local/spaces/space%20%2F%E6%9D%B1%E4%BA%AC%3F/documents/document%23%C3%A4/socket-grants");
+        let intent: serde_json::Value = serde_json::from_slice(&requests[0].body).expect("independent intent decode");
+        assert_eq!(intent, serde_json::json!({
+            "schema": "semio.hub.document-open-intent/v1",
+            "version": 1,
+            "scope": { "spaceId": space_id, "documentId": document_id },
+            "requestedSurfaceId": surface_id,
+            "clientInstanceId": "native-instance"
+        }));
+        let exchange: serde_json::Value = serde_json::from_slice(&requests[1].body).expect("independent exchange decode");
+        assert_eq!(exchange, serde_json::json!({
+            "schema": "semio.hub.document-plan-socket-grant-intent/v1",
+            "version": 1,
+            "planReceipt": receipt
+        }));
+        assert!(!requests[0].body.windows(receipt.len()).any(|window| window == receipt.as_bytes()));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn hostile_or_cancelled_plan_never_reaches_receipt_exchange() {
+        let transport = FakeTransport::default();
+        let receipt = push_document_plan(&transport, "space", "document", "foreign/v1", "surface").await;
+        let client = authenticated_client(transport.clone(), "protected-session");
+        let expectation = document_expectation("expected/v1", Some("surface"));
+        let error = match client.admit_document_socket(&root_ctx(), "space", "document", &expectation, "native-instance", 5_000) {
+            Err(error) => error,
+            Ok(_) => panic!("schema substitution accepted"),
+        };
+        assert!(!error.to_string().contains(&receipt));
+        assert_eq!(transport.requests.lock().unwrap().len(), 1, "invalid plan is never exchanged");
+
+        let cancelled_transport = FakeTransport::default();
+        push_document_plan(&cancelled_transport, "space", "document", "expected/v1", "surface").await;
+        cancelled_transport.cancel_after_grant.store(true, Ordering::SeqCst);
+        let cancelled = authenticated_client(cancelled_transport.clone(), "protected-session");
+        assert!(matches!(cancelled.admit_document_socket(&root_ctx(), "space", "document", &expectation, "native-instance", 5_000), Err(DirectoryClientError::Cancelled)));
+        assert_eq!(cancelled_transport.requests.lock().unwrap().len(), 1, "cancel after plan prevents exchange");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn cancellation_after_receipt_exchange_never_reaches_a_document_socket() {
+        let transport = FakeTransport::default();
+        push_document_plan(&transport, "space", "document", "expected/v1", "surface").await;
+        push_grant(&transport).await;
+        transport.cancel_after_grant_number.store(2, Ordering::SeqCst);
+        let client = authenticated_client(transport.clone(), "protected-session");
+        let expectation = document_expectation("expected/v1", Some("surface"));
+
+        assert!(matches!(client.admit_document_socket(&root_ctx(), "space", "document", &expectation, "native-instance", 5_000), Err(DirectoryClientError::Cancelled)));
+        assert_eq!(transport.requests.lock().unwrap().len(), 2, "plan and receipt exchange completed once");
+        assert!(transport.ws_urls.lock().unwrap().is_empty(), "cancelled exchanged grant never reaches a socket URL or protocol header");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn protected_document_admission_is_bounded_and_redacts_hostile_responses() {
+        let oversized = FakeTransport::default();
+        oversized.push_response(Ok(HttpResponse { status: 200, body: vec![b'x'; DOCUMENT_ADMISSION_RESPONSE_MAX_BYTES + 1] })).await;
+        let client = authenticated_client(oversized.clone(), "protected-session");
+        let expectation = document_expectation("expected/v1", None);
+        let error = match client.admit_document_socket(&root_ctx(), "space", "document", &expectation, "native-instance", u64::MAX) {
+            Err(error) => error,
+            Ok(_) => panic!("oversized plan accepted"),
+        };
+        assert_eq!(error.to_string(), "decode: protected document admission response exceeded 64 KiB");
+        assert_eq!(oversized.requests.lock().unwrap().len(), 1);
+
+        let hostile = FakeTransport::default();
+        let secret = format!("plan.v1.{}.{}", "a".repeat(32), "b".repeat(43));
+        hostile.push_response(Ok(HttpResponse { status: 500, body: secret.as_bytes().to_vec() })).await;
+        let client = authenticated_client(hostile.clone(), "protected-session");
+        let error = match client.admit_document_socket(&root_ctx(), "space", "document", &expectation, "native-instance", 5_000) {
+            Err(error) => error,
+            Ok(_) => panic!("hostile response accepted"),
+        };
+        assert!(!error.to_string().contains(&secret));
+        assert_eq!(error.to_string(), "http 500: protected document admission rejected");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn mismatched_local_plugin_selection_never_exchanges_a_plan_receipt() {
+        let transport = FakeTransport::default();
+        let receipt = push_document_plan(&transport, "space", "document", "expected/v1", "surface").await;
+        let client = authenticated_client(transport.clone(), "protected-session");
+        let mut expectation = document_expectation("expected/v1", Some("surface"));
+        expectation.surface.as_mut().expect("surface").package_id = "foreign.package".into();
+        let error = match client.admit_document_socket(&root_ctx(), "space", "document", &expectation, "native-instance", 5_000) {
+            Err(error) => error,
+            Ok(_) => panic!("foreign plugin selection accepted"),
+        };
+        assert!(!error.to_string().contains(&receipt));
+        assert_eq!(transport.requests.lock().unwrap().len(), 1);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1467,6 +2137,55 @@ mod tests {
 
         assert!(matches!(stream.turn(&ctx, 0), DirectoryStreamTurn::Closed));
         assert!(matches!(stream.turn(&root_ctx(), 0), DirectoryStreamTurn::Closed));
+    }
+
+    /// 🧪️ Cancellation while a grant/dial is outstanding closes a late socket exactly once.
+    #[semio_framework_async_macros::async_test]
+    async fn cancelling_a_pending_grant_dial_closes_its_late_socket() {
+        use super::test_support::FakeWs;
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        let client = authenticated_client(FakeTransport::default(), "tok");
+        let mut stream = client.stream(0);
+        let ctx = root_ctx();
+        assert!(matches!(stream.turn(&ctx, 0), DirectoryStreamTurn::Dial { .. }));
+
+        ctx.cancel.cancel_now();
+        assert!(matches!(stream.turn(&ctx, 1), DirectoryStreamTurn::Closed));
+        let closes = Arc::new(AtomicUsize::new(0));
+        assert!(matches!(stream.complete_dial(2, Ok(FakeWs::with_close_observer(closes.clone()))), DirectoryStreamTurn::Closed));
+        assert_eq!(closes.load(Ordering::SeqCst), 1);
+        assert!(matches!(stream.turn(&root_ctx(), 3), DirectoryStreamTurn::Closed));
+    }
+
+    /// 🧪️ A cancellation that races the fresh grant prevents any socket dial from starting.
+    #[semio_framework_async_macros::async_test]
+    async fn cancellation_after_grant_refresh_never_opens_or_greets_a_socket() {
+        let transport = FakeTransport::default();
+        push_grant(&transport).await;
+        transport.cancel_after_grant.store(true, Ordering::SeqCst);
+        let client = authenticated_client(transport.clone(), "tok");
+
+        assert!(matches!(client.open_stream_ws(&root_ctx(), 0, 100), Err(DirectoryClientError::Cancelled)));
+        assert!(transport.ws_urls.lock().unwrap().is_empty());
+        assert_eq!(transport.ws_sends.load(Ordering::SeqCst), 0);
+        assert_eq!(transport.ws_closes.load(Ordering::SeqCst), 0);
+    }
+
+    /// 🧪️ A cancellation after transport open but before tag-7 greeting closes the socket exactly
+    /// once and sends no frame.
+    #[semio_framework_async_macros::async_test]
+    async fn cancellation_after_socket_open_closes_before_socket_hello() {
+        let transport = FakeTransport::default();
+        push_grant(&transport).await;
+        transport.push_ws(Ok(VecDeque::new())).await;
+        transport.cancel_after_open.store(true, Ordering::SeqCst);
+        let client = authenticated_client(transport.clone(), "tok");
+
+        assert!(matches!(client.open_stream_ws(&root_ctx(), 0, 100), Err(DirectoryClientError::Cancelled)));
+        assert_eq!(transport.ws_urls.lock().unwrap().len(), 1);
+        assert_eq!(transport.ws_sends.load(Ordering::SeqCst), 0);
+        assert_eq!(transport.ws_closes.load(Ordering::SeqCst), 1);
     }
     //#endregion 🔖️CancellationTests
 }

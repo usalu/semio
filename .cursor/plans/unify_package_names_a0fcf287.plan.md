@@ -104,7 +104,7 @@ flowchart LR
 4. **Wave 3 — compose + hub Rust (9)**
   Prefix to `semio-compose-*` / `semio-hub-*`. Update compose workspace deps and any `extern crate` / path deps.
 5. **Wave 4 — JS/Nx + other languages**
-  - Force every `package.json` / `📋️project.json` under compose/repo/vscode/trinity/assets/infinite-canvas onto `@semio-tech/...` per table.  
+  - Force every `package.json` / `📋️project.json` under compose/repo/vscode/trinity/assets/infinite-canvas onto `@semio-tech/...` per table.
   - Root `[package.json](package.json)` `name`: `compose` → `workspace`.  
   - Python `[compose/client/lib/py](compose/client/lib/py)`, framework ui-styling pyproject.  
   - Go modules under compose/repo: keep `github.com/usalu/semio/...` path-shaped modules; rename only if the module path still says a relocated/legacy segment (do not invent a second parallel scheme).  
@@ -128,4 +128,3 @@ flowchart LR
 - Root rename `compose` → `workspace` touches monorepo identity; update anything that keys off root package name.  
 - High fan-out on `compose` / `puzzle-plugin` / `ui_wgpu`; do renames via the map in batches and regenerate `Cargo.lock`/`bun.lock` once per wave, not per crate.  
 - Concurrent editors: only edit existing manifests; no worktrees; no git mutating commands.
-

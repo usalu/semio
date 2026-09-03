@@ -34,8 +34,8 @@ function readOwned(path: string): Buffer {
 }
 
 const ownerRelative = relative(root, import.meta.dir).split("\\").join("/");
-const vector = JSON.parse(readOwned(ownerRelative + "/🔣️.json").toString("utf8"));
-const schema = JSON.parse(readOwned(ownerRelative + "/🧬️schema/🔣️.json").toString("utf8"));
+const vector = JSON.parse(readOwned(ownerRelative + "../🧪️📖️🪻️testing-readme-coordinates/🔣️.json").toString("utf8"));
+const schema = JSON.parse(readOwned(ownerRelative + "../🧪️📖️🪻️testing-readme-coordinates/🧬️schema/🔣️.json").toString("utf8"));
 const content = (): string => readOwned(vector.documents.readme).toString("utf8");
 const squash = (value: string): string => value.replace(/\s+/gu, " ").trim();
 const nodeText = (node: any): string => typeof node.value === "string" ? node.value : (node.children ?? []).map(nodeText).join("");
@@ -59,7 +59,7 @@ test("authored coordinate and prose vectors satisfy their neutral schema and ind
   const validate = new Ajv({ allErrors: true }).compile(schema);
   expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
   const errors: ParseError[] = [];
-  expect(parseJson(readOwned(ownerRelative + "/🔣️.json").toString("utf8"), errors, { disallowComments: true, allowTrailingComma: false })).toEqual(vector);
+  expect(parseJson(readOwned(ownerRelative + "../🧪️📖️🪻️testing-readme-coordinates/🔣️.json").toString("utf8"), errors, { disallowComments: true, allowTrailingComma: false })).toEqual(vector);
   expect(errors).toEqual([]);
   for (const rows of [vector.kindLeaves, vector.inlineCoordinates, vector.paragraphs, vector.parserCases]) {
     const keys = rows.map((row: any) => row.id ?? row.kindId);

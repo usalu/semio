@@ -22,7 +22,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { LATEST_PROTOCOL_VERSION, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { requireMcpBinary, spawnRawMcp } from "../../🟦️.ts";
-import { isValidJsonSchema2020_12 } from "./🧬️schema-validation.ts";
+import { isValidJsonSchema2020_12 } from "../../📦️packages/🟦️typescript/🧬️schema-validation.ts";
 import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();

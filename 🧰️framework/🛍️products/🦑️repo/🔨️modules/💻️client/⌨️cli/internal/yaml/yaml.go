@@ -454,7 +454,7 @@ func assign(target reflect.Value, source interface{}) error {
 }
 
 func fieldName(field reflect.StructField) (string, map[string]bool) {
-	tag := field.Tag.Get("yaml")
+	tag := field.Tag.Get("🐹️🟪️yaml.go")
 	if tag == "" {
 		tag = field.Tag.Get("json")
 	}

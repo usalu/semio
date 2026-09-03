@@ -11,7 +11,7 @@ import { semanticPackageProjectionAuthority, type SemanticPackageProjectionCatal
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../../");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧪️🪪️🪁️nested-cargo-collision-authority/🔣️.json"), "utf8"));
 const taxonomy = JSON.parse(readFileSync(join(repoRoot, library, "🔣️taxonomy.json"), "utf8")) as Taxonomy;
 const catalogBytes = readFileSync(join(repoRoot, taxonomy.semanticPackageProjectionContracts["nested-cargo-packages-v1"]!.authorityCatalogPath));
 const catalog = JSON.parse(catalogBytes.toString()) as SemanticPackageProjectionCatalog;

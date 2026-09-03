@@ -7,7 +7,7 @@ import ts from "typescript";
 
 const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "🧹️normalization/🟦️.ts"), source = readFileSync(sourcePath, "utf8");
 const tree = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧪️🪪️🐸️transaction-recovery-authority/🔣️.json"), "utf8"));
 const functionNames = ["reconcileTransactionOwnedTuples", "validateForwardMoveSourceInputs", "validateForwardGeneratorInputs", "validateResumeTuples"];
 const classNames = ["TaxonomyStartedRegenerationPartialError", "TaxonomyMoveSourceInputDriftError", "TaxonomyGeneratorInputDriftError"];
 const compilers = [
@@ -91,7 +91,7 @@ test("recovery authority is mounted through its exact Nx and launch registration
   expect(project.targets["test-" + row.id]).toEqual({ executor: "nx:run-commands", options: { cwd: "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript", command: "bun ./📜️script.ts test " + row.id } });
   const router = readFileSync(join(packagePath, "📜️script.ts"), "utf8");
   expect(router).toContain('segments[0] === "' + row.id + '"');
-  expect(router).toContain('🧪️tests/🧪️' + row.id + '/🟦️.ts');
+  expect(router).toContain('🧪️🧪️🏔️🦋️tests/🧪️' + row.id + '../🧪️🪪️🐸️transaction-recovery-authority/🟦️.ts');
   for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
     const document = getNodeValue(parseTree(readFileSync(join(root, path), "utf8"))!);
     expect(document.configurations.filter((entry: any) => entry.presentation?.group === "4_gate" && entry.presentation?.order === row.order)).toHaveLength(1);

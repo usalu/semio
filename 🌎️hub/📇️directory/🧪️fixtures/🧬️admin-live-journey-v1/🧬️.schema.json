@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.hub.admin-live-journey/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "profile", "limits", "languages", "mutation", "operation"],
+  "properties": {
+    "schema": { "const": "semio.hub.admin-live-journey/v1" },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profileId", "subject", "displayName"],
+      "properties": {
+        "profileId": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "subject": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["journeyMs", "pollMs", "responseBytes"],
+      "properties": {
+        "journeyMs": { "type": "integer", "minimum": 1000, "maximum": 60000 },
+        "pollMs": { "type": "integer", "minimum": 10, "maximum": 5000 },
+        "responseBytes": { "const": 65536 }
+      }
+    },
+    "languages": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["locale", "overview", "spaces", "newSpace"],
+        "properties": {
+          "locale": { "enum": ["en", "de"] },
+          "overview": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "spaces": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "newSpace": { "type": "string", "minLength": 1, "maxLength": 64 }
+        }
+      }
+    },
+    "mutation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "requestId", "name", "spaceKind", "visibility"],
+      "properties": {
+        "kind": { "const": "create-space" },
+        "requestId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "spaceKind": { "enum": ["atelier", "studio", "archive"] },
+        "visibility": { "enum": ["private", "public"] }
+      }
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "requestId"],
+      "properties": {
+        "kind": { "const": "rebuild-directory-projections" },
+        "requestId": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    }
+  }
+}

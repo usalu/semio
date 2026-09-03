@@ -1,8 +1,7 @@
 // #region 🧲️Header
-/** @emoji 🛡️ `os-hub-admin` entry — mounts `AdminApp` under `AdminLocaleProvider`/`AdminSessionProvider`.
- * Served by the hub itself at `/admin` in production (see `📦️bin.rs`'s `🔖️AdminPage` region); in dev,
- * `⚙️vite.config.ts` proxies `/directory`, `/admin/api`, `/auth`, `/spaces` to the hub so this page
- * behaves identically at both the `8790` dev port and the hub's own `/admin`. */
+/** 🛡️ `os-hub-admin` entry — mounts `AdminApp` under the explicit locale and protected relay session
+ * providers. Authenticated development is served only by `os-hub:dev-secure-admin`; Vite is a
+ * static, authority-free UI iteration surface. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters

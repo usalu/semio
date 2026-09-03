@@ -3512,11 +3512,6 @@
       "slugPattern": "^(config|options)$",
       "allowEmojiOnly": false
     },
-    "commands": {
-      "emoji": "🎮️",
-      "slugPattern": "^commands$",
-      "allowEmojiOnly": false
-    },
     "tools": {
       "emoji": "🛠️",
       "slugPattern": "^tools$",
@@ -4991,6 +4986,11 @@
     "turn-patch-owner": {
       "emoji": "🚪️",
       "slugPattern": "^turn-patch-owner$",
+      "allowEmojiOnly": false
+    },
+    "commands": {
+      "emoji": "🎮️",
+      "slugPattern": "^commands$",
       "allowEmojiOnly": false
     }
   },
@@ -9963,8 +9963,8 @@
     },
     "readme-license-owner-leaves-v1": {
       "contractKind": "exact-owner-path-catalog",
-      "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️readme-license-owner-authority.json",
-      "authorityCatalogSha256": "051394741822e92d51f3bda15ce64d84c236582c6927335c9c5e0ac3c18a1da4",
+      "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️readme-license-owner-authority/🔣️.json",
+      "authorityCatalogSha256": "5142e32c5a67725174797889bd90d80e4abc8f62c62cd085555c599ef8519543",
       "currentSourceRevisions": {
         "testing-readme-protocol-v2-reviewed": {
           "catalogCaseIndex": 31,
@@ -9981,7 +9981,7 @@
             "size": 12527,
             "mode": "0644"
           },
-          "expectationsPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️test/🔣️ing-readme-coordinates.json",
+          "expectationsPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️📖️🪻️testing-readme-coordinates/🔣️.json",
           "expectationsSha256": "83a1c6b098f7fc5ad26d1f7d5b47e08447ec50a8016796f0eaa0b1db3ed575a6"
         }
       },
@@ -10457,6 +10457,30 @@
         "ecosystemId": "🟦️typescript"
       },
       "verification": "bun pm",
+      "expires": null
+    },
+    "bun-package-readme": {
+      "pathPattern": "**/README.md",
+      "authority": "Bun package publisher",
+      "reason": "Bun package publication discovers the README at an exact publishable TypeScript package root",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "package-root",
+        "ecosystemId": "🟦️typescript"
+      },
+      "verification": "bun pm pack --dry-run --ignore-scripts",
+      "expires": null
+    },
+    "bun-package-license": {
+      "pathPattern": "**/LICENSE.md",
+      "authority": "Bun package publisher",
+      "reason": "Bun package publication discovers the license at an exact publishable TypeScript package root",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "package-root",
+        "ecosystemId": "🟦️typescript"
+      },
+      "verification": "bun pm pack --dry-run --ignore-scripts",
       "expires": null
     },
     "typescript-config": {
@@ -11207,6 +11231,171 @@
       },
       "verification": "depcruise --config",
       "expires": null
+    },
+    "root-mcp-config": {
+      "pathPattern": ".mcp.json",
+      "authority": "Model Context Protocol tooling",
+      "reason": "Workspace MCP server discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "MCP client load",
+      "expires": null
+    },
+    "root-prettier-config": {
+      "pathPattern": ".prettierrc.json",
+      "authority": "Prettier",
+      "reason": "Workspace formatter discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "prettier --check",
+      "expires": null
+    },
+    "root-changelog": {
+      "pathPattern": "CHANGELOG.md",
+      "authority": "Repository hosting conventions",
+      "reason": "Release history discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "repository host rendering",
+      "expires": null
+    },
+    "root-claude-instructions": {
+      "pathPattern": "CLAUDE.md",
+      "authority": "Claude Code",
+      "reason": "Repository instruction discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "Claude project load",
+      "expires": null
+    },
+    "root-cmake-project": {
+      "pathPattern": "CMakeLists.txt",
+      "authority": "CMake",
+      "reason": "CMake project discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "cmake configure",
+      "expires": null
+    },
+    "root-cmake-presets": {
+      "pathPattern": "CMakePresets.json",
+      "authority": "CMake",
+      "reason": "CMake preset discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "cmake --list-presets",
+      "expires": null
+    },
+    "root-dotnet-solution": {
+      "pathPattern": "Monorepo.sln",
+      "authority": ".NET SDK",
+      "reason": "Solution discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "dotnet restore",
+      "expires": null
+    },
+    "root-bun-lock": {
+      "pathPattern": "bun.lock",
+      "authority": "Bun",
+      "reason": "Workspace dependency lock discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "bun install --frozen-lockfile",
+      "expires": null
+    },
+    "root-bun-config": {
+      "pathPattern": "bunfig.toml",
+      "authority": "Bun",
+      "reason": "Workspace runtime configuration discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "bun install",
+      "expires": null
+    },
+    "root-pytest-config": {
+      "pathPattern": "conftest.py",
+      "authority": "pytest",
+      "reason": "Workspace test fixture discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "pytest",
+      "expires": null
+    },
+    "root-eslint-config": {
+      "pathPattern": "eslint.config.mjs",
+      "authority": "ESLint",
+      "reason": "Workspace lint configuration discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "eslint",
+      "expires": null
+    },
+    "root-rustfmt-config": {
+      "pathPattern": "rustfmt.toml",
+      "authority": "rustfmt",
+      "reason": "Workspace Rust formatting discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "cargo fmt --check",
+      "expires": null
+    },
+    "root-rust-toolchain": {
+      "pathPattern": "rust-toolchain.toml",
+      "authority": "rustup",
+      "reason": "Workspace Rust toolchain discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "rustup show",
+      "expires": null
+    },
+    "root-skills-lock": {
+      "pathPattern": "skills-lock.json",
+      "authority": "Codex skills",
+      "reason": "Workspace skill dependency lock discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "Codex skill inventory",
+      "expires": null
+    },
+    "root-uv-lock": {
+      "pathPattern": "uv.lock",
+      "authority": "uv",
+      "reason": "Workspace Python dependency lock discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "uv lock --check",
+      "expires": null
     }
   },
   "fixedFilenameRejectionContracts": {
@@ -11518,6 +11707,50 @@
       },
       "verification": "repo goal inventory",
       "expires": null
+    },
+    "go-command-root": {
+      "pathPattern": "**/⌨️cli/cmd",
+      "authority": "Go toolchain",
+      "reason": "Go executable discovery requires the ASCII cmd directory",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "go build",
+      "expires": null
+    },
+    "go-internal-root": {
+      "pathPattern": "**/⌨️cli/internal",
+      "authority": "Go import-path grammar",
+      "reason": "Go import paths reject emoji and reserve internal as a package visibility boundary",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "go test",
+      "expires": null
+    },
+    "go-internal-package": {
+      "pathPattern": "**/⌨️cli/internal/*",
+      "authority": "Go import-path grammar",
+      "reason": "Imported Go package path segments must use the compiler-accepted ASCII package identity",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "go test",
+      "expires": null
+    },
+    "repo-command-entry": {
+      "pathPattern": "**/⌨️cli/cmd/repo",
+      "authority": "Go import-path grammar",
+      "reason": "Go import paths reject emoji, so the executable package name is reserved ASCII",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "go build",
+      "expires": null
     }
   },
   "configurableEntryContracts": {
@@ -11687,6 +11920,8 @@
       ],
       "allowedFixedContractIds": [
         "node-package-manifest",
+        "bun-package-readme",
+        "bun-package-license",
         "typescript-config",
         "nx-project-manifest",
         "root-script"
@@ -11805,6 +12040,20 @@
     }
   },
   "packageSourceDispositions": {
+    "root-pytest-config": {
+      "contractKind": "fixed",
+      "disposition": "tool-metadata",
+      "validator": "pytest-configuration",
+      "authority": "pytest repository-root configuration discovery",
+      "verification": "pytest"
+    },
+    "root-eslint-config": {
+      "contractKind": "fixed",
+      "disposition": "tool-metadata",
+      "validator": "eslint-configuration",
+      "authority": "ESLint repository-root configuration discovery",
+      "verification": "eslint"
+    },
     "python-init": {
       "contractKind": "fixed",
       "disposition": "adapter-source",
@@ -12561,8 +12810,8 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📐️surface-lane/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Trunk.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/package.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/⚙️🌹️Trunk.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🌐️.html",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📋️project.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📚️library/🦀️.rs",
@@ -12570,18 +12819,18 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🧪️test/🟦️s.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📮️runtime-mailbox-core/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📸️render-snapshot/🦀️.rs",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer-boot/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️🟠️renderer-boot/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🟦️browser-frame-transport.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🟦️browser-interactive-job-port.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🟦️package-integration.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️browser-boot/🟦️.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️browser-frame-transport/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️browser-interactive-job-port/🟦️.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️browser-worker/🦀️.rs",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️frame-worker/🟦️.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️interactive-job-registry/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️🐼️browser-worker/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️📇️interactive-job-registry/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️📡️browser-frame-transport/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️🚀️frame-worker/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️🧵️🪄️frame-job/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🪢️kernel-seam/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml",
@@ -12675,6 +12924,45 @@
     "requiredAfterEmoji": true,
     "comparison": "ignore-selector"
   },
+  "pathEmojiPolicy": {
+    "inventory": "git-visible",
+    "identity": "leading-emoji-sequence",
+    "siblingNamespace": "files-and-directories",
+    "genericEmojiIdentities": [
+      "📁️",
+      "📂️",
+      "📄️"
+    ],
+    "reservedSubtreeDirectoryNames": [
+      ".git",
+      ".🧬semio",
+      ".semio",
+      ".vscode",
+      ".github",
+      ".cursor",
+      ".claude",
+      ".agents",
+      ".devcontainer",
+      ".kiro",
+      ".codex",
+      ".windsurf",
+      ".copilot",
+      ".factory",
+      ".ralph-tui",
+      ".cargo",
+      ".config",
+      ".storybook",
+      "📄️artifacts",
+      "🗿️artifacts",
+      "asset",
+      "assets",
+      "fixtures",
+      "🧪️fixtures",
+      "📚️examples",
+      "🤖️generated",
+      "🌐️public"
+    ]
+  },
   "collisionPolicy": {
     "comparisons": [
       "byte",
@@ -12717,9 +13005,6 @@
     },
     "🔨️modules": {
       "kind": "module"
-    },
-    "🗿️artifacts": {
-      "kind": "artifact"
     },
     "🏅️standards": {
       "kind": "standard"
@@ -12768,6 +13053,9 @@
     },
     "🎬️actions": {
       "kind": "action"
+    },
+    "🗿️artifacts": {
+      "kind": "artifact"
     },
     "🎮️commands": {
       "kind": "command"
@@ -13492,8 +13780,8 @@
     "↩️inverse"
   ],
   "mutationDirectLeafForbiddenRegionMarkers": {
-    "🔺️diff": "🔖️Diff",
-    "↩️inverse": "🔖️Inverse"
+    "↩️inverse": "🔖️Inverse",
+    "🔺️diff": "🔖️Diff"
   },
   "mutationOrganizationalFacetDirs": [
     "🧩️plan",

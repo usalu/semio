@@ -14,7 +14,7 @@ import { applyTaxonomyPlan, frozenCoordinateEvidenceCoordinates, inventoryTaxono
 const libraryRoot = resolve(import.meta.dir, "../..");
 const repoRoot = resolve(libraryRoot, "../../../../..");
 const ticketRoot = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧪️🪪️🌴️historical-package-owner-identity/🔣️.json"), "utf8"));
 const goldenPath = join(libraryRoot, vector.historicalDocument.libraryRelativePath);
 const goldenBytes = readFileSync(goldenPath);
 const golden = JSON.parse(goldenBytes.toString());

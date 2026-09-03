@@ -7,7 +7,7 @@
 //! `viewer` pin for the very same dialect — the coordinate is the pair, not the dialect.
 //!
 //! 🎚️ Shape note: this config facet's `Mutation::Diff` IS `OpeningPreferences` itself — a
-//! whole-record diff whose `apply` ignores `base` — so the committed `🔺️diff/🔣️.json` is
+//! whole-record diff whose `apply` ignores `base` — so the committed `../✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🔺️diff/🔣️.json` is
 //! the full post-op preferences record, not a sparse delta.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket

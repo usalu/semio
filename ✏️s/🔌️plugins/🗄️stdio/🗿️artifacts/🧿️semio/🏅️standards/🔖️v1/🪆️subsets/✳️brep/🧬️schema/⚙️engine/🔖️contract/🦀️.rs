@@ -130,14 +130,14 @@ pub const BREP_KERNEL_OPERATIONS: &[&str] = &[
     "plane_surface", "planar_face_from_points", "planar_face_from_wire", "nurbs_surface_from_grid", "coons_patch", "offset_face", "thicken_face",
     "extrude_wire", "extrude", "revolve", "loft", "sweep", "pipe", "helical_sweep",
     "fuse", "cut", "intersect", "compound_cut",
-    "translate", "rotate", "scale", "mirror", "copy_shape", "linear_pattern", "circular_pattern", "grid_pattern",
+    "translate", "rotate", "rotate_about", "scale", "mirror", "copy_shape", "linear_pattern", "circular_pattern", "grid_pattern",
     "fillet", "fillet_variable", "fillet_edges", "chamfer", "chamfer_asymmetric", "chamfer_edges", "shell", "draft", "offset_solid", "defeature",
     "section", "split", "curve_curve_intersect", "curve_surface_intersect", "surface_surface_intersect",
-    "curve_point", "curve_tangent", "curve_domain", "curve_curvature", "surface_point", "surface_normal",
+    "curve_point", "curve_tangent", "curve_domain", "curve_curvature", "surface_point", "surface_normal", "curve_closest_parameter", "surface_closest_uv",
     "volume", "area", "length", "center_of_mass", "bounding_box", "distance", "closest_point", "classify_point", "validate",
     "vertex", "face_from_wire", "sew_faces", "heal_solid", "convert_to_nurbs", "deconstruct",
     "export_step", "export_stl", "export_obj", "export_gltf", "import_step", "import_stl", "import_obj", "export_dwg", "import_dwg",
-    "kind", "tessellate", "dispose", "retain", "registry_len",
+    "kind", "tessellate", "dispose", "retain", "registry_len", "solid_shells", "compound", "explode", "label",
 ];
 
 /// 📊️ `(method name, quality)` table reflecting the CURRENT engine implementation (audit
@@ -172,36 +172,52 @@ const OPERATION_QUALITY: &[(&str, OpQuality)] = &[
     ("planar_face_from_wire", OpQuality::ExactAnalytic),
     ("nurbs_surface_from_grid", OpQuality::ApproximateBRep),
     ("coons_patch", OpQuality::ApproximateBRep),
-    ("offset_face", OpQuality::MeshDerivedBRep),
-    ("thicken_face", OpQuality::MeshDerivedBRep),
-    ("extrude_wire", OpQuality::MeshDerivedBRep),
+    ("offset_face", OpQuality::ExactNumericalWithinTolerance),
+    ("thicken_face", OpQuality::ExactNumericalWithinTolerance),
+    // W2-C (26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME): exact per-edge analytic/NURBS sweeps,
+    // no triangle soup anywhere — see `➡️sweep/📓️w2c-sweeps.md`. `extrude`/`extrude_wire`/`revolve`
+    // build every lateral face from the profile edge's own analytic kind (Plane/Cylinder/Cone/
+    // Torus/Sphere) or its exact `to_nurbs()` control net; `loft` skins harmonized NURBS control
+    // columns exactly. `sweep`/`pipe`/`helical_sweep` fast-path a straight/circular path onto
+    // extrude/revolve exactly, but their general (arbitrary-curvature) path chains adaptively
+    // sampled rotation-minimizing-frame stations — bounded-error, not exact.
+    ("extrude_wire", OpQuality::ExactAnalytic),
     ("extrude", OpQuality::ExactAnalytic),
-    ("revolve", OpQuality::MeshDerivedBRep),
-    ("loft", OpQuality::MeshDerivedBRep),
-    ("sweep", OpQuality::MeshDerivedBRep),
-    ("pipe", OpQuality::MeshDerivedBRep),
-    ("helical_sweep", OpQuality::MeshDerivedBRep),
-    ("fuse", OpQuality::MeshDerivedBRep),
-    ("cut", OpQuality::MeshDerivedBRep),
-    ("intersect", OpQuality::MeshDerivedBRep),
-    ("compound_cut", OpQuality::MeshDerivedBRep),
-    ("translate", OpQuality::MeshDerivedBRep),
-    ("rotate", OpQuality::MeshDerivedBRep),
-    ("scale", OpQuality::MeshDerivedBRep),
-    ("mirror", OpQuality::MeshDerivedBRep),
-    ("copy_shape", OpQuality::MeshDerivedBRep),
+    ("revolve", OpQuality::ExactAnalytic),
+    ("loft", OpQuality::ExactAnalytic),
+    ("sweep", OpQuality::ExactNumericalWithinTolerance),
+    ("pipe", OpQuality::ExactNumericalWithinTolerance),
+    ("helical_sweep", OpQuality::ExactNumericalWithinTolerance),
+    // 🔀️ W2-B (26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME): the exact imprint→classify→select→
+    // stitch boolean engine (`diff::boolean::exact_imprint_boolean`, plus the still-exact
+    // trivial-topology/box-analytic fast paths ahead of it) is now the default path — the old
+    // tessellate→classify→triangle-soup pipeline survives only as the explicit opt-in
+    // `boolean_solid_mesh_preview`, which `boolean_solid`/`compound_cut` never call. Not
+    // `ExactAnalytic`: the imprint curve's domain is clipped via fixed-resolution sampling +
+    // bisection refinement (matching `intersect::surface_surface`'s own `curve_surface_intersect`/
+    // `surface_surface_intersect` rating below), not a certified closed-form clip.
+    ("fuse", OpQuality::ExactNumericalWithinTolerance),
+    ("cut", OpQuality::ExactNumericalWithinTolerance),
+    ("intersect", OpQuality::ExactNumericalWithinTolerance),
+    ("compound_cut", OpQuality::ExactNumericalWithinTolerance),
+    ("translate", OpQuality::ExactAnalytic),
+    ("rotate", OpQuality::ExactAnalytic),
+    ("rotate_about", OpQuality::ExactAnalytic),
+    ("scale", OpQuality::ExactAnalytic),
+    ("mirror", OpQuality::ExactAnalytic),
+    ("copy_shape", OpQuality::ExactAnalytic),
     ("linear_pattern", OpQuality::MeshDerivedBRep),
     ("circular_pattern", OpQuality::MeshDerivedBRep),
     ("grid_pattern", OpQuality::MeshDerivedBRep),
-    ("fillet", OpQuality::MeshDerivedBRep),
-    ("fillet_variable", OpQuality::MeshDerivedBRep),
-    ("fillet_edges", OpQuality::MeshDerivedBRep),
-    ("chamfer", OpQuality::MeshDerivedBRep),
-    ("chamfer_asymmetric", OpQuality::MeshDerivedBRep),
-    ("chamfer_edges", OpQuality::MeshDerivedBRep),
-    ("shell", OpQuality::MeshDerivedBRep),
-    ("draft", OpQuality::MeshDerivedBRep),
-    ("offset_solid", OpQuality::MeshDerivedBRep),
+    ("fillet", OpQuality::ExactNumericalWithinTolerance),
+    ("fillet_variable", OpQuality::ExactNumericalWithinTolerance),
+    ("fillet_edges", OpQuality::ExactNumericalWithinTolerance),
+    ("chamfer", OpQuality::ExactNumericalWithinTolerance),
+    ("chamfer_asymmetric", OpQuality::ExactNumericalWithinTolerance),
+    ("chamfer_edges", OpQuality::ExactNumericalWithinTolerance),
+    ("shell", OpQuality::ExactNumericalWithinTolerance),
+    ("draft", OpQuality::ExactNumericalWithinTolerance),
+    ("offset_solid", OpQuality::ExactNumericalWithinTolerance),
     ("defeature", OpQuality::MeshDerivedBRep),
     ("section", OpQuality::ExactAnalytic),
     ("split", OpQuality::MeshDerivedBRep),
@@ -214,6 +230,8 @@ const OPERATION_QUALITY: &[(&str, OpQuality)] = &[
     ("curve_curvature", OpQuality::ExactAnalytic),
     ("surface_point", OpQuality::ExactAnalytic),
     ("surface_normal", OpQuality::ExactAnalytic),
+    ("curve_closest_parameter", OpQuality::ExactNumericalWithinTolerance),
+    ("surface_closest_uv", OpQuality::ExactNumericalWithinTolerance),
     ("volume", OpQuality::ExactNumericalWithinTolerance),
     ("area", OpQuality::ExactNumericalWithinTolerance),
     ("length", OpQuality::ExactNumericalWithinTolerance),
@@ -243,6 +261,10 @@ const OPERATION_QUALITY: &[(&str, OpQuality)] = &[
     ("dispose", OpQuality::ExactAnalytic),
     ("retain", OpQuality::ExactAnalytic),
     ("registry_len", OpQuality::ExactAnalytic),
+    ("solid_shells", OpQuality::ExactAnalytic),
+    ("compound", OpQuality::ExactAnalytic),
+    ("explode", OpQuality::ExactAnalytic),
+    ("label", OpQuality::ExactAnalytic),
 ];
 
 /// 🔎️ Looks up a `BrepKernel` method's current result fidelity by name; unknown names report

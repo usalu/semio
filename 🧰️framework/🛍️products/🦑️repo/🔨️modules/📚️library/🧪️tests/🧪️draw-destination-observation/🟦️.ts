@@ -20,15 +20,15 @@ type DestinationInput = Readonly<{ repoRoot: string; destinationRoot: string; io
 type Run = Readonly<{ root: string; repoRoot: string; started: string; report: string }>;
 
 const libraryRoot = resolve(import.meta.dir, "../.."), repoRoot = resolve(libraryRoot, "../../../../..");
-const vectorText = readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"), vector = JSON.parse(vectorText) as ObservationVector;
-const schemaText = readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8"), schema = JSON.parse(schemaText);
+const vectorText = readFileSync(join(import.meta.dir, "../🧪️🛟️draw-destination-observation/🔣️.json"), "utf8"), vector = JSON.parse(vectorText) as ObservationVector;
+const schemaText = readFileSync(join(import.meta.dir, "../🧪️🛟️draw-destination-observation/🧬️schema/🔣️.json"), "utf8"), schema = JSON.parse(schemaText);
 const catalogPath = resolve(import.meta.dir, vector.authority.catalog), catalogBytes = readFileSync(catalogPath);
 const projection = JSON.parse(catalogBytes.toString()).projections[vector.authority.projectionIndex] as Projection;
 const authoredPath = resolve(import.meta.dir, vector.authority.authoredSource), authoredBytes = readFileSync(authoredPath), authored = JSON.parse(authoredBytes.toString()) as AuthoredSource;
 const authoredSchemaPath = join(dirname(authoredPath), "🧬️schema/🔣️.json"), authoredSchema = JSON.parse(readFileSync(authoredSchemaPath, "utf8"));
 const taxonomy = loadCatalogTaxonomy();
 const reportOwner = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️draw-destination-observation");
-const inputPaths = [import.meta.filename, join(import.meta.dir, "🔣️.json"), join(import.meta.dir, "🧬️schema/🔣️.json"), catalogPath, authoredPath, authoredSchemaPath, join(libraryRoot, "🔣️taxonomy.json"), join(libraryRoot, "🔍️discovery/🟦️.ts"), join(import.meta.dir, "🧪️registration/🔣️.json"), join(import.meta.dir, "🧪️registration/🧬️schema/🔣️.json")];
+const inputPaths = [import.meta.filename, join(import.meta.dir, "../🧪️🛟️draw-destination-observation/🔣️.json"), join(import.meta.dir, "../🧪️🛟️draw-destination-observation/🧬️schema/🔣️.json"), catalogPath, authoredPath, authoredSchemaPath, join(libraryRoot, "🔣️taxonomy.json"), join(libraryRoot, "🔍️discovery/🟦️.ts"), join(import.meta.dir, "../🧪️🛟️draw-destination-observation/🧪️registration/🔣️.json"), join(import.meta.dir, "../🧪️🛟️draw-destination-observation/🧪️registration/🧬️schema/🔣️.json")];
 const hash = (bytes: string | Uint8Array): string => createHash("sha256").update(bytes).digest("hex");
 const byteOrder = (left: string, right: string): number => Buffer.from(left).compare(Buffer.from(right));
 const validateNeutral = new Ajv({ strict: true, allErrors: true }).compile(schema);
@@ -363,10 +363,10 @@ for (const boundary of vector.ancestorSwap.boundaries) test("Draw destination an
 });
 
 test("Draw destination observation has the closed default-budget canonical registration", async () => {
-  const directory = join(import.meta.dir, "🧪️registration"), bytes = readFileSync(join(directory, "🔣️.json"), "utf8"), registration = JSON.parse(bytes);
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(directory, "🧬️schema/🔣️.json"), "utf8")));
+  const directory = join(import.meta.dir, "../🧪️🛟️draw-destination-observation/🧪️registration"), bytes = readFileSync(join(directory, "../🧪️🛟️draw-destination-observation/🔣️.json"), "utf8"), registration = JSON.parse(bytes);
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(directory, "../🧪️🛟️draw-destination-observation/🧬️schema/🔣️.json"), "utf8")));
   expect(validate(registration), JSON.stringify(validate.errors)).toBe(true);
-  for (const invalid of [{ ...registration, source: "🟦️.ts" }, { ...registration, budget: 120000 }, { ...registration, budgetMs: 120000 }, { ...registration, filter: "selected" }, { ...registration, runner: "other" }, { ...registration, launchOrder: 410.210 }]) expect(validate(invalid)).toBe(false);
+  for (const invalid of [{ ...registration, source: "../🧪️🛟️draw-destination-observation/🟦️.ts" }, { ...registration, budget: 120000 }, { ...registration, budgetMs: 120000 }, { ...registration, filter: "selected" }, { ...registration, runner: "other" }, { ...registration, launchOrder: 410.210 }]) expect(validate(invalid)).toBe(false);
   const errors: ParseError[] = [];
   expect(parse(bytes, errors, { disallowComments: true, allowTrailingComma: false })).toEqual(registration);
   expect(errors).toEqual([]);

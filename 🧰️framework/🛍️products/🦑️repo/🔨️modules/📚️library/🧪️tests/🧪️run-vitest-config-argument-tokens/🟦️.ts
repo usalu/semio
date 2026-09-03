@@ -6,7 +6,7 @@ import ts from "typescript";
 const root = resolve(import.meta.dir, "../../../../../../../");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const text = readFileSync(resolve(root, library, "🧹️normalization/🟦️.ts"), "utf8");
-const syntax = ts.createSourceFile("🟦️.ts", text, ts.ScriptTarget.Latest, true);
+const syntax = ts.createSourceFile("../🧪️🎚️run-vitest-config-argument-tokens/🟦️.ts", text, ts.ScriptTarget.Latest, true);
 const helpers = new Set(["lineLocation"]);
 const constants = new Set(["indexedLineContent", "indexedLineStarts"]);
 const support = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) ? helpers.has(node.name?.text ?? "") : ts.isVariableStatement(node) && node.declarationList.declarations.some((declaration) => constants.has(declaration.name.getText(syntax)))).map((node) => node.getText(syntax)).join("\n");

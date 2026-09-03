@@ -18,6 +18,7 @@ import { conflictResolutionAsU8, createTurnOutcomeBroadcast, dialectCoordinate, 
  * {@link BackboneWorkerRequest}/{@link BackboneWorkerResponse}'s `directory-*` variants and this
  * file's `🔖️HubBinding` region; never redeclared (lane 0-A owns the type source). */
 import type { DirectoryCommand, DirectoryEvent, DirectoryStreamMessage } from "./🔨️modules/📇️directory/🟦️.ts";
+import type { DocumentOpenArtifactV1, DocumentOpenPackageV1, DocumentOpenSurfaceV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 /** 📡️ The replication wire contract lives in `🧰️framework/🔨️modules/📡️replication` — os speaks it,
  * it is not os-owned. Frames/envelopes/presence peers all come from there. */
 import type { ArtifactPresencePeer, ClientFrame, LocalInteractionIdentity, LocalInteractionPage, LocalInteractionQueryCommand, LocalInteractionQueryReply, LocalInteractionQueryToken, MutationEnvelope, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireMutationEnvelope } from "@semio-tech/framework-replication";
@@ -553,7 +554,31 @@ export const BLOB_ENDPOINT_PATH = "/semio-blob";
 //#endregion 🔖️Blob
 
 //#region 🔖️BackboneWorkerProtocol
-export type PersistenceBinding = { readonly kind: "folder"; readonly path: string } | { readonly kind: "hub"; readonly baseUrl: string; readonly spaceId: string; readonly surface?: string };
+export type InstalledDocumentExecutionTargetV1 = Readonly<{
+  package: DocumentOpenPackageV1;
+  artifact: DocumentOpenArtifactV1;
+  surface: DocumentOpenSurfaceV1;
+}>;
+
+export type DocumentRuntimeScopeV1 = Readonly<{ kind: "hub"; spaceId: string; documentId: string }> | Readonly<{ kind: "local"; documentId: string }>;
+
+/** 🔑️ Canonical collision-free document runtime ownership key. Hub documents are keyed by their
+ * complete authority scope; local documents occupy an explicitly separate namespace. */
+export function documentRuntimeKeyV1(scope: DocumentRuntimeScopeV1): string {
+  const encodeId = (value: string): Uint8Array => {
+    const bytes = new TextEncoder().encode(value);
+    if (bytes.length === 0 || bytes.length > 256 || /[\u0000-\u001f\u007f]/u.test(value)) throw new Error("document runtime scope: invalid id");
+    return bytes;
+  };
+  const documentBytes = encodeId(scope.documentId);
+  if (scope.kind === "local") return `local:v1:${documentBytes.length}:${scope.documentId}`;
+  const spaceBytes = encodeId(scope.spaceId);
+  return `v1:${spaceBytes.length}:${documentBytes.length}:${scope.spaceId}${scope.documentId}`;
+}
+
+export type PersistenceBinding =
+  | { readonly kind: "folder"; readonly path: string }
+  | { readonly kind: "hub"; readonly baseUrl: string; readonly spaceId: string; readonly installedTarget?: InstalledDocumentExecutionTargetV1 };
 
 /** 🧾️ Everything the worker needs to open one artifact's actor — mirrors `ArtifactActorConfig`. */
 export type ArtifactActorConfig = {
@@ -563,7 +588,7 @@ export type ArtifactActorConfig = {
   readonly watchExternal?: boolean;
   readonly actor: string;
   /** 🧬️ W5.7: this document kind's `store::DocumentCodec.pack_schema_hash`, for hub schema-hash
-   * validation (`ClientFrame::Hello.pack_schema_hash`) — the shell fills this from the wasm
+   * validation (`ClientFrame::SocketHelloV1.pack_schema_hash`) — the shell fills this from the wasm
    * renderer's `document_pack_schema_hash(schema)` export before calling `openArtifact`. Omitted
    * (or all-zero) means "schema-agnostic client", which the hub never validates. */
   readonly packSchemaHash?: readonly number[];
@@ -646,6 +671,7 @@ export function decodeBackboneWorkerRequest(wire: Uint8Array): BackboneWorkerReq
     return {
       kind: "send",
       documentId: String(parsed.documentId),
+      ...(typeof parsed.spaceId === "string" ? { spaceId: parsed.spaceId } : {}),
       message: parseArtifactActorMsg(parsed.message as Record<string, unknown>),
     };
   }
@@ -675,8 +701,8 @@ export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerRe
  * UI thread; see `🟦️backbone-worker.ts`'s `🔖️Directory` region. */
 export type BackboneWorkerRequest =
   | ({ readonly kind: "open" } & ArtifactActorConfig)
-  | { readonly kind: "close"; readonly documentId: string }
-  | { readonly kind: "send"; readonly documentId: string; readonly message: ArtifactActorMsg }
+  | { readonly kind: "close"; readonly documentId: string; readonly spaceId?: string }
+  | { readonly kind: "send"; readonly documentId: string; readonly spaceId?: string; readonly message: ArtifactActorMsg }
   | { readonly kind: "directory-open"; readonly baseUrl: string; readonly since: number }
   | { readonly kind: "directory-command"; readonly requestId: string; readonly command: DirectoryCommand }
   | { readonly kind: "directory-close" };
@@ -716,6 +742,7 @@ export type BackboneWorkerResponse =
   | { readonly kind: "directory-message"; readonly message: DirectoryStreamMessage }
   | { readonly kind: "directory-command-result"; readonly requestId: string; readonly ok: boolean; readonly events?: readonly DirectoryEvent[]; readonly error?: string }
   | { readonly kind: "socket-actor"; readonly documentId: string; readonly actorId: string }
+  | { readonly kind: "socket-actor-failed"; readonly documentId: string; readonly code: "installed-target-unavailable" | "session-mismatch" }
   | { readonly kind: "directory-status"; readonly pendingCommands: number };
 
 function wireArtifactActorMsg(message: ArtifactActorMsg): unknown {
@@ -3784,9 +3811,21 @@ export function mediaAcceptFilterKinds(formatArtifactKinds: readonly string[]): 
 // package's `🧪️tests/🟦️.ts` (`include`/`includeSource` list only THIS file and
 // `🟦️backbone-worker.ts`), hosts the in-source parity test against the Rust twin's golden fixture.
 import { descriptorDigestEncodingV1, descriptorDigestV1, emptyDirectoryReadModel, fold, foldAll, isDirectoryCommandKind, isDirectoryEventBodyKind, isDirectoryStreamMessageKind } from "./🔨️modules/📇️directory/🟦️.ts";
-import type { DirectoryReadModel } from "./🔨️modules/📇️directory/🟦️.ts";
+import type { DirectoryReadModel, DocumentDescriptor } from "./🔨️modules/📇️directory/🟦️.ts";
 
 export type {
+  AdminConnectionSnapshotV1,
+  AdminIntentOutcomeV1,
+  AdminIntentReceiptV1,
+  AdminIntentResultV1,
+  AdminIntentStateV1,
+  AdminIntentV1,
+  AdminOperationAuditPhaseV1,
+  AdminOperationAuditV1,
+  AdminOperationProgressV1,
+  AdminOperationStatusV1,
+  AdminPageV1,
+  AdminRecordedConnectionV1,
   ArtifactBlobRef,
   ArtifactCheckpoint,
   ArtifactFrontier,
@@ -3980,6 +4019,37 @@ export type SocketGrantReceiptV1 = Readonly<{
   actorId: string;
   expiresAtMs: number;
 }>;
+
+export type BrowserBrokerPortRequestV1 =
+  | Readonly<{ kind: "initialize"; proof: string }>
+  | Readonly<{ kind: "request"; requestId: string; operation: "me" }>
+  | Readonly<{ kind: "cancel"; requestId: string }>;
+
+export type BrowserBrokerPortResponseV1 =
+  | Readonly<{ kind: "initialized"; ok: boolean }>
+  | Readonly<{ kind: "response"; requestId: string; status: number; body: string }>;
+
+function exactRecordKeys(value: Readonly<Record<string, unknown>>, expected: readonly string[]): boolean {
+  const keys = Object.keys(value).sort();
+  return keys.length === expected.length && keys.every((key, index) => key === [...expected].sort()[index]);
+}
+
+export function parseBrowserBrokerPortRequestV1(value: unknown): BrowserBrokerPortRequestV1 | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const record = value as Readonly<Record<string, unknown>>;
+  if (record.kind === "initialize" && exactRecordKeys(record, ["kind", "proof"]) && typeof record.proof === "string" && /^[0-9a-f]{64}$/u.test(record.proof)) return record as BrowserBrokerPortRequestV1;
+  if (record.kind === "request" && exactRecordKeys(record, ["kind", "operation", "requestId"]) && record.operation === "me" && typeof record.requestId === "string" && /^[0-9a-f-]{36}$/u.test(record.requestId)) return record as BrowserBrokerPortRequestV1;
+  if (record.kind === "cancel" && exactRecordKeys(record, ["kind", "requestId"]) && typeof record.requestId === "string" && /^[0-9a-f-]{36}$/u.test(record.requestId)) return record as BrowserBrokerPortRequestV1;
+  return undefined;
+}
+
+export function parseBrowserBrokerPortResponseV1(value: unknown): BrowserBrokerPortResponseV1 | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const record = value as Readonly<Record<string, unknown>>;
+  if (record.kind === "initialized" && exactRecordKeys(record, ["kind", "ok"]) && typeof record.ok === "boolean") return record as BrowserBrokerPortResponseV1;
+  if (record.kind !== "response" || !exactRecordKeys(record, ["body", "kind", "requestId", "status"]) || typeof record.requestId !== "string" || !/^[0-9a-f-]{36}$/u.test(record.requestId) || typeof record.status !== "number" || !Number.isSafeInteger(record.status) || record.status < 100 || record.status > 599 || typeof record.body !== "string" || new TextEncoder().encode(record.body).byteLength > 1024 * 1024) return undefined;
+  return record as BrowserBrokerPortResponseV1;
+}
 
 /** 🔐 Narrow authority boundary that alone may retain an upstream session/share credential. */
 export interface SocketGrantIssuerV1 {

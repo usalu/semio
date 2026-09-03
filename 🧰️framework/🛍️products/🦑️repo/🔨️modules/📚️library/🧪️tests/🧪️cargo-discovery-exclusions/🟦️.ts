@@ -9,9 +9,9 @@ import { taxonomyRelativePathIsExcluded } from "../../🔍️discovery/🟦️.t
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../../");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8")) as { schemaVersion: number; opaquePaths: string[]; virtualRoots: string[]; traversal: { enumeration: string; metadata: string; symlinks: string }; symlinks: string[]; manifests: { path: string; package: string; admitted: boolean }[]; execution: { target: string; command: string; launchName: string; launchCommand: string; launchGroup: string; launchOrder: number } };
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧪️🟤️cargo-discovery-exclusions/🔣️.json"), "utf8")) as { schemaVersion: number; opaquePaths: string[]; virtualRoots: string[]; traversal: { enumeration: string; metadata: string; symlinks: string }; symlinks: string[]; manifests: { path: string; package: string; admitted: boolean }[]; execution: { target: string; command: string; launchName: string; launchCommand: string; launchGroup: string; launchOrder: number } };
 const taxonomy = JSON.parse(readFileSync(join(repoRoot, library, "🔣️taxonomy.json"), "utf8"));
-const source = ts.createSourceFile("🟦️.ts", readFileSync(join(repoRoot, library, "📦️packages/🟦️typescript/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+const source = ts.createSourceFile("../🧪️🟤️cargo-discovery-exclusions/🟦️.ts", readFileSync(join(repoRoot, library, "📦️packages/🟦️typescript/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
 const names = ["generateCargoVariants", "getCargoWorkspaceIndex"];
 const declarations = names.map((name) => {
   const rows = source.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === name);

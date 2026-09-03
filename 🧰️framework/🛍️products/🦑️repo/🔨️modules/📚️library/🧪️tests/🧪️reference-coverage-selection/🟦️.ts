@@ -9,7 +9,7 @@ import ts from "typescript";
 type Token = Readonly<{ id: string; adapter: string; start: number; end: number; value: string; rewriteKind?: string; physicalInterpretation?: string; physicalTargets?: readonly string[]; unsupportedReason?: string }>;
 type Scenario = Readonly<{ id: string; supported: readonly string[]; unsupported: readonly string[]; retained: readonly string[] }>;
 const library = resolve(import.meta.dir, "../.."), root = resolve(library, "../../../../..");
-const inputBytes = readFileSync(join(import.meta.dir, "🔣️.json")), vector = JSON.parse(inputBytes.toString("utf8"));
+const inputBytes = readFileSync(join(import.meta.dir, "../🧪️🐝️reference-coverage-selection/🔣️.json")), vector = JSON.parse(inputBytes.toString("utf8"));
 const normalizerPath = join(library, "🧹️normalization/🟦️.ts"), normalizerBytes = readFileSync(normalizerPath);
 const tree = ts.createSourceFile(normalizerPath, normalizerBytes.toString("utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 const declaration = (name: string): string => {
@@ -120,7 +120,7 @@ test("reference coverage gate is registered through its exact default-budget rou
   for (const compiler of compilers) {
     const calls: unknown[][] = [], operation = new Function("join", "process", "runTestBudgeted", compiler.compile("async function route(segments: string[]) " + body) + "\nreturn route;")(join, { execPath: "exact-bun" }, (...args: unknown[]) => { calls.push(args); });
     await operation.call({ repoRoot: root }, [expected.route, "--test-name-pattern", "retained-selector"]);
-    expect(calls).toEqual([["exact-bun", ["test", join(import.meta.dir, "🟦️.ts"), "--test-name-pattern", "retained-selector"], { cwd: root }]]);
+    expect(calls).toEqual([["exact-bun", ["test", join(import.meta.dir, "../🧪️🐝️reference-coverage-selection/🟦️.ts"), "--test-name-pattern", "retained-selector"], { cwd: root }]]);
   }
   for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
     const errors: ParseError[] = [], document = parse(readFileSync(join(root, path), "utf8"), errors, { allowTrailingComma: true });

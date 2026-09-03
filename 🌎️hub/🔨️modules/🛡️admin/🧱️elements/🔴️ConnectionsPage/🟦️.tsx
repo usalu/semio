@@ -7,26 +7,23 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { Button } from "@semio-tech/ui-react";
-import type { ConnectionView } from "@semio-tech/framework-os";
+import type { AdminRecordedConnectionV1 } from "@semio-tech/framework-os";
 import { useAdminT } from "../📚️I18n/🟦️.tsx";
 import { useAdminSession } from "../🔑️AdminSession/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Grouping
-type ConnectionGroup = Map<string, Map<string, Map<string, ConnectionView[]>>>;
+type ConnectionGroup = Map<string, Map<string, AdminRecordedConnectionV1[]>>;
 
-/** 🧮️ `space -> document -> surface -> actor[]` — pure grouping over the live connection set, so the
- * component body only ever renders, never mutates. */
-function groupConnections(connections: readonly ConnectionView[]): ConnectionGroup {
+/** 🧮️ `space -> document -> recorded bindings`, without synthesized actor or surface claims. */
+function groupConnections(connections: readonly AdminRecordedConnectionV1[]): ConnectionGroup {
   const bySpace: ConnectionGroup = new Map();
   for (const connection of connections) {
-    const byDocument = bySpace.get(connection.spaceId) ?? new Map();
-    bySpace.set(connection.spaceId, byDocument);
-    const bySurface = byDocument.get(connection.documentId) ?? new Map();
-    byDocument.set(connection.documentId, bySurface);
-    const list = bySurface.get(connection.surface || "—") ?? [];
+    const byDocument = bySpace.get(connection.scope.spaceId) ?? new Map();
+    bySpace.set(connection.scope.spaceId, byDocument);
+    const list = byDocument.get(connection.scope.documentId) ?? [];
     list.push(connection);
-    bySurface.set(connection.surface || "—", list);
+    byDocument.set(connection.scope.documentId, list);
   }
   return bySpace;
 }
@@ -39,7 +36,7 @@ const CONNECTION_POLL_DEADLINE_MS = 2_000;
 export function ConnectionsPage(): React.ReactElement {
   const t = useAdminT();
   const { client } = useAdminSession();
-  const [connections, setConnections] = React.useState<Map<string, ConnectionView>>(new Map());
+  const [connections, setConnections] = React.useState<Map<string, AdminRecordedConnectionV1>>(new Map());
   const [fresh, setFresh] = React.useState(false);
 
   React.useEffect(() => {
@@ -50,9 +47,9 @@ export function ConnectionsPage(): React.ReactElement {
       controller = new AbortController();
       const deadline = setTimeout(() => controller?.abort(), CONNECTION_POLL_DEADLINE_MS);
       try {
-        const rows = await client.connections(controller.signal);
+        const snapshot = await client.connections(controller.signal);
         if (cancelled) return;
-        setConnections(new Map(rows.map((row) => [row.syncSessionId, row])));
+        setConnections(new Map(snapshot.rows.map((row) => [row.syncSessionId, row])));
         setFresh(true);
       } catch {
         if (!cancelled) setFresh(false);
@@ -90,27 +87,22 @@ export function ConnectionsPage(): React.ReactElement {
             <h2 className="text-sm font-semibold text-emphasized">
               {t("admin.connections.space")}: {spaceId}
             </h2>
-            {[...byDocument.entries()].map(([documentId, bySurface]) => (
+            {[...byDocument.entries()].map(([documentId, rows]) => (
               <div key={documentId} className="ml-single flex flex-col gap-single">
                 <h3 className="text-sm text-emphasized">
                   {t("admin.connections.document")}: {documentId}
                 </h3>
-                {[...bySurface.entries()].map(([surface, rows]) => (
-                  <div key={surface} className="ml-single flex flex-col gap-single">
-                    <h4 className="text-xs text-muted-foreground">
-                      {t("admin.connections.surface")}: {surface}
-                    </h4>
-                    {rows.map((row) => (
-                      <div key={row.syncSessionId} className="ml-single flex items-center justify-between gap-single text-sm" data-row-id={`connection:${row.syncSessionId}`}>
-                        <span>
-                          {t("admin.connections.actor")}: {row.actor}
-                          {row.email ? ` (${row.email})` : ""} · {row.role}
-                        </span>
-                        <Button id={`admin-connection-kick-${row.syncSessionId}`} icon="x" text={t("admin.connections.kick")} variant="ghost" onClick={() => client.closeConnection(row.syncSessionId)} />
-                      </div>
-                    ))}
+                <div className="ml-single flex flex-col gap-single">
+                  {rows.map((row) => (
+                    <div key={row.syncSessionId} className="ml-single flex items-center justify-between gap-single text-sm" data-row-id={`connection:${row.syncSessionId}`}>
+                      <span>
+                        {row.email ?? row.authenticatedUserId ?? "—"}
+                        {row.role ? ` · ${row.role}` : ""}
+                      </span>
+                      <Button id={`admin-connection-kick-${row.syncSessionId}`} icon="x" text={t("admin.connections.kick")} variant="ghost" onClick={() => client.closeConnection(row.syncSessionId)} />
+                    </div>
+                  ))}
                   </div>
-                ))}
               </div>
             ))}
           </div>

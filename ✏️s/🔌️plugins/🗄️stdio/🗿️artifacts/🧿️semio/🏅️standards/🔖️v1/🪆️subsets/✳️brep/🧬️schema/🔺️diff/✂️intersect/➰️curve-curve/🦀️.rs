@@ -218,7 +218,7 @@ fn intersect_circle_circle(f1: &Frame3, r1: f64, f2: &Frame3, r2: f64, tol: f64)
 fn intersect_general(a: &Curve3, b: &Curve3, tol: f64) -> Result<Vec<CurveCurveHit>, IntersectError> {
     let (dom_a, nurbs_a) = curve_as_nurbs(a, b, tol)?;
     let (dom_b, nurbs_b) = curve_as_nurbs(b, a, tol)?;
-    let segs_a = super::shared::curve_to_bezier_segments(a, dom_a).map(|_| ()).and(nurbs_to_bezier_segments(&nurbs_a))?;
+    let segs_a = nurbs_to_bezier_segments(&nurbs_a)?;
     let segs_b = nurbs_to_bezier_segments(&nurbs_b)?;
     let mut hits = Vec::new();
     for (bez_a, a0, a1) in &segs_a {

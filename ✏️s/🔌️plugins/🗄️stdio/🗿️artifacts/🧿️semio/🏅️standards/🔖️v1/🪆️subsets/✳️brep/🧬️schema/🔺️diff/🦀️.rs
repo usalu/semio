@@ -761,7 +761,7 @@ pub(crate) fn enc_vertex(v: &BrepVertex) -> String {
 pub(crate) fn dec_vertex(s: &str) -> Result<BrepVertex, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, point] = parts.as_slice() else { return Err(format!("vertex: expected 2 fields, got {}", parts.len())) };
-    Ok(BrepVertex { id: dec_str(id)?, point: dec_point3(point)? })
+    Ok(BrepVertex { id: dec_str(id)?, point: dec_point3(point)?, tol: 0.0 })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -772,7 +772,7 @@ pub(crate) fn enc_edge(e: &BrepEdge) -> String {
 pub(crate) fn dec_edge(s: &str) -> Result<BrepEdge, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, start_vertex, end_vertex, curve] = parts.as_slice() else { return Err(format!("edge: expected 4 fields, got {}", parts.len())) };
-    Ok(BrepEdge { id: dec_str(id)?, start_vertex: dec_str(start_vertex)?, end_vertex: dec_str(end_vertex)?, curve: dec_curve(curve)? })
+    Ok(BrepEdge { id: dec_str(id)?, start_vertex: dec_str(start_vertex)?, end_vertex: dec_str(end_vertex)?, curve: dec_curve(curve)?, tol: 0.0 })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -794,7 +794,7 @@ pub(crate) fn enc_face(f: &BrepFace) -> String {
 pub(crate) fn dec_face(s: &str) -> Result<BrepFace, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, outer_loop, inner_loops, surface, orientation] = parts.as_slice() else { return Err(format!("face: expected 5 fields, got {}", parts.len())) };
-    Ok(BrepFace { id: dec_str(id)?, outer_loop: dec_str(outer_loop)?, inner_loops: dec_list(inner_loops, dec_str)?, surface: dec_surface(surface)?, orientation: parse_bool(orientation)? })
+    Ok(BrepFace { id: dec_str(id)?, outer_loop: dec_str(outer_loop)?, inner_loops: dec_list(inner_loops, dec_str)?, surface: dec_surface(surface)?, orientation: parse_bool(orientation)?, tol: 0.0 })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

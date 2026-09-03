@@ -8,8 +8,18 @@ export { emptyMeshTransfer, kernelGeometry, solidRef };
 // #endregion 🧲️Header
 
 import type { TypologyRef } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { SemioBrepKernel, semioBrepKernel } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🟦️.ts";
+import type { SpatialKernel } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
+export { SemioBrepKernel, semioBrepKernel };
 
-
+// #region 🧠️DefaultSpatialKernel
+/** @emoji 🧠️ THE production CAD `SpatialKernel` (ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME
+ * W4-A) — the first-party Rust `BrepKernel` over `invokeBrep`/`flow_core` wasm. `🧱️brepjs`
+ * (OpenCascade) is retained ONLY as the vitest differential oracle, never constructed here. */
+export function defaultSpatialKernel(): SpatialKernel {
+  return semioBrepKernel;
+}
+// #endregion 🧠️DefaultSpatialKernel
 
 // #region 📦️📔️registry
 // #region 📥️ModelDefinitionRegistry

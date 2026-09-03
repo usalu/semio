@@ -68,12 +68,68 @@
         "command": "bun ./📜️script.ts socket-grant-check"
       }
     },
+    "browser-broker-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts browser-broker-check"
+      }
+    },
+    "admin-relay-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts admin-relay-check"
+      }
+    },
+    "admin-backend-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts admin-backend-check"
+      }
+    },
+    "admin-live-journey-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts admin-live-journey-check"
+      }
+    },
     "canonical-pair-check": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts canonical-pair-check"
+      }
+    },
+    "open-plan-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts open-plan-check"
+      }
+    },
+    "open-plan-server-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts open-plan-server-check"
+      }
+    },
+    "browser-document-open-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts browser-document-open-check"
       }
     },
     "dev": {
@@ -90,6 +146,30 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts dev secure-suite"
+      }
+    },
+    "dev-secure-native": {
+      "executor": "nx:run-commands",
+      "dependsOn": [{ "target": "build", "projects": ["os-hub-admin"] }],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts dev secure-native"
+      }
+    },
+    "dev-secure-mcp": {
+      "executor": "nx:run-commands",
+      "dependsOn": [{ "target": "build", "projects": ["os-hub-admin"] }],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts dev secure-mcp"
+      }
+    },
+    "dev-secure-admin": {
+      "executor": "nx:run-commands",
+      "dependsOn": [{ "target": "build", "projects": ["os-hub-admin"] }],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts dev secure-admin"
       }
     },
     "secure-local-smoke": {

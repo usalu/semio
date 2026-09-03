@@ -1,8 +1,8 @@
 //! 🧩️ Plan body for `duplicate-widget`: calls `create-widget` for the copy, then `connect-widgets`
 //! to wire it to its source — the exact leaf kinds it composes, over the SAME shared `Planner` so
 //! `fold_plan_diff`/`fold_plan_inverse` see one continuous local-step sequence.
-use crate::artifacts::flow::schema::mutations::connect_widgets::mutation::ConnectWidgets;
-use crate::artifacts::flow::schema::mutations::create_widget::mutation::CreateWidget;
+use crate::artifacts::flow::schema::mutations::connect_widgets::ConnectWidgets;
+use crate::artifacts::flow::schema::mutations::create_widget::CreateWidget;
 use crate::artifacts::flow::schema::mutations::FlowMutation;
 use crate::artifacts::flow::schema::widget_with_id;
 use crate::artifacts::flow::{flow_working_scene, FlowSnapshot};

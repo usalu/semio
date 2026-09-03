@@ -449,9 +449,7 @@ impl<S: ImmutableArtifactBlobStore, P: VerifiedCheckpointPublisher> CheckpointPu
         let mut aggregate = Sha256::new();
         aggregate.update(&candidate.pair.pack);
         aggregate.update(&candidate.pair.spr);
-        if candidate.checkpoint.aggregate_sha256 != ArtifactHash(aggregate.finalize())
-            || candidate.checkpoint.checkpoint_id != ArtifactHash(Sha256::digest(&checkpoint_id_encoding_v1(&candidate.checkpoint)?))
-        {
+        if candidate.checkpoint.aggregate_sha256 != ArtifactHash(aggregate.finalize()) || candidate.checkpoint.checkpoint_id != ArtifactHash(Sha256::digest(&checkpoint_id_encoding_v1(&candidate.checkpoint)?)) {
             return Err(AuthorityError::BlobIntegrity("candidate"));
         }
 
@@ -566,8 +564,8 @@ pub mod trusted_catalog;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::adapters::{bounded_message, LivePluginPackageBinding, PluginHostTrustedArtifactCatalog, AUTHORITY_MAX_DIAGNOSTIC_BYTES};
+    use super::*;
     use ::directory::os_directory::{DocumentFrontier, DocumentOwner};
     use ::directory::os_store::{register_document_codec, ArtifactCodec, ArtifactPackFiles, ArtifactTextFiles, VcsError};
     use semio_framework_plugin_host::{PackageHash, PackageId, PackageRef, PluginGraph};
@@ -740,15 +738,7 @@ mod tests {
     }
 
     fn fixture_artifact_codec() -> ArtifactCodec {
-        ArtifactCodec {
-            schema: "fixture.number@1".to_string(),
-            extension: "fixture",
-            pack_schema_hash: [0x11; 32],
-            compile_dsl: fixture_compile,
-            print_mirror: fixture_print,
-            edit_text_from_envelope: fixture_edit,
-            apply_ops_binary: fixture_apply,
-        }
+        ArtifactCodec { schema: "fixture.number@1".to_string(), extension: "fixture", pack_schema_hash: [0x11; 32], compile_dsl: fixture_compile, print_mirror: fixture_print, edit_text_from_envelope: fixture_edit, apply_ops_binary: fixture_apply }
     }
 
     fn fixture_manifest() -> semio_framework::PluginManifest {
@@ -974,11 +964,7 @@ mod tests {
         assert_eq!(codec.identity(), &required);
         codec.validate_pair(&ArtifactPair { pack: b"10".to_vec(), spr: b"seed".to_vec() }, ArtifactValidationStage::Input, &context(&control, limits())).await.expect("real registered codec validation");
         let pair = codec
-            .apply_operation(
-                ArtifactPair { pack: b"10".to_vec(), spr: b"seed".to_vec() },
-                &AcceptedArtifactOperation { sequence: 1, encoded: b"5".to_vec(), resulting_frontier: frontier(1, 1) },
-                &context(&control, limits()),
-            )
+            .apply_operation(ArtifactPair { pack: b"10".to_vec(), spr: b"seed".to_vec() }, &AcceptedArtifactOperation { sequence: 1, encoded: b"5".to_vec(), resulting_frontier: frontier(1, 1) }, &context(&control, limits()))
             .await
             .expect("real registered codec application");
         assert_eq!(pair, ArtifactPair { pack: b"15".to_vec(), spr: vec![b's', b'e', b'e', b'd', 0, 0, 0, 1, b'5'] });
@@ -1063,5 +1049,4 @@ mod tests {
         assert!(message.len() <= AUTHORITY_MAX_DIAGNOSTIC_BYTES);
         assert!(message.is_char_boundary(message.len()));
     }
-
 }

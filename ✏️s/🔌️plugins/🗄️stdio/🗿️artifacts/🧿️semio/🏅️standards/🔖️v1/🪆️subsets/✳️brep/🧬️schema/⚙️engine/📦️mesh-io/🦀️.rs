@@ -1,9 +1,14 @@
 //! 📦 STL/OBJ/GLB/DWG mesh import/export bridged to native B-Rep.
 //!
-//! Triangle soups interchange through `semio_framework_mesh_engine`/`crate::artifacts::dwg` codecs
-//! where available; solids tessellate via [`crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::tessellation`] and import as
+//! Triangle soups interchange through `semio_framework_mesh_engine` codecs where available; solids
+//! tessellate via [`crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::tessellation`] and import as
 //! one planar face per triangle (shell assembly until [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::sew`] can weld
-//! shared edges).
+//! shared edges). `export_dwg`/`import_dwg`/`export_solid_dwg`/`import_dwg_to_body` take their DWG
+//! codec as a `MeshExporter`/`MeshImporter` parameter (ticket
+//! `26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME` wave 1): `crate::artifacts::dwg` is a SEPARATE
+//! artifact, and this kernel-layer file must not import another artifact directly — the caller
+//! (`⚙️engine/🦀️.rs`, the contract façade that legitimately bridges artifacts) supplies the real
+//! `DwgExporter`/`DwgImporter`.
 //!
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/📦️mesh-io` in ticket 26/08/12/
 //! DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave DEDUP: this file's sole
@@ -19,7 +24,6 @@
 //! used at the time. `MeshTransfer` moved again in ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME
 //! wave 1 (W1-A): the parent's own `engine::contract` module now owns it same-crate.
 
-use crate::artifacts::dwg::{dwg_drawing_to_mesh, dwg_from_bytes, dwg_to_bytes, mesh_to_dwg_drawing};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_shell, add_solid};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_planar_face_from_points;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::tessellation::tessellate_solid;
@@ -134,17 +138,21 @@ pub fn import_glb_to_body(body: &mut Body, data: &[u8], tolerance: f64) -> Resul
     import_triangle_mesh_to_body(body, &import_glb(data)?, tolerance)
 }
 
-/// 📦 Tessellates `solid` and encodes DWG mesh bytes.
+/// 📦 Tessellates `solid` and encodes DWG mesh bytes via `exporter` — the DWG codec itself
+/// (`crate::artifacts::dwg`) is a separate artifact this kernel-layer file must not import
+/// directly; the caller (`⚙️engine/🦀️.rs`, the contract façade that legitimately bridges
+/// artifacts) supplies it as a [`MeshExporter`], the same pattern `export_glb`/`import_glb` already
+/// use for `GlbExporter`/`GlbImporter`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn export_solid_dwg(body: &Body, solid: SolidId, deflection: f64) -> Result<Vec<u8>, KernelError> {
+pub fn export_solid_dwg(body: &Body, solid: SolidId, deflection: f64, exporter: &impl MeshExporter) -> Result<Vec<u8>, KernelError> {
     let transfer = tessellate_solid(body, solid, deflection)?;
-    export_dwg(&triangle_mesh_from_transfer(&transfer))
+    export_dwg(&triangle_mesh_from_transfer(&transfer), exporter)
 }
 
-/// 📦 Decodes DWG mesh bytes into `body` as a single solid.
+/// 📦 Decodes DWG mesh bytes into `body` as a single solid via `importer` — see [`export_solid_dwg`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn import_dwg_to_body(body: &mut Body, data: &[u8], tolerance: f64) -> Result<SolidId, KernelError> {
-    import_triangle_mesh_to_body(body, &import_dwg(data)?, tolerance)
+pub fn import_dwg_to_body(body: &mut Body, data: &[u8], tolerance: f64, importer: &impl MeshImporter) -> Result<SolidId, KernelError> {
+    import_triangle_mesh_to_body(body, &import_dwg(data, importer)?, tolerance)
 }
 
 /// 📦 Encodes a [`TriangleMesh`] as binary STL.
@@ -191,19 +199,18 @@ pub fn import_glb(data: &[u8]) -> Result<TriangleMesh, KernelError> {
     GlbImporter.import(data).map(|data| mesh_from_mesh_data(&data)).map_err(KernelError::Operation)
 }
 
-/// 📦 Encodes DWG mesh bytes from a [`TriangleMesh`].
+/// 📦 Encodes DWG mesh bytes from a [`TriangleMesh`] via `exporter` — see [`export_solid_dwg`] for
+/// why the DWG codec itself is caller-supplied rather than imported here.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn export_dwg(mesh: &TriangleMesh) -> Result<Vec<u8>, KernelError> {
+pub fn export_dwg(mesh: &TriangleMesh, exporter: &impl MeshExporter) -> Result<Vec<u8>, KernelError> {
     let data = mesh_to_mesh_data(mesh);
-    let drawing = mesh_to_dwg_drawing(&data);
-    dwg_to_bytes(&drawing).map_err(KernelError::Operation)
+    exporter.export(&data).map_err(KernelError::Operation)
 }
 
-/// 📦 Decodes DWG bytes into a [`TriangleMesh`].
+/// 📦 Decodes DWG bytes into a [`TriangleMesh`] via `importer` — see [`export_solid_dwg`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn import_dwg(data: &[u8]) -> Result<TriangleMesh, KernelError> {
-    let drawing = dwg_from_bytes(data).map_err(KernelError::Operation)?;
-    Ok(mesh_from_mesh_data(&dwg_drawing_to_mesh(&drawing)))
+pub fn import_dwg(data: &[u8], importer: &impl MeshImporter) -> Result<TriangleMesh, KernelError> {
+    importer.import(data).map(|data| mesh_from_mesh_data(&data)).map_err(KernelError::Operation)
 }
 
 /// 📦 Imports a triangle soup as a single solid shell (one planar face per triangle).

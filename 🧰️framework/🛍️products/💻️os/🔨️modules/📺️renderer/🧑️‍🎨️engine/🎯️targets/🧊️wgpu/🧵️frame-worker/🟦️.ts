@@ -2,8 +2,8 @@
 
 import { pluginGraphErrorMessage, resolvePlaygroundBoot } from "@semio-tech/framework";
 import { PLUGIN_CATALOG } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
-import type { BrowserFrameUiMessage, BrowserFrameWorkerMessage } from "../🧵️browser-frame-transport/🟦️";
-import { INTERACTIVE_WORKER_DESCRIPTORS, InteractiveWorkerScheduler } from "../🧵️interactive-job-registry/🟦️";
+import type { BrowserFrameUiMessage, BrowserFrameWorkerMessage } from "../🧵️browser-frame-transport/🟦️.ts";
+import { INTERACTIVE_WORKER_DESCRIPTORS, InteractiveWorkerScheduler } from "../🧵️interactive-job-registry/🟦️.ts";
 import { loadPluginModule, pluginHandleForBridge } from "../📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts";
 
 //#region 🔖️Bindings

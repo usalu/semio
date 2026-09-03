@@ -623,18 +623,17 @@ fn registry_override_context_resolve(tools: &mut InMemoryToolRegistry, context_t
 
 //#region 🔖️WorkspaceOptions
 /// 🏠️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P7-headless-workspace:
-/// `--hub <url> --space <id> --token <t>` — the second binding shape `📋️master.md` §2.1 names
+/// `--hub <url> --space <id>` — the second binding shape `📋️master.md` §2.1 names
 /// alongside `--folder`. Shared by `StdioOptions`/`HttpOptions` rather than duplicated per mode.
 #[derive(Clone, Default, PartialEq, Eq)]
 pub struct HubOptions {
     pub base_url: String,
     pub space_id: String,
-    pub token: String,
 }
 
 impl std::fmt::Debug for HubOptions {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter.debug_struct("HubOptions").field("base_url", &self.base_url).field("space_id", &self.space_id).field("token", &"[REDACTED]").finish()
+        formatter.debug_struct("HubOptions").field("base_url", &self.base_url).field("space_id", &self.space_id).finish()
     }
 }
 
@@ -655,7 +654,9 @@ fn server_for_workspace_options(principal: AgentPrincipal, audit: std::sync::Arc
         std::sync::Arc::new(HeadlessWorkspace::open_folder(std::path::PathBuf::from(folder), principal.id.clone(), principal.scopes.iter().map(|scope| scope.0.clone()).collect(), catalog)?)
     } else if let Some(hub) = hub {
         origin_label = format!("hub {}/{}", hub.base_url, hub.space_id);
-        std::sync::Arc::new(HeadlessWorkspace::open_hub(hub.base_url.clone(), hub.space_id.clone(), hub.token.clone(), principal.id.clone(), principal.scopes.iter().map(|scope| scope.0.clone()).collect(), catalog)?)
+        let credential = semio_framework_os_kernel::os_directory::identity::claimed_local_hub_credential("mcp")
+            .ok_or_else(|| GatewayError::new(GatewayErrorCode::PermissionDenied, "hub workspace requires a protected process-entry MCP credential"))?;
+        std::sync::Arc::new(HeadlessWorkspace::open_hub(hub.base_url.clone(), hub.space_id.clone(), credential, principal.id.clone(), principal.scopes.iter().map(|scope| scope.0.clone()).collect(), catalog)?)
     } else {
         return Ok(build_server_with_principal(principal, audit, Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), bridge));
     };
@@ -667,7 +668,7 @@ fn server_for_workspace_options(principal: AgentPrincipal, audit: std::sync::Arc
 
 //#region 🔖️StdioEntrypoint
 /// ⚙️ Options `📦️bin.rs`'s `stdio` subcommand parses off argv (`semio-os-mcp stdio [--folder <dir>]
-/// [--hub <url> --space <id> --token <t>] [--principal <id>] [--scopes a,b]`).
+/// [--hub <url> --space <id>] [--principal <id>] [--scopes a,b]`).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct StdioOptions {
     pub folder: Option<String>,
@@ -698,33 +699,27 @@ pub fn run_stdio(options: StdioOptions) -> Result<(), GatewayError> {
 
 //#region 🔖️HttpEntrypoint
 /// ⚙️ Options `📦️bin.rs`'s `http` subcommand parses off argv (`semio-os-mcp http [--port <p>]
-/// [--bind <addr>] --token <t> [--folder <dir>] [--hub <url> --space <id> --token <t>]
-/// [--principal <id>] [--scopes a,b] [--audit-dir <dir>] [--allow-origin <origin>]…
-/// [--bridge-token-file <path>]`). `bridge_token_file` (P1c) is WHERE the freshly-minted `/bridge`
-/// secret is written, not the secret itself — unlike `token` (the `/mcp` bearer, chosen by whoever
-/// starts the process), the bridge token is always generated fresh at startup (`📋️master.md` §2.1).
+/// [--bind <addr>] [--folder <dir>] [--hub <url> --space <id>] [--principal <id>] [--scopes a,b]
+/// [--audit-dir <dir>] [--allow-origin <origin>]…`). HTTP and bridge admission are both authorized
+/// by the protected process-entry credential and never by argv, URL, environment, or disk state.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HttpOptions {
     pub port: u16,
     pub bind: String,
-    pub token: String,
     pub folder: Option<String>,
     pub hub: Option<HubOptions>,
     pub principal: Option<String>,
     pub scopes: Vec<String>,
     pub audit_dir: Option<String>,
     pub allow_origin: Vec<String>,
-    pub bridge_token_file: Option<String>,
 }
 
 /// 🚪️ Boots the retained nonblocking [`HttpTransport`] (Streamable HTTP, dual-era, `/mcp` +
 /// `/bridge` on the SAME socket) bound to `bind:port`, serving until cancellation or process exit —
 /// [`run_stdio`]. Fails fast (before binding a socket) if the audit directory cannot be created, so a
 /// misconfigured `--audit-dir` surfaces immediately rather than on the first audit write a later
-/// packet wires in. Mints a FRESH `/bridge` secret every start (`bridge::mint_bridge_token`), writes
-/// it `0600` to `bridge_token_file` (default `~/.semio/agent/bridge-token`), and prints the bridge URL
-/// + token ONCE on stderr so a dev server/shell process can pick either up (`📋️master.md` §2.1: "token
-/// minted at start, 0600 file").
+/// packet wires in. The logged bridge URL is credential-free; callers receive the admission proof
+/// only through the supervisor-owned in-memory boundary.
 pub fn run_http(options: HttpOptions) -> Result<(), GatewayError> {
     let audit_dir = options.audit_dir.clone().map(std::path::PathBuf::from).unwrap_or_else(default_audit_dir);
     let audit: std::sync::Arc<AuditSinks> = std::sync::Arc::new(AuditSinks::File(FileAuditSink::new(audit_dir)?));
@@ -732,13 +727,10 @@ pub fn run_http(options: HttpOptions) -> Result<(), GatewayError> {
     let bridge_slot: BridgeSlot = std::sync::Arc::new(std::sync::OnceLock::new());
     let server = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), Some(bridge_slot.clone()))?;
     let bind_ip: std::net::IpAddr = options.bind.parse().map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, format!("invalid --bind address `{}`: {error}", options.bind)))?;
-
-    let bridge_token = mint_bridge_token();
-    let bridge_token_path = options.bridge_token_file.clone().map(std::path::PathBuf::from).unwrap_or_else(default_bridge_token_path);
-    write_bridge_token_file(&bridge_token_path, &bridge_token)?;
-    eprintln!("[semio-os-mcp] bridge listening on ws://{bind_ip}:{}/bridge?token={bridge_token}  (also written to {})", options.port, bridge_token_path.display());
-
-    let transport_options = HttpTransportOptions::new(options.token, bridge_token).bind_addr(std::net::SocketAddr::new(bind_ip, options.port)).allowed_origins(options.allow_origin);
+    let credential = semio_framework_os_kernel::os_directory::identity::claimed_local_hub_credential("mcp")
+        .ok_or_else(|| GatewayError::new(GatewayErrorCode::PermissionDenied, "HTTP mode requires a protected process-entry MCP credential"))?;
+    eprintln!("[semio-os-mcp] bridge listening on ws://{bind_ip}:{}/bridge", options.port);
+    let transport_options = HttpTransportOptions::new(credential).bind_addr(std::net::SocketAddr::new(bind_ip, options.port)).allowed_origins(options.allow_origin);
     let mut transport = HttpTransport::new(transport_options).publishing_bridge_into(bridge_slot);
     transport.start(server)?.wait()
 }
@@ -791,8 +783,8 @@ mod quick {
     }
 
     #[test]
-    fn http_options_round_trip_into_a_transport_bind_addr_and_token() {
-        let options = HttpOptions { port: 7401, bind: "127.0.0.1".to_string(), token: "t".to_string(), folder: None, hub: None, principal: None, scopes: vec![], audit_dir: None, allow_origin: vec![], bridge_token_file: None };
+    fn http_options_round_trip_without_a_credential_carrier() {
+        let options = HttpOptions { port: 7401, bind: "127.0.0.1".to_string(), folder: None, hub: None, principal: None, scopes: vec![], audit_dir: None, allow_origin: vec![] };
         assert_eq!(options.port, 7401);
         assert_eq!(options.bind, "127.0.0.1");
     }

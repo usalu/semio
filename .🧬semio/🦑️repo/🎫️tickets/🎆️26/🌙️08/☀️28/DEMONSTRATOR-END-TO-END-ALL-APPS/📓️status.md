@@ -1502,3 +1502,534 @@ session's in-flight file — the exact thing this ticket's rule forbids. Verifie
 no work was lost: my unstaged diff is one line, their 11-insertion/4-deletion staged change is
 intact, because the edit was a read-modify-write of current content. The guard must be an
 assertion that stops the edit, not a line printed next to it.
+
+## 2026-09-03 ~17:45 — `/` never served: the html entry filename broke the root rewrite
+
+The demonstrator's HTML entry was `🌐️index.html`, but every semio host app is expected to name it
+`🌐️.html`. `semioEmojiIndexHtmlVitePlugin(rootDir, fileName = "🌐️.html")`
+(`🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts:625`) defaults to that name, and the demonstrator
+invoked it **with no fileName argument**, so the plugin was wired to a file that did not exist.
+
+That plugin is not cosmetic — its `configureServer` installs two middlewares:
+- `semioEmojiIndexHtmlRootRewrite(entry)` — makes `/` serve the app
+- `semioEmojiIndexHtmlSpaFallbackRewrite(entry)` — makes deep links (per-pane URLs) resolve
+
+Both were pointing at a nonexistent `/🌐️.html`, so **`/` returned 404** and the SPA fallback was
+dead. The app was only reachable at the literal `/🌐️index.html`.
+
+Consequences this explains:
+1. Real users hitting `/` got nothing.
+2. Per-pane deep links could not resolve — the acceptance spec navigates by pane URL and reads
+   `paneIdFromLocation`, so the suite could never have passed.
+3. `runAcceptancePlaywright()` (`📜️script.ts:153`) waits on `waitForHttpUrl("http://127.0.0.1:6029/", 180_000)`
+   — the root path. It would have timed out after 3 minutes regardless of app health.
+
+Fix: renamed `🌐️index.html` → `🌐️.html` and updated the one stale reference
+(`⚙️vite.config.ts:98`, `optimizeDeps.entries`). This matches the working apps —
+`🌎️hub/🔨️modules/🛡️admin` and `💻️os/🔨️modules/🧑️‍💻️dev` both ship `🌐️.html` and call the plugin
+with the default.
+
+`♻️mit-bestand/🎤️präsentation/📅️33.projektetage` has the identical defect (`🌐️index.html` +
+default-arg plugin call, and its own html points at a missing `./js/index.ts`). Left for its owner.
+
+**Second guard failure, same shape as the wgpu one:** I printed `(none = safe)` next to a grep
+that had in fact returned a hit (`⚙️vite.config.ts:98`), because the echo ran unconditionally
+rather than being gated on the grep's result. Caught and fixed it immediately after, but the
+lesson is the same as before — a guard that prints beside a command instead of gating on it is
+not a guard.
+
+## 2026-09-03 ~18:00 — `/` and all six deep links now serve; descriptor gap quantified
+
+After renaming the entry to `🌐️.html`:
+- `GET /` → **200** (was 404)
+- `GET /{generator,koordinator,aggregator,aussuchen,bearbeiten,verfolgen}` → **200 for all six**
+  (SPA fallback alive; every one of these 404'd before)
+
+The landing page renders with all six panes. Opening a pane still falls back to the landing view
+because the runtime cannot load its programs — root cause below, and it is artifact staleness,
+not app code.
+
+### The SPA fallback is not masking anything
+Checked, because the stdio failure changed from `HTTP 404` to `returned HTML` after my fix.
+`rewriteSpaFallbackToEmojiEntry` (`🎨️styling/🟦️.ts:599`) rewrites **only** when the path is exactly
+`/index.html`, so it does not swallow `/plugin-modules/**` or `/extensions/**`. The message changed
+only because a fallback target now exists; the underlying files were missing before and still are.
+
+### Quantified: 19 of 57 plugin module dirs have no `🔣️.json` descriptor
+`🧑️‍💻️dev/🔌️plugin-modules/` — 38 have one, these 19 do not:
+`block, flow-extension-bim, flow-extension-draw, imperative-extension-{control,effect,logic,math,text},
+playbook, playbook-module-procedural, process-extension-{concrete,metal,robotic,wood},
+sourcing-module-{beams,slabs,windows}, stdio, trinity`
+
+The runtime only *demands* three of them for the demonstrator — `stdio`, `flow-extension-draw`,
+`flow-extension-bim` — which is exactly the set of `program load failed` errors in the console.
+
+Descriptor presence tracks **whether the dir was produced by a current build**, not age:
+| plugin | bundle mtime | descriptor |
+| --- | --- | --- |
+| cad | Sep 3 16:09 | yes |
+| gis | Aug 27 15:50 | yes |
+| flow-extension-draw | Sep 3 12:55 | **no** |
+| stdio | **Aug 18 11:14** | **no** |
+
+`cad` at 16:09 was produced by *this ticket's* build run before I stopped it — so the catalog build
+does emit descriptors and does work. That also corrects an earlier note here: my "built: 0" reading
+was a wrong log marker, not an absence of output. A rebuild is therefore both necessary and
+sufficient for the descriptor gap; `SKIP_PLUGIN_BUILD` can never produce a working app.
+
+**Blocked on:** `semio-s-plugin-stdio` compiling, which is semio-ac's brep fleet
+(ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME). They asked me not to patch any of it and
+will ping when `cargo check -p semio-s-plugin-stdio --lib` is green. My catalog build is stopped
+so their ~12 workers get the CPU; 74 cached rmeta are preserved for an immediate restart.
+
+## 2026-09-03 ~18:40 — CORRECTION: all remaining plugins are blocked on stdio, not just stdio
+
+I claimed the six non-stdio missing-descriptor plugins were buildable independently. **That was
+wrong**, and the build proved it: `flow-extension-draw` failed on
+`could not compile semio-s-plugin-stdio (lib)` with 2 × `E0023` (the `Wire(..)` arity error
+semio-ac attributes to their handle-lifecycle worker).
+
+The error in my reasoning: I tested for a stdio dependency with
+`grep -c stdio <plugin>/📦️packages/🦀️rust/Cargo.toml`, which only sees **direct** dependencies.
+The real path is transitive:
+- `flow-extension-draw` → `flow` → `semio-s-plugin-stdio` (`flow`'s Cargo.toml, 1 ref)
+- `process-extension-*` → `process` → `semio-s-plugin-stdio`
+
+The Haiku explorer had already reported that every demonstrator plugin's `dependsOn` closure
+includes `stdio`; I read that as a runtime-registry fact and failed to apply it to the build graph.
+A direct-manifest grep is not a dependency check — resolve the closure, or just let the build answer.
+
+**Consequence:** there is no plugin bundle work available to me until `stdio` compiles. All six
+remaining descriptors, and the demonstrator component itself, sit behind semio-ac's brep fleet.
+My builds are fully stopped (0 processes) so their ~26 concurrent `rustc` get the machine;
+`target-engines` caches (74+ rmeta, plus today's successful `cad` and `puzzle` bundles) are intact
+for an immediate restart.
+
+Two build-hygiene faults corrected along the way, both of which nearly hid this:
+1. The first chain piped each build through `tail -20`, which discarded the actual compiler error
+   and left only nx's generic "exited with status 1". Never truncate a build log you intend to
+   diagnose from.
+2. A failing build still advanced the loop, so "moved on to the next plugin" is NOT evidence of
+   success. The replacement chain asserts the `🔣️.json` descriptor exists after each build and
+   prints `DESCRIPTOR-OK` / `DESCRIPTOR-MISSING`. That assertion is what caught this.
+
+### Accurate remaining work
+| item | owner | state |
+| --- | --- | --- |
+| app routing, entry, aliases, css, imports | this ticket | **done, verified in browser** |
+| dependency closure 283 → 0 errors | this ticket | done (provisional vs live tree) |
+| `stdio` compiles | semio-ac's brep fleet | **blocking everything below** |
+| 6 extension/plugin descriptors | this ticket | queued, unblocked only by stdio |
+| demonstrator component rebuild | this ticket | queued, unblocked only by stdio |
+| 7-test acceptance suite | this ticket | 1 test ready now; 6 need the above |
+
+## 2026-09-03 ~19:00 — acceptance harness VERIFIED RUNNING; failure isolated to plugin load
+
+Ran the suite for real (not static reading) against the live dev server:
+
+```
+bunx playwright test --config ♻️mit-bestand/🧺️demonstrator/🧪️playwright.config.ts -g "drift guard"
+  ✓ DEMONSTRATOR_PANES matches the pane ids this suite covers (drift guard)
+  1 passed (2.3s)
+```
+
+So the Playwright infrastructure, config, base URL, and `brandPaneIds()` text-parse all work
+end to end. The suite is not broken.
+
+Then ran one pane test to capture the exact failure rather than inferring it:
+
+```
+bunx playwright test ... -g "aussuchen"
+  ✘ demonstrator pane "aussuchen": boots via hash deep-link and renders its declared window(s)
+    Error: pane "aussuchen": expected its shell to reach "ready"
+    at :305  expect(outcome).toBe("ready")   // outcome from waitForPaneShellOutcome
+  1 failed
+```
+
+That is the single assertion gated on plugin programs loading. Nothing in the routing, entry,
+alias, CSS or import layer fails any more — the pane shell mounts and deep-links correctly, and
+stops exactly at "shell never reached ready" because its programs cannot load.
+
+**Verified scoreboard:** 1/7 acceptance tests pass today; the other 6 fail on precisely one cause,
+which is the stdio-gated bundle set. No other defect stands between the app and green.
+
+`timeout(1)` does not exist on macOS — hit it again here. Use a backgrounded run plus a
+`pgrep` wait loop instead.
+
+## 2026-09-03 ~19:20 — second independent blocker: taxonomy.json breaks the registry generator
+
+A third session (not me, not semio-a4, not semio-ac) has `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json`
+dirty with mtime 19:12:01, mid-edit on `root-*` source-format contracts. Reproduced independently:
+
+```
+bun 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts generate
+exit 1
+error: Invalid taxonomy schema:
+- packageSourceDispositions is missing source-format contract "root-pytest-config".
+```
+
+(semio-a4 also sees `root-eslint-config`, so more than one row is missing.)
+
+**This gates plugin component builds, not just `dev` boots.** `@semio-tech/framework-os-dev:plugin`
+calls `ensurePluginRegistry` (3 call sites in `🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts`), so the
+staged rebuild would have failed on all 8 components had it fired. Not patched — whoever is editing
+those contracts knows the intended `packageSourceDispositions` rows; guessing them is the same class
+of mistake as patching semio-ac's brep mid-refactor.
+
+### Gate hardened twice over
+`gate3` now requires **three** conditions before it will rebuild anything:
+`registry generate` exit 0 **AND** `cargo check -p semio-s-plugin-stdio --lib --target wasm32-wasip2`
+exit 0 **AND** its error count exactly 0. Retries 12× at 3-minute intervals.
+
+Why the exit-code condition exists, concretely: an earlier gate recorded
+`STDIO-WASM-ERRORS=0 rc=137`. That zero was a **false green** — I had accidentally SIGKILLed the
+gate's own cargo check with an over-broad `pkill`, and a killed check emits no error lines, which is
+indistinguishable from a clean one by error count alone. The `rc` guard blocked the rebuild. An
+aborted, truncated, or killed build must never be readable as success.
+
+### Sweep-proofing
+The ticket's `🗑️generated/` was deleted twice mid-run by another session's cleanup (correct per
+CLAUDE.md — generated output is disposable; all 18 markdown reports survived). That silently broke
+the first gate: its check log vanished, `grep -c` on a missing file returned empty, and the
+`= "0"` test could never pass again. Transient run logs now go to the session scratchpad, which no
+ticket sweep can reach; only durable reports stay in the ticket.
+
+### Standing blockers (both external, both being worked by their owners)
+| blocker | owner | signal I wait for |
+| --- | --- | --- |
+| `stdio` wasm compile (`✳️brep`) | semio-ac fleet | my own wasm gate, not their native check |
+| `taxonomy.json` registry schema | unidentified third session | `registry generate` exit 0 |
+
+## 2026-09-03 ~19:40 — repo-wide emoji-path corruption (external, non-Claude writer)
+
+A non-idempotent repo-wide rename pass duplicated emoji path segments across tracked text files.
+Identified by semio-a4 as a **Codex (ChatGPT app) session**, not any Claude session: an inline
+`bun -e` rename-plan applier for ticket `26/04/08/ENFORCE-UNIQUE-SEMANTIC-EMOJIS-ACROSS-REPOSITORY`,
+run over every `git ls-files` text file, re-prefixing emoji on each pass. That applier PID is gone
+as of 19:41; the ChatGPT `codex app-server` parent (PID 66250) is still running, so it can recur.
+
+Two defect classes (semio-2f's analysis, confirmed on my files):
+1. Repeated runs — `📦️packages` → `📦️📦️📦️packages`, up to 5 deep. "Collapse triple→single" leaves `📦️📦️`.
+2. A spurious extra emoji glued in, which collapsing cannot repair: `🎨️🟠️styling` (real `🎨️styling`),
+   `🔺️⚙️mesh-engine`, `🧮️🔢️math`, and on my files `🟦️⚙️runtime.ts` / `🟦️🪄️.tsx`.
+
+### Impact on this ticket
+- `♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx` — 2 × `📦️📦️packages`. Repaired by me at ~19:32 (before
+  the coordination call to hold). HEAD had 0 occurrences, worktree 2, mtime 19:30:17.
+- `♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts` — **re-corrupted after my alias fixes**: now
+  10 broken alias targets, containing both defect classes. My earlier repair of the four
+  `🟦️glue` aliases is undone and must be re-applied after the tree is quiescent.
+- Survived intact: both renames (`🌐️.html`, `🟦️.tsx`), puzzle's `⚛️5d-react/🟦️.tsx`, and the
+  root `Cargo.toml` `codegen-units` block (7 plugin overrides present).
+
+### Repair oracle agreed across sessions
+HEAD first (`git show HEAD:<file>` carried correct pre-corruption paths — and unlike collapsing, it
+handles defect class 2), with on-disk existence as tiebreaker, plus the rename-plan's declared
+destinations. **Caveat I supplied:** HEAD is stale for paths that legitimately changed today —
+the demonstrator's `🌐️.html` and `🟦️.tsx`, puzzle's `⚛️5d-react/🟦️.tsx`, and five vite alias
+targets. A blanket HEAD restore would silently revert real work.
+
+### Measurement error to note
+I sampled corrupted `Cargo.toml` counts at 108 → 92 and my check printed "STILL GROWING". It tested
+`N1 != N2`, not direction: the count **fell**, which indicates peers repairing, not the corrupter
+advancing. A drift check must compare direction, not mere inequality.
+
+All my automation is stopped and I am staying off the tree until quiescence is confirmed.
+
+## 2026-09-03 ~20:20 — the codemod rewrites references too; my "restore" was wrong
+
+**Correction to my own action.** I restored four of my app's files to their HEAD names. That was
+wrong for three of them, and testing it is what proved the point:
+
+```
+bun 🔌️plugin/📇️registry/📜️script.ts generate
+error: Workspace taxonomy taxonomy file is missing at ".../📚️library/🔣️🌷️taxonomy.json"
+```
+
+The loader wanted the **glued** name. My restore of `🔣️🌷️taxonomy.json` → `🔣️taxonomy.json` caused
+that error; reverting my own restore cleared it. My app's sources agree:
+`⚙️vite.config.ts` → `"./🟦️🪧️brand.ts"`, `📜️script.ts` → `"🧪️🎚️playwright.config.ts"` and
+`"🧪️🎚️🐨️vitest.config.ts"`. All three re-aligned to the glued names; the app is self-consistent again.
+
+**So the Codex pass renames files AND rewrites their references.** A blanket restore to HEAD names
+orphans those references and leaves the tree worse than the corruption did. semio-a4's 912 logged
+moves are likely in that category; both peers have the evidence now.
+
+### Revised taxonomy of the damage — only two of three classes are defects
+1. **Nesting bug (real).** Repeated passes give `📦️📦️📦️packages`, up to 5 deep. References break here
+   because the rewrite is no longer a fixed point — the file lands at depth N, some references at N-1.
+2. **Tool-resolved manifests (real).** `package.json`, `Cargo.toml`: resolved by literal name, never
+   imported, so they were renamed with no reference to rewrite and nothing can load them.
+   My app's `package.json` is restored on exactly this basis and stays restored.
+3. **Single-emoji renames with matching references (probably intended).** `🟦️brand.ts` →
+   `🟦️🪧️brand.ts` with all references updated is coherent, and is plausibly ticket 26/04/08's goal.
+
+### Repairs I made this round (all existence-verified)
+- 4 files under `🔌️plugin/📇️registry/` importing `../📇️📇️registry/…` → `../📇️registry/…`, each
+  accepted only after checking every relative import in the rewritten file resolves.
+- `🔣️🌷️taxonomy.json`: `generatorContracts["styling-tokens"].outputRoots` and
+  `["wgpu-frame-worker"].inputPatterns` — 4 paths repaired to match what exists on disk
+  (`🎨️styling` → `🎨️🟠️styling` ×3, `📇️📇️registry` → `📇️registry` ×1), then deduped and sorted.
+  Backup at `scratchpad/taxonomy.before-my-fix.json`. **Taxonomy schema now validates.**
+
+Notably `🎨️🟠️styling` is what exists on disk and `🎨️styling` does not — yet 4 of 5 `outputRoots`
+entries still named the old path. The codemod renamed the directory and updated only *some*
+references: the rewrite is not atomic, which is the mechanism behind class 1.
+
+### Still blocked
+`registry generate` now fails at
+`📇️registry: expected exactly one plugin crate to declare [package.metadata.semio].host, found 0`
+— crate discovery across renamed manifest directories (`🔺️mesh-engine` → `🔺️⚙️mesh-engine`,
+`🧮️math` → `🧮️🔢️math`, `🎨️styling` → `🎨️🟠️styling`). That is the shared repair semio-2f and
+semio-a4 own, and it cannot converge while the Codex applier (PID 66250) keeps re-running.
+
+## 2026-09-03 ~20:45 — why "found 0 host crates": discovery is taxonomy-driven, not cargo-driven
+
+Chased `📇️registry: expected exactly one plugin crate to declare [package.metadata.semio].host, found 0`
+to its mechanism, and it is NOT a missing or malformed manifest:
+
+- `✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/Cargo.toml` is intact and correct — `[package.metadata.semio]`
+  at line 14, `host = { landing = "home", shell = "studio" }` at line 17.
+- `cargo metadata --no-deps` exits **0** and lists 127 workspace packages, including
+  `semio-s-plugin-space` with its `metadata.semio.host` block fully parsed.
+
+So cargo can see it and the registry cannot, because they use different sources:
+
+    findPluginCargoFiles → discoverComponentPackages → discoverCatalogPackages(repoRoot, TAXONOMY) → scanRepo(...)
+
+Discovery walks the filesystem **guided by taxonomy patterns**, not by `cargo metadata`. The Codex
+pass renamed directories repo-wide (`🎨️styling` → `🎨️🟠️styling`, `🔺️mesh-engine` → `🔺️⚙️mesh-engine`,
+`🧮️math` → `🧮️🔢️math`), so those patterns no longer match and the walk yields nothing. It fails
+**silently to zero** rather than erroring on a specific path — the same drift-blinds-discovery
+failure mode this repo has hit before, which is why the error names no file.
+
+Consequence: repairing individual manifests cannot fix this. Discovery only recovers when the
+on-disk names and the taxonomy patterns agree again — i.e. after the repo-wide convention decision.
+
+### Verified progress this round
+- `🔣️🌷️taxonomy.json` schema **validates** (was 2 blocking errors, now 0).
+- 4 files under `🔌️plugin/📇️registry/` repaired off `📇️📇️registry`, each existence-checked.
+- `cargo metadata` exits 0 (semio-2f's manifest repair landed).
+- Demonstrator app itself is self-consistent: `package.json` restored (tool-resolved, no
+  referrer), and `🟦️🪧️brand.ts` / `🧪️🎚️playwright.config.ts` / `🧪️🎚️🐨️vitest.config.ts` aligned to
+  what my sources actually reference.
+
+### The single remaining gate
+The Codex applier (PID 66250) must stop, then one convention decision, then discovery realigns.
+Until then every repair — mine, semio-2f's, semio-a4's — is undone on the next pass.
+
+## 2026-09-03 ~20:50 — discovery is FINE; the blocker is purely the live oscillation
+
+Two corrections to my previous entry, both from direct measurement rather than reasoning:
+
+**1. Discovery was never blinded.** I claimed renamed directories had broken taxonomy-guided
+discovery. Wrong. Once the taxonomy validates, a direct probe of the real code path returns:
+
+```
+total discovered: 122
+by role: {"plugin":35,"extension":26,"tool":5,"s-module":1,"hub":1,"framework":45,"product":8,"testkit":1}
+space matches: [{ role: "plugin", lang: "🦀️rust",
+                  manifestPath: "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/Cargo.toml" }]
+```
+
+The host crate IS discovered. `found 0 host crates` was a **downstream symptom of the taxonomy
+failing to validate**, not of pattern drift. Fix the taxonomy and discovery works.
+
+**2. The real and only blocker is that names and references oscillate.** Demonstrated end to end
+in about five minutes:
+
+| t | state |
+| --- | --- |
+| t0 | directory is `📇️registry`; four files import `../📇️📇️registry/…` → broken |
+| t1 | I repair the four imports to `../📇️registry/…`, existence-checked → **correct** |
+| t2 | corrupter renames the **directory** to `📇️📇️registry` |
+| t3 | my now-correct imports are wrong; generator fails with the mirror-image error |
+
+Also measured: taxonomy re-corrupted at mtime 20:13:09 with 6 doubled segments, minutes after I
+repaired it. Repairing either side is futile while the pass keeps alternating them.
+
+**This is not a diagnosis gap and not a missing fix.** Every remaining failure traces to one
+external process. The demonstrator's own code is in good shape:
+- dependency closure 283 → 0
+- app layer verified in-browser (root path, hash routing, entry, aliases, imports, CSS)
+- acceptance harness verified running, 1/7 passing, other 6 gated only on plugin bundles
+- taxonomy repairable to validating in ~10s whenever the tree holds still
+
+**Required, and only the dev can do it:** stop the Codex app-server (PID 66250), then decide
+HEAD-layout vs. keeping the enforcement renames. After that the sequence is mechanical: repair
+taxonomy → `registry generate` → build 8 components → serve → run the 7-test suite.
+
+## 2026-09-03 ~20:21 — latent diagnosability bug found; measurement itself now unreliable
+
+### Durable finding: `tryParsePluginCargo` swallows every parse error
+`🔌️plugin/📇️registry/📜️script.ts:619`
+
+```ts
+function tryParsePluginCargo(manifestPath, repoRoot, view) {
+  try { return parsePluginCargo(manifestPath, repoRoot, view); }
+  catch { return undefined; }      // ← bare catch, no logging, no path
+}
+```
+
+Any manifest that fails to parse is silently dropped from the catalog. The only downstream symptom
+is `defaultHostVariant` (`:654`) reporting
+`expected exactly one plugin crate to declare [package.metadata.semio].host, found 0`
+— which names no crate and no cause. A single malformed manifest anywhere makes the whole catalog
+look empty and sends you hunting the host crate, which is fine.
+
+This is worth fixing on its own merits, independent of today's corruption: the catch should at
+minimum record `manifestPath` and the error, so "found 0" can be traced to the manifest that
+actually failed. Recorded here rather than patched, because the file belongs to another session's
+subsystem and the tree is not stable enough to verify a change.
+
+### Measurement is no longer reliable
+The registry directory flipped `📇️registry` → `📇️📇️registry` at **20:20:59**, between two
+consecutive probes in the same investigation. Consequences:
+- probe4's "all 59 crates fail / registry entries: 0" was an artifact of mid-flip state, not a real
+  defect — retracted.
+- probe5 could not even import the script: `Cannot find module …/📇️registry/📜️script.ts`.
+
+So the tree mutates *within a single diagnostic sequence*, not merely between repairs. Under these
+conditions neither diagnosis nor build is possible: a plugin build needs 30+ uninterrupted minutes
+and the observed flip interval is single-digit minutes.
+
+### Verified, unchanged, and ready to finish
+- dependency closure 283 → 0
+- app layer verified in-browser (root path, hash routing, entry, 4 aliases, puzzle-js import, CSS)
+- acceptance harness verified running: 1/7 pass, 6 gated solely on plugin bundles
+- 8-component rebuild staged behind `registry generate` exit 0 AND stdio wasm rc=0/0 errors
+- discovery proven healthy (122 packages, 35 plugins, host crate found) whenever the taxonomy validates
+
+**Blocked solely on:** stopping Codex app-server PID 66250 (still alive), then the HEAD-layout vs.
+enforcement-renames decision.
+
+## 2026-09-04 (new session) — both standing blockers re-measured; only ONE compile error remains
+
+Re-measured every blocker the previous session ended on, rather than inheriting its conclusions.
+
+### Blocker 1 — repo-wide emoji corruption: GONE
+- No `bun -e` rename-plan applier process is running (the ChatGPT `codex app-server` parent is alive
+  but has spawned no applier).
+- `git ls-files | grep -cE '📦️📦️|📇️📇️|🎫️🎫️|🦑️🦑️'` → **0**.
+- Directory and file names are back at their HEAD spellings: `📇️registry` (not `📇️📇️registry`),
+  `🔣️taxonomy.json` (not `🔣️🌷️taxonomy.json`), `🟦️brand.ts`, `🧪️playwright.config.ts`,
+  `🧪️vitest.config.ts`.
+
+**Retracted (my own false positive):** I read `📦️packages/🦀️rust/././././././../../🗿️artifacts/…`
+in a compiler diagnostic as dot-multiplication corruption. It is not. The `#[path]` lines are
+byte-identical to HEAD; the repeated `./` is rustc's own display of nested `#[path]` attributes.
+The 915k `././.` matches repo-wide are almost entirely inside archived ticket `.txt` build logs.
+
+### Blocker 2 — `registry generate`: PASSES
+```
+bun 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts generate
+plugin registry catalog refreshed (59 plugin crates, 60 playgrounds, 45 framework packages)
+rc=0
+```
+The taxonomy validates and discovery is healthy. `🤖️generated/🔣️plugins.json` is fresh (Sep 4 00:46).
+
+**Method note:** the first attempt appeared to pass with `REGISTRY_RC=0` while actually never
+running — `timeout` does not exist on macOS, so the pipeline was `command not found | tail` and `$?`
+read `tail`'s status. A rc captured through a pipe is the LAST stage's rc, not the build's.
+
+### Blocker 3 — `stdio` wasm compile: ONE error, and it is a peer's unfinished edit
+```
+cargo check -p semio-s-plugin-stdio --lib --target wasm32-wasip2 --keep-going
+rc=101 — 1 error, 1434 warnings
+error[E0425]: cannot find function `issues_scoped_to_new_solids` in this scope
+  --> …/✳️brep/🧬️schema/🔺️diff/🔀️boolean/🦀️.rs:500:18
+```
+`issues_scoped_to_new_solids` exists **nowhere** — not in the worktree, not in `git grep HEAD`.
+A peer wrote the call site and its `pre_existing_solids` input (line 359) but never defined the
+helper. Their brep files were last touched 2026-09-03 22:1x–22:27 and no cargo/rustc of theirs is
+running, so the edit is dormant, not in flight. Fixing it forward per CLAUDE.md's
+"don't stop because others are working the same area".
+
+Note this is a *compile* error, not the historic `rust-lld` link crash. The link ceiling is handled
+by `[profile.dev.package.semio-s-plugin-stdio] codegen-units = 1` plus publishing from
+`[profile.wasm-release]` — debug bytes are never catalog bytes.
+
+### The real reason all six panes fail
+`0 of 8` plugin component bundles exist on disk. `target/wasm32-wasip2/{debug,wasm-release}/`
+holds only three framework components (actor, math, os-kernel). Every pane fails at
+"shell never reached ready" because there is nothing to load. Registry descriptors are fresh, so
+this is purely a missing-artifact problem once stdio compiles.
+
+### Traps to respect on the way out
+- `BUILD_BUDGET_MS = 1_200_000` (20 min) in
+  `🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts:1242` kills a cold wasm plugin build
+  **silently**. Export `SEMIO_BUILD_BUDGET_MS` before any component build.
+- `export RUSTC_WRAPPER=""` — sccache serializes concurrent builds.
+
+### Fixed here
+- `♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts:6` — `🎨️styling/🟦️` → `🎨️styling/🟦️.ts`.
+  Not corruption (HEAD carries the same extensionless spelling) and not the boot failure — Vite's
+  esbuild config loader resolved it, which is why the server booted. Aligned to the convention every
+  other importer in the repo uses.
+
+### Plan
+1. Define the missing brep helper → `stdio` checks clean. (in progress)
+2. Build all 8 wasm components under `wasm-release` with the budget raised.
+3. Boot :6029, run the 7-test acceptance suite, fix what it reports.
+
+## 2026-09-04 ~01:00 — stdio green; all nine crates checked at once; flow/process repaired by a fleet
+
+### stdio compiles (the blocker is gone)
+The missing `issues_scoped_to_new_solids` was defined (plus `pre_existing_entity_strings`, a forward
+map from every `entity` string `validate_body` can emit to its owning solid — chosen over inverting
+`raw_index()`, which has no inverse in this repo and would desync if either format changed).
+Verified independently by the coordinator, not just by the agent that wrote it:
+`cargo check -p semio-s-plugin-stdio --lib --target wasm32-wasip2 --keep-going` → **rc=0, 0 errors**.
+
+### Checked all nine demonstrator crates in ONE pass
+Rather than discovering failures serially 40 minutes into a component build:
+```
+cargo check --target wasm32-wasip2 --keep-going --lib \
+  -p …stdio -p …cad -p …gis -p …procedural -p …process \
+  -p …puzzle -p …sourcing -p …flow -p …demonstrator
+```
+**7 of 9 clean.** Only `flow` (164) and `process` (15) failed.
+
+### 30 flow errors were a committed parse defect
+All five `✏️editor/🎭️modes/🧬️generate/🎮️commands/🧬️*-generation/🦀️.rs` files had
+`use semio_framework_value_derive::{FromValue, ToValue};` injected **inside** the `use flow::{…}`
+block. The derive is genuinely used (line 67), and **HEAD carries the same defect** — this is
+committed, not fresh corruption. Moving the line below the block took flow 164 → 134.
+
+### Scope finding that reorders the work
+`🤖️generated/🔣️plugins.json` says `demonstrator.dependsOn = [cad, gis, procedural, process, puzzle,
+sourcing, stdio]` — **`flow` is NOT a direct dependency.** It enters only transitively, because
+`demonstrator` and `procedural` declare `consumes: ["flow.extension"]` and the `flow-extension-*`
+plugins depend on `flow`. So the seven clean components can build and boot before flow is finished.
+
+### Why the fleet was run edit-only
+Cargo takes one global target-dir lock, so six agents each running their own `cargo check` would
+serialize anyway *and* each would compile a tree containing the others' half-landed edits. Agents
+were given disjoint file sets and told to verify statically against real definitions and against the
+four sibling plugins that compile clean today; the coordinator runs the authoritative check.
+
+### What the fleet found beyond the assigned families
+- **`FlowMutation` was not renamed — it was reshaped.** Four generic `CollectionMutation`-wrapped
+  variants became ten concrete per-verb leaf types, and `flow_fixture_operations` now returns a
+  `Result`. `snapshot_operations`/`from_framework_mutation`/`to_framework_mutation` were rewritten to
+  the new shape, with u32↔usize casts where the framework's wire index differs from the plugin's
+  native `usize`.
+- **The serde errors are deliberate, not accidental.** `Dictionary`/`OrderedSet`/`Tree`/`FlowUi`/
+  `FlowSnapshot` dropped non-test serde under ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-
+  PLUGINS-AND-ARTIFACTS`. Call sites moved to `flow::os_pack::json::to_json_string`/`from_json_str`
+  and `dsl::json::to_json_string` — the replacements this plugin already uses at `✏️editor/🦀️.rs:2030`.
+  Adding a serde derive back would have fought a deliberate migration.
+- **`duplicate_widget` was deliberately never flattened**, unlike its sibling mutation leaves — so
+  there the fix was to KEEP `::mutation::`, the opposite of the cad-style repair. Blanket-dropping the
+  segment would have broken it.
+- Two files carry the same `flow_action`/`ActionDescriptor` defect but fell in no agent's file set:
+  `✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/📏️proximity/🦀️.rs`, and `DuplicateWidgetStep`'s serde
+  errors live in `✏️editor/🎮️commands/📋️duplicate-widget/🦀️.rs`. Coordinator picks these up.
+
+### Method notes worth keeping
+- The `process` agent backgrounded its verification build and ended its turn, which kills the child —
+  its fix is therefore UNVERIFIED and the coordinator must check it. Background children do not
+  survive the parent turn.
+- A peer's `cargo check --workspace --all-targets` held the target-dir lock for ~15 minutes. A
+  lock-holding cargo at ~5% CPU with busy `rustc` children is working normally, not hung — it was
+  left alone rather than killed.

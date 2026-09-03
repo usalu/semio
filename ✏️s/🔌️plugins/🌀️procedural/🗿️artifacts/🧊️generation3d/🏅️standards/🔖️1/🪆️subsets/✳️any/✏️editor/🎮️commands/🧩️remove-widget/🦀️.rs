@@ -35,21 +35,22 @@ mod tests {
     use crate::editor::generation3d::commands::{add_widget, patch_flow_widgets};
     use crate::editor::generation3d::testkit::{app, dispatch};
     use crate::editor::generation3d::Generation3dCommand;
+    use flow::Widget;
 
-    #[test]
-    fn add_widget_action_appends_widget() {
+    #[semio_framework_async_macros::async_test]
+    async fn add_widget_action_appends_widget() {
         let _serial = crate::editor::generation3d::test_support::lock();
-        let mut app = app();
+        let mut app = app().await;
         let before = app.snapshot().expect("snapshot").fixture.widgets.len();
-        dispatch(&mut app, Generation3dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), x: None, y: None }));
+        dispatch(&mut app, Generation3dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), x: None, y: None })).await;
         assert!(app.snapshot().expect("snapshot").fixture.widgets.len() > before);
     }
 
-    #[test]
-    fn patch_flow_widgets_edits_slider_value() {
+    #[semio_framework_async_macros::async_test]
+    async fn patch_flow_widgets_edits_slider_value() {
         let _serial = crate::editor::generation3d::test_support::lock();
-        let mut app = app();
-        dispatch(&mut app, Generation3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["height".into()], field: "value".into(), value: Some(9.5) }));
+        let mut app = app().await;
+        dispatch(&mut app, Generation3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["height".into()], field: "value".into(), value: Some(9.5) })).await;
         let value = app.snapshot().expect("snapshot").fixture.widgets.iter().find_map(|widget| match widget {
             Widget::InputSlider { id, value, .. } if id == "height" => Some(*value),
             _ => None,
@@ -57,10 +58,10 @@ mod tests {
         assert_eq!(value, Some(9.5));
     }
 
-    #[test]
-    fn patch_flow_widgets_recomputes_preview_geometry() {
+    #[semio_framework_async_macros::async_test]
+    async fn patch_flow_widgets_recomputes_preview_geometry() {
         let _serial = crate::editor::generation3d::test_support::lock();
-        let mut app = app();
+        let mut app = app().await;
         let before_fixture = app.snapshot().expect("snapshot").fixture.clone();
         let mut before_session = flow::FlowEvalSession::new();
         let mut before_host = flow::flow_host_with_session(&before_fixture, &before_session);
@@ -69,7 +70,7 @@ mod tests {
         let before_eval = before_session.eval_json().to_string();
         let (before_meshes, _) = crate::editor::generation3d::preview_payload_from_eval(&before_eval, &before_fixture, &Generation3dConfig::default());
 
-        dispatch(&mut app, Generation3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["height".into()], field: "value".into(), value: Some(9.5) }));
+        dispatch(&mut app, Generation3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["height".into()], field: "value".into(), value: Some(9.5) })).await;
         let after_fixture = app.snapshot().expect("snapshot").fixture.clone();
         let mut after_session = flow::FlowEvalSession::new();
         let mut after_host = flow::flow_host_with_session(&after_fixture, &after_session);
@@ -82,12 +83,12 @@ mod tests {
         assert_ne!(before_meshes, after_meshes, "slider mutation must change the tessellated preview mesh");
     }
 
-    #[test]
-    fn remove_widget_action_deletes_by_id() {
+    #[semio_framework_async_macros::async_test]
+    async fn remove_widget_action_deletes_by_id() {
         let _serial = crate::editor::generation3d::test_support::lock();
-        let mut app = app();
+        let mut app = app().await;
         assert!(app.snapshot().expect("snapshot").fixture.widgets.iter().any(|widget| crate::artifacts::generation3d::widget_id(widget) == "sides"));
-        dispatch(&mut app, Generation3dCommand::RemoveWidget(RemoveWidget { widget_id: "sides".into() }));
+        dispatch(&mut app, Generation3dCommand::RemoveWidget(RemoveWidget { widget_id: "sides".into() })).await;
         assert!(!app.snapshot().expect("snapshot").fixture.widgets.iter().any(|widget| crate::artifacts::generation3d::widget_id(widget) == "sides"));
     }
 }

@@ -11,6 +11,8 @@ import {
   canonicalFilenameForKind,
   canonicalFilenamesForKind,
   canonicalPrimaryFilenameForKind,
+  createTaxonomyPathMatcher,
+  createFixedContractResolver,
   coverageDir,
   coverageEnabled,
   daemonBudgetOpts,
@@ -22,6 +24,7 @@ import {
   dispatchSubcommand,
   defineLint,
   fixedContractFilename,
+  fixedDirectoryContractIdsForPath,
   fixedFilenameContractIdsForPath,
   loadTaxonomy,
   schemaFacetFormatEntries,
@@ -45,6 +48,7 @@ import {
   parseLcov,
   renderLcov,
   resolveCliBin,
+  resolveMcpBin,
   resolveFrameworkOsPlaygroundPlugin,
   resolveTestLevel,
   runCmd,
@@ -108,6 +112,8 @@ import {
   type SemanticProjectionAuthorityNode,
   mutationPayloadSchemaRelativePath,
   mutationDirectoryNameIsValid,
+  pathEmojiStatuteFindings,
+  type PathEmojiEntry,
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import {
   applyTaxonomyPlan,
@@ -136,13 +142,14 @@ const BUN = process.execPath;
 const NATIVE_BOOTSTRAP_DIR = join(WORKSPACE_ROOT, "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap");
 const REPO_CLIENT_DIR = join("🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "💻️client");
 const REPO_CLIENT_GO = join(REPO_CLIENT_DIR, "⌨️cli");
+const REPO_CLI_ENTRY_GO = join(REPO_CLIENT_GO, "cmd", "repo");
 const REPO_MCP_GO = join(REPO_CLIENT_DIR, "🔌️mcp");
 const REPO_MCP_PROFILE_ENV = "SEMIO_REPO_MCP_CLIENT";
 process.env.NX_ISOLATE_PLUGINS = "false";
 
 /** 🦑️Builds the repo MCP client from the current source before execution. */
 function buildRepoMcpClient(root: string): string {
-  const bin = resolveCliBin(root);
+  const bin = resolveMcpBin(root);
   runCmd("go", ["build", "-o", bin, `./${REPO_MCP_GO}`], {
     cwd: root,
     env: { ...process.env, GOWORK: join(root, "go.work") },
@@ -382,7 +389,8 @@ export class SetupScript extends Script {
     tryRun("bun", [join(this.root, "📜️script.ts"), "cpp", "setup"], { cwd: this.root });
     console.log("[setup] go build repo client…");
     const clientOut = resolveCliBin(this.root);
-    tryRun("go", ["build", "-o", clientOut, `./${REPO_MCP_GO}`], { env: { ...process.env, GOWORK: join(this.root, "go.work") } });
+    tryRun("go", ["build", "-o", clientOut, `./${REPO_CLI_ENTRY_GO}`], { env: { ...process.env, GOWORK: join(this.root, "go.work") } });
+    tryRun("go", ["build", "-o", resolveMcpBin(this.root), `./${REPO_MCP_GO}`], { env: { ...process.env, GOWORK: join(this.root, "go.work") } });
     console.log("[setup] dotnet restore…");
     tryRun("dotnet", ["restore", "Monorepo.sln"]);
     console.log("[setup] rustup wasm target…");
@@ -19010,8 +19018,8 @@ export class TestScript extends Script {
     }
     if (rest[0] === "repo-mcp") {
       await this.runRepoGoTest(`./${REPO_MCP_GO}`, level, rest.slice(1));
-      const clientOut = resolveCliBin(this.root);
-      runCmd("go", ["build", "-o", clientOut, `./${REPO_MCP_GO}`], {
+      const mcpOut = resolveMcpBin(this.root);
+      runCmd("go", ["build", "-o", mcpOut, `./${REPO_MCP_GO}`], {
         cwd: this.root,
         env: { ...process.env, GOWORK: join(this.root, "go.work") },
         budgetMs: buildBudgetMs(),
@@ -25731,19 +25739,34 @@ function policyBannedNameStemBreaches(repoRoot: string): BreachRecord[] {
 }
 
 /** 🧷️Whether an exact filename contract applies at this precise scope. */
-function policyFilenameContractApplies(relDir: string, name: string, taxonomy: ReturnType<typeof loadTaxonomy>): boolean {
+function policyFilenameContractApplies(repoRoot: string, relDir: string, name: string, taxonomy: ReturnType<typeof loadTaxonomy>, resolver?: ReturnType<typeof createFixedContractResolver>): boolean {
   const segments = relDir.split("/").filter(Boolean);
-  const packagesIndex = segments.lastIndexOf(taxonomy.packagesDirName);
+  let packagesIndex = -1;
+  for (let index = segments.length - 1; index >= 0; index--) {
+    if (semanticDirectoryKindId(segments[index]!, taxonomy) === "packages") {
+      packagesIndex = index;
+      break;
+    }
+  }
   const ecosystemId = packagesIndex >= 0 ? segments[packagesIndex + 1] : undefined;
+  const packageManifest = name === "package.json" || existsSync(join(repoRoot, relDir, "package.json"));
+  const packageRoot = packagesIndex === segments.length - 2 || packageManifest;
+  const siblingFixedFilenameContractIds = existsSync(join(repoRoot, relDir, "📋️project.json")) ? ["nx-project-manifest"] : undefined;
   for (const contract of Object.values(taxonomy.configurableEntryContracts)) {
-    if (contract.filename === name && contract.ecosystemId === ecosystemId && packagesIndex === segments.length - 2) return true;
+    if (contract.filename === name && contract.ecosystemId === ecosystemId && packageRoot) return true;
   }
   const path = relDir ? `${relDir}/${name}` : name;
-  return fixedFilenameContractIdsForPath(path, taxonomy, {
-    packageRoot: packagesIndex === segments.length - 2,
+  return (resolver?.filenameIdsForPath(path, {
+    packageRoot,
     ecosystemId,
     parentDirectoryKindId: semanticDirectoryKindId(segments.at(-1) ?? "", taxonomy) ?? undefined,
-  }).length > 0;
+    siblingFixedFilenameContractIds,
+  }) ?? fixedFilenameContractIdsForPath(path, taxonomy, {
+    packageRoot,
+    ecosystemId,
+    parentDirectoryKindId: semanticDirectoryKindId(segments.at(-1) ?? "", taxonomy) ?? undefined,
+    siblingFixedFilenameContractIds,
+  })).length > 0;
 }
 
 /** 🏭️Generated and framework-owned trees whose entry names are not repository taxonomy. */
@@ -25754,10 +25777,10 @@ function policyEmojiEntryIsGeneratedOrFrameworkOwned(relDir: string, name: strin
 }
 
 /** 🪪️Whether an entry is free to adopt the repository's emoji-prefixed identity. */
-function policyEmojiEntryIsRenamable(relDir: string, name: string, isDirectory: boolean, taxonomy: ReturnType<typeof loadTaxonomy>): boolean {
+function policyEmojiEntryIsRenamable(repoRoot: string, relDir: string, name: string, isDirectory: boolean, taxonomy: ReturnType<typeof loadTaxonomy>): boolean {
   if (!name || name.startsWith(".") || policyEmojiEntryIsGeneratedOrFrameworkOwned(relDir, name)) return false;
   if (isDirectory) return true;
-  return !policyFilenameContractApplies(relDir, name, taxonomy);
+  return !policyFilenameContractApplies(repoRoot, relDir, name, taxonomy);
 }
 
 /** 🎭️Families whose shared leading emoji is a structural kind marker rather than a sibling identity.
@@ -25795,62 +25818,48 @@ function policyEmojiPrefixNeedsVs16(name: string): boolean {
   return policyHasLeadingEmoji(name) && /^[A-Za-z]/.test(name.slice(prefix.length)) && !/\p{Emoji_Presentation}/u.test(first) && !prefix.includes(POLICY_VS16);
 }
 
-/** ✅️Every renamable entry in a clean taxonomy area has a VS16 emoji identity unique among its siblings. */
+/** ✅️Every Git-visible, non-reserved entry has a semantic canonical emoji identity unique among all siblings. */
 export function policyEmojiPrefixBreaches(repoRoot: string): BreachRecord[] {
   const taxonomy = loadTaxonomy();
-  if (taxonomy.variationSelectorPolicy.requiredAfterEmoji !== true) return [];
-  const breaches: BreachRecord[] = [];
-  const cleanRoots = Object.entries(taxonomy.areas)
-    .filter(([, state]) => state === "clean")
-    .map(([root]) => root)
-    .filter((root, index, roots) => !roots.some((candidate, candidateIndex) => candidateIndex !== index && root.startsWith(`${candidate}/`)));
-  const walk = (relDir: string): void => {
-    const seen = new Map<string, string>();
-    for (const entry of policyReaddirSafe(repoRoot, relDir)) {
-      const childRel = `${relDir}/${entry.name}`;
-      const renamable = policyEmojiEntryIsRenamable(relDir, entry.name, entry.isDirectory, taxonomy);
-      const hasPrefix = policyHasLeadingEmoji(entry.name);
-      if (renamable && !hasPrefix) {
-        breaches.push({
-          id: `emoji-prefix-missing-${childRel}`,
-          summary: `"${childRel}" is renamable but has no leading emoji prefix`,
-          kind: "taxonomy/emoji-prefix",
-          scope: childRel,
-          priority: "high",
-          reason: "Every renamable file and directory in a clean taxonomy area must start with an emoji identity.",
-          solution: `Rename "${entry.name}" with a sibling-unique emoji prefix and update every reference.`,
-        });
-      } else if (renamable && !policyEmojiPresentationIsStructural(relDir) && policyEmojiPrefixNeedsVs16(entry.name)) {
-        breaches.push({
-          id: `emoji-vs16-${childRel}`,
-          summary: `"${childRel}" is missing U+FE0F on its emoji prefix`,
-          kind: "taxonomy/emoji-prefix",
-          scope: childRel,
-          priority: "high",
-          reason: "taxonomy.variationSelectorPolicy requires canonical emoji presentation on renamable entries.",
-          solution: `Rename the leading emoji so it includes U+FE0F, preserving the stem and references.`,
-        });
-      }
-      if (renamable && hasPrefix && !policyEmojiSiblingIdentityIsStructural(relDir, entry.name, taxonomy)) {
-        const prefix = policyLeadingEmojiPrefix(entry.name).replaceAll(POLICY_VS16, "");
-        const previous = seen.get(prefix);
-        if (previous) {
-          breaches.push({
-            id: `emoji-prefix-duplicate-${relDir}-${prefix.codePointAt(0)?.toString(16) ?? "unknown"}-${entry.name}`,
-            summary: `"${relDir}" reuses emoji prefix "${prefix}" for siblings "${previous}" and "${entry.name}"`,
-            kind: "taxonomy/emoji-prefix-uniqueness",
-            scope: childRel,
-            priority: "high",
-            reason: "A leading emoji is the local visual identity of an entry and must be unique among siblings.",
-            solution: `Rename either sibling with a distinct emoji prefix and update every reference.`,
-          });
-        } else seen.set(prefix, entry.name);
-      }
-      if (entry.isDirectory && !policyEmojiEntryIsGeneratedOrFrameworkOwned(relDir, entry.name)) walk(childRel);
-    }
-  };
-  cleanRoots.forEach(walk);
-  return breaches;
+  const result = Bun.spawnSync(["git", "ls-files", "-co", "--exclude-standard", "-z"], { cwd: repoRoot });
+  if (result.exitCode !== 0) throw new Error(`git-visible path inventory failed: ${result.stderr.toString()}`);
+  const inventory = result.stdout.toString().split("\0").filter(Boolean)
+    .map((path) => path.replaceAll("\\", "/").replace(/\/$/u, "").normalize("NFC"))
+    .flatMap((path) => {
+      try { return [{ path, directory: lstatSync(join(repoRoot, path)).isDirectory() }]; } catch { return []; }
+    });
+  const files = inventory.filter((entry) => !entry.directory).map((entry) => entry.path);
+  const directories = new Set<string>();
+  for (const entry of inventory) {
+    if (entry.directory) directories.add(entry.path);
+    for (let parent = posix.dirname(entry.path); parent !== "." && parent !== ""; parent = posix.dirname(parent)) directories.add(parent);
+  }
+  const reservedSubtrees = new Set(taxonomy.pathEmojiPolicy.reservedSubtreeDirectoryNames.map((name) => name.normalize("NFC").replaceAll(POLICY_VS16, "")));
+  const isReservedSubtreeName = (name: string): boolean => reservedSubtrees.has(name.replaceAll(POLICY_VS16, "")) || reservedSubtrees.has(leadingEmojiIdentity(name).rest.replaceAll(POLICY_VS16, ""));
+  const resolver = createFixedContractResolver(taxonomy);
+  const underReservedSubtree = (path: string): boolean => path.split("/").slice(0, -1).some(isReservedSubtreeName);
+  const directoryReserved = (path: string): boolean => resolver.directoryIdsForPath(path, {
+    parentDirectoryKindId: semanticDirectoryKindId(posix.basename(posix.dirname(path)), taxonomy) ?? undefined,
+  }).length > 0;
+  const entries: PathEmojiEntry[] = [
+    ...[...directories].map((path): PathEmojiEntry => ({ path, nodeKind: "directory", reserved: underReservedSubtree(path) || isReservedSubtreeName(posix.basename(path)) || directoryReserved(path) })),
+    ...files.map((path): PathEmojiEntry => ({ path, nodeKind: "file", reserved: underReservedSubtree(path) || policyFilenameContractApplies(repoRoot, posix.dirname(path) === "." ? "" : posix.dirname(path), posix.basename(path), taxonomy, resolver) })),
+  ].filter((entry) => !taxonomyRelativePathIsExcluded(entry.path, taxonomy));
+  const byPath = new Map(entries.map((entry) => [entry.path, entry]));
+  return pathEmojiStatuteFindings(entries, taxonomy.pathEmojiPolicy.genericEmojiIdentities).map((finding): BreachRecord => {
+    const entity = byPath.get(finding.path)?.nodeKind === "directory" ? "folder" : "file";
+    const label = { missing: "missing-emoji", generic: "generic-emoji", presentation: "noncanonical-emoji-presentation", spacing: "whitespace-after-emoji", duplicate: "emoji-not-unique" }[finding.kind];
+    const detail = finding.kind === "duplicate" ? ` duplicates sibling "${finding.sibling}"` : finding.emoji ? ` uses "${finding.emoji}"` : "";
+    return {
+      id: `path-emoji-${finding.kind}-${finding.path}`,
+      summary: `"${finding.path}" breaches ${label}${detail}`,
+      kind: `${entity}/name/${label}`,
+      scope: finding.path,
+      priority: "high",
+      reason: "Every non-reserved file and folder has a canonical, non-generic leading emoji identity that is unique across its sibling namespace.",
+      solution: `Rename "${posix.basename(finding.path)}" with a semantic sibling-unique emoji prefix and update every reference.`,
+    };
+  });
 }
 
 /**

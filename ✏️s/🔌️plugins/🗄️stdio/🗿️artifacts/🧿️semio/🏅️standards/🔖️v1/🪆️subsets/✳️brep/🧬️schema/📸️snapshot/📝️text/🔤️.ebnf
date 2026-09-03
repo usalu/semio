@@ -1,6 +1,6 @@
 (* ISO-14977-style EBNF for `stdio.semio.brep`'s real text DSL body — descriptive mirror of the
    authoritative `📖️.grammar.semio` (same production names). *)
-document = artifact mark, schema line, vertices line, edges line, loops line, faces line, shells line, solids line ;
+document = artifact mark, schema line, vertices line, edges line, loops line, faces line, shells line, solids line, coedges line, next label line ;
 artifact mark = 'stdio.semio.brep' ;
 
 schema line = 'schema', '=', hex ;
@@ -10,13 +10,26 @@ loops line = 'loops', '=', '[', [ brep loop, { ',', brep loop } ], ']' ;
 faces line = 'faces', '=', '[', [ face, { ',', face } ], ']' ;
 shells line = 'shells', '=', '[', [ shell, { ',', shell } ], ']' ;
 solids line = 'solids', '=', '[', [ solid, { ',', solid } ], ']' ;
+(* Landed alongside `BrepCoedge`/`SemioBrepSnapshot::nextLabel` (wave W3-A). *)
+coedges line = 'coedges', '=', '[', [ coedge, { ',', coedge } ], ']' ;
+next label line = 'nextLabel', '=', number ;
 
-vertex = '[', hex, ',', point3, ']' ;
-edge = '[', hex, ',', hex, ',', hex, ',', curve, ']' ;
+vertex = '[', hex, ',', point3, ',', number, ']' ;
+edge = '[', hex, ',', hex, ',', hex, ',', curve, ',', number, ']' ;
 brep loop = '[', hex, ',', loop edge list, ']' ;
-face = '[', hex, ',', hex, ',', hex list, ',', surface, ',', bool, ']' ;
+face = '[', hex, ',', hex, ',', hex list, ',', surface, ',', bool, ',', number, ']' ;
 shell = '[', hex, ',', shell face list, ']' ;
 solid = '[', hex, ',', solid shell list, ']' ;
+
+coedge = '[', hex, ',', hex, ',', bool, ',', opt curve2, ',', prange, ',', hex, ',', hex, ',', hex, ']' ;
+opt curve2 = '-' | ( '~', curve2 ) ;
+prange = '[', number, ',', number, ']' ;
+curve2 = ( 'L', '[', point2, ',', point2, ']' )
+       | ( 'C', '[', point2, ',', number, ']' )
+       | ( 'E', '[', point2, ',', point2, ',', number, ',', number, ']' )
+       | ( 'N', '[', point2 list, ',', number list, ',', number, ',', number list, ']' ) ;
+point2 = '[', number, ',', number, ']' ;
+point2 list = '[', [ point2, { ',', point2 } ], ']' ;
 
 loop edge = '[', hex, ',', bool, ']' ;
 loop edge list = '[', [ loop edge, { ',', loop edge } ], ']' ;

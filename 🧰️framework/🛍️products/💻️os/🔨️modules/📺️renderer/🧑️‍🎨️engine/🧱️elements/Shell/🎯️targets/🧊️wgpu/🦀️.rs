@@ -19,7 +19,7 @@ use semio_framework_os_kernel::os_directory::identity::IdentityEnv;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 #[cfg(not(target_arch = "wasm32"))]
-use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactHost, ArtifactMailboxSender, ArtifactSyncStatus, PersistenceBinding, RemoteState};
+use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactDocumentKey, ArtifactEvent, ArtifactHost, ArtifactMailboxSender, ArtifactSyncStatus, PersistenceBinding, RemoteState};
 #[cfg(not(target_arch = "wasm32"))]
 use store_sync::PresencePeer;
 use ui_contract::{SurfaceId, UiDocumentLease, UiFixedList, UiText, UI_DOCUMENT_LEASE_ALIASES, UI_DOCUMENT_LEASE_SLOTS};
@@ -32,9 +32,13 @@ use ui_contract::{SurfaceId, UiDocumentLease, UiFixedList, UiText, UI_DOCUMENT_L
 // `ShellState` (`document_host`, `sync_channel`, `sync_status`).
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_kernel::os_directory::{
-    client::{native::NativeDirectoryTransport, DirectoryClient, DirectoryStream, DirectoryStreamTurn, DirectoryTransport},
-    identity::{actor_id, restore_inherited, Identity, IdentityOutcome, IdentityStatus},
-    DirectoryCommand, DirectoryEvent, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage,
+    client::{
+        native::NativeDirectoryTransport, DirectoryClient, DirectoryStream, DirectoryStreamTurn, DirectoryTransport, DirectoryWsConnection, DocumentSocketSurfaceExpectationV1,
+        TransportError,
+    },
+    identity::{actor_id, claimed_local_hub_credential, restore_claimed, Identity, IdentityOutcome, IdentityStatus},
+    DirectoryCommand, DirectoryEvent, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentOpenRendererTargetV1,
+    DocumentOpenSurfaceRoleV1,
 };
 // 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-directory-and-run): `DirectoryClient`'s request
 // methods now carry an `OperationContext` (cancellation/deadline/trace), and the native transport
@@ -361,7 +365,7 @@ fn default_persistence_bindings(identity: Option<&Identity>, space_id: Option<&s
     };
     match (identity, space_id) {
         (Some(identity), Some(space_id)) => {
-            let mut bindings = vec![PersistenceBinding::Hub { base_url: identity.hub_base_url.clone(), space_id: space_id.to_string(), token: None, surface: surface.map(str::to_string) }];
+            let mut bindings = vec![PersistenceBinding::Hub { base_url: identity.hub_base_url.clone(), space_id: space_id.to_string(), surface: surface.map(str::to_string) }];
             bindings.extend(folder);
             bindings
         }
@@ -532,6 +536,72 @@ fn find_dialect_app<'a>(program: &'a ProgramBridgeEntry, dialect: &semio_framewo
     program.manifest.apps.iter().find(|app| &app.dialect == dialect && app.role == role)
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+fn document_socket_surface_from_descriptor(
+    plugin_id: &str,
+    package_id: Option<&str>,
+    manifest: &semio_framework::PluginManifest,
+    app: &AppDefinition,
+    window_kind_id: &str,
+) -> Result<DocumentSocketSurfaceExpectationV1, String> {
+    let package_id = package_id.filter(|value| !value.is_empty()).ok_or_else(|| "document open requires a verified package descriptor".to_string())?;
+    if plugin_id != manifest.plugin_id || manifest.version.is_empty() || !manifest.apps.iter().any(|candidate| candidate.id == app.id) || !app.window_kinds.iter().any(|window| window.id == window_kind_id) {
+        return Err("document open local plugin selection is not descriptor-bound".into());
+    }
+    Ok(DocumentSocketSurfaceExpectationV1 {
+        artifact_kind: app.dialect.artifact_kind.clone(),
+        plugin_id: plugin_id.to_string(),
+        package_id: package_id.to_string(),
+        version: manifest.version.clone(),
+        surface_id: semio_framework::manifest::surface_app_id(&app.dialect, app.role),
+        app_id: app.id.clone(),
+        window_kind_id: window_kind_id.to_string(),
+        role: match app.role {
+            semio_framework::manifest::AppRole::Viewer => DocumentOpenSurfaceRoleV1::Viewer,
+            semio_framework::manifest::AppRole::Editor => DocumentOpenSurfaceRoleV1::Editor,
+        },
+        renderer_target: DocumentOpenRendererTargetV1::Wgpu,
+    })
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn wgpu_document_socket_surface(program: &ProgramBridgeEntry, app: &AppDefinition, window_kind_id: &str) -> Result<DocumentSocketSurfaceExpectationV1, String> {
+    document_socket_surface_from_descriptor(&program.plugin_id, program.package_id.as_deref(), &program.manifest, app, window_kind_id)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn bind_wgpu_document_socket_surface(
+    host: &ArtifactHost,
+    document_id: &str,
+    artifact_schema: &str,
+    bindings: &[PersistenceBinding],
+    program: &ProgramBridgeEntry,
+    app: &AppDefinition,
+    window_kind_id: &str,
+) -> Result<(), String> {
+    let mut hub_spaces = bindings.iter().filter_map(|binding| match binding {
+        PersistenceBinding::Hub { space_id, .. } => Some(space_id.as_str()),
+        PersistenceBinding::Folder { .. } => None,
+    });
+    let Some(space_id) = hub_spaces.next() else {
+        return Ok(());
+    };
+    if hub_spaces.any(|candidate| candidate != space_id) {
+        return Err("document open cannot span hub spaces".into());
+    }
+    if app.io.document_schema != artifact_schema {
+        return Err("document open local artifact schema does not match the selected app".into());
+    }
+    let surface = wgpu_document_socket_surface(program, app, window_kind_id)?;
+    if bindings.iter().any(|binding| matches!(binding, PersistenceBinding::Hub { surface: Some(selected), .. } if selected != &surface.surface_id)) {
+        return Err("document open local surface does not match the hub binding".into());
+    }
+    if !host.set_document_socket_surface(&ArtifactDocumentKey::hub(space_id, document_id), surface) {
+        return Err("document open local surface authority was already claimed".into());
+    }
+    Ok(())
+}
+
 //#endregion 🔖️IdentityPure
 
 //#region 🔖️CheckInPure
@@ -637,6 +707,24 @@ fn checkpoint_landed(previous_checkpoint_id: Option<&str>, next_checkpoint_id: O
 mod identity_directory_presence_tests {
     use super::*;
 
+    struct LateDialProbe(std::sync::Arc<std::sync::atomic::AtomicUsize>);
+
+    impl DirectoryWsConnection for LateDialProbe {
+        fn send_text(&mut self, _text: String) -> Result<(), TransportError> { Ok(()) }
+        fn send_binary(&mut self, _bytes: Vec<u8>) -> Result<(), TransportError> { Ok(()) }
+        fn try_recv_text(&mut self) -> Result<semio_framework_os_kernel::os_directory::client::DirectoryWsPoll, TransportError> {
+            Ok(semio_framework_os_kernel::os_directory::client::DirectoryWsPoll::Pending)
+        }
+        fn close(&mut self) { self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst); }
+    }
+
+    #[test]
+    fn dropped_shell_runner_explicitly_closes_a_late_dial_result() {
+        let closes = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        close_unowned_directory_dial(Ok(LateDialProbe(closes.clone())));
+        assert_eq!(closes.load(std::sync::atomic::Ordering::SeqCst), 1);
+    }
+
     fn sample_identity() -> Identity {
         Identity { user_id: "u-amara".to_string(), email: "amara@semio.dev".to_string(), display_name: "Amara".to_string(), hub_base_url: "http://hub.local".to_string(), issued_at_ms: 0 }
     }
@@ -656,10 +744,9 @@ mod identity_directory_presence_tests {
         let bindings = default_persistence_bindings(Some(&identity), Some("sp-1"), Some(data_dir), Some("s.space.space@1/*#editor"));
         assert_eq!(bindings.len(), 2, "hub first, folder second");
         match &bindings[0] {
-            PersistenceBinding::Hub { base_url, space_id, token, surface } => {
+            PersistenceBinding::Hub { base_url, space_id, surface } => {
                 assert_eq!(base_url, "http://hub.local");
                 assert_eq!(space_id, "sp-1");
-                assert_eq!(token.as_deref(), Some("tok"));
                 assert_eq!(surface.as_deref(), Some("s.space.space@1/*#editor"));
             }
             other => panic!("expected Hub binding first, got {other:?}"),
@@ -1098,6 +1185,7 @@ pub struct ActiveSession {
 #[cfg(not(target_arch = "wasm32"))]
 pub struct ShellSyncChannel {
     pub document_id: String,
+    pub document_key: ArtifactDocumentKey,
     pub actor_uri: String,
     pub instance_id: u32,
     pub plugin_id: String,
@@ -1239,6 +1327,13 @@ impl std::task::Wake for ShellPoolFuture {
 type ShellDirectoryStream = DirectoryStream<NativeDirectoryTransport<TokioHostRuntime>>;
 
 #[cfg(not(target_arch = "wasm32"))]
+fn close_unowned_directory_dial<T: DirectoryWsConnection>(result: Result<T, TransportError>) {
+    if let Ok(mut connection) = result {
+        connection.close();
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 /// 📡️ Finite directory-stream actor: bounded turns, I/O-lane dials, timer-wheel wakeups, ordered output.
 struct ShellDirectoryRunner {
     pool: WorkerPool,
@@ -1305,6 +1400,8 @@ impl ShellDirectoryRunner {
                                 let now_ms = runner.pool.now_ms();
                                 let _ = runner.stream.lock().expect("directory stream mutex poisoned").complete_dial(now_ms, result);
                                 runner.schedule();
+                            } else {
+                                close_unowned_directory_dial(result);
                             }
                         }),
                     );
@@ -2040,6 +2137,14 @@ impl ShellState {
             let transport = NativeDirectoryTransport::with_new_http_pool_now(runtime, scope, compute, 10_000_000, 8, DirectoryPackageId("os.directory-client".to_string()), DirectoryActorId(0));
             (transport, CancelToken::root_now())
         };
+        #[cfg(not(target_arch = "wasm32"))]
+        let document_host = {
+            let host = ArtifactHost::new(std::sync::Arc::new(crate::renderer_worker_pool()));
+            if let Some(credential) = claimed_local_hub_credential("native") {
+                host.set_local_hub_credential(credential);
+            }
+            host
+        };
         let mut state = Self {
             plugins,
             plugin_filter,
@@ -2135,7 +2240,7 @@ impl ShellState {
             sync_card_anchor: None,
             last_envelope_dsl: None,
             #[cfg(not(target_arch = "wasm32"))]
-            document_host: ArtifactHost::new(std::sync::Arc::new(crate::renderer_worker_pool())),
+            document_host,
             #[cfg(not(target_arch = "wasm32"))]
             sync_channel: None,
             #[cfg(not(target_arch = "wasm32"))]
@@ -3029,7 +3134,7 @@ impl ShellState {
         if let Some(rest) = uri.strip_prefix("remote://") {
             let (host_port, space_id) = rest.split_once('/').unwrap_or((rest, "default"));
             let space_id = if space_id.is_empty() { "default" } else { space_id };
-            return Ok(vec![PersistenceBinding::Hub { base_url: format!("http://{host_port}"), space_id: space_id.to_string(), token: None, surface: None }]);
+            return Ok(vec![PersistenceBinding::Hub { base_url: format!("http://{host_port}"), space_id: space_id.to_string(), surface: None }]);
         }
         if let Some(path) = uri.strip_prefix("folder://") {
             return Ok(vec![PersistenceBinding::Folder { path: std::path::PathBuf::from(path) }]);
@@ -3055,7 +3160,7 @@ impl ShellState {
                 // `HostBackboneChannel` this drove is retired with no `EffectBackbone` replacement
                 // landed yet (`📓️status.md`'s "A2-abi-sdk — honest partial" entry, still open).
             }
-            self.document_host.close(&channel.document_id);
+            self.document_host.close_key(&channel.document_key);
         }
         self.sync_status = None;
         self.sync_bootstrap_progress = None;
@@ -3242,7 +3347,7 @@ impl ShellState {
             views: Vec::new(),
             ui: None,
         };
-        self.document_host.presence_heartbeat(&document_id, chrome_now_ms() as u64, peer);
+        self.document_host.presence_heartbeat_key(&channel.document_key, chrome_now_ms() as u64, peer);
     }
 
     /// 🎭️ ticket §1 — contract §C0's `user:{userId}#{sessionId}` once identity is minted/restored,
@@ -3449,10 +3554,23 @@ impl ShellState {
         let surface = semio_framework::manifest::surface_app_id(&app.dialect, semio_framework::manifest::AppRole::Editor);
         let bindings = default_persistence_bindings(self.identity.as_ref(), Some(space_id), data_dir, Some(surface.as_str()));
         let actor_uri = format!("actor://{S_SPACE_INDEX_DOCUMENT_ID}");
+        if let Err(error) = bind_wgpu_document_socket_surface(
+            &self.document_host,
+            S_SPACE_INDEX_DOCUMENT_ID,
+            S_SPACE_INDEX_DOCUMENT_SCHEMA,
+            &bindings,
+            &program,
+            &app,
+            &app.window_kinds.first().id,
+        ) {
+            eprintln!("[DEBUG] wgpu shell touchArtifact document admission failed: {error}");
+            program.destroy_app(instance_id);
+            return;
+        }
         let channels = self.document_host.open(ArtifactActorConfig { document_id: S_SPACE_INDEX_DOCUMENT_ID.to_string(), schema: S_SPACE_INDEX_DOCUMENT_SCHEMA.to_string(), bindings, watch_external: true, actor: actor.clone() }).await;
         if let Err(error) = program.attach_backbone(instance_id, &actor_uri) {
             eprintln!("[DEBUG] wgpu shell touchArtifact attach_backbone failed: {error}");
-            self.document_host.close(S_SPACE_INDEX_DOCUMENT_ID);
+            self.document_host.close_key(&channels.document_key);
             program.destroy_app(instance_id);
             return;
         }
@@ -3470,7 +3588,7 @@ impl ShellState {
             }
             Err(error) => eprintln!("[DEBUG] wgpu shell touchArtifact encode failed: {error}"),
         }
-        self.document_host.close(S_SPACE_INDEX_DOCUMENT_ID);
+        self.document_host.close_key(&channels.document_key);
         program.destroy_app(instance_id);
     }
 
@@ -3514,8 +3632,14 @@ impl ShellState {
             // `detach_sync_backbone_internal`'s note; `attach_backbone` below now carries the honest
             // "not implemented yet" error for the whole mechanism.
             let document_id = self.sync_document_id().unwrap_or_else(|| "document".into());
-            let schema = session.app.breadcrumb.join(".");
+            let schema = session.app.io.document_schema.clone();
             let bindings = Self::parse_persistence_binding(&uri)?;
+            let window_kind_id = self
+                .active_window_id
+                .as_deref()
+                .or(session.view_state.active_window_kind_id.as_deref())
+                .unwrap_or_else(|| session.app.window_kinds.first().id.as_str())
+                .to_string();
             // 📌️ ticket §C5 item 4 — checkpoint-on-close: this shell keeps exactly one session/document
             // mounted at a time, so "attach a different backbone" IS "close" for whatever was open —
             // same posture the React shell's own report documents ("switch away IS close here").
@@ -3527,12 +3651,13 @@ impl ShellState {
             self.presence_surface = None;
             let actor_uri = format!("actor://{document_id}");
             let actor = self.current_shell_actor(session.instance_id);
+            bind_wgpu_document_socket_surface(&self.document_host, &document_id, &schema, &bindings, &plugin, &session.app, &window_kind_id)?;
             let channels = self.document_host.open(ArtifactActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: true, actor }).await;
-            let events = self.document_host.subscribe(&document_id).await;
+            let events = self.document_host.subscribe_key(&channels.document_key).await;
             plugin.attach_backbone(session.instance_id, &actor_uri).map_err(|error| format!("plugin attach backbone: {error}"))?;
             let cmd_tx = channels.cmd_tx.clone();
             let _ = cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() });
-            self.sync_channel = Some(ShellSyncChannel { document_id, actor_uri, instance_id: session.instance_id, plugin_id: session.plugin_id.clone(), cmd_tx, events, connected_at_ms: chrome_now_ms() as i64 });
+            self.sync_channel = Some(ShellSyncChannel { document_id, document_key: channels.document_key, actor_uri, instance_id: session.instance_id, plugin_id: session.plugin_id.clone(), cmd_tx, events, connected_at_ms: chrome_now_ms() as i64 });
             self.sync_status = Some(ArtifactSyncStatus::default());
             self.sync_backbone_uri = Some(uri);
             self.sync_card_kind = None;
@@ -3561,6 +3686,12 @@ impl ShellState {
     async fn open_document(&mut self, document_id: String, schema: String, bindings: Vec<PersistenceBinding>, surface: Option<String>) -> Result<(), String> {
         let session = self.session.clone().ok_or("session missing")?;
         let plugin = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned().ok_or("plugin missing")?;
+        let window_kind_id = self
+            .active_window_id
+            .as_deref()
+            .or(session.view_state.active_window_kind_id.as_deref())
+            .unwrap_or_else(|| session.app.window_kinds.first().id.as_str())
+            .to_string();
         // 🎠️ H3-wgpu-native — `wasm_runtime()`/`register_host_backbone` retired, see
         // `detach_sync_backbone_internal`'s note.
         // 📌️ ticket §C5 item 4 — checkpoint-on-close, same "switch away IS close" posture as
@@ -3570,13 +3701,14 @@ impl ShellState {
         self.presence_surface = surface;
         let actor_uri = format!("actor://{document_id}");
         let actor = self.current_shell_actor(session.instance_id);
+        bind_wgpu_document_socket_surface(&self.document_host, &document_id, &schema, &bindings, &plugin, &session.app, &window_kind_id)?;
         let channels = self.document_host.open(ArtifactActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: true, actor }).await;
-        let events = self.document_host.subscribe(&document_id).await;
+        let events = self.document_host.subscribe_key(&channels.document_key).await;
         plugin.attach_backbone(session.instance_id, &actor_uri).map_err(|error| format!("plugin attach backbone: {error}"))?;
         let cmd_tx = channels.cmd_tx.clone();
         let _ = cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() });
         self.sync_backbone_uri = Some(actor_uri.clone());
-        self.sync_channel = Some(ShellSyncChannel { document_id, actor_uri, instance_id: session.instance_id, plugin_id: session.plugin_id.clone(), cmd_tx, events, connected_at_ms: chrome_now_ms() as i64 });
+        self.sync_channel = Some(ShellSyncChannel { document_id, document_key: channels.document_key, actor_uri, instance_id: session.instance_id, plugin_id: session.plugin_id.clone(), cmd_tx, events, connected_at_ms: chrome_now_ms() as i64 });
         self.sync_status = Some(ArtifactSyncStatus::default());
         self.sync_card_kind = None;
         self.refresh_history_snapshot().await;
@@ -4028,7 +4160,7 @@ impl ShellState {
         let mut ctx = self.directory_ctx();
         ctx.deadline_ms = Some(pool.now_ms().saturating_add(5_000));
         self.identity_bootstrap_task = Some(ShellPoolFuture::spawn(pool, Lane::Io, async move {
-            let outcome = restore_inherited(&ctx, transport).await.map_err(|error| error.to_string());
+            let outcome = restore_claimed(&ctx, transport, "native").await.map_err(|error| error.to_string());
             let _ = tx.send(outcome);
         }));
         self.identity_bootstrap_rx = Some(rx);
@@ -4045,6 +4177,8 @@ impl ShellState {
                 self.identity_offline = outcome.status == IdentityStatus::Offline;
                 self.identity = Some(outcome.identity.clone());
                 let client = std::sync::Arc::new(DirectoryClient::authenticated(self.directory_transport.clone(), outcome.credential.clone()));
+                self.document_host.set_local_hub_credential(outcome.credential);
+                self.document_host.set_hub_socket_grant_source(client.clone());
                 self.directory_client = Some(client.clone());
                 if !self.identity_offline {
                     self.open_directory_stream(client);
@@ -8188,6 +8322,41 @@ mod command_registry_tests {
         ShellState::new(Vec::new(), String::new())
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn native_document_admission_is_bound_to_verified_package_app_window_and_renderer() {
+        let mut app = test_app(Vec::new(), Vec::new());
+        app.io.document_schema = "s.test.document".into();
+        let manifest = PluginManifest {
+            plugin_id: "s.test".into(),
+            label: "Test".into(),
+            version: "1.2.3".into(),
+            apps: vec![app.clone()],
+            examples: vec![],
+            capabilities: vec![],
+            topic_contributions: vec![],
+            commands: vec![],
+            artifact_kinds: vec![],
+            dependencies: vec![],
+            contributions: vec![],
+        };
+        let authority = document_socket_surface_from_descriptor("s.test", Some("s.test.package"), &manifest, &app, "main").expect("verified descriptor selection");
+        assert_eq!(authority.artifact_kind, "s.test.app");
+        assert_eq!(authority.plugin_id, "s.test");
+        assert_eq!(authority.package_id, "s.test.package");
+        assert_eq!(authority.version, "1.2.3");
+        assert_eq!(authority.app_id, "test-app");
+        assert_eq!(authority.window_kind_id, "main");
+        assert_eq!(authority.renderer_target, DocumentOpenRendererTargetV1::Wgpu);
+        assert_eq!(authority.role, DocumentOpenSurfaceRoleV1::Editor);
+        assert!(document_socket_surface_from_descriptor("s.test", None, &manifest, &app, "main").is_err());
+        assert!(document_socket_surface_from_descriptor("hostile.plugin", Some("s.test.package"), &manifest, &app, "main").is_err());
+        assert!(document_socket_surface_from_descriptor("s.test", Some("s.test.package"), &manifest, &app, "unrelated-window").is_err());
+        let unrelated_app = test_app(Vec::new(), Vec::new());
+        let empty_manifest = PluginManifest { apps: Vec::new(), ..manifest };
+        assert!(document_socket_surface_from_descriptor("s.test", Some("s.test.package"), &empty_manifest, &unrelated_app, "main").is_err());
+    }
+
     #[test]
     fn build_os_commands_covers_every_wired_setting() {
         let shell = test_shell_state();
@@ -10317,7 +10486,7 @@ impl ShellState {
         let label = self.session.as_ref().map(|session| session.app.id.clone()).filter(|value| value.len() <= SHELL_CHROME_IO_FIELD_BYTES);
         let user_id = self.identity.as_ref().map(|identity| identity.user_id.clone()).filter(|value| value.len() <= SHELL_CHROME_IO_FIELD_BYTES);
         let peer = PresencePeer { actor, label, presence_pack: None, connected_at_ms, user_id, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None };
-        self.document_host.presence_heartbeat(&document_id, chrome_now_ms() as u64, peer);
+        self.document_host.presence_heartbeat_key(&channel.document_key, chrome_now_ms() as u64, peer);
     }
 
     #[cfg(target_arch = "wasm32")]

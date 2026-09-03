@@ -10,15 +10,15 @@
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
 use crate::artifacts::flow::op::FlowMutation;
-use crate::artifacts::flow::schema::mutations::connect_widgets::mutation::ConnectWidgets;
-use crate::artifacts::flow::schema::mutations::create_widget::mutation::CreateWidget;
-use crate::artifacts::flow::schema::mutations::delete_widget::mutation::DeleteWidget;
-use crate::artifacts::flow::schema::mutations::disconnect_widgets::mutation::DisconnectWidgets;
-use crate::artifacts::flow::schema::mutations::move_widgets::mutation::MoveWidgets;
-use crate::artifacts::flow::schema::mutations::reorder_synapses::mutation::ReorderSynapses;
-use crate::artifacts::flow::schema::mutations::reorder_widgets::mutation::ReorderWidgets;
-use crate::artifacts::flow::schema::mutations::replace_widget::mutation::ReplaceWidget;
-use crate::artifacts::flow::schema::mutations::update_synapse_endpoints::mutation::UpdateSynapseEndpoints;
+use crate::artifacts::flow::schema::mutations::connect_widgets::ConnectWidgets;
+use crate::artifacts::flow::schema::mutations::create_widget::CreateWidget;
+use crate::artifacts::flow::schema::mutations::delete_widget::DeleteWidget;
+use crate::artifacts::flow::schema::mutations::disconnect_widgets::DisconnectWidgets;
+use crate::artifacts::flow::schema::mutations::move_widgets::MoveWidgets;
+use crate::artifacts::flow::schema::mutations::reorder_synapses::ReorderSynapses;
+use crate::artifacts::flow::schema::mutations::reorder_widgets::ReorderWidgets;
+use crate::artifacts::flow::schema::mutations::replace_widget::ReplaceWidget;
+use crate::artifacts::flow::schema::mutations::update_synapse_endpoints::UpdateSynapseEndpoints;
 use crate::artifacts::flow::{flow_content_child_handle_bounded, FlowSnapshot, FlowWorkingScene, FLOW_DOCUMENT_SCHEMA};
 use crate::editor::flow::commands::{
     add_widget, connect_media_ports, context_menu_at, delete_selection, disconnect, duplicate_widget, duplicate_widget_step, evaluate, flow_eval_resolve, flow_eval_tick, focus_selection, move_media_node, node_graph_edit, node_graph_viewport,
@@ -37,13 +37,14 @@ use flow::{dag::DagDrawLod, flow_fixture_operations, flow_host_with_session, Cam
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 use semio_framework_plugin::{
-    ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppDefinition, ArtifactEditor, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, Dialect,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppActionRegistry, AppDefinition, ArtifactEditor, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, Dialect,
     DomainTopology, DraftView, Editor, Effect, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod,
-    SelectionMode, SelectionSpec, TopologyNode, UiNode, WindowMeasure,
+    SelectionMode, SelectionSpec, TopologyNode, WindowMeasure,
 };
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::io::Write;
+use std::sync::Arc;
 use store::EngineHandles;
 
 #[path = "🧵️retained/🦀️.rs"]
@@ -238,62 +239,79 @@ fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowSnapshot,
     // groups; `delete-selection` stays a direct destructive item last — `organize_context_menu`
     // (applied automatically at the `VcsArtifactApp::context_menu` funnel) sorts the groups into
     // `RIBBON_PARENT_CATEGORIES` order and inserts the pre-destructive separator itself.
-    let mut menu = Menu::of(registry);
-    if hits.is_empty() {
-        menu = menu
-            .item(ContextMenuItemSpec { id: "add-node".into(), label: Some(labels.add_node.into()), icon: Some("plus".into()), action: Some("openSpotlight".into()), ..Default::default() })
-            .action("selectAll")
-            .group("transform", |m| m.action("reorganize"));
-    }
-    if let Some(node_id) = hit_node {
-        menu = menu.group("actions", |m| {
-            m.item(ContextMenuItemSpec {
-                id: "duplicate-widget".into(),
-                label: Some(labels.duplicate_widget.into()),
-                icon: Some("copy".into()),
-                action: Some("duplicateWidget".into()),
-                args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "widgetId": node_id }))),
-                ..Default::default()
-            })
-        });
-        if is_image {
-            menu = menu.group("actions", |m| {
-                m.item(ContextMenuItemSpec {
-                    id: "replace-image".into(),
-                    label: Some(labels.replace_image.into()),
-                    icon: Some("image".into()),
-                    action: Some("replaceImage".into()),
-                    args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "id": node_id }))),
-                    ..Default::default()
+    semio_framework_plugin::resolve_ready(async {
+        let mut menu = Menu::of(registry).await;
+        if hits.is_empty() {
+            menu = menu
+                .item(ContextMenuItemSpec { id: "add-node".into(), label: Some(labels.add_node.into()), icon: Some("plus".into()), action: Some("openSpotlight".into()), ..Default::default() })
+                .await
+                .action("selectAll")
+                .await
+                .group("transform", |m| m.action("reorganize"))
+                .await;
+        }
+        if let Some(node_id) = hit_node {
+            menu = menu
+                .group("actions", |m| {
+                    m.item(ContextMenuItemSpec {
+                        id: "duplicate-widget".into(),
+                        label: Some(labels.duplicate_widget.into()),
+                        icon: Some("copy".into()),
+                        action: Some("duplicateWidget".into()),
+                        args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "widgetId": node_id }))),
+                        ..Default::default()
+                    })
                 })
-            });
+                .await;
+            if is_image {
+                menu = menu
+                    .group("actions", |m| {
+                        m.item(ContextMenuItemSpec {
+                            id: "replace-image".into(),
+                            label: Some(labels.replace_image.into()),
+                            icon: Some("image".into()),
+                            action: Some("replaceImage".into()),
+                            args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "id": node_id }))),
+                            ..Default::default()
+                        })
+                    })
+                    .await;
+            }
         }
-    }
-    if has_selection {
-        menu = menu.action("focusSelection").action("clearSelection").group("view", |m| {
-            m.item(ContextMenuItemSpec {
-                id: "toggle-preview".into(),
-                label: Some(if all_preview_off { labels.show_preview.into() } else { labels.hide_preview.into() }),
-                icon: Some(if all_preview_off { "eye".into() } else { "eye-off".into() }),
-                checked: Some(!all_preview_off),
-                action: Some("setPreviewOff".into()),
-                args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "ids": nodes, "value": !all_preview_off }))),
-                ..Default::default()
-            })
-        });
-        let phrase = selection_count_phrase(is_de, &[(nodes.len(), if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" }), (edges.len(), if is_de { "Kante" } else { "edge" }, if is_de { "Kanten" } else { "edges" })]);
-        if !phrase.is_empty() {
-            menu = menu.item(ContextMenuItemSpec {
-                id: "delete-selection".into(),
-                label: Some(format!("{} ({phrase})", labels.delete_selection.as_str())),
-                icon: Some("trash".into()),
-                destructive: Some(true),
-                action: Some("deleteSelection".into()),
-                ..Default::default()
-            });
+        if has_selection {
+            menu = menu
+                .action("focusSelection")
+                .await
+                .action("clearSelection")
+                .await
+                .group("view", |m| {
+                    m.item(ContextMenuItemSpec {
+                        id: "toggle-preview".into(),
+                        label: Some(if all_preview_off { labels.show_preview.into() } else { labels.hide_preview.into() }),
+                        icon: Some(if all_preview_off { "eye".into() } else { "eye-off".into() }),
+                        checked: Some(!all_preview_off),
+                        action: Some("setPreviewOff".into()),
+                        args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "ids": nodes, "value": !all_preview_off }))),
+                        ..Default::default()
+                    })
+                })
+                .await;
+            let phrase = selection_count_phrase(is_de, &[(nodes.len(), if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" }), (edges.len(), if is_de { "Kante" } else { "edge" }, if is_de { "Kanten" } else { "edges" })]).await;
+            if !phrase.is_empty() {
+                menu = menu
+                    .item(ContextMenuItemSpec {
+                        id: "delete-selection".into(),
+                        label: Some(format!("{} ({phrase})", labels.delete_selection.as_str())),
+                        icon: Some("trash".into()),
+                        destructive: Some(true),
+                        action: Some("deleteSelection".into()),
+                        ..Default::default()
+                    })
+                    .await;
+            }
         }
-    }
-    menu.build()
+        menu.build().await
+    })
 }
 //#endregion 🔖️ContextMenu
 
@@ -1185,7 +1203,7 @@ impl semio_framework::ToolJobFactory for FlowDirectStoreJobFactory {
     }
 
     fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
-        semio_framework::ToolExecutionContract::resumable(FLOW_DIRECT_STORE_RAW_BYTES, 256, FLOW_STORE_MAX_MUTATION_ITEMS, 16_384, 7_500, 1, 1)
+        semio_framework::ToolExecutionContract::resumable(FLOW_DIRECT_STORE_RAW_BYTES, 256, FLOW_STORE_MAX_MUTATION_ITEMS as u64, 16_384, 7_500, 1, 1)
     }
 
     fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
@@ -1315,9 +1333,9 @@ impl semio_framework_job::InteractiveJob for FlowHostEffectJob {
             let view = semio_framework_plugin::resolve_ready(ArtifactView::with_children(&payload.snapshot, &payload.history, (*payload.children).clone()));
             let emit = payload.instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| {
                 owner.with_session(|session| match &payload.command {
-                    FlowCommand::Evaluate(_) => Ok(semio_framework_plugin::resolve_ready(evaluate::evaluate_result(&payload.snapshot, &payload.config, session))),
-                    FlowCommand::FlowEvalTick(command) => semio_framework_plugin::resolve_ready(flow_eval_tick::handle(command, &view, &ConfigView { snapshot: &payload.config }, session)),
-                    FlowCommand::FlowEvalResolve(command) => semio_framework_plugin::resolve_ready(flow_eval_resolve::handle(command, &view, &ConfigView { snapshot: &payload.config }, session)),
+                    FlowCommand::Evaluate(_) => Ok(evaluate::evaluate_result(&payload.snapshot, &payload.config, session)),
+                    FlowCommand::FlowEvalTick(command) => flow_eval_tick::handle(&command, &view, &ConfigView { snapshot: &payload.config }, session),
+                    FlowCommand::FlowEvalResolve(command) => flow_eval_resolve::handle(&command, &view, &ConfigView { snapshot: &payload.config }, session),
                     FlowCommand::ContextMenuAt(_) | FlowCommand::OpenSpotlight(_) | FlowCommand::ReplaceImage(_) => Ok(Emit::default()),
                     _ => Err(Fault::from("flow-host-effect-route-mismatch")),
                 })?
@@ -1713,10 +1731,10 @@ impl ArtifactEditor for FlowPlayApp {
             FLOW_PLAY_BODY_GENERATIONS => generations::render(config, semio_framework_plugin::locale_from_str(&config.locale), semio_framework_plugin::Terminology::Native),
             FLOW_PLAY_BODY_GENERATE_FORM => form::render(fixture, config),
             FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(config),
-            FLOW_PLAY_BODY_DOCUMENT => document_panel::render(fixture, labels),
-            FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(fixture, config, &mut session, labels),
+            FLOW_PLAY_BODY_DOCUMENT => document_panel::render(fixture, labels).map(semio_framework_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(fixture, config, &mut session, labels).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(labels),
-            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
@@ -1734,10 +1752,10 @@ impl ArtifactEditor for FlowPlayApp {
                     FLOW_PLAY_BODY_GENERATIONS => generations::render(cfg.snapshot, semio_framework_plugin::locale_from_str(&cfg.snapshot.locale), semio_framework_plugin::Terminology::Native),
                     FLOW_PLAY_BODY_GENERATE_FORM => form::render(doc.snapshot, cfg.snapshot),
                     FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(cfg.snapshot),
-                    FLOW_PLAY_BODY_DOCUMENT => document_panel::render(doc.snapshot, flow_play_labels(cfg.snapshot)),
-                    FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(doc.snapshot, cfg.snapshot, session, flow_play_labels(cfg.snapshot)),
+                    FLOW_PLAY_BODY_DOCUMENT => document_panel::render(doc.snapshot, flow_play_labels(cfg.snapshot)).map(semio_framework_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(doc.snapshot, cfg.snapshot, session, flow_play_labels(cfg.snapshot)).map(semio_framework_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(flow_play_labels(cfg.snapshot)),
-                    _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
+                    _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
                 })
             })
             .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("flow.eval-session-owner", error.message))?
@@ -1795,7 +1813,7 @@ pub fn host_operations(snapshot: &FlowSnapshot, config: &FlowConfig, session: &F
     if !mutate(&mut host) {
         return Vec::new();
     }
-    flow_fixture_operations(&snapshot.to_fixture(), &host.fixture).into_iter().filter_map(crate::artifacts::flow::schema::mutations::from_framework_mutation).collect()
+    flow_fixture_operations(&snapshot.to_fixture(), &host.fixture).unwrap_or_default().into_iter().filter_map(crate::artifacts::flow::schema::mutations::from_framework_mutation).collect()
 }
 //#endregion 🔖️Host
 
@@ -1858,11 +1876,11 @@ pub fn create_flow_app() -> AppDefinition {
         .mutation("duplicateWidget", LocalizedLabel::native("Duplicate Widget", "Widget duplizieren"))
         .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(duplicate_widget::DUPLICATE_WIDGET_STEP_ACTION_ID, LocalizedLabel::native("Continue Duplicating Widget", "Widgetduplizierung fortsetzen"), ActionKind::Mutation) })
         // 🗂️ Referenced by flow_context_menu_items — categorized for grouped-context-menu disclosure.
-        .action_with(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
+        .action_with(semio_framework_plugin::resolve_ready(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection")))
         .mutation("disconnect", LocalizedLabel::native("Disconnect", "Trennen"))
         .mutation("connectMediaPorts", LocalizedLabel::native("Connect Ports", "Anschlüsse verbinden"))
         .mutation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
-        .action_with(ActionDefinition::bounded_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
+        .action_with(semio_framework_plugin::resolve_ready(ActionDefinition::bounded_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform")))
         .mutation("patchFlowWidgets", LocalizedLabel::native("Patch Widgets", "Widgets aktualisieren"))
         .mutation("renameFlowWidget", LocalizedLabel::native("Rename Widget", "Widget umbenennen"))
         .mutation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
@@ -1874,7 +1892,7 @@ pub fn create_flow_app() -> AppDefinition {
         // `nodeGraphHover`/`graphPointerDown`) are no longer declared here: framework-owned, injected
         // via `.interaction(...)` below (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
         .view_action("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"))
-        .action_with(ActionDefinition::bounded_catalog("focusSelection", LocalizedLabel::native("Zoom to Selection", "Auf Auswahl zoomen"), ActionKind::View).with_category("view"))
+        .action_with(semio_framework_plugin::resolve_ready(ActionDefinition::bounded_catalog("focusSelection", LocalizedLabel::native("Zoom to Selection", "Auf Auswahl zoomen"), ActionKind::View).with_category("view")))
         .action_with(flow_internal_action("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), ActionKind::View))
         .action_with(flow_internal_action("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View))
         .action_with(flow_internal_action("setProximityDistance", LocalizedLabel::native("Set Proximity Distance", "Näheabstand festlegen"), ActionKind::View))
@@ -1882,9 +1900,9 @@ pub fn create_flow_app() -> AppDefinition {
         .action_with(flow_internal_action("setGridSnapEnabled", LocalizedLabel::native("Set Grid Snap Enabled", "Rasterfang aktivieren"), ActionKind::View))
         .action_with(flow_internal_action("setGridFactor", LocalizedLabel::native("Set Grid Factor", "Rasterfaktor festlegen"), ActionKind::View))
         .action_with(flow_internal_action("contextMenuAt", LocalizedLabel::native("Context Menu At", "Kontextmenü an Position"), ActionKind::View))
-        .action_with(flow_internal_action("setPreviewOff", LocalizedLabel::native("Set Preview Off", "Vorschau deaktivieren"), ActionKind::View).with_category("view"))
-        .action_with(flow_internal_action("openSpotlight", LocalizedLabel::native("Open Spotlight", "Spotlight öffnen"), ActionKind::View).with_category("create"))
-        .action_with(flow_internal_action("replaceImage", LocalizedLabel::native("Replace Image", "Bild ersetzen"), ActionKind::View).with_category("actions"))
+        .action_with(semio_framework_plugin::resolve_ready(flow_internal_action("setPreviewOff", LocalizedLabel::native("Set Preview Off", "Vorschau deaktivieren"), ActionKind::View).with_category("view")))
+        .action_with(semio_framework_plugin::resolve_ready(flow_internal_action("openSpotlight", LocalizedLabel::native("Open Spotlight", "Spotlight öffnen"), ActionKind::View).with_category("create")))
+        .action_with(semio_framework_plugin::resolve_ready(flow_internal_action("replaceImage", LocalizedLabel::native("Replace Image", "Bild ersetzen"), ActionKind::View).with_category("actions")))
         .action_with(flow_internal_action("setCatalogueSections", LocalizedLabel::native("Set Catalogue Sections", "Katalogabschnitte festlegen"), ActionKind::View))
         .action_with(flow_internal_action("toggleAutomation", LocalizedLabel::native("Toggle Extension", "Erweiterung umschalten"), ActionKind::View))
         // 📝️ Staged argument form for the panel-visible create action (module operators stay catalogue-driven).

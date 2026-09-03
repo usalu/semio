@@ -272,7 +272,7 @@ fn solve_trig_hits(a: f64, b: f64, c: f64, tol: f64, build: impl Fn(f64) -> Curv
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn intersect_general(curve: &Curve3, surface: &Surface, tol: f64) -> Result<Vec<CurveSurfaceHit>, IntersectError> {
     let domain_t = curve_sample_domain(curve, surface, tol)?;
-    let surf_domain = finite_surface_domain(surface);
+    let surf_domain = super::shared::finite_surface_domain(surface);
     let segs = super::shared::curve_to_bezier_segments(curve, domain_t)?;
     let mut hits = Vec::new();
     for (bez, t0, t1) in &segs {
@@ -313,7 +313,7 @@ fn subdivide_seed(bez: &crate::artifacts::semio::standards::v1::subsets::brep::s
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn curve_sample_domain(curve: &Curve3, surface: &Surface, tol: f64) -> Result<(f64, f64), IntersectError> {
     match curve {
-        Curve3::Line { origin, dir } => line_domain_against_surface(origin, dir, surface, tol),
+        Curve3::Line { origin, dir } => super::shared::line_domain_against_surface(origin, dir, surface, tol),
         Curve3::Circle { .. } | Curve3::Ellipse { .. } => Ok(curve.domain()),
         Curve3::Nurbs { knots, .. } => {
             let d = knots.domain();
@@ -325,42 +325,6 @@ fn curve_sample_domain(curve: &Curve3, surface: &Surface, tol: f64) -> Result<(f
     }
 }
 
-// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn line_domain_against_surface(origin: &Pnt3, dir: &Vec3, surface: &Surface, tol: f64) -> Result<(f64, f64), IntersectError> {
-    let n = dir.norm();
-    if n <= tol {
-        return Err(IntersectError::Degenerate("zero-length line direction".into()));
-    }
-    let unit = *dir * (1.0 / n);
-    let ((u0, u1), (v0, v1)) = finite_surface_domain(surface);
-    let mut lo = f64::INFINITY;
-    let mut hi = f64::NEG_INFINITY;
-    for i in 0..=8 {
-        for j in 0..=8 {
-            let u = u0 + (u1 - u0) * (i as f64 / 8.0);
-            let v = v0 + (v1 - v0) * (j as f64 / 8.0);
-            let p = surface.eval(u, v);
-            let s = (p - *origin).dot(unit);
-            lo = lo.min(s);
-            hi = hi.max(s);
-        }
-    }
-    if !lo.is_finite() || !hi.is_finite() {
-        return Err(IntersectError::Degenerate("unable to bound line against surface".into()));
-    }
-    let pad = ((hi - lo).abs() + 1.0).max(1.0);
-    Ok(((lo - pad) / n, (hi + pad) / n))
-}
-
-// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn finite_surface_domain(surface: &Surface) -> ((f64, f64), (f64, f64)) {
-    let ((u0, u1), (v0, v1)) = surface.domain();
-    let u_hi = if u1.is_finite() { u1 } else { u0 + std::f64::consts::TAU };
-    let u_lo = if u0.is_finite() { u0 } else { u_hi - std::f64::consts::TAU };
-    let v_hi = if v1.is_finite() { v1 } else { 10.0 };
-    let v_lo = if v0.is_finite() { v0 } else { -10.0 };
-    ((u_lo, u_hi), (v_lo, v_hi))
-}
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn wrap_or_clamp(x: f64, lo: f64, hi: f64, periodic: bool) -> f64 {

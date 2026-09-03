@@ -4,7 +4,7 @@ use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "sphere-cut-with-torus";
 pub fn label() -> LocalizedLabel {
-    LocalizedLabel::native("Sphere Cut With Torus", "Sphere Cut With Torus")
+    LocalizedLabel::native("Sphere Cut With Torus", "Kugel mit Torus geschnitten")
 }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🧪️sphere-cut-with-torus/🗣️.dsl.semio");

@@ -10,14 +10,14 @@
 //! — folding it into a string literal is a zero-behavior-change mechanical transform (see
 //! `📋️TEMPLATE-FAMILY.md`'s "non-source assets" section for the general rule this establishes).
 
+use crate::artifact_authority::chunk_cas::{decode_artifact_cas_ownership_v1, encode_artifact_cas_ownership_v1, validate_artifact_cas_publication_v1, ArtifactCasDeleteFence, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation};
 use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{
-    active_capability, auth_audit, bounded_event_read, checkpoint_projection_rebuild, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, validate_bounded_auth_text, validate_verified_checkpoint_append,
-    visibility_to_str, HubClock, HubDirectory, InviteCapability, NewDirectoryEvent, ProjectionRebuildControl, SessionCapability, ShareCapability, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES,
-    ArtifactCasSweepCandidatePage, UNCONTROLLED_PROJECTION_REBUILD, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX,
+    active_capability, auth_audit, bounded_event_read, checkpoint_projection_rebuild, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, same_admin_operation_request, validate_admin_operation_audit,
+    validate_bounded_auth_text, validate_verified_checkpoint_append, visibility_to_str, ArtifactCasSweepCandidatePage, HubClock, HubDirectory, InviteCapability, NewDirectoryEvent, ProjectionRebuildControl, SessionCapability, ShareCapability,
+    ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, UNCONTROLLED_PROJECTION_REBUILD,
 };
-use crate::artifact_authority::chunk_cas::{decode_artifact_cas_ownership_v1, encode_artifact_cas_ownership_v1, validate_artifact_cas_publication_v1, ArtifactCasDeleteFence, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation};
 use directory::os_directory::{
     ArtifactCheckpoint, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor, Hlc, PublishedArtifactCheckpoint,
 };
@@ -134,6 +134,7 @@ CREATE TABLE IF NOT EXISTS hub_sync_session (
     document_id TEXT NOT NULL,
     surface TEXT NOT NULL,
     user_id TEXT REFERENCES hub_user(id) ON DELETE SET NULL,
+    authenticated_email TEXT,
     space_role TEXT,
     client_label TEXT NOT NULL,
     connected_at BIGINT NOT NULL,
@@ -178,6 +179,28 @@ CREATE TABLE IF NOT EXISTS hub_auth_audit (
     reason_code TEXT,
     correlation_id TEXT NOT NULL,
     peer_class TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS hub_admin_operation_audit (
+    sequence BIGSERIAL PRIMARY KEY,
+    request_id TEXT NOT NULL,
+    intent_digest TEXT NOT NULL CHECK (length(intent_digest) = 64),
+    operation_id TEXT NOT NULL,
+    occurred_at BIGINT NOT NULL,
+    phase TEXT NOT NULL CHECK (phase IN ('accepted', 'succeeded', 'failed', 'cancelled')),
+    terminal BOOLEAN NOT NULL,
+    intent_kind TEXT NOT NULL,
+    target_kind TEXT NOT NULL,
+    target_id TEXT NOT NULL,
+    principal_user_id TEXT NOT NULL,
+    principal_session_id TEXT NOT NULL,
+    principal_generation BIGINT NOT NULL CHECK (principal_generation >= 1),
+    correlation_id TEXT NOT NULL,
+    event_seq_first BIGINT,
+    event_seq_last BIGINT,
+    outcome_code TEXT NOT NULL,
+    reason_code TEXT,
+    UNIQUE (request_id, terminal)
 );
 
 CREATE TABLE IF NOT EXISTS hub_directory_event (
@@ -296,6 +319,9 @@ CREATE INDEX IF NOT EXISTS idx_share_grant_scope ON hub_share_grant (space_id, d
 CREATE INDEX IF NOT EXISTS idx_auth_session_user_active ON hub_auth_session (user_id, revoked_at);
 CREATE INDEX IF NOT EXISTS idx_auth_session_identity_active ON hub_auth_session (identity_provider, identity_subject_digest, revoked_at);
 CREATE INDEX IF NOT EXISTS idx_auth_audit_occurred ON hub_auth_audit (occurred_at, sequence);
+CREATE INDEX IF NOT EXISTS idx_admin_operation_audit_sequence ON hub_admin_operation_audit (sequence);
+CREATE INDEX IF NOT EXISTS idx_admin_operation_audit_request ON hub_admin_operation_audit (request_id, sequence);
+CREATE INDEX IF NOT EXISTS idx_admin_operation_audit_operation ON hub_admin_operation_audit (operation_id, sequence);
 ";
 //#endregion 🔖️Schema
 
@@ -362,9 +388,21 @@ async fn cas_lock_space(tx: &mut sqlx_core::transaction::Transaction<'_, sqlx_po
 async fn cas_reservation_barrier(tx: &mut sqlx_core::transaction::Transaction<'_, sqlx_postgres::Postgres>, space_id: &str, now_ms: i64) -> DirectoryResult<([u8; 32], u64)> {
     cas_lock_space(tx, space_id).await?;
     let current: Option<(i64, Option<i64>)> = sqlx_core::query_as::query_as("SELECT fence_epoch, expires_at_ms FROM hub_artifact_cas_delete_lease WHERE space_id = $1 FOR UPDATE").bind(space_id).fetch_optional(&mut **tx).await.map_err(backend)?;
-    if current.as_ref().and_then(|(_, expiry)| *expiry).is_some_and(|expiry| expiry > now_ms) { return Err(DirectoryError::Conflict("artifact CAS deletion lease is active for this space".into())); }
-    let epoch = match current { Some((epoch, _)) => epoch.checked_add(1).ok_or_else(|| DirectoryError::Conflict("artifact CAS fence epoch overflow".into()))?, None => 1 };
-    sqlx_core::query::query("INSERT INTO hub_artifact_cas_delete_lease(space_id, fence_epoch, lease_token, expires_at_ms) VALUES ($1,$2,NULL,NULL) ON CONFLICT(space_id) DO UPDATE SET fence_epoch = excluded.fence_epoch, lease_token = NULL, expires_at_ms = NULL").bind(space_id).bind(epoch).execute(&mut **tx).await.map_err(backend)?;
+    if current.as_ref().and_then(|(_, expiry)| *expiry).is_some_and(|expiry| expiry > now_ms) {
+        return Err(DirectoryError::Conflict("artifact CAS deletion lease is active for this space".into()));
+    }
+    let epoch = match current {
+        Some((epoch, _)) => epoch.checked_add(1).ok_or_else(|| DirectoryError::Conflict("artifact CAS fence epoch overflow".into()))?,
+        None => 1,
+    };
+    sqlx_core::query::query(
+        "INSERT INTO hub_artifact_cas_delete_lease(space_id, fence_epoch, lease_token, expires_at_ms) VALUES ($1,$2,NULL,NULL) ON CONFLICT(space_id) DO UPDATE SET fence_epoch = excluded.fence_epoch, lease_token = NULL, expires_at_ms = NULL",
+    )
+    .bind(space_id)
+    .bind(epoch)
+    .execute(&mut **tx)
+    .await
+    .map_err(backend)?;
     let (coordinator,): (Vec<u8>,) = sqlx_core::query_as::query_as("SELECT coordinator_id FROM hub_artifact_cas_barrier_identity WHERE singleton").fetch_one(&mut **tx).await.map_err(backend)?;
     Ok((coordinator.try_into().map_err(|_| DirectoryError::Backend("artifact CAS barrier coordinator identity is invalid".into()))?, u64::try_from(epoch).map_err(backend)?))
 }
@@ -383,17 +421,46 @@ async fn cas_insert_objects(tx: &mut sqlx_core::transaction::Transaction<'_, sql
 
 async fn cas_project_reserve(tx: &mut sqlx_core::transaction::Transaction<'_, sqlx_postgres::Postgres>, reservation: &ArtifactCasReservation) -> DirectoryResult<()> {
     let plan = encode_artifact_cas_ownership_v1(&reservation.plan).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
-    sqlx_core::query::query("DELETE FROM hub_artifact_cas_reservation WHERE space_id = $1 AND document_id = $2 AND checkpoint_id = $3").bind(&reservation.plan.scope.space_id).bind(&reservation.plan.scope.document_id).bind(reservation.plan.checkpoint_id.0.as_slice()).execute(&mut **tx).await.map_err(backend)?;
+    sqlx_core::query::query("DELETE FROM hub_artifact_cas_reservation WHERE space_id = $1 AND document_id = $2 AND checkpoint_id = $3")
+        .bind(&reservation.plan.scope.space_id)
+        .bind(&reservation.plan.scope.document_id)
+        .bind(reservation.plan.checkpoint_id.0.as_slice())
+        .execute(&mut **tx)
+        .await
+        .map_err(backend)?;
     sqlx_core::query::query("INSERT INTO hub_artifact_cas_reservation(space_id, document_id, checkpoint_id, generation, write_epoch, expires_at_ms, plan) VALUES ($1, $2, $3, $4, $5, $6, $7)")
-        .bind(&reservation.plan.scope.space_id).bind(&reservation.plan.scope.document_id).bind(reservation.plan.checkpoint_id.0.as_slice()).bind(i64::try_from(reservation.generation).map_err(backend)?).bind(i64::try_from(reservation.write_epoch).map_err(backend)?).bind(i64::try_from(reservation.expires_at_ms).map_err(backend)?).bind(plan).execute(&mut **tx).await.map_err(backend)?;
+        .bind(&reservation.plan.scope.space_id)
+        .bind(&reservation.plan.scope.document_id)
+        .bind(reservation.plan.checkpoint_id.0.as_slice())
+        .bind(i64::try_from(reservation.generation).map_err(backend)?)
+        .bind(i64::try_from(reservation.write_epoch).map_err(backend)?)
+        .bind(i64::try_from(reservation.expires_at_ms).map_err(backend)?)
+        .bind(plan)
+        .execute(&mut **tx)
+        .await
+        .map_err(backend)?;
     cas_insert_objects(tx, "reservation", &reservation.plan).await
 }
 
 async fn cas_project_publish(tx: &mut sqlx_core::transaction::Transaction<'_, sqlx_postgres::Postgres>, reservation: &ArtifactCasReservation, generation: i64) -> DirectoryResult<()> {
     let plan = encode_artifact_cas_ownership_v1(&reservation.plan).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
-    sqlx_core::query::query("DELETE FROM hub_artifact_cas_reservation WHERE space_id = $1 AND document_id = $2 AND checkpoint_id = $3").bind(&reservation.plan.scope.space_id).bind(&reservation.plan.scope.document_id).bind(reservation.plan.checkpoint_id.0.as_slice()).execute(&mut **tx).await.map_err(backend)?;
+    sqlx_core::query::query("DELETE FROM hub_artifact_cas_reservation WHERE space_id = $1 AND document_id = $2 AND checkpoint_id = $3")
+        .bind(&reservation.plan.scope.space_id)
+        .bind(&reservation.plan.scope.document_id)
+        .bind(reservation.plan.checkpoint_id.0.as_slice())
+        .execute(&mut **tx)
+        .await
+        .map_err(backend)?;
     sqlx_core::query::query("INSERT INTO hub_artifact_cas_reference(space_id, document_id, checkpoint_id, generation, write_epoch, plan) VALUES ($1, $2, $3, $4, $5, $6)")
-        .bind(&reservation.plan.scope.space_id).bind(&reservation.plan.scope.document_id).bind(reservation.plan.checkpoint_id.0.as_slice()).bind(generation).bind(i64::try_from(reservation.write_epoch).map_err(backend)?).bind(plan).execute(&mut **tx).await.map_err(backend)?;
+        .bind(&reservation.plan.scope.space_id)
+        .bind(&reservation.plan.scope.document_id)
+        .bind(reservation.plan.checkpoint_id.0.as_slice())
+        .bind(generation)
+        .bind(i64::try_from(reservation.write_epoch).map_err(backend)?)
+        .bind(plan)
+        .execute(&mut **tx)
+        .await
+        .map_err(backend)?;
     cas_insert_objects(tx, "reference", &reservation.plan).await
 }
 
@@ -402,8 +469,15 @@ async fn cas_project_release(tx: &mut sqlx_core::transaction::Transaction<'_, sq
         "retention" => {
             sqlx_core::query::query("DELETE FROM hub_artifact_cas_reference WHERE space_id = $1 AND document_id = $2 AND checkpoint_id IN (SELECT checkpoint_id FROM hub_artifact_authority_journal WHERE space_id = $1 AND document_id = $2 AND event_seq < (SELECT event_seq FROM hub_artifact_authority_journal WHERE space_id = $1 AND document_id = $2 AND checkpoint_id = $3))")
                 .bind(space_id).bind(document_id.ok_or_else(|| DirectoryError::Backend("artifact CAS retention document missing".into()))?).bind(checkpoint_id.ok_or_else(|| DirectoryError::Backend("artifact CAS retention checkpoint missing".into()))?.0.as_slice()).execute(&mut **tx).await.map_err(backend)?;
-            sqlx_core::query::query("DELETE FROM hub_artifact_checkpoint_private WHERE space_id = $1 AND document_id = $2 AND event_seq < (SELECT event_seq FROM hub_artifact_authority_journal WHERE space_id = $1 AND document_id = $2 AND checkpoint_id = $3)")
-                .bind(space_id).bind(document_id.ok_or_else(|| DirectoryError::Backend("artifact CAS retention document missing".into()))?).bind(checkpoint_id.ok_or_else(|| DirectoryError::Backend("artifact CAS retention checkpoint missing".into()))?.0.as_slice()).execute(&mut **tx).await.map_err(backend)?;
+            sqlx_core::query::query(
+                "DELETE FROM hub_artifact_checkpoint_private WHERE space_id = $1 AND document_id = $2 AND event_seq < (SELECT event_seq FROM hub_artifact_authority_journal WHERE space_id = $1 AND document_id = $2 AND checkpoint_id = $3)",
+            )
+            .bind(space_id)
+            .bind(document_id.ok_or_else(|| DirectoryError::Backend("artifact CAS retention document missing".into()))?)
+            .bind(checkpoint_id.ok_or_else(|| DirectoryError::Backend("artifact CAS retention checkpoint missing".into()))?.0.as_slice())
+            .execute(&mut **tx)
+            .await
+            .map_err(backend)?;
         }
         "space-delete" => {
             sqlx_core::query::query("DELETE FROM hub_artifact_cas_reservation WHERE space_id = $1").bind(space_id).execute(&mut **tx).await.map_err(backend)?;
@@ -433,14 +507,7 @@ impl PostgresDirectory {
         Ok(Self { pool })
     }
 
-    async fn revoke_auth_sessions_matching(
-        &self,
-        key: &str,
-        subject_digest: Option<[u8; 32]>,
-        reason: &str,
-        actor_user_id: Option<&str>,
-        correlation_id: &str,
-    ) -> DirectoryResult<Vec<RevokedAuthSession>> {
+    async fn revoke_auth_sessions_matching(&self, key: &str, subject_digest: Option<[u8; 32]>, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>> {
         validate_bounded_auth_text(reason, "session revoke reason", AUTH_TEXT_MAX_BYTES)?;
         let revoked_at = now_ms();
         let mut tx = self.pool.begin().await.map_err(backend)?;
@@ -669,9 +736,9 @@ impl PostgresDirectory {
 
 impl HubDirectory for PostgresDirectory {
     //#region ShareTokens
-    async fn issue_share_token(&self, scope: &DocumentScope, ttl_secs: i64, correlation_id: &str) -> DirectoryResult<IssuedShareToken> {
+    async fn issue_share_token_as(&self, scope: &DocumentScope, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<IssuedShareToken> {
         let issued = prepare_share_token(scope, ttl_secs, now_ms())?;
-        let audit = auth_audit(issued.record.created_at, "share-issued", Some(&issued.record.id), None, None, None, "success", None, correlation_id, "server")?;
+        let audit = auth_audit(issued.record.created_at, "share-issued", Some(&issued.record.id), None, actor_user_id, None, "success", None, correlation_id, "server")?;
         let mut tx = self.pool.begin().await.map_err(backend)?;
         sqlx_core::query::query("INSERT INTO hub_share_grant (id, selector, secret_digest, space_id, document_id, created_at, expires_at, revoked_at, revoked_reason) VALUES ($1, $2, $3, $4, $5, $6, $7, NULL, NULL)")
             .bind(&issued.record.id)
@@ -689,10 +756,10 @@ impl HubDirectory for PostgresDirectory {
         Ok(issued)
     }
 
-    async fn revoke_share_token(&self, scope: &DocumentScope, share_id: &str, reason: &str, correlation_id: &str) -> DirectoryResult<()> {
+    async fn revoke_share_token_as(&self, scope: &DocumentScope, share_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()> {
         validate_bounded_auth_text(reason, "share revoke reason", AUTH_TEXT_MAX_BYTES)?;
         let revoked_at = now_ms();
-        let audit = auth_audit(revoked_at, "share-revoked", Some(share_id), None, None, None, "success", Some(reason), correlation_id, "server")?;
+        let audit = auth_audit(revoked_at, "share-revoked", Some(share_id), None, actor_user_id, None, "success", Some(reason), correlation_id, "server")?;
         let mut tx = self.pool.begin().await.map_err(backend)?;
         let result = sqlx_core::query::query("UPDATE hub_share_grant SET revoked_at = $4, revoked_reason = $5 WHERE id = $1 AND space_id = $2 AND document_id = $3 AND revoked_at IS NULL")
             .bind(share_id)
@@ -717,26 +784,28 @@ impl HubDirectory for PostgresDirectory {
     }
 
     async fn authenticate_share_binding(&self, scope: &DocumentScope, capability: &ShareCapability) -> DirectoryResult<Option<ShareTokenRecord>> {
-        let row: Option<ShareRow> = sqlx_core::query_as::query_as("SELECT id, selector, secret_digest, space_id, document_id, created_at, expires_at, revoked_at, revoked_reason FROM hub_share_grant WHERE space_id = $1 AND document_id = $2 AND selector = $3")
-            .bind(&scope.space_id)
-            .bind(&scope.document_id)
-            .bind(capability.selector())
-            .fetch_optional(&self.pool)
-            .await
-            .map_err(backend)?;
+        let row: Option<ShareRow> =
+            sqlx_core::query_as::query_as("SELECT id, selector, secret_digest, space_id, document_id, created_at, expires_at, revoked_at, revoked_reason FROM hub_share_grant WHERE space_id = $1 AND document_id = $2 AND selector = $3")
+                .bind(&scope.space_id)
+                .bind(&scope.document_id)
+                .bind(capability.selector())
+                .fetch_optional(&self.pool)
+                .await
+                .map_err(backend)?;
         let record = row.map(share_from_row).transpose()?;
         Ok(record.filter(|record| active_capability(&record.selector, &record.secret_digest, record.expires_at, record.revoked_at, capability.selector(), &capability.secret_digest(), now_ms())))
     }
 
     async fn socket_share_binding(&self, share_id: &str, selector: &str, scope: &DocumentScope, now_ms: i64) -> DirectoryResult<SocketShareBindingStatus> {
-        let row: Option<ShareRow> = sqlx_core::query_as::query_as("SELECT id, selector, secret_digest, space_id, document_id, created_at, expires_at, revoked_at, revoked_reason FROM hub_share_grant WHERE id = $1 AND selector = $2 AND space_id = $3 AND document_id = $4")
-            .bind(share_id)
-            .bind(selector)
-            .bind(&scope.space_id)
-            .bind(&scope.document_id)
-            .fetch_optional(&self.pool)
-            .await
-            .map_err(backend)?;
+        let row: Option<ShareRow> =
+            sqlx_core::query_as::query_as("SELECT id, selector, secret_digest, space_id, document_id, created_at, expires_at, revoked_at, revoked_reason FROM hub_share_grant WHERE id = $1 AND selector = $2 AND space_id = $3 AND document_id = $4")
+                .bind(share_id)
+                .bind(selector)
+                .bind(&scope.space_id)
+                .bind(&scope.document_id)
+                .fetch_optional(&self.pool)
+                .await
+                .map_err(backend)?;
         Ok(match row.map(share_from_row).transpose()? {
             None => SocketShareBindingStatus::Unavailable,
             Some(record) if record.revoked_at.is_some() => SocketShareBindingStatus::Revoked,
@@ -805,6 +874,12 @@ impl HubDirectory for PostgresDirectory {
                 .map_err(backend)?;
         Ok(rows.into_iter().map(user_from_row).collect())
     }
+
+    async fn admin_overview_counts(&self) -> DirectoryResult<AdminDirectoryOverviewCounts> {
+        let (spaces, users, connections): (i64, i64, i64) =
+            sqlx_core::query_as::query_as("SELECT (SELECT COUNT(*) FROM hub_space), (SELECT COUNT(*) FROM hub_user), (SELECT COUNT(*) FROM hub_sync_session WHERE disconnected_at IS NULL)").fetch_one(&self.pool).await.map_err(backend)?;
+        Ok(AdminDirectoryOverviewCounts { spaces: u64::try_from(spaces).map_err(backend)?, users: u64::try_from(users).map_err(backend)?, connections: u64::try_from(connections).map_err(backend)? })
+    }
     //#endregion
 
     //#region Spaces
@@ -830,6 +905,59 @@ impl HubDirectory for PostgresDirectory {
         let rows: Vec<(String, String, String, i64, String, String)> =
             sqlx_core::query_as::query_as("SELECT id, name, owner_user_id, created_at, kind, visibility FROM hub_space ORDER BY created_at LIMIT $1 OFFSET $2").bind(limit).bind(offset).fetch_all(&self.pool).await.map_err(backend)?;
         Ok(rows.into_iter().map(|(id, name, owner_user_id, created_at, kind, visibility)| SpaceRecord { id, name, owner_user_id, created_at, kind, visibility }).collect())
+    }
+
+    async fn list_admin_space_summaries_page(&self, space_id: Option<&str>, offset: usize, limit: usize) -> DirectoryResult<Vec<AdminSpaceSummaryRecord>> {
+        if limit == 0 || limit > super::ADMIN_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("administrator space page limit must be 1..={}", super::ADMIN_PAGE_FETCH_MAX)));
+        }
+        let rows: Vec<(String, String, String, i64, String, String, i64, i64, i64, i64)> = sqlx_core::query_as::query_as(
+            "SELECT s.id, s.name, s.owner_user_id, s.created_at, s.kind, s.visibility,
+                    (SELECT COUNT(*) FROM hub_space_membership m WHERE m.space_id = s.id),
+                    (SELECT COUNT(*) FROM hub_document_descriptor d WHERE d.space_id = s.id),
+                    (SELECT COUNT(*) FROM hub_sync_session y WHERE y.space_id = s.id AND y.disconnected_at IS NULL),
+                    COALESCE((SELECT MAX(e.recorded_at) FROM hub_directory_event e WHERE e.space_id = s.id), s.created_at)
+             FROM hub_space s WHERE ($1::TEXT IS NULL OR s.id = $1) ORDER BY s.id LIMIT $2 OFFSET $3",
+        )
+        .bind(space_id)
+        .bind(i64::try_from(limit).map_err(backend)?)
+        .bind(i64::try_from(offset).map_err(backend)?)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(backend)?;
+        rows.into_iter()
+            .map(|(id, name, owner_user_id, created_at, kind, visibility, member_count, document_count, active_connections, updated_at)| {
+                Ok(AdminSpaceSummaryRecord {
+                    space: SpaceRecord { id, name, owner_user_id, created_at, kind, visibility },
+                    member_count: u64::try_from(member_count).map_err(backend)?,
+                    document_count: u64::try_from(document_count).map_err(backend)?,
+                    active_connections: u64::try_from(active_connections).map_err(backend)?,
+                    updated_at,
+                })
+            })
+            .collect()
+    }
+
+    async fn list_admin_space_members_page(&self, space_id: &str, offset: usize, limit: usize) -> DirectoryResult<Vec<(UserRecord, SpaceRole)>> {
+        if limit == 0 || limit > super::ADMIN_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("administrator member page limit must be 1..={}", super::ADMIN_PAGE_FETCH_MAX)));
+        }
+        let rows: Vec<(String, String, String, Option<String>, Option<String>, Option<String>, i64, String)> = sqlx_core::query_as::query_as(
+            "SELECT u.id, u.email, u.display_name, u.password_hash, u.sso_subject, u.sso_provider, u.created_at, m.role
+             FROM hub_space_membership m JOIN hub_user u ON u.id = m.user_id
+             WHERE m.space_id = $1 ORDER BY u.id LIMIT $2 OFFSET $3",
+        )
+        .bind(space_id)
+        .bind(i64::try_from(limit).map_err(backend)?)
+        .bind(i64::try_from(offset).map_err(backend)?)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(backend)?;
+        rows.into_iter()
+            .map(|(id, email, display_name, password_hash, sso_subject, sso_provider, created_at, role)| {
+                SpaceRole::parse(&role).map(|role| (UserRecord { id, email, display_name, password_hash, sso_subject, sso_provider, created_at }, role)).ok_or_else(|| DirectoryError::Backend("stored member role is invalid".into()))
+            })
+            .collect()
     }
 
     async fn list_members(&self, space_id: &str) -> DirectoryResult<Vec<(UserRecord, SpaceRole)>> {
@@ -860,6 +988,25 @@ impl HubDirectory for PostgresDirectory {
 
     async fn list_document_descriptors(&self, space_id: &str) -> DirectoryResult<Vec<DocumentDescriptor>> {
         let rows: Vec<(serde_json::Value,)> = sqlx_core::query_as::query_as("SELECT descriptor FROM hub_document_descriptor WHERE space_id = $1 ORDER BY document_id").bind(space_id).fetch_all(&self.pool).await.map_err(backend)?;
+        rows.into_iter().map(|(value,)| DocumentDescriptor::from_value(DslValue::from(value)).map_err(backend)).collect()
+    }
+
+    async fn list_document_descriptors_page(&self, space_id: Option<&str>, offset: usize, limit: usize) -> DirectoryResult<Vec<DocumentDescriptor>> {
+        if limit == 0 || limit > super::ADMIN_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("administrator document page limit must be 1..={}", super::ADMIN_PAGE_FETCH_MAX)));
+        }
+        let limit = i64::try_from(limit).map_err(backend)?;
+        let offset = i64::try_from(offset).map_err(backend)?;
+        let rows: Vec<(serde_json::Value,)> = match space_id {
+            Some(space_id) => sqlx_core::query_as::query_as("SELECT descriptor FROM hub_document_descriptor WHERE space_id = $1 ORDER BY space_id, document_id LIMIT $2 OFFSET $3")
+                .bind(space_id)
+                .bind(limit)
+                .bind(offset)
+                .fetch_all(&self.pool)
+                .await
+                .map_err(backend)?,
+            None => sqlx_core::query_as::query_as("SELECT descriptor FROM hub_document_descriptor ORDER BY space_id, document_id LIMIT $1 OFFSET $2").bind(limit).bind(offset).fetch_all(&self.pool).await.map_err(backend)?,
+        };
         rows.into_iter().map(|(value,)| DocumentDescriptor::from_value(DslValue::from(value)).map_err(backend)).collect()
     }
 
@@ -974,12 +1121,7 @@ impl HubDirectory for PostgresDirectory {
         }
         let role = match space_id {
             Some(space_id) => {
-                let row: Option<(String,)> = sqlx_core::query_as::query_as("SELECT role FROM hub_space_membership WHERE space_id = $1 AND user_id = $2")
-                    .bind(space_id)
-                    .bind(user_id)
-                    .fetch_optional(&self.pool)
-                    .await
-                    .map_err(backend)?;
+                let row: Option<(String,)> = sqlx_core::query_as::query_as("SELECT role FROM hub_space_membership WHERE space_id = $1 AND user_id = $2").bind(space_id).bind(user_id).fetch_optional(&self.pool).await.map_err(backend)?;
                 row.and_then(|(role,)| SpaceRole::parse(&role))
             }
             None => None,
@@ -1022,22 +1164,136 @@ impl HubDirectory for PostgresDirectory {
         if limit == 0 || limit > AUTH_AUDIT_PAGE_MAX {
             return Err(DirectoryError::Conflict(format!("auth audit limit must be 1..={AUTH_AUDIT_PAGE_MAX}")));
         }
-        let rows: Vec<AuthAuditRow> = sqlx_core::query_as::query_as(
-            "SELECT id, occurred_at, event_kind, auth_session_id, target_user_id, actor_user_id, provider, outcome_code, reason_code, correlation_id, peer_class FROM hub_auth_audit ORDER BY sequence LIMIT $1 OFFSET $2",
-        )
-        .bind(i64::try_from(limit).map_err(backend)?)
-        .bind(i64::try_from(offset).map_err(backend)?)
-        .fetch_all(&self.pool)
-        .await
-        .map_err(backend)?;
+        let rows: Vec<AuthAuditRow> =
+            sqlx_core::query_as::query_as("SELECT id, occurred_at, event_kind, auth_session_id, target_user_id, actor_user_id, provider, outcome_code, reason_code, correlation_id, peer_class FROM hub_auth_audit ORDER BY sequence LIMIT $1 OFFSET $2")
+                .bind(i64::try_from(limit).map_err(backend)?)
+                .bind(i64::try_from(offset).map_err(backend)?)
+                .fetch_all(&self.pool)
+                .await
+                .map_err(backend)?;
         Ok(rows.into_iter().map(auth_audit_from_row).collect())
     }
     //#endregion
 
+    //#region AdminOperations
+    async fn append_admin_operation_audit(&self, fact: &NewAdminOperationAuditRecord) -> DirectoryResult<AdminOperationAuditRecord> {
+        validate_admin_operation_audit(fact)?;
+        let terminal = fact.phase != "accepted";
+        let mut tx = self.pool.begin().await.map_err(backend)?;
+        let existing: Vec<AdminOperationAuditRow> = sqlx_core::query_as::query_as(
+            "SELECT sequence, request_id, intent_digest, operation_id, occurred_at, phase, intent_kind, target_kind, target_id, principal_user_id, principal_session_id, principal_generation, correlation_id, event_seq_first, event_seq_last, outcome_code, reason_code FROM hub_admin_operation_audit WHERE request_id = $1 ORDER BY sequence LIMIT 2 FOR UPDATE",
+        )
+        .bind(&fact.request_id)
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(backend)?;
+        let existing = existing.into_iter().map(admin_operation_audit_from_row).collect::<DirectoryResult<Vec<_>>>()?;
+        if !terminal {
+            if let Some(established) = existing.first() {
+                let outcome = if same_admin_operation_request(&established.fact, fact) { Ok(established.clone()) } else { Err(DirectoryError::Conflict("admin request id was reused for a different intent".into())) };
+                tx.rollback().await.map_err(backend)?;
+                return outcome;
+            }
+        } else {
+            let accepted = existing.iter().find(|row| row.fact.phase == "accepted").ok_or_else(|| DirectoryError::Conflict("admin terminal fact requires accepted fact".into()))?;
+            if accepted.fact.operation_id != fact.operation_id || !same_admin_operation_request(&accepted.fact, fact) {
+                return Err(DirectoryError::Conflict("admin terminal fact changed operation identity".into()));
+            }
+            if let Some(established) = existing.iter().find(|row| row.fact.phase != "accepted") {
+                let outcome = if established.fact.operation_id == fact.operation_id && established.fact.phase == fact.phase {
+                    Ok(established.clone())
+                } else {
+                    Err(DirectoryError::Conflict("admin operation already terminated with a different outcome".into()))
+                };
+                tx.rollback().await.map_err(backend)?;
+                return outcome;
+            }
+        }
+        let inserted: Option<(i64,)> = sqlx_core::query_as::query_as(
+            "INSERT INTO hub_admin_operation_audit (request_id, intent_digest, operation_id, occurred_at, phase, terminal, intent_kind, target_kind, target_id, principal_user_id, principal_session_id, principal_generation, correlation_id, event_seq_first, event_seq_last, outcome_code, reason_code) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) ON CONFLICT (request_id, terminal) DO NOTHING RETURNING sequence",
+        )
+        .bind(&fact.request_id)
+        .bind(&fact.intent_digest)
+        .bind(&fact.operation_id)
+        .bind(fact.occurred_at)
+        .bind(&fact.phase)
+        .bind(terminal)
+        .bind(&fact.intent_kind)
+        .bind(&fact.target_kind)
+        .bind(&fact.target_id)
+        .bind(&fact.principal_user_id)
+        .bind(&fact.principal_session_id)
+        .bind(i64::try_from(fact.principal_generation).map_err(backend)?)
+        .bind(&fact.correlation_id)
+        .bind(fact.event_seq_first.map(i64::try_from).transpose().map_err(backend)?)
+        .bind(fact.event_seq_last.map(i64::try_from).transpose().map_err(backend)?)
+        .bind(&fact.outcome_code)
+        .bind(&fact.reason_code)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(backend)?;
+        match inserted {
+            Some((sequence,)) => {
+                tx.commit().await.map_err(backend)?;
+                Ok(AdminOperationAuditRecord { sequence: u64::try_from(sequence).map_err(backend)?, fact: fact.clone() })
+            }
+            None => {
+                tx.rollback().await.map_err(backend)?;
+                let established =
+                    self.admin_operation_audit_for_request(&fact.request_id).await?.into_iter().find(|row| (row.fact.phase != "accepted") == terminal).ok_or_else(|| DirectoryError::Conflict("admin request race has no established receipt".into()))?;
+                if same_admin_operation_request(&established.fact, fact) {
+                    Ok(established)
+                } else {
+                    Err(DirectoryError::Conflict("admin request id race changed intent".into()))
+                }
+            }
+        }
+    }
+
+    async fn admin_operation_audit_for_request(&self, request_id: &str) -> DirectoryResult<Vec<AdminOperationAuditRecord>> {
+        validate_bounded_auth_text(request_id, "admin request id", AUTH_TEXT_MAX_BYTES)?;
+        let rows: Vec<AdminOperationAuditRow> = sqlx_core::query_as::query_as(
+            "SELECT sequence, request_id, intent_digest, operation_id, occurred_at, phase, intent_kind, target_kind, target_id, principal_user_id, principal_session_id, principal_generation, correlation_id, event_seq_first, event_seq_last, outcome_code, reason_code FROM hub_admin_operation_audit WHERE request_id = $1 ORDER BY sequence LIMIT 2",
+        )
+        .bind(request_id)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(backend)?;
+        rows.into_iter().map(admin_operation_audit_from_row).collect()
+    }
+
+    async fn admin_operation_audit_for_operation(&self, operation_id: &str) -> DirectoryResult<Vec<AdminOperationAuditRecord>> {
+        validate_bounded_auth_text(operation_id, "admin operation id", AUTH_TEXT_MAX_BYTES)?;
+        let rows: Vec<AdminOperationAuditRow> = sqlx_core::query_as::query_as(
+            "SELECT sequence, request_id, intent_digest, operation_id, occurred_at, phase, intent_kind, target_kind, target_id, principal_user_id, principal_session_id, principal_generation, correlation_id, event_seq_first, event_seq_last, outcome_code, reason_code FROM hub_admin_operation_audit WHERE operation_id = $1 ORDER BY sequence LIMIT 2",
+        )
+        .bind(operation_id)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(backend)?;
+        rows.into_iter().map(admin_operation_audit_from_row).collect()
+    }
+
+    async fn list_admin_operation_audit(&self, after_sequence: u64, limit: usize) -> DirectoryResult<Vec<AdminOperationAuditRecord>> {
+        if limit == 0 || limit > ADMIN_PAGE_MAX {
+            return Err(DirectoryError::Conflict(format!("admin audit limit must be 1..={ADMIN_PAGE_MAX}")));
+        }
+        let rows: Vec<AdminOperationAuditRow> = sqlx_core::query_as::query_as(
+            "SELECT sequence, request_id, intent_digest, operation_id, occurred_at, phase, intent_kind, target_kind, target_id, principal_user_id, principal_session_id, principal_generation, correlation_id, event_seq_first, event_seq_last, outcome_code, reason_code FROM hub_admin_operation_audit WHERE sequence > $1 ORDER BY sequence LIMIT $2",
+        )
+        .bind(i64::try_from(after_sequence).map_err(backend)?)
+        .bind(i64::try_from(limit).map_err(backend)?)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(backend)?;
+        rows.into_iter().map(admin_operation_audit_from_row).collect()
+    }
+    //#endregion
+
     //#region Invites
-    async fn issue_invite(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, correlation_id: &str) -> DirectoryResult<IssuedInvite> {
+    async fn issue_invite_as(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<IssuedInvite> {
         let issued = prepare_invite(space_id, role, ttl_secs, now_ms())?;
-        let audit = auth_audit(issued.record.created_at, "invite-issued", Some(&issued.record.id), None, None, None, "success", None, correlation_id, "server")?;
+        let audit = auth_audit(issued.record.created_at, "invite-issued", Some(&issued.record.id), None, actor_user_id, None, "success", None, correlation_id, "server")?;
         let mut tx = self.pool.begin().await.map_err(backend)?;
         sqlx_core::query::query("INSERT INTO hub_space_invite (id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at) VALUES ($1, $2, $3, $4, $5, $6, $7, NULL, NULL, NULL)")
             .bind(&issued.record.id)
@@ -1056,21 +1312,19 @@ impl HubDirectory for PostgresDirectory {
     }
 
     async fn authenticate_invite(&self, capability: &InviteCapability) -> DirectoryResult<Option<InviteRecord>> {
-        let row: Option<InviteRow> = sqlx_core::query_as::query_as(
-            "SELECT id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at FROM hub_space_invite WHERE selector = $1",
-        )
-        .bind(capability.selector())
-        .fetch_optional(&self.pool)
-        .await
-        .map_err(backend)?;
+        let row: Option<InviteRow> = sqlx_core::query_as::query_as("SELECT id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at FROM hub_space_invite WHERE selector = $1")
+            .bind(capability.selector())
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(backend)?;
         let record = row.map(invite_from_row).transpose()?;
         Ok(record.filter(|record| record.accepted_at.is_none() && active_capability(&record.selector, &record.secret_digest, record.expires_at, record.revoked_at, capability.selector(), &capability.secret_digest(), now_ms())))
     }
 
-    async fn revoke_invite(&self, invite_id: &str, reason: &str, correlation_id: &str) -> DirectoryResult<()> {
+    async fn revoke_invite_as(&self, invite_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()> {
         validate_bounded_auth_text(reason, "invite revoke reason", AUTH_TEXT_MAX_BYTES)?;
         let revoked_at = now_ms();
-        let audit = auth_audit(revoked_at, "invite-revoked", Some(invite_id), None, None, None, "success", Some(reason), correlation_id, "server")?;
+        let audit = auth_audit(revoked_at, "invite-revoked", Some(invite_id), None, actor_user_id, None, "success", Some(reason), correlation_id, "server")?;
         let mut tx = self.pool.begin().await.map_err(backend)?;
         let result = sqlx_core::query::query("UPDATE hub_space_invite SET revoked_at = $2, revoked_reason = $3 WHERE id = $1 AND revoked_at IS NULL").bind(invite_id).bind(revoked_at).bind(reason).execute(&mut *tx).await.map_err(backend)?;
         if result.rows_affected() == 0 {
@@ -1082,11 +1336,12 @@ impl HubDirectory for PostgresDirectory {
     }
 
     async fn list_invites(&self, space_id: &str) -> DirectoryResult<Vec<InviteRecord>> {
-        let rows: Vec<InviteRow> = sqlx_core::query_as::query_as("SELECT id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at FROM hub_space_invite WHERE space_id = $1 ORDER BY created_at DESC")
-            .bind(space_id)
-            .fetch_all(&self.pool)
-            .await
-            .map_err(backend)?;
+        let rows: Vec<InviteRow> =
+            sqlx_core::query_as::query_as("SELECT id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at FROM hub_space_invite WHERE space_id = $1 ORDER BY created_at DESC")
+                .bind(space_id)
+                .fetch_all(&self.pool)
+                .await
+                .map_err(backend)?;
         rows.into_iter().map(invite_from_row).collect()
     }
     //#endregion
@@ -1101,6 +1356,7 @@ impl HubDirectory for PostgresDirectory {
         document_id: &str,
         surface: &str,
         user_id: Option<&str>,
+        authenticated_email: Option<&str>,
         space_role: Option<SpaceRole>,
         client_label: &str,
     ) -> DirectoryResult<SyncSessionRecord> {
@@ -1108,21 +1364,24 @@ impl HubDirectory for PostgresDirectory {
         let id = time_ordered_id();
         let connected_at = now_ms();
         let role_str = space_role.map(|r| r.as_str());
-        sqlx_core::query::query("INSERT INTO hub_sync_session (id, auth_session_id, authorization_generation, actor_id, space_id, document_id, surface, user_id, space_role, client_label, connected_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)")
-            .bind(&id)
-            .bind(auth_session_id)
-            .bind(i64::try_from(authorization_generation).map_err(backend)?)
-            .bind(actor_id)
-            .bind(space_id)
-            .bind(document_id)
-            .bind(surface)
-            .bind(user_id)
-            .bind(role_str)
-            .bind(client_label)
-            .bind(connected_at)
-            .execute(&self.pool)
-            .await
-            .map_err(backend)?;
+        sqlx_core::query::query(
+            "INSERT INTO hub_sync_session (id, auth_session_id, authorization_generation, actor_id, space_id, document_id, surface, user_id, authenticated_email, space_role, client_label, connected_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
+        )
+        .bind(&id)
+        .bind(auth_session_id)
+        .bind(i64::try_from(authorization_generation).map_err(backend)?)
+        .bind(actor_id)
+        .bind(space_id)
+        .bind(document_id)
+        .bind(surface)
+        .bind(user_id)
+        .bind(authenticated_email)
+        .bind(role_str)
+        .bind(client_label)
+        .bind(connected_at)
+        .execute(&self.pool)
+        .await
+        .map_err(backend)?;
         Ok(SyncSessionRecord {
             id,
             auth_session_id: auth_session_id.map(str::to_string),
@@ -1132,6 +1391,7 @@ impl HubDirectory for PostgresDirectory {
             document_id: document_id.to_string(),
             surface: surface.to_string(),
             user_id: user_id.map(str::to_string),
+            authenticated_email: authenticated_email.map(str::to_string),
             space_role,
             client_label: client_label.to_string(),
             connected_at,
@@ -1146,7 +1406,7 @@ impl HubDirectory for PostgresDirectory {
 
     async fn list_sync_sessions_for_document(&self, document_id: &str) -> DirectoryResult<Vec<SyncSessionRecord>> {
         let rows: Vec<SyncSessionRow> = sqlx_core::query_as::query_as(
-            "SELECT id, auth_session_id, authorization_generation, actor_id, space_id, document_id, surface, user_id, space_role, client_label, connected_at, disconnected_at FROM hub_sync_session
+            "SELECT id, auth_session_id, authorization_generation, actor_id, space_id, document_id, surface, user_id, authenticated_email, space_role, client_label, connected_at, disconnected_at FROM hub_sync_session
              WHERE document_id = $1 ORDER BY connected_at DESC",
         )
         .bind(document_id)
@@ -1156,20 +1416,29 @@ impl HubDirectory for PostgresDirectory {
         Ok(rows.into_iter().map(sync_session_from_row).collect())
     }
 
-    async fn list_active_sync_sessions(&self, space_id: Option<&str>) -> DirectoryResult<Vec<SyncSessionRecord>> {
+    async fn list_active_sync_sessions_page(&self, space_id: Option<&str>, offset: usize, limit: usize) -> DirectoryResult<Vec<SyncSessionRecord>> {
+        if limit == 0 || limit > super::ACTIVE_SYNC_SESSION_READ_MAX {
+            return Err(DirectoryError::Conflict(format!("active sync-session limit must be 1..={}", super::ACTIVE_SYNC_SESSION_READ_MAX)));
+        }
+        let limit = i64::try_from(limit).map_err(backend)?;
+        let offset = i64::try_from(offset).map_err(backend)?;
         let rows: Vec<SyncSessionRow> = match space_id {
             Some(space_id) => sqlx_core::query_as::query_as(
-                "SELECT id, auth_session_id, authorization_generation, actor_id, space_id, document_id, surface, user_id, space_role, client_label, connected_at, disconnected_at FROM hub_sync_session
-                 WHERE space_id = $1 AND disconnected_at IS NULL ORDER BY connected_at DESC",
+                "SELECT id, auth_session_id, authorization_generation, actor_id, space_id, document_id, surface, user_id, authenticated_email, space_role, client_label, connected_at, disconnected_at FROM hub_sync_session
+                 WHERE space_id = $1 AND disconnected_at IS NULL ORDER BY connected_at DESC, id ASC LIMIT $2 OFFSET $3",
             )
             .bind(space_id)
+            .bind(limit)
+            .bind(offset)
             .fetch_all(&self.pool)
             .await
             .map_err(backend)?,
             None => sqlx_core::query_as::query_as(
-                "SELECT id, auth_session_id, authorization_generation, actor_id, space_id, document_id, surface, user_id, space_role, client_label, connected_at, disconnected_at FROM hub_sync_session
-                 WHERE disconnected_at IS NULL ORDER BY connected_at DESC",
+                "SELECT id, auth_session_id, authorization_generation, actor_id, space_id, document_id, surface, user_id, authenticated_email, space_role, client_label, connected_at, disconnected_at FROM hub_sync_session
+                 WHERE disconnected_at IS NULL ORDER BY connected_at DESC, id ASC LIMIT $1 OFFSET $2",
             )
+            .bind(limit)
+            .bind(offset)
             .fetch_all(&self.pool)
             .await
             .map_err(backend)?,
@@ -1192,12 +1461,22 @@ impl HubDirectory for PostgresDirectory {
         let mut tx = self.pool.begin().await.map_err(backend)?;
         let (coordinator_id, physical_epoch) = cas_reservation_barrier(&mut tx, &plan.scope.space_id, now).await?;
         let historical: Option<(Vec<u8>,)> = sqlx_core::query_as::query_as("SELECT plan FROM hub_artifact_cas_ledger_journal WHERE space_id = $1 AND document_id = $2 AND checkpoint_id = $3 AND plan IS NOT NULL ORDER BY generation LIMIT 1")
-            .bind(&plan.scope.space_id).bind(&plan.scope.document_id).bind(plan.checkpoint_id.0.as_slice()).fetch_optional(&mut *tx).await.map_err(backend)?;
+            .bind(&plan.scope.space_id)
+            .bind(&plan.scope.document_id)
+            .bind(plan.checkpoint_id.0.as_slice())
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(backend)?;
         if historical.as_ref().is_some_and(|(value,)| value != &encoded) {
             return Err(DirectoryError::Conflict("artifact CAS checkpoint identity names a different ownership plan".into()));
         }
         let published: Option<(i64, i64, Vec<u8>)> = sqlx_core::query_as::query_as("SELECT generation, write_epoch, plan FROM hub_artifact_cas_reference WHERE space_id = $1 AND document_id = $2 AND checkpoint_id = $3")
-            .bind(&plan.scope.space_id).bind(&plan.scope.document_id).bind(plan.checkpoint_id.0.as_slice()).fetch_optional(&mut *tx).await.map_err(backend)?;
+            .bind(&plan.scope.space_id)
+            .bind(&plan.scope.document_id)
+            .bind(plan.checkpoint_id.0.as_slice())
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(backend)?;
         if let Some((generation, write_epoch, stored)) = published {
             if stored != encoded {
                 return Err(DirectoryError::Conflict("artifact CAS published ownership conflict".into()));
@@ -1207,12 +1486,22 @@ impl HubDirectory for PostgresDirectory {
             return Ok(reservation);
         }
         let (released,): (bool,) = sqlx_core::query_as::query_as("SELECT EXISTS(SELECT 1 FROM hub_artifact_cas_ledger_journal WHERE space_id = $1 AND document_id = $2 AND checkpoint_id = $3 AND operation = 'publish')")
-            .bind(&plan.scope.space_id).bind(&plan.scope.document_id).bind(plan.checkpoint_id.0.as_slice()).fetch_one(&mut *tx).await.map_err(backend)?;
+            .bind(&plan.scope.space_id)
+            .bind(&plan.scope.document_id)
+            .bind(plan.checkpoint_id.0.as_slice())
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(backend)?;
         if released {
             return Err(DirectoryError::Conflict("artifact CAS released checkpoint cannot be reserved again".into()));
         }
         let current: Option<(i64, i64, i64, Vec<u8>)> = sqlx_core::query_as::query_as("SELECT generation, write_epoch, expires_at_ms, plan FROM hub_artifact_cas_reservation WHERE space_id = $1 AND document_id = $2 AND checkpoint_id = $3")
-            .bind(&plan.scope.space_id).bind(&plan.scope.document_id).bind(plan.checkpoint_id.0.as_slice()).fetch_optional(&mut *tx).await.map_err(backend)?;
+            .bind(&plan.scope.space_id)
+            .bind(&plan.scope.document_id)
+            .bind(plan.checkpoint_id.0.as_slice())
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(backend)?;
         if let Some((generation, write_epoch, expiry, stored)) = current {
             if stored != encoded {
                 return Err(DirectoryError::Conflict("artifact CAS reservation identity conflict".into()));
@@ -1224,11 +1513,25 @@ impl HubDirectory for PostgresDirectory {
             }
         }
         let (previous_epoch,): (i64,) = sqlx_core::query_as::query_as("SELECT COALESCE(MAX(write_epoch), 0) FROM hub_artifact_cas_ledger_journal WHERE space_id = $1 AND document_id = $2 AND checkpoint_id = $3")
-            .bind(&plan.scope.space_id).bind(&plan.scope.document_id).bind(plan.checkpoint_id.0.as_slice()).fetch_one(&mut *tx).await.map_err(backend)?;
+            .bind(&plan.scope.space_id)
+            .bind(&plan.scope.document_id)
+            .bind(plan.checkpoint_id.0.as_slice())
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(backend)?;
         let write_epoch = previous_epoch.checked_add(1).ok_or_else(|| DirectoryError::Conflict("artifact CAS write epoch overflow".into()))?;
         let generation = cas_generation(&mut tx).await?;
         sqlx_core::query::query("INSERT INTO hub_artifact_cas_ledger_journal(generation, operation, space_id, document_id, checkpoint_id, write_epoch, expires_at_ms, plan) VALUES ($1, 'reserve', $2, $3, $4, $5, $6, $7)")
-            .bind(generation).bind(&plan.scope.space_id).bind(&plan.scope.document_id).bind(plan.checkpoint_id.0.as_slice()).bind(write_epoch).bind(i64::try_from(expires_at_ms).map_err(backend)?).bind(encoded).execute(&mut *tx).await.map_err(backend)?;
+            .bind(generation)
+            .bind(&plan.scope.space_id)
+            .bind(&plan.scope.document_id)
+            .bind(plan.checkpoint_id.0.as_slice())
+            .bind(write_epoch)
+            .bind(i64::try_from(expires_at_ms).map_err(backend)?)
+            .bind(encoded)
+            .execute(&mut *tx)
+            .await
+            .map_err(backend)?;
         let reservation = ArtifactCasReservation::fenced(plan.clone(), u64::try_from(generation).map_err(backend)?, u64::try_from(write_epoch).map_err(backend)?, expires_at_ms, coordinator_id, physical_epoch);
         cas_project_reserve(&mut tx, &reservation).await?;
         tx.commit().await.map_err(backend)?;
@@ -1237,7 +1540,9 @@ impl HubDirectory for PostgresDirectory {
 
     async fn append_reserved_artifact_checkpoint(&self, event: Option<&NewDirectoryEvent>, checkpoint: &ArtifactCheckpoint, reservation: &ArtifactCasReservation, current_now_ms: u64) -> DirectoryResult<Vec<DirectoryEvent>> {
         validate_artifact_cas_publication_v1(&reservation.plan, checkpoint).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
-        if let Some(event) = event { validate_verified_checkpoint_append(event, checkpoint)?; }
+        if let Some(event) = event {
+            validate_verified_checkpoint_append(event, checkpoint)?;
+        }
         let encoded = encode_artifact_cas_ownership_v1(&reservation.plan).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
         let token_generation = i64::try_from(reservation.generation).map_err(backend)?;
         let token_epoch = i64::try_from(reservation.write_epoch).map_err(backend)?;
@@ -1245,16 +1550,31 @@ impl HubDirectory for PostgresDirectory {
         let now = i64::try_from(current_now_ms).map_err(backend)?;
         let mut tx = self.pool.begin().await.map_err(backend)?;
         cas_lock_space(&mut tx, &reservation.plan.scope.space_id).await?;
-        let (leased,): (bool,) = sqlx_core::query_as::query_as("SELECT EXISTS(SELECT 1 FROM hub_artifact_cas_delete_lease WHERE space_id = $1 AND expires_at_ms > $2)").bind(&reservation.plan.scope.space_id).bind(now).fetch_one(&mut *tx).await.map_err(backend)?;
-        if leased { return Err(DirectoryError::Conflict("artifact CAS deletion lease is active for this space".into())); }
+        let (leased,): (bool,) =
+            sqlx_core::query_as::query_as("SELECT EXISTS(SELECT 1 FROM hub_artifact_cas_delete_lease WHERE space_id = $1 AND expires_at_ms > $2)").bind(&reservation.plan.scope.space_id).bind(now).fetch_one(&mut *tx).await.map_err(backend)?;
+        if leased {
+            return Err(DirectoryError::Conflict("artifact CAS deletion lease is active for this space".into()));
+        }
         let published: Option<(i64, i64, Vec<u8>)> = sqlx_core::query_as::query_as("SELECT generation, write_epoch, plan FROM hub_artifact_cas_reference WHERE space_id = $1 AND document_id = $2 AND checkpoint_id = $3")
-            .bind(&reservation.plan.scope.space_id).bind(&reservation.plan.scope.document_id).bind(reservation.plan.checkpoint_id.0.as_slice()).fetch_optional(&mut *tx).await.map_err(backend)?;
+            .bind(&reservation.plan.scope.space_id)
+            .bind(&reservation.plan.scope.document_id)
+            .bind(reservation.plan.checkpoint_id.0.as_slice())
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(backend)?;
         if let Some((generation, epoch, stored)) = published {
-            if event.is_some() || generation != token_generation || epoch != token_epoch || stored != encoded { return Err(DirectoryError::Conflict("artifact CAS published reservation conflict".into())); }
+            if event.is_some() || generation != token_generation || epoch != token_epoch || stored != encoded {
+                return Err(DirectoryError::Conflict("artifact CAS published reservation conflict".into()));
+            }
             return Ok(Vec::new());
         }
         let current: Option<(i64, i64, i64, Vec<u8>)> = sqlx_core::query_as::query_as("SELECT generation, write_epoch, expires_at_ms, plan FROM hub_artifact_cas_reservation WHERE space_id = $1 AND document_id = $2 AND checkpoint_id = $3 FOR UPDATE")
-            .bind(&reservation.plan.scope.space_id).bind(&reservation.plan.scope.document_id).bind(reservation.plan.checkpoint_id.0.as_slice()).fetch_optional(&mut *tx).await.map_err(backend)?;
+            .bind(&reservation.plan.scope.space_id)
+            .bind(&reservation.plan.scope.document_id)
+            .bind(reservation.plan.checkpoint_id.0.as_slice())
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(backend)?;
         if current.as_ref().is_none_or(|(generation, epoch, expiry, stored)| *generation != token_generation || *epoch != token_epoch || *expiry != token_expiry || *expiry <= now || stored != &encoded) {
             return Err(DirectoryError::Conflict("artifact CAS reservation is missing, expired, or superseded".into()));
         }
@@ -1265,15 +1585,45 @@ impl HubDirectory for PostgresDirectory {
         let kind = payload_value.get("kind").and_then(|value| value.as_str()).unwrap_or_default();
         let (event_seq,): (i64,) = sqlx_core::query_as::query_as("UPDATE hub_directory_event_head SET seq = seq + 1 WHERE singleton RETURNING seq").fetch_one(&mut *tx).await.map_err(backend)?;
         sqlx_core::query::query("INSERT INTO hub_directory_event(seq, id, hlc_physical, hlc_logical, actor_kind, actor_id, space_id, user_id, kind, payload, recorded_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)")
-            .bind(event_seq).bind(&id).bind(event.hlc.physical_ms).bind(i64::from(event.hlc.logical)).bind(actor_kind_to_str(event.actor.kind)).bind(&event.actor.id).bind(&event.space_id).bind(&event.user_id).bind(kind).bind(&payload_value).bind(recorded_at_ms).execute(&mut *tx).await.map_err(backend)?;
+            .bind(event_seq)
+            .bind(&id)
+            .bind(event.hlc.physical_ms)
+            .bind(i64::from(event.hlc.logical))
+            .bind(actor_kind_to_str(event.actor.kind))
+            .bind(&event.actor.id)
+            .bind(&event.space_id)
+            .bind(&event.user_id)
+            .bind(kind)
+            .bind(&payload_value)
+            .bind(recorded_at_ms)
+            .execute(&mut *tx)
+            .await
+            .map_err(backend)?;
         let full = DirectoryEvent { seq: u64::try_from(event_seq).map_err(backend)?, id, hlc: event.hlc, actor: event.actor.clone(), space_id: event.space_id.clone(), user_id: event.user_id.clone(), body: event.body.clone(), recorded_at_ms };
         sqlx_core::query::query("INSERT INTO hub_artifact_authority_journal(event_seq, space_id, document_id, checkpoint_id, payload) VALUES ($1,$2,$3,$4,$5)")
-            .bind(event_seq).bind(&checkpoint.scope.space_id).bind(&checkpoint.scope.document_id).bind(checkpoint.checkpoint_id.0.as_slice()).bind(serde_json::Value::from(&checkpoint.to_value())).execute(&mut *tx).await.map_err(backend)?;
+            .bind(event_seq)
+            .bind(&checkpoint.scope.space_id)
+            .bind(&checkpoint.scope.document_id)
+            .bind(checkpoint.checkpoint_id.0.as_slice())
+            .bind(serde_json::Value::from(&checkpoint.to_value()))
+            .execute(&mut *tx)
+            .await
+            .map_err(backend)?;
         self.project(&mut tx, &full).await?;
         self.project_verified_checkpoint(&mut tx, &full, checkpoint).await?;
         let generation = cas_generation(&mut tx).await?;
         sqlx_core::query::query("INSERT INTO hub_artifact_cas_ledger_journal(generation, operation, space_id, document_id, checkpoint_id, write_epoch, expires_at_ms, event_seq, plan) VALUES ($1,'publish',$2,$3,$4,$5,$6,$7,$8)")
-            .bind(generation).bind(&reservation.plan.scope.space_id).bind(&reservation.plan.scope.document_id).bind(reservation.plan.checkpoint_id.0.as_slice()).bind(token_epoch).bind(token_expiry).bind(event_seq).bind(encoded).execute(&mut *tx).await.map_err(backend)?;
+            .bind(generation)
+            .bind(&reservation.plan.scope.space_id)
+            .bind(&reservation.plan.scope.document_id)
+            .bind(reservation.plan.checkpoint_id.0.as_slice())
+            .bind(token_epoch)
+            .bind(token_expiry)
+            .bind(event_seq)
+            .bind(encoded)
+            .execute(&mut *tx)
+            .await
+            .map_err(backend)?;
         cas_project_publish(&mut tx, reservation, generation).await?;
         tx.commit().await.map_err(backend)?;
         Ok(vec![full])
@@ -1290,48 +1640,92 @@ impl HubDirectory for PostgresDirectory {
     }
 
     async fn artifact_cas_sweep_candidates(&self, after_generation: u64, through_generation: u64, limit: usize) -> DirectoryResult<ArtifactCasSweepCandidatePage> {
-        if limit == 0 || limit > ARTIFACT_CAS_SWEEP_PAGE_MAX { return Err(DirectoryError::Conflict(format!("artifact CAS sweep page requires limit 1..={ARTIFACT_CAS_SWEEP_PAGE_MAX}"))); }
+        if limit == 0 || limit > ARTIFACT_CAS_SWEEP_PAGE_MAX {
+            return Err(DirectoryError::Conflict(format!("artifact CAS sweep page requires limit 1..={ARTIFACT_CAS_SWEEP_PAGE_MAX}")));
+        }
         let (current,): (i64,) = sqlx_core::query_as::query_as("SELECT generation FROM hub_artifact_cas_ledger_head WHERE singleton").fetch_one(&self.pool).await.map_err(backend)?;
         let after = i64::try_from(after_generation).map_err(backend)?;
         let through = i64::try_from(through_generation).map_err(backend)?;
-        if through > current || after > through { return Err(DirectoryError::Conflict("artifact CAS sweep bounds are outside the ledger".into())); }
+        if through > current || after > through {
+            return Err(DirectoryError::Conflict("artifact CAS sweep bounds are outside the ledger".into()));
+        }
         let rows: Vec<(i64, Option<Vec<u8>>)> = sqlx_core::query_as::query_as("SELECT generation, plan FROM hub_artifact_cas_ledger_journal WHERE generation > $1 AND generation <= $2 ORDER BY generation LIMIT $3")
-            .bind(after).bind(through).bind(i64::try_from(limit).map_err(backend)?).fetch_all(&self.pool).await.map_err(backend)?;
-        let mut objects = Vec::new(); let mut next = after;
-        for (generation, plan) in rows { next = generation; if let Some(plan) = plan { objects.extend(decode_artifact_cas_ownership_v1(&plan).map_err(|error| DirectoryError::Backend(error.to_string()))?.objects); } }
-        objects.sort_by_key(|object| (object.space_id.clone(), object.kind, object.digest.0)); objects.dedup();
+            .bind(after)
+            .bind(through)
+            .bind(i64::try_from(limit).map_err(backend)?)
+            .fetch_all(&self.pool)
+            .await
+            .map_err(backend)?;
+        let mut objects = Vec::new();
+        let mut next = after;
+        for (generation, plan) in rows {
+            next = generation;
+            if let Some(plan) = plan {
+                objects.extend(decode_artifact_cas_ownership_v1(&plan).map_err(|error| DirectoryError::Backend(error.to_string()))?.objects);
+            }
+        }
+        objects.sort_by_key(|object| (object.space_id.clone(), object.kind, object.digest.0));
+        objects.dedup();
         Ok(ArtifactCasSweepCandidatePage { observed_generation: through_generation, next_generation: u64::try_from(next).map_err(backend)?, objects })
     }
 
     async fn artifact_cas_delete_preview_protected(&self, key: &ArtifactCasObjectKey, observed_generation: u64, now_ms: u64) -> DirectoryResult<bool> {
         let (current,): (i64,) = sqlx_core::query_as::query_as("SELECT generation FROM hub_artifact_cas_ledger_head WHERE singleton").fetch_one(&self.pool).await.map_err(backend)?;
-        if current < i64::try_from(observed_generation).map_err(backend)? { return Err(DirectoryError::Conflict("artifact CAS sweep observation is ahead of the ledger".into())); }
+        if current < i64::try_from(observed_generation).map_err(backend)? {
+            return Err(DirectoryError::Conflict("artifact CAS sweep observation is ahead of the ledger".into()));
+        }
         let (referenced,): (bool,) = sqlx_core::query_as::query_as("SELECT EXISTS(SELECT 1 FROM hub_artifact_cas_reference_object WHERE space_id = $1 AND kind = $2 AND object_digest = $3)")
-            .bind(&key.space_id).bind(key.kind.name()).bind(key.digest.0.as_slice()).fetch_one(&self.pool).await.map_err(backend)?;
+            .bind(&key.space_id)
+            .bind(key.kind.name())
+            .bind(key.digest.0.as_slice())
+            .fetch_one(&self.pool)
+            .await
+            .map_err(backend)?;
         let (reserved,): (bool,) = sqlx_core::query_as::query_as("SELECT EXISTS(SELECT 1 FROM hub_artifact_cas_reservation_object object JOIN hub_artifact_cas_reservation reservation USING(space_id, document_id, checkpoint_id) WHERE object.space_id = $1 AND object.kind = $2 AND object.object_digest = $3 AND reservation.expires_at_ms > $4)")
             .bind(&key.space_id).bind(key.kind.name()).bind(key.digest.0.as_slice()).bind(i64::try_from(now_ms).map_err(backend)?).fetch_one(&self.pool).await.map_err(backend)?;
         Ok(referenced || reserved)
     }
 
     async fn acquire_artifact_cas_delete_fence(&self, key: &ArtifactCasObjectKey, observed_generation: u64, lease_token: [u8; 32], now_ms: u64, expires_at_ms: u64) -> DirectoryResult<Option<ArtifactCasDeleteFence>> {
-        if observed_generation == 0 { return Err(DirectoryError::Conflict("artifact CAS sweep requires a nonzero observed generation".into())); }
-        if lease_token == [0; 32] || expires_at_ms <= now_ms { return Err(DirectoryError::Conflict("artifact CAS deletion lease is invalid".into())); }
+        if observed_generation == 0 {
+            return Err(DirectoryError::Conflict("artifact CAS sweep requires a nonzero observed generation".into()));
+        }
+        if lease_token == [0; 32] || expires_at_ms <= now_ms {
+            return Err(DirectoryError::Conflict("artifact CAS deletion lease is invalid".into()));
+        }
         let now = i64::try_from(now_ms).map_err(backend)?;
         let mut tx = self.pool.begin().await.map_err(backend)?;
         cas_lock_space(&mut tx, &key.space_id).await?;
-        let current_lease: Option<(i64, Option<i64>)> = sqlx_core::query_as::query_as("SELECT fence_epoch, expires_at_ms FROM hub_artifact_cas_delete_lease WHERE space_id = $1 FOR UPDATE").bind(&key.space_id).fetch_optional(&mut *tx).await.map_err(backend)?;
+        let current_lease: Option<(i64, Option<i64>)> =
+            sqlx_core::query_as::query_as("SELECT fence_epoch, expires_at_ms FROM hub_artifact_cas_delete_lease WHERE space_id = $1 FOR UPDATE").bind(&key.space_id).fetch_optional(&mut *tx).await.map_err(backend)?;
         if current_lease.as_ref().and_then(|(_, expiry)| *expiry).is_some_and(|expiry| expiry > now) {
             tx.commit().await.map_err(backend)?;
             return Ok(None);
         }
-        let physical_epoch = match current_lease { Some((epoch, _)) => epoch.checked_add(1).ok_or_else(|| DirectoryError::Conflict("artifact CAS fence epoch overflow".into()))?, None => 1 };
+        let physical_epoch = match current_lease {
+            Some((epoch, _)) => epoch.checked_add(1).ok_or_else(|| DirectoryError::Conflict("artifact CAS fence epoch overflow".into()))?,
+            None => 1,
+        };
         sqlx_core::query::query("INSERT INTO hub_artifact_cas_delete_lease(space_id, fence_epoch, lease_token, expires_at_ms) VALUES ($1,$2,$3,$4) ON CONFLICT(space_id) DO UPDATE SET fence_epoch = excluded.fence_epoch, lease_token = excluded.lease_token, expires_at_ms = excluded.expires_at_ms").bind(&key.space_id).bind(physical_epoch).bind(lease_token.as_slice()).bind(i64::try_from(expires_at_ms).map_err(backend)?).execute(&mut *tx).await.map_err(backend)?;
         let (current,): (i64,) = sqlx_core::query_as::query_as("SELECT generation FROM hub_artifact_cas_ledger_head WHERE singleton").fetch_one(&mut *tx).await.map_err(backend)?;
-        if current < i64::try_from(observed_generation).map_err(backend)? { return Err(DirectoryError::Conflict("artifact CAS sweep observation is ahead of the ledger".into())); }
-        let (referenced,): (bool,) = sqlx_core::query_as::query_as("SELECT EXISTS(SELECT 1 FROM hub_artifact_cas_reference_object WHERE space_id = $1 AND kind = $2 AND object_digest = $3)").bind(&key.space_id).bind(key.kind.name()).bind(key.digest.0.as_slice()).fetch_one(&mut *tx).await.map_err(backend)?;
+        if current < i64::try_from(observed_generation).map_err(backend)? {
+            return Err(DirectoryError::Conflict("artifact CAS sweep observation is ahead of the ledger".into()));
+        }
+        let (referenced,): (bool,) = sqlx_core::query_as::query_as("SELECT EXISTS(SELECT 1 FROM hub_artifact_cas_reference_object WHERE space_id = $1 AND kind = $2 AND object_digest = $3)")
+            .bind(&key.space_id)
+            .bind(key.kind.name())
+            .bind(key.digest.0.as_slice())
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(backend)?;
         let (reserved,): (bool,) = sqlx_core::query_as::query_as("SELECT EXISTS(SELECT 1 FROM hub_artifact_cas_reservation_object object JOIN hub_artifact_cas_reservation reservation USING(space_id, document_id, checkpoint_id) WHERE object.space_id = $1 AND object.kind = $2 AND object.object_digest = $3 AND reservation.expires_at_ms > $4)").bind(&key.space_id).bind(key.kind.name()).bind(key.digest.0.as_slice()).bind(now).fetch_one(&mut *tx).await.map_err(backend)?;
         if referenced || reserved {
-            sqlx_core::query::query("UPDATE hub_artifact_cas_delete_lease SET lease_token = NULL, expires_at_ms = NULL WHERE space_id = $1 AND lease_token = $2").bind(&key.space_id).bind(lease_token.as_slice()).execute(&mut *tx).await.map_err(backend)?;
+            sqlx_core::query::query("UPDATE hub_artifact_cas_delete_lease SET lease_token = NULL, expires_at_ms = NULL WHERE space_id = $1 AND lease_token = $2")
+                .bind(&key.space_id)
+                .bind(lease_token.as_slice())
+                .execute(&mut *tx)
+                .await
+                .map_err(backend)?;
             tx.commit().await.map_err(backend)?;
             return Ok(None);
         }
@@ -1345,21 +1739,17 @@ impl HubDirectory for PostgresDirectory {
         let now = i64::try_from(now_ms).map_err(backend)?;
         let mut tx = self.pool.begin().await.map_err(backend)?;
         cas_lock_space(&mut tx, &fence.object().space_id).await?;
-        let lease: Option<(i64, Option<Vec<u8>>, Option<i64>)> = sqlx_core::query_as::query_as(
-            "SELECT fence_epoch, lease_token, expires_at_ms FROM hub_artifact_cas_delete_lease WHERE space_id = $1 FOR UPDATE",
-        )
-        .bind(&fence.object().space_id)
-        .fetch_optional(&mut *tx)
-        .await
-        .map_err(backend)?;
-        let lease_valid = lease.is_some_and(|(epoch, token, expiry)| {
-            u64::try_from(epoch).ok() == Some(fence.physical_epoch())
-                && token.as_deref() == Some(fence.lease_token().as_slice())
-                && expiry.is_some_and(|expiry| expiry > now)
-        });
+        let lease: Option<(i64, Option<Vec<u8>>, Option<i64>)> =
+            sqlx_core::query_as::query_as("SELECT fence_epoch, lease_token, expires_at_ms FROM hub_artifact_cas_delete_lease WHERE space_id = $1 FOR UPDATE").bind(&fence.object().space_id).fetch_optional(&mut *tx).await.map_err(backend)?;
+        let lease_valid = lease.is_some_and(|(epoch, token, expiry)| u64::try_from(epoch).ok() == Some(fence.physical_epoch()) && token.as_deref() == Some(fence.lease_token().as_slice()) && expiry.is_some_and(|expiry| expiry > now));
         let (current,): (i64,) = sqlx_core::query_as::query_as("SELECT generation FROM hub_artifact_cas_ledger_head WHERE singleton").fetch_one(&mut *tx).await.map_err(backend)?;
         let (referenced,): (bool,) = sqlx_core::query_as::query_as("SELECT EXISTS(SELECT 1 FROM hub_artifact_cas_reference_object WHERE space_id = $1 AND kind = $2 AND object_digest = $3)")
-            .bind(&fence.object().space_id).bind(fence.object().kind.name()).bind(fence.object().digest.0.as_slice()).fetch_one(&mut *tx).await.map_err(backend)?;
+            .bind(&fence.object().space_id)
+            .bind(fence.object().kind.name())
+            .bind(fence.object().digest.0.as_slice())
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(backend)?;
         let (reserved,): (bool,) = sqlx_core::query_as::query_as("SELECT EXISTS(SELECT 1 FROM hub_artifact_cas_reservation_object object JOIN hub_artifact_cas_reservation reservation USING(space_id, document_id, checkpoint_id) WHERE object.space_id = $1 AND object.kind = $2 AND object.object_digest = $3 AND reservation.expires_at_ms > $4)")
             .bind(&fence.object().space_id).bind(fence.object().kind.name()).bind(fence.object().digest.0.as_slice()).bind(now).fetch_one(&mut *tx).await.map_err(backend)?;
         let (coordinator,): (Vec<u8>,) = sqlx_core::query_as::query_as("SELECT coordinator_id FROM hub_artifact_cas_barrier_identity WHERE singleton").fetch_one(&mut *tx).await.map_err(backend)?;
@@ -1368,16 +1758,33 @@ impl HubDirectory for PostgresDirectory {
     }
 
     async fn renew_artifact_cas_delete_fence(&self, fence: &ArtifactCasDeleteFence, now_ms: u64, expires_at_ms: u64) -> DirectoryResult<()> {
-        if expires_at_ms <= now_ms { return Err(DirectoryError::Conflict("artifact CAS deletion lease renewal is invalid".into())); }
+        if expires_at_ms <= now_ms {
+            return Err(DirectoryError::Conflict("artifact CAS deletion lease renewal is invalid".into()));
+        }
         let result = sqlx_core::query::query("UPDATE hub_artifact_cas_delete_lease SET expires_at_ms = $3 WHERE space_id = $1 AND lease_token = $2 AND expires_at_ms > $4")
-            .bind(&fence.object().space_id).bind(fence.lease_token().as_slice()).bind(i64::try_from(expires_at_ms).map_err(backend)?).bind(i64::try_from(now_ms).map_err(backend)?).execute(&self.pool).await.map_err(backend)?;
-        if result.rows_affected() != 1 { return Err(DirectoryError::Conflict("artifact CAS deletion lease is no longer owned".into())); }
+            .bind(&fence.object().space_id)
+            .bind(fence.lease_token().as_slice())
+            .bind(i64::try_from(expires_at_ms).map_err(backend)?)
+            .bind(i64::try_from(now_ms).map_err(backend)?)
+            .execute(&self.pool)
+            .await
+            .map_err(backend)?;
+        if result.rows_affected() != 1 {
+            return Err(DirectoryError::Conflict("artifact CAS deletion lease is no longer owned".into()));
+        }
         Ok(())
     }
 
     async fn release_artifact_cas_delete_fence(&self, fence: ArtifactCasDeleteFence) -> DirectoryResult<()> {
-        let result = sqlx_core::query::query("UPDATE hub_artifact_cas_delete_lease SET lease_token = NULL, expires_at_ms = NULL WHERE space_id = $1 AND lease_token = $2").bind(&fence.object().space_id).bind(fence.lease_token().as_slice()).execute(&self.pool).await.map_err(backend)?;
-        if result.rows_affected() != 1 { return Err(DirectoryError::Conflict("artifact CAS deletion lease is no longer owned".into())); }
+        let result = sqlx_core::query::query("UPDATE hub_artifact_cas_delete_lease SET lease_token = NULL, expires_at_ms = NULL WHERE space_id = $1 AND lease_token = $2")
+            .bind(&fence.object().space_id)
+            .bind(fence.lease_token().as_slice())
+            .execute(&self.pool)
+            .await
+            .map_err(backend)?;
+        if result.rows_affected() != 1 {
+            return Err(DirectoryError::Conflict("artifact CAS deletion lease is no longer owned".into()));
+        }
         Ok(())
     }
 
@@ -1422,7 +1829,15 @@ impl HubDirectory for PostgresDirectory {
             if let Some((operation, space_id, document_id, checkpoint_id)) = release {
                 let generation = cas_generation(&mut tx).await?;
                 sqlx_core::query::query("INSERT INTO hub_artifact_cas_ledger_journal(generation, operation, space_id, document_id, checkpoint_id, event_seq) VALUES ($1,$2,$3,$4,$5,$6)")
-                    .bind(generation).bind(operation).bind(space_id).bind(document_id).bind(checkpoint_id.map(|value| value.0.to_vec())).bind(row.0).execute(&mut *tx).await.map_err(backend)?;
+                    .bind(generation)
+                    .bind(operation)
+                    .bind(space_id)
+                    .bind(document_id)
+                    .bind(checkpoint_id.map(|value| value.0.to_vec()))
+                    .bind(row.0)
+                    .execute(&mut *tx)
+                    .await
+                    .map_err(backend)?;
                 cas_project_release(&mut tx, operation, space_id, document_id, checkpoint_id).await?;
             }
             persisted.push(full);
@@ -1495,15 +1910,26 @@ impl HubDirectory for PostgresDirectory {
             }
         }
         type CasLedgerRow = (i64, String, String, Option<String>, Option<Vec<u8>>, Option<i64>, Option<i64>, Option<Vec<u8>>);
-        let ledger_rows: Vec<CasLedgerRow> = sqlx_core::query_as::query_as("SELECT generation, operation, space_id, document_id, checkpoint_id, write_epoch, expires_at_ms, plan FROM hub_artifact_cas_ledger_journal ORDER BY generation").fetch_all(&mut *tx).await.map_err(backend)?;
+        let ledger_rows: Vec<CasLedgerRow> =
+            sqlx_core::query_as::query_as("SELECT generation, operation, space_id, document_id, checkpoint_id, write_epoch, expires_at_ms, plan FROM hub_artifact_cas_ledger_journal ORDER BY generation").fetch_all(&mut *tx).await.map_err(backend)?;
         for (generation, operation, space_id, document_id, checkpoint_id, write_epoch, expires_at_ms, plan) in ledger_rows {
             match operation.as_str() {
                 "reserve" => {
-                    let reservation = ArtifactCasReservation::unfenced(decode_artifact_cas_ownership_v1(plan.as_deref().ok_or_else(|| DirectoryError::Backend("artifact CAS reserve journal plan missing".into()))?).map_err(|error| DirectoryError::Backend(error.to_string()))?, u64::try_from(generation).map_err(backend)?, u64::try_from(write_epoch.ok_or_else(|| DirectoryError::Backend("artifact CAS reserve journal epoch missing".into()))?).map_err(backend)?, u64::try_from(expires_at_ms.ok_or_else(|| DirectoryError::Backend("artifact CAS reserve journal expiry missing".into()))?).map_err(backend)?);
+                    let reservation = ArtifactCasReservation::unfenced(
+                        decode_artifact_cas_ownership_v1(plan.as_deref().ok_or_else(|| DirectoryError::Backend("artifact CAS reserve journal plan missing".into()))?).map_err(|error| DirectoryError::Backend(error.to_string()))?,
+                        u64::try_from(generation).map_err(backend)?,
+                        u64::try_from(write_epoch.ok_or_else(|| DirectoryError::Backend("artifact CAS reserve journal epoch missing".into()))?).map_err(backend)?,
+                        u64::try_from(expires_at_ms.ok_or_else(|| DirectoryError::Backend("artifact CAS reserve journal expiry missing".into()))?).map_err(backend)?,
+                    );
                     cas_project_reserve(&mut tx, &reservation).await?;
                 }
                 "publish" => {
-                    let reservation = ArtifactCasReservation::unfenced(decode_artifact_cas_ownership_v1(plan.as_deref().ok_or_else(|| DirectoryError::Backend("artifact CAS publish journal plan missing".into()))?).map_err(|error| DirectoryError::Backend(error.to_string()))?, u64::try_from(generation).map_err(backend)?, u64::try_from(write_epoch.ok_or_else(|| DirectoryError::Backend("artifact CAS publish journal epoch missing".into()))?).map_err(backend)?, u64::try_from(expires_at_ms.ok_or_else(|| DirectoryError::Backend("artifact CAS publish journal expiry missing".into()))?).map_err(backend)?);
+                    let reservation = ArtifactCasReservation::unfenced(
+                        decode_artifact_cas_ownership_v1(plan.as_deref().ok_or_else(|| DirectoryError::Backend("artifact CAS publish journal plan missing".into()))?).map_err(|error| DirectoryError::Backend(error.to_string()))?,
+                        u64::try_from(generation).map_err(backend)?,
+                        u64::try_from(write_epoch.ok_or_else(|| DirectoryError::Backend("artifact CAS publish journal epoch missing".into()))?).map_err(backend)?,
+                        u64::try_from(expires_at_ms.ok_or_else(|| DirectoryError::Backend("artifact CAS publish journal expiry missing".into()))?).map_err(backend)?,
+                    );
                     cas_project_publish(&mut tx, &reservation, generation).await?;
                 }
                 "retention" | "space-delete" => {
@@ -1528,7 +1954,51 @@ type InviteRow = (String, String, Vec<u8>, String, String, i64, i64, Option<i64>
 type ShareRow = (String, String, Vec<u8>, String, String, i64, i64, Option<i64>, Option<String>);
 type AuthSessionRow = (String, String, Vec<u8>, String, String, Vec<u8>, i64, i64, Option<i64>, Option<String>, i64, String, String);
 type AuthAuditRow = (String, i64, String, Option<String>, Option<String>, Option<String>, Option<String>, String, Option<String>, String, String);
-type SyncSessionRow = (String, Option<String>, i64, String, String, String, String, Option<String>, Option<String>, String, i64, Option<i64>);
+struct AdminOperationAuditRow {
+    sequence: i64,
+    request_id: String,
+    intent_digest: String,
+    operation_id: String,
+    occurred_at: i64,
+    phase: String,
+    intent_kind: String,
+    target_kind: String,
+    target_id: String,
+    principal_user_id: String,
+    principal_session_id: String,
+    principal_generation: i64,
+    correlation_id: String,
+    event_seq_first: Option<i64>,
+    event_seq_last: Option<i64>,
+    outcome_code: String,
+    reason_code: Option<String>,
+}
+
+impl<'row> sqlx_core::from_row::FromRow<'row, sqlx_postgres::PgRow> for AdminOperationAuditRow {
+    fn from_row(row: &'row sqlx_postgres::PgRow) -> Result<Self, sqlx_core::error::Error> {
+        use sqlx_core::row::Row as _;
+        Ok(Self {
+            sequence: row.try_get("sequence")?,
+            request_id: row.try_get("request_id")?,
+            intent_digest: row.try_get("intent_digest")?,
+            operation_id: row.try_get("operation_id")?,
+            occurred_at: row.try_get("occurred_at")?,
+            phase: row.try_get("phase")?,
+            intent_kind: row.try_get("intent_kind")?,
+            target_kind: row.try_get("target_kind")?,
+            target_id: row.try_get("target_id")?,
+            principal_user_id: row.try_get("principal_user_id")?,
+            principal_session_id: row.try_get("principal_session_id")?,
+            principal_generation: row.try_get("principal_generation")?,
+            correlation_id: row.try_get("correlation_id")?,
+            event_seq_first: row.try_get("event_seq_first")?,
+            event_seq_last: row.try_get("event_seq_last")?,
+            outcome_code: row.try_get("outcome_code")?,
+            reason_code: row.try_get("reason_code")?,
+        })
+    }
+}
+type SyncSessionRow = (String, Option<String>, i64, String, String, String, String, Option<String>, Option<String>, Option<String>, String, i64, Option<i64>);
 
 fn invite_from_row(row: InviteRow) -> DirectoryResult<InviteRecord> {
     let (id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at) = row;
@@ -1564,8 +2034,32 @@ fn auth_audit_from_row(row: AuthAuditRow) -> AuthAuditRecord {
     AuthAuditRecord { id, occurred_at, event_kind, auth_session_id, target_user_id, actor_user_id, provider, outcome_code, reason_code, correlation_id, peer_class }
 }
 
+fn admin_operation_audit_from_row(row: AdminOperationAuditRow) -> DirectoryResult<AdminOperationAuditRecord> {
+    Ok(AdminOperationAuditRecord {
+        sequence: u64::try_from(row.sequence).map_err(backend)?,
+        fact: NewAdminOperationAuditRecord {
+            request_id: row.request_id,
+            intent_digest: row.intent_digest,
+            operation_id: row.operation_id,
+            occurred_at: row.occurred_at,
+            phase: row.phase,
+            intent_kind: row.intent_kind,
+            target_kind: row.target_kind,
+            target_id: row.target_id,
+            principal_user_id: row.principal_user_id,
+            principal_session_id: row.principal_session_id,
+            principal_generation: u64::try_from(row.principal_generation).map_err(backend)?,
+            correlation_id: row.correlation_id,
+            event_seq_first: row.event_seq_first.map(u64::try_from).transpose().map_err(backend)?,
+            event_seq_last: row.event_seq_last.map(u64::try_from).transpose().map_err(backend)?,
+            outcome_code: row.outcome_code,
+            reason_code: row.reason_code,
+        },
+    })
+}
+
 fn sync_session_from_row(row: SyncSessionRow) -> SyncSessionRecord {
-    let (id, auth_session_id, authorization_generation, actor_id, space_id, document_id, surface, user_id, space_role, client_label, connected_at, disconnected_at) = row;
+    let (id, auth_session_id, authorization_generation, actor_id, space_id, document_id, surface, user_id, authenticated_email, space_role, client_label, connected_at, disconnected_at) = row;
     SyncSessionRecord {
         id,
         auth_session_id,
@@ -1575,6 +2069,7 @@ fn sync_session_from_row(row: SyncSessionRow) -> SyncSessionRecord {
         document_id,
         surface,
         user_id,
+        authenticated_email,
         space_role: space_role.and_then(|r| SpaceRole::parse(&r)),
         client_label,
         connected_at,
@@ -1604,6 +2099,7 @@ mod tests {
     use std::net::TcpListener;
     use std::process::Command;
     use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::Arc;
     use std::time::Duration;
 
     //#region 🔖️PostgresFixture
@@ -1670,6 +2166,58 @@ mod tests {
         ];
         dir.append_events(&events).await.expect("seed space");
         space_id
+    }
+
+    fn admin_audit_fact(phase: &str, outcome_code: &str) -> NewAdminOperationAuditRecord {
+        NewAdminOperationAuditRecord {
+            request_id: "request:postgres-race".into(),
+            intent_digest: "1".repeat(64),
+            operation_id: "operation:postgres-race".into(),
+            occurred_at: now_ms(),
+            phase: phase.into(),
+            intent_kind: "delete-space".into(),
+            target_kind: "space".into(),
+            target_id: "space:one".into(),
+            principal_user_id: "user:admin".into(),
+            principal_session_id: "session:admin".into(),
+            principal_generation: 7,
+            correlation_id: "correlation:postgres-race".into(),
+            event_seq_first: None,
+            event_seq_last: None,
+            outcome_code: outcome_code.into(),
+            reason_code: None,
+        }
+    }
+
+    #[tokio::test]
+    async fn admin_operation_audit_concurrent_absent_request_rereads_established_receipt() {
+        let (directory, _container) = test_directory().await;
+        let directory = Arc::new(directory);
+        let barrier = Arc::new(tokio::sync::Barrier::new(17));
+        let accepted = admin_audit_fact("accepted", "accepted");
+        let mut writers = Vec::new();
+        for _ in 0..16 {
+            let directory = directory.clone();
+            let barrier = barrier.clone();
+            let accepted = accepted.clone();
+            writers.push(tokio::spawn(async move {
+                barrier.wait().await;
+                directory.append_admin_operation_audit(&accepted).await
+            }));
+        }
+        barrier.wait().await;
+        let mut sequence = None;
+        for writer in writers {
+            let established = writer.await.expect("postgres audit writer").expect("race loser rereads receipt");
+            if let Some(first) = sequence {
+                assert_eq!(first, established.sequence);
+            } else {
+                sequence = Some(established.sequence);
+            }
+        }
+        assert_eq!(directory.admin_operation_audit_for_request(&accepted.request_id).await.expect("postgres audit").len(), 1);
+        let terminal = admin_audit_fact("succeeded", "space-deleted");
+        assert_eq!(directory.append_admin_operation_audit(&terminal).await.expect("postgres terminal").fact.intent_digest, accepted.intent_digest);
     }
 
     // 🔬️ Users, spaces, and role-based membership round-trip against a real Postgres.

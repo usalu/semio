@@ -144,6 +144,100 @@ export type DirectoryCommand =
   | { kind: "announce-document"; descriptor: DocumentDescriptor };
 //#endregion 🔖️Command
 
+//#region 🔖️Admin
+export type AdminIntentV1 =
+  | { kind: "create-space"; requestId: string; name: string; spaceKind: DirectorySpaceKind; visibility: DirectorySpaceVisibility }
+  | { kind: "rename-space"; requestId: string; spaceId: string; name: string }
+  | { kind: "set-space-visibility"; requestId: string; spaceId: string; visibility: DirectorySpaceVisibility }
+  | { kind: "archive-space"; requestId: string; spaceId: string }
+  | { kind: "delete-space"; requestId: string; spaceId: string }
+  | { kind: "upsert-space-member"; requestId: string; spaceId: string; email: string; role: DirectorySpaceRole }
+  | { kind: "remove-space-member"; requestId: string; spaceId: string; userId: string }
+  | { kind: "create-space-invite"; requestId: string; spaceId: string; role: DirectorySpaceRole; ttlSecs: number }
+  | { kind: "revoke-space-invite"; requestId: string; spaceId: string; inviteId: string }
+  | { kind: "issue-document-share"; requestId: string; scope: DocumentScope; ttlSecs: number }
+  | { kind: "revoke-document-share"; requestId: string; scope: DocumentScope; shareId: string; reasonCode: string }
+  | { kind: "revoke-user-sessions"; requestId: string; userId: string; reasonCode: string }
+  | { kind: "kick-connection"; requestId: string; syncSessionId: string; reasonCode: string }
+  | { kind: "rebuild-directory-projections"; requestId: string; expectedHeadSeq: number };
+
+export type AdminIntentStateV1 = "succeeded" | "accepted" | "failed" | "cancelled";
+
+export interface AdminIntentOutcomeV1 {
+  code: string;
+  durable: boolean;
+  kickAttempted?: number;
+  kickSignalled?: number;
+}
+
+export interface AdminIntentResultV1 {
+  inviteToken?: string;
+  shareToken?: string;
+}
+
+export interface AdminIntentReceiptV1 {
+  operationId: string;
+  correlationId: string;
+  state: AdminIntentStateV1;
+  eventSeqFirst?: number;
+  eventSeqLast?: number;
+  result?: AdminIntentResultV1;
+  outcome: AdminIntentOutcomeV1;
+}
+
+export interface AdminOperationProgressV1 {
+  completedEvents: number;
+  totalEvents: number;
+  cancelRequested: boolean;
+}
+
+export interface AdminOperationStatusV1 {
+  receipt: AdminIntentReceiptV1;
+  progress?: AdminOperationProgressV1;
+}
+
+export interface AdminPageV1<T> {
+  rows: T[];
+  nextCursor?: string;
+  observedAtMs: number;
+}
+
+export interface AdminRecordedConnectionV1 {
+  syncSessionId: string;
+  scope: DocumentScope;
+  authenticatedUserId?: string;
+  email?: string;
+  role?: DirectorySpaceRole;
+  connectedAtMs: number;
+  source: "recorded-sync-session";
+}
+
+export interface AdminConnectionSnapshotV1 extends AdminPageV1<AdminRecordedConnectionV1> {
+  source: "recorded-sync-sessions";
+  headSeq: number;
+}
+
+export type AdminOperationAuditPhaseV1 = "accepted" | "succeeded" | "failed" | "cancelled";
+
+export interface AdminOperationAuditV1 {
+  sequence: number;
+  operationId: string;
+  occurredAtMs: number;
+  phase: AdminOperationAuditPhaseV1;
+  intentKind: string;
+  targetKind: string;
+  targetId: string;
+  principalUserId: string;
+  principalSessionId: string;
+  principalGeneration: number;
+  correlationId: string;
+  eventSeqFirst?: number;
+  eventSeqLast?: number;
+  outcomeCode: string;
+  reasonCode?: string;
+}
+//#endregion 🔖️Admin
+
 //#region 🔖️Views
 /** 🏠️ One space, as the hub's REST/read surface renders it. `role` is the calling user's
  * membership role (server-filled per request), never derived by the pure fold. */
@@ -219,6 +313,223 @@ export interface DocumentDescriptor {
   bootstrapVersion: number;
   bootstrapFrontier: DocumentFrontier;
   bootstrapSnapshotHash: string;
+}
+
+export const DOCUMENT_OPEN_ID_MAX_BYTES = 256;
+export const DOCUMENT_OPEN_CLIENT_INSTANCE_MAX_BYTES = 128;
+export const DOCUMENT_OPEN_PLAN_MAX_TTL_MS = 30_000;
+
+export interface DocumentOpenIntentV1 {
+  schema: "semio.hub.document-open-intent/v1";
+  version: 1;
+  scope: DocumentScope;
+  requestedSurfaceId?: string;
+  clientInstanceId: string;
+}
+
+export type DocumentOpenRendererTargetV1 = "react" | "wgpu" | "wasm";
+export type DocumentOpenSurfaceRoleV1 = "viewer" | "editor";
+
+export interface DocumentOpenCatalogV1 {
+  generationId: string;
+}
+
+export interface DocumentOpenPackageV1 {
+  pluginId: string;
+  packageId: string;
+  version: string;
+  componentSha256: string;
+  componentBlake3: string;
+  descriptorByteSha256: string;
+}
+
+export interface DocumentOpenArtifactV1 {
+  kind: string;
+  schema: string;
+  packSchemaHash: string;
+}
+
+export interface DocumentOpenSurfaceV1 {
+  surfaceId: string;
+  appId: string;
+  windowKindId: string;
+  role: DocumentOpenSurfaceRoleV1;
+  rendererTarget: DocumentOpenRendererTargetV1;
+}
+
+export interface DocumentOpenGrantV1 {
+  read: true;
+  write: boolean;
+  observe: true;
+}
+
+export interface DocumentOpenCheckpointV1 {
+  checkpointId: string;
+  descriptorDigestV1: string;
+  baselineFrontier: ArtifactFrontier;
+  aggregateSha256: string;
+}
+
+export interface DocumentOpenRevalidationV1 {
+  directoryRevision: number;
+  membershipGeneration: number;
+  sessionGeneration?: number;
+  shareGeneration?: number;
+}
+
+export interface DocumentOpenPlanV1 {
+  schema: "semio.hub.document-open-plan/v1";
+  version: 1;
+  receipt: string;
+  expiresAtUnixMs: number;
+  scope: DocumentScope;
+  descriptorDigestV1: string;
+  catalog: DocumentOpenCatalogV1;
+  package: DocumentOpenPackageV1;
+  artifact: DocumentOpenArtifactV1;
+  surface: DocumentOpenSurfaceV1;
+  grant: DocumentOpenGrantV1;
+  checkpoint?: DocumentOpenCheckpointV1;
+  revalidation: DocumentOpenRevalidationV1;
+}
+
+export interface DocumentPlanSocketGrantIntentV1 {
+  schema: "semio.hub.document-plan-socket-grant-intent/v1";
+  version: 1;
+  planReceipt: string;
+}
+
+export type DocumentOpenPlanErrorCodeV1 = "denied" | "not-found" | "catalog-unavailable" | "component-unavailable" | "stale" | "expired" | "already-consumed" | "cancelled" | "deadline-exceeded";
+
+export interface DocumentOpenPlanErrorV1 {
+  schema: "semio.hub.document-open-plan-error/v1";
+  code: DocumentOpenPlanErrorCodeV1;
+}
+
+function documentOpenObject(value: unknown, required: readonly string[], optional: readonly string[] = []): Record<string, unknown> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("document-open.invalid-object");
+  const object = value as Record<string, unknown>;
+  const accepted = new Set([...required, ...optional]);
+  if (Object.keys(object).some((key) => !accepted.has(key)) || required.some((key) => !(key in object))) throw new Error("document-open.invalid-fields");
+  return object;
+}
+
+function documentOpenText(value: unknown, maxBytes = DOCUMENT_OPEN_ID_MAX_BYTES): string {
+  if (typeof value !== "string" || value.length === 0 || new TextEncoder().encode(value).length > maxBytes || /\p{Cc}/u.test(value)) throw new Error("document-open.invalid-text");
+  return value;
+}
+
+function documentOpenHash(value: unknown): string {
+  if (typeof value !== "string" || !/^[0-9a-f]{64}$/u.test(value) || /^0{64}$/u.test(value)) throw new Error("document-open.invalid-hash");
+  return value;
+}
+
+function documentOpenInteger(value: unknown, positive = false): number {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < (positive ? 1 : 0)) throw new Error("document-open.invalid-integer");
+  return value;
+}
+
+function documentOpenReceipt(value: unknown): string {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+  if (typeof value !== "string" || !/^open\.v1\.[A-Za-z0-9_-]{43}$/u.test(value) || (alphabet.indexOf(value.at(-1)!) & 0b11) !== 0) throw new Error("document-open.invalid-receipt");
+  return value;
+}
+
+function parseDocumentOpenScope(value: unknown): DocumentScope {
+  const object = documentOpenObject(value, ["spaceId", "documentId"]);
+  return { spaceId: documentOpenText(object.spaceId), documentId: documentOpenText(object.documentId) };
+}
+
+function parseDocumentOpenFrontier(value: unknown, documentId: string): ArtifactFrontier {
+  const object = documentOpenObject(value, ["documentId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainHash"]);
+  const chainHash = object.chainHash;
+  if (!Array.isArray(chainHash) || chainHash.length !== 32 || chainHash.every((byte) => byte === 0) || chainHash.some((byte) => typeof byte !== "number" || !Number.isInteger(byte) || byte < 0 || byte > 255)) throw new Error("document-open.invalid-frontier-hash");
+  const frontier = {
+    documentId: documentOpenText(object.documentId),
+    headEditOrdinal: documentOpenInteger(object.headEditOrdinal),
+    headEditId: documentOpenText(object.headEditId),
+    lastCommitSeq: documentOpenInteger(object.lastCommitSeq),
+    chainHash: chainHash as number[],
+  };
+  if (frontier.documentId !== documentId || frontier.lastCommitSeq > frontier.headEditOrdinal) throw new Error("document-open.stale-frontier");
+  return frontier;
+}
+
+export function parseDocumentOpenIntentV1(value: unknown): DocumentOpenIntentV1 {
+  const object = documentOpenObject(value, ["schema", "version", "scope", "clientInstanceId"], ["requestedSurfaceId"]);
+  if (object.schema !== "semio.hub.document-open-intent/v1" || object.version !== 1) throw new Error("document-open.invalid-version");
+  return {
+    schema: object.schema,
+    version: object.version,
+    scope: parseDocumentOpenScope(object.scope),
+    ...(object.requestedSurfaceId === undefined ? {} : { requestedSurfaceId: documentOpenText(object.requestedSurfaceId) }),
+    clientInstanceId: documentOpenText(object.clientInstanceId, DOCUMENT_OPEN_CLIENT_INSTANCE_MAX_BYTES),
+  };
+}
+
+export function parseDocumentPlanSocketGrantIntentV1(value: unknown): DocumentPlanSocketGrantIntentV1 {
+  const object = documentOpenObject(value, ["schema", "version", "planReceipt"]);
+  if (object.schema !== "semio.hub.document-plan-socket-grant-intent/v1" || object.version !== 1) throw new Error("document-open.invalid-version");
+  return { schema: object.schema, version: object.version, planReceipt: documentOpenReceipt(object.planReceipt) };
+}
+
+export function parseDocumentOpenPlanV1(value: unknown, nowMs: number): DocumentOpenPlanV1 {
+  const object = documentOpenObject(value, ["schema", "version", "receipt", "expiresAtUnixMs", "scope", "descriptorDigestV1", "catalog", "package", "artifact", "surface", "grant", "revalidation"], ["checkpoint"]);
+  if (object.schema !== "semio.hub.document-open-plan/v1" || object.version !== 1) throw new Error("document-open.invalid-version");
+  const scope = parseDocumentOpenScope(object.scope);
+  const descriptorDigestV1 = documentOpenHash(object.descriptorDigestV1);
+  const catalog = documentOpenObject(object.catalog, ["generationId"]);
+  const packageValue = documentOpenObject(object.package, ["pluginId", "packageId", "version", "componentSha256", "componentBlake3", "descriptorByteSha256"]);
+  const artifact = documentOpenObject(object.artifact, ["kind", "schema", "packSchemaHash"]);
+  const surface = documentOpenObject(object.surface, ["surfaceId", "appId", "windowKindId", "role", "rendererTarget"]);
+  const grant = documentOpenObject(object.grant, ["read", "write", "observe"]);
+  const revalidation = documentOpenObject(object.revalidation, ["directoryRevision", "membershipGeneration"], ["sessionGeneration", "shareGeneration"]);
+  const expiresAtUnixMs = documentOpenInteger(object.expiresAtUnixMs, true);
+  if (expiresAtUnixMs <= nowMs || expiresAtUnixMs - nowMs > DOCUMENT_OPEN_PLAN_MAX_TTL_MS || (revalidation.sessionGeneration === undefined) === (revalidation.shareGeneration === undefined)) throw new Error("document-open.expired-or-ambiguous-binding");
+  if (grant.read !== true || grant.observe !== true || typeof grant.write !== "boolean") throw new Error("document-open.invalid-grant");
+  if ((surface.role !== "viewer" && surface.role !== "editor") || (surface.rendererTarget !== "react" && surface.rendererTarget !== "wgpu" && surface.rendererTarget !== "wasm") || grant.write !== (surface.role === "editor")) throw new Error("document-open.invalid-surface");
+  const checkpoint = object.checkpoint === undefined ? undefined : documentOpenObject(object.checkpoint, ["checkpointId", "descriptorDigestV1", "baselineFrontier", "aggregateSha256"]);
+  if (checkpoint && checkpoint.descriptorDigestV1 !== descriptorDigestV1) throw new Error("document-open.stale-checkpoint");
+  return {
+    schema: object.schema,
+    version: object.version,
+    receipt: documentOpenReceipt(object.receipt),
+    expiresAtUnixMs,
+    scope,
+    descriptorDigestV1,
+    catalog: { generationId: documentOpenHash(catalog.generationId) },
+    package: {
+      pluginId: documentOpenText(packageValue.pluginId),
+      packageId: documentOpenText(packageValue.packageId),
+      version: documentOpenText(packageValue.version),
+      componentSha256: documentOpenHash(packageValue.componentSha256),
+      componentBlake3: documentOpenHash(packageValue.componentBlake3),
+      descriptorByteSha256: documentOpenHash(packageValue.descriptorByteSha256),
+    },
+    artifact: { kind: documentOpenText(artifact.kind), schema: documentOpenText(artifact.schema), packSchemaHash: documentOpenHash(artifact.packSchemaHash) },
+    surface: {
+      surfaceId: documentOpenText(surface.surfaceId),
+      appId: documentOpenText(surface.appId),
+      windowKindId: documentOpenText(surface.windowKindId),
+      role: surface.role,
+      rendererTarget: surface.rendererTarget,
+    },
+    grant: { read: true, write: grant.write, observe: true },
+    ...(checkpoint ? {
+      checkpoint: {
+        checkpointId: documentOpenHash(checkpoint.checkpointId),
+        descriptorDigestV1,
+        baselineFrontier: parseDocumentOpenFrontier(checkpoint.baselineFrontier, scope.documentId),
+        aggregateSha256: documentOpenHash(checkpoint.aggregateSha256),
+      },
+    } : {}),
+    revalidation: {
+      directoryRevision: documentOpenInteger(revalidation.directoryRevision, true),
+      membershipGeneration: documentOpenInteger(revalidation.membershipGeneration, true),
+      ...(revalidation.sessionGeneration === undefined ? {} : { sessionGeneration: documentOpenInteger(revalidation.sessionGeneration, true) }),
+      ...(revalidation.shareGeneration === undefined ? {} : { shareGeneration: documentOpenInteger(revalidation.shareGeneration, true) }),
+    },
+  };
 }
 
 export interface ArtifactFrontier {

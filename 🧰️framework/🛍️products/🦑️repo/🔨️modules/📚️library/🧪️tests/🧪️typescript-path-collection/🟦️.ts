@@ -10,7 +10,7 @@ const root = resolve(import.meta.dir, "../../../../../../../");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const sourcePath = join(root, library, "🧹️normalization/🟦️.ts"), source = readFileSync(sourcePath, "utf8");
 const syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧪️🧬️🐼️typescript-path-collection/🔣️.json"), "utf8"));
 type Span = { value: string; start: number; end: number; physicalTargets: string[] };
 type Token = Span & { adapter: string; structuredLocation: string; unsupportedReason?: string };
 const compilers = [

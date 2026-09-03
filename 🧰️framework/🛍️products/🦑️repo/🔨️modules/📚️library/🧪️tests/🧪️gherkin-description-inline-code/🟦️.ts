@@ -16,11 +16,11 @@ type Vector = Readonly<{
 const library = resolve(import.meta.dir, "../..");
 const root = resolve(library, "../../../../..");
 const normalizerPath = join(library, "🧹️normalization/🟦️.ts");
-const vectorPath = join(import.meta.dir, "🔣️.json"), schemaPath = join(import.meta.dir, "🧬️schema/🔣️.json");
+const vectorPath = join(import.meta.dir, "../🧪️🐬️gherkin-description-inline-code/🔣️.json"), schemaPath = join(import.meta.dir, "../🧪️🐬️gherkin-description-inline-code/🧬️schema/🔣️.json");
 const vector: Vector = JSON.parse(readFileSync(vectorPath, "utf8"));
 const schema = JSON.parse(readFileSync(schemaPath, "utf8"));
 const normalizerText = readFileSync(normalizerPath, "utf8");
-const syntax = ts.createSourceFile("🟦️.ts", normalizerText, ts.ScriptTarget.Latest, true);
+const syntax = ts.createSourceFile("../🧪️🐬️gherkin-description-inline-code/🟦️.ts", normalizerText, ts.ScriptTarget.Latest, true);
 
 const spanDeclaration = syntax.statements.find((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === "gherkinDescriptionInlineCodeSpans");
 if (!spanDeclaration) throw new Error("Missing actual gherkinDescriptionInlineCodeSpans implementation");

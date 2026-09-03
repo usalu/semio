@@ -131,6 +131,50 @@ The hello mechanism has relevant bounded owners but the two-document scenario is
 - **Uniform hub error lowering:** `get_blob`'s explicit `NotFound` plus `_ => 500` bypasses the existing `db_error_status` mapping at lines 294-302. After typed preservation is fixed, a genuine `Unavailable`/`Timeout` will still be incorrectly sent as 500 instead of 503, and input/limit errors as 500 instead of 400. The one-branch lowering above fixes this without widening authority.
 - **Response-copy interactivity:** `db_io_pages_into_http_bytes` enforces `HUB_BLOB_MAX_BYTES` and yields while closing pages, but it copies every fragment into one `Vec` with no cancellation observation or yield in the copy loop (`…/📦️bin.rs:499-517`). It is byte-bounded, not unbounded; nevertheless a maximum-size response can monopolize one handler turn. Add a bounded request-cancellation/close path and yield/check point per owned page or fixed chunk, while retaining deterministic close on success, limit rejection, cancellation, and copy failure.
 
+## Current DbIo list heap move — source RED
+
+The `DbIoU64List` heap move removes the prior 4,096-element inline array from
+task/result stack frames: its `Option<Box<[u64]>>` retains fixed capacity and
+the result/handback/drop paths continue to close the list incrementally
+(`🛢️db/🗄️storage/🦀️.rs:1838-1969,2216-2220,2276-2315,3795-3798`). The static
+layout law now correctly keeps `DbIoTask`, `DbIoResult`, `DbIoTaskSlot`, and
+`DbIoLostOwner` below their stack bounds (`:8139-8147`). The coordinator's
+session `9492` additionally observed the real hub pass the former default-stack
+abort through readiness and HTTP bind; that runtime evidence does not prove the
+new byte accounting.
+
+The heap allocation is no longer represented in the byte ledger. The operation
+and process byte caps derive from `size_of::<DbIoTaskSlot>()`
+(`:78-84,142-146`), which used to include `[u64; DB_IO_LIST_ITEMS]`. A list
+task now reports only `DB_IO_TASK_SLOT_BYTES` while charging logical items
+(`DbIoTask::aggregate_credit`, `:2157-2163`), and its 32 KiB backing is
+allocated by `DbIoU64List::new` before `db_io_allocate_task` reserves that
+aggregate credit (`:1845-1851,3247-3265`). A result transfer can transiently
+own replacement and result boxes as well. Thus multiple admitted list tasks can
+exceed the former fixed byte ceiling without the ledger seeing their backing.
+
+This remains RED until list-task admission preflights and charges the fixed
+heap bytes (and a law proves the operation/process byte caps reject the next
+list before allocating or retaining uncharged backing), while preserving the
+existing close/handback semantics.
+
+### Heap-credit repair — source-closed; runtime pending
+
+The preceding uncharged-heap RED is superseded in current source. Lists now
+begin without a backing allocation; list-task aggregate credit reserves a
+conservative two-backing transient byte/item allowance before allocation
+(`🛢️db/🗄️storage/🦀️.rs:76-84,1838-1873,2170-2189`).
+`db_io_allocate_task` reserves that aggregate credit first, then calls
+`admit_list_backing`; an allocation error detaches the exact operation credit
+before returning ownership to the caller (`:3268-3300`). This eliminates the
+former post-admission uncharged allocation.
+
+The new direct law checks the charged operation ceiling, plus-one rejection,
+heap allocation, stack layout, and post-close ledger-baseline restoration
+(`:8154-8200`). It is a source-qualified proof only: this audit did not run
+the Cargo law or the real hub again, so session `9492` remains evidence only
+for the earlier stack-abort repair.
+
 These are adjacent blob lowering/boundedness items only. They do not alter canonical artifact authority, document descriptors, or directory privacy policy.
 
 ## Verification to perform after implementation

@@ -1,7 +1,7 @@
 // #region 🔖️Protocol
 /** @emoji 🧵️ Browser UI-to-frame-Worker protocol with bounded lossless and latest-wins lanes. */
 
-import { BrowserInteractiveJobPort, type InteractiveJobUiMessage, type InteractiveJobWorkerMessage } from "../🧵️browser-interactive-job-port/🟦️";
+import { BrowserInteractiveJobPort, type InteractiveJobUiMessage, type InteractiveJobWorkerMessage } from "../🧵️🧵️browser-interactive-job-port/🟦️.ts";
 
 export const FRAME_WORKER_LOSSLESS_ITEM_CAPACITY = 64;
 export const FRAME_WORKER_BYTE_CAPACITY = 256 * 1024;

@@ -15146,6 +15146,33 @@ func TestFolderPolicyEmptyFolder(t *testing.T) {
 	}
 }
 
+func TestPathEmojiStatutesLanguageNeutralFixture(t *testing.T) {
+	fixturePath := filepath.Join("..", "..", "📚️library", "🧪️tests", "🔏️path-emoji-statutes", "🔣️.json")
+	data, err := os.ReadFile(fixturePath)
+	if err != nil {
+		t.Fatalf("read shared path emoji fixture: %v", err)
+	}
+	var fixture struct {
+		GenericEmojiIdentities []string `json:"genericEmojiIdentities"`
+		Cases                  []struct {
+			ID       string             `json:"id"`
+			Entries  []pathEmojiEntry   `json:"entries"`
+			Expected []pathEmojiFinding `json:"expected"`
+		} `json:"cases"`
+	}
+	if err := json.Unmarshal(data, &fixture); err != nil {
+		t.Fatalf("parse shared path emoji fixture: %v", err)
+	}
+	for _, scenario := range fixture.Cases {
+		observed := pathEmojiStatuteFindings(scenario.Entries, fixture.GenericEmojiIdentities)
+		observedJSON, _ := json.Marshal(observed)
+		expectedJSON, _ := json.Marshal(scenario.Expected)
+		if !bytes.Equal(observedJSON, expectedJSON) {
+			t.Errorf("%s: observed %s, expected %s", scenario.ID, observedJSON, expectedJSON)
+		}
+	}
+}
+
 func TestFolderPolicyEmptyFolderAutofix(t *testing.T) {
 	tmpDir := t.TempDir()
 	oldRoot := rootDir

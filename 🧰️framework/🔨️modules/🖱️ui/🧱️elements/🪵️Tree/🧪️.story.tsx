@@ -11,7 +11,7 @@
 // #region 🔌️Adapters
 import { Button, ControlDef, ControlTree, ControlTreeFolderSettings, Input, LevelProvider, Tree, TreeContent, TreeItem, reactHostPort } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "../../🧪️story";
+import type { Meta, StoryObj } from "../../🧪️🐨️story.ts";
 import type React from "react";
 import { fireEvent, within } from "@testing-library/react";
 // #endregion 🔌️Adapters

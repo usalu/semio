@@ -31,7 +31,7 @@ mod tests {
 
     #[test]
     fn actual_leaf_descriptor_and_provenance() {
-        assert_metadata::<Std2AnySnapshot, Std2AnyMutation, SetValue>(include_str!("🔣️.json"), operation);
+        assert_metadata::<Std2AnySnapshot, Std2AnyMutation, SetValue>(include_str!("../../../../../🛰️declaration-channels/2️⃣standard-2/🌐️any/🧬️mutations/📝️set-value/🔣️.json"), operation);
     }
 
     #[test]

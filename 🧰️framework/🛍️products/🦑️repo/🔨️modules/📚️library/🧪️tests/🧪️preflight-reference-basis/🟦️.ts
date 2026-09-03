@@ -13,7 +13,7 @@ import * as discovery from "../../🔍️discovery/🟦️.ts";
 const root = resolve(import.meta.dir, "../../../../../../../");
 const path = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts");
 const source = readFileSync(path, "utf8"), syntax = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧪️🏔️preflight-reference-basis/🔣️.json"), "utf8"));
 const compilers = [
   { name: "Bun", compile: (value: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(value) },
   { name: "TypeScript", compile: (value: string) => ts.transpileModule(value, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText },
@@ -384,7 +384,7 @@ for (const row of vector.physicalCases) test("physical preflight publication bou
   } finally {
     const output = join(fixture.owner, "📊️outcome");
     mkdirSync(output);
-    writeFileSync(join(output, "🔣️.json"), JSON.stringify(evidence, null, 2) + "\n", { flag: "wx" });
+    writeFileSync(join(output, "../🧪️🏔️preflight-reference-basis/🔣️.json"), JSON.stringify(evidence, null, 2) + "\n", { flag: "wx" });
   }
 }, 15_000);
 

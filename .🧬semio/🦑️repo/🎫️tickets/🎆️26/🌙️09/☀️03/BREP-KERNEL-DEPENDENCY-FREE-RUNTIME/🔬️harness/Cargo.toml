@@ -21,10 +21,24 @@ path = "lib.rs"
 semio-framework-number = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust", package = "semio-framework-number" }
 semio-framework-os-kernel = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-value-derive = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+# `⚙️engine/🦀️.rs`'s own `GeometryHandle` construction hashes a payload directly
+# (`semio_framework_hash::hash_bytes`).
+semio-framework-hash = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔢️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+# `📦️mesh-io/🦀️.rs` (mounted as part of the full `⚙️engine/🦀️.rs`) uses
+# `semio_framework_mesh_engine::{mesh_from_obj, mesh_from_stl, mesh_to_obj, mesh_to_stl,
+# GlbExporter, GlbImporter, MeshData, MeshExporter, MeshImporter}` for OBJ/STL/GLB — its OTHER
+# import, `crate::artifacts::dwg::{…}`, is deliberately left unresolved (see lib.rs doc).
+semio-framework-mesh-engine = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust", package = "semio-framework-mesh-engine" }
 # `base::schema::geometry`'s `SemioTransform` still derives `serde::Serialize`/`Deserialize`
 # (mid-migration to `value_derive`, same as the rest of this crate — see stdio root Cargo.toml's
 # own `serde`/`serde_json` comment).
 serde = { version = "1.0.228", features = ["derive"] }
+# `⚙️engine/🦀️.rs`'s own `validate_sync` builds a `serde_json::json!({…})` report directly (real
+# code, not test-only) — moved out of dev-dependencies for that reason. Also covers
+# topology.rs's own `serde_round_trips_a_whole_body` test (`serde_json::to_string(&body)`), which
+# is a KNOWN CURRENTLY-FAILING test regardless (`Body` derives only `value_derive::ToValue`/
+# `FromValue`, not `serde::Serialize`/`Deserialize` — see 📓️h0-harness.md), not a harness gap.
+serde_json = "1.0.149"
 
 [dev-dependencies]
 # 🧪 Test-only: `#[cfg(test)] mod tests` in the mounted kernel files reach for these directly
@@ -35,8 +49,3 @@ serde = { version = "1.0.228", features = ["derive"] }
 semio-framework-async-macros = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-geometry = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 pack = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
-# topology.rs's own `serde_round_trips_a_whole_body` test calls `serde_json::to_string(&body)` —
-# kept even though `Body` currently does NOT derive `serde::Serialize`/`Deserialize` (only
-# `value_derive::ToValue`/`FromValue`), so that test is a KNOWN CURRENTLY-FAILING one (see
-# 📓️h0-harness.md), not a harness gap.
-serde_json = "1.0.149"

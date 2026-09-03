@@ -7,8 +7,8 @@ import { findNodeAtLocation, getNodeValue, parseTree } from "jsonc-parser";
 import { loadCatalogTaxonomy, validateFrozenCoordinateEvidenceContracts } from "../../🔍️discovery/🟦️.ts";
 import { canonicalJson, frozenCoordinateEvidenceCoordinates } from "../../🧹️normalization/🟦️.ts";
 
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
-const historical = JSON.parse(readFileSync(join(import.meta.dir, "🧬️energy-source-coordinates/🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧪️🛰️historical-json-source-encoding/🔣️.json"), "utf8"));
+const historical = JSON.parse(readFileSync(join(import.meta.dir, "../🧪️🛰️historical-json-source-encoding/🧬️energy-source-coordinates/🔣️.json"), "utf8"));
 const sha = (value: string) => createHash("sha256").update(value).digest("hex");
 const libraryRoot = resolve(import.meta.dir, "../.."), root = resolve(libraryRoot, "../../../../..");
 

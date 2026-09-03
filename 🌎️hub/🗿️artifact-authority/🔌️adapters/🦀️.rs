@@ -111,11 +111,7 @@ impl PluginHostTrustedArtifactCatalog {
             if binding.plugin_id.is_empty() || binding.package_id.is_empty() || binding.package_hash == [0; 32] {
                 return Err(AuthorityError::Catalog("trusted package identity is empty or zero".to_string()));
             }
-            let manifest = graph
-                .manifest(&binding.plugin_id)
-                .await
-                .map_err(|error| AuthorityError::Catalog(bounded_message(error)))?
-                .ok_or_else(|| AuthorityError::Catalog("trusted plugin has no loaded manifest".to_string()))?;
+            let manifest = graph.manifest(&binding.plugin_id).await.map_err(|error| AuthorityError::Catalog(bounded_message(error)))?.ok_or_else(|| AuthorityError::Catalog("trusted plugin has no loaded manifest".to_string()))?;
             context.checkpoint()?;
             if manifest.plugin_id != binding.plugin_id || manifest.version.is_empty() {
                 return Err(AuthorityError::Catalog("loaded manifest does not exactly own its plugin identity".to_string()));

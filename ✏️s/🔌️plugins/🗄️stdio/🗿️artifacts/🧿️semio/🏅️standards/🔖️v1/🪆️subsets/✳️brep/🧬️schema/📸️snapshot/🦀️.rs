@@ -7,7 +7,7 @@
 //! own curve (not just a straight-line control polygon) and every face its own surface (not just
 //! `PLANE`), matching AP214's real vocabulary of surface/curve kinds.
 
-use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3};
 use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use schema::ArtifactSchema;
 
@@ -58,6 +58,43 @@ pub enum BrepCurve {
 impl Default for BrepCurve {
     fn default() -> Self {
         BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3::default() }
+    }
+}
+
+/// 🗺️➰️ A p-curve: a coedge's edge, reparametrized into its owning face's `(u, v)` domain — the
+/// 2D twin of [`BrepCurve`], same variant vocabulary, matching the native kernel's `Curve2`
+/// (`📸️snapshot/➰️curve/🦀️.rs`) field-for-field so [`Body::to_snapshot`]/[`Body::from_snapshot`]
+/// (`📸️snapshot/🔁️body/🦀️.rs`) round-trip it exactly, never approximated.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
+pub enum BrepCurve2 {
+    Line {
+        origin: SemioPoint2,
+        direction: SemioPoint2,
+    },
+    Circle {
+        center: SemioPoint2,
+        radius: f64,
+    },
+    Ellipse {
+        center: SemioPoint2,
+        x_axis: SemioPoint2,
+        radius_major: f64,
+        radius_minor: f64,
+    },
+    Nurbs {
+        control_points: Vec<SemioPoint2>,
+        weights: Vec<f64>,
+        degree: u32,
+        knots: Vec<f64>,
+    },
+}
+
+/// 🩹️ See `BrepCurve`'s `Default` impl doc comment — same reason (needed only so `BrepCoedge` can
+/// derive `Default`, never a meaningful default in real code paths).
+impl Default for BrepCurve2 {
+    fn default() -> Self {
+        BrepCurve2::Line { origin: SemioPoint2::default(), direction: SemioPoint2::default() }
     }
 }
 //#endregion 🔖️Curve
@@ -125,6 +162,12 @@ impl Default for BrepSurface {
 pub struct BrepVertex {
     pub id: String,
     pub point: SemioPoint3,
+    /// 🎚️ Native `Vertex::tol` (containment ball radius, model units) — `0.0` (the Rust default)
+    /// means "unspecified"; [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::body::Body::from_snapshot`]
+    /// treats `<= 0.0` as "use the kernel default" rather than a literal zero tolerance, so
+    /// pre-this-wave fixture JSON (missing this field) still reconstructs a valid `Body`.
+    #[value(default)]
+    pub tol: f64,
 }
 
 /// ➡️ A b-rep edge — corresponds to STEP's `EDGE_CURVE`, always resolved between two vertices.
@@ -135,6 +178,10 @@ pub struct BrepEdge {
     pub start_vertex: String,
     pub end_vertex: String,
     pub curve: BrepCurve,
+    /// 🎚️ Native `Edge::tol` (tube radius, model units) — same "`<= 0.0` means unspecified"
+    /// convention as [`BrepVertex::tol`].
+    #[value(default)]
+    pub tol: f64,
 }
 
 /// 🔁️ A loop-member reference to an edge, carrying the traversal orientation — STEP's
@@ -155,6 +202,30 @@ pub struct BrepLoop {
     pub edges: Vec<BrepLoopEdge>,
 }
 
+/// 🧱️ A b-rep coedge — one face's directed USE of one edge within one loop, matching the native
+/// kernel's `Coedge` (`📸️snapshot/🕸️topology/🦀️.rs`) field-for-field: `edge`/`forward` duplicate
+/// `BrepLoopEdge`'s `edge`/`orientation` (kept as a SEPARATE, purely-additive top-level collection
+/// — `SemioBrepSnapshot::coedges` — rather than widening `BrepLoopEdge` itself, so every existing
+/// producer of `BrepLoopEdge` literals, in this facet's own STEP im/export siblings included,
+/// keeps compiling unchanged), plus the two fields `BrepLoopEdge` cannot carry: the p-curve
+/// (`pcurve`/`prange`, `None`/`(0.0, 0.0)` when the producer has not stored one) and the coedge's
+/// position in its loop's ring (`loop_id`, `next`, `prev` — ids into this same collection,
+/// matching native `Coedge::{loop_id,next,prev}`).
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct BrepCoedge {
+    pub id: String,
+    pub edge: String,
+    pub forward: bool,
+    #[value(default)]
+    pub pcurve: Option<BrepCurve2>,
+    #[value(default)]
+    pub prange: (f64, f64),
+    pub loop_id: String,
+    pub next: String,
+    pub prev: String,
+}
+
 /// 🔺️ A b-rep face — corresponds to STEP's `ADVANCED_FACE`, bounded by one outer loop and zero
 /// or more inner (hole) loops, over a typed surface.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -166,6 +237,10 @@ pub struct BrepFace {
     pub inner_loops: Vec<String>,
     pub surface: BrepSurface,
     pub orientation: bool,
+    /// 🎚️ Native `Face::tol` (shell thickness, model units) — same "`<= 0.0` means unspecified"
+    /// convention as [`BrepVertex::tol`].
+    #[value(default)]
+    pub tol: f64,
 }
 
 /// 🔁️ A shell-member reference to a face, carrying orientation — STEP's face-in-shell sense.
@@ -229,11 +304,27 @@ pub struct SemioBrepSnapshot {
     #[state(artifact)]
     #[value(default)]
     pub solids: Vec<BrepSolid>,
+    /// 🧱️ First-class coedges — see [`BrepCoedge`]'s own doc comment for why this is a separate
+    /// collection rather than a widened `BrepLoopEdge`. Empty for every snapshot produced before
+    /// this field existed (STEP import, hand-authored fixtures): [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::body::Body::from_snapshot`]
+    /// falls back to reconstructing coedges from `BrepLoop.edges` (no pcurve) when this is empty.
+    #[state(artifact)]
+    #[value(default)]
+    pub coedges: Vec<BrepCoedge>,
+    /// 📜️ The native `Body::labels`/`LabelSource` high-water mark — MUST be carried forward
+    /// (never reset to 0) across a `to_snapshot`/`from_snapshot` round trip so two independent
+    /// mutation constructions against the same document never mint colliding persistent labels
+    /// (see `topology::history::LabelSource`'s own doc comment). `0` for any snapshot produced
+    /// before this field existed, meaning "mint fresh labels for everything" — safe because such a
+    /// snapshot has no persistent-label history to preserve in the first place.
+    #[state(artifact)]
+    #[value(default)]
+    pub next_label: u64,
 }
 
 impl Default for SemioBrepSnapshot {
     fn default() -> Self {
-        Self { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices: Default::default(), edges: Default::default(), loops: Default::default(), faces: Default::default(), shells: Default::default(), solids: Default::default() }
+        Self { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices: Default::default(), edges: Default::default(), loops: Default::default(), faces: Default::default(), shells: Default::default(), solids: Default::default(), coedges: Default::default(), next_label: 0 }
     }
 }
 //#endregion 🔖️Snapshot
@@ -428,6 +519,93 @@ fn dec_surface(s: &str) -> Result<BrepSurface, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_point2(p: &SemioPoint2) -> String {
+    format!("[{},{}]", p.x, p.y)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [x, y] = parts.as_slice() else { return Err(format!("point2: expected 2 fields, got {}", parts.len())) };
+    Ok(SemioPoint2 { x: parse_f64(x)?, y: parse_f64(y)? })
+}
+
+/// 🗺️➰️ `L[origin,direction]` / `C[center,radius]` / `E[center,xAxis,radiusMajor,radiusMinor]` /
+/// `N[controlPoints,weights,degree,knots]` — same convention as [`enc_curve`], one dimension down.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_curve2(c: &BrepCurve2) -> String {
+    match c {
+        BrepCurve2::Line { origin, direction } => format!("L[{},{}]", enc_point2(origin), enc_point2(direction)),
+        BrepCurve2::Circle { center, radius } => format!("C[{},{}]", enc_point2(center), radius),
+        BrepCurve2::Ellipse { center, x_axis, radius_major, radius_minor } => format!("E[{},{},{},{}]", enc_point2(center), enc_point2(x_axis), radius_major, radius_minor),
+        BrepCurve2::Nurbs { control_points, weights, degree, knots } => format!("N[{},{},{},{}]", enc_list(control_points, enc_point2), enc_list(weights, |w: &f64| w.to_string()), degree, enc_list(knots, |k: &f64| k.to_string()),),
+    }
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_curve2(s: &str) -> Result<BrepCurve2, String> {
+    let (tag, rest) = s.split_at(1);
+    let inner = strip_brackets(rest)?;
+    let parts = split_top_level(inner, ',');
+    match tag {
+        "L" => {
+            let [origin, direction] = parts.as_slice() else { return Err(format!("curve2 line: expected 2 fields, got {}", parts.len())) };
+            Ok(BrepCurve2::Line { origin: dec_point2(origin)?, direction: dec_point2(direction)? })
+        }
+        "C" => {
+            let [center, radius] = parts.as_slice() else { return Err(format!("curve2 circle: expected 2 fields, got {}", parts.len())) };
+            Ok(BrepCurve2::Circle { center: dec_point2(center)?, radius: parse_f64(radius)? })
+        }
+        "E" => {
+            let [center, x_axis, radius_major, radius_minor] = parts.as_slice() else { return Err(format!("curve2 ellipse: expected 4 fields, got {}", parts.len())) };
+            Ok(BrepCurve2::Ellipse { center: dec_point2(center)?, x_axis: dec_point2(x_axis)?, radius_major: parse_f64(radius_major)?, radius_minor: parse_f64(radius_minor)? })
+        }
+        "N" => {
+            let [control_points, weights, degree, knots] = parts.as_slice() else { return Err(format!("curve2 nurbs: expected 4 fields, got {}", parts.len())) };
+            Ok(BrepCurve2::Nurbs { control_points: dec_list(control_points, dec_point2)?, weights: dec_list(weights, parse_f64)?, degree: parse_u32(degree)?, knots: dec_list(knots, parse_f64)? })
+        }
+        other => Err(format!("curve2: unknown tag {other:?}")),
+    }
+}
+
+/// 🌀️ `[hex-tag]` around `Some`'s inner encoding, or the literal token `-` for `None`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_opt_curve2(c: &Option<BrepCurve2>) -> String {
+    match c {
+        Some(curve) => format!("~{}", enc_curve2(curve)),
+        None => "-".to_string(),
+    }
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_opt_curve2(s: &str) -> Result<Option<BrepCurve2>, String> {
+    if s == "-" {
+        return Ok(None);
+    }
+    let rest = s.strip_prefix('~').ok_or_else(|| format!("optional curve2: expected '-' or a '~'-prefixed curve, got {s:?}"))?;
+    Ok(Some(dec_curve2(rest)?))
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_prange(r: &(f64, f64)) -> String {
+    format!("[{},{}]", r.0, r.1)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_prange(s: &str) -> Result<(f64, f64), String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [a, b] = parts.as_slice() else { return Err(format!("prange: expected 2 fields, got {}", parts.len())) };
+    Ok((parse_f64(a)?, parse_f64(b)?))
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_coedge(c: &BrepCoedge) -> String {
+    format!("[{},{},{},{},{},{},{},{}]", enc_str(&c.id), enc_str(&c.edge), enc_bool(c.forward), enc_opt_curve2(&c.pcurve), enc_prange(&c.prange), enc_str(&c.loop_id), enc_str(&c.next), enc_str(&c.prev))
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_coedge(s: &str) -> Result<BrepCoedge, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [id, edge, forward, pcurve, prange, loop_id, next, prev] = parts.as_slice() else { return Err(format!("coedge: expected 8 fields, got {}", parts.len())) };
+    Ok(BrepCoedge { id: dec_str(id)?, edge: dec_str(edge)?, forward: parse_bool(forward)?, pcurve: dec_opt_curve2(pcurve)?, prange: dec_prange(prange)?, loop_id: dec_str(loop_id)?, next: dec_str(next)?, prev: dec_str(prev)? })
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_loop_edge(le: &BrepLoopEdge) -> String {
     format!("[{},{}]", enc_str(&le.edge), enc_bool(le.orientation))
 }
@@ -462,24 +640,24 @@ fn dec_solid_shell(s: &str) -> Result<BrepSolidShell, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_vertex(v: &BrepVertex) -> String {
-    format!("[{},{}]", enc_str(&v.id), enc_point3(&v.point))
+    format!("[{},{},{}]", enc_str(&v.id), enc_point3(&v.point), v.tol)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_vertex(s: &str) -> Result<BrepVertex, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [id, point] = parts.as_slice() else { return Err(format!("vertex: expected 2 fields, got {}", parts.len())) };
-    Ok(BrepVertex { id: dec_str(id)?, point: dec_point3(point)? })
+    let [id, point, tol] = parts.as_slice() else { return Err(format!("vertex: expected 3 fields, got {}", parts.len())) };
+    Ok(BrepVertex { id: dec_str(id)?, point: dec_point3(point)?, tol: parse_f64(tol)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_edge(e: &BrepEdge) -> String {
-    format!("[{},{},{},{}]", enc_str(&e.id), enc_str(&e.start_vertex), enc_str(&e.end_vertex), enc_curve(&e.curve))
+    format!("[{},{},{},{},{}]", enc_str(&e.id), enc_str(&e.start_vertex), enc_str(&e.end_vertex), enc_curve(&e.curve), e.tol)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_edge(s: &str) -> Result<BrepEdge, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [id, start_vertex, end_vertex, curve] = parts.as_slice() else { return Err(format!("edge: expected 4 fields, got {}", parts.len())) };
-    Ok(BrepEdge { id: dec_str(id)?, start_vertex: dec_str(start_vertex)?, end_vertex: dec_str(end_vertex)?, curve: dec_curve(curve)? })
+    let [id, start_vertex, end_vertex, curve, tol] = parts.as_slice() else { return Err(format!("edge: expected 5 fields, got {}", parts.len())) };
+    Ok(BrepEdge { id: dec_str(id)?, start_vertex: dec_str(start_vertex)?, end_vertex: dec_str(end_vertex)?, curve: dec_curve(curve)?, tol: parse_f64(tol)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -495,13 +673,13 @@ fn dec_loop(s: &str) -> Result<BrepLoop, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_face(f: &BrepFace) -> String {
-    format!("[{},{},{},{},{}]", enc_str(&f.id), enc_str(&f.outer_loop), enc_list(&f.inner_loops, |s: &String| enc_str(s)), enc_surface(&f.surface), enc_bool(f.orientation),)
+    format!("[{},{},{},{},{},{}]", enc_str(&f.id), enc_str(&f.outer_loop), enc_list(&f.inner_loops, |s: &String| enc_str(s)), enc_surface(&f.surface), enc_bool(f.orientation), f.tol)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_face(s: &str) -> Result<BrepFace, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [id, outer_loop, inner_loops, surface, orientation] = parts.as_slice() else { return Err(format!("face: expected 5 fields, got {}", parts.len())) };
-    Ok(BrepFace { id: dec_str(id)?, outer_loop: dec_str(outer_loop)?, inner_loops: dec_list(inner_loops, dec_str)?, surface: dec_surface(surface)?, orientation: parse_bool(orientation)? })
+    let [id, outer_loop, inner_loops, surface, orientation, tol] = parts.as_slice() else { return Err(format!("face: expected 6 fields, got {}", parts.len())) };
+    Ok(BrepFace { id: dec_str(id)?, outer_loop: dec_str(outer_loop)?, inner_loops: dec_list(inner_loops, dec_str)?, surface: dec_surface(surface)?, orientation: parse_bool(orientation)?, tol: parse_f64(tol)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -534,7 +712,7 @@ fn dec_solid(s: &str) -> Result<BrepSolid, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn print_brep_snapshot_body(s: &SemioBrepSnapshot) -> String {
     format!(
-        "schema={}\nvertices=[{}]\nedges=[{}]\nloops=[{}]\nfaces=[{}]\nshells=[{}]\nsolids=[{}]",
+        "schema={}\nvertices=[{}]\nedges=[{}]\nloops=[{}]\nfaces=[{}]\nshells=[{}]\nsolids=[{}]\ncoedges=[{}]\nnextLabel={}",
         enc_str(&s.schema),
         s.vertices.iter().map(enc_vertex).collect::<Vec<_>>().join(","),
         s.edges.iter().map(enc_edge).collect::<Vec<_>>().join(","),
@@ -542,6 +720,8 @@ fn print_brep_snapshot_body(s: &SemioBrepSnapshot) -> String {
         s.faces.iter().map(enc_face).collect::<Vec<_>>().join(","),
         s.shells.iter().map(enc_shell).collect::<Vec<_>>().join(","),
         s.solids.iter().map(enc_solid).collect::<Vec<_>>().join(","),
+        s.coedges.iter().map(enc_coedge).collect::<Vec<_>>().join(","),
+        s.next_label,
     )
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -553,6 +733,8 @@ fn parse_brep_snapshot_body(body: &str) -> Result<SemioBrepSnapshot, String> {
     let mut faces = Vec::new();
     let mut shells = Vec::new();
     let mut solids = Vec::new();
+    let mut coedges = Vec::new();
+    let mut next_label = 0u64;
     for line in body.lines() {
         let line = line.trim();
         if line.is_empty() {
@@ -572,12 +754,16 @@ fn parse_brep_snapshot_body(body: &str) -> Result<SemioBrepSnapshot, String> {
             shells = split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_shell).collect::<Result<Vec<_>, String>>()?;
         } else if let Some(rest) = line.strip_prefix("solids=") {
             solids = split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_solid).collect::<Result<Vec<_>, String>>()?;
+        } else if let Some(rest) = line.strip_prefix("coedges=") {
+            coedges = split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_coedge).collect::<Result<Vec<_>, String>>()?;
+        } else if let Some(rest) = line.strip_prefix("nextLabel=") {
+            next_label = rest.parse::<u64>().map_err(|e| e.to_string())?;
         } else {
             return Err(format!("brep snapshot: unknown line {line:?}"));
         }
     }
     let schema = schema.ok_or_else(|| "brep snapshot: missing schema line".to_string())?;
-    Ok(SemioBrepSnapshot { schema, vertices, edges, loops, faces, shells, solids })
+    Ok(SemioBrepSnapshot { schema, vertices, edges, loops, faces, shells, solids, coedges, next_label })
 }
 //#endregion 🔖️TextPrimitives
 
@@ -775,10 +961,11 @@ fn read_surface(reader: &mut store::ByteReader<'_>) -> Result<BrepSurface, Strin
 fn write_vertex(out: &mut Vec<u8>, v: &BrepVertex) {
     write_str_lp(out, &v.id);
     write_point3(out, &v.point);
+    out.extend_from_slice(&v.tol.to_le_bytes());
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_vertex(reader: &mut store::ByteReader<'_>) -> Result<BrepVertex, String> {
-    Ok(BrepVertex { id: read_str_lp(reader)?, point: read_point3(reader)? })
+    Ok(BrepVertex { id: read_str_lp(reader)?, point: read_point3(reader)?, tol: reader.read_f64_le().map_err(|e| e.to_string())? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_edge(out: &mut Vec<u8>, e: &BrepEdge) {
@@ -786,10 +973,11 @@ fn write_edge(out: &mut Vec<u8>, e: &BrepEdge) {
     write_str_lp(out, &e.start_vertex);
     write_str_lp(out, &e.end_vertex);
     write_curve(out, &e.curve);
+    out.extend_from_slice(&e.tol.to_le_bytes());
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_edge(reader: &mut store::ByteReader<'_>) -> Result<BrepEdge, String> {
-    Ok(BrepEdge { id: read_str_lp(reader)?, start_vertex: read_str_lp(reader)?, end_vertex: read_str_lp(reader)?, curve: read_curve(reader)? })
+    Ok(BrepEdge { id: read_str_lp(reader)?, start_vertex: read_str_lp(reader)?, end_vertex: read_str_lp(reader)?, curve: read_curve(reader)?, tol: reader.read_f64_le().map_err(|e| e.to_string())? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_loop_edge(out: &mut Vec<u8>, le: &BrepLoopEdge) {
@@ -828,6 +1016,7 @@ fn write_face(out: &mut Vec<u8>, f: &BrepFace) {
     }
     write_surface(out, &f.surface);
     write_bool(out, f.orientation);
+    out.extend_from_slice(&f.tol.to_le_bytes());
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_face(reader: &mut store::ByteReader<'_>) -> Result<BrepFace, String> {
@@ -840,7 +1029,8 @@ fn read_face(reader: &mut store::ByteReader<'_>) -> Result<BrepFace, String> {
     }
     let surface = read_surface(reader)?;
     let orientation = read_bool(reader)?;
-    Ok(BrepFace { id, outer_loop, inner_loops, surface, orientation })
+    let tol = reader.read_f64_le().map_err(|e| e.to_string())?;
+    Ok(BrepFace { id, outer_loop, inner_loops, surface, orientation, tol })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_shell_face(out: &mut Vec<u8>, sf: &BrepShellFace) {
@@ -897,6 +1087,100 @@ fn read_solid(reader: &mut store::ByteReader<'_>) -> Result<BrepSolid, String> {
     Ok(BrepSolid { id, shells })
 }
 
+/// 🏷️ `BrepCurve2` variant tags — 0=Line, 1=Circle, 2=Ellipse, 3=Nurbs (declaration order).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_curve2(out: &mut Vec<u8>, c: &BrepCurve2) {
+    match c {
+        BrepCurve2::Line { origin, direction } => {
+            out.push(0);
+            out.extend_from_slice(&origin.x.to_le_bytes());
+            out.extend_from_slice(&origin.y.to_le_bytes());
+            out.extend_from_slice(&direction.x.to_le_bytes());
+            out.extend_from_slice(&direction.y.to_le_bytes());
+        }
+        BrepCurve2::Circle { center, radius } => {
+            out.push(1);
+            out.extend_from_slice(&center.x.to_le_bytes());
+            out.extend_from_slice(&center.y.to_le_bytes());
+            out.extend_from_slice(&radius.to_le_bytes());
+        }
+        BrepCurve2::Ellipse { center, x_axis, radius_major, radius_minor } => {
+            out.push(2);
+            out.extend_from_slice(&center.x.to_le_bytes());
+            out.extend_from_slice(&center.y.to_le_bytes());
+            out.extend_from_slice(&x_axis.x.to_le_bytes());
+            out.extend_from_slice(&x_axis.y.to_le_bytes());
+            out.extend_from_slice(&radius_major.to_le_bytes());
+            out.extend_from_slice(&radius_minor.to_le_bytes());
+        }
+        BrepCurve2::Nurbs { control_points, weights, degree, knots } => {
+            out.push(3);
+            store::pack_rt::write_varint_u64(out, control_points.len() as u64);
+            for p in control_points {
+                out.extend_from_slice(&p.x.to_le_bytes());
+                out.extend_from_slice(&p.y.to_le_bytes());
+            }
+            write_f64_vec(out, weights);
+            store::pack_rt::write_varint_u64(out, *degree as u64);
+            write_f64_vec(out, knots);
+        }
+    }
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_curve2(reader: &mut store::ByteReader<'_>) -> Result<BrepCurve2, String> {
+    let read_f64 = |reader: &mut store::ByteReader<'_>| reader.read_f64_le().map_err(|e| e.to_string());
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    match tag {
+        0 => Ok(BrepCurve2::Line { origin: SemioPoint2 { x: read_f64(reader)?, y: read_f64(reader)? }, direction: SemioPoint2 { x: read_f64(reader)?, y: read_f64(reader)? } }),
+        1 => Ok(BrepCurve2::Circle { center: SemioPoint2 { x: read_f64(reader)?, y: read_f64(reader)? }, radius: read_f64(reader)? }),
+        2 => Ok(BrepCurve2::Ellipse { center: SemioPoint2 { x: read_f64(reader)?, y: read_f64(reader)? }, x_axis: SemioPoint2 { x: read_f64(reader)?, y: read_f64(reader)? }, radius_major: read_f64(reader)?, radius_minor: read_f64(reader)? }),
+        3 => {
+            let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let mut control_points = Vec::with_capacity(n as usize);
+            for _ in 0..n {
+                control_points.push(SemioPoint2 { x: read_f64(reader)?, y: read_f64(reader)? });
+            }
+            let weights = read_f64_vec(reader)?;
+            let degree = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+            let knots = read_f64_vec(reader)?;
+            Ok(BrepCurve2::Nurbs { control_points, weights, degree, knots })
+        }
+        other => Err(format!("curve2: unknown binary tag {other}")),
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_coedge(out: &mut Vec<u8>, c: &BrepCoedge) {
+    write_str_lp(out, &c.id);
+    write_str_lp(out, &c.edge);
+    write_bool(out, c.forward);
+    match &c.pcurve {
+        Some(curve) => {
+            write_bool(out, true);
+            write_curve2(out, curve);
+        }
+        None => write_bool(out, false),
+    }
+    out.extend_from_slice(&c.prange.0.to_le_bytes());
+    out.extend_from_slice(&c.prange.1.to_le_bytes());
+    write_str_lp(out, &c.loop_id);
+    write_str_lp(out, &c.next);
+    write_str_lp(out, &c.prev);
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_coedge(reader: &mut store::ByteReader<'_>) -> Result<BrepCoedge, String> {
+    let id = read_str_lp(reader)?;
+    let edge = read_str_lp(reader)?;
+    let forward = read_bool(reader)?;
+    let has_pcurve = read_bool(reader)?;
+    let pcurve = if has_pcurve { Some(read_curve2(reader)?) } else { None };
+    let prange = (reader.read_f64_le().map_err(|e| e.to_string())?, reader.read_f64_le().map_err(|e| e.to_string())?);
+    let loop_id = read_str_lp(reader)?;
+    let next = read_str_lp(reader)?;
+    let prev = read_str_lp(reader)?;
+    Ok(BrepCoedge { id, edge, forward, pcurve, prange, loop_id, next, prev })
+}
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn encode_brep_snapshot_binary(s: &SemioBrepSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
@@ -927,6 +1211,11 @@ fn encode_brep_snapshot_binary(s: &SemioBrepSnapshot) -> Vec<u8> {
     for so in &s.solids {
         write_solid(&mut out, so);
     }
+    store::pack_rt::write_varint_u64(&mut out, s.coedges.len() as u64);
+    for c in &s.coedges {
+        write_coedge(&mut out, c);
+    }
+    store::pack_rt::write_varint_u64(&mut out, s.next_label);
     out
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -968,7 +1257,13 @@ fn decode_brep_snapshot_binary(bytes: &[u8]) -> Result<SemioBrepSnapshot, String
     for _ in 0..solid_count {
         solids.push(read_solid(&mut reader)?);
     }
-    Ok(SemioBrepSnapshot { schema, vertices, edges, loops, faces, shells, solids })
+    let coedge_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut coedges = Vec::with_capacity(coedge_count as usize);
+    for _ in 0..coedge_count {
+        coedges.push(read_coedge(&mut reader)?);
+    }
+    let next_label = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    Ok(SemioBrepSnapshot { schema, vertices, edges, loops, faces, shells, solids, coedges, next_label })
 }
 //#endregion 🔖️BinaryPrimitives
 
@@ -1081,14 +1376,34 @@ pub fn encode_semio_brep_pack(snapshot: &SemioBrepSnapshot) -> Vec<u8> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_brep_snapshot() -> SemioBrepSnapshot {
     let mut s = SemioBrepSnapshot::default();
-    s.vertices =
-        vec![BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } }, BrepVertex { id: "v2".into(), point: SemioPoint3 { x: 4.0, y: 0.0, z: 0.0 } }, BrepVertex { id: "v3".into(), point: SemioPoint3 { x: 4.0, y: 3.0, z: 0.0 } }];
+    s.vertices = vec![
+        BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, tol: 1e-7 },
+        BrepVertex { id: "v2".into(), point: SemioPoint3 { x: 4.0, y: 0.0, z: 0.0 }, tol: 1e-7 },
+        BrepVertex { id: "v3".into(), point: SemioPoint3 { x: 4.0, y: 3.0, z: 0.0 }, tol: 1e-7 },
+    ];
     s.edges = vec![
-        BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v2".into(), curve: BrepCurve::Line { origin: s.vertices[0].point, direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } },
-        BrepEdge { id: "e2".into(), start_vertex: "v2".into(), end_vertex: "v3".into(), curve: BrepCurve::Circle { center: SemioPoint3 { x: 4.0, y: 1.5, z: 0.0 }, axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 1.5 } },
-        BrepEdge { id: "e3".into(), start_vertex: "v3".into(), end_vertex: "v1".into(), curve: BrepCurve::Nurbs { control_points: vec![s.vertices[2].point, s.vertices[0].point], weights: vec![1.0, 1.0], degree: 1, knots: vec![0.0, 0.0, 1.0, 1.0] } },
+        BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v2".into(), curve: BrepCurve::Line { origin: s.vertices[0].point, direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } }, tol: 1e-7 },
+        BrepEdge { id: "e2".into(), start_vertex: "v2".into(), end_vertex: "v3".into(), curve: BrepCurve::Circle { center: SemioPoint3 { x: 4.0, y: 1.5, z: 0.0 }, axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 1.5 }, tol: 1e-7 },
+        BrepEdge { id: "e3".into(), start_vertex: "v3".into(), end_vertex: "v1".into(), curve: BrepCurve::Nurbs { control_points: vec![s.vertices[2].point, s.vertices[0].point], weights: vec![1.0, 1.0], degree: 1, knots: vec![0.0, 0.0, 1.0, 1.0] }, tol: 1e-7 },
     ];
     s.loops = vec![BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: true }, BrepLoopEdge { edge: "e2".into(), orientation: true }, BrepLoopEdge { edge: "e3".into(), orientation: true }] }];
+    // 🧱️ Coedges mirror `loops[0].edges` one-for-one, in ring order, with a p-curve stored on the
+    // first coedge only — exercising both the `Some(pcurve)` and `None` (fallback-to-projection)
+    // arms of `Body::from_snapshot` in one fixture.
+    s.coedges = vec![
+        BrepCoedge {
+            id: "co1".into(),
+            edge: "e1".into(),
+            forward: true,
+            pcurve: Some(BrepCurve2::Line { origin: SemioPoint2 { x: 0.0, y: 0.0 }, direction: SemioPoint2 { x: 1.0, y: 0.0 } }),
+            prange: (0.0, 4.0),
+            loop_id: "l1".into(),
+            next: "co2".into(),
+            prev: "co3".into(),
+        },
+        BrepCoedge { id: "co2".into(), edge: "e2".into(), forward: true, pcurve: None, prange: (0.0, 0.0), loop_id: "l1".into(), next: "co3".into(), prev: "co1".into() },
+        BrepCoedge { id: "co3".into(), edge: "e3".into(), forward: true, pcurve: None, prange: (0.0, 1.0), loop_id: "l1".into(), next: "co1".into(), prev: "co2".into() },
+    ];
     s.faces = vec![BrepFace {
         id: "f1".into(),
         outer_loop: "l1".into(),
@@ -1104,9 +1419,11 @@ pub(crate) fn demo_brep_snapshot() -> SemioBrepSnapshot {
             knots_v: vec![0.0, 1.0],
         },
         orientation: true,
+        tol: 1e-7,
     }];
     s.shells = vec![BrepShell { id: "s1".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: true }] }];
     s.solids = vec![BrepSolid { id: "so1".into(), shells: vec![BrepSolidShell { shell: "s1".into(), is_void: false }] }];
+    s.next_label = 100;
     s
 }
 //#endregion 🔖️Demo
@@ -1122,24 +1439,31 @@ mod tests {
     fn populated_snapshot() -> SemioBrepSnapshot {
         let mut s = SemioBrepSnapshot::default();
         s.vertices = vec![
-            BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } },
-            BrepVertex { id: "v2".into(), point: SemioPoint3 { x: 4.0, y: 0.0, z: 0.0 } },
-            BrepVertex { id: "v3".into(), point: SemioPoint3 { x: 4.0, y: 3.0, z: 0.0 } },
+            BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, tol: 1e-7 },
+            BrepVertex { id: "v2".into(), point: SemioPoint3 { x: 4.0, y: 0.0, z: 0.0 }, tol: 1e-7 },
+            BrepVertex { id: "v3".into(), point: SemioPoint3 { x: 4.0, y: 3.0, z: 0.0 }, tol: 1e-7 },
         ];
         s.edges = vec![
-            BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v2".into(), curve: BrepCurve::Line { origin: s.vertices[0].point, direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } },
-            BrepEdge { id: "e2".into(), start_vertex: "v2".into(), end_vertex: "v3".into(), curve: BrepCurve::Line { origin: s.vertices[1].point, direction: SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 } } },
+            BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v2".into(), curve: BrepCurve::Line { origin: s.vertices[0].point, direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } }, tol: 1e-7 },
+            BrepEdge { id: "e2".into(), start_vertex: "v2".into(), end_vertex: "v3".into(), curve: BrepCurve::Line { origin: s.vertices[1].point, direction: SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 } }, tol: 1e-7 },
             BrepEdge {
                 id: "e3".into(),
                 start_vertex: "v3".into(),
                 end_vertex: "v1".into(),
                 curve: BrepCurve::Nurbs { control_points: vec![s.vertices[2].point, s.vertices[0].point], weights: vec![1.0, 1.0], degree: 1, knots: vec![0.0, 0.0, 1.0, 1.0] },
+                tol: 1e-7,
             },
         ];
         s.loops = vec![BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: true }, BrepLoopEdge { edge: "e2".into(), orientation: true }, BrepLoopEdge { edge: "e3".into(), orientation: true }] }];
-        s.faces = vec![BrepFace { id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Plane { origin: SemioPoint3::default(), normal: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 } }, orientation: true }];
+        s.coedges = vec![
+            BrepCoedge { id: "co1".into(), edge: "e1".into(), forward: true, pcurve: None, prange: (0.0, 1.0), loop_id: "l1".into(), next: "co2".into(), prev: "co3".into() },
+            BrepCoedge { id: "co2".into(), edge: "e2".into(), forward: true, pcurve: None, prange: (0.0, 1.0), loop_id: "l1".into(), next: "co3".into(), prev: "co1".into() },
+            BrepCoedge { id: "co3".into(), edge: "e3".into(), forward: true, pcurve: None, prange: (0.0, 1.0), loop_id: "l1".into(), next: "co1".into(), prev: "co2".into() },
+        ];
+        s.faces = vec![BrepFace { id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Plane { origin: SemioPoint3::default(), normal: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 } }, orientation: true, tol: 1e-7 }];
         s.shells = vec![BrepShell { id: "s1".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: true }] }];
         s.solids = vec![BrepSolid { id: "so1".into(), shells: vec![BrepSolidShell { shell: "s1".into(), is_void: false }] }];
+        s.next_label = 42;
         s
     }
 

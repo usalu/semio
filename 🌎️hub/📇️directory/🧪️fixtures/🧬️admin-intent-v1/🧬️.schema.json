@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.hub.admin-intent-v1.fixture/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "limits", "principal", "createSpaceIntent", "expectedActor", "recordedConnection", "auditPhases", "outcomes", "invalidVectors", "redactionProbes"],
+  "properties": {
+    "schema": { "const": "semio.hub.admin-intent-v1.fixture/v1" },
+    "limits": {
+      "type": "object", "additionalProperties": false,
+      "required": ["textBytes", "intentBytes", "pageRows", "responseBytes"],
+      "properties": {
+        "textBytes": { "const": 256 }, "intentBytes": { "const": 8192 },
+        "pageRows": { "const": 100 }, "responseBytes": { "const": 65536 }
+      }
+    },
+    "principal": {
+      "type": "object", "additionalProperties": false,
+      "required": ["userId", "sessionId", "authorizationGeneration", "identityProvider", "identitySubjectDigestHex", "expiresAtMs", "correlationId", "peerClass"],
+      "properties": {
+        "userId": { "$ref": "#/$defs/text" }, "sessionId": { "$ref": "#/$defs/text" },
+        "authorizationGeneration": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "identityProvider": { "$ref": "#/$defs/text" }, "identitySubjectDigestHex": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "expiresAtMs": { "type": "integer" }, "correlationId": { "$ref": "#/$defs/text" }, "peerClass": { "const": "admin-rest" }
+      }
+    },
+    "createSpaceIntent": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "requestId", "name", "spaceKind", "visibility"],
+      "properties": {
+        "kind": { "const": "create-space" }, "requestId": { "$ref": "#/$defs/text" },
+        "name": { "$ref": "#/$defs/text" }, "spaceKind": { "const": "atelier" }, "visibility": { "const": "private" }
+      }
+    },
+    "expectedActor": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "id", "ownerUserId"],
+      "properties": { "kind": { "const": "user" }, "id": { "$ref": "#/$defs/text" }, "ownerUserId": { "$ref": "#/$defs/text" } }
+    },
+    "recordedConnection": {
+      "type": "object", "additionalProperties": false, "required": ["stored", "publicKeys"],
+      "properties": {
+        "stored": {
+          "type": "object", "additionalProperties": false,
+          "required": ["syncSessionId", "spaceId", "documentId", "authenticatedUserId", "email", "role", "connectedAtMs", "actorId", "clientLabel", "surface", "presenceKnown"],
+          "properties": {
+            "syncSessionId": { "$ref": "#/$defs/text" }, "spaceId": { "$ref": "#/$defs/text" }, "documentId": { "$ref": "#/$defs/text" },
+            "authenticatedUserId": { "$ref": "#/$defs/text" }, "email": { "$ref": "#/$defs/text" }, "role": { "enum": ["author", "spectator"] },
+            "connectedAtMs": { "type": "integer" }, "actorId": { "$ref": "#/$defs/text" }, "clientLabel": { "$ref": "#/$defs/text" },
+            "surface": { "$ref": "#/$defs/text" }, "presenceKnown": { "type": "boolean" }
+          }
+        },
+        "publicKeys": { "type": "array", "minItems": 7, "maxItems": 7, "uniqueItems": true, "items": { "enum": ["syncSessionId", "scope", "authenticatedUserId", "email", "role", "connectedAtMs", "source"] } }
+      }
+    },
+    "auditPhases": { "type": "array", "prefixItems": [{ "const": "accepted" }, { "enum": ["succeeded", "failed", "cancelled"] }], "minItems": 2, "maxItems": 2 },
+    "outcomes": {
+      "type": "object", "additionalProperties": false, "required": ["durableRevoke", "ephemeralKick"],
+      "properties": {
+        "durableRevoke": { "$ref": "#/$defs/outcome" }, "ephemeralKick": { "$ref": "#/$defs/outcome" }
+      }
+    },
+    "invalidVectors": { "type": "array", "minItems": 20, "uniqueItems": true, "items": { "$ref": "#/$defs/text" } },
+    "redactionProbes": { "type": "array", "minItems": 3, "uniqueItems": true, "items": { "$ref": "#/$defs/text" } }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "outcome": {
+      "type": "object", "additionalProperties": false, "required": ["code", "durable", "kickAttempted", "kickSignalled"],
+      "properties": { "code": { "$ref": "#/$defs/text" }, "durable": { "type": "boolean" }, "kickAttempted": { "type": "integer", "minimum": 0 }, "kickSignalled": { "type": "integer", "minimum": 0 } }
+    }
+  }
+}

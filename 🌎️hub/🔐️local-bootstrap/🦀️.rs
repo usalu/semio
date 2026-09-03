@@ -3,9 +3,8 @@
 use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::{AuthSessionIssue, AuthSessionKind, IssuedAuthSession};
 use crate::directory::{
-    constant_time_digest_eq, identity_subject_digest, validate_bounded_auth_text, HubDirectories, HubDirectory, IdentityVerificationContext, IdentityVerificationControl, LocalBootstrapAcceptFuture,
-    LocalBootstrapClientClass, LocalBootstrapIssueFuture, LocalBootstrapRejectCode, LocalBootstrapTerminalFuture, LocalBootstrapTransport, VerifiedLocalBootstrapRequest, AUTH_TEXT_MAX_BYTES,
-    DEVICE_INSTANCE_MAX_BYTES,
+    constant_time_digest_eq, identity_subject_digest, validate_bounded_auth_text, HubDirectories, HubDirectory, IdentityVerificationContext, IdentityVerificationControl, LocalBootstrapAcceptFuture, LocalBootstrapClientClass,
+    LocalBootstrapIssueFuture, LocalBootstrapRejectCode, LocalBootstrapTerminalFuture, LocalBootstrapTransport, VerifiedLocalBootstrapRequest, AUTH_TEXT_MAX_BYTES, DEVICE_INSTANCE_MAX_BYTES,
 };
 use semio_framework_hash::{hex_lower, Sha256};
 use serde::{Deserialize, Serialize};
@@ -23,6 +22,7 @@ pub const LOCAL_BOOTSTRAP_REPLAY_MAX: usize = 64;
 pub const LOCAL_BOOTSTRAP_EXCHANGE_DEADLINE_MS: i64 = 15_000;
 pub const LOCAL_BOOTSTRAP_SESSION_TTL_SECS: i64 = 15 * 60;
 const LOCAL_BOOTSTRAP_HMAC_DOMAIN: &[u8] = b"semio/hub/local-bootstrap/v1\0";
+const LOCAL_BOOTSTRAP_IDLE_POLL_MS: u64 = 100;
 const INHERITED_BOOTSTRAP_DESCRIPTOR: i32 = 3;
 
 #[cfg(unix)]
@@ -322,16 +322,8 @@ impl InheritedLocalBootstrapTransport {
             read_frame(&mut *reader, context).await?.ok_or_else(unavailable)?
         };
         let hello: HelloWire = serde_json::from_slice(&bytes).map_err(|_| denied())?;
-        let unsigned = HelloUnsigned {
-            schema: &hello.schema,
-            kind: &hello.kind,
-            run_id: &hello.run_id,
-            sequence: hello.sequence,
-            exchange_id: &hello.exchange_id,
-            issued_at: hello.issued_at,
-            expires_at: hello.expires_at,
-            launcher_nonce: &hello.launcher_nonce,
-        };
+        let unsigned =
+            HelloUnsigned { schema: &hello.schema, kind: &hello.kind, run_id: &hello.run_id, sequence: hello.sequence, exchange_id: &hello.exchange_id, issued_at: hello.issued_at, expires_at: hello.expires_at, launcher_nonce: &hello.launcher_nonce };
         validate_common(&hello.schema, &hello.kind, "hello", &hello.run_id, &self.run_id, hello.sequence, 1, &hello.exchange_id, hello.issued_at, hello.expires_at, context.control.now_ms())?;
         decode_hex::<32>(&hello.launcher_nonce)?;
         self.verify_proof(&unsigned, &hello.proof)?;
@@ -344,16 +336,7 @@ impl InheritedLocalBootstrapTransport {
         let now = context.control.now_ms();
         let expires_at = checked_deadline(now)?;
         let sequence = self.next_outgoing_sequence()?;
-        let unsigned = HelloAcceptedUnsigned {
-            schema: LOCAL_BOOTSTRAP_SCHEMA,
-            kind: "hello-accepted",
-            run_id: &self.run_id,
-            sequence,
-            exchange_id: &hello.exchange_id,
-            issued_at: now,
-            expires_at,
-            hub_nonce: &hub_nonce,
-        };
+        let unsigned = HelloAcceptedUnsigned { schema: LOCAL_BOOTSTRAP_SCHEMA, kind: "hello-accepted", run_id: &self.run_id, sequence, exchange_id: &hello.exchange_id, issued_at: now, expires_at, hub_nonce: &hub_nonce };
         let proof = self.sign(&unsigned)?;
         let wire = HelloAcceptedWire { schema: unsigned.schema, kind: unsigned.kind, run_id: unsigned.run_id, sequence, exchange_id: unsigned.exchange_id, issued_at: now, expires_at, hub_nonce: &hub_nonce, proof: &proof };
         self.write(&wire, context).await?;
@@ -423,16 +406,16 @@ impl InheritedLocalBootstrapTransport {
         }
     }
 
-    async fn accept_next(&self, context: &IdentityVerificationContext<'_>) -> DirectoryResult<Option<VerifiedLocalBootstrapRequest>> {
+    async fn accept_next(&self, control: &dyn IdentityVerificationControl) -> DirectoryResult<Option<VerifiedLocalBootstrapRequest>> {
+        let transport_control = TransportControl { base: control, shutdown: &self.shutdown };
         loop {
             if self.shutdown.load(Ordering::Acquire) {
                 return Ok(None);
             }
-            context.checkpoint(0, 4)?;
-            let bytes = {
+            let (bytes, deadline_ms) = {
                 let mut reader = self.reader.lock().await;
-                match read_frame(&mut *reader, context).await? {
-                    Some(bytes) => bytes,
+                match read_admitted_frame(&mut *reader, &transport_control).await? {
+                    Some(frame) => frame,
                     None => {
                         self.shutdown.store(true, Ordering::Release);
                         self.ready.store(false, Ordering::Release);
@@ -440,6 +423,7 @@ impl InheritedLocalBootstrapTransport {
                     }
                 }
             };
+            let context = IdentityVerificationContext { deadline_ms, control: &transport_control };
             context.checkpoint(1, 4)?;
             let kind: KindWire = serde_json::from_slice(&bytes).map_err(|_| denied())?;
             if kind.kind == "issue" {
@@ -558,28 +542,9 @@ impl InheritedLocalBootstrapTransport {
         let now = context.control.now_ms();
         let expires_at = checked_deadline(now)?;
         let sequence = self.next_outgoing_sequence()?;
-        let unsigned = RejectUnsigned {
-            schema: LOCAL_BOOTSTRAP_SCHEMA,
-            kind: "reject",
-            run_id: &self.run_id,
-            sequence,
-            exchange_id: request_id,
-            issued_at: now,
-            expires_at,
-            code: code.as_str(),
-        };
+        let unsigned = RejectUnsigned { schema: LOCAL_BOOTSTRAP_SCHEMA, kind: "reject", run_id: &self.run_id, sequence, exchange_id: request_id, issued_at: now, expires_at, code: code.as_str() };
         let proof = self.sign(&unsigned)?;
-        let wire = RejectWire {
-            schema: unsigned.schema,
-            kind: unsigned.kind,
-            run_id: unsigned.run_id,
-            sequence,
-            exchange_id: unsigned.exchange_id,
-            issued_at: unsigned.issued_at,
-            expires_at: unsigned.expires_at,
-            code: unsigned.code,
-            proof: &proof,
-        };
+        let wire = RejectWire { schema: unsigned.schema, kind: unsigned.kind, run_id: unsigned.run_id, sequence, exchange_id: unsigned.exchange_id, issued_at: unsigned.issued_at, expires_at: unsigned.expires_at, code: unsigned.code, proof: &proof };
         let result = self.write(&wire, context).await;
         self.finish_request(request_id);
         result
@@ -599,8 +564,8 @@ impl LocalBootstrapTransport for InheritedLocalBootstrapTransport {
         self.shutdown.load(Ordering::Acquire) || self.cancelled.lock().map_or(true, |cancelled| cancelled.contains(request_id))
     }
 
-    fn accept<'a>(&'a self, context: &'a IdentityVerificationContext<'a>) -> LocalBootstrapAcceptFuture<'a> {
-        Box::pin(async move { self.accept_next(context).await })
+    fn accept<'a>(&'a self, control: &'a dyn IdentityVerificationControl) -> LocalBootstrapAcceptFuture<'a> {
+        Box::pin(async move { self.accept_next(control).await })
     }
 
     fn issue<'a>(&'a self, request: &'a VerifiedLocalBootstrapRequest, session: &'a IssuedAuthSession, context: &'a IdentityVerificationContext<'a>) -> LocalBootstrapIssueFuture<'a> {
@@ -637,6 +602,25 @@ struct RequestControl {
     request_id: String,
 }
 
+struct TransportControl<'a> {
+    base: &'a dyn IdentityVerificationControl,
+    shutdown: &'a AtomicBool,
+}
+
+impl IdentityVerificationControl for TransportControl<'_> {
+    fn now_ms(&self) -> i64 {
+        self.base.now_ms()
+    }
+
+    fn is_cancelled(&self) -> bool {
+        self.base.is_cancelled() || self.shutdown.load(Ordering::Acquire)
+    }
+
+    fn report(&self, progress: crate::directory::IdentityVerificationProgress) {
+        self.base.report(progress);
+    }
+}
+
 impl IdentityVerificationControl for RequestControl {
     fn now_ms(&self) -> i64 {
         self.base.now_ms()
@@ -659,9 +643,7 @@ pub async fn serve_local_bootstrap(transport: Arc<dyn LocalBootstrapTransport>, 
                 result.map_err(|_| unavailable())??;
             }
         }
-        let deadline_ms = checked_deadline(control.now_ms())?;
-        let context = IdentityVerificationContext { deadline_ms, control: control.as_ref() };
-        let Some(request) = transport.accept(&context).await? else { break };
+        let Some(request) = transport.accept(control.as_ref()).await? else { break };
         let request_transport = transport.clone();
         let request_directory = directory.clone();
         let request_control = Arc::new(RequestControl { base: control.clone(), transport: transport.clone(), request_id: request.request_id.clone() });
@@ -673,10 +655,7 @@ pub async fn serve_local_bootstrap(transport: Arc<dyn LocalBootstrapTransport>, 
                 Ok(session) => match request_transport.issue(&request, &session, &context).await {
                     Ok(()) => Ok(()),
                     Err(delivery_error) => {
-                        request_directory
-                            .revoke_auth_session(&session.record.id, "local-bootstrap-delivery-failed", None, &request.request_id)
-                            .await?
-                            .ok_or_else(unavailable)?;
+                        request_directory.revoke_auth_session(&session.record.id, "local-bootstrap-delivery-failed", None, &request.request_id).await?.ok_or_else(unavailable)?;
                         Err(delivery_error)
                     }
                 },
@@ -751,19 +730,7 @@ fn validate_initialize(initialize: &InitializeWire) -> DirectoryResult<()> {
     Ok(())
 }
 
-fn validate_common(
-    schema: &str,
-    kind: &str,
-    expected_kind: &str,
-    run_id: &str,
-    expected_run_id: &str,
-    sequence: u64,
-    expected_sequence: u64,
-    exchange_id: &str,
-    issued_at: i64,
-    expires_at: i64,
-    now: i64,
-) -> DirectoryResult<()> {
+fn validate_common(schema: &str, kind: &str, expected_kind: &str, run_id: &str, expected_run_id: &str, sequence: u64, expected_sequence: u64, exchange_id: &str, issued_at: i64, expires_at: i64, now: i64) -> DirectoryResult<()> {
     if schema != LOCAL_BOOTSTRAP_SCHEMA || kind != expected_kind || run_id != expected_run_id || sequence != expected_sequence {
         return Err(denied());
     }
@@ -856,6 +823,42 @@ async fn read_frame(reader: &mut (impl tokio::io::AsyncRead + Unpin), context: &
     }
 }
 
+async fn read_admitted_frame(reader: &mut (impl tokio::io::AsyncRead + Unpin), control: &dyn IdentityVerificationControl) -> DirectoryResult<Option<(Box<[u8]>, i64)>> {
+    let mut prefix = [0u8; 4];
+    loop {
+        if control.is_cancelled() {
+            return Err(DirectoryError::Conflict("local bootstrap cancellation reached while idle".into()));
+        }
+        match tokio::time::timeout(std::time::Duration::from_millis(LOCAL_BOOTSTRAP_IDLE_POLL_MS), reader.read_exact(&mut prefix[..1])).await {
+            Ok(Ok(_)) => break,
+            Ok(Err(error)) if error.kind() == std::io::ErrorKind::UnexpectedEof => return Ok(None),
+            Ok(Err(_)) => return Err(unavailable()),
+            Err(_) => continue,
+        }
+    }
+    let deadline_ms = checked_deadline(control.now_ms())?;
+    let context = IdentityVerificationContext { deadline_ms, control };
+    control.report(crate::directory::IdentityVerificationProgress { completed_units: 1, total_units: 2 });
+    match tokio::time::timeout(remaining(&context)?, reader.read_exact(&mut prefix[1..])).await {
+        Ok(Ok(_)) => {}
+        Ok(Err(_)) => return Err(denied()),
+        Err(_) => return Err(DirectoryError::Conflict("local bootstrap frame deadline exceeded".into())),
+    }
+    let length = u32::from_be_bytes(prefix) as usize;
+    if length == 0 || length.checked_add(4).is_none_or(|complete| complete > LOCAL_BOOTSTRAP_FRAME_BYTES_MAX) {
+        return Err(resource_limit());
+    }
+    let mut bytes = vec![0; length].into_boxed_slice();
+    match tokio::time::timeout(remaining(&context)?, reader.read_exact(&mut bytes)).await {
+        Ok(Ok(_)) => {
+            control.report(crate::directory::IdentityVerificationProgress { completed_units: 2, total_units: 2 });
+            Ok(Some((bytes, deadline_ms)))
+        }
+        Ok(Err(_)) => Err(denied()),
+        Err(_) => Err(DirectoryError::Conflict("local bootstrap frame deadline exceeded".into())),
+    }
+}
+
 async fn write_frame(writer: &mut (impl tokio::io::AsyncWrite + Unpin), bytes: &[u8], context: &IdentityVerificationContext<'_>) -> DirectoryResult<()> {
     if bytes.is_empty() || bytes.len().checked_add(4).is_none_or(|complete| complete > LOCAL_BOOTSTRAP_FRAME_BYTES_MAX) {
         return Err(resource_limit());
@@ -900,15 +903,7 @@ fn inherited_bootstrap_file() -> DirectoryResult<std::fs::File> {
     #[link(name = "kernel32")]
     unsafe extern "system" {
         fn GetCurrentProcess() -> *mut std::ffi::c_void;
-        fn DuplicateHandle(
-            source_process: *mut std::ffi::c_void,
-            source_handle: *mut std::ffi::c_void,
-            target_process: *mut std::ffi::c_void,
-            target_handle: *mut *mut std::ffi::c_void,
-            desired_access: u32,
-            inherit_handle: i32,
-            options: u32,
-        ) -> i32;
+        fn DuplicateHandle(source_process: *mut std::ffi::c_void, source_handle: *mut std::ffi::c_void, target_process: *mut std::ffi::c_void, target_handle: *mut *mut std::ffi::c_void, desired_access: u32, inherit_handle: i32, options: u32) -> i32;
     }
     let handle = unsafe { _get_osfhandle(INHERITED_BOOTSTRAP_DESCRIPTOR) };
     if handle == -1 {
@@ -944,10 +939,31 @@ fn unavailable() -> DirectoryError {
 mod tests {
     use super::*;
     use serde_json::Value;
+    use std::sync::atomic::{AtomicI64, AtomicU8};
 
     struct CancelAtCommit {
         cancelled: AtomicBool,
         now_ms: i64,
+    }
+
+    struct AdmissionClock {
+        now_ms: AtomicI64,
+        admitted_units: AtomicU8,
+        cancelled: AtomicBool,
+    }
+
+    impl IdentityVerificationControl for AdmissionClock {
+        fn now_ms(&self) -> i64 {
+            self.now_ms.load(Ordering::Acquire)
+        }
+
+        fn is_cancelled(&self) -> bool {
+            self.cancelled.load(Ordering::Acquire)
+        }
+
+        fn report(&self, progress: crate::directory::IdentityVerificationProgress) {
+            self.admitted_units.store(progress.completed_units, Ordering::Release);
+        }
     }
 
     impl IdentityVerificationControl for CancelAtCommit {
@@ -970,21 +986,79 @@ mod tests {
         serde_json::from_str(include_str!("🧪️fixtures/🧬️pipe-v1/🔣️.json")).expect("fixture")
     }
 
+    fn admission_fixture() -> Value {
+        serde_json::from_str(include_str!("🧪️fixtures/🧬️idle-admission-v1/🔣️.json")).expect("admission fixture")
+    }
+
+    #[tokio::test]
+    async fn local_bootstrap_idle_listener_survives_until_admission_and_admitted_frame_is_deadline_bounded() {
+        let fixture = admission_fixture();
+        let exchange_deadline_ms = fixture["exchangeDeadlineMs"].as_i64().expect("exchange deadline");
+        let idle_before_admission_ms = fixture["idleBeforeAdmissionMs"].as_i64().expect("idle duration");
+        assert_eq!(exchange_deadline_ms, LOCAL_BOOTSTRAP_EXCHANGE_DEADLINE_MS);
+        assert!(idle_before_admission_ms > exchange_deadline_ms);
+        let frame = decode_hex_bytes(fixture["frameHex"].as_str().expect("frame"));
+        let payload = decode_hex_bytes(fixture["payloadHex"].as_str().expect("payload"));
+
+        let clock = Arc::new(AdmissionClock { now_ms: AtomicI64::new(0), admitted_units: AtomicU8::new(0), cancelled: AtomicBool::new(false) });
+        let (mut reader, mut writer) = tokio::io::duplex(LOCAL_BOOTSTRAP_FRAME_BYTES_MAX);
+        let read_clock = clock.clone();
+        let read = tokio::spawn(async move { read_admitted_frame(&mut reader, read_clock.as_ref()).await });
+        tokio::task::yield_now().await;
+        clock.now_ms.store(idle_before_admission_ms, Ordering::Release);
+        writer.write_all(&frame).await.expect("write admitted frame");
+        let (actual, deadline_ms) = read.await.expect("idle reader task").expect("idle reader result").expect("admitted frame");
+        assert_eq!(&*actual, payload.as_ref());
+        assert_eq!(deadline_ms, idle_before_admission_ms + exchange_deadline_ms);
+        assert_eq!(clock.admitted_units.load(Ordering::Acquire), 2);
+
+        let clock = Arc::new(AdmissionClock { now_ms: AtomicI64::new(0), admitted_units: AtomicU8::new(0), cancelled: AtomicBool::new(false) });
+        let (mut reader, mut writer) = tokio::io::duplex(LOCAL_BOOTSTRAP_FRAME_BYTES_MAX);
+        let read_clock = clock.clone();
+        let read = tokio::spawn(async move { read_admitted_frame(&mut reader, read_clock.as_ref()).await });
+        writer.write_all(&frame[..1]).await.expect("write admission byte");
+        tokio::time::timeout(std::time::Duration::from_secs(1), async {
+            while clock.admitted_units.load(Ordering::Acquire) == 0 {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .expect("admission progress");
+        clock.now_ms.store(exchange_deadline_ms + 1, Ordering::Release);
+        writer.write_all(&frame[1..4]).await.expect("write late prefix");
+        let error = read.await.expect("bounded reader task").expect_err("late admitted frame");
+        assert!(matches!(error, DirectoryError::Conflict(message) if message.contains("deadline")));
+
+        let clock = Arc::new(AdmissionClock { now_ms: AtomicI64::new(0), admitted_units: AtomicU8::new(0), cancelled: AtomicBool::new(false) });
+        let (mut reader, _writer) = tokio::io::duplex(LOCAL_BOOTSTRAP_FRAME_BYTES_MAX);
+        let read_clock = clock.clone();
+        let read = tokio::spawn(async move { read_admitted_frame(&mut reader, read_clock.as_ref()).await });
+        clock.cancelled.store(true, Ordering::Release);
+        let error = tokio::time::timeout(std::time::Duration::from_secs(1), read)
+            .await
+            .expect("idle cancellation deadline")
+            .expect("idle cancellation task")
+            .expect_err("idle cancellation result");
+        assert!(matches!(error, DirectoryError::Conflict(message) if message.contains("cancellation")));
+    }
+
+    fn decode_hex_bytes(encoded: &str) -> Box<[u8]> {
+        assert_eq!(encoded.len() % 2, 0);
+        encoded
+            .as_bytes()
+            .chunks_exact(2)
+            .map(|pair| hex_nibble(pair[0]) << 4 | hex_nibble(pair[1]))
+            .collect::<Vec<_>>()
+            .into_boxed_slice()
+    }
+
     #[test]
     fn local_bootstrap_hmac_matches_neutral_node_oracle_and_rejects_boundaries() {
         let fixture = fixture();
         let key = decode_hex::<32>(fixture["channelKey"].as_str().expect("key")).expect("key bytes");
         let hello: HelloWire = serde_json::from_value(fixture["hello"].clone()).expect("hello fixture");
-        let hello_unsigned = HelloUnsigned {
-            schema: &hello.schema,
-            kind: &hello.kind,
-            run_id: &hello.run_id,
-            sequence: hello.sequence,
-            exchange_id: &hello.exchange_id,
-            issued_at: hello.issued_at,
-            expires_at: hello.expires_at,
-            launcher_nonce: &hello.launcher_nonce,
-        };
+        let hello_unsigned =
+            HelloUnsigned { schema: &hello.schema, kind: &hello.kind, run_id: &hello.run_id, sequence: hello.sequence, exchange_id: &hello.exchange_id, issued_at: hello.issued_at, expires_at: hello.expires_at, launcher_nonce: &hello.launcher_nonce };
         assert_eq!(hex_lower(&hmac_sha256(&key, &serde_json::to_vec(&hello_unsigned).expect("hello canonical"))), hello.proof);
         let issue: IssueWire = serde_json::from_value(fixture["issue"].clone()).expect("issue fixture");
         let issue_unsigned = IssueUnsigned {
@@ -1048,14 +1122,8 @@ mod tests {
     async fn local_session_commit_survives_cancellation_observed_by_final_progress() {
         let sqlite = crate::directory::sqlite::SqliteDirectory::connect(":memory:").await.expect("sqlite");
         let directory = Arc::new(HubDirectories::from(sqlite));
-        directory
-            .create_user("local-commit@bootstrap.invalid", "Local Commit", None, Some("commit-subject"), Some(LOCAL_BOOTSTRAP_IDENTITY_PROVIDER))
-            .await
-            .expect("profile user");
-        let control = CancelAtCommit {
-            cancelled: AtomicBool::new(false),
-            now_ms: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).expect("clock").as_millis() as i64,
-        };
+        directory.create_user("local-commit@bootstrap.invalid", "Local Commit", None, Some("commit-subject"), Some(LOCAL_BOOTSTRAP_IDENTITY_PROVIDER)).await.expect("profile user");
+        let control = CancelAtCommit { cancelled: AtomicBool::new(false), now_ms: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).expect("clock").as_millis() as i64 };
         let context = IdentityVerificationContext { deadline_ms: checked_deadline(control.now_ms()).expect("deadline"), control: &control };
         let request = VerifiedLocalBootstrapRequest {
             request_id: "00112233445566778899aabbccddeeff".into(),

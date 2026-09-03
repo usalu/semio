@@ -305,11 +305,11 @@ pub fn plugin() -> Result<Plugin<ProceduralApps>, semio_framework_plugin::Plugin
             FlowExtensionManifest::new("bim", "Bim", "0.1.0")?,
             FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.bim", "semio.s.plugin.flow.extension.bim", "register")?,
         )?)
-        .editor::<crate::editor::generation2d::Generation2dPlayApp>(crate::editor::generation2d::create_generation2d_app())
+        .editor_with_examples::<crate::editor::generation2d::Generation2dPlayApp>(crate::editor::generation2d::create_generation2d_app(), vec![crate::examples::art_generation2d_demo::source()])
         .editor_mutation_roster::<crate::editor::generation2d::Generation2dPlayApp>()
         .viewer::<crate::viewer::generation2d::Generation2dViewer>(crate::viewer::generation2d::create_generation2d_viewer())
         .viewer_mutation_roster::<crate::viewer::generation2d::Generation2dViewer>()
-        .editor::<crate::editor::generation3d::Generation3dPlayApp>(crate::editor::generation3d::create_generation3d_app())
+        .editor_with_examples::<crate::editor::generation3d::Generation3dPlayApp>(crate::editor::generation3d::create_generation3d_app(), crate::editor::generation3d::examples())
         .editor_mutation_roster::<crate::editor::generation3d::Generation3dPlayApp>()
         .viewer::<crate::viewer::generation3d::Generation3dViewer>(crate::viewer::generation3d::create_generation3d_viewer())
         .viewer_mutation_roster::<crate::viewer::generation3d::Generation3dViewer>()
@@ -364,6 +364,22 @@ mod surface_tests {
     #[test]
     fn generation3d_editor_and_viewer_share_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Generation3dPlayApp, Generation3dViewer>();
+    }
+
+    /// 📚️ Ticket 26/09/03/PROCEDURAL-3D-END-TO-END — `.editor_with_examples::<Generation3dPlayApp>`
+    /// must stamp the eight `crate::editor::generation3d::examples()` fixtures onto the manifest,
+    /// `app_id`-addressed to the gen3d editor surface, or the react shell's example dropdown
+    /// (`activePluginManifest.examples`) stays hidden for `generation3d`.
+    #[test]
+    fn generation3d_manifest_examples_are_registered_on_the_editor_surface() {
+        let plugin = super::plugin().expect("procedural plugin manifest should build synchronously");
+        let editor_app_id = crate::editor::generation3d::create_generation3d_app().id;
+        assert_eq!(editor_app_id, "s.procedural.generation3d@1/*#editor");
+        let registered_ids: Vec<&str> = plugin.manifest.examples.iter().filter(|example| example.app_id == editor_app_id).map(|example| example.id.as_str()).collect();
+        let expected_sources = crate::editor::generation3d::examples();
+        let expected_ids: Vec<&str> = expected_sources.iter().map(|source| source.id()).collect();
+        assert_eq!(registered_ids.len(), 8);
+        assert_eq!(registered_ids, expected_ids);
     }
 }
 //#endregion 🧪️SurfaceTests

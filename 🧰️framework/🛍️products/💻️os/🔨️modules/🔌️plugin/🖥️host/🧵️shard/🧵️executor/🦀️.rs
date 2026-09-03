@@ -149,6 +149,7 @@ impl OutcomeSink {
 pub struct ShardExecutor {
     state: Mutex<ShardExecutorState>,
     kernel_side: ThreadTransport,
+    ingress: Mutex<FixedOwnerRing<PendingIngressFrame, SHARD_DEFERRED_ITEMS>>,
     outcomes: Arc<OutcomeSink>,
     pool: Arc<WorkerPool>,
     /// 🚦 Single-flight gate: `true` while a pump job for this shard is either queued on the
@@ -181,6 +182,11 @@ pub struct ShardExecutor {
     terminal_overflow_occupied: AtomicBool,
     failure: Mutex<FixedOwnerRing<crate::PluginHostError, SHARD_DEFERRED_ITEMS>>,
     terminal_failure: Mutex<Option<crate::PluginHostError>>,
+}
+
+struct PendingIngressFrame {
+    lane: ActorLane,
+    bytes: Vec<u8>,
 }
 
 type ShardDriveFuture = Pin<Box<dyn Future<Output = (ShardLoop, ShardDrive)> + Send>>;
@@ -298,6 +304,7 @@ impl ShardExecutor {
         Arc::new(ShardExecutor {
             state: Mutex::new(ShardExecutorState { shard: Some(shard), drive: None, registrations: FixedOwnerRing::new(SHARD_DEFERRED_BYTES) }),
             kernel_side,
+            ingress: Mutex::new(FixedOwnerRing::new(SHARD_DEFERRED_BYTES)),
             outcomes,
             pool,
             scheduled: AtomicBool::new(false),
@@ -400,12 +407,9 @@ impl ShardExecutor {
         self.state.lock().unwrap_or_else(PoisonError::into_inner).shard.as_mut().and_then(ShardLoop::take_terminal_authority)
     }
 
-    /// ✉️ Injects one already-encoded [`super::ShardFrame`]'s bytes (a `Grant` or `Unregister`) and
-    /// schedules a pump job on `lane` — the caller-visible replacement for the old
-    /// `kernel_side.send(&bytes)` + relying on the executor thread's own 5ms park/pump cadence to
-    /// notice it. `lane` should be the triggering envelope's own `ActorLane` (a `TurnGrant`'s
-    /// envelopes all share one lane, fixed per actor at scheduler registration) — see
-    /// [`Self::schedule`] for what this actually buys versus costs on a race.
+    /// ✉️ Retains one already-encoded [`super::ShardFrame`] in the finite ingress ring and
+    /// schedules a pump job on `lane`. The next drive selects the most urgent retained lane while
+    /// preserving arrival order within equal lanes.
     pub async fn send_frame(self: &Arc<Self>, bytes: Vec<u8>, lane: ActorLane) -> FrameIngress {
         let ingress = self.ingress_gate.lock().unwrap_or_else(PoisonError::into_inner);
         if bytes.len() > SHARD_FRAME_MAX_BYTES {
@@ -420,15 +424,21 @@ impl ShardExecutor {
         if self.ingress_state.load(Ordering::Acquire) != 0 || self.closed.load(Ordering::Acquire) {
             return FrameIngress::Rejected(TerminalFrameOwner { reason: self.ingress_close_reason(), frame: bytes });
         }
-        if let Err(frame) = self.kernel_side.send_now(bytes) {
-            self.ingress_state.store(1, Ordering::Release);
-            return FrameIngress::Rejected(TerminalFrameOwner { reason: IngressCloseReason::Closing, frame });
+        let byte_len = bytes.len();
+        if let Err(rejected) = self.ingress.lock().unwrap_or_else(PoisonError::into_inner).try_push(PendingIngressFrame { lane, bytes }, byte_len) {
+            return FrameIngress::Rejected(TerminalFrameOwner { reason: IngressCloseReason::OverCapacity, frame: rejected.owner.bytes });
         }
         self.epoch.fetch_add(1, Ordering::SeqCst);
         self.bump_lane_hint(lane);
         drop(ingress);
         self.schedule();
         FrameIngress::Admitted
+    }
+
+    fn take_next_ingress_frame(&self) -> Option<Vec<u8>> {
+        let mut ingress = self.ingress.lock().unwrap_or_else(PoisonError::into_inner);
+        let offset = (0..ingress.len).min_by_key(|offset| lane_rank(ingress.get(*offset).expect("ingress offset remains occupied").lane))?;
+        ingress.pop_at(offset).map(|(_, frame)| frame.bytes)
     }
 
     fn ingress_close_reason(&self) -> IngressCloseReason {
@@ -597,9 +607,10 @@ impl ShardExecutor {
                 if let Some((_, (actor, instance))) = state.registrations.pop_front() {
                     shard.register(actor, instance);
                 }
+                let primed = shard.can_accept_primed_frame().then(|| self.take_next_ingress_frame()).flatten();
                 self.drive_generation.fetch_add(1, Ordering::AcqRel);
                 state.drive = Some(Box::pin(async move {
-                    let drive = shard.drive_one().await;
+                    let drive = shard.drive_one_primed(primed).await;
                     (shard, drive)
                 }));
             }
@@ -748,7 +759,84 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
+    async fn fifo_ingress_selects_interactive_before_earlier_background_without_unbounded_drain() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️relay-lifecycle.json")).expect("neutral relay lifecycle fixture");
+        let case = &fixture["ingressCases"][0];
+        let frames = case["frames"].as_array().expect("ingress frames");
+        let actor_number = |index: usize| u32::try_from(frames[index]["actor"].as_u64().expect("actor")).expect("actor fits");
+        let lane = |index: usize| match frames[index]["lane"].as_str().expect("lane") {
+            "interactive" => semio_framework_actor::Lane::Interactive,
+            "user-visible" => semio_framework_actor::Lane::UserVisible,
+            "background" => semio_framework_actor::Lane::Background,
+            "maintenance" => semio_framework_actor::Lane::Maintenance,
+            other => panic!("unknown neutral lane {other}"),
+        };
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let background = ActorId::new(0, 0, actor_number(0), 0).await;
+        let interactive = ActorId::new(0, 0, actor_number(1), 0).await;
+        let package = PackageRef { package: PackageId("executor-lane-priority".to_string()), hash: PackageHash([31u8; 32]) };
+        let compiled = mock.compile(&package, &[]).await.expect("mock compile");
+        let instantiate_budget = Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+        let background_instance = mock.instantiate(&compiled, background, &[], &instantiate_budget).await.expect("background instance");
+        let interactive_instance = mock.instantiate(&compiled, interactive, &[], &instantiate_budget).await.expect("interactive instance");
+        let mut background_turn = MockGuestRuntime::idle_turn().await;
+        background_turn.fuel_used = frames[0]["fuel"].as_u64().expect("background fuel");
+        mock.script_turn(background, background_turn).await;
+        let mut interactive_turn = MockGuestRuntime::idle_turn().await;
+        interactive_turn.fuel_used = frames[1]["fuel"].as_u64().expect("interactive fuel");
+        mock.script_turn(interactive, interactive_turn).await;
+
+        let pool = Arc::new(WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1)));
+        let (entered_tx, entered_rx) = std::sync::mpsc::sync_channel(1);
+        let (release_tx, release_rx) = std::sync::mpsc::sync_channel(1);
+        pool.submit(PoolLane::Interactive, Box::new(move || {
+            let _ = entered_tx.send(());
+            let _ = release_rx.recv();
+        }));
+        entered_rx.recv_timeout(Duration::from_secs(2)).expect("pool blocker entered");
+
+        let outcomes = OutcomeSink::new();
+        let executor = ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(mock)), vec![(background, background_instance), (interactive, interactive_instance)], outcomes.clone()).await;
+        let envelope = |actor, lane, seq| Envelope {
+            to: actor,
+            from: semio_framework_actor::Origin::Kernel,
+            lane,
+            seq,
+            deadline_ms: None,
+            coalesce: None,
+            cancel_of: None,
+            payload: Payload::Event { bytes: serde_json::to_vec(&super::super::fixture_instance_close_event()).expect("event") },
+        };
+        let background_lane = lane(0);
+        let interactive_lane = lane(1);
+        let background_frame = encode_frame(super::super::ShardFrame::Grant {
+            actor: background,
+            budget: semio_framework_actor::lane_defaults::budget_for(background_lane),
+            envelopes: vec![envelope(background, background_lane, frames[0]["sequence"].as_u64().expect("background sequence"))],
+        })
+        .await;
+        let interactive_frame = encode_frame(super::super::ShardFrame::Grant {
+            actor: interactive,
+            budget: semio_framework_actor::lane_defaults::budget_for(interactive_lane),
+            envelopes: vec![envelope(interactive, interactive_lane, frames[1]["sequence"].as_u64().expect("interactive sequence"))],
+        })
+        .await;
+        assert!(matches!(executor.send_frame(background_frame, background_lane).await, FrameIngress::Admitted));
+        assert!(matches!(executor.send_frame(interactive_frame, interactive_lane).await, FrameIngress::Admitted));
+        release_tx.send(()).expect("release pool blocker");
+
+        let collected = outcomes.wait_for(2, Duration::from_secs(2));
+        assert_eq!(collected.len(), 2);
+        let expected = case["expectedActors"].as_array().expect("expected ingress actors");
+        assert_eq!(case["maxFramesPerDrive"].as_u64(), Some(1));
+        assert!(matches!(&collected[0], ShardOutcome::Turn { actor, result } if u64::from(ActorId(*actor).ordinal()) == expected[0].as_u64().expect("first expected actor") && result.usage.fuel == frames[1]["fuel"].as_u64().expect("interactive fuel")));
+        assert!(matches!(&collected[1], ShardOutcome::Turn { actor, result } if u64::from(ActorId(*actor).ordinal()) == expected[1].as_u64().expect("second expected actor") && result.usage.fuel == frames[0]["fuel"].as_u64().expect("background fuel")));
+        pool.shutdown();
+    }
+
+    #[semio_framework_async_macros::async_test]
     async fn mounted_fixed_replay_uses_the_same_shard_guest_route_at_one_two_four_and_host_default_workers() {
+        let _replay_authority = super::super::replay_test_authority();
         let host_default = std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1);
         for worker_count in [1, 2, 4, host_default] {
             let mock = Arc::new(MockGuestRuntime::new().await);
@@ -766,7 +854,7 @@ mod tests {
 
             let pool = Arc::new(WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, worker_count)));
             let outcomes = OutcomeSink::new();
-            let executor = ShardExecutor::new(pool, Arc::new(GuestRuntimes::Mock(mock.clone())), vec![(actor, instance)], outcomes.clone()).await;
+            let executor = ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(mock.clone())), vec![(actor, instance)], outcomes.clone()).await;
             let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
             let event = Envelope {
                 to: actor,
@@ -795,15 +883,13 @@ mod tests {
             assert!(ready, "fixed replay seed activation did not reach the mounted running set");
             let operation = JobOperation { operation: 1, base_revision: 0, generation: u64::from(actor.generation()) + 1, preview_sequence: 0, seed: 1u64.rotate_left(17) ^ actor.0 ^ job };
             let turn = JobTurn { job, operation, step_sequence: 0 };
-            mock.script_job_step(actor, JobStep::Done { output: vec![11, 13] }).await;
-            mock.script_turn(actor, MockGuestRuntime::idle_turn().await).await;
+            mock.script_job_step(actor, JobStep::Running { progress: Some(vec![11, 13]) }).await;
             let step = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { turn } };
             executor.send_frame(encode_frame(super::super::ShardFrame::Grant { actor, budget, envelopes: vec![step] }).await, semio_framework_actor::Lane::Interactive).await;
             let original = wait_for_one(&outcomes);
             assert!(
-                matches!(&original, ShardOutcome::Job { request: observed, publication, .. } if *observed == request && matches!(&publication.outcome, semio_framework_actor::JobStepOutcome::Complete { candidate } if candidate.output == [11, 13]))
+                matches!(&original, ShardOutcome::Job { request: observed, publication, .. } if *observed == request && matches!(&publication.outcome, semio_framework_actor::JobStepOutcome::PreviewReady { preview } if *preview == [11, 13]))
             );
-            assert!(matches!(wait_for_one(&outcomes), ShardOutcome::Turn { actor: reported, .. } if reported == actor.0));
 
             let replay = Envelope {
                 to: actor,
@@ -821,8 +907,10 @@ mod tests {
             mock.script_turn(actor, MockGuestRuntime::idle_turn().await).await;
             let replay_step = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: 4, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { turn } };
             executor.send_frame(encode_frame(super::super::ShardFrame::Grant { actor, budget, envelopes: vec![replay_step] }).await, semio_framework_actor::Lane::Interactive).await;
+            let replayed = wait_for_one(&outcomes);
             assert!(
-                matches!(wait_for_one(&outcomes), ShardOutcome::Job { request: observed, publication, .. } if observed == request && matches!(publication.outcome, semio_framework_actor::JobStepOutcome::Complete { ref candidate } if candidate.output == [11, 13]))
+                matches!(&replayed, ShardOutcome::Job { request: observed, publication, .. } if *observed == request && matches!(&publication.outcome, semio_framework_actor::JobStepOutcome::Complete { candidate } if candidate.output == [11, 13])),
+                "replay step emitted {replayed:?} before the expected terminal job publication"
             );
             assert!(matches!(wait_for_one(&outcomes), ShardOutcome::Turn { actor: reported, .. } if reported == actor.0));
 
@@ -837,6 +925,7 @@ mod tests {
                 std::thread::yield_now();
             }
             assert!(terminal, "unregister must incrementally close every retained replay owner");
+            pool.shutdown();
         }
     }
 

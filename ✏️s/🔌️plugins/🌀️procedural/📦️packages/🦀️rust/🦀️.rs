@@ -1676,6 +1676,8 @@ pub mod examples {
     pub mod app_3d_demo_session;
     #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
     pub mod art_generation2d_demo;
+    #[path = "../../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️hexagonal-mushroom-column/🦀️.rs"]
+    pub mod art_generation3d_hexagonal_mushroom_column;
     #[path = "../../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️box-fillet-preview/🦀️.rs"]
     pub mod art_generation3d_box_fillet_preview;
     #[path = "../../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️box-shell-preview/🦀️.rs"]

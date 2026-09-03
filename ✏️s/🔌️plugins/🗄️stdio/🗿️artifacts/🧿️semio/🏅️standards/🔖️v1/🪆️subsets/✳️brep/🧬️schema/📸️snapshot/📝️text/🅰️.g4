@@ -4,7 +4,7 @@
 // names).
 grammar Semio_brep_snapshot;
 
-document: artifactMark schemaLine verticesLine edgesLine loopsLine facesLine shellsLine solidsLine EOF;
+document: artifactMark schemaLine verticesLine edgesLine loopsLine facesLine shellsLine solidsLine coedgesLine nextLabelLine EOF;
 artifactMark: 'stdio.semio.brep';
 
 schemaLine: 'schema' '=' HEX;
@@ -15,13 +15,28 @@ loopsLine: 'loops' '=' '[' (brepLoop (',' brepLoop)*)? ']';
 facesLine: 'faces' '=' '[' (face (',' face)*)? ']';
 shellsLine: 'shells' '=' '[' (shell (',' shell)*)? ']';
 solidsLine: 'solids' '=' '[' (solid (',' solid)*)? ']';
+// 🧱️ Landed alongside `BrepCoedge`/`SemioBrepSnapshot::nextLabel` (wave W3-A) — see the sibling
+// `📖️.grammar.semio` for the full rationale.
+coedgesLine: 'coedges' '=' '[' (coedge (',' coedge)*)? ']';
+nextLabelLine: 'nextLabel' '=' number;
 
-vertex: '[' HEX ',' point3 ']';
-edge: '[' HEX ',' HEX ',' HEX ',' curve ']';
+vertex: '[' HEX ',' point3 ',' number ']';
+edge: '[' HEX ',' HEX ',' HEX ',' curve ',' number ']';
 brepLoop: '[' HEX ',' loopEdgeList ']';
-face: '[' HEX ',' HEX ',' hexList ',' surface ',' bool ']';
+face: '[' HEX ',' HEX ',' hexList ',' surface ',' bool ',' number ']';
 shell: '[' HEX ',' shellFaceList ']';
 solid: '[' HEX ',' solidShellList ']';
+
+coedge: '[' HEX ',' HEX ',' bool ',' optCurve2 ',' prange ',' HEX ',' HEX ',' HEX ']';
+optCurve2: '-' | '~' curve2;
+prange: '[' number ',' number ']';
+curve2: 'L' '[' point2 ',' point2 ']'
+      | 'C' '[' point2 ',' number ']'
+      | 'E' '[' point2 ',' point2 ',' number ',' number ']'
+      | 'N' '[' point2List ',' numberList ',' number ',' numberList ']'
+      ;
+point2: '[' number ',' number ']';
+point2List: '[' (point2 (',' point2)*)? ']';
 
 loopEdge: '[' HEX ',' bool ']';
 loopEdgeList: '[' (loopEdge (',' loopEdge)*)? ']';

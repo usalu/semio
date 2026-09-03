@@ -1,7 +1,7 @@
 //! 🧬️ SemioBrepArtifact schema — full artifact state, mirrors `SemioBrepSnapshot` field for
 //! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepEdge, BrepFace, BrepLoop, BrepShell, BrepSolid, BrepVertex, SemioBrepSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCoedge, BrepEdge, BrepFace, BrepLoop, BrepShell, BrepSolid, BrepVertex, SemioBrepSnapshot};
 use schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
@@ -28,6 +28,12 @@ pub struct SemioBrepArtifact {
     #[state(artifact)]
     #[value(default)]
     pub solids: Vec<BrepSolid>,
+    #[state(artifact)]
+    #[value(default)]
+    pub coedges: Vec<BrepCoedge>,
+    #[state(artifact)]
+    #[value(default)]
+    pub next_label: u64,
 }
 
 impl Default for SemioBrepArtifact {
@@ -39,11 +45,21 @@ impl Default for SemioBrepArtifact {
 impl SemioBrepArtifact {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> SemioBrepSnapshot {
-        SemioBrepSnapshot { schema: self.schema.clone(), vertices: self.vertices.clone(), edges: self.edges.clone(), loops: self.loops.clone(), faces: self.faces.clone(), shells: self.shells.clone(), solids: self.solids.clone() }
+        SemioBrepSnapshot {
+            schema: self.schema.clone(),
+            vertices: self.vertices.clone(),
+            edges: self.edges.clone(),
+            loops: self.loops.clone(),
+            faces: self.faces.clone(),
+            shells: self.shells.clone(),
+            solids: self.solids.clone(),
+            coedges: self.coedges.clone(),
+            next_label: self.next_label,
+        }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: SemioBrepSnapshot) -> Self {
-        Self { schema: snapshot.schema, vertices: snapshot.vertices, edges: snapshot.edges, loops: snapshot.loops, faces: snapshot.faces, shells: snapshot.shells, solids: snapshot.solids }
+        Self { schema: snapshot.schema, vertices: snapshot.vertices, edges: snapshot.edges, loops: snapshot.loops, faces: snapshot.faces, shells: snapshot.shells, solids: snapshot.solids, coedges: snapshot.coedges, next_label: snapshot.next_label }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: SemioBrepSnapshot) {

@@ -563,11 +563,47 @@ pub enum RouterEffectJobOutcome {
     Fault(String),
 }
 
-pub async fn run_router_effect_job<R: HostAsyncRuntime>(_compute: &ComputePool, _runtime: &R, _scope: &ScopeHandle, ctx: OperationContext, _handler: &Arc<dyn RouterEffectHandler>, _effect: RouterEffect) -> RouterEffectJobOutcome {
+fn copy_router_effect_payload(payload: &RetainedJobPayload) -> Result<Vec<u8>, String> {
+    if payload.len() > semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES {
+        return Err(format!("router effect payload exceeds {} bytes", semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES));
+    }
+    let mut bytes = Vec::with_capacity(payload.len());
+    let mut reader = payload.reader();
+    while let Some(page) = reader.read_page(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+        bytes.extend_from_slice(page);
+    }
+    if !reader.terminal_is_empty() {
+        return Err("router effect payload page exceeds the fixed codec grant".to_string());
+    }
+    Ok(bytes)
+}
+
+fn close_router_effect_outcome(outcome: &mut StepOutcome) {
+    while !outcome.terminal_is_empty() {
+        let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    }
+}
+
+pub async fn run_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, runtime: &R, scope: &ScopeHandle, ctx: OperationContext, handler: &Arc<dyn RouterEffectHandler>, effect: RouterEffect) -> RouterEffectJobOutcome {
     if ctx.cancel.is_cancelled().await {
         return RouterEffectJobOutcome::Cancelled;
     }
-    RouterEffectJobOutcome::Fault("router effect retained-session pump is not mounted".to_string())
+    let mut outcome = match compute.run_job(runtime, scope, ctx, DynRouterEffectJob(handler.create_job(effect))).await {
+        Ok(outcome) => outcome,
+        Err(ComputeError::DeadlineExceeded) => return RouterEffectJobOutcome::DeadlineExceeded,
+        Err(ComputeError::WorkerLost) => return RouterEffectJobOutcome::WorkerLost,
+    };
+    let result = match &outcome {
+        StepOutcome::Complete(candidate) => copy_router_effect_payload(&candidate.output).map_or_else(RouterEffectJobOutcome::Fault, RouterEffectJobOutcome::Complete),
+        StepOutcome::Cancelled => RouterEffectJobOutcome::Cancelled,
+        StepOutcome::Fault(fault) => match copy_router_effect_payload(&fault.detail) {
+            Ok(detail) => RouterEffectJobOutcome::Fault(String::from_utf8_lossy(&detail).into_owned()),
+            Err(error) => RouterEffectJobOutcome::Fault(error),
+        },
+        StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => RouterEffectJobOutcome::Fault("router effect compute session returned a nonterminal outcome".to_string()),
+    };
+    close_router_effect_outcome(&mut outcome);
+    result
 }
 
 /// 🚧️ Default until a real handler is wired (mirrors `UnwiredHttpTransport`'s own honest-gap
@@ -1534,7 +1570,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn router_effect_fails_closed_until_a_retained_session_pump_is_mounted() {
+    async fn router_effect_runs_through_the_retained_compute_session() {
         let runtime = ManualRuntime::new(0).await;
         let runtime_dyn: Arc<ManualRuntime> = Arc::new(runtime.clone());
         let (mut executor, injector, actors) = executor(runtime_dyn.clone()).await;
@@ -1544,8 +1580,31 @@ mod tests {
         let dispatch = EffectDispatchContext { actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: None };
         executor.execute(&dispatch, &[Effect::CacheRead { req: RequestId(5), engine_id: "e".to_string(), key: "k".to_string() }]).await;
         runtime.drive().await;
-        assert_eq!(recording_handler.0.load(Ordering::SeqCst), 0);
-        assert_eq!(injector.recorded().await.len(), 1);
+        assert_eq!(recording_handler.0.load(Ordering::SeqCst), 1);
+        let recorded = injector.recorded().await;
+        assert_eq!(recorded.len(), 1);
+        assert!(matches!(&recorded[0].payload, Payload::Event { bytes } if matches!(serde_json::from_slice::<Event>(bytes), Ok(Event::Completed { req: RequestId(5), result: RequestOutcome::Ok(output) }) if output == b"ok")));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn router_effect_on_a_stopped_compute_pool_returns_worker_lost_without_stranding_its_owner() {
+        let runtime = ManualRuntime::new(0).await;
+        let scope = runtime.open_scope(ScopeOwner::Service("stopped-router-compute"), None).await;
+        let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
+        pool.shutdown();
+        let compute = ComputePool::with_pool(1, pool);
+        let ctx = OperationContext {
+            actor: 1,
+            generation: 0,
+            trace: TraceId(91),
+            lane: 0,
+            deadline_ms: None,
+            cancel: CancelToken::root().await,
+            capability: None,
+        };
+        let handler: Arc<dyn RouterEffectHandler> = Arc::new(RecordingRouterHandler(Arc::new(AtomicUsize::new(0))));
+        let outcome = run_router_effect_job(&compute, &runtime, &scope, ctx, &handler, RouterEffect::CacheRead { engine_id: "e".to_string(), key: "k".to_string() }).await;
+        assert!(matches!(outcome, RouterEffectJobOutcome::WorkerLost));
     }
     //#endregion 🚀️ClassificationTests
 

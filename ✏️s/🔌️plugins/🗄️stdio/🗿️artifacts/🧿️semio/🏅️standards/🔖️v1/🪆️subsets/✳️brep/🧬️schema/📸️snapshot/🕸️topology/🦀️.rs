@@ -743,14 +743,18 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn serde_round_trips_a_whole_body() {
+    async fn json_round_trips_a_whole_body() {
+        // 🌉️ First-party `ToValue`/`FromValue` + `pack::{to_json_string,from_json_str}` codec
+        // (`Body` derives both, see its struct definition above) — same pattern as
+        // `📸️snapshot/🏟️arena/🦀️.rs`'s own `TestId` round-trip test, not `serde_json` (removed
+        // from `Body`'s derive list by the serde-elimination wave).
         let mut body = Body::new();
         let frame = Frame3::WORLD;
         let surface = body.surfaces.insert(Surface::Plane { frame });
         let face = insert_face(&mut body, surface);
         make_triangle_loop(&mut body, face, [Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(0.0, 1.0, 0.0)]);
-        let json = serde_json::to_string(&body).unwrap();
-        let back: Body = serde_json::from_str(&json).unwrap();
+        let json = pack::to_json_string(&body);
+        let back: Body = pack::from_json_str(&json).unwrap();
         assert_eq!(back.vertices.len(), body.vertices.len());
         assert_eq!(back.edges.len(), body.edges.len());
         assert_eq!(back.faces.len(), body.faces.len());

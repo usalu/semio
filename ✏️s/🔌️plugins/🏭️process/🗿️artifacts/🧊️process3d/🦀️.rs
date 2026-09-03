@@ -587,7 +587,7 @@ pub fn brep_snapshot_for_working_solid(solid: &WorkingSolid) -> SemioBrepSnapsho
 }
 
 fn empty_brep_snapshot() -> SemioBrepSnapshot {
-    SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices: Vec::new(), edges: Vec::new(), loops: Vec::new(), faces: Vec::new(), shells: Vec::new(), solids: Vec::new() }
+    SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices: Vec::new(), edges: Vec::new(), loops: Vec::new(), faces: Vec::new(), shells: Vec::new(), solids: Vec::new(), coedges: Vec::new(), next_label: 0 }
 }
 
 fn point3(p: [f64; 3]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3 {
@@ -599,11 +599,11 @@ fn point3(p: [f64; 3]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1:
 fn brep_snapshot_for_box(width: f64, depth: f64, height: f64) -> SemioBrepSnapshot {
     let (w, d, h) = (width, depth, height);
     let corners = [[0.0, 0.0, 0.0], [w, 0.0, 0.0], [w, d, 0.0], [0.0, d, 0.0], [0.0, 0.0, h], [w, 0.0, h], [w, d, h], [0.0, d, h]];
-    let vertices: Vec<BrepVertex> = corners.iter().enumerate().map(|(i, c)| BrepVertex { id: format!("v{i}"), point: point3(*c) }).collect();
+    let vertices: Vec<BrepVertex> = corners.iter().enumerate().map(|(i, c)| BrepVertex { id: format!("v{i}"), point: point3(*c), tol: 0.0 }).collect();
     let line_edge = |id: &str, a: usize, b: usize| -> BrepEdge {
         let origin = corners[a];
         let direction = [corners[b][0] - corners[a][0], corners[b][1] - corners[a][1], corners[b][2] - corners[a][2]];
-        BrepEdge { id: id.into(), start_vertex: format!("v{a}"), end_vertex: format!("v{b}"), curve: BrepCurve::Line { origin: point3(origin), direction: point3(direction) } }
+        BrepEdge { id: id.into(), start_vertex: format!("v{a}"), end_vertex: format!("v{b}"), curve: BrepCurve::Line { origin: point3(origin), direction: point3(direction) }, tol: 0.0 }
     };
     let edges = vec![
         line_edge("e0", 0, 1),
@@ -629,7 +629,7 @@ fn brep_snapshot_for_box(width: f64, depth: f64, height: f64) -> SemioBrepSnapsh
         loop_of("l5", &[("e3", true), ("e8", true), ("e7", false), ("e11", false)]),
     ];
     let plane_face = |id: &str, loop_id: &str, origin: [f64; 3], normal: [f64; 3], orientation: bool| -> BrepFace {
-        BrepFace { id: id.into(), outer_loop: loop_id.into(), inner_loops: Vec::new(), surface: BrepSurface::Plane { origin: point3(origin), normal: point3(normal) }, orientation }
+        BrepFace { id: id.into(), outer_loop: loop_id.into(), inner_loops: Vec::new(), surface: BrepSurface::Plane { origin: point3(origin), normal: point3(normal) }, orientation, tol: 0.0 }
     };
     let faces = vec![
         plane_face("f0", "l0", [0.0, 0.0, 0.0], [0.0, 0.0, -1.0], true),
@@ -641,7 +641,7 @@ fn brep_snapshot_for_box(width: f64, depth: f64, height: f64) -> SemioBrepSnapsh
     ];
     let shells = vec![BrepShell { id: "s0".into(), faces: (0..6).map(|i| BrepShellFace { face: format!("f{i}"), orientation: true }).collect() }];
     let solids = vec![BrepSolid { id: "so0".into(), shells: vec![BrepSolidShell { shell: "s0".into(), is_void: false }] }];
-    SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices, edges, loops, faces, shells, solids }
+    SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices, edges, loops, faces, shells, solids, coedges: Vec::new(), next_label: 0 }
 }
 
 /// 🥫️ Axis-aligned cylinder, base centered at local origin, axis along +Z, spanning `[0,height]`.
@@ -651,10 +651,10 @@ fn brep_snapshot_for_box(width: f64, depth: f64, height: f64) -> SemioBrepSnapsh
 /// parametric domain, matching the same "loop may be empty" convention the sphere face uses).
 fn brep_snapshot_for_cylinder(radius: f64, height: f64) -> SemioBrepSnapshot {
     let (r, h) = (radius, height);
-    let vertices = vec![BrepVertex { id: "v0".into(), point: point3([r, 0.0, 0.0]) }, BrepVertex { id: "v1".into(), point: point3([r, 0.0, h]) }];
+    let vertices = vec![BrepVertex { id: "v0".into(), point: point3([r, 0.0, 0.0]), tol: 0.0 }, BrepVertex { id: "v1".into(), point: point3([r, 0.0, h]), tol: 0.0 }];
     let edges = vec![
-        BrepEdge { id: "e0".into(), start_vertex: "v0".into(), end_vertex: "v0".into(), curve: BrepCurve::Circle { center: point3([0.0, 0.0, 0.0]), axis: point3([0.0, 0.0, 1.0]), radius: r } },
-        BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v1".into(), curve: BrepCurve::Circle { center: point3([0.0, 0.0, h]), axis: point3([0.0, 0.0, 1.0]), radius: r } },
+        BrepEdge { id: "e0".into(), start_vertex: "v0".into(), end_vertex: "v0".into(), curve: BrepCurve::Circle { center: point3([0.0, 0.0, 0.0]), axis: point3([0.0, 0.0, 1.0]), radius: r }, tol: 0.0 },
+        BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v1".into(), curve: BrepCurve::Circle { center: point3([0.0, 0.0, h]), axis: point3([0.0, 0.0, 1.0]), radius: r }, tol: 0.0 },
     ];
     let loops = vec![
         BrepLoop { id: "l0".into(), edges: vec![BrepLoopEdge { edge: "e0".into(), orientation: true }] },
@@ -662,13 +662,13 @@ fn brep_snapshot_for_cylinder(radius: f64, height: f64) -> SemioBrepSnapshot {
         BrepLoop { id: "l2".into(), edges: Vec::new() },
     ];
     let faces = vec![
-        BrepFace { id: "f0".into(), outer_loop: "l0".into(), inner_loops: Vec::new(), surface: BrepSurface::Plane { origin: point3([0.0, 0.0, 0.0]), normal: point3([0.0, 0.0, -1.0]) }, orientation: true },
-        BrepFace { id: "f1".into(), outer_loop: "l1".into(), inner_loops: Vec::new(), surface: BrepSurface::Plane { origin: point3([0.0, 0.0, h]), normal: point3([0.0, 0.0, 1.0]) }, orientation: true },
-        BrepFace { id: "f2".into(), outer_loop: "l2".into(), inner_loops: Vec::new(), surface: BrepSurface::Cylinder { origin: point3([0.0, 0.0, 0.0]), axis: point3([0.0, 0.0, 1.0]), radius: r }, orientation: true },
+        BrepFace { id: "f0".into(), outer_loop: "l0".into(), inner_loops: Vec::new(), surface: BrepSurface::Plane { origin: point3([0.0, 0.0, 0.0]), normal: point3([0.0, 0.0, -1.0]) }, orientation: true, tol: 0.0 },
+        BrepFace { id: "f1".into(), outer_loop: "l1".into(), inner_loops: Vec::new(), surface: BrepSurface::Plane { origin: point3([0.0, 0.0, h]), normal: point3([0.0, 0.0, 1.0]) }, orientation: true, tol: 0.0 },
+        BrepFace { id: "f2".into(), outer_loop: "l2".into(), inner_loops: Vec::new(), surface: BrepSurface::Cylinder { origin: point3([0.0, 0.0, 0.0]), axis: point3([0.0, 0.0, 1.0]), radius: r }, orientation: true, tol: 0.0 },
     ];
     let shells = vec![BrepShell { id: "s0".into(), faces: vec![BrepShellFace { face: "f0".into(), orientation: true }, BrepShellFace { face: "f1".into(), orientation: true }, BrepShellFace { face: "f2".into(), orientation: true }] }];
     let solids = vec![BrepSolid { id: "so0".into(), shells: vec![BrepSolidShell { shell: "s0".into(), is_void: false }] }];
-    SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices, edges, loops, faces, shells, solids }
+    SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices, edges, loops, faces, shells, solids, coedges: Vec::new(), next_label: 0 }
 }
 
 /// 🔮️ Sphere centered at local origin — one closed, untrimmed analytic `BrepSurface::Sphere` face
@@ -676,10 +676,10 @@ fn brep_snapshot_for_cylinder(radius: f64, height: f64) -> SemioBrepSnapshot {
 /// "a `BrepLoop` with no edges means the whole surface" convention).
 fn brep_snapshot_for_sphere(radius: f64) -> SemioBrepSnapshot {
     let loops = vec![BrepLoop { id: "l0".into(), edges: Vec::new() }];
-    let faces = vec![BrepFace { id: "f0".into(), outer_loop: "l0".into(), inner_loops: Vec::new(), surface: BrepSurface::Sphere { center: point3([0.0, 0.0, 0.0]), radius }, orientation: true }];
+    let faces = vec![BrepFace { id: "f0".into(), outer_loop: "l0".into(), inner_loops: Vec::new(), surface: BrepSurface::Sphere { center: point3([0.0, 0.0, 0.0]), radius }, orientation: true, tol: 0.0 }];
     let shells = vec![BrepShell { id: "s0".into(), faces: vec![BrepShellFace { face: "f0".into(), orientation: true }] }];
     let solids = vec![BrepSolid { id: "so0".into(), shells: vec![BrepSolidShell { shell: "s0".into(), is_void: false }] }];
-    SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices: Vec::new(), edges: Vec::new(), loops, faces, shells, solids }
+    SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices: Vec::new(), edges: Vec::new(), loops, faces, shells, solids, coedges: Vec::new(), next_label: 0 }
 }
 
 /// 🌉️ READ direction, documented gap: recovering a `WorkingSolid` (a small parametric vocabulary)

@@ -73,7 +73,7 @@ def check_lod_bands(fixture: dict, failures: list[str]) -> None:
 
 
 def main() -> int:
-    fixture_path = Path(__file__).resolve().parent / "🧫️fixtures" / "🔣️.json"
+    fixture_path = Path(__file__).resolve().parent / "../../🧪️🧪️🏔️🦋️tests/🕸️web-mercator-tile-oracle/🧫️fixtures" / "🔣️.json"
     fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
     failures: list[str] = []
     check_projection(fixture, failures)
