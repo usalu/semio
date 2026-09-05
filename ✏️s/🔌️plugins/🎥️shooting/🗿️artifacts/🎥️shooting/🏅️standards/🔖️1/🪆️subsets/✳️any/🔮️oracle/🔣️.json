@@ -82,7 +82,7 @@
           "scenarios": [
             {
               "id": "points-asset-prop-at-v2-mesh",
-              "directoryName": "🖼️points-asset-prop-at-v2-mesh"
+              "directoryName": "🌐️points-asset-prop-at-v2-mesh"
             }
           ]
         },
@@ -93,7 +93,7 @@
           "scenarios": [
             {
               "id": "dims-scene-ambient-to-quarter",
-              "directoryName": "🎞️dims-scene-ambient-to-quarter"
+              "directoryName": "🔅️dims-scene-ambient-to-quarter"
             }
           ]
         },
@@ -104,7 +104,7 @@
           "scenarios": [
             {
               "id": "polishes-scene-material-to-quarter",
-              "directoryName": "🎞️polishes-scene-material-to-quarter"
+              "directoryName": "✨️polishes-scene-material-to-quarter"
             }
           ]
         },
@@ -115,7 +115,7 @@
           "scenarios": [
             {
               "id": "switches-scene-shadows-off",
-              "directoryName": "🎞️switches-scene-shadows-off"
+              "directoryName": "🌑️switches-scene-shadows-off"
             }
           ]
         },
@@ -126,7 +126,7 @@
           "scenarios": [
             {
               "id": "turns-scene-sun-to-315-degrees",
-              "directoryName": "🎞️turns-scene-sun-to-315-degrees"
+              "directoryName": "🧭️turns-scene-sun-to-315-degrees"
             }
           ]
         },
@@ -137,7 +137,7 @@
           "scenarios": [
             {
               "id": "raises-scene-sun-to-60-degrees",
-              "directoryName": "🎞️raises-scene-sun-to-60-degrees"
+              "directoryName": "🌅️raises-scene-sun-to-60-degrees"
             }
           ]
         },
@@ -148,7 +148,7 @@
           "scenarios": [
             {
               "id": "switches-scene-sun-off",
-              "directoryName": "🎞️switches-scene-sun-off"
+              "directoryName": "☀️switches-scene-sun-off"
             }
           ]
         },
@@ -159,7 +159,7 @@
           "scenarios": [
             {
               "id": "dims-scene-sun-to-half",
-              "directoryName": "🎞️dims-scene-sun-to-half"
+              "directoryName": "💡️dims-scene-sun-to-half"
             }
           ]
         },
@@ -170,7 +170,7 @@
           "scenarios": [
             {
               "id": "switches-shot-wide-to-svg",
-              "directoryName": "🦀️switches-shot-wide-to-svg"
+              "directoryName": "🎨️switches-shot-wide-to-svg"
             }
           ]
         },
@@ -181,7 +181,7 @@
           "scenarios": [
             {
               "id": "heightens-shot-close-to-768",
-              "directoryName": "🧭️heightens-shot-close-to-768"
+              "directoryName": "↕️heightens-shot-close-to-768"
             }
           ]
         },
@@ -192,7 +192,7 @@
           "scenarios": [
             {
               "id": "rounds-shot-wide-to-ellipse",
-              "directoryName": "⛵️rounds-shot-wide-to-ellipse"
+              "directoryName": "⭕️rounds-shot-wide-to-ellipse"
             }
           ]
         },
@@ -203,18 +203,18 @@
           "scenarios": [
             {
               "id": "widens-shot-close-to-1024",
-              "directoryName": "🦋️widens-shot-close-to-1024"
+              "directoryName": "↔️widens-shot-close-to-1024"
             }
           ]
         },
         {
           "mutationId": "create-asset",
-          "sourceMutationDirectoryName": "🌱️create-asset",
-          "mutationDirectoryName": "🌱️create-asset",
+          "sourceMutationDirectoryName": "➕️create-asset",
+          "mutationDirectoryName": "➕️create-asset",
           "scenarios": [
             {
               "id": "appends-asset-detail",
-              "directoryName": "🖼️appends-asset-detail"
+              "directoryName": "➕️appends-asset-detail"
             }
           ]
         },
@@ -225,7 +225,7 @@
           "scenarios": [
             {
               "id": "appends-saved-camera-top",
-              "directoryName": "🍋️appends-saved-camera-top"
+              "directoryName": "🎥️appends-saved-camera-top"
             }
           ]
         },
@@ -236,7 +236,7 @@
           "scenarios": [
             {
               "id": "appends-shot-macro",
-              "directoryName": "🔴️appends-shot-macro"
+              "directoryName": "📸️appends-shot-macro"
             }
           ]
         },
@@ -247,7 +247,7 @@
           "scenarios": [
             {
               "id": "removes-trailing-asset-prop",
-              "directoryName": "🖼️removes-trailing-asset-prop"
+              "directoryName": "🗑️removes-trailing-asset-prop"
             }
           ]
         },
@@ -280,7 +280,7 @@
           "scenarios": [
             {
               "id": "offsets-both-assets-and-skips-a-ghost",
-              "directoryName": "🤖️offsets-both-assets-and-skips-a-ghost"
+              "directoryName": "🚚️offsets-both-assets-and-skips-a-ghost"
             }
           ]
         },
@@ -291,7 +291,7 @@
           "scenarios": [
             {
               "id": "renames-asset-hero-to-lead",
-              "directoryName": "🖼️renames-asset-hero-to-lead"
+              "directoryName": "🏷️renames-asset-hero-to-lead"
             }
           ]
         },
@@ -324,7 +324,7 @@
           "scenarios": [
             {
               "id": "moves-asset-hero-behind-asset-prop",
-              "directoryName": "🖼️moves-asset-hero-behind-asset-prop"
+              "directoryName": "🔀️moves-asset-hero-behind-asset-prop"
             }
           ]
         },
@@ -335,7 +335,7 @@
           "scenarios": [
             {
               "id": "moves-cam-close-to-front",
-              "directoryName": "🛰️moves-cam-close-to-front"
+              "directoryName": "🔁️moves-cam-close-to-front"
             }
           ]
         },
@@ -346,7 +346,7 @@
           "scenarios": [
             {
               "id": "moves-shot-close-to-front",
-              "directoryName": "🟢️moves-shot-close-to-front"
+              "directoryName": "⬆️moves-shot-close-to-front"
             }
           ]
         },
@@ -357,7 +357,7 @@
           "scenarios": [
             {
               "id": "repositions-cam-close-view",
-              "directoryName": "🍐️repositions-cam-close-view"
+              "directoryName": "📍️repositions-cam-close-view"
             }
           ]
         },
@@ -368,7 +368,7 @@
           "scenarios": [
             {
               "id": "rewrites-cam-wide-through-shot-wide",
-              "directoryName": "🦅️rewrites-cam-wide-through-shot-wide"
+              "directoryName": "📷️rewrites-cam-wide-through-shot-wide"
             }
           ]
         },
@@ -379,7 +379,7 @@
           "scenarios": [
             {
               "id": "spins-asset-hero-about-z",
-              "directoryName": "🖼️spins-asset-hero-about-z"
+              "directoryName": "🔄️spins-asset-hero-about-z"
             }
           ]
         },
@@ -390,7 +390,7 @@
           "scenarios": [
             {
               "id": "doubles-asset-hero-scale",
-              "directoryName": "🖼️doubles-asset-hero-scale"
+              "directoryName": "📏️doubles-asset-hero-scale"
             }
           ]
         },
@@ -401,7 +401,7 @@
           "scenarios": [
             {
               "id": "activates-asset-prop",
-              "directoryName": "🖼️activates-asset-prop"
+              "directoryName": "📌️activates-asset-prop"
             }
           ]
         },
@@ -412,7 +412,7 @@
           "scenarios": [
             {
               "id": "activates-shot-close",
-              "directoryName": "🛟️activates-shot-close"
+              "directoryName": "🎯️activates-shot-close"
             }
           ]
         }

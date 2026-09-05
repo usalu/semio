@@ -27,7 +27,7 @@ use semio_framework_plugin_host::OwnedRuntime;
 /// `redo_probe_mutation` below.
 use store::SpaceMember as _;
 use semio_framework_os_kernel::os_directory::{
-    client::{DocumentSocketSurfaceExpectationV1, LocalHubCredential}, DocumentOpenRendererTargetV1, DocumentOpenSurfaceRoleV1,
+    client::LocalHubCredential,
 };
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -171,12 +171,7 @@ pub fn load_package_descriptor(owner_root: &Path) -> Result<semio_framework::Pac
 /// plugin schema id.
 pub const PROBE_SCHEMA: &str = "os.agent.probe/v1";
 pub const PROBE_PACK_SCHEMA_HASH: &str = "9fab7cb8b71dabede955b4257fa06e2908642e0904f124b6230479f8a153041e";
-const PROBE_PLUGIN_ID: &str = "os.mcp";
-const PROBE_PACKAGE_ID: &str = "os.mcp.probe";
-const PROBE_PACKAGE_VERSION: &str = "1.0.0";
 const PROBE_SURFACE_ID: &str = "os.mcp.probe.editor";
-const PROBE_APP_ID: &str = "os.mcp.probe.app";
-const PROBE_WINDOW_KIND_ID: &str = "os.mcp.probe.window";
 
 fn probe_record_spec() -> store::os_dsl::RecordSpec {
     store::os_dsl::RecordSpec::new(Some("probe"), store::os_dsl::RecordLayout::Inline, vec![store::os_dsl::FieldSpec::new(0, "value", store::os_dsl::Shape::Value)])
@@ -347,20 +342,6 @@ pub fn ensure_probe_codec_registered() {
     });
 }
 
-fn probe_document_socket_surface() -> DocumentSocketSurfaceExpectationV1 {
-    DocumentSocketSurfaceExpectationV1 {
-        artifact_kind: "os.agent.probe".into(),
-        plugin_id: PROBE_PLUGIN_ID.into(),
-        package_id: PROBE_PACKAGE_ID.into(),
-        version: PROBE_PACKAGE_VERSION.into(),
-        surface_id: PROBE_SURFACE_ID.into(),
-        app_id: PROBE_APP_ID.into(),
-        window_kind_id: PROBE_WINDOW_KIND_ID.into(),
-        role: DocumentOpenSurfaceRoleV1::Editor,
-        renderer_target: DocumentOpenRendererTargetV1::Wasm,
-    }
-}
-
 /// 🧹️ Owned-value retirement for a probe's snapshot root/initial snapshot/mutation — a `ProbeStore`
 /// has nothing external to release (no blob handle, no disk row) so retiring one is exactly taking
 /// it, one bounded step at a time, mirroring `🏪️store/🦀️.rs`'s own `#[cfg(test)]`
@@ -478,7 +459,7 @@ impl WorkspaceOrigin {
     fn persistence_binding(&self) -> store::sync::PersistenceBinding {
         match self {
             WorkspaceOrigin::Folder { path } => store::sync::PersistenceBinding::Folder { path: path.clone() },
-            WorkspaceOrigin::Hub { base_url, space_id } => store::sync::PersistenceBinding::Hub { base_url: base_url.clone(), space_id: space_id.clone(), surface: None },
+            WorkspaceOrigin::Hub { base_url, space_id } => store::sync::PersistenceBinding::Hub { base_url: base_url.clone(), space_id: space_id.clone(), surface: Some(PROBE_SURFACE_ID.to_string()) },
         }
     }
 
@@ -1373,9 +1354,6 @@ impl HeadlessWorkspace {
                 let mut probe_store = ProbeStore::new(envelope).await.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("constructing probe store for `{artifact_id}`: {error}")))?;
                 probe_store.install_member_store_owners_exact(probe_store_owners());
                 let document_key = self.origin.artifact_document_key(artifact_id);
-                if matches!(&self.origin, WorkspaceOrigin::Hub { .. }) && !self.artifact_host.set_document_socket_surface(&document_key, probe_document_socket_surface()) {
-                    return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("artifact `{artifact_id}` already has a claimed document-open authority")).retryable());
-                }
                 let channels = self
                     .artifact_host
                     .open(store::sync::ArtifactActorConfig {
@@ -1852,6 +1830,144 @@ fn base64_encode(bytes: &[u8]) -> String {
 //#endregion 🔖️HeadlessWorkspace
 
 //#region 🧪️Tests
+//#region 💡️Inference
+use semio_framework_os_kernel::os_directory::DocumentScope;
+/// 💡️ The authenticated hub GIS Map inference facade. Every method here is a thin, typed pass to
+/// the hub's own four routes: this process holds no inference authority of its own, mints no job
+/// state, and never applies anything to a document. A `--folder` workspace answers a retryable
+/// `PLUGIN_UNAVAILABLE` naming the `--hub`/`--space` binding it needs.
+impl HeadlessWorkspace {
+    fn hub_inference_binding(&self) -> Result<&Arc<HubRemoteBinding>, GatewayError> {
+        if !matches!(self.origin, WorkspaceOrigin::Hub { .. }) {
+            return Err(crate::inference::hub_inference_binding_required("this workspace"));
+        }
+        self.hub_binding.as_ref().ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, "hub descriptor binding is unbound").retryable())
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn hub_inference_driver(&self) -> Result<&NativeHubBindingDriver, GatewayError> {
+        self.hub_driver.as_ref().ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, "hub binding actor is not running").retryable())
+    }
+
+    /// 👤️ The live authenticated subject every inference job in this process is owned by.
+    pub fn hub_inference_subject(&self) -> Result<crate::inference::HubInferenceSubjectV1, GatewayError> {
+        self.hub_inference_binding()?.inference_subject(i64::try_from(now_ms()).unwrap_or(i64::MAX))
+    }
+
+    /// 📄️ Resolves one document id in the bound space and states plainly when it is not a GIS Map.
+    fn gis_map_inference_scope(&self, document_id: &str) -> Result<DocumentScope, GatewayError> {
+        let (scope, document) = self.hub_inference_binding()?.inference_document(document_id, i64::try_from(now_ms()).unwrap_or(i64::MAX))?;
+        if document.view.descriptor.artifact_schema != crate::inference::GIS_MAP_INFERENCE_DOCUMENT_SCHEMA && document.view.descriptor.artifact_kind != crate::inference::GIS_MAP_INFERENCE_ARTIFACT_KIND {
+            return Err(GatewayError::new(
+                GatewayErrorCode::PreconditionFailed,
+                format!("document `{document_id}` is `{}`/`{}`, not the GIS Map kind this inference service is bound to", document.view.descriptor.artifact_kind, document.view.descriptor.artifact_schema),
+            ));
+        }
+        Ok(scope)
+    }
+
+    /// 🧊️ The P4-C canonical pair mount projected to exactly the frozen base an inference job is
+    /// compared against. It is a LOCAL record: the hub re-derives its own base from server objects.
+    pub fn gis_map_inference_base(&self, document_id: &str) -> Result<crate::inference::GisMapInferenceBaseBindingV1, GatewayError> {
+        let scope = self.gis_map_inference_scope(document_id)?;
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let binding = self.hub_inference_binding()?;
+            let driver = self.hub_inference_driver()?;
+            let cancel = semio_framework_async::CancelToken::root_now();
+            let label = crate::inference::inference_operation_label(&scope.space_id, &scope.document_id, None);
+            crate::inference::retain_inference_operation(&label, cancel.clone());
+            let mounted = driver.gis_map_inference_base(binding.as_ref(), &scope, &cancel);
+            crate::inference::release_inference_operation(&label);
+            mounted.map_err(remote::pair_mount_error_to_gateway)
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            let _ = scope;
+            Err(crate::inference::hub_inference_binding_required("gis_map_inference_base"))
+        }
+    }
+
+    /// 📥️ Submits one closed client intent. The hub runs the bounded deterministic service inline,
+    /// so this call blocks until an offer, a refusal or the bounded deadline — the local wait is
+    /// retained under this document's operation label so `inference_cancel` can interrupt it.
+    pub fn submit_gis_map_inference_job(&self, document_id: &str, request: &crate::inference::GisMapInferenceSubmitRequestV1) -> Result<crate::inference::GisMapInferenceJobReceiptV1, GatewayError> {
+        let scope = self.gis_map_inference_scope(document_id)?;
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let binding = self.hub_inference_binding()?;
+            let driver = self.hub_inference_driver()?;
+            let cancel = semio_framework_async::CancelToken::root_now();
+            let label = crate::inference::inference_operation_label(&scope.space_id, &scope.document_id, None);
+            crate::inference::retain_inference_operation(&label, cancel.clone());
+            let submitted = driver.submit_gis_map_inference_job(&scope, binding.hub_origin(), request, &cancel);
+            crate::inference::release_inference_operation(&label);
+            submitted.map_err(|error| error.to_gateway_error("inference_submit"))
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            let _ = (scope, request);
+            Err(crate::inference::hub_inference_binding_required("submit_gis_map_inference_job"))
+        }
+    }
+
+    /// 📤️ Reads the next owner-private bounded page of lifecycle events and progress rows.
+    pub fn read_gis_map_inference_job_events(&self, document_id: &str, job_id: &str, after: u64) -> Result<crate::inference::GisMapInferenceEventPageV1, GatewayError> {
+        let scope = self.gis_map_inference_scope(document_id)?;
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let binding = self.hub_inference_binding()?;
+            let driver = self.hub_inference_driver()?;
+            let cancel = semio_framework_async::CancelToken::root_now();
+            driver.read_gis_map_inference_job_events(&scope, binding.hub_origin(), job_id, after, &cancel).map_err(|error| error.to_gateway_error("inference_events"))
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            let _ = (scope, job_id, after);
+            Err(crate::inference::hub_inference_binding_required("read_gis_map_inference_job_events"))
+        }
+    }
+
+    /// 🛑️ Records the owner's durable cancel request on the hub.
+    pub fn cancel_gis_map_inference_job(&self, document_id: &str, job_id: &str) -> Result<crate::inference::GisMapInferenceEventPageV1, GatewayError> {
+        let scope = self.gis_map_inference_scope(document_id)?;
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let binding = self.hub_inference_binding()?;
+            let driver = self.hub_inference_driver()?;
+            let cancel = semio_framework_async::CancelToken::root_now();
+            driver.cancel_gis_map_inference_job(&scope, binding.hub_origin(), job_id, &cancel).map_err(|error| error.to_gateway_error("inference_cancel"))
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            let _ = (scope, job_id);
+            Err(crate::inference::hub_inference_binding_required("cancel_gis_map_inference_job"))
+        }
+    }
+
+    /// ✅️ Sends one explicit approval of an exact proposal hash; the hub rebuilds the typed effect.
+    pub fn approve_gis_map_inference_job(&self, document_id: &str, request: &crate::inference::GisMapInferenceApprovalRequestV1) -> Result<crate::inference::GisMapInferenceApprovalReceiptV1, GatewayError> {
+        let scope = self.gis_map_inference_scope(document_id)?;
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let binding = self.hub_inference_binding()?;
+            let driver = self.hub_inference_driver()?;
+            let cancel = semio_framework_async::CancelToken::root_now();
+            let label = crate::inference::inference_operation_label(&scope.space_id, &scope.document_id, Some(&request.job_id));
+            crate::inference::retain_inference_operation(&label, cancel.clone());
+            let approved = driver.approve_gis_map_inference_job(&scope, binding.hub_origin(), request, &cancel);
+            crate::inference::release_inference_operation(&label);
+            approved.map_err(|error| error.to_gateway_error("inference_approve"))
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            let _ = (scope, request);
+            Err(crate::inference::hub_inference_binding_required("approve_gis_map_inference_job"))
+        }
+    }
+}
+//#endregion 💡️Inference
+
 #[cfg(test)]
 mod quick {
     use super::*;
@@ -1867,16 +1983,13 @@ mod quick {
         let origin = WorkspaceOrigin::Hub { base_url: "https://hub.example".into(), space_id: "space-a".into() };
         assert_eq!(origin.artifact_document_key("shared-document"), store::sync::ArtifactDocumentKey::hub("space-a", "shared-document"));
         assert_ne!(origin.artifact_document_key("shared-document"), store::sync::ArtifactDocumentKey::hub("space-b", "shared-document"));
-        let surface = probe_document_socket_surface();
-        assert_eq!(surface.artifact_kind, "os.agent.probe");
-        assert_eq!(surface.plugin_id, PROBE_PLUGIN_ID);
-        assert_eq!(surface.package_id, PROBE_PACKAGE_ID);
-        assert_eq!(surface.version, PROBE_PACKAGE_VERSION);
-        assert_eq!(surface.surface_id, PROBE_SURFACE_ID);
-        assert_eq!(surface.app_id, PROBE_APP_ID);
-        assert_eq!(surface.window_kind_id, PROBE_WINDOW_KIND_ID);
-        assert_eq!(surface.role, DocumentOpenSurfaceRoleV1::Editor);
-        assert_eq!(surface.renderer_target, DocumentOpenRendererTargetV1::Wasm);
+        // 🪪️ The probe verifies no execution-target bytes, so it claims no lease and binds only its
+        // requested surface id; a forgeable local target is no longer an admission input anywhere.
+        match origin.persistence_binding() {
+            store::sync::PersistenceBinding::Hub { surface, .. } => assert_eq!(surface.as_deref(), Some(PROBE_SURFACE_ID)),
+            store::sync::PersistenceBinding::Folder { .. } => panic!("hub origin must bind a hub persistence binding"),
+        }
+        assert!(!std::fs::read_to_string(std::path::Path::new(file!())).expect("probe source").contains("probe_document_socket_surface"));
     }
 
     fn empty_catalog() -> Arc<Catalog> {
@@ -1886,8 +1999,14 @@ mod quick {
     fn authenticated_hub_workspace_fixture() -> HeadlessWorkspace {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("🔗️remote/🧫️fixtures/🔣️authenticated-hub-descriptor-index.json")).unwrap();
         let ready = &fixture["cases"]["memberReady"];
-        let detail = semio_framework_os_kernel::os_pack::json::from_json_str::<semio_framework_os_kernel::os_directory::DirectorySpaceDetailV1>(&ready["responses"][1]["body"].to_string()).unwrap();
-        let semio_framework_os_kernel::os_directory::DirectorySpaceDetailV1::Author { space, members, documents, .. } = detail else { panic!("author detail fixture") };
+        let page = semio_framework_os_kernel::os_directory::DirectorySpaceAdministrationPageV1::parse_canonical_json(ready["responses"][1]["canonicalBody"].as_str().unwrap()).unwrap();
+        let semio_framework_os_kernel::os_directory::DirectorySpaceAdministrationPageV1::Author { space, members, documents, .. } = page else { panic!("author administration page fixture") };
+        let members: Vec<semio_framework_os_kernel::os_directory::MemberView> = members
+            .rows
+            .into_iter()
+            .map(|row| semio_framework_os_kernel::os_directory::MemberView { user_id: row.user_id, email: row.email, display_name: row.display_name, role: row.role })
+            .collect();
+        let documents = documents.rows;
         let view = documents[0].clone();
         let scope = semio_framework_os_kernel::os_directory::DocumentScope::new("space-a", "shared-doc");
         let digest = semio_framework_os_kernel::os_directory::descriptor_digest_v1(&view.descriptor).unwrap();

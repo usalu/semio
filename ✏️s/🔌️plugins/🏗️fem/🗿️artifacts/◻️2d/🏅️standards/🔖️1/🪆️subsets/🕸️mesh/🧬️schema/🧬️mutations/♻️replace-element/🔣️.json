@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element",
   "semanticKind": "replace-element",
   "displayName": "Replace Element",
-  "emoji": "🔁🧩️",
+  "emoji": "♻️",
   "aggregateVariant": "ReplaceElement",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": "replace-element",

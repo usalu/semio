@@ -1,6 +1,6 @@
 //! 🖥️ Plugin-based OS kernel: hot-swappable WASM plugins, workflow, document VCS.
 
-#[cfg(feature = "os-host-full")]
+#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub mod host {
     // #region host
     //! 🔌️ Plugin host, studio document VCS store, backbone, and catalog.
@@ -2246,7 +2246,7 @@ pub mod host {
     // #endregion host
 }
 
-#[cfg(feature = "os-host-full")]
+#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub mod backbone {
     // #region backbone
     //! 🗄️ Trusted host-side backbone ports for local studio storage — reads/writes the raw persisted
@@ -2407,7 +2407,7 @@ pub mod backbone {
 }
 
 
-#[cfg(feature = "os-host-full")]
+#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub mod instance {
     // #region instance
     //! 📦️ App instance schemas, parameters, and studio bindings.
@@ -2979,7 +2979,7 @@ pub mod media_export_raster {
     //! 🖼️ SVG/DWG media helpers: SVG builders and DWG-to-SVG stay target-neutral; rasterization and
     //! SVG-path flattening use the native renderer tier and report unavailable on wasm32-wasip2.
 
-    #[cfg(not(feature = "os-host-full"))]
+    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
     use std::sync::{LazyLock, Mutex};
 
     //#region 🔖️MediaRegistryRegistryStubs
@@ -2988,10 +2988,10 @@ pub mod media_export_raster {
     // share one OnceLock (stubs previously shadowed the real handlers at crate root). Keyed on string
     // format kind ids, not the legacy format enum (retired — ticket 26/08/11/
     // SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6).
-    #[cfg(feature = "os-host-full")]
+    #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
     pub use crate::workflow::{export_os_app_instance_media_kind, import_os_app_instance_media_kind, register_os_media_export_handler_kind, register_os_media_import_handler_kind, OsMediaExportResult};
 
-    #[cfg(not(feature = "os-host-full"))]
+    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
     /// 🖼️ Host-local media export result (workflow module gated behind os-host-full).
     #[derive(Clone, Debug, PartialEq)]
     pub struct OsMediaExportResult {
@@ -3001,7 +3001,7 @@ pub mod media_export_raster {
         pub encoding: Option<String>,
     }
 
-    #[cfg(not(feature = "os-host-full"))]
+    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
     impl OsMediaExportResult {
         /// 📤️ Build an export result from raw bytes + stdio format kind id.
         pub fn from_format_kind_bytes(bytes: Vec<u8>, format_artifact_kind: &str, file_stem: &str) -> Result<Self, String> {
@@ -3018,22 +3018,22 @@ pub mod media_export_raster {
         semio_framework::format_accept_filter(format_artifact_kinds)
     }
 
-    #[cfg(not(feature = "os-host-full"))]
+    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
     type OsMediaExportHandler = Box<dyn Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync>;
-    #[cfg(not(feature = "os-host-full"))]
+    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
     type OsMediaImportHandler = Box<dyn Fn(&[u8]) -> Result<Value, String> + Send + Sync>;
 
-    #[cfg(not(feature = "os-host-full"))]
+    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
     static OS_MEDIA_EXPORT_HANDLERS: LazyLock<Mutex<std::collections::HashMap<(String, String), OsMediaExportHandler>>> = LazyLock::new(|| Mutex::new(std::collections::HashMap::new()));
-    #[cfg(not(feature = "os-host-full"))]
+    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
     static OS_MEDIA_IMPORT_HANDLERS: LazyLock<Mutex<std::collections::HashMap<(String, String), OsMediaImportHandler>>> = LazyLock::new(|| Mutex::new(std::collections::HashMap::new()));
 
-    #[cfg(not(feature = "os-host-full"))]
+    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
     pub fn register_os_media_export_handler_kind(artifact_kind: &str, format_artifact_kind: &str, handler: impl Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync + 'static) {
         OS_MEDIA_EXPORT_HANDLERS.lock().expect("media export registry").insert((artifact_kind.to_string(), format_artifact_kind.to_string()), Box::new(handler));
     }
 
-    #[cfg(not(feature = "os-host-full"))]
+    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
     pub fn register_os_media_import_handler_kind(artifact_kind: &str, format_artifact_kind: &str, handler: impl Fn(&[u8]) -> Result<Value, String> + Send + Sync + 'static) {
         OS_MEDIA_IMPORT_HANDLERS.lock().expect("media import registry").insert((artifact_kind.to_string(), format_artifact_kind.to_string()), Box::new(handler));
     }
@@ -3046,6 +3046,7 @@ pub mod media_export_raster {
     /// dependency closure), the direction this ticket's other framework-product crates already use.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     use semio_s_plugin_stdio::artifacts::dwg::{DwgColor, DwgEntity};
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     use semio_s_plugin_stdio::artifacts::dwg::{DwgDrawing, DwgGeometry};
     use serde_json::Value;
 
@@ -3189,6 +3190,7 @@ pub mod media_export_raster {
     }
 
     /// @emoji 📐️ Renders a DWG drawing back to flat SVG markup (lines and closed polygons), for the raster import path.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn dwg_drawing_to_svg(drawing: &DwgDrawing) -> Result<(String, u32, u32), String> {
         let width = (drawing.extmax[0] - drawing.extmin[0]).max(1.0).ceil() as u32;
         let height = (drawing.extmax[1] - drawing.extmin[1]).max(1.0).ceil() as u32;
@@ -3266,6 +3268,7 @@ pub mod media_export_raster {
     }
 
     /// @emoji 📥️ Registers a DWG import handler for one mesh resource kind.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn register_mesh_dwg_import_handler(artifact_kind: &'static str, document_from_mesh: fn(&semio_framework_plugin::MeshData) -> Result<Value, String>) {
         register_os_media_import_handler_kind(artifact_kind, "dwg", move |bytes| {
             let drawing = semio_s_plugin_stdio::artifacts::dwg::dwg_from_bytes(bytes)?;
@@ -3275,6 +3278,7 @@ pub mod media_export_raster {
     }
 
     /// @emoji 💾️ Registers a DWG export handler for one mesh resource kind; DWG is not part of the `MeshExporter` mechanism (it flattens a mesh into a DWG drawing, not a mesh codec), so it stays a dedicated registrar alongside `register_mesh_exporter`.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn register_mesh_dwg_export_handler(artifact_kind: &'static str, file_stem: &'static str, mesh_from_document: fn(&Value) -> Result<semio_framework_plugin::MeshData, String>) {
         register_os_media_export_handler_kind(artifact_kind, "dwg", move |doc| {
             let mesh = mesh_from_document(doc)?;
@@ -3408,7 +3412,7 @@ pub mod media_export_simple {
     // #endregion media_export_simple
 }
 
-#[cfg(feature = "os-host-full")]
+#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub mod workflow {
     // #region workflow
     //! 🎬️ Workflow, VFS snapshot types, and media export registry.
@@ -3427,7 +3431,7 @@ pub mod workflow {
     // inversion` in the plan) — re-exported here too so every `crate::workflow::X` call site (and every
     // downstream crate importing via `semio_framework_os::workflow::X`/`semio_framework_os::X`) keeps a
     // single source of truth for the workflow document vocabulary.
-    #[cfg(feature = "os-host-full")]
+    #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
     pub use crate::workflow_kernel::{
         apply_workflow_operation, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot, media_port_spec_id, patch_workflow_parameter, placeholder_media_contract, plan_workflow, sync_workflow_parameter_ports,
         validate_workflow as kernel_validate_workflow, validate_workflow_parameter_config_binding, validate_workflow_snapshot, workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name,
@@ -3437,16 +3441,16 @@ pub mod workflow {
         S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA,
     };
 
-    #[cfg(feature = "os-host-full")]
+    #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
     use crate::instance::create_os_id;
-    #[cfg(not(feature = "os-host-full"))]
+    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
     fn create_os_id(prefix: &str) -> String {
         format!("{prefix}-stub")
     }
     //#region 🔖️RegistryStubs
-    #[cfg(feature = "os-host-full")]
+    #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
     use crate::registry::{os_app_registration, os_artifact_descriptor, OsArtifactDescriptor};
-    #[cfg(not(feature = "os-host-full"))]
+    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
     #[derive(Clone, Debug, Default)]
     pub struct OsArtifactDescriptor {
         pub kind: String,
@@ -3456,11 +3460,11 @@ pub mod workflow {
         pub dimension: String,
         pub schema: String,
     }
-    #[cfg(not(feature = "os-host-full"))]
+    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
     fn os_app_registration(_id: &str) -> Option<()> {
         None
     }
-    #[cfg(not(feature = "os-host-full"))]
+    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
     fn os_artifact_descriptor(_kind: &str) -> Option<OsArtifactDescriptor> {
         None
     }
@@ -3925,9 +3929,9 @@ pub mod workflow {
     }
     //#endregion 🔖️IoDialectBridge
     //#region 🔖️MediaCapability
-    #[cfg(feature = "os-host-full")]
+    #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
     pub use crate::registry::os_resource_media_capability;
-    #[cfg(not(feature = "os-host-full"))]
+    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
     fn os_resource_media_capability(_kind: &str) -> semio_framework::OsMediaCapability {
         semio_framework::OsMediaCapability::MeshOnly
     }
@@ -4306,6 +4310,7 @@ pub mod workflow {
             assert!(!drawing.entities.is_empty());
         }
 
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
         #[test]
         fn mesh_dwg_registrar_round_trips_a_box() {
             crate::media_export_raster::register_mesh_dwg_export_handler("3d.__dwg_test", "box", |_| Ok(semio_framework_plugin::mesh_from_kind("box")));
@@ -4724,11 +4729,11 @@ pub mod codec_abi {
         fn resolve_format(&mut self, kind: &str) -> Result<Option<OsHostCodecFormat>, OsHostCodecFailure>;
     }
 
-    #[cfg(feature = "os-host-full")]
+    #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
     #[derive(Default)]
     struct RegisteredOsHostFormatResolver;
 
-    #[cfg(feature = "os-host-full")]
+    #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
     impl OsHostFormatResolver for RegisteredOsHostFormatResolver {
         fn resolve_format(&mut self, kind: &str) -> Result<Option<OsHostCodecFormat>, OsHostCodecFailure> {
             semio_framework::format_descriptor(kind)
@@ -5831,20 +5836,20 @@ pub mod codec_abi {
         }
     }
 
-    #[cfg(feature = "os-host-full")]
+    #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
     /// 🌉️ Owned retained OS-host codec service; UI callers can submit only A1 requests and pages.
     pub struct OsHostCodecService {
         retained: RetainedOsHostCodecService<RegisteredOsHostFormatResolver>,
     }
 
-    #[cfg(feature = "os-host-full")]
+    #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
     impl Default for OsHostCodecService {
         fn default() -> Self {
             Self::new()
         }
     }
 
-    #[cfg(feature = "os-host-full")]
+    #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
     impl OsHostCodecService {
         pub fn new() -> Self {
             Self { retained: RetainedOsHostCodecService::new(RegisteredOsHostFormatResolver) }
@@ -6362,7 +6367,7 @@ pub mod codec_abi {
             assert!(production.contains("NormalizeKindStructuralCursor"));
         }
 
-        #[cfg(feature = "os-host-full")]
+        #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
         #[test]
         fn public_service_runs_the_retained_workflow_cursor_without_a_format_backend() {
             let mut service = OsHostCodecService::new();
@@ -6389,7 +6394,7 @@ pub mod codec_abi {
             assert_eq!(payload(&output), CANONICAL_DSL);
         }
 
-        #[cfg(feature = "os-host-full")]
+        #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
         #[test]
         fn public_service_runs_filter_and_normalize_structural_cursors() {
             let mut service = OsHostCodecService::new();
@@ -6432,7 +6437,7 @@ pub mod codec_abi {
     //#endregion 🧪️Tests
 }
 
-#[cfg(feature = "os-host-full")]
+#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub mod registry {
     // #region registry
     //! 🗂️ Plugin manifest registry and OS plugin/artifact catalog.
@@ -6994,10 +6999,9 @@ pub mod registry {
     // #endregion registry
 }
 
-#[cfg(feature = "os-host-full")]
-#[cfg(feature = "os-host-full")]
+#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub use crate::space::*;
-#[cfg(feature = "os-host-full")]
+#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub use crate::workflow::{
     apply_flow_fixture_to_os_workflow, apply_workflow_operation, build_os_workflow_operator_infos, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot, export_os_app_instance_media_kind, import_os_app_instance_media_kind,
     negotiate_media_contract, os_media_export_extension_for_format_kind, os_media_neuron_kind_for_node, os_resource_media_capability, os_workflow_to_flow_fixture, os_workflow_to_node_graph_payload, patch_workflow_parameter,
@@ -7009,26 +7013,26 @@ pub use crate::workflow::{
 #[cfg(not(target_arch = "wasm32"))]
 #[cfg(feature = "os-host-full")]
 pub use backbone::{open_file_space_backbone, open_folder_space_backbone};
-#[cfg(feature = "os-host-full")]
+#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub use host::{
     create_backbone_document, create_os_space, decode_backbone_payload, delete_os_space, encode_backbone_payload, export_backbone_dsl, export_backbone_pack, export_os_space_dsl, export_os_space_pack, import_os_space_from_dsl,
     import_os_space_from_pack, list_os_space_catalog_entries, load_os_space_document, materialize_backbone_snapshot, seed_os_space_catalog_if_empty, BackboneDocument, LoadedProgram, OsBackbonePort, OsBackbonePorts, OsCollectionDocument,
     OsSpaceCatalogEntry, OsSpaceDocument, OsSpaceStore, OsWorkflowArtifactDocument, OsWorkflowStore, PluginHost, ProgramHotSwapEvent, OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX,
 };
-#[cfg(feature = "os-host-full")]
-#[cfg(feature = "os-host-full")]
+#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub use instance::{
     apply_parameter_values_to_snapshot, create_default_os_parameter, create_os_artifact_id, create_os_id, is_parameter_port_id, materialize_os_app_instance_document_json, media_port_id_for_spec, media_port_spec_id, os_fixture_json,
     os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id, parameter_port_id, patch_os_parameter, register_os_fixture_json, resolve_parameter_values_for_instance, set_json_pointer_value, OsArtifactRef, OsInstanceState,
     OsParameter, OsParameterFieldBinding, OsParameterFieldSpec, OsParameterType, OS_PARAMETER_PORT_PREFIX,
 };
 pub use media_export_raster::{
-    dwg_drawing_to_svg, media_accept_filter_kinds, rasterize_svg_to_png_base64, register_2d_export_handlers, register_mesh_dwg_export_handler, register_mesh_dwg_import_handler, register_mesh_exporter, register_mesh_importer,
-    register_os_media_export_handler_kind, register_os_media_import_handler_kind, svg_to_dwg_bytes, OsMediaExportResult,
+    media_accept_filter_kinds, rasterize_svg_to_png_base64, register_2d_export_handlers, register_mesh_exporter, register_mesh_importer, register_os_media_export_handler_kind, register_os_media_import_handler_kind, svg_to_dwg_bytes,
+    OsMediaExportResult,
 };
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+pub use media_export_raster::{dwg_drawing_to_svg, register_mesh_dwg_export_handler, register_mesh_dwg_import_handler};
 pub use media_export_simple::{map_points_svg, pages_rects_svg, title_card_svg, wrap_svg};
-#[cfg(feature = "os-host-full")]
-#[cfg(feature = "os-host-full")]
+#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub use registry::{
     list_os_artifact_descriptors, os_app_primary_output_kind, os_app_registration, os_artifact_descriptor, os_artifact_dialect, register_app_io, register_artifact_descriptor, register_artifact_descriptors, resolve_os_app_definition,
     try_os_artifact_descriptor, workflow_palette, AppPaletteEntry, OsAppRegistration, OsArtifactDescriptor, OsArtifactKindId, PluginRegistry,

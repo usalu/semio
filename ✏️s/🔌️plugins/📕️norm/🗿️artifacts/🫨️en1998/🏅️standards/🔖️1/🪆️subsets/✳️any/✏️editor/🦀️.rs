@@ -69,6 +69,33 @@ impl ArtifactEditor for En1998PlayApp {
     const DIALECT: Dialect = crate::artifacts::en1998::EN1998_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = "semio.norm.en1998/v1";
 
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        crate::app_surface::norm_artifact_store_preparation::<Self>()
+    }
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        crate::app_surface::norm_config_store_preparation::<Self>()
+    }
+
+    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
+        En1998BoundedCommandJobFactory::register(registry)
+    }
+
+    fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        crate::app_surface::build_norm_tool_job::<Self>(request)
+    }
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<En1998PlayApp>,
+        owner_file: "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.norm.en1998@1/*#editor",
+        document_schema: "semio.norm.en1998/v1",
+        factory: "En1998BoundedCommandJobFactory",
+        factory_type: En1998BoundedCommandJobFactory,
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+        tools: ["setSnapshot", "evaluate", "setSelectedCheckIndex"]
+    }
+
 
 
 
@@ -133,6 +160,16 @@ impl ArtifactEditor for En1998PlayApp {
 }
 //#endregion ðï¸En1998PlayApp
 
+//#region 🧵️RetainedCommands
+crate::norm_owned_tool_job_factory!(En1998BoundedCommandJobFactory, En1998PlayApp);
+
+impl crate::app_surface::NormRetainedEditor for En1998PlayApp {
+    fn dispatch_retained(command: &En1998Command, doc: &ArtifactView<'_, En1998Snapshot>, cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<En1998Mutation, NormConfigMutation, NoDraftMutation>, Fault> {
+        command.dispatch(doc, cfg)
+    }
+}
+//#endregion 🧵️RetainedCommands
+
 //#region 🧩️ComplianceFamily
 /// 🧩️ Headless `NormFamily` binding (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
 /// relocated verbatim from the deleted `⚙️engine`. This is stateful/host-facing behaviour, so it
@@ -172,11 +209,9 @@ pub fn create_en1998_app() -> semio_framework_plugin::AppDefinition {
             .mutation("setSnapshot", LocalizedLabel::native("Set En1998Snapshot", "Dokument setzen"))
             .view_action("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"))
             .view_action("setSelectedCheckIndex", LocalizedLabel::native("Set Selected Check", "AusgewÃ¤hlte PrÃ¼fung setzen"))
-            // 🧵️ Honest fail-closed dispositions: evaluate is a no-op placeholder, selected-check
-            // lacks retained Config preparation, and set-snapshot performs whole-document parse/diff.
-            .action_interactive_job("setSnapshot", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("evaluate", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setSelectedCheckIndex", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setSnapshot", InteractiveJobClassification::Migrated)
+            .action_interactive_job("evaluate", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSelectedCheckIndex", InteractiveJobClassification::Migrated)
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder` takes a bare `AppDefinition` — there is no
@@ -192,7 +227,7 @@ pub fn create_en1998_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::testkit::{meta, new_app as sdk_new_app, new_app_with_registry};
+    use semio_framework_plugin::testkit::{meta, new_app_with_registry};
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
     /// ✏️ Adapts `create_en1998_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
@@ -204,9 +239,6 @@ pub(crate) mod testkit {
 
     pub type NormApp = VcsArtifactApp<EditorApp<En1998PlayApp>>;
 
-    pub fn new_app() -> NormApp {
-        sdk_new_app::<EditorApp<En1998PlayApp>>()
-    }
 
     /// ð§¬ï¸ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
     pub fn app_with_registry() -> NormApp {
@@ -232,11 +264,16 @@ mod tests {
     #[test]
     fn retained_command_dispositions_match_the_language_neutral_oracle() {
         crate::app_surface::retained_disposition_oracle::assert_fixture(VARIANT);
-        let expected = ["setSnapshot", "evaluate", "setSelectedCheckIndex"];
         let definition = create_en1998_app();
-        let classified = definition.actions.iter().filter(|action| expected.contains(&action.id.as_str())).collect::<Vec<_>>();
-        assert_eq!(classified.len(), expected.len());
-        assert!(classified.iter().all(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::BatchOnlyPendingRewrite));
+        let mut classified = 0usize;
+        for window in definition.window_kinds.iter() {
+            for id in crate::app_surface::NORM_RETAINED_TOOL_IDS {
+                let action = window.actions.iter().find(|action| action.id == *id).unwrap_or_else(|| panic!("window {} must declare {id}", window.id));
+                assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
+                classified += 1;
+            }
+        }
+        assert_eq!(classified, definition.window_kinds.len() * crate::app_surface::NORM_RETAINED_TOOL_IDS.len());
     }
 
     //#region ðï¸CommandSurface
@@ -290,7 +327,7 @@ mod tests {
     //#region ðï¸Manifest
     #[semio_framework_async_macros::async_test]
     fn the_manifest_stitches_every_taxonomy_node() {
-        let definition = create_en1998_app().definition;
+        let definition = create_en1998_app();
         assert_eq!(definition.modes.len(), 1);
         assert_eq!(definition.window_kinds.len(), 2);
         for body_key in [document_panel::BODY_DOCUMENT, catalogue_panel::BODY_CATALOGUE, inspection_panel::BODY_INSPECTION] {
@@ -303,7 +340,7 @@ mod tests {
     /// ports, and `report:out` is pinned to this family's already-declared artifact kind.
     #[semio_framework_async_macros::async_test]
     fn declares_model_in_and_report_out_ports() {
-        let ports = create_en1998_app().definition.io.ports;
+        let ports = create_en1998_app().io.ports;
         assert!(ports.iter().any(|port| port.id == "model:in" && port.direction == semio_framework_plugin::MediaPortDirection::In));
         let report_out = ports.iter().find(|port| port.id == "report:out").expect("report:out declared");
         assert_eq!(report_out.kind_id.as_deref(), Some(crate::app_surface::artifact_kind_id(VARIANT).as_str()));
@@ -311,13 +348,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     fn an_unknown_body_key_falls_back_to_a_text_node() {
-        let mut app = testkit::new_app();
+        let mut app = testkit::app_with_registry();
         assert!(testkit::render(&mut app, "norm.en1998.play.nope").contains("Unknown body"));
     }
 
     #[semio_framework_async_macros::async_test]
     fn every_declared_body_key_renders() {
-        let mut app = testkit::new_app();
+        let mut app = testkit::app_with_registry();
         for body_key in [inputs::BODY_INPUTS, results::BODY_RESULTS, document_panel::BODY_DOCUMENT, catalogue_panel::BODY_CATALOGUE, inspection_panel::BODY_INSPECTION] {
             assert!(!testkit::render(&mut app, body_key).contains("Unknown body"), "{body_key} must render its own node");
         }
@@ -327,7 +364,7 @@ mod tests {
     //#region ðï¸Behavior
     #[semio_framework_async_macros::async_test]
     fn set_snapshot_commits_a_host_backed_report() {
-        let mut app = testkit::new_app();
+        let mut app = testkit::app_with_registry();
         testkit::dispatch(&mut app, En1998Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1998Snapshot::default() }));
         let host = NormHost::<En1998Family>::from_document(app.snapshot().expect("projection"));
         assert!(!host.report().checks.is_empty());
@@ -335,7 +372,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     fn evaluate_recommits_the_current_projection_without_changing_it() {
-        let mut app = testkit::new_app();
+        let mut app = testkit::app_with_registry();
         let before = app.snapshot().expect("projection");
         testkit::dispatch(&mut app, En1998Command::Evaluate(evaluate::Evaluate {}));
         assert_eq!(before, app.snapshot().expect("projection"));
@@ -344,7 +381,7 @@ mod tests {
     /// ð§®ï¸ `setSelectedCheckIndex` is config-only â it must dispatch cleanly and never touch the document.
     #[semio_framework_async_macros::async_test]
     fn selected_check_index_is_a_config_only_edit() {
-        let mut app = testkit::new_app();
+        let mut app = testkit::app_with_registry();
         let before = app.snapshot().expect("projection");
         let result = testkit::dispatch(&mut app, En1998Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }));
         assert!(result.mutations.is_empty(), "a config-only command must emit no document operations");
@@ -362,7 +399,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     fn undo_redo_round_trips_through_the_wrapper() {
-        let mut app = testkit::new_app();
+        let mut app = testkit::app_with_registry();
         testkit::dispatch(&mut app, En1998Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1998Snapshot::default() }));
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
         app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).expect("redo");
@@ -372,7 +409,7 @@ mod tests {
     /// ðï¸ `report:out` dumps the currently computed `CheckReport` as a `Structured` media payload.
     #[semio_framework_async_macros::async_test]
     fn report_out_exports_the_computed_check_report() {
-        let mut app = testkit::new_app();
+        let mut app = testkit::app_with_registry();
         let media = semio_framework_plugin::resolve_ready(PluginApp::export_media(&mut app, "report:out")).expect("export report:out");
         let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };
         assert_eq!(schema, crate::app_surface::artifact_kind_id(VARIANT));

@@ -73,8 +73,14 @@ fn exact_live_pump_binding(source: &str) -> bool {
     let helper = &source[helper_start..start];
     if helper.matches("pool.pump(now_ms);").count() != 1 || !helper.contains("let now_ms = semio_framework_job::default_now_ms();") || ["while ", "loop {", "for "].iter().any(|pattern| helper.contains(pattern)) { return false }
     let source = &source[start..];
-    let Some(start) = source.find("RUNTIME_MAINTENANCE_QUEUED | RUNTIME_MAINTENANCE_RUNNING =>") else { return false };
-    let Some(length) = source[start..].find("_ => Err(") else { return false };
+    let marker = "RuntimeMaintenanceStatus::Queued | RuntimeMaintenanceStatus::Running => {";
+    let Some(start) = source.find(marker).map(|start| start + marker.len()) else { return false };
+    let mut depth = 1;
+    let Some(length) = source[start..].char_indices().find_map(|(index, character)| {
+        if character == '{' { depth += 1; }
+        if character == '}' { depth -= 1; }
+        (depth == 0).then_some(index)
+    }) else { return false };
     let branch = &source[start..start + length];
     branch.matches("pump_runtime_live_cooperative_turn(&cell)").count() == 1 && !["while ", "loop {", "for "].iter().any(|pattern| branch.contains(pattern))
 }

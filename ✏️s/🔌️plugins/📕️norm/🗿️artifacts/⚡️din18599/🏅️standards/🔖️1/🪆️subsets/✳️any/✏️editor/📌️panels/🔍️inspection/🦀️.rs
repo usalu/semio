@@ -46,7 +46,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     fn renders_a_single_check() {
-        let mut app = testkit::new_app();
+        let mut app = testkit::app_with_registry();
         assert!(!testkit::render(&mut app, BODY_INSPECTION).contains("Unknown body"));
     }
 }

@@ -8,11 +8,15 @@
 // #endregion Header
 
 import type { ArtifactBootstrapControl, ArtifactBootstrapProgress, ArtifactPresencePeer, ClientFrame, MutationEnvelope, ServerFrame, WireAckStage, WireArtifactBootstrap, WireFrontierSummary, WireLane, WireMutationEnvelope } from "@semio-tech/framework-replication";
-import type { ArtifactActorConfig, ArtifactActorMsg, ArtifactBootstrapWorkerEvent, ArtifactEvent, ArtifactSyncStatus, BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, BrowserBrokerPortResponseV1, CanonicalDirectoryEventPageV1, CommandAckOutcome, DirectoryAcknowledgedStream, DirectoryCommand, DirectoryEventPageAckV1, DirectoryStreamMessage, DocumentScope, PersistenceBinding, RemoteState, SocketGrantReceiptV1 } from "./🟦️";
+import type { ArtifactActorConfig, ArtifactActorMsg, ArtifactBootstrapWorkerEvent, ArtifactEvent, ArtifactSyncStatus, BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, BrowserBrokerPortResponseV1, CanonicalDirectoryEventPageV1, CommandAckOutcome, DirectoryAcknowledgedStream, DirectoryAdministrationPhaseV1, DirectoryCommand, DirectoryEventPageAckV1, DirectoryStreamMessage, DocumentScope, PersistenceBinding, RemoteState, SocketGrantReceiptV1 } from "./🟦️";
 import { ArtifactBootstrapAssembler, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodePresencePeer, encodeServerFrame } from "@semio-tech/framework-replication";
-import { DirectoryClient, DirectoryHttpError, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, createSocketGrantIssuerV1, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeDocumentPackBytes, decodePackValue, documentRuntimeKeyV1, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentPackBytes, encodePackValue, parseBrowserBrokerPortRequestV1, parseSocketGrantReceiptV1, socketGrantProtocolsV1 } from "./🟦️";
-import type { DocumentOpenIntentV1, DocumentOpenPlanV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-import { parseDocumentOpenIntentV1, parseDocumentOpenPlanV1, parseDocumentPlanSocketGrantIntentV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { DirectoryClient, DirectoryCommandError, DirectoryHttpError, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, createSocketGrantIssuerV1, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeDocumentPackBytes, decodePackValue, documentRuntimeKeyV1, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentPackBytes, encodePackValue, parseBrowserBrokerPortRequestV1, parseSocketGrantReceiptV1, socketGrantProtocolsV1 } from "./🟦️";
+import type { DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryCommandResultV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1, DocumentOpenIntentV1, DocumentOpenPlanV1, GisMapInferencePortCodeV1, GisMapInferencePortEventV1, GisMapInferencePortStatusV1, GisMapInferencePreviewV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES, gisMapInferenceCodeFromStatusV1, gisMapInferencePortTerminalV1, idleGisMapInferencePortStatusV1, parseGisMapInferenceApprovalReceiptV1, parseGisMapInferenceEventPageV1, parseGisMapInferenceJobReceiptV1, reduceGisMapInferencePortV1, sealGisMapInferenceApprovalRequestV1, sealGisMapInferenceJobRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, directoryCommandErrorIsTransient, directoryCommandRequestJson, directoryCommandSha256, documentExecutionTargetStatusRoleV1, leaseFieldsFromPlanV1, parseDocumentExecutionTargetLeaseFieldsV1, parseDocumentOpenIntentV1, parseDocumentOpenPlanV1, parseDocumentPlanSocketGrantIntentV1, sameLeaseFieldsV1, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+/** 🔏️ First-party BLAKE3 runtime module — Web Crypto supplies SHA-256 but has no BLAKE3, so a
+ * verified execution-target component is hashed with the repository's own implementation. */
+import { blake3Hex } from "@semio-tech/framework";
 /** 🎚️ config-lane attach (contract freeze §4) — `OpeningPreferences` is a kernel type (domain-neutral
  * framework), never redefined here; see this file's `🔖️ConfigLane` region. */
 import type { OpeningPreferences } from "@semio-tech/framework";
@@ -223,10 +227,14 @@ type ArtifactState = {
   pendingSocketActorId: string | null;
   channel: BroadcastChannel;
   socket: WebSocket | null;
+  presenceAuthority: Readonly<{ socket: WebSocket; scope: DocumentScope; verifiedSurfaceId: string }> | null;
   /** 🛑️ Aborted once, in {@link closeArtifact} — cancels every in-flight folder/blob fetch this
    * document owns and unblocks any pending {@link retryWithJitteredBackoff} delay for its hub/SSE
    * reconnect loops immediately (finding 3). Never re-created; a closed document stays closed. */
   docAbort: AbortController;
+  /** 🪪️ The private verified execution-target owner for a non-`react` hub target, live only while
+   * this document's plan/socket authority is. Never posted, cloned or encoded. */
+  executionTargetLease: DocumentExecutionTargetLease | null;
   /** 🛟️ Handle for the recursive, jittered sanity-poll reschedule (finding 1) — a plain
    * `ReturnType<typeof setTimeout>`, not `setInterval`, because each tick schedules its OWN next
    * delay with fresh jitter rather than ticking on a fixed period. */
@@ -276,6 +284,7 @@ type ArtifactState = {
 };
 
 const artifacts = new Map<string, ArtifactState>();
+let workerPostTestSink: ((message: BackboneWorkerResponse) => void) | null = null;
 
 function artifactRuntimeKey(documentId: string, spaceId?: string): string | null {
   if (spaceId !== undefined) return documentRuntimeKeyV1({ kind: "hub", spaceId, documentId });
@@ -291,11 +300,37 @@ function artifactState(documentId: string, spaceId?: string): ArtifactState | un
 }
 
 function post(message: BackboneWorkerResponse): void {
+  if (workerPostTestSink !== null) {
+    workerPostTestSink(message);
+    return;
+  }
   workerScope?.postMessage({ wire: encodeBackboneWorkerResponse(message) });
 }
 
-function emitEvent(documentId: string, event: ArtifactEvent): void {
-  post({ kind: "event", documentId, event });
+function artifactScope(state: ArtifactState): DocumentScope | undefined {
+  const binding = hubBinding(state.config);
+  return binding === null ? undefined : { spaceId: binding.spaceId, documentId: state.config.documentId };
+}
+
+function emitEvent(state: ArtifactState, event: ArtifactEvent): void {
+  const scope = artifactScope(state);
+  if (event.kind === "presence") {
+    const authority = state.presenceAuthority;
+    const verified = authority !== null
+      && authority.socket === state.socket
+      && scope !== undefined
+      && authority.scope.spaceId === scope.spaceId
+      && authority.scope.documentId === scope.documentId;
+    post({
+      kind: "event",
+      documentId: state.config.documentId,
+      event: verified ? event : { ...event, peers: [] },
+      ...(scope === undefined ? {} : { scope }),
+      ...(verified ? { verifiedSurfaceId: authority.verifiedSurfaceId } : {}),
+    });
+    return;
+  }
+  post({ kind: "event", documentId: state.config.documentId, event, ...(scope === undefined ? {} : { scope }) });
 }
 
 const SOCKET_GRANT_REQUEST_TIMEOUT_MS = 10_000;
@@ -483,72 +518,359 @@ async function readDocumentOpenJson(response: Response): Promise<unknown> {
   }
 }
 
-function documentOpenPlanAuthority(plan: DocumentOpenPlanV1, intent: DocumentOpenIntentV1, config: ArtifactActorConfig, installed: NonNullable<Extract<PersistenceBinding, { kind: "hub" }>["installedTarget"]>): Omit<BrowserDocumentSocketAuthorityV1, "receipt"> {
+//#region 🪪️ExecutionTargetLease
+/** 📶️ Bounded streaming progress unit for a verified execution-target body. */
+const EXECUTION_TARGET_PROGRESS_UNIT_BYTES = 64 * 1024;
+/** 🧯️ Bound on the strict lease manifest JSON body. */
+const EXECUTION_TARGET_MANIFEST_MAX_BYTES = 8 * 1024;
+
+type DocumentExecutionTargetAssetV1 = "manifest" | "component" | "descriptor";
+
+const documentExecutionTargetLeaseMintToken = Symbol("semio.os.document-execution-target-lease.mint/v1");
+const documentExecutionTargetLeaseBrand = Symbol("semio.os.document-execution-target-lease/v1");
+
+/** 🪪️ Private non-serializable owner of one verified execution target. Its constructor is
+ * unreachable outside this module (a module-private mint token), it owns the verified component and
+ * descriptor buffers plus any private module URL, and public callers only ever receive a frozen copy
+ * of {@link DocumentExecutionTargetLeaseFieldsV1}. It is never posted, cloned or encoded. */
+class DocumentExecutionTargetLease {
+  readonly [documentExecutionTargetLeaseBrand] = true;
+  #fields: DocumentExecutionTargetLeaseFieldsV1;
+  #hubOrigin: string;
+  #component: Uint8Array | null;
+  #descriptor: Uint8Array | null;
+  #moduleUrl: string | null = null;
+  #live = true;
+
+  constructor(token: symbol, fields: DocumentExecutionTargetLeaseFieldsV1, hubOrigin: string, component: Uint8Array, descriptor: Uint8Array) {
+    if (token !== documentExecutionTargetLeaseMintToken) throw new Error("document execution target lease: private constructor");
+    this.#fields = fields;
+    this.#hubOrigin = hubOrigin;
+    this.#component = component;
+    this.#descriptor = descriptor;
+    Object.freeze(this);
+  }
+
+  get live(): boolean {
+    return this.#live;
+  }
+
+  get hubOrigin(): string {
+    return this.#hubOrigin;
+  }
+
+  fields(): DocumentExecutionTargetLeaseFieldsV1 {
+    if (!this.#live) throw new Error("document execution target lease: dropped");
+    return Object.freeze(structuredClone(this.#fields));
+  }
+
+  drop(): void {
+    this.#live = false;
+    this.#component?.fill(0);
+    this.#descriptor?.fill(0);
+    this.#component = null;
+    this.#descriptor = null;
+    if (this.#moduleUrl !== null) {
+      URL.revokeObjectURL(this.#moduleUrl);
+      this.#moduleUrl = null;
+    }
+  }
+}
+
+/** 🧾️ Receipt-free lease projection of one parsed plan, at the byte lengths under comparison. */
+function receiptFreeFields(plan: DocumentOpenPlanV1, byteLengths: { readonly component: number; readonly descriptor: number }): DocumentExecutionTargetLeaseFieldsV1 {
+  return leaseFieldsFromPlanV1(plan, byteLengths);
+}
+
+function executionTargetHex(bytes: Uint8Array): string {
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+async function executionTargetSha256Hex(bytes: Uint8Array): Promise<string> {
+  return executionTargetHex(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)));
+}
+
+function executionTargetAssetPath(spaceId: string, documentId: string, asset: DocumentExecutionTargetAssetV1): string {
+  return `/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}/execution-target/${asset}`;
+}
+
+/** 🚪️ The only broker operation this lane owns: exactly the three protected document-scoped asset
+ * calls, always POST, always the bounded `DocumentOpenIntentV1` body, never a package, digest,
+ * generation, path or receipt selector. Anything else is denied before a request exists. */
+function browserExecutionTargetAssetRequest(binding: Extract<PersistenceBinding, { kind: "hub" }>, documentId: string, asset: DocumentExecutionTargetAssetV1, intent: DocumentOpenIntentV1, options: { readonly timeoutMs: number; readonly signal: AbortSignal }): Promise<FetchTimeoutResponse> {
+  const path = executionTargetAssetPath(binding.spaceId, documentId, asset);
+  if (!/^\/spaces\/[^/?#]+\/documents\/[^/?#]+\/execution-target\/(?:manifest|component|descriptor)$/u.test(path)) return Promise.reject(new Error("document execution target: operation denied"));
+  if (intent.scope.spaceId !== binding.spaceId || intent.scope.documentId !== documentId) return Promise.reject(new Error("document execution target: operation denied"));
+  return browserBrokerFetch(`/_semio/hub${path}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(intent) }, options);
+}
+
+/** 🔭️ Observation seam for the execution-target live region, mirroring {@link socketGrantTestIssue}:
+ * a worker scope posts, and a harness without one still sees the exact bounded payload. */
+let executionTargetStatusObserver: ((status: Extract<BackboneWorkerResponse, { kind: "execution-target-status" }>) => void) | null = null;
+
+function emitExecutionTargetStatus(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "hub" }>, code: DocumentExecutionTargetStatusCodeV1, progress?: DocumentExecutionTargetProgressV1): void {
+  const scope = { spaceId: binding.spaceId, documentId: state.config.documentId };
+  const status: Extract<BackboneWorkerResponse, { kind: "execution-target-status" }> = { kind: "execution-target-status", documentId: state.config.documentId, spaceId: binding.spaceId, scope, code, ...(progress ? { progress } : {}) };
+  executionTargetStatusObserver?.(status);
+  post(status);
+}
+
+/** 📥️ Streams the strict lease manifest under its own explicit maximum, independently of the larger
+ * plan/grant response bound. The body is wiped after decoding. */
+async function readExecutionTargetManifestJson(response: FetchTimeoutResponse): Promise<unknown> {
+  const declared = response.headers.get("content-length");
+  if (declared !== null && !(Number.isSafeInteger(Number(declared)) && Number(declared) >= 1 && Number(declared) <= EXECUTION_TARGET_MANIFEST_MAX_BYTES)) throw new Error("document execution target: invalid manifest");
+  if (!response.body) throw new Error("document execution target: invalid manifest");
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let retained = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      retained += value.byteLength;
+      if (retained > EXECUTION_TARGET_MANIFEST_MAX_BYTES) throw new Error("document execution target: invalid manifest");
+      chunks.push(value);
+    }
+    if (retained === 0) throw new Error("document execution target: invalid manifest");
+    const bytes = new Uint8Array(retained);
+    let offset = 0;
+    for (const chunk of chunks) {
+      bytes.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    try {
+      return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    } finally {
+      bytes.fill(0);
+    }
+  } finally {
+    await reader.cancel().catch(() => undefined);
+    for (const chunk of chunks) chunk.fill(0);
+  }
+}
+
+/** 📥️ Streams one bounded asset body, enforcing the declared byte length, the shared maximum and the
+ * operation's cancellation/deadline before every chunk, and reporting bounded progress only. */
+async function readExecutionTargetBody(response: FetchTimeoutResponse, expectedByteLength: number, maxBytes: number, stage: "component" | "descriptor", signal: AbortSignal, report: (progress: DocumentExecutionTargetProgressV1) => void): Promise<Uint8Array> {
+  const declared = Number(response.headers.get("content-length") ?? "");
+  if (!response.ok || !Number.isSafeInteger(declared) || declared !== expectedByteLength || declared < 1 || declared > maxBytes || !response.body) throw new Error("document execution target: invalid body");
+  const bytes = new Uint8Array(declared);
+  const reader = response.body.getReader();
+  let received = 0;
+  let announced = 0;
+  try {
+    for (;;) {
+      if (signal.aborted) throw new Error("document execution target: cancelled");
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (received + value.byteLength > declared) throw new Error("document execution target: invalid body");
+      bytes.set(value, received);
+      received += value.byteLength;
+      value.fill(0);
+      if (received - announced >= EXECUTION_TARGET_PROGRESS_UNIT_BYTES) {
+        announced = received;
+        report({ stage, completedBytes: received, totalBytes: declared });
+      }
+    }
+    if (received !== declared) throw new Error("document execution target: invalid body");
+    report({ stage, completedBytes: received, totalBytes: declared });
+    return bytes;
+  } catch (error) {
+    bytes.fill(0);
+    await reader.cancel().catch(() => undefined);
+    throw error;
+  }
+}
+
+/** 📜️ Strictly admits the raw descriptor bytes: canonical re-encoding equality first, then exact
+ * equality between the decoded package descriptor and the verified lease fields. A sibling JSON
+ * manifest or a caller-selected URL is never descriptor authority. */
+function parseVerifiedPackageDescriptorV1(bytes: Uint8Array, fields: DocumentExecutionTargetLeaseFieldsV1): void {
+  const decoded = decodePackValue(bytes);
+  const canonical = encodePackValue(decoded);
+  if (canonical.length !== bytes.length || canonical.some((byte, index) => byte !== bytes[index])) throw new Error("document execution target: descriptor is not canonical");
+  const record = (value: unknown): Record<string, unknown> => {
+    if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("document execution target: descriptor invalid");
+    return value as Record<string, unknown>;
+  };
+  const descriptor = record(decoded);
+  const manifest = record(descriptor.manifest);
+  const hashes = record(descriptor.hashes);
+  const apps = Array.isArray(manifest.apps) ? manifest.apps.map(record) : [];
+  const artifactKinds = Array.isArray(manifest.artifactKinds) ? manifest.artifactKinds.map(record) : [];
+  const app = apps.find((entry) => entry.id === fields.surface.appId);
+  const dialect = app === undefined ? undefined : record(app.dialect);
+  const windowKinds = app !== undefined && Array.isArray(app.windowKinds) ? app.windowKinds.map(record) : [];
   if (
+    descriptor.descriptorVersion !== 1
+    || descriptor.packageId !== fields.package.packageId
+    || descriptor.execution !== "isolated"
+    || manifest.pluginId !== fields.package.pluginId
+    || manifest.version !== fields.package.version
+    || hashes.wasmSha256 !== fields.component.sha256
+    || app === undefined
+    || dialect === undefined
+    || app.id !== fields.surface.surfaceId
+    || app.role !== fields.surface.role
+    || dialect.artifactKind !== fields.parentDialect.artifactKind
+    || dialect.standard !== fields.parentDialect.standard
+    || dialect.subset !== fields.parentDialect.subset
+    || !windowKinds.some((window) => window.id === fields.surface.windowKindId)
+    || !artifactKinds.some((kind) => kind.id === fields.artifact.kind && kind.schema === fields.artifact.schema)
+  ) throw new Error("document execution target: descriptor mismatch");
+}
+
+/** 🛡️ Acquires the server-selected verified execution target for one live plan and mints the private
+ * lease only after every byte verifies. It shares {@link ArtifactState.docAbort} and the current
+ * document-open deadline with {@link requestDocumentSocketAuthority}; a mismatch, cancellation or
+ * deadline wipes every retained buffer and returns no lease. */
+async function installDocumentExecutionTargetLease(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "hub" }>, plan: DocumentOpenPlanV1, intent: DocumentOpenIntentV1): Promise<DocumentExecutionTargetLease> {
+  const signal = state.docAbort.signal;
+  const options = { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal } as const;
+  const report = (progress: DocumentExecutionTargetProgressV1): void => emitExecutionTargetStatus(state, binding, "verifying", progress);
+  let component: Uint8Array | null = null;
+  let descriptorBytes: Uint8Array | null = null;
+  try {
+    if (signal.aborted) throw new Error("document execution target: cancelled");
+    report({ stage: "manifest", completedBytes: 0, totalBytes: 1 });
+    const manifestResponse = await browserExecutionTargetAssetRequest(binding, state.config.documentId, "manifest", intent, options);
+    if (!manifestResponse.ok) throw new Error("document execution target: unavailable");
+    const fields = parseDocumentExecutionTargetLeaseFieldsV1(await readExecutionTargetManifestJson(manifestResponse));
+    if (!sameLeaseFieldsV1(fields, receiptFreeFields(plan, { component: fields.component.byteLength, descriptor: fields.descriptor.byteLength }))) throw new Error("document execution target: manifest mismatch");
+    report({ stage: "manifest", completedBytes: 1, totalBytes: 1 });
+
+    if (signal.aborted) throw new Error("document execution target: cancelled");
+    const componentResponse = await browserExecutionTargetAssetRequest(binding, state.config.documentId, "component", intent, options);
+    component = await readExecutionTargetBody(componentResponse, fields.component.byteLength, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, "component", signal, report);
+
+    if (signal.aborted) throw new Error("document execution target: cancelled");
+    const descriptorResponse = await browserExecutionTargetAssetRequest(binding, state.config.documentId, "descriptor", intent, options);
+    descriptorBytes = await readExecutionTargetBody(descriptorResponse, fields.descriptor.byteLength, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, "descriptor", signal, report);
+
+    if (signal.aborted) throw new Error("document execution target: cancelled");
+    report({ stage: "verify", completedBytes: 0, totalBytes: 3 });
+    if (await executionTargetSha256Hex(component) !== fields.component.sha256) throw new Error("document execution target: component integrity");
+    report({ stage: "verify", completedBytes: 1, totalBytes: 3 });
+    if (blake3Hex(component) !== fields.component.blake3) throw new Error("document execution target: component integrity");
+    report({ stage: "verify", completedBytes: 2, totalBytes: 3 });
+    if (await executionTargetSha256Hex(descriptorBytes) !== fields.descriptor.sha256) throw new Error("document execution target: descriptor integrity");
+    parseVerifiedPackageDescriptorV1(descriptorBytes, fields);
+    report({ stage: "verify", completedBytes: 3, totalBytes: 3 });
+    if (signal.aborted) throw new Error("document execution target: cancelled");
+    const lease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, fields, binding.baseUrl.replace(/\/+$/u, ""), component, descriptorBytes);
+    component = null;
+    descriptorBytes = null;
+    return lease;
+  } finally {
+    component?.fill(0);
+    descriptorBytes?.fill(0);
+  }
+}
+
+function dropDocumentExecutionTargetLease(state: ArtifactState): void {
+  state.executionTargetLease?.drop();
+  state.executionTargetLease = null;
+}
+//#endregion 🪪️ExecutionTargetLease
+
+/** ⚖️ Compares one server plan against the complete locally installed execution-target fields through
+ * the single shared {@link sameLeaseFieldsV1} relation. A non-`react` renderer target is admitted
+ * only when the caller owns a live private lease whose own verified fields are the comparison input;
+ * the verified target is then routed to an explicit renderer state, never to a module loader. */
+function documentOpenPlanAuthority(plan: DocumentOpenPlanV1, intent: DocumentOpenIntentV1, config: ArtifactActorConfig, installed: NonNullable<Extract<PersistenceBinding, { kind: "hub" }>["installedTarget"]>, lease?: DocumentExecutionTargetLease): Omit<BrowserDocumentSocketAuthorityV1, "receipt"> {
+  const leaseFields = lease !== undefined && lease.live ? lease.fields() : undefined;
+  const projected = ((): DocumentExecutionTargetLeaseFieldsV1 | null => {
+    try {
+      return receiptFreeFields(plan, { component: installed.component.byteLength, descriptor: installed.descriptor.byteLength });
+    } catch {
+      return null;
+    }
+  })();
+  if (
+    projected === null ||
+    plan.artifact.schema !== config.schema ||
     plan.scope.spaceId !== intent.scope.spaceId ||
     plan.scope.documentId !== intent.scope.documentId ||
-    plan.artifact.schema !== config.schema ||
-    plan.package.pluginId !== installed.package.pluginId ||
-    plan.package.packageId !== installed.package.packageId ||
-    plan.package.version !== installed.package.version ||
-    plan.package.componentSha256 !== installed.package.componentSha256 ||
-    plan.package.componentBlake3 !== installed.package.componentBlake3 ||
-    plan.package.descriptorByteSha256 !== installed.package.descriptorByteSha256 ||
-    plan.artifact.kind !== installed.artifact.kind ||
-    plan.artifact.schema !== installed.artifact.schema ||
-    plan.artifact.packSchemaHash !== installed.artifact.packSchemaHash ||
-    plan.parentDialect.artifactKind !== installed.parentDialect.artifactKind ||
-    plan.parentDialect.standard !== installed.parentDialect.standard ||
-    plan.parentDialect.subset !== installed.parentDialect.subset ||
-    plan.surface.surfaceId !== installed.surface.surfaceId ||
-    plan.surface.appId !== installed.surface.appId ||
-    plan.surface.windowKindId !== installed.surface.windowKindId ||
-    plan.surface.role !== installed.surface.role ||
-    plan.surface.rendererTarget !== installed.surface.rendererTarget ||
-    plan.surface.rendererTarget !== "react" ||
-    intent.requestedSurfaceId !== installed.surface.surfaceId
+    intent.requestedSurfaceId !== installed.surface.surfaceId ||
+    !sameLeaseFieldsV1(projected, installed) ||
+    (plan.surface.rendererTarget !== "react" && (leaseFields === undefined || !sameLeaseFieldsV1(leaseFields, installed)))
   ) throw new Error("document open: authority mismatch");
   const packSchemaHash = Array.from({ length: 32 }, (_unused, index) => Number.parseInt(plan.artifact.packSchemaHash.slice(index * 2, index * 2 + 2), 16));
   const configured = config.packSchemaHash;
   if (configured && configured.some((byte) => byte !== 0) && (configured.length !== 32 || configured.some((byte, index) => byte !== packSchemaHash[index]))) throw new Error("document open: authority mismatch");
   return { schema: plan.artifact.schema, packSchemaHash, parentDialect: plan.parentDialect, surfaceId: plan.surface.surfaceId };
 }
-
 async function requestDocumentSocketAuthority(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "hub" }>): Promise<BrowserDocumentSocketAuthorityV1> {
   const grantPath = `/spaces/${encodeURIComponent(binding.spaceId)}/documents/${encodeURIComponent(state.config.documentId)}/socket-grants`;
   if (socketGrantTestIssue) {
     const receipt = await socketGrantTestIssue(binding.baseUrl, grantPath, state.docAbort.signal);
-    return { receipt, schema: state.config.schema, packSchemaHash: state.config.packSchemaHash ?? new Array(32).fill(0), ...(binding.installedTarget ? { surfaceId: binding.installedTarget.surface.surfaceId } : {}) };
+    return { receipt, schema: state.config.schema, packSchemaHash: state.config.packSchemaHash ?? new Array(32).fill(0), ...(binding.installedTarget ? { surfaceId: binding.installedTarget.surface.surfaceId } : binding.requestedSurfaceId ? { surfaceId: binding.requestedSurfaceId } : {}) };
   }
-  if (binding.installedTarget === undefined) throw new Error("document open: installed target unavailable");
+  const requestedSurfaceId = binding.requestedSurfaceId ?? binding.installedTarget?.surface.surfaceId;
+  if (requestedSurfaceId === undefined) throw new Error("document open: installed target unavailable");
   const intent = parseDocumentOpenIntentV1({
     schema: "semio.hub.document-open-intent/v1",
     version: 1,
     scope: { spaceId: binding.spaceId, documentId: state.config.documentId },
-    requestedSurfaceId: binding.installedTarget.surface.surfaceId,
+    requestedSurfaceId,
     clientInstanceId: state.openClientInstanceId,
   });
   const openPath = `/spaces/${encodeURIComponent(binding.spaceId)}/documents/${encodeURIComponent(state.config.documentId)}/open-plan`;
   const openResponse = await browserBrokerFetch(`/_semio/hub${openPath}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(intent) }, { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal: state.docAbort.signal });
   if (!openResponse.ok) throw new Error("document open: unavailable");
   let plan: DocumentOpenPlanV1;
-  let authority: Omit<BrowserDocumentSocketAuthorityV1, "receipt">;
   try {
     plan = parseDocumentOpenPlanV1(await readDocumentOpenJson(openResponse), Date.now());
-    authority = documentOpenPlanAuthority(plan, intent, state.config, binding.installedTarget);
   } catch {
     clearLocalBrowserBrokerProof();
     throw new Error("document open: invalid plan");
   }
-  if (state.docAbort.signal.aborted) throw new Error("document open: cancelled");
+  dropDocumentExecutionTargetLease(state);
+  let lease: DocumentExecutionTargetLease | undefined;
+  if (plan.surface.rendererTarget !== "react" || binding.installedTarget === undefined) {
+    try {
+      lease = await installDocumentExecutionTargetLease(state, binding, plan, intent);
+    } catch (error) {
+      const cancelled = state.docAbort.signal.aborted || String((error as Error).message).includes("cancelled");
+      emitExecutionTargetStatus(state, binding, cancelled ? "cancelled" : "integrity-failed");
+      clearLocalBrowserBrokerProof();
+      throw new Error(cancelled ? "document open: cancelled" : "document open: invalid execution target");
+    }
+  }
+  let authority: Omit<BrowserDocumentSocketAuthorityV1, "receipt">;
+  try {
+    const installed = lease === undefined ? binding.installedTarget : lease.fields();
+    if (installed === undefined) throw new Error("document open: installed target unavailable");
+    authority = documentOpenPlanAuthority(plan, intent, state.config, installed, lease);
+  } catch {
+    lease?.drop();
+    emitExecutionTargetStatus(state, binding, "stale");
+    clearLocalBrowserBrokerProof();
+    throw new Error("document open: invalid plan");
+  }
+  if (state.docAbort.signal.aborted || (lease !== undefined && !lease.live)) {
+    lease?.drop();
+    emitExecutionTargetStatus(state, binding, "cancelled");
+    throw new Error("document open: cancelled");
+  }
   const exchange = parseDocumentPlanSocketGrantIntentV1({ schema: "semio.hub.document-plan-socket-grant-intent/v1", version: 1, planReceipt: plan.receipt });
   const grantResponse = await browserBrokerFetch(`/_semio/hub${grantPath}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(exchange) }, { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal: state.docAbort.signal });
-  if (!grantResponse.ok) throw new Error("document open: unavailable");
+  if (!grantResponse.ok) {
+    lease?.drop();
+    if (lease !== undefined) emitExecutionTargetStatus(state, binding, "stale");
+    throw new Error("document open: unavailable");
+  }
   try {
     const receipt = parseSocketGrantReceiptV1(await readDocumentOpenJson(grantResponse));
-    if (receipt.expiresAtMs <= Date.now() || receipt.expiresAtMs > plan.expiresAtUnixMs) throw new Error("document open: invalid grant");
+    if (receipt.expiresAtMs <= Date.now() || receipt.expiresAtMs > plan.expiresAtUnixMs || (lease !== undefined && !lease.live)) throw new Error("document open: invalid grant");
+    if (lease !== undefined) {
+      state.executionTargetLease = lease;
+      emitExecutionTargetStatus(state, binding, "renderer-unavailable");
+    }
     return { receipt, ...authority };
   } catch {
+    lease?.drop();
     clearLocalBrowserBrokerProof();
     throw new Error("document open: invalid grant");
   }
@@ -570,7 +892,7 @@ function browserDirectoryRequest(input: string, init: RequestInit = {}, options:
 
 function setStatus(state: ArtifactState, patch: Partial<ArtifactSyncStatus>): void {
   state.status = { ...state.status, ...patch };
-  emitEvent(state.config.documentId, { kind: "status", ...state.status });
+  emitEvent(state, { kind: "status", ...state.status });
 }
 
 function setRemote(state: ArtifactState, remote: RemoteState): void {
@@ -793,7 +1115,7 @@ async function pollFolderOnce(state: ArtifactState, binding: Extract<Persistence
     if (!response.ok) throw new Error(`folder backbone read failed (${response.status})`);
     const bundle = new Uint8Array(await response.arrayBuffer());
     const { pack, spr } = decodeDocumentPackBytes(bundle);
-    emitEvent(state.config.documentId, { kind: "snapshotReplaced", pack: Array.from(pack), spr: Array.from(spr) });
+    emitEvent(state, { kind: "snapshotReplaced", pack: Array.from(pack), spr: Array.from(spr) });
     setStatus(state, { persisted: true });
   } catch (error) {
     if (state.docAbort.signal.aborted) return; // 🛑 closed mid-flight — not a real failure.
@@ -925,6 +1247,9 @@ async function connectHubOnce(state: ArtifactState, binding: Extract<Persistence
     // change (its flag byte is full and the file is peer-leased).
     const surfaceQuery = authority.surfaceId ? `?surface=${encodeURIComponent(authority.surfaceId)}` : "";
     const socket = new WebSocket(`${wsBase}/spaces/${encodeURIComponent(binding.spaceId)}/documents/${encodeURIComponent(state.config.documentId)}/socket/v1${surfaceQuery}`, [...socketGrantProtocolsV1(receipt)]);
+    const presenceCandidate = authority.surfaceId
+      ? { socket, scope: { spaceId: binding.spaceId, documentId: state.config.documentId }, verifiedSurfaceId: authority.surfaceId }
+      : null;
     // 🎞️ Binary frames (`protocol_wire`), not JSON text — see this file's header + `WireBridge` region.
     socket.binaryType = "arraybuffer";
     state.socket = socket;
@@ -960,7 +1285,7 @@ async function connectHubOnce(state: ArtifactState, binding: Extract<Persistence
         if (state.socket !== socket) return;
         try {
           const bytes = new Uint8Array(messageEvent.data as ArrayBuffer);
-          await handleHubFrame(state, decodeServerFrame(bytes).frame);
+          await handleHubFrame(state, decodeServerFrame(bytes).frame, presenceCandidate);
         } catch (error) {
           console.error("[backbone-worker] malformed hub frame", state.config.documentId, error);
           rejectArtifactBootstrap(state, error);
@@ -970,12 +1295,17 @@ async function connectHubOnce(state: ArtifactState, binding: Extract<Persistence
     socket.onclose = () => {
       state.docAbort.signal.removeEventListener("abort", onAbort);
       if (sustainedHealthTimer != null) clearTimeout(sustainedHealthTimer);
-      if (state.socket === socket) state.socket = null;
-      state.actor = "";
-      state.hubActorReady = false;
-      state.pendingSocketActorId = null;
-      abortArtifactBootstrap(state);
-      requeuePendingBatches(state);
+      if (state.socket === socket) {
+        if (state.presenceAuthority?.socket === socket) emitEvent(state, { kind: "presence", peers: [] });
+        state.presenceAuthority = null;
+        state.socket = null;
+        state.actor = "";
+        state.hubActorReady = false;
+        state.pendingSocketActorId = null;
+        dropDocumentExecutionTargetLease(state);
+        abortArtifactBootstrap(state);
+        requeuePendingBatches(state);
+      }
       if (state.docAbort.signal.aborted) {
         resolve();
         return;
@@ -1017,6 +1347,12 @@ function sendWireFrame(state: ArtifactState, frame: ClientFrame, lane: WireLane)
  * function again) only after the grant actor is proven, so nothing is lost or sent pre-authority. */
 function relayMutationsToHub(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
   if (envelopes.length === 0) return;
+  // 🔒️ A verified read-only execution target rejects publication locally, before a worker frame or
+  // an outbox entry exists. Server authorization stays an independent fence.
+  if (state.executionTargetLease !== null && state.executionTargetLease.live && !state.executionTargetLease.fields().grant.write) {
+    rejectReadOnlyExecutionTarget(state, envelopes);
+    return;
+  }
   if (!state.hubActorReady) {
     queueOutbox(state, envelopes);
     return;
@@ -1041,11 +1377,24 @@ function relayMutationsToHub(state: ArtifactState, envelopes: readonly MutationE
  * in {@link relayMutationsToHub} (which start at 0 and only increase) can never reach, so the two
  * id spaces never collide. */
 let nextLocalOverflowBatchId = -1;
+
+/** 🚫️ Terminal local rejection for a verified viewer-only execution target — the same
+ * {@link CommandAckOutcome} vocabulary, emitted before any queue, socket frame or retry exists. */
+function rejectReadOnlyExecutionTarget(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
+  const batchId = nextLocalOverflowBatchId;
+  nextLocalOverflowBatchId -= 1;
+  emitEvent(state, {
+    kind: "commandOutcome",
+    batchId,
+    outcome: { kind: "rejected", reason: "execution target is read-only", messages: [envelopes.length] },
+  });
+}
+
 function rejectMutationQueueOverflow(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
   const batchId = nextLocalOverflowBatchId;
   nextLocalOverflowBatchId -= 1;
   console.error("[backbone-worker] pending mutation queue full, rejecting batch", state.config.documentId, envelopes.length);
-  emitEvent(state.config.documentId, {
+  emitEvent(state, {
     kind: "commandOutcome",
     batchId,
     outcome: { kind: "rejected", reason: "pending mutation queue full", messages: [envelopes.length, PENDING_MUTATIONS_QUEUE_LIMIT] },
@@ -1070,17 +1419,17 @@ function handleAck(state: ArtifactState, batchId: number, stages: readonly WireA
       ackOutcome = { kind: "accepted" };
     } else if ("Transformed" in outcome) {
       const rollbacks = [...sent].reverse().map(rollbackEnvelope);
-      if (rollbacks.length > 0) emitEvent(state.config.documentId, { kind: "remoteMutations", envelopes: rollbacks });
+      if (rollbacks.length > 0) emitEvent(state, { kind: "remoteMutations", envelopes: rollbacks });
       const converted = fromWireEnvelope(outcome.Transformed.envelope);
-      emitEvent(state.config.documentId, { kind: "remoteMutations", envelopes: [converted] });
+      emitEvent(state, { kind: "remoteMutations", envelopes: [converted] });
       ackOutcome = { kind: "transformed" };
     } else {
       const rollbacks = [...sent].reverse().map(rollbackEnvelope);
-      if (rollbacks.length > 0) emitEvent(state.config.documentId, { kind: "remoteMutations", envelopes: rollbacks });
+      if (rollbacks.length > 0) emitEvent(state, { kind: "remoteMutations", envelopes: rollbacks });
       ackOutcome = { kind: "rejected", reason: outcome.Rejected.reason, messages: outcome.Rejected.messages };
     }
     setStatus(state, { pendingMutations: state.pendingMutations.length });
-    emitEvent(state.config.documentId, { kind: "commandOutcome", batchId, outcome: ackOutcome });
+    emitEvent(state, { kind: "commandOutcome", batchId, outcome: ackOutcome });
   }
 }
 
@@ -1116,7 +1465,8 @@ function emitBootstrapProgress(state: ArtifactState, progress: ArtifactBootstrap
   const previous = state.artifactBootstrapProgress.at(-1);
   if (previous && (progress.receivedBytes < previous.receivedBytes || progress.receivedChunks < previous.receivedChunks)) throw new Error("artifact bootstrap progress regressed");
   state.artifactBootstrapProgress.push(progress);
-  post({ kind: "artifact-bootstrap-progress", documentId: state.config.documentId, receivedBytes: progress.receivedBytes, totalBytes: progress.totalBytes, receivedChunks: progress.receivedChunks, totalChunks: progress.totalChunks });
+  const scope = artifactScope(state);
+  post({ kind: "artifact-bootstrap-progress", documentId: state.config.documentId, ...(scope === undefined ? {} : { scope }), receivedBytes: progress.receivedBytes, totalBytes: progress.totalBytes, receivedChunks: progress.receivedChunks, totalChunks: progress.totalChunks });
 }
 
 function bootstrapControl(state: ArtifactState): ArtifactBootstrapControl {
@@ -1150,7 +1500,8 @@ function artifactBootstrapFailure(state: ArtifactState, error: unknown): Extract
   const deadline = normalized.includes("deadline") || normalized.includes("timed out") || normalized.includes("timeout");
   const invalid = normalized.includes("snapshot") || normalized.includes("schema") || normalized.includes("digest") || normalized.includes("descriptor") || normalized.includes("scope") || normalized.includes("chunk") || normalized.includes("frontier") || normalized.includes("without an active transfer") || normalized.includes("before artifact");
   const code = cancelled ? "cancelled" : deadline ? "deadline-exceeded" : invalid ? "invalid-bootstrap" : "transport-failure";
-  return { kind: "artifact-bootstrap-failed", documentId: state.config.documentId, code, message, retryable: code !== "invalid-bootstrap" };
+  const scope = artifactScope(state);
+  return { kind: "artifact-bootstrap-failed", documentId: state.config.documentId, ...(scope === undefined ? {} : { scope }), code, message, retryable: code !== "invalid-bootstrap" };
 }
 
 function rejectArtifactBootstrap(state: ArtifactState, error: unknown): void {
@@ -1168,7 +1519,8 @@ function requireArtifactRebootstrap(state: ArtifactState): void {
   state.resumeToken = null;
   state.artifactBootstrapProgress = [];
   setRemote(state, { kind: "connecting" });
-  post({ kind: "artifact-rebootstrap-required", documentId: state.config.documentId, message: "rebootstrap-required", retryable: true });
+  const scope = artifactScope(state);
+  post({ kind: "artifact-rebootstrap-required", documentId: state.config.documentId, ...(scope === undefined ? {} : { scope }), message: "rebootstrap-required", retryable: true });
   state.socket?.close();
 }
 
@@ -1201,8 +1553,8 @@ async function installArtifactBootstrap(state: ArtifactState, assembler: Artifac
   state.artifactBootstrap = null;
   state.artifactBootstrapDeadlineMs = null;
   state.frontier = assembler.bootstrap.baseline_frontier;
-  emitEvent(state.config.documentId, { kind: "snapshotReplaced", pack: Array.from(pair.pack), spr: Array.from(pair.spr) });
-  if (state.outbox.length > 0) emitEvent(state.config.documentId, { kind: "remoteMutations", envelopes: [...state.outbox] });
+  emitEvent(state, { kind: "snapshotReplaced", pack: Array.from(pair.pack), spr: Array.from(pair.spr) });
+  if (state.outbox.length > 0) emitEvent(state, { kind: "remoteMutations", envelopes: [...state.outbox] });
   finishCatchupIfReady(state);
 }
 
@@ -1220,7 +1572,11 @@ async function startArtifactBootstrap(state: ArtifactState, bootstrap: WireArtif
   }
 }
 
-async function handleHubFrame(state: ArtifactState, frame: ServerFrame): Promise<void> {
+async function handleHubFrame(
+  state: ArtifactState,
+  frame: ServerFrame,
+  presenceCandidate: Readonly<{ socket: WebSocket; scope: DocumentScope; verifiedSurfaceId: string }> | null = null,
+): Promise<void> {
   if (typeof frame === "string") return; // no unit-variant `ServerFrame` exists today; defensive.
   if ("Welcome" in frame) {
     requeuePendingBatches(state);
@@ -1298,7 +1654,7 @@ async function handleHubFrame(state: ArtifactState, frame: ServerFrame): Promise
     }
     if (frame.Commands.origin !== state.actor) {
       const envelopes = frame.Commands.envelopes.map(fromWireEnvelope);
-      emitEvent(state.config.documentId, { kind: "remoteMutations", envelopes });
+      emitEvent(state, { kind: "remoteMutations", envelopes });
     }
     state.frontier = frame.Commands.frontier;
     finishCatchupIfReady(state);
@@ -1314,7 +1670,7 @@ async function handleHubFrame(state: ArtifactState, frame: ServerFrame): Promise
     return;
   }
   if ("Preview" in frame) {
-    if (frame.Preview.actor !== state.actor) emitEvent(state.config.documentId, { kind: "preview", actor: frame.Preview.actor, key: frame.Preview.key, seq: frame.Preview.seq, payload: frame.Preview.payload });
+    if (frame.Preview.actor !== state.actor) emitEvent(state, { kind: "preview", actor: frame.Preview.actor, key: frame.Preview.key, seq: frame.Preview.seq, payload: frame.Preview.payload });
     return;
   }
   if ("Presence" in frame) {
@@ -1329,7 +1685,7 @@ async function handleHubFrame(state: ArtifactState, frame: ServerFrame): Promise
         return [];
       }
     });
-    emitEvent(state.config.documentId, { kind: "presence", peers });
+    emitEvent(state, { kind: "presence", peers });
     return;
   }
   if ("CreditGrant" in frame) {
@@ -1347,7 +1703,9 @@ async function handleHubFrame(state: ArtifactState, frame: ServerFrame): Promise
       state.actor = "";
       state.hubActorReady = false;
       state.pendingSocketActorId = null;
-      post({ kind: "socket-actor-failed", documentId: state.config.documentId, code: "session-mismatch" });
+      state.presenceAuthority = null;
+      const scope = artifactScope(state);
+      post({ kind: "socket-actor-failed", documentId: state.config.documentId, ...(scope === undefined ? {} : { scope }), code: "session-mismatch" });
       state.socket?.close(1008, "socket actor mismatch");
       return;
     }
@@ -1355,13 +1713,15 @@ async function handleHubFrame(state: ArtifactState, frame: ServerFrame): Promise
     state.hubActorReady = true;
     state.pendingSocketActorId = null;
     state.sessionColor = frame.Session.color;
+    state.presenceAuthority = presenceCandidate?.socket === state.socket ? presenceCandidate : null;
     if (state.outbox.length > 0) relayMutationsToHub(state, state.outbox.splice(0));
-    post({ kind: "socket-actor", documentId: state.config.documentId, actorId: expectedActor });
-    emitEvent(state.config.documentId, { kind: "session", actor: frame.Session.actor, color: frame.Session.color });
+    const scope = artifactScope(state);
+    post({ kind: "socket-actor", documentId: state.config.documentId, ...(scope === undefined ? {} : { scope }), actorId: expectedActor });
+    emitEvent(state, { kind: "session", actor: frame.Session.actor, color: frame.Session.color });
     return;
   }
   if ("Error" in frame) {
-    emitEvent(state.config.documentId, { kind: "conflict", message: frame.Error.message });
+    emitEvent(state, { kind: "conflict", message: frame.Error.message });
   }
 }
 //#endregion 🔖️Hub
@@ -1372,15 +1732,31 @@ async function handleHubFrame(state: ArtifactState, frame: ServerFrame): Promise
  * thread. Owns exactly one {@link DirectoryClient}/{@link DirectoryStream} at a time. Reuses that
  * client's own reconnect/backoff (`🔖️HubBinding` in `🟦️.ts`) rather than a second loop
  * here — this region's only extra responsibility is the offline command queue. */
-const DIRECTORY_COMMAND_QUEUE_LIMIT = 200;
+/** 📏️ Fixed transport capacity. A 65th live operation is REJECTED with a terminal `capacity`
+ * result; the oldest intent is never silently dropped, because an administration mutation the
+ * caller believes it issued must never vanish without a receipt. */
+const DIRECTORY_COMMAND_TRANSPORT_CAPACITY = 64;
 
-type QueuedDirectoryCommand = { requestId: string; command: DirectoryCommand };
+/** 🆔️ One retained command operation. `request` is sealed once and re-sent byte-identically by
+ * every transient retry — a retry that changed a single byte would be a different command to the
+ * hub's digest-keyed idempotency store. `sessionEpoch`/`workerEpoch` suppress delivery after an
+ * identity or worker replacement; such a request may later be explicitly resolved, never auto-replayed. */
+type DirectoryCommandTransportOperationV1 = {
+  readonly request: DirectoryCommandRequestV1;
+  readonly abort: AbortController;
+  readonly sessionEpoch: number;
+  readonly workerEpoch: number;
+  settled: boolean;
+};
 
 let directoryClient: DirectoryClient | null = null;
 let directoryStream: { close: () => void } | null = null;
 const scopedDirectoryStreams = new Map<string, { close: () => void }>();
 let directoryFlushing = false;
-const directoryCommandQueue: QueuedDirectoryCommand[] = [];
+let directorySessionEpoch = 0;
+let directoryWorkerEpoch = 0;
+const directoryCommandOperations = new Map<string, DirectoryCommandTransportOperationV1>();
+const directoryCommandQueue: DirectoryCommandTransportOperationV1[] = [];
 
 type DirectoryBootstrapTransition = { readonly kind: "fetch"; readonly after: number } | { readonly kind: "live"; readonly since: number };
 
@@ -1453,11 +1829,12 @@ type DirectoryBootstrapOwner = {
 let directoryBootstrap: DirectoryBootstrapOwner | null = null;
 
 function directoryStatus(): BackboneWorkerResponse {
-  return { kind: "directory-status", pendingCommands: directoryCommandQueue.length };
+  return { kind: "directory-status", pendingCommands: directoryCommandOperations.size };
 }
 
 function openDirectory(baseUrl: string, since: number): void {
   closeDirectory();
+  directorySessionEpoch += 1;
   const issuer = createSocketGrantIssuerV1({ post: (path, options) => requestSocketGrant(baseUrl, path, options?.signal) });
   const client = new DirectoryClient(baseUrl, {
     requestBaseUrl: "/_semio/hub",
@@ -1599,6 +1976,12 @@ function openScopedDirectory(baseUrl: string, scope: DocumentScope, since: numbe
     () => {
       if (scopedDirectoryStreams.get(key) !== stream) return;
       scopedDirectoryStreams.delete(key);
+      // 🧯️ A scoped 4401 is an authoritative membership revocation for exactly this space. If the one
+      // retained administration operation is administering it, that operation must erase its page,
+      // receipt and capability NOW rather than keep an authoritative-looking pane alive until the next
+      // read happens to answer 403/404 (packet §3: "unmount, identity/session generation change,
+      // 401/403, or scoped 4401").
+      revokeDirectoryAdministrationForScope(scope.spaceId);
       post({ kind: "directory-scope-revoked", scope });
     },
   );
@@ -1624,71 +2007,100 @@ function closeDirectory(): void {
   directoryClient = null;
   for (const stream of scopedDirectoryStreams.values()) stream.close();
   scopedDirectoryStreams.clear();
+  directoryWorkerEpoch += 1;
+  if (directoryAdministration !== null) terminateDirectoryAdministration(directoryAdministration, "stale", "closed");
+  const closing = [...directoryCommandOperations.keys()];
   directoryCommandQueue.length = 0;
+  directoryCommandOperations.clear();
+  for (const requestId of closing) post({ kind: "directory-command-failed", requestId, code: "closed" });
 }
 
-/** 🗃️ Pushes a command onto the bounded offline queue, dropping the OLDEST entry past
- * {@link DIRECTORY_COMMAND_QUEUE_LIMIT} (logged, never silently) — a full queue means a very long
- * outage, and the newest intent is more likely still relevant than the oldest. */
-function enqueueDirectoryCommand(requestId: string, command: DirectoryCommand): void {
-  directoryCommandQueue.push({ requestId, command });
-  while (directoryCommandQueue.length > DIRECTORY_COMMAND_QUEUE_LIMIT) {
-    const dropped = directoryCommandQueue.shift();
-    console.error("[backbone-worker] directory command queue full, dropped oldest", dropped?.requestId);
-  }
-  post(directoryStatus());
+/** 🏁️ Retires one operation exactly once and answers its owner with a closed terminal code. */
+function settleDirectoryCommand(operation: DirectoryCommandTransportOperationV1, response: BackboneWorkerResponse | null): void {
+  if (operation.settled) return;
+  operation.settled = true;
+  directoryCommandOperations.delete(operation.request.requestId);
+  const index = directoryCommandQueue.indexOf(operation);
+  if (index >= 0) directoryCommandQueue.splice(index, 1);
+  if (response !== null) post(response);
 }
 
-/** 🚨️ `true` for a {@link DirectoryHttpError}-shaped rejection (the hub answered and rejected the
- * command — authz/validation, never retried); `false` for anything else (network failure — queue
- * and retry). Structural rather than an `instanceof DirectoryHttpError` check, since this file's
+/** 🚨️ `Some(status)` for a {@link DirectoryHttpError}-shaped rejection (the hub answered and
+ * rejected the read — authz/validation, never retried); `undefined` for anything else (a network
+ * failure). Structural rather than an `instanceof DirectoryHttpError` check, since this file's
  * `DirectoryClient` import and the wasm host's own may not share a class identity. */
 function directoryRejectionStatus(error: unknown): number | undefined {
   return typeof error === "object" && error !== null && "status" in error && typeof (error as { status: unknown }).status === "number" ? (error as { status: number }).status : undefined;
 }
 
-async function submitDirectoryCommand(requestId: string, command: DirectoryCommand): Promise<void> {
-  const client = directoryClient;
-  if (!client) {
-    enqueueDirectoryCommand(requestId, command);
-    return;
-  }
-  try {
-    const result = await client.command(command);
-    post({ kind: "directory-command-result", requestId, ok: true, events: result.events });
-  } catch (error) {
-    const status = directoryRejectionStatus(error);
-    if (status !== undefined) {
-      post({ kind: "directory-command-result", requestId, ok: false, error: error instanceof Error ? error.message : String(error) });
-      return;
-    }
-    console.error("[backbone-worker] directory command unreachable, queued for retry", requestId, error);
-    enqueueDirectoryCommand(requestId, command);
-  }
+/** 🚨️ Classifies one rejection into the closed transport vocabulary without touching server text. */
+function directoryCommandErrorCode(error: unknown, aborted: boolean): DirectoryCommandErrorCodeV1 {
+  if (aborted) return "cancelled";
+  if (error instanceof DirectoryCommandError) return error.code;
+  if (error instanceof DirectoryHttpError) return "invalid";
+  return "transport";
 }
 
-/** ♻️ Retries the queue in order on every live signal from the stream (contract §C6 "flush on
- * reconnect") — stops at the first still-unreachable command so ordering is preserved; a definitive
- * rejection is surfaced and dropped rather than retried forever. Re-entrancy guarded: a burst of
- * stream messages must not run overlapping flushes. */
+/** 🆔️ Seals one request, admits it against the fixed capacity, and starts its transport turn. A
+ * sealing failure, a duplicate live id, and a full transport are all terminal — never queued. */
+async function submitDirectoryCommand(requestId: string, command: DirectoryCommand): Promise<void> {
+  if (directoryCommandOperations.has(requestId)) {
+    post({ kind: "directory-command-failed", requestId, code: "request-conflict" });
+    return;
+  }
+  if (directoryCommandOperations.size >= DIRECTORY_COMMAND_TRANSPORT_CAPACITY) {
+    post({ kind: "directory-command-failed", requestId, code: "capacity" });
+    return;
+  }
+  let request: DirectoryCommandRequestV1;
+  try {
+    request = sealDirectoryCommandRequestV1(requestId, command);
+    directoryCommandRequestJson(request);
+  } catch {
+    post({ kind: "directory-command-failed", requestId, code: "invalid" });
+    return;
+  }
+  const operation: DirectoryCommandTransportOperationV1 = { request, abort: new AbortController(), sessionEpoch: directorySessionEpoch, workerEpoch: directoryWorkerEpoch, settled: false };
+  directoryCommandOperations.set(requestId, operation);
+  directoryCommandQueue.push(operation);
+  post(directoryStatus());
+  await flushDirectoryQueue();
+}
+
+/** 🛑️ Cancels one live operation's HTTP wait. The hub may already have linearized the command, so
+ * the owner is told `cancelled` (indeterminate) and the id is never silently reissued. */
+function cancelDirectoryCommand(requestId: string): void {
+  const operation = directoryCommandOperations.get(requestId);
+  if (!operation) return;
+  operation.abort.abort(new DirectoryCommandError("cancelled"));
+  settleDirectoryCommand(operation, { kind: "directory-command-failed", requestId, code: "cancelled" });
+  post(directoryStatus());
+}
+
+/** ♻️ Drives the FIFO on every live signal from the stream. Only a transient fault retains the head
+ * and its byte-identical sealed request; every terminal code answers its owner and lets the queue
+ * proceed. An operation whose session or worker epoch has been replaced is suppressed, not replayed. */
 async function flushDirectoryQueue(): Promise<void> {
   if (directoryFlushing) return;
   directoryFlushing = true;
   try {
     while (directoryCommandQueue.length > 0 && directoryClient) {
-      const next = directoryCommandQueue[0]!;
-      try {
-        const result = await directoryClient.command(next.command);
+      const operation = directoryCommandQueue[0]!;
+      if (operation.settled) {
         directoryCommandQueue.shift();
-        post({ kind: "directory-command-result", requestId: next.requestId, ok: true, events: result.events });
+        continue;
+      }
+      if (operation.sessionEpoch !== directorySessionEpoch || operation.workerEpoch !== directoryWorkerEpoch) {
+        settleDirectoryCommand(operation, null);
+        continue;
+      }
+      try {
+        const receipt = await directoryClient.command(operation.request, { signal: operation.abort.signal });
+        settleDirectoryCommand(operation, operation.sessionEpoch === directorySessionEpoch && operation.workerEpoch === directoryWorkerEpoch ? { kind: "directory-command-receipt", requestId: operation.request.requestId, receipt } : null);
       } catch (error) {
-        const status = directoryRejectionStatus(error);
-        if (status !== undefined) {
-          directoryCommandQueue.shift();
-          post({ kind: "directory-command-result", requestId: next.requestId, ok: false, error: error instanceof Error ? error.message : String(error) });
-          continue;
-        }
-        break;
+        const code = directoryCommandErrorCode(error, operation.abort.signal.aborted);
+        if (directoryCommandErrorIsTransient(code)) break;
+        settleDirectoryCommand(operation, operation.sessionEpoch === directorySessionEpoch && operation.workerEpoch === directoryWorkerEpoch ? { kind: "directory-command-failed", requestId: operation.request.requestId, code } : null);
       }
     }
   } finally {
@@ -1697,6 +2109,565 @@ async function flushDirectoryQueue(): Promise<void> {
   }
 }
 //#endregion 🔖️Directory
+
+//#region 🔖️SpaceAdministration
+/** 🏛️ The single shell-owned retained space-administration operation (contract §C6 + the P0
+ * packet's "one operation, fixed capacity"). It is NOT a second socket and NOT a generic queue: it
+ * owns exactly one canonical page, at most one in-flight command request/receipt, and at most one
+ * one-shot invite capability. The capability remains worker-owned until an exact clipboard-success
+ * result for the live transfer epoch. Every terminal transition erases all three BEFORE the renderer is
+ * notified, so an unmount, identity change, 401/403, or scoped 4401 can never leave a secret,
+ * a stale page, or a stale capability reachable. Administration mutations never auto-retry: an
+ * indeterminate transport becomes `failed` ("unknown outcome / refresh required"), because only an
+ * exact server receipt may advance the pane. */
+const DIRECTORY_ADMINISTRATION_CAPACITY = 1;
+
+type DirectoryAdministrationOperationV1 = {
+  readonly operationEpoch: number;
+  readonly spaceId: string;
+  readonly sessionEpoch: number;
+  readonly workerEpoch: number;
+  abort: AbortController;
+  phase: DirectoryAdministrationPhaseV1;
+  canonicalJson: string | null;
+  receiptSha256: string | null;
+  outcome: DirectoryCommandOutcomeV1 | null;
+  inviteToken: string | null;
+  inviteCapabilityStatus: "available" | "copying" | "failed" | null;
+  inviteTransferEpoch: number | null;
+  nextInviteTransferEpoch: number;
+  requestId: string | null;
+  closed: boolean;
+};
+
+let directoryAdministration: DirectoryAdministrationOperationV1 | null = null;
+
+/** 📣️ Publishes the operation's complete renderer-visible state; never its transport internals. */
+function postDirectoryAdministrationState(operation: DirectoryAdministrationOperationV1, code?: DirectoryCommandErrorCodeV1): void {
+  post({
+    kind: "directory-administration-state",
+    operationEpoch: operation.operationEpoch,
+    spaceId: operation.spaceId,
+    phase: operation.phase,
+    ...(operation.canonicalJson === null ? {} : { canonicalJson: operation.canonicalJson }),
+    ...(operation.receiptSha256 === null ? {} : { receiptSha256: operation.receiptSha256 }),
+    ...(operation.outcome === null ? {} : { outcome: operation.outcome }),
+    ...(code === undefined ? {} : { code }),
+    ...(operation.inviteToken === null ? {} : { inviteCapabilityPending: true }),
+    ...(operation.inviteCapabilityStatus === null ? {} : { inviteCapabilityStatus: operation.inviteCapabilityStatus }),
+  });
+}
+
+/** 🧯️ Erases page, receipt, and capability, then reports one terminal phase exactly once. */
+function terminateDirectoryAdministration(operation: DirectoryAdministrationOperationV1, phase: "cancelled" | "denied" | "stale" | "failed", code?: DirectoryCommandErrorCodeV1, notify = true): void {
+  if (operation.closed) return;
+  operation.closed = true;
+  operation.abort.abort(new Error("directory administration closed"));
+  operation.canonicalJson = null;
+  operation.receiptSha256 = null;
+  operation.outcome = null;
+  operation.inviteToken = null;
+  operation.inviteCapabilityStatus = null;
+  operation.inviteTransferEpoch = null;
+  operation.requestId = null;
+  operation.phase = phase;
+  if (directoryAdministration === operation) directoryAdministration = null;
+  if (notify) postDirectoryAdministrationState(operation, code);
+}
+
+/** 🔎️ Returns the live operation for `operationEpoch`, or `null` when it has been replaced. */
+function liveDirectoryAdministration(operationEpoch: number): DirectoryAdministrationOperationV1 | null {
+  const operation = directoryAdministration;
+  if (operation === null || operation.closed || operation.operationEpoch !== operationEpoch) return null;
+  if (operation.sessionEpoch !== directorySessionEpoch || operation.workerEpoch !== directoryWorkerEpoch) {
+    terminateDirectoryAdministration(operation, "stale");
+    return null;
+  }
+  return operation;
+}
+
+/** 🚦️ Maps one page rejection onto the closed terminal vocabulary. A 401/403 clears the pane. */
+function directoryAdministrationPageTermination(error: unknown, aborted: boolean): { phase: "cancelled" | "denied" | "stale" | "failed"; code: DirectoryCommandErrorCodeV1 } {
+  if (aborted) return { phase: "cancelled", code: "cancelled" };
+  const status = directoryRejectionStatus(error);
+  if (status === 401) return { phase: "denied", code: "unauthorized" };
+  if (status === 403 || status === 404) return { phase: "denied", code: "forbidden" };
+  if (status === 409 || status === 410) return { phase: "stale", code: "stale-session" };
+  return { phase: "failed", code: status === undefined ? "transport" : "invalid" };
+}
+
+/** 📄️ Fetches exactly one canonical page into the operation and reports `ready`. */
+async function loadDirectoryAdministrationPage(operationEpoch: number, cursor: string | undefined, loading: "loading" | "refreshing"): Promise<void> {
+  const operation = liveDirectoryAdministration(operationEpoch);
+  if (operation === null) return;
+  const client = directoryClient;
+  if (client === null) {
+    terminateDirectoryAdministration(operation, "failed", "transport");
+    return;
+  }
+  operation.phase = loading;
+  postDirectoryAdministrationState(operation);
+  try {
+    const page = await client.spaceAdministrationPage(operation.spaceId, cursor, { signal: operation.abort.signal });
+    const live = liveDirectoryAdministration(operationEpoch);
+    if (live === null || live !== operation) return;
+    operation.canonicalJson = page.canonicalJson;
+    operation.phase = "ready";
+    postDirectoryAdministrationState(operation);
+  } catch (error) {
+    if (operation.closed) return;
+    const termination = directoryAdministrationPageTermination(error, operation.abort.signal.aborted);
+    terminateDirectoryAdministration(operation, termination.phase, termination.code);
+  }
+}
+
+/** 🆕️ Installs the one retained operation for exactly one space, replacing any predecessor. */
+function openDirectoryAdministration(operationEpoch: number, spaceId: string): void {
+  const live = directoryAdministration === null ? 0 : 1;
+  if (live >= DIRECTORY_ADMINISTRATION_CAPACITY && directoryAdministration !== null) terminateDirectoryAdministration(directoryAdministration, "cancelled", "cancelled");
+  if (!Number.isSafeInteger(operationEpoch) || operationEpoch < 0 || spaceId.length === 0 || new TextEncoder().encode(spaceId).byteLength > 256) {
+    post({ kind: "directory-administration-state", operationEpoch, spaceId, phase: "failed", code: "invalid" });
+    return;
+  }
+  const operation: DirectoryAdministrationOperationV1 = {
+    operationEpoch,
+    spaceId,
+    sessionEpoch: directorySessionEpoch,
+    workerEpoch: directoryWorkerEpoch,
+    abort: new AbortController(),
+    phase: "loading",
+    canonicalJson: null,
+    receiptSha256: null,
+    outcome: null,
+    inviteToken: null,
+    inviteCapabilityStatus: null,
+    inviteTransferEpoch: null,
+    nextInviteTransferEpoch: 0,
+    requestId: null,
+    closed: false,
+  };
+  directoryAdministration = operation;
+  void loadDirectoryAdministrationPage(operationEpoch, undefined, "loading");
+}
+
+/** 📮️ Submits exactly one administration command and advances only on an exact server receipt.
+ * The command is never retried: an indeterminate transport is terminal `failed`, so a `create-invite`
+ * can never mint a second invite behind the operator's back. */
+async function submitDirectoryAdministrationCommand(operationEpoch: number, requestId: string, command: DirectoryCommand): Promise<void> {
+  const operation = liveDirectoryAdministration(operationEpoch);
+  if (operation === null) return;
+  if (operation.requestId !== null || operation.phase === "submitting") {
+    postDirectoryAdministrationState(operation, "capacity");
+    return;
+  }
+  const client = directoryClient;
+  if (client === null) {
+    terminateDirectoryAdministration(operation, "failed", "transport");
+    return;
+  }
+  let request: DirectoryCommandRequestV1;
+  try {
+    request = sealDirectoryCommandRequestV1(requestId, command);
+    directoryCommandRequestJson(request);
+  } catch {
+    postDirectoryAdministrationState(operation, "invalid");
+    return;
+  }
+  operation.requestId = requestId;
+  operation.phase = "submitting";
+  postDirectoryAdministrationState(operation);
+  let receipt: DirectoryCommandReceiptV1;
+  try {
+    receipt = await client.command(request, { signal: operation.abort.signal });
+  } catch (error) {
+    if (operation.closed) return;
+    const code = directoryCommandErrorCode(error, operation.abort.signal.aborted);
+    if (code === "unauthorized" || code === "forbidden") {
+      terminateDirectoryAdministration(operation, "denied", code);
+      return;
+    }
+    if (code === "stale-session") {
+      terminateDirectoryAdministration(operation, "stale", code);
+      return;
+    }
+    terminateDirectoryAdministration(operation, code === "cancelled" ? "cancelled" : "failed", code);
+    return;
+  }
+  const live = liveDirectoryAdministration(operationEpoch);
+  if (live === null || live !== operation) return;
+  operation.requestId = null;
+  operation.receiptSha256 = receipt.receiptSha256;
+  operation.outcome = receipt.outcome;
+  operation.inviteToken = receipt.result.kind === "invite" ? receipt.result.inviteToken : null;
+  operation.inviteCapabilityStatus = operation.inviteToken === null ? null : "available";
+  operation.inviteTransferEpoch = null;
+  operation.phase = "receipt";
+  postDirectoryAdministrationState(operation);
+  await loadDirectoryAdministrationPage(operationEpoch, undefined, "refreshing");
+}
+
+/** 🎁️ Offers the worker-retained capability for one operation-bound clipboard attempt. */
+function requestDirectoryAdministrationCapability(operationEpoch: number): void {
+  const operation = liveDirectoryAdministration(operationEpoch);
+  if (operation === null) return;
+  const inviteToken = operation.inviteToken;
+  if (inviteToken === null) {
+    post({ kind: "directory-administration-capability-rejected", operationEpoch, code: "already-settled" });
+    return;
+  }
+  if (operation.inviteTransferEpoch !== null) {
+    post({ kind: "directory-administration-capability-rejected", operationEpoch, transferEpoch: operation.inviteTransferEpoch, code: "capacity" });
+    return;
+  }
+  const transferEpoch = operation.nextInviteTransferEpoch + 1;
+  operation.nextInviteTransferEpoch = transferEpoch;
+  operation.inviteTransferEpoch = transferEpoch;
+  operation.inviteCapabilityStatus = "copying";
+  postDirectoryAdministrationState(operation);
+  post({ kind: "directory-administration-capability", operationEpoch, transferEpoch, inviteToken });
+}
+
+/** 📋️ Erases the capability only after an exact successful clipboard result; failure keeps it retryable. */
+function settleDirectoryAdministrationCapability(operationEpoch: number, transferEpoch: number, copied: boolean): void {
+  const operation = liveDirectoryAdministration(operationEpoch);
+  if (operation === null) return;
+  if (operation.inviteTransferEpoch === null) {
+    post({ kind: "directory-administration-capability-rejected", operationEpoch, transferEpoch, code: "already-settled" });
+    return;
+  }
+  if (!Number.isSafeInteger(transferEpoch) || transferEpoch <= 0 || transferEpoch !== operation.inviteTransferEpoch) {
+    post({ kind: "directory-administration-capability-rejected", operationEpoch, transferEpoch, code: "mismatch" });
+    return;
+  }
+  operation.inviteTransferEpoch = null;
+  if (copied) {
+    operation.inviteToken = null;
+    operation.inviteCapabilityStatus = null;
+  } else {
+    operation.inviteCapabilityStatus = "failed";
+  }
+  postDirectoryAdministrationState(operation);
+}
+
+/** 🧯️ Retires the retained operation when its exact space loses membership through a scoped 4401.
+ * Any other space's revocation leaves the operation untouched — one revoked document scope is not a
+ * reason to tear down administration of an unrelated space. */
+function revokeDirectoryAdministrationForScope(spaceId: string): void {
+  const operation = directoryAdministration;
+  if (operation === null || operation.closed || operation.spaceId !== spaceId) return;
+  terminateDirectoryAdministration(operation, "denied", "forbidden");
+}
+
+/** 🛑️ Renderer unmount: cancel, erase, and report `cancelled` without touching any other lane. */
+function closeDirectoryAdministration(operationEpoch: number): void {
+  const operation = directoryAdministration;
+  if (operation === null || operation.operationEpoch !== operationEpoch) return;
+  terminateDirectoryAdministration(operation, "cancelled", "cancelled");
+}
+//#endregion 🔖️SpaceAdministration
+
+//#region 💡️Inference
+/** 💡️ The single shell-owned retained inference operation. It is NOT a socket, NOT a queue and NOT
+ * a document command: it owns exactly one document scope, at most one submitted job, and one bounded
+ * poll timer. It refuses to exist at all unless that document currently owns a LIVE verified
+ * execution-target lease, and it shares the document's own `docAbort` so a close, rebootstrap or
+ * identity change cancels every in-flight call before the renderer is told anything. Nothing it
+ * holds is ever persisted into the document: the proposal reaches the Map only through the hub's
+ * own server-stamped approval command. */
+const INFERENCE_PORT_CAPACITY = 1;
+/** ⏱️ Bounded, jitter-free poll cadence for one running job — a `setTimeout` chain, never an
+ * interval and never a busy loop. */
+const INFERENCE_POLL_INTERVAL_MS = 750;
+/** 🔁️ Highest number of poll turns one job may take before it is reported indeterminate. */
+const INFERENCE_MAX_POLL_TURNS = 240;
+/** ⏳️ Lifetime one submitted job asks the hub for. */
+const INFERENCE_JOB_LIFETIME_MS = 60_000;
+
+type InferenceOperationV1 = {
+  readonly operationEpoch: number;
+  readonly scope: DocumentScope;
+  readonly abort: AbortController;
+  status: GisMapInferencePortStatusV1;
+  turns: number;
+  pollTimer: ReturnType<typeof setTimeout> | null;
+  inFlight: boolean;
+  /** 🛑️ Whether the one cancel request this operation may ever send has actually left. A Cancel
+   * clicked while another call is in flight is recorded here and sent on the very next turn, never
+   * dropped and never sent twice. */
+  cancelSent: boolean;
+  closed: boolean;
+};
+
+let inferencePort: InferenceOperationV1 | null = null;
+
+/** 🔭️ Observation seam mirroring {@link executionTargetStatusObserver}: a harness without a worker
+ * scope still sees the exact bounded payload the renderer would receive. */
+let inferencePortStatusObserver: ((status: Extract<BackboneWorkerResponse, { kind: "inference-port-status" }>) => void) | null = null;
+
+function postInferencePortStatus(operation: InferenceOperationV1): void {
+  const status: Extract<BackboneWorkerResponse, { kind: "inference-port-status" }> = { kind: "inference-port-status", operationEpoch: operation.operationEpoch, scope: operation.scope, status: operation.status };
+  inferencePortStatusObserver?.(status);
+  post(status);
+}
+
+/** 🧮️ Applies one closed event through the shared reducer and publishes only on a real change. */
+function advanceInferencePort(operation: InferenceOperationV1, event: GisMapInferencePortEventV1): void {
+  const next = reduceGisMapInferencePortV1(operation.status, event);
+  if (next === operation.status) return;
+  operation.status = next;
+  postInferencePortStatus(operation);
+}
+
+/** 🪪️ The precondition: only a document whose worker-private execution-target lease is minted AND
+ * still live may open a port. A dropped, absent or non-writable lease is refused before any request
+ * exists, and the refusal is a localized terminal, never a silent no-op. */
+function inferenceLeaseVerified(scope: DocumentScope): boolean {
+  const state = artifactState(scope.documentId, scope.spaceId);
+  if (state === undefined || state.closed || state.docAbort.signal.aborted) return false;
+  const lease = state.executionTargetLease;
+  if (lease === null || !lease.live) return false;
+  const fields = lease.fields();
+  return fields.scope.spaceId === scope.spaceId && fields.scope.documentId === scope.documentId && fields.grant.write;
+}
+
+function inferenceJobPath(scope: DocumentScope, suffix: string): string {
+  return `/spaces/${encodeURIComponent(scope.spaceId)}/documents/${encodeURIComponent(scope.documentId)}/inference/gis-map${suffix}`;
+}
+
+/** 🚪️ The only broker operation this lane owns: exactly the four protected document-scoped inference
+ * calls for the port's own scope. Anything else is denied before a request exists. */
+async function inferenceBrokerFetch(operation: InferenceOperationV1, suffix: string, init: { readonly method: "GET" | "POST"; readonly body?: string }): Promise<FetchTimeoutResponse> {
+  const path = inferenceJobPath(operation.scope, suffix);
+  if (!/^\/spaces\/[^/?#]+\/documents\/[^/?#]+\/inference\/gis-map\/jobs(?:\/[0-9a-f]{32}\/(?:events\?after=\d{1,3}|cancel|approval))?$/u.test(path)) throw new Error("gis map inference: operation denied");
+  const documentAbort = artifactState(operation.scope.documentId, operation.scope.spaceId)?.docAbort.signal;
+  if (documentAbort?.aborted ?? true) throw new Error("gis map inference: document closed");
+  return browserBrokerFetch(`/_semio/hub${path}`, {
+    method: init.method,
+    ...(init.body === undefined ? {} : { headers: { "content-type": "application/json" }, body: init.body }),
+  }, { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal: operation.abort.signal });
+}
+
+/** 📥️ Reads one bounded owner-private JSON body under the shared response maximum. */
+async function readInferenceJson(response: FetchTimeoutResponse): Promise<unknown> {
+  const declared = response.headers.get("content-length");
+  if (declared !== null && !(Number.isSafeInteger(Number(declared)) && Number(declared) >= 1 && Number(declared) <= GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES)) throw new Error("gis map inference: invalid body");
+  const text = await response.text();
+  if (text.length === 0 || new TextEncoder().encode(text).length > GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES) throw new Error("gis map inference: invalid body");
+  return JSON.parse(text);
+}
+
+/** 🔎️ Returns the live operation for `operationEpoch`, or `null` once it has been replaced, closed,
+ * or had its document's lease invalidated under it. */
+function liveInferencePort(operationEpoch: number): InferenceOperationV1 | null {
+  const operation = inferencePort;
+  if (operation === null || operation.closed || operation.operationEpoch !== operationEpoch) return null;
+  if (!inferenceLeaseVerified(operation.scope)) {
+    terminateInferencePort(operation, "inference.lease-unverified");
+    return null;
+  }
+  return operation;
+}
+
+/** 🧯️ Reports one closed terminal exactly once and retires the operation with its timer cleared. */
+function terminateInferencePort(operation: InferenceOperationV1, code: GisMapInferencePortCodeV1): void {
+  if (operation.closed) return;
+  operation.closed = true;
+  if (operation.pollTimer !== null) clearTimeout(operation.pollTimer);
+  operation.pollTimer = null;
+  operation.abort.abort(new Error("gis map inference port closed"));
+  if (inferencePort === operation) inferencePort = null;
+  advanceInferencePort(operation, { kind: "failed", code });
+}
+
+function inferenceCodeFromRejection(error: unknown, aborted: boolean): GisMapInferencePortCodeV1 {
+  if (aborted) return "inference.cancelled";
+  const status = error instanceof DirectoryHttpError ? error.status : undefined;
+  return status === undefined ? "inference.transport" : gisMapInferenceCodeFromStatusV1(status);
+}
+
+/** 🆕️ Installs the one retained port for exactly one document scope, retiring any predecessor. The
+ * lease precondition is checked BEFORE the operation exists, so a refusal never leaves a port open. */
+function openInferencePort(operationEpoch: number, scope: DocumentScope): void {
+  if (inferencePort !== null && INFERENCE_PORT_CAPACITY === 1) closeInferencePort(inferencePort.operationEpoch);
+  if (!Number.isSafeInteger(operationEpoch) || operationEpoch < 0 || scope.spaceId.length === 0 || scope.documentId.length === 0) {
+    post({ kind: "inference-port-status", operationEpoch, scope, status: { ...idleGisMapInferencePortStatusV1(), phase: "failed", code: "inference.invalid" } });
+    return;
+  }
+  const operation: InferenceOperationV1 = { operationEpoch, scope, abort: new AbortController(), status: idleGisMapInferencePortStatusV1(), turns: 0, pollTimer: null, inFlight: false, cancelSent: false, closed: false };
+  if (!inferenceLeaseVerified(scope)) {
+    operation.closed = true;
+    advanceInferencePort(operation, { kind: "lease-unverified" });
+    return;
+  }
+  inferencePort = operation;
+  postInferencePortStatus(operation);
+}
+
+/** 📮️ Submits exactly one job and advances only on an exact server receipt. A submit is never
+ * retried: an indeterminate transport is terminal, so a replay can never mint a second job. */
+async function submitInferenceJob(operationEpoch: number, requestId: string): Promise<void> {
+  const operation = liveInferencePort(operationEpoch);
+  if (operation === null || operation.status.phase !== "idle" || operation.inFlight) return;
+  let body: string;
+  try {
+    body = JSON.stringify(sealGisMapInferenceJobRequestV1(requestId, INFERENCE_JOB_LIFETIME_MS));
+  } catch {
+    terminateInferencePort(operation, "inference.invalid");
+    return;
+  }
+  advanceInferencePort(operation, { kind: "start" });
+  operation.inFlight = true;
+  try {
+    const response = await inferenceBrokerFetch(operation, "/jobs", { method: "POST", body });
+    if (!response.ok) throw new DirectoryHttpError(response.status, "");
+    const receipt = parseGisMapInferenceJobReceiptV1(await readInferenceJson(response));
+    if (liveInferencePort(operationEpoch) !== operation) return;
+    advanceInferencePort(operation, { kind: "receipt", receipt });
+    scheduleInferencePoll(operation);
+  } catch (error) {
+    if (operation.closed) return;
+    terminateInferencePort(operation, inferenceCodeFromRejection(error, operation.abort.signal.aborted));
+  } finally {
+    operation.inFlight = false;
+  }
+}
+
+/** ⏱️ Arms exactly one bounded next poll turn; a terminal phase or an exhausted turn budget arms none. */
+function scheduleInferencePoll(operation: InferenceOperationV1): void {
+  if (operation.pollTimer !== null) clearTimeout(operation.pollTimer);
+  operation.pollTimer = null;
+  if (operation.closed || gisMapInferencePortTerminalV1(operation.status.phase)) return;
+  if (operation.turns >= INFERENCE_MAX_POLL_TURNS) {
+    terminateInferencePort(operation, "inference.transport");
+    return;
+  }
+  operation.pollTimer = setTimeout(() => {
+    operation.pollTimer = null;
+    void driveInferencePort(operation.operationEpoch);
+  }, INFERENCE_POLL_INTERVAL_MS);
+}
+
+/** 🔄️ One bounded turn: a recorded-but-unsent cancellation always outranks the next progress read,
+ * so a Cancel clicked while another call was in flight is transmitted on the very next turn. */
+async function driveInferencePort(operationEpoch: number): Promise<void> {
+  const operation = liveInferencePort(operationEpoch);
+  if (operation === null) return;
+  if (operation.status.cancelRequested && !operation.cancelSent) {
+    await cancelInferenceJob(operationEpoch);
+    return;
+  }
+  await pollInferenceJob(operationEpoch);
+}
+
+/** 📃️ Reads exactly one bounded owner-private page and folds it through the shared reducer. */
+async function pollInferenceJob(operationEpoch: number): Promise<void> {
+  const operation = liveInferencePort(operationEpoch);
+  if (operation === null || operation.inFlight || operation.status.jobId === null) return;
+  operation.turns += 1;
+  operation.inFlight = true;
+  try {
+    const response = await inferenceBrokerFetch(operation, `/jobs/${operation.status.jobId}/events?after=${operation.status.cursor}`, { method: "GET" });
+    if (!response.ok) throw new DirectoryHttpError(response.status, "");
+    const page = parseGisMapInferenceEventPageV1(await readInferenceJson(response));
+    if (liveInferencePort(operationEpoch) !== operation) return;
+    advanceInferencePort(operation, { kind: "page", page });
+    if (gisMapInferencePortTerminalV1(operation.status.phase)) {
+      retireInferencePort(operation);
+      return;
+    }
+    scheduleInferencePoll(operation);
+  } catch (error) {
+    if (operation.closed) return;
+    terminateInferencePort(operation, inferenceCodeFromRejection(error, operation.abort.signal.aborted));
+  } finally {
+    operation.inFlight = false;
+  }
+}
+
+/** 🛑️ Requests cancellation. The phase does NOT move optimistically: only the server's own answer
+ * may report `cancelled`, so a hub that refuses the cancel can never be misreported as honoured. */
+async function cancelInferenceJob(operationEpoch: number): Promise<void> {
+  const operation = liveInferencePort(operationEpoch);
+  if (operation === null || operation.status.jobId === null) return;
+  advanceInferencePort(operation, { kind: "cancel" });
+  if (operation.inFlight || operation.cancelSent) return;
+  operation.cancelSent = true;
+  operation.inFlight = true;
+  try {
+    const response = await inferenceBrokerFetch(operation, `/jobs/${operation.status.jobId}/cancel`, { method: "POST" });
+    if (!response.ok) throw new DirectoryHttpError(response.status, "");
+    const page = parseGisMapInferenceEventPageV1(await readInferenceJson(response));
+    if (liveInferencePort(operationEpoch) !== operation) return;
+    advanceInferencePort(operation, { kind: "page", page });
+    if (gisMapInferencePortTerminalV1(operation.status.phase)) retireInferencePort(operation);
+    else scheduleInferencePoll(operation);
+  } catch (error) {
+    if (operation.closed) return;
+    terminateInferencePort(operation, inferenceCodeFromRejection(error, operation.abort.signal.aborted));
+  } finally {
+    operation.inFlight = false;
+  }
+}
+
+/** ✅️ Approves exactly the offered proposal, echoing back the server's own hash. It is never
+ * retried: a duplicate approval could otherwise ask for a second Map commit. */
+async function approveInferenceProposal(operationEpoch: number): Promise<void> {
+  const operation = liveInferencePort(operationEpoch);
+  if (
+    operation === null
+    || operation.status.phase !== "offered"
+    || operation.status.jobId === null
+    || operation.status.proposalHash === null
+    || operation.status.preview?.jobId !== operation.status.jobId
+    || operation.status.preview.proposalHash !== operation.status.proposalHash
+    || operation.inFlight
+  ) return;
+  let body: string;
+  try {
+    body = JSON.stringify(sealGisMapInferenceApprovalRequestV1(operation.status.jobId, operation.status.proposalHash));
+  } catch {
+    terminateInferencePort(operation, "inference.invalid");
+    return;
+  }
+  const jobId = operation.status.jobId;
+  advanceInferencePort(operation, { kind: "approve" });
+  operation.inFlight = true;
+  try {
+    const response = await inferenceBrokerFetch(operation, `/jobs/${jobId}/approval`, { method: "POST", body });
+    if (!response.ok) throw new DirectoryHttpError(response.status, "");
+    const receipt = parseGisMapInferenceApprovalReceiptV1(await readInferenceJson(response));
+    if (liveInferencePort(operationEpoch) !== operation) return;
+    advanceInferencePort(operation, { kind: "approval", receipt });
+    retireInferencePort(operation);
+  } catch (error) {
+    if (operation.closed) return;
+    terminateInferencePort(operation, inferenceCodeFromRejection(error, operation.abort.signal.aborted));
+  } finally {
+    operation.inFlight = false;
+  }
+}
+
+/** 🏁️ Releases a port that already reported its terminal, without publishing a second one. */
+function retireInferencePort(operation: InferenceOperationV1): void {
+  if (operation.closed) return;
+  operation.closed = true;
+  if (operation.pollTimer !== null) clearTimeout(operation.pollTimer);
+  operation.pollTimer = null;
+  operation.abort.abort(new Error("gis map inference port retired"));
+  if (inferencePort === operation) inferencePort = null;
+}
+
+/** 🛑️ Renderer unmount or document close: cancel every in-flight call and report `cancelled` once. */
+function closeInferencePort(operationEpoch: number): void {
+  const operation = inferencePort;
+  if (operation === null || operation.operationEpoch !== operationEpoch) return;
+  if (gisMapInferencePortTerminalV1(operation.status.phase)) {
+    retireInferencePort(operation);
+    return;
+  }
+  terminateInferencePort(operation, "inference.cancelled");
+}
+//#endregion 💡️Inference
 
 //#region 🔖️BlobCache
 /** 📦️ Must match `framework/os/core/js/index.ts`'s `BLOB_ENDPOINT_PATH`. A hub-backed fallback
@@ -1852,7 +2823,9 @@ function openArtifact(config: ArtifactActorConfig): void {
     pendingSocketActorId: null,
     channel,
     socket: null,
+    presenceAuthority: null,
     docAbort: new AbortController(),
+    executionTargetLease: null,
     sanityPollTimer: null,
     sseHealthy: false,
     revalidateFolder: async () => {}, // 🔧 replaced below once a folder binding exists.
@@ -1879,7 +2852,7 @@ function openArtifact(config: ArtifactActorConfig): void {
   artifacts.set(runtimeKey, state);
   channel.onmessage = (messageEvent) => {
     const envelopes = messageEvent.data as MutationEnvelope[];
-    if (Array.isArray(envelopes) && envelopes.length > 0) emitEvent(config.documentId, { kind: "remoteMutations", envelopes });
+    if (Array.isArray(envelopes) && envelopes.length > 0) emitEvent(state, { kind: "remoteMutations", envelopes });
   };
   const folder = folderBinding(config);
   if (folder) {
@@ -1889,11 +2862,12 @@ function openArtifact(config: ArtifactActorConfig): void {
     else void state.revalidateFolder();
   }
   if (hub?.installedTarget === undefined && socketGrantTestIssue === null) {
-    post({ kind: "socket-actor-failed", documentId: config.documentId, code: "installed-target-unavailable" });
+    const scope = artifactScope(state);
+    post({ kind: "socket-actor-failed", documentId: config.documentId, ...(scope === undefined ? {} : { scope }), code: "installed-target-unavailable" });
   } else if (hub) {
     connectHub(state, hub);
   }
-  emitEvent(config.documentId, { kind: "status", ...state.status });
+  emitEvent(state, { kind: "status", ...state.status });
 }
 
 function closeArtifactRuntime(runtimeKey: string): void {
@@ -1905,6 +2879,10 @@ function closeArtifactRuntime(runtimeKey: string): void {
   // pending reconnect backoff delay immediately — no fetch or reconnect loop can pin this document
   // after this line.
   state.docAbort.abort();
+  // 💡️ The inference port exists only while this document's lease does — a close retires it with a
+  // localized terminal before the lease buffers are wiped.
+  if (inferencePort !== null && documentRuntimeKeyV1({ kind: "hub", ...inferencePort.scope }) === runtimeKey) closeInferencePort(inferencePort.operationEpoch);
+  dropDocumentExecutionTargetLease(state);
   state.socket?.close();
   if (state.sanityPollTimer != null) clearTimeout(state.sanityPollTimer);
   state.channel.close();
@@ -2010,8 +2988,47 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
     case "directory-command":
       void submitDirectoryCommand(request.requestId, request.command);
       break;
+    case "directory-command-cancel":
+      cancelDirectoryCommand(request.requestId);
+      break;
+    case "directory-administration-open":
+      openDirectoryAdministration(request.operationEpoch, request.spaceId);
+      break;
+    case "directory-administration-refresh":
+      void loadDirectoryAdministrationPage(request.operationEpoch, request.cursor, "refreshing");
+      break;
+    case "directory-administration-submit":
+      void submitDirectoryAdministrationCommand(request.operationEpoch, request.requestId, request.command);
+      break;
+    case "directory-administration-capability-request":
+      requestDirectoryAdministrationCapability(request.operationEpoch);
+      break;
+    case "directory-administration-capability-result":
+      settleDirectoryAdministrationCapability(request.operationEpoch, request.transferEpoch, request.copied);
+      break;
+    case "directory-administration-close":
+      closeDirectoryAdministration(request.operationEpoch);
+      break;
     case "directory-close":
       closeDirectory();
+      break;
+    case "inference-open":
+      openInferencePort(request.operationEpoch, request.scope);
+      break;
+    case "inference-propose":
+      void submitInferenceJob(request.operationEpoch, request.requestId);
+      break;
+    case "inference-poll":
+      void pollInferenceJob(request.operationEpoch);
+      break;
+    case "inference-cancel":
+      void cancelInferenceJob(request.operationEpoch);
+      break;
+    case "inference-approve":
+      void approveInferenceProposal(request.operationEpoch);
+      break;
+    case "inference-close":
+      closeInferencePort(request.operationEpoch);
       break;
   }
 }
@@ -2578,6 +3595,240 @@ if (import.meta.vitest) {
   //#endregion 🔖️ConfigMutationTests
 
   //#region 🔖️DirectoryLaneTests
+  describe("backbone-worker space administration", () => {
+    const SPACE = "space-admin-01";
+
+    /** ⏳️ Settles the operation by waiting until the worker stops posting, rather than by a fixed
+     * number of turns: `parseDirectorySpaceAdministrationPageV1` awaits `crypto.subtle.digest`, whose
+     * turn count is not fixed, so a constant loop is load-dependent and therefore flaky. Bounded at 60
+     * turns so a genuinely stuck operation still fails the test instead of hanging it. */
+    const settleAdministrationTurns = async (harness?: { readonly posted: readonly unknown[] }): Promise<void> => {
+      let quiet = 0;
+      let seen = harness?.posted.length ?? -1;
+      for (let turn = 0; turn < 60 && quiet < 4; turn += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        if (harness === undefined) {
+          quiet += 1;
+          continue;
+        }
+        quiet = harness.posted.length === seen ? quiet + 1 : 0;
+        seen = harness.posted.length;
+      }
+    };
+
+    async function sealAdministrationPage(members: readonly { userId: string; email: string; role: "author" | "spectator"; owner: boolean }[], invites: readonly { inviteId: string; createdAtMs: number }[]): Promise<string> {
+      const unsigned = {
+        access: "author" as const,
+        schema: "semio.directory.space-administration-page.v1" as const,
+        sessionBindingSha256: "a".repeat(64),
+        authorizationGeneration: 5,
+        spaceId: SPACE,
+        space: { id: SPACE, name: "Administered", kind: "studio", visibility: "private", ownerUserId: "user-a", role: "author", memberCount: members.length, documentCount: 0, activeConnections: 0, createdAtMs: 1, updatedAtMs: 2 },
+        members: { rows: members.map((row) => ({ userId: row.userId, email: row.email, displayName: row.userId, role: row.role, owner: row.owner })) },
+        documents: { rows: [] as unknown[] },
+        invites: { rows: invites.map((row) => ({ inviteId: row.inviteId, role: "spectator" as const, createdAtMs: row.createdAtMs, expiresAtMs: 900000, revoked: false, accepted: false })) },
+        capabilities: { renameSpace: true, setVisibility: true, deleteSpace: true, upsertMember: true, removeMember: true, createInvite: true, revokeInvite: true },
+      };
+      const digest = new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(unsigned))));
+      return JSON.stringify({ ...unsigned, receiptSha256: Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("") });
+    }
+
+    async function sealCommandReceipt(requestId: string, command: DirectoryCommand, inviteToken?: string): Promise<string> {
+      const commandSha256 = await directorySha256(JSON.stringify(command));
+      const unsigned = {
+        schema: "semio.directory.command-receipt.v1" as const,
+        requestId,
+        commandSha256,
+        outcome: "accepted" as const,
+        events: [] as unknown[],
+        result: inviteToken === undefined ? { kind: "none" as const } : { kind: "invite" as const, inviteToken },
+      };
+      const digest = new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(unsigned))));
+      return JSON.stringify({ ...unsigned, receiptSha256: Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("") });
+    }
+
+    async function directorySha256(text: string): Promise<string> {
+      const digest = new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)));
+      return Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("");
+    }
+
+    function administrationHarness(pageStatuses: readonly number[], receiptStatus = 200) {
+      const posted: BackboneWorkerResponse[] = [];
+      const original = workerPostTestSink;
+      workerPostTestSink = (message) => posted.push(message);
+      const requests: string[] = [];
+      let pageIndex = 0;
+      const bodies: string[] = [];
+      const fetches = vi.fn(async (input: string, init?: { method?: string }) => {
+        requests.push(`${init?.method ?? "GET"} ${input}`);
+        if ((init?.method ?? "GET") === "POST") {
+          return { ok: receiptStatus < 400, status: receiptStatus, statusText: "", headers: { get: () => "application/json" }, json: async () => ({}), text: async () => bodies.shift() ?? "" };
+        }
+        const status = pageStatuses[Math.min(pageIndex, pageStatuses.length - 1)] ?? 200;
+        pageIndex += 1;
+        return { ok: status < 400, status, statusText: "", headers: { get: () => "application/json" }, json: async () => ({}), text: async () => bodies.shift() ?? "" };
+      });
+      return {
+        posted,
+        requests,
+        bodies,
+        fetches,
+        release: () => { workerPostTestSink = original; },
+      };
+    }
+
+    it("drives loading → ready → submitting → receipt → refreshing without changing state before the receipt", async () => {
+      const harness = administrationHarness([200, 200]);
+      const first = await sealAdministrationPage([{ userId: "user-a", email: "a@example.invalid", role: "author", owner: true }, { userId: "user-b", email: "b@example.invalid", role: "spectator", owner: false }], [{ inviteId: "invite-1", createdAtMs: 20 }]);
+      try {
+        directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
+        harness.bodies.push(first);
+        handleTsRequest({ kind: "directory-administration-open", operationEpoch: 1, spaceId: SPACE });
+        await settleAdministrationTurns(harness);
+        const loading = harness.posted.filter((message) => message.kind === "directory-administration-state");
+        expect(loading.map((message) => (message as { phase: string }).phase)).toEqual(["loading", "ready"]);
+        expect((loading.at(-1) as { canonicalJson?: string }).canonicalJson).toBe(first);
+
+        const command: DirectoryCommand = { kind: "remove-member", spaceId: SPACE, userId: "user-b" };
+        const receipt = await sealCommandReceipt("0".repeat(31) + "1", command, undefined);
+        const second = await sealAdministrationPage([{ userId: "user-a", email: "a@example.invalid", role: "author", owner: true }], [{ inviteId: "invite-1", createdAtMs: 20 }]);
+        harness.bodies.push(receipt, second);
+        handleTsRequest({ kind: "directory-administration-submit", operationEpoch: 1, requestId: "0".repeat(31) + "1", command });
+        await settleAdministrationTurns(harness);
+        await settleAdministrationTurns(harness);
+        const phases = harness.posted.filter((message) => message.kind === "directory-administration-state").map((message) => (message as { phase: string }).phase);
+        expect(phases).toEqual(["loading", "ready", "submitting", "receipt", "refreshing", "ready"]);
+        const submitting = harness.posted.filter((message) => message.kind === "directory-administration-state").find((message) => (message as { phase: string }).phase === "submitting") as { canonicalJson?: string; receiptSha256?: string };
+        expect(submitting.canonicalJson).toBe(first);
+        expect(submitting.receiptSha256).toBeUndefined();
+        const receiptState = harness.posted.filter((message) => message.kind === "directory-administration-state").find((message) => (message as { phase: string }).phase === "receipt") as { canonicalJson?: string; receiptSha256?: string };
+        expect(receiptState.canonicalJson).toBe(first);
+        expect(receiptState.receiptSha256).toMatch(/^[0-9a-f]{64}$/u);
+        expect(harness.posted.filter((message) => message.kind === "directory-administration-state").at(-1)).toMatchObject({ phase: "ready", canonicalJson: second });
+        expect(harness.requests.filter((entry) => entry.startsWith("POST"))).toHaveLength(1);
+      } finally {
+        harness.release();
+        closeDirectory();
+      }
+    });
+
+    it("retains the invite capability until exact clipboard success and rejects duplicate results without redisclosure", async () => {
+      const harness = administrationHarness([200, 200]);
+      const page = await sealAdministrationPage([{ userId: "user-a", email: "a@example.invalid", role: "author", owner: true }], []);
+      try {
+        directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
+        harness.bodies.push(page);
+        handleTsRequest({ kind: "directory-administration-open", operationEpoch: 2, spaceId: SPACE });
+        await settleAdministrationTurns(harness);
+        const command: DirectoryCommand = { kind: "create-invite", spaceId: SPACE, role: "spectator", ttlSecs: 3600 };
+        harness.bodies.push(await sealCommandReceipt("1".repeat(32), command, "invite.v1.secret"), page);
+        handleTsRequest({ kind: "directory-administration-submit", operationEpoch: 2, requestId: "1".repeat(32), command });
+        await settleAdministrationTurns(harness);
+        await settleAdministrationTurns(harness);
+        expect(harness.posted.some((message) => message.kind === "directory-administration-state" && (message as { inviteCapabilityPending?: boolean }).inviteCapabilityPending === true)).toBe(true);
+        handleTsRequest({ kind: "directory-administration-capability-request", operationEpoch: 2 });
+        handleTsRequest({ kind: "directory-administration-capability-request", operationEpoch: 2 });
+        let capabilities = harness.posted.filter((message) => message.kind === "directory-administration-capability");
+        expect(capabilities).toHaveLength(1);
+        expect(capabilities[0]).toMatchObject({ operationEpoch: 2, transferEpoch: 1, inviteToken: "invite.v1.secret" });
+        expect(harness.posted).toContainEqual({ kind: "directory-administration-capability-rejected", operationEpoch: 2, transferEpoch: 1, code: "capacity" });
+
+        handleTsRequest({ kind: "directory-administration-capability-result", operationEpoch: 2, transferEpoch: 1, copied: false });
+        expect(harness.posted.filter((message) => message.kind === "directory-administration-state").at(-1)).toMatchObject({
+          inviteCapabilityPending: true,
+          inviteCapabilityStatus: "failed",
+        });
+        handleTsRequest({ kind: "directory-administration-capability-request", operationEpoch: 2 });
+        capabilities = harness.posted.filter((message) => message.kind === "directory-administration-capability");
+        expect(capabilities).toHaveLength(2);
+        expect(capabilities[1]).toMatchObject({ operationEpoch: 2, transferEpoch: 2, inviteToken: "invite.v1.secret" });
+
+        handleTsRequest({ kind: "directory-administration-capability-result", operationEpoch: 2, transferEpoch: 1, copied: true });
+        expect(harness.posted).toContainEqual({ kind: "directory-administration-capability-rejected", operationEpoch: 2, transferEpoch: 1, code: "mismatch" });
+        handleTsRequest({ kind: "directory-administration-capability-result", operationEpoch: 2, transferEpoch: 2, copied: true });
+        handleTsRequest({ kind: "directory-administration-capability-result", operationEpoch: 2, transferEpoch: 2, copied: true });
+        expect(harness.posted.filter((message) => message.kind === "directory-administration-state").at(-1)).not.toMatchObject({ inviteCapabilityPending: true });
+        expect(harness.posted).toContainEqual({ kind: "directory-administration-capability-rejected", operationEpoch: 2, transferEpoch: 2, code: "already-settled" });
+        handleTsRequest({ kind: "directory-administration-capability-request", operationEpoch: 2 });
+        expect(harness.posted.filter((message) => message.kind === "directory-administration-capability")).toHaveLength(2);
+      } finally {
+        harness.release();
+        closeDirectory();
+      }
+    });
+
+    it("clears the pane on 401 and on 403 and never retains a page after the denial", async () => {
+      for (const status of [401, 403]) {
+        const harness = administrationHarness([status]);
+        try {
+          directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
+          handleTsRequest({ kind: "directory-administration-open", operationEpoch: 3, spaceId: SPACE });
+          await settleAdministrationTurns(harness);
+          const terminal = harness.posted.filter((message) => message.kind === "directory-administration-state").at(-1) as { phase: string; canonicalJson?: string; code?: string };
+          expect(terminal.phase).toBe("denied");
+          expect(terminal.canonicalJson).toBeUndefined();
+          expect(terminal.code).toBe(status === 401 ? "unauthorized" : "forbidden");
+        } finally {
+          harness.release();
+          closeDirectory();
+        }
+      }
+    });
+
+    it("retires the pane on a scoped 4401 for its own space and ignores another space's revocation", async () => {
+      const harness = administrationHarness([200, 200]);
+      const page = await sealAdministrationPage([{ userId: "user-a", email: "a@example.invalid", role: "author", owner: true }], []);
+      try {
+        directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
+        harness.bodies.push(page);
+        handleTsRequest({ kind: "directory-administration-open", operationEpoch: 5, spaceId: SPACE });
+        await settleAdministrationTurns(harness);
+        expect((harness.posted.filter((message) => message.kind === "directory-administration-state").at(-1) as { phase: string }).phase).toBe("ready");
+
+        revokeDirectoryAdministrationForScope("some-other-space");
+        expect((harness.posted.filter((message) => message.kind === "directory-administration-state").at(-1) as { phase: string }).phase).toBe("ready");
+
+        revokeDirectoryAdministrationForScope(SPACE);
+        const terminal = harness.posted.filter((message) => message.kind === "directory-administration-state").at(-1) as { phase: string; canonicalJson?: string; code?: string };
+        expect(terminal.phase).toBe("denied");
+        expect(terminal.code).toBe("forbidden");
+        expect(terminal.canonicalJson).toBeUndefined();
+      } finally {
+        harness.release();
+        closeDirectory();
+      }
+    });
+
+    it("cancels on close and drops every later turn for the retired epoch", async () => {
+      const harness = administrationHarness([200]);
+      const page = await sealAdministrationPage([{ userId: "user-a", email: "a@example.invalid", role: "author", owner: true }], []);
+      try {
+        directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
+        harness.bodies.push(page);
+        handleTsRequest({ kind: "directory-administration-open", operationEpoch: 4, spaceId: SPACE });
+        await settleAdministrationTurns(harness);
+        if (directoryAdministration === null) throw new Error("administration operation missing");
+        directoryAdministration.inviteToken = "invite.v1.close-secret";
+        directoryAdministration.inviteCapabilityStatus = "available";
+        handleTsRequest({ kind: "directory-administration-close", operationEpoch: 4 });
+        const terminal = harness.posted.filter((message) => message.kind === "directory-administration-state").at(-1) as { phase: string; canonicalJson?: string };
+        expect(terminal.phase).toBe("cancelled");
+        expect(terminal.canonicalJson).toBeUndefined();
+        const before = harness.requests.length;
+        handleTsRequest({ kind: "directory-administration-submit", operationEpoch: 4, requestId: "2".repeat(32), command: { kind: "remove-member", spaceId: SPACE, userId: "user-b" } });
+        handleTsRequest({ kind: "directory-administration-refresh", operationEpoch: 4 });
+        handleTsRequest({ kind: "directory-administration-capability-request", operationEpoch: 4 });
+        await settleAdministrationTurns(harness);
+        expect(harness.requests).toHaveLength(before);
+        expect(harness.posted.some((message) => message.kind === "directory-administration-capability")).toBe(false);
+        expect(terminal).not.toMatchObject({ inviteCapabilityPending: true });
+      } finally {
+        harness.release();
+        closeDirectory();
+      }
+    });
+  });
+
   describe("backbone-worker directory lane", () => {
     class FakeDirectoryWebSocket {
       static instances: FakeDirectoryWebSocket[] = [];
@@ -2609,34 +3860,183 @@ if (import.meta.vitest) {
       await new Promise((resolve) => setTimeout(resolve, 0));
     }
 
+    const commandRequestId = (index: number): string => index.toString(16).padStart(32, "b");
+    const sampleCommand: DirectoryCommand = { kind: "create-space", name: "Atelier", spaceKind: "atelier", visibility: "private" };
+    const inviteCommand = (spaceId: string): DirectoryCommand => ({ kind: "create-invite", spaceId, role: "spectator", ttlSecs: 3600 });
+
+    async function commandReceiptBody(request: DirectoryCommandRequestV1, outcome: DirectoryCommandOutcomeV1 = "accepted", result: DirectoryCommandResultV1 = { kind: "none" }): Promise<string> {
+      return JSON.stringify(await sealDirectoryCommandReceiptV1(request.requestId, await directoryCommandSha256(request.command), outcome, [], result));
+    }
+
+    /** ⏳️ Drains enough macrotask turns for every in-flight command turn (fetch, response text, and
+     * two SHA-256 digests) to settle, so a transport assertion never races the receipt parser. */
+    async function settleDirectoryTransport(): Promise<void> {
+      for (let turn = 0; turn < 8; turn += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+
+    /** 🧪️ Installs a directory client whose transport is a recorded stub, isolating the command
+     * transport owner from the browser broker's own proof ratchet (proved separately above). */
+    function installFakeDirectoryClient(respond: (request: DirectoryCommandRequestV1) => Promise<{ status: number; body: string }> | { status: number; body: string }): string[] {
+      const bodies: string[] = [];
+      directoryClient = new DirectoryClient("http://hub.test", {
+        request: async (_input: string, init: RequestInit = {}) => {
+          const body = String(init.body ?? "");
+          bodies.push(body);
+          const response = await respond(JSON.parse(body) as DirectoryCommandRequestV1);
+          return { ok: response.status >= 200 && response.status < 300, status: response.status, text: async () => response.body } as unknown as FetchTimeoutResponse;
+        },
+      });
+      directorySessionEpoch += 1;
+      return bodies;
+    }
+
+    it("retries only a transient fault with the byte-identical sealed request and never retries a terminal rejection", async () => {
+      let status = 503;
+      const bodies = installFakeDirectoryClient(async (request) => (status === 202 ? { status, body: await commandReceiptBody(request) } : { status, body: "hub text the client must never echo" }));
+      try {
+        handleTsRequest({ kind: "directory-command", requestId: commandRequestId(1), command: sampleCommand });
+        await settleDirectoryTransport();
+        expect(bodies).toHaveLength(1);
+        expect(directoryCommandQueue).toHaveLength(1);
+        status = 202;
+        await flushDirectoryQueue();
+        expect(bodies).toHaveLength(2);
+        expect(bodies[0]).toBe(bodies[1]);
+        expect(bodies[0]).toBe(JSON.stringify({ schema: "semio.directory.command-request.v1", requestId: commandRequestId(1), command: sampleCommand }));
+        expect(directoryCommandQueue).toHaveLength(0);
+        expect(directoryCommandOperations.size).toBe(0);
+
+        for (const [index, terminal] of [401, 403, 409, 413].entries()) {
+          status = terminal;
+          bodies.length = 0;
+          handleTsRequest({ kind: "directory-command", requestId: commandRequestId(10 + index), command: sampleCommand });
+          await settleDirectoryTransport();
+          expect(bodies).toHaveLength(1);
+          expect(directoryCommandQueue).toHaveLength(0);
+          expect(directoryCommandOperations.size).toBe(0);
+        }
+      } finally {
+        closeDirectory();
+      }
+    });
+
+    it("bounds the transport at a fixed capacity, keeps the oldest intent, and terminates a malformed correlation", async () => {
+      installFakeDirectoryClient(() => {
+        throw new Error("network unreachable");
+      });
+      try {
+        for (let index = 0; index < DIRECTORY_COMMAND_TRANSPORT_CAPACITY; index += 1) {
+          handleTsRequest({ kind: "directory-command", requestId: commandRequestId(100 + index), command: sampleCommand });
+        }
+        await settleDirectoryTransport();
+        expect(directoryCommandOperations.size).toBe(DIRECTORY_COMMAND_TRANSPORT_CAPACITY);
+        expect(directoryCommandQueue).toHaveLength(DIRECTORY_COMMAND_TRANSPORT_CAPACITY);
+        handleTsRequest({ kind: "directory-command", requestId: commandRequestId(9999), command: sampleCommand });
+        await settleDirectoryTransport();
+        expect(directoryCommandOperations.size).toBe(DIRECTORY_COMMAND_TRANSPORT_CAPACITY);
+        expect(directoryCommandOperations.has(commandRequestId(100))).toBe(true);
+        expect(directoryCommandOperations.has(commandRequestId(9999))).toBe(false);
+        expect(directoryCommandQueue[0]!.request.requestId).toBe(commandRequestId(100));
+
+        handleTsRequest({ kind: "directory-command", requestId: "r1", command: sampleCommand });
+        await settleDirectoryTransport();
+        expect(directoryCommandOperations.has("r1")).toBe(false);
+
+        handleTsRequest({ kind: "directory-command-cancel", requestId: commandRequestId(100) });
+        expect(directoryCommandOperations.size).toBe(DIRECTORY_COMMAND_TRANSPORT_CAPACITY - 1);
+        expect(directoryCommandOperations.has(commandRequestId(100))).toBe(false);
+        closeDirectory();
+        expect(directoryCommandOperations.size).toBe(0);
+        expect(directoryCommandQueue).toHaveLength(0);
+      } finally {
+        closeDirectory();
+      }
+    });
+
+    it("stops the queue at a transient head, then drains it in order without a capability reaching any log", async () => {
+      const token = "inv.01920000000070008000000000000001.dGhpcy1jYXBhYmlsaXR5LW5ldmVyLXJlYWNoZXMtYS1sb2c";
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      let head: "transient" | "accepted" = "transient";
+      const bodies = installFakeDirectoryClient(async (request) => {
+        if (request.requestId === commandRequestId(200) && head === "transient") return { status: 503, body: "" };
+        return { status: 202, body: await commandReceiptBody(request, "accepted", request.command.kind === "create-invite" ? { kind: "invite", inviteToken: token } : { kind: "none" }) };
+      });
+      try {
+        handleTsRequest({ kind: "directory-command", requestId: commandRequestId(200), command: inviteCommand("space-a") });
+        handleTsRequest({ kind: "directory-command", requestId: commandRequestId(201), command: sampleCommand });
+        await settleDirectoryTransport();
+        expect(bodies).toHaveLength(1);
+        expect(directoryCommandQueue.map((operation) => operation.request.requestId)).toEqual([commandRequestId(200), commandRequestId(201)]);
+
+        head = "accepted";
+        await flushDirectoryQueue();
+        expect(bodies).toHaveLength(3);
+        expect(directoryCommandQueue).toHaveLength(0);
+        expect(directoryCommandOperations.size).toBe(0);
+        expect(JSON.stringify([...directoryCommandOperations.values(), ...directoryCommandQueue])).not.toContain(token);
+        expect(errorSpy.mock.calls.flat().map((entry) => String(entry)).join("|")).not.toContain(token);
+      } finally {
+        errorSpy.mockRestore();
+        closeDirectory();
+      }
+    });
+
+    it("suppresses delivery for an operation whose session epoch was replaced and settles each operation exactly once", async () => {
+      const bodies = installFakeDirectoryClient(async (request) => ({ status: 202, body: await commandReceiptBody(request) }));
+      try {
+        handleTsRequest({ kind: "directory-command", requestId: commandRequestId(300), command: sampleCommand });
+        await settleDirectoryTransport();
+        expect(bodies).toHaveLength(1);
+        expect(directoryCommandOperations.size).toBe(0);
+
+        const stale: DirectoryCommandTransportOperationV1 = {
+          request: sealDirectoryCommandRequestV1(commandRequestId(301), sampleCommand),
+          abort: new AbortController(),
+          sessionEpoch: directorySessionEpoch - 1,
+          workerEpoch: directoryWorkerEpoch,
+          settled: false,
+        };
+        directoryCommandOperations.set(commandRequestId(301), stale);
+        directoryCommandQueue.push(stale);
+        await flushDirectoryQueue();
+        expect(bodies).toHaveLength(1);
+        expect(directoryCommandOperations.has(commandRequestId(301))).toBe(false);
+        expect(directoryCommandQueue).toHaveLength(0);
+        expect(stale.settled).toBe(true);
+
+        settleDirectoryCommand(stale, { kind: "directory-command-failed", requestId: commandRequestId(301), code: "closed" });
+        expect(directoryCommandOperations.size).toBe(0);
+        expect(directoryCommandQueue).toHaveLength(0);
+      } finally {
+        closeDirectory();
+      }
+    });
+
     it("queues a directory command while the hub is unreachable, then flushes it in order on the next live signal", async () => {
       FakeDirectoryWebSocket.instances = [];
       const originalWebSocket = globalThis.WebSocket;
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeDirectoryWebSocket;
-      let fetchCalls = 0;
-      const originalFetch = globalThis.fetch;
-      (globalThis as unknown as { fetch: unknown }).fetch = async () => {
-        fetchCalls += 1;
-        throw new Error("network unreachable");
-      };
-
+      let reachable = false;
       try {
         handleTsRequest({ kind: "directory-open", baseUrl: "http://hub.test", since: 0 });
-        handleTsRequest({ kind: "directory-command", requestId: "r1", command: { kind: "create-space", name: "Atelier", spaceKind: "atelier", visibility: "private" } });
-        await flushMicrotasks();
-        expect(fetchCalls).toBeGreaterThan(0);
+        const bodies = installFakeDirectoryClient(async (request) => {
+          if (!reachable) throw new Error("network unreachable");
+          return { status: 202, body: await commandReceiptBody(request) };
+        });
+        handleTsRequest({ kind: "directory-command", requestId: commandRequestId(1), command: sampleCommand });
+        await settleDirectoryTransport();
+        expect(bodies).toHaveLength(1);
         expect(directoryCommandQueue).toHaveLength(1);
-        expect(directoryCommandQueue[0]!.requestId).toBe("r1");
+        expect(directoryCommandQueue[0]!.request.requestId).toBe(commandRequestId(1));
 
         // 🟢️ Hub becomes reachable — any live signal on the stream (a heartbeat here) triggers a flush.
-        installLocalBrowserBrokerProof("5".repeat(64));
-        (globalThis as unknown as { fetch: unknown }).fetch = async () => new Response(JSON.stringify({ events: [] }), { status: 202, headers: { "content-type": "application/json", "x-semio-browser-broker-advanced": "1" } });
-        const socket = FakeDirectoryWebSocket.instances.at(-1)!;
-        socket.triggerMessage({ kind: "heartbeat", headSeq: 0 });
-        await flushMicrotasks();
+        reachable = true;
+        FakeDirectoryWebSocket.instances.at(-1)!.triggerMessage({ kind: "heartbeat", headSeq: 0 });
+        await settleDirectoryTransport();
+        expect(bodies).toHaveLength(2);
         expect(directoryCommandQueue).toHaveLength(0);
+        expect(directoryCommandOperations.size).toBe(0);
       } finally {
-        (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
         // 🧹️ Restores the real global — an un-restored `FakeDirectoryWebSocket` (no `OPEN` static)
         // previously leaked into every later test's `WebSocket.OPEN` comparisons, silently making
         // `relayMutationsToHub`/`sendWireFrame`'s "is the socket actually open" checks pass when
@@ -2684,6 +4084,274 @@ if (import.meta.vitest) {
     });
   });
   //#endregion 🔖️DirectoryLaneTests
+
+  //#region 💡️InferencePortTests
+  // 💡️ Slice D — the host-owned ephemeral GIS Map inference port, driven through a FAKE, already
+  // authenticated transport (an installed browser-broker proof plus a stubbed `fetch`). These are
+  // the port's own laws: it refuses to start without a verified live execution-target lease, it
+  // publishes no state before an exact server receipt, a Cancel click is never an optimistic
+  // terminal, `stale` and `failed` are hard, and no document mutation, outbox entry or artifact
+  // event is ever produced.
+  describe("gis map inference port", () => {
+    const SPACE = "sp-inference";
+    const DOCUMENT = "doc-inference";
+    const JOB = "1".repeat(32);
+    const HASH = "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130";
+    const PREVIEW = { schema: "semio.hub.gis-map-inference-preview/v1" as const, jobId: JOB, proposalHash: HASH, regionId: `inference-${JOB}`, ring: [[7, 46], [9, 46], [9, 48], [7, 48], [7, 46]] };
+
+    function leaseFields(write: boolean): DocumentExecutionTargetLeaseFieldsV1 {
+      return { scope: { spaceId: SPACE, documentId: DOCUMENT }, grant: { read: true, write, observe: true } } as unknown as DocumentExecutionTargetLeaseFieldsV1;
+    }
+
+    function inferenceHarness(options: { readonly lease: "none" | "viewer" | "editor" }) {
+      const posted: BackboneWorkerResponse[] = [];
+      const original = workerPostTestSink;
+      workerPostTestSink = (message) => posted.push(message);
+      const originalFetch = globalThis.fetch;
+      const requests: string[] = [];
+      const bodies: string[] = [];
+      const statuses: number[] = [];
+      (globalThis as unknown as { fetch: unknown }).fetch = async (input: string, init?: { method?: string }) => {
+        requests.push(`${init?.method ?? "GET"} ${input}`);
+        const status = statuses.shift() ?? 200;
+        const body = bodies.shift() ?? "";
+        return { ok: status < 400, status, statusText: "", headers: new Headers({ "content-type": "application/json", "content-length": String(new TextEncoder().encode(body).length), "x-semio-browser-broker-advanced": "1" }), text: async () => body, json: async () => JSON.parse(body) };
+      };
+      clearLocalBrowserBrokerProof();
+      installLocalBrowserBrokerProof("b".repeat(64));
+      // 🧷️ No socket-grant issuer and no installed target means `openArtifact` opens no hub socket
+      // at all, so this harness exercises the inference port's own four calls and nothing else.
+      const originalIssue = socketGrantTestIssue;
+      socketGrantTestIssue = null;
+      openArtifact({ documentId: DOCUMENT, schema: "gis.map", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: SPACE }], actor: "caller" });
+      const state = artifactState(DOCUMENT, SPACE)!;
+      if (options.lease !== "none") state.executionTargetLease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, leaseFields(options.lease === "editor"), "http://hub.test", new Uint8Array(1), new Uint8Array(1));
+      return {
+        posted,
+        requests,
+        bodies,
+        statuses,
+        state,
+        ports: () => posted.filter((message) => message.kind === "inference-port-status").map((message) => (message as Extract<BackboneWorkerResponse, { kind: "inference-port-status" }>).status),
+        release: () => {
+          closeArtifact(DOCUMENT, SPACE);
+          clearLocalBrowserBrokerProof();
+          workerPostTestSink = original;
+          socketGrantTestIssue = originalIssue;
+          (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
+        },
+      };
+    }
+
+    const receiptBody = (state: string, proposalState: string, cursor: number, proposalHash?: string): string =>
+      JSON.stringify({ schema: "semio.hub.inference-receipt/v1", jobId: JOB, state, proposalState, ...(proposalHash === undefined ? {} : { proposalHash }), cursor, expiresAtMs: 1_700_000_060_000 });
+
+    const pageBody = (state: string, proposalState: string, options: { readonly nextCursor: number; readonly completed: number; readonly total: number; readonly proposalHash?: string; readonly preview?: GisMapInferencePreviewV1; readonly cancelRequested?: boolean; readonly stale?: boolean }): string =>
+      JSON.stringify({
+        schema: "semio.hub.inference-events/v1",
+        jobId: JOB,
+        state,
+        proposalState,
+        cancelRequested: options.cancelRequested ?? false,
+        stale: options.stale ?? false,
+        ...(options.proposalHash === undefined ? {} : { proposalHash: options.proposalHash }),
+        ...(options.preview === undefined ? {} : { preview: options.preview }),
+        events: [],
+        progress: [{ cursor: options.nextCursor, runEpoch: 1, completed: options.completed, total: options.total, atMs: 1_700_000_001_000 }],
+        nextCursor: options.nextCursor,
+      });
+
+    it("refuses to start at all without a verified live execution-target lease", async () => {
+      const harness = inferenceHarness({ lease: "none" });
+      try {
+        handleTsRequest({ kind: "inference-open", operationEpoch: 1, scope: { spaceId: SPACE, documentId: DOCUMENT } });
+        await Promise.resolve();
+        expect(harness.ports()).toEqual([{ phase: "failed", jobId: null, cursor: 0, completed: 0, total: 0, proposalHash: null, cancelRequested: false, code: "inference.lease-unverified" }]);
+        expect(harness.requests).toEqual([]);
+        handleTsRequest({ kind: "inference-propose", operationEpoch: 1, requestId: "2".repeat(32) });
+        await Promise.resolve();
+        expect(harness.requests).toEqual([]);
+      } finally {
+        harness.release();
+      }
+    });
+
+    it("refuses a verified viewer-only lease, because a proposal it could never approve must not start", async () => {
+      const harness = inferenceHarness({ lease: "viewer" });
+      try {
+        handleTsRequest({ kind: "inference-open", operationEpoch: 2, scope: { spaceId: SPACE, documentId: DOCUMENT } });
+        await Promise.resolve();
+        expect(harness.ports().at(-1)?.code).toBe("inference.lease-unverified");
+        expect(harness.requests).toEqual([]);
+      } finally {
+        harness.release();
+      }
+    });
+
+    it("publishes no phase beyond submitting until an exact server receipt lands, and never mutates the document", async () => {
+      const harness = inferenceHarness({ lease: "editor" });
+      try {
+        handleTsRequest({ kind: "inference-open", operationEpoch: 3, scope: { spaceId: SPACE, documentId: DOCUMENT } });
+        harness.statuses.push(200);
+        harness.bodies.push(receiptBody("accepted", "none", 0));
+        handleTsRequest({ kind: "inference-propose", operationEpoch: 3, requestId: "3".repeat(32) });
+        expect(harness.ports().map((status) => status.phase)).toEqual(["idle", "submitting"]);
+        await settleInferenceTurns();
+        expect(harness.ports().map((status) => status.phase)).toEqual(["idle", "submitting", "running"]);
+        expect(harness.ports().at(-1)?.jobId).toBe(JOB);
+        expect(harness.requests).toEqual([`POST /_semio/hub/spaces/${SPACE}/documents/${DOCUMENT}/inference/gis-map/jobs`]);
+        expect(harness.state.outbox).toEqual([]);
+        expect(harness.state.pendingMutations).toEqual([]);
+        expect(harness.posted.some((message) => message.kind === "event" && "event" in message && (message as { event: { kind: string } }).event.kind === "remoteMutations")).toBe(false);
+      } finally {
+        harness.release();
+      }
+    });
+
+    it("records a Cancel click as requested and reaches cancelled only on the server's own answer", async () => {
+      const harness = inferenceHarness({ lease: "editor" });
+      try {
+        handleTsRequest({ kind: "inference-open", operationEpoch: 4, scope: { spaceId: SPACE, documentId: DOCUMENT } });
+        harness.statuses.push(200);
+        harness.bodies.push(receiptBody("accepted", "none", 0));
+        handleTsRequest({ kind: "inference-propose", operationEpoch: 4, requestId: "4".repeat(32) });
+        await settleInferenceTurns();
+        harness.statuses.push(200);
+        harness.bodies.push(pageBody("cancelled", "cancelled", { nextCursor: 1, completed: 1, total: 4, cancelRequested: true }));
+        handleTsRequest({ kind: "inference-cancel", operationEpoch: 4 });
+        const requested = harness.ports().at(-1)!;
+        expect(requested.cancelRequested).toBe(true);
+        expect(requested.phase).toBe("running");
+        // 🛑️ A second Cancel click never sends a second cancel request.
+        handleTsRequest({ kind: "inference-cancel", operationEpoch: 4 });
+        await settleInferenceTurns();
+        expect(harness.ports().at(-1)?.phase).toBe("cancelled");
+        expect(harness.requests.filter((entry) => entry.endsWith("/cancel"))).toEqual([`POST /_semio/hub/spaces/${SPACE}/documents/${DOCUMENT}/inference/gis-map/jobs/${JOB}/cancel`]);
+      } finally {
+        harness.release();
+      }
+    });
+
+    it("reports a stale base as a hard terminal that no later answer can move", async () => {
+      const harness = inferenceHarness({ lease: "editor" });
+      try {
+        handleTsRequest({ kind: "inference-open", operationEpoch: 5, scope: { spaceId: SPACE, documentId: DOCUMENT } });
+        harness.statuses.push(200);
+        harness.bodies.push(receiptBody("accepted", "none", 0));
+        handleTsRequest({ kind: "inference-propose", operationEpoch: 5, requestId: "5".repeat(32) });
+        await settleInferenceTurns();
+        harness.statuses.push(200);
+        harness.bodies.push(pageBody("running", "none", { nextCursor: 1, completed: 1, total: 4, stale: true }));
+        handleTsRequest({ kind: "inference-cancel", operationEpoch: 5 });
+        await settleInferenceTurns();
+        expect(harness.ports().at(-1)?.phase).toBe("stale");
+        const before = harness.ports().length;
+        handleTsRequest({ kind: "inference-approve", operationEpoch: 5 });
+        await settleInferenceTurns();
+        expect(harness.ports().length).toBe(before);
+      } finally {
+        harness.release();
+      }
+    });
+
+    it("approves exactly the offered hash once and applies only on a committed receipt", async () => {
+      const harness = inferenceHarness({ lease: "editor" });
+      try {
+        handleTsRequest({ kind: "inference-open", operationEpoch: 6, scope: { spaceId: SPACE, documentId: DOCUMENT } });
+        harness.statuses.push(200);
+        harness.bodies.push(receiptBody("succeeded", "offered", 1, HASH));
+        handleTsRequest({ kind: "inference-propose", operationEpoch: 6, requestId: "6".repeat(32) });
+        await settleInferenceTurns();
+        expect(harness.ports().at(-1)?.phase).toBe("offered");
+        handleTsRequest({ kind: "inference-approve", operationEpoch: 6 });
+        expect(harness.requests.filter((entry) => entry.endsWith("/approval"))).toEqual([]);
+        harness.statuses.push(200);
+        harness.bodies.push(pageBody("succeeded", "offered", { nextCursor: 2, completed: 4, total: 4, proposalHash: HASH, preview: PREVIEW }));
+        await driveInferencePort(6);
+        expect(harness.ports().at(-1)?.preview).toEqual(PREVIEW);
+        harness.statuses.push(200);
+        harness.bodies.push(JSON.stringify({ schema: "semio.hub.inference-approval-receipt/v1", jobId: JOB, mutationId: HASH, commandHash: HASH, proposalHash: HASH, applied: true }));
+        handleTsRequest({ kind: "inference-approve", operationEpoch: 6 });
+        expect(harness.ports().at(-1)?.phase).toBe("approving");
+        await settleInferenceTurns();
+        expect(harness.ports().at(-1)?.phase).toBe("applied");
+        const approvalRequests = harness.requests.filter((entry) => entry.endsWith("/approval"));
+        expect(approvalRequests).toHaveLength(1);
+        expect(harness.state.outbox).toEqual([]);
+      } finally {
+        harness.release();
+      }
+    });
+
+    it("terminates on valid-looking cross-job or cross-hash previews without sending approval", async () => {
+      const substituted = [
+        { ...PREVIEW, jobId: "8".repeat(32), regionId: `inference-${"8".repeat(32)}` },
+        { ...PREVIEW, proposalHash: "9".repeat(64) },
+      ];
+      for (const [index, preview] of substituted.entries()) {
+        const operationEpoch = 8 + index;
+        const harness = inferenceHarness({ lease: "editor" });
+        try {
+          handleTsRequest({ kind: "inference-open", operationEpoch, scope: { spaceId: SPACE, documentId: DOCUMENT } });
+          harness.statuses.push(200);
+          harness.bodies.push(receiptBody("accepted", "none", 0));
+          handleTsRequest({ kind: "inference-propose", operationEpoch, requestId: `${operationEpoch}`.repeat(32) });
+          await settleInferenceTurns();
+          harness.statuses.push(200);
+          harness.bodies.push(pageBody("succeeded", "offered", { nextCursor: 1, completed: 4, total: 4, proposalHash: HASH, preview }));
+          await driveInferencePort(operationEpoch);
+          expect(harness.ports().at(-1)).toMatchObject({ phase: "failed", code: "inference.transport" });
+          handleTsRequest({ kind: "inference-approve", operationEpoch });
+          await settleInferenceTurns();
+          expect(harness.requests.filter((entry) => entry.endsWith("/approval"))).toEqual([]);
+        } finally {
+          harness.release();
+        }
+      }
+    });
+
+    it("maps a published route rejection onto the closed failure vocabulary", async () => {
+      const harness = inferenceHarness({ lease: "editor" });
+      try {
+        handleTsRequest({ kind: "inference-open", operationEpoch: 7, scope: { spaceId: SPACE, documentId: DOCUMENT } });
+        harness.statuses.push(503);
+        harness.bodies.push(JSON.stringify({ schema: "semio.hub.inference-error/v1", code: "inference.unavailable" }));
+        handleTsRequest({ kind: "inference-propose", operationEpoch: 7, requestId: "7".repeat(32) });
+        await settleInferenceTurns();
+        expect(harness.ports().at(-1)).toMatchObject({ phase: "failed", code: "inference.unavailable" });
+      } finally {
+        harness.release();
+      }
+    });
+
+    it("keeps explicit English and German text for every phase, code and control with no default language", async () => {
+      const { GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1, GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1, GIS_MAP_INFERENCE_PORT_TEXT_V1, gisMapInferencePortRoleV1 } = await import("./🔨️modules/📇️directory/🧬️schema/🟦️.ts");
+      const phases: readonly GisMapInferencePortStatusV1["phase"][] = ["idle", "submitting", "running", "offered", "approving", "applied", "cancelled", "stale", "failed"];
+      for (const phase of phases) {
+        const row = GIS_MAP_INFERENCE_PORT_TEXT_V1[phase];
+        expect(Object.keys(row).sort()).toEqual(["de", "en"]);
+        expect(row.en.length).toBeGreaterThan(0);
+        expect(row.de.length).toBeGreaterThan(0);
+        expect(row.de).not.toBe(row.en);
+      }
+      for (const [code, row] of Object.entries(GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1)) {
+        expect(Object.keys(row).sort(), code).toEqual(["de", "en"]);
+        expect(row.de, code).not.toBe(row.en);
+      }
+      for (const [control, row] of Object.entries(GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1)) {
+        expect(Object.keys(row).sort(), control).toEqual(["de", "en"]);
+        expect(row.de, control).not.toBe(row.en);
+      }
+      expect(gisMapInferencePortRoleV1("running")).toBe("status");
+      expect(gisMapInferencePortRoleV1("failed")).toBe("alert");
+    });
+  });
+
+  /** ⏳️ Settles every turn one bounded request/response leg needs, then four quiet ones. */
+  async function settleInferenceTurns(): Promise<void> {
+    for (let turn = 0; turn < 40; turn += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+  //#endregion 💡️InferencePortTests
 
   //#region 🔖️OfflineResilienceTests
   // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-backbone) findings 1/2/3/5: SSE-primary folder
@@ -2951,6 +4619,278 @@ if (import.meta.vitest) {
         clearLocalBrowserBrokerProof();
         (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
         (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
+      }
+    });
+
+    type ExecutionTargetLeaseFixture = {
+      nowMs: number;
+      hubOrigin: string;
+      intent: DocumentOpenIntentV1;
+      plan: DocumentOpenPlanV1;
+      manifest: DocumentExecutionTargetLeaseFieldsV1;
+      socketGrant: SocketGrantReceiptV1;
+      componentHex: string;
+      descriptorHex: string;
+      expected: {
+        assetPaths: [string, string, string];
+        openPlanPath: string;
+        socketGrantPath: string;
+        componentMaxBytes: number;
+        descriptorMaxBytes: number;
+        manifestMaxBytes: number;
+        progressUnitBytes: number;
+        progressStages: string[];
+        rendererState: string;
+        rendererClaims: Record<string, boolean>;
+        viewerWriteRejectedLocally: true;
+        forbiddenStatusFragments: string[];
+        status: Record<string, { en: string; de: string }>;
+        statusRoles: Record<string, "status" | "alert">;
+        rotation: { generationA: string; generationB: string };
+      };
+      hostile: { name: string; stage: string; kind: string; path?: string; value?: unknown; expected: "unpublished" }[];
+    };
+
+    async function executionTargetLeaseFixture(): Promise<ExecutionTargetLeaseFixture> {
+      const { readFile } = await import("node:fs/promises");
+      return JSON.parse(await readFile(new URL("../../../🌎️hub/🧪️fixtures/📇️directory/🔏️document-execution-target-lease-v1/🔣️.json", import.meta.url), "utf8")) as ExecutionTargetLeaseFixture;
+    }
+
+    function executionTargetBytes(hexText: string): Uint8Array {
+      return Uint8Array.from({ length: hexText.length / 2 }, (_unused, index) => Number.parseInt(hexText.slice(index * 2, index * 2 + 2), 16));
+    }
+
+    function executionTargetMutate(source: unknown, path: string, value: unknown): Record<string, unknown> {
+      const candidate = structuredClone(source) as Record<string, unknown>;
+      const segments = path.split(".");
+      let cursor = candidate as Record<string, unknown>;
+      for (const segment of segments.slice(0, -1)) cursor = cursor[segment] as Record<string, unknown>;
+      cursor[segments.at(-1)!] = value;
+      return candidate;
+    }
+
+    function executionTargetBodyResponse(bytes: Uint8Array, declaredLength = bytes.byteLength): Response {
+      return new Response(bytes, { headers: { "content-length": String(declaredLength), "x-semio-browser-broker-advanced": "1" } });
+    }
+
+    type ExecutionTargetHarness = {
+      state: ArtifactState;
+      binding: Extract<PersistenceBinding, { kind: "hub" }>;
+      requests: { url: string; method: string; body: string }[];
+      statuses: Extract<BackboneWorkerResponse, { kind: "execution-target-status" }>[];
+      release: () => void;
+    };
+
+    function executionTargetHarness(fixture: ExecutionTargetLeaseFixture, respond: (url: string, requests: { url: string; method: string; body: string }[]) => Response | Promise<Response>): ExecutionTargetHarness {
+      const requests: { url: string; method: string; body: string }[] = [];
+      const statuses: Extract<BackboneWorkerResponse, { kind: "execution-target-status" }>[] = [];
+      const originalFetch = globalThis.fetch;
+      socketGrantTestIssue = null;
+      executionTargetStatusObserver = (status) => statuses.push(status);
+      openArtifact({ documentId: fixture.intent.scope.documentId, schema: fixture.plan.artifact.schema, bindings: [], actor: "caller-selected-actor" });
+      const state = artifactState(fixture.intent.scope.documentId)!;
+      state.openClientInstanceId = fixture.intent.clientInstanceId;
+      // 🪪️ The caller declares only which surface it wants: nothing forgeable is supplied, so the
+      // verified lease is the sole local comparison input for this wasm target.
+      const binding: Extract<PersistenceBinding, { kind: "hub" }> = { kind: "hub", baseUrl: fixture.hubOrigin, spaceId: fixture.intent.scope.spaceId, requestedSurfaceId: fixture.intent.requestedSurfaceId };
+      clearLocalBrowserBrokerProof();
+      installLocalBrowserBrokerProof("a".repeat(64));
+      (globalThis as unknown as { fetch: unknown }).fetch = async (input: string, init?: RequestInit) => {
+        const url = String(input);
+        requests.push({ url, method: String(init?.method ?? "GET"), body: String(init?.body ?? "") });
+        return respond(url, requests);
+      };
+      return {
+        state,
+        binding,
+        requests,
+        statuses,
+        release: () => {
+          executionTargetStatusObserver = null;
+          closeArtifact(fixture.intent.scope.documentId);
+          clearLocalBrowserBrokerProof();
+          (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
+        },
+      };
+    }
+
+    it("browser execution target lease verifies GIS wasm bytes before plan exchange", async () => {
+      const fixture = await executionTargetLeaseFixture();
+      const component = executionTargetBytes(fixture.componentHex);
+      const descriptor = executionTargetBytes(fixture.descriptorHex);
+      const plan = { ...structuredClone(fixture.plan), expiresAtUnixMs: Date.now() + 30_000 };
+      const grant = { ...fixture.socketGrant, expiresAtMs: Date.now() + 25_000 };
+      const harness = executionTargetHarness(fixture, (url) => {
+        if (url.endsWith("/open-plan")) return Response.json(plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
+        if (url.endsWith("/execution-target/manifest")) return Response.json(fixture.manifest, { headers: { "x-semio-browser-broker-advanced": "1" } });
+        if (url.endsWith("/execution-target/component")) return executionTargetBodyResponse(component);
+        if (url.endsWith("/execution-target/descriptor")) return executionTargetBodyResponse(descriptor);
+        return Response.json(grant, { headers: { "x-semio-browser-broker-advanced": "1" } });
+      });
+      try {
+        expect(fixture.plan.surface.rendererTarget).toBe("wasm");
+        expect(fixture.manifest.grant.write).toBe(false);
+        const authority = await requestDocumentSocketAuthority(harness.state, harness.binding);
+        expect(authority.surfaceId).toBe(fixture.manifest.surface.surfaceId);
+        expect(harness.requests.map(({ url }) => url)).toEqual([
+          `/_semio/hub${fixture.expected.openPlanPath}`,
+          ...fixture.expected.assetPaths.map((path) => `/_semio/hub${path}`),
+          `/_semio/hub${fixture.expected.socketGrantPath}`,
+        ]);
+        for (const index of [1, 2, 3]) {
+          expect(harness.requests[index]!.method).toBe("POST");
+          expect(JSON.parse(harness.requests[index]!.body)).toEqual(fixture.intent);
+          expect(harness.requests[index]!.body).not.toContain(plan.receipt);
+        }
+        expect(JSON.parse(harness.requests.at(-1)!.body).planReceipt).toBe(plan.receipt);
+        expect(harness.state.executionTargetLease).not.toBeNull();
+        expect(harness.state.executionTargetLease!.live).toBe(true);
+        expect(sameLeaseFieldsV1(harness.state.executionTargetLease!.fields(), fixture.manifest)).toBe(true);
+        const observed = harness.statuses.map(({ code, progress }) => `${code}:${progress?.stage ?? "-"}`);
+        expect(observed.at(-1)).toBe(`${fixture.expected.rendererState}:-`);
+        expect(new Set(harness.statuses.flatMap(({ progress }) => (progress ? [progress.stage] : [])))).toEqual(new Set(fixture.expected.progressStages));
+        const payload = JSON.stringify(harness.statuses);
+        for (const fragment of fixture.expected.forbiddenStatusFragments) expect(payload).not.toContain(fragment);
+      } finally {
+        harness.release();
+      }
+    });
+
+    it("browser execution target lease rejects every single-field substitution without publication", async () => {
+      const fixture = await executionTargetLeaseFixture();
+      const component = executionTargetBytes(fixture.componentHex);
+      const descriptor = executionTargetBytes(fixture.descriptorHex);
+      FakeHubWebSocket.instances = [];
+      const rejected: string[] = [];
+      for (const vector of fixture.hostile) {
+        const plan = { ...structuredClone(fixture.plan), expiresAtUnixMs: Date.now() + 30_000 };
+        if (vector.kind === "stale-plan" || vector.kind === "mixed-generation") plan.catalog = { generationId: fixture.expected.rotation.generationA };
+        const manifest = vector.kind === "manifest-field"
+          ? executionTargetMutate(fixture.manifest, vector.path!, vector.value)
+          : vector.kind === "mixed-generation"
+            ? structuredClone(fixture.manifest) as unknown as Record<string, unknown>
+            : structuredClone(fixture.manifest) as unknown as Record<string, unknown>;
+        const harness = executionTargetHarness(fixture, (url, requests) => {
+          if (url.endsWith("/open-plan")) return Response.json(vector.kind === "stale-plan" ? { ...plan, catalog: { generationId: fixture.expected.rotation.generationB } } : plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
+          if (url.endsWith("/execution-target/manifest")) {
+            if (vector.kind === "cancel" && vector.stage === "manifest") requests.length > 0 && harnessAbort();
+            return Response.json(manifest, { headers: { "x-semio-browser-broker-advanced": "1" } });
+          }
+          if (url.endsWith("/execution-target/component")) {
+            if (vector.kind === "cancel" && (vector.stage === "component" || vector.stage === "verify")) harnessAbort();
+            if (vector.kind === "missing-body" && vector.stage === "component") return new Response(null, { status: 204, headers: { "x-semio-browser-broker-advanced": "1" } });
+            if (vector.kind === "component-max-plus-one") return executionTargetBodyResponse(component, fixture.expected.componentMaxBytes + 1);
+            if (vector.kind === "component-truncated") return executionTargetBodyResponse(component.subarray(0, component.length - 1), component.length);
+            if (vector.kind === "component-extra-byte") return executionTargetBodyResponse(new Uint8Array([...component, 7]), component.length);
+            if (vector.kind === "component-bytes" || vector.kind === "mixed-generation") {
+              const substituted = new Uint8Array(component);
+              substituted[0] = substituted[0]! ^ 0xff;
+              return executionTargetBodyResponse(substituted);
+            }
+            if (vector.kind === "deadline") return new Promise<Response>(() => undefined);
+            return executionTargetBodyResponse(component);
+          }
+          if (url.endsWith("/execution-target/descriptor")) {
+            if (vector.kind === "cancel" && vector.stage === "descriptor") harnessAbort();
+            if (vector.kind === "missing-body" && vector.stage === "descriptor") return new Response(null, { status: 204, headers: { "x-semio-browser-broker-advanced": "1" } });
+            if (vector.kind === "descriptor-max-plus-one") return executionTargetBodyResponse(descriptor, fixture.expected.descriptorMaxBytes + 1);
+            if (vector.kind === "descriptor-trailing-byte") return executionTargetBodyResponse(new Uint8Array([...descriptor, 0]));
+            if (vector.kind === "descriptor-noncanonical") return executionTargetBodyResponse(encodePackValue({ descriptorVersion: 1, packageId: "semio:gis" }));
+            if (vector.kind === "descriptor-self-hash") return executionTargetBodyResponse(encodePackValue({ ...(decodePackValue(descriptor) as Record<string, unknown>), hashes: { wasmSha256: "a".repeat(64), coreWasmSha256: "9".repeat(64), descriptorSha256: "8".repeat(64) } }));
+            if (vector.kind === "descriptor-bytes") {
+              const substituted = new Uint8Array(descriptor);
+              substituted[substituted.length - 1] = substituted[substituted.length - 1]! ^ 0xff;
+              return executionTargetBodyResponse(substituted);
+            }
+            return executionTargetBodyResponse(descriptor);
+          }
+          return Response.json({ ...fixture.socketGrant, expiresAtMs: Date.now() + 25_000 }, { headers: { "x-semio-browser-broker-advanced": "1" } });
+        });
+        function harnessAbort(): void {
+          harness.state.docAbort.abort();
+        }
+        try {
+          if (vector.kind === "caller-url" || vector.kind === "caller-path" || vector.kind === "caller-module") {
+            const denied = await browserExecutionTargetAssetRequest(harness.binding, `${harness.state.config.documentId}/../${String(vector.value)}`, "component", fixture.intent, { timeoutMs: 1_000, signal: harness.state.docAbort.signal }).catch((error: unknown) => error as Error);
+            expect((denied as Error).message).toBe("document execution target: operation denied");
+            expect(harness.requests).toHaveLength(0);
+            rejected.push(vector.name);
+            continue;
+          }
+          if (vector.kind === "viewer-write") {
+            await requestDocumentSocketAuthority(harness.state, harness.binding);
+            expect(harness.state.executionTargetLease!.fields().grant.write).toBe(false);
+            harness.state.hubActorReady = true;
+            relayMutationsToHub(harness.state, [sampleEnvelope()]);
+            expect(harness.state.outbox).toHaveLength(0);
+            expect(harness.state.pendingBatches.size).toBe(0);
+            expect(FakeHubWebSocket.instances).toHaveLength(0);
+            rejected.push(vector.name);
+            continue;
+          }
+          if (vector.kind === "reconnect-after-invalidation") {
+            const authority = await requestDocumentSocketAuthority(harness.state, harness.binding).catch((error: unknown) => error as Error);
+            expect(authority).not.toBeInstanceOf(Error);
+            harness.state.executionTargetLease!.drop();
+            expect(() => harness.state.executionTargetLease!.fields()).toThrow("document execution target lease: dropped");
+            rejected.push(vector.name);
+            continue;
+          }
+          if (vector.kind === "deadline") harness.state.docAbort.abort();
+          const outcome = await requestDocumentSocketAuthority(harness.state, harness.binding).catch((error: unknown) => error as Error);
+          expect(outcome).toBeInstanceOf(Error);
+          expect(harness.state.executionTargetLease).toBeNull();
+          expect(harness.requests.some(({ url }) => url.endsWith("/socket-grants"))).toBe(false);
+          expect(FakeHubWebSocket.instances).toHaveLength(0);
+          expect(vector.expected).toBe("unpublished");
+          rejected.push(vector.name);
+        } finally {
+          harness.release();
+        }
+      }
+      expect(rejected).toHaveLength(fixture.hostile.length);
+      expect(new Set(rejected).size).toBe(fixture.hostile.length);
+    });
+
+    it("browser GIS viewer exposes localized renderer-unavailable after verified lease", async () => {
+      const fixture = await executionTargetLeaseFixture();
+      const component = executionTargetBytes(fixture.componentHex);
+      const descriptor = executionTargetBytes(fixture.descriptorHex);
+      const plan = { ...structuredClone(fixture.plan), expiresAtUnixMs: Date.now() + 30_000 };
+      const harness = executionTargetHarness(fixture, (url) => {
+        if (url.endsWith("/open-plan")) return Response.json(plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
+        if (url.endsWith("/execution-target/manifest")) return Response.json(fixture.manifest, { headers: { "x-semio-browser-broker-advanced": "1" } });
+        if (url.endsWith("/execution-target/component")) return executionTargetBodyResponse(component);
+        if (url.endsWith("/execution-target/descriptor")) return executionTargetBodyResponse(descriptor);
+        return Response.json({ ...fixture.socketGrant, expiresAtMs: Date.now() + 25_000 }, { headers: { "x-semio-browser-broker-advanced": "1" } });
+      });
+      const events: ArtifactEvent[] = [];
+      const originalPostMessage = (globalThis as unknown as { postMessage?: unknown }).postMessage;
+      try {
+        await requestDocumentSocketAuthority(harness.state, harness.binding);
+        const terminal = harness.statuses.at(-1)!;
+        expect(terminal.code).toBe(fixture.expected.rendererState);
+        for (const [code, text] of Object.entries(fixture.expected.status)) {
+          expect(DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1[code as keyof typeof DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1]).toEqual(text);
+          expect(documentExecutionTargetStatusRoleV1(code as keyof typeof DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1)).toBe(fixture.expected.statusRoles[code]);
+        }
+        expect(Object.keys(DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1).sort()).toEqual(Object.keys(fixture.expected.status).sort());
+        const source = await (await import("node:fs/promises")).readFile(new URL("./🧵️backbone-worker.ts", import.meta.url), "utf8");
+        const leaseRegion = source.slice(source.indexOf("//#region 🪪️ExecutionTargetLease"), source.indexOf("//#endregion 🪪️ExecutionTargetLease"));
+        expect(leaseRegion).not.toContain("loadPluginModule");
+        expect(leaseRegion).not.toContain("ActivationRegistry");
+        expect(leaseRegion).not.toContain("load_wasm_plugins");
+        expect(leaseRegion).not.toContain("attach_backbone");
+        expect(Object.values(fixture.expected.rendererClaims).every((claim) => claim === false)).toBe(true);
+        harness.state.hubActorReady = true;
+        const originalEmit = FakeHubWebSocket.instances.length;
+        relayMutationsToHub(harness.state, [sampleEnvelope()]);
+        expect(harness.state.outbox).toHaveLength(0);
+        expect(FakeHubWebSocket.instances).toHaveLength(originalEmit);
+        expect(events).toHaveLength(0);
+      } finally {
+        (globalThis as unknown as { postMessage?: unknown }).postMessage = originalPostMessage;
+        harness.release();
       }
     });
 
@@ -3504,5 +5444,48 @@ if (import.meta.vitest) {
     });
   });
   //#endregion 🔖️OfflineResilienceTests
+
+  describe("backbone-worker scope-safe presence", () => {
+    it("binds verified surface authority only after the exact socket Session and isolates equal document ids", async () => {
+      const responses: BackboneWorkerResponse[] = [];
+      workerPostTestSink = (message) => responses.push(message);
+      const socketA = { close: vi.fn() } as unknown as WebSocket;
+      const socketB = { close: vi.fn() } as unknown as WebSocket;
+      const makeState = (spaceId: string, socket: WebSocket): ArtifactState => ({
+        config: { documentId: "same-document", schema: "demo/v1", actor: "requested", bindings: [{ kind: "hub", baseUrl: "https://hub.example", spaceId }] },
+        socket,
+        actor: "",
+        hubActorReady: false,
+        pendingSocketActorId: `hub.v1.${spaceId === "space-a" ? "a" : "b"}`.padEnd(71, spaceId === "space-a" ? "a" : "b"),
+        presenceAuthority: null,
+        outbox: [],
+        sessionColor: null,
+      }) as unknown as ArtifactState;
+      const stateA = makeState("space-a", socketA);
+      const stateB = makeState("space-b", socketB);
+      const actorA = stateA.pendingSocketActorId!;
+      const actorB = stateB.pendingSocketActorId!;
+      try {
+        await handleHubFrame(stateA, { Session: { actor: actorA, color: 2 } }, { socket: socketA, scope: { spaceId: "space-a", documentId: "same-document" }, verifiedSurfaceId: "map@1/*#editor" });
+        await handleHubFrame(stateB, { Session: { actor: actorB, color: 5 } }, { socket: socketB, scope: { spaceId: "space-b", documentId: "same-document" }, verifiedSurfaceId: "map@1/*#viewer" });
+        emitEvent(stateA, { kind: "presence", peers: [{ actor: actorA, label: "Ada", connectedAtMs: 101, color: 2, surface: "map@1/*#editor", views: [] }] });
+        emitEvent(stateB, { kind: "presence", peers: [{ actor: actorB, label: "Berta", connectedAtMs: 202, color: 5, surface: "map@1/*#viewer", views: [] }] });
+        const presence = responses.filter((message): message is Extract<BackboneWorkerResponse, { kind: "event" }> => message.kind === "event" && message.event.kind === "presence");
+        expect(presence.map((message) => [message.scope?.spaceId, message.verifiedSurfaceId, message.event.kind === "presence" ? message.event.peers[0]?.label : undefined])).toEqual([
+          ["space-a", "map@1/*#editor", "Ada"],
+          ["space-b", "map@1/*#viewer", "Berta"],
+        ]);
+        emitEvent(stateA, { kind: "presence", peers: [] });
+        stateA.presenceAuthority = null;
+        emitEvent(stateA, { kind: "presence", peers: [{ actor: actorA, connectedAtMs: 303, surface: "map@1/*#editor", views: [] }] });
+        const tail = responses.slice(-2) as Extract<BackboneWorkerResponse, { kind: "event" }>[];
+        expect(tail[0]).toMatchObject({ scope: { spaceId: "space-a", documentId: "same-document" }, verifiedSurfaceId: "map@1/*#editor", event: { kind: "presence", peers: [] } });
+        expect(tail[1]).toMatchObject({ scope: { spaceId: "space-a", documentId: "same-document" }, event: { kind: "presence", peers: [] } });
+        expect(tail[1]?.verifiedSurfaceId).toBeUndefined();
+      } finally {
+        workerPostTestSink = null;
+      }
+    });
+  });
 }
 //#endregion 🧪️Tests

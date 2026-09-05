@@ -308,8 +308,8 @@ fn fixtures(out: &str) -> Result<Vec<String>, String> {
     )?;
 
     for name in [
-        "🟢️create-node-adds-a-row/⬅️before.csv",
-        "🟢️create-node-adds-a-row/➡️after.csv",
+        "➕️create-node-adds-a-row/⬅️before.csv",
+        "➕️create-node-adds-a-row/➡️after.csv",
         "❌️delete-node-removes-a-row/⬅️before.csv",
         "❌️delete-node-removes-a-row/➡️after.csv",
         "🗑️delete-nodes-removes-two-rows/⬅️before.csv",

@@ -1,6 +1,10 @@
+import { stagePrintSources } from "../../../🔨️modules/📥️source-staging/🟦️.ts";
+import { visualizationTemplates, verifyVisualizationCoverage, pdfStableHash, parseVizTaxonomyLeaves } from "../../../🔨️modules/📊️visualization-gallery/🟦️.ts";
+import MarkdownIt from "markdown-it";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readFileSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { basename, dirname, join } from "node:path";
+import { createRequire } from "node:module";
 import { getWorkspaceRoot } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { provisionPrintFonts } from "../../../🔨️modules/🔤print-font-catalog/🟦️.ts";
 import { loadPrintDesignTokens, renderPrintLatexTokenStylesheet, resolvePrintPanelGlassStyle } from "../../../🔨️modules/🎨print-design-token-paints/🟦️.ts";
@@ -11,10 +15,14 @@ const workspaceRoot = getWorkspaceRoot();
 const productRoot = join(workspaceRoot, "🧰️framework", "🛍️products", "📓️print");
 const packageRoot = join(productRoot, "📦️packages", "🟦️typescript");
 const latexRoot = join(productRoot, "🖋️latex");
-const outputRoot = join(packageRoot, "dist");
+const outputRoot = process.env.SEMIO_PRINT_OUTPUT_DIR ?? join(packageRoot, "dist");
 
 /** 🧪️ Runs pure deterministic print-pipeline verification. */
 export function verifyPrintPipelineQuick(): void {
+  const galleryIdentities = JSON.parse(readFileSync(join(import.meta.dir, "🗺️gallery-identities.json"), "utf8")) as Record<string, string>;
+  assert.deepEqual(Object.fromEntries(visualizationTemplates().map(({ id, texPath }) => [id, basename(texPath)])), galleryIdentities);
+  assert.equal(new Set(Object.values(galleryIdentities).map((name) => name.split("viz-")[0]!.replaceAll("\uFE0F", ""))).size, 81);
+  assert.equal(resolveRegisteredPrintTemplates(["viz", "api"]).length, 1);
   const stylesheet = renderPrintLatexTokenStylesheet(loadPrintDesignTokens());
   assert.match(stylesheet, /\\ProvidesPackage\{semio-tokens\}/);
   assert.match(stylesheet, /\\definecolor\{semio-chrome-light-panel\}/);
@@ -33,24 +41,83 @@ export function verifyPrintPipelineQuick(): void {
   assert.throws(() => deriveDarkPrintTexSource("\\documentclass[theme=dark]{article}"));
   assert.throws(() => deriveDarkPrintTexSource("\\documentclass{article}"));
 
+  const contract = JSON.parse(readFileSync(join(import.meta.dir, "🧫️merge-contract.json"), "utf8"));
   const templates = registeredPrintTemplates();
+  for (const template of [...templates, ...visualizationTemplates()]) {
+    const source = readFileSync(join(productRoot, template.texPath), "utf8");
+    const options = source.match(/\\documentclass\[([^\]]*)\]/)?.[1];
+    assert.ok(options);
+    assert.doesNotMatch(options, /\p{Extended_Pictographic}/u);
+  }
+  assert.deepEqual(templates.map((template) => template.id), contract.templates);
+  for (const vector of contract.markdownCases) assert.deepEqual(parseVizTaxonomyLeaves(vector.source), vector.leaves);
+  const stagingRoot = join(outputRoot, ".staging-test");
+  try {
+    const input = join(stagingRoot, "input"), output = join(stagingRoot, "output");
+    for (const [path, content] of Object.entries(contract.staging.inputs)) {
+      mkdirSync(dirname(join(input, path)), { recursive: true });
+      writeFileSync(join(input, path), content as string);
+    }
+    const staged = stagePrintSources(input, ["📄️document.tex", "📎️appendix.tex", "🖼️assets"], output);
+    assert.equal(staged.get("📄️document.tex"), join(output, "document.tex"));
+    for (const [path, content] of Object.entries(contract.staging.outputs)) assert.equal(readFileSync(join(output, path), "utf8"), content);
+    writeFileSync(join(input, "document.tex"), "collision");
+    assert.throws(() => stagePrintSources(input, ["📄️document.tex", "document.tex"], output), /colliding print source/);
+    assert.equal(readFileSync(join(output, "document.tex"), "utf8"), contract.staging.outputs["document.tex"]);
+  } finally {
+    rmSync(stagingRoot, { recursive: true, force: true });
+  }
+  const taxonomy = readFileSync(join(productRoot, "🖼️assets/📊️viz-taxonomy.md"), "utf8");
+  const markdown = new MarkdownIt().parse(taxonomy, {});
+  const oracle: string[] = [];
+  let section: string | undefined;
+  for (let index = 0; index < markdown.length; index++) {
+    const token = markdown[index]!;
+    if (token.type === "heading_open" && token.tag === "h2") section = String(Number.parseInt(markdown[index + 1]!.content, 10));
+    if (token.type !== "inline" || !section) continue;
+    const children = token.children ?? [];
+    const code = children.findIndex((child) => child.type === "code_inline");
+    if (code < 0 || !["mark", "chart", "layout", "axis", "scale"].includes(children[code + 1]?.content.trim() ?? "")) continue;
+    oracle.push(`${section}/${children[code]!.content}`);
+  }
+  assert.equal(oracle.length, contract.vizLeaves);
+  assert.deepEqual(parseVizTaxonomyLeaves(taxonomy), oracle);
   assert.equal(resolveRegisteredPrintTemplates([]).length, templates.length);
   assert.equal(resolveRegisteredPrintTemplates(["report", "report-dark"]).length, 1);
   assert.throws(() => resolveRegisteredPrintTemplates(["not-a-template"]));
   assert.deepEqual(printTemplatePdfNames("🧾️template/📋️report/📋️report.tex"), { light: "📋️report.pdf", dark: "📋️report-dark.pdf" });
 
+  const loader = readFileSync(join(latexRoot, "semio-viz-charts.sty"), "utf8");
+  for (const match of loader.matchAll(/\\RequirePackage\{([^}]+)\}/g)) assert.ok(existsSync(join(latexRoot, `${match[1]}.sty`)), `missing chart package ${match[1]}`);
   const windowSource = readFileSync(join(latexRoot, "semio-window.sty"), "utf8");
   const tableSource = readFileSync(join(latexRoot, "semio-table.sty"), "utf8");
-  assert.match(windowSource, /\\semio_window_vskip_stroke_hairline: \{[\s\S]*?\\vskip\\dimexpr-3\\semio@stroke@hairline\\relax/);
-  assert.match(windowSource, /semio~window~table\/.style=\{\s*semio~window,\s*toprule=0pt,/);
-  assert.match(windowSource, /\\semio_window_table_border_finish: \{[\s\S]*?frame\.north~west[\s\S]*?frame\.south~west/);
-  assert.match(windowSource, /semio~window~table\/.style=\{[\s\S]*?finish=\{\\semio_window_table_border_finish:\}/);
-  assert.match(tableSource, /\\NewDocumentCommand \\SemioTableHeaderRow \{ m \} \{[\s\S]*?\\semio@table@row@sep/);
-  assert.match(tableSource, /\\newcommand\{\\semio@table@row@sep\}\{[\s\S]*?\\hrule height\\arrayrulewidth width\\linewidth/);
-  assert.match(tableSource, /\\newcommand\{\\semio@table@long@header@left@cell\}\[2\]\{[\s\S]*?\\multicolumn\{1\}\{\|/);
-  assert.match(tableSource, /\\semio_table_long_header_build:nn #1#2 \{[\s\S]*?\\semio@table@long@header@left@cell[\s\S]*?\\clist_item:nn \{#1\} \{1\}/);
-  assert.doesNotMatch(tableSource, /\\newcommand\{\\semio@table@long@header@(repeat|continuation)@three\}\[3\]\{%\s*\\hhline/);
-  console.log("print: unit tests passed");
+    const headingTrackSource = windowSource.slice(windowSource.indexOf("\\newcount\\semio@chrome@heading@level"), windowSource.indexOf("\\newsavebox{\\semio@window@cap@slot}"));
+    assert.match(readFileSync(join(latexRoot, "semio.cls"), "utf8"), /\\RequirePackage\[style=\\semio@citestyle,backend=bibtex,sorting=nyt,backref=true\]\{biblatex\}/);
+    assert.match(readFileSync(join(latexRoot, "semio-components.sty"), "utf8"), /\\NewDocumentCommand\{\\makecoverpages\}\{\}\{%[\s\S]*?\\newgeometry\{[^}]+\}\s*\\thispagestyle\{empty\}/);
+    assert.match(headingTrackSource, /\\semio@chrome@heading@level=99\\relax/);
+    assert.match(headingTrackSource, /\\ifnum\\semio@chrome@heading@candidate@level<\\semio@chrome@heading@level[\s\S]*?\\global\\semio@chrome@heading@level=\\semio@chrome@heading@candidate@level/);
+    assert.match(headingTrackSource, /\\ifnum\\semio@chrome@heading@candidate@level=\\semio@chrome@heading@level[\s\S]*?\\semio@chrome@heading@set\{#2\}%[\s\S]*?\\else[\s\S]*?\\global\\let\\semio@nav@short@pending\\relax[\s\S]*?\\expandafter\\markright\\expandafter\{\\semio@chrome@heading\}/);
+    assert.match(tableSource, /\\newcommand\{\\semio@table@long@head@copy\}\{%[\s\S]*?\\ifsemio@table@long@pageparts[\s\S]*?\\global\\advance\\semio@table@long@part\\@ne[\s\S]*?\\semio@table@long@part@overlay[\s\S]*?\\copy\\LT@head/);
+    assert.match(tableSource, /\\patchcmd\{\\LT@start\}[\s\S]*?\{\\copy\\LT@head\}[\s\S]*?\{\\semio@table@long@head@copy\}/);
+    assert.match(tableSource, /\\end\{longtable\}%\s*\\semio@table@long@parts@record/);
+    assert.match(tableSource, /\\newcommand\{\\semio@table@long@parts@record\}\{%\s*\\ifsemio@table@long@pageparts[\s\S]*?\\semio@window@break@record/);
+    assert.match(tableSource, /\\newcommand\{\\SemioTableLong\}[\s\S]*?\\semio@table@long@pagepartstrue[\s\S]*?\\semio@table@long@render[\s\S]*?\\semio@table@long@pagepartsfalse/);
+    assert.match(windowSource, /\\semio_window_vskip_stroke_hairline: \{[\s\S]*?\\vskip\\dimexpr-\\semio@stroke@hairline-5\.75pt\\relax/);
+    assert.match(windowSource, /overlay~unbroken=\{\\semio@window@break@record\{1\}/);
+    assert.match(windowSource, /overlay~first=\{\\semio@window@frame@bottom@stroke\}/);
+    assert.match(windowSource, /overlay~middle=\{[\s\S]*?\\semio@window@frame@bottom@stroke/);
+    assert.match(windowSource, /bottomrule~at~break=\\semio@stroke@hairline/);
+    assert.match(windowSource, /toprule~at~break=0pt/);
+    assert.match(windowSource, /\\semio@window@header@invoke@tcb/);
+    assert.match(windowSource, /\\semio@heading@cap@muted@open/);
+    assert.match(windowSource, /toprule=0pt/);
+    assert.match(tableSource, /\\semio@table@long@title@chrome@row[\s\S]*?\\semio@window@header@invoke/);
+    assert.match(tableSource, /\\NewDocumentCommand \\SemioTableHeaderRow \{ m \} \{[\s\S]*?\\semio@table@row@sep/);
+    assert.match(tableSource, /\\semio_table_long_header_build:nn #1#2 \{[\s\S]*?\\semio@table@long@header@left@cell[\s\S]*?\\clist_item:nn \{#1\} \{1\}/);
+    assert.doesNotMatch(tableSource, /\\newcommand\{\\semio@table@long@header@(repeat|continuation)@three\}\[3\]\{%\s*\\hhline/);
+
+  verifyVisualizationCoverage();
+  console.log("[DEBUG] print: unit tests passed");
 }
 
 /** 🧪️ Builds all light and dark registered templates and verifies their PDFs. */
@@ -66,3 +133,34 @@ export async function verifyPrintPipelineLong(): Promise<void> {
   console.log(`print: all ${registeredPrintTemplates().length * 2} template PDFs built`);
 }
 //#endregion 🧪️PrintPipelineTests
+
+/** 🧪️ Compiles every visualization in both themes and verifies reproducible PDF content. */
+export async function verifyPrintVisualizationBuild(): Promise<void> {
+  await provisionPrintFonts();
+  await buildRegisteredPrintTemplates(["viz"]);
+  for (const template of visualizationTemplates()) for (const name of Object.values(printTemplatePdfNames(template.texPath))) assert.ok(existsSync(join(outputRoot, name)));
+  const probe = visualizationTemplates().find((template) => template.id === "viz-api")!;
+  const path = join(outputRoot, printTemplatePdfNames(probe.texPath).light);
+  const canvas = createRequire(join(workspaceRoot, "node_modules/pdfjs-dist/legacy/build/pdf.mjs"))("@napi-rs/canvas") as typeof import("@napi-rs/canvas");
+  (globalThis as { DOMMatrix?: typeof canvas.DOMMatrix }).DOMMatrix ??= canvas.DOMMatrix;
+  const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const contract = JSON.parse(readFileSync(join(import.meta.dir, "🧫️merge-contract.json"), "utf8"));
+  for (const name of Object.values(printTemplatePdfNames(probe.texPath))) {
+    const document = await getDocument({ data: new Uint8Array(readFileSync(join(outputRoot, name))) }).promise;
+    try {
+      const pages: string[] = [];
+      for (let number = 1; number <= document.numPages; number++) {
+        const page = await document.getPage(number);
+        pages.push((await page.getTextContent()).items.map((item) => "str" in item ? item.str : "").join(" "));
+      }
+      for (const text of contract.vizText) assert.ok(pages.join(" ").includes(text), `missing PDF text: ${text}`);
+    } finally {
+      await document.destroy();
+    }
+  }
+  await buildRegisteredPrintTemplates(["viz", "api"]);
+  const hash = pdfStableHash(path);
+  await buildRegisteredPrintTemplates(["viz", "api"]);
+  assert.equal(pdfStableHash(path), hash);
+  console.log(`[DEBUG] print: all ${visualizationTemplates().length * 2} visualization PDFs built, deterministic content ${hash.slice(0, 12)}`);
+}

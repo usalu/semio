@@ -20807,7 +20807,7 @@ func pathEmojiStatuteFindings(entries []pathEmojiEntry, genericEmojiIdentities [
 		if generic[foldPathEmojiIdentity(first)] {
 			findings = append(findings, pathEmojiFinding{Kind: "generic", Path: entry.Path, Emoji: first})
 		}
-		if emojiText(first) != strings.ReplaceAll(first, "\uFE0E", "") && !strings.Contains(first, "\uFE0F") {
+		if (emojiText(first) != strings.ReplaceAll(first, "\uFE0E", "") || strings.Contains(first, "\u20E3")) && !strings.Contains(first, "\uFE0F") {
 			findings = append(findings, pathEmojiFinding{Kind: "presentation", Path: entry.Path, Emoji: first})
 		}
 		if rest != "" {
@@ -41098,6 +41098,7 @@ func emojiText(emoji string) string {
 		"\u2699", "\u2696", "\U0001F3F7", "\U0001F6E0",
 		"\u2702", "\U0001F6E1", "\U0001F5D1",
 		"\u2600", "\u23F1", "\u270F", "\U0001F46E",
+		"\u2B05", "\u2B06", "\u2B07",
 	}
 	base := strings.ReplaceAll(stripped, "\uFE0F", "")
 	for _, td := range textDefaultEmojis {
@@ -41120,11 +41121,24 @@ func extractEntityEmoji(s string) (string, string) {
 	}
 	i := 0
 	r := runes[i]
+	if strings.ContainsRune("0123456789#*", r) {
+		end := 1
+		if end < len(runes) && runes[end] == 0xFE0F {
+			end++
+		}
+		if end < len(runes) && runes[end] == 0x20E3 {
+			return string(runes[:end+1]), string(runes[end+1:])
+		}
+		return "", s
+	}
 	// Check if the first rune is an emoji
 	if !isEmojiRune(r) {
 		return "", s
 	}
 	i++
+	if r >= 0x1F1E6 && r <= 0x1F1FF && i < len(runes) && runes[i] >= 0x1F1E6 && runes[i] <= 0x1F1FF {
+		i++
+	}
 	// Consume variation selectors and ZWJ sequences
 	for i < len(runes) {
 		r = runes[i]
@@ -41154,6 +41168,9 @@ func extractEntityEmoji(s string) (string, string) {
 
 // 🔷️isEmojiRune returns true if the rune is likely an emoji base character.
 func isEmojiRune(r rune) bool {
+	if r >= 0x1F1E6 && r <= 0x1F1FF {
+		return true
+	}
 	// Common emoji ranges
 	if r >= 0x1F600 && r <= 0x1F64F {
 		return true
@@ -41194,6 +41211,9 @@ func isEmojiRune(r rune) bool {
 	if r >= 0x2B50 && r <= 0x2B55 {
 		return true
 	} // Stars
+	if r >= 0x2B05 && r <= 0x2B07 {
+		return true
+	}
 	if r >= 0x200D && r <= 0x200D {
 		return true
 	} // ZWJ

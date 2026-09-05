@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🗑️delete-material",
   "semanticKind": "delete-material",
   "displayName": "Delete Material",
-  "emoji": "🗑🧱️",
+  "emoji": "🗑️",
   "aggregateVariant": "DeleteMaterial",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": "delete-material",

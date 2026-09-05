@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/hub/execution-target-relay-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "limits", "intent", "routes", "responses", "fences"],
+  "properties": {
+    "schema": { "const": "semio.hub.execution-target-relay/v1" },
+    "intent": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema", "version", "scope", "requestedSurfaceId", "clientInstanceId"],
+      "properties": {
+        "schema": { "const": "semio.hub.document-open-intent/v1" }, "version": { "const": 1 },
+        "scope": { "type": "object", "additionalProperties": false, "required": ["spaceId", "documentId"], "properties": { "spaceId": { "const": "studio" }, "documentId": { "const": "map" } } },
+        "requestedSurfaceId": { "const": "surface.test.editor" }, "clientInstanceId": { "const": "client:relay" }
+      }
+    },
+    "limits": {
+      "type": "object", "additionalProperties": false,
+      "required": ["requestBytes", "manifestBytes", "componentBytes", "descriptorBytes", "inFlight", "hubDeadlineMs", "relayDeadlineMs"],
+      "properties": {
+        "requestBytes": { "const": 8192 }, "manifestBytes": { "const": 8192 },
+        "componentBytes": { "const": 67108864 }, "descriptorBytes": { "const": 4194304 },
+        "inFlight": { "const": 2 }, "hubDeadlineMs": { "const": 8000 }, "relayDeadlineMs": { "const": 9000 }
+      }
+    },
+    "routes": {
+      "type": "array", "minItems": 12,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["id", "method", "path", "admitted"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 }, "method": { "enum": ["GET", "POST", "PUT", "DELETE"] },
+          "path": { "type": "string", "minLength": 1 }, "admitted": { "type": "boolean" }
+        }
+      }
+    },
+    "fences": {
+      "type": "array", "minItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["mutation", "expected"],
+        "properties": { "mutation": { "enum": ["unchanged", "directory-advanced", "session-revoked", "cancelled"] }, "expected": { "enum": ["selected", "stale", "denied", "cancelled"] } },
+        "allOf": [
+          { "if": { "properties": { "mutation": { "const": "unchanged" } } }, "then": { "properties": { "expected": { "const": "selected" } } } },
+          { "if": { "properties": { "mutation": { "const": "directory-advanced" } } }, "then": { "properties": { "expected": { "const": "stale" } } } },
+          { "if": { "properties": { "mutation": { "const": "session-revoked" } } }, "then": { "properties": { "expected": { "const": "denied" } } } },
+          { "if": { "properties": { "mutation": { "const": "cancelled" } } }, "then": { "properties": { "expected": { "const": "cancelled" } } } }
+        ]
+      }
+    },
+    "responses": {
+      "type": "array", "minItems": 5,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["id", "asset", "bytes", "delayMs", "status"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 }, "asset": { "enum": ["manifest", "component", "descriptor"] },
+          "bytes": { "type": "integer", "minimum": 1, "maximum": 67108865 },
+          "delayMs": { "type": "integer", "minimum": 0, "maximum": 2500 }, "status": { "enum": [200, 503] }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "admittedRoute": {
+      "type": "object", "required": ["method", "path"],
+      "properties": {
+        "method": { "const": "POST" },
+        "path": {
+          "type": "string",
+          "pattern": "^/_semio/hub/spaces/(?:[A-Za-z0-9_.!~*'()-]|%[0-9A-F]{2})+/documents/(?:[A-Za-z0-9_.!~*'()-]|%[0-9A-F]{2})+/execution-target/(manifest|component|descriptor)$",
+          "not": { "pattern": "%(?:[01][0-9A-F]|2[0135789ADEF]|3[0-9F]|4[1-9A-F]|5[0-9ACF]|6[1-9A-F]|7[0-9AEF])" }
+        }
+      }
+    }
+  }
+}

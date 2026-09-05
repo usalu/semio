@@ -33,19 +33,19 @@ pub struct Block3dInference {
 }
 
 impl protocol::Inference<Block3dSnapshot> for Block3dInference {
-    async fn infer(snapshot: &Block3dSnapshot) -> Self {
+    fn infer(snapshot: &Block3dSnapshot) -> Self {
         Self { bounds: compute_block3d_bounds(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<Block3dSnapshot> for Block3dInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.block.block3d.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.block.block3d.inference.bounds", reads: &["vortices"] }]
     }
 }
@@ -61,7 +61,7 @@ impl ArtifactInferrer for crate::artifacts::block3d::standards::v1::subsets::any
 //#region 🔖️PuzzleCatalogFragment
 /// 🌐️ Resolves the active representation's mesh url — the first representation whose `tags` all
 /// appear in `wanted_tags`, or the first representation overall, or `None` for an empty catalog.
-pub async fn resolve_active_mesh_url<'a>(definition: &'a Block3dSnapshot, wanted_tags: &[&str]) -> Option<&'a str> {
+pub fn resolve_active_mesh_url<'a>(definition: &'a Block3dSnapshot, wanted_tags: &[&str]) -> Option<&'a str> {
     definition
         .representations
         .iter()
@@ -74,7 +74,7 @@ pub async fn resolve_active_mesh_url<'a>(definition: &'a Block3dSnapshot, wanted
 /// `vortexKinds`/`cableKinds`/`attractionKinds` — see `Puzzle3dKindCatalogs`), the seam puzzle imports
 /// through its `Kit×Type` media port. The active representation's mesh (first row, or the first
 /// matching `wanted_tags`) becomes the catalog row's `meshUrl`.
-pub async fn puzzle3d_catalog_fragment(definition: &Block3dSnapshot, wanted_tags: &[&str]) -> Value {
+pub fn puzzle3d_catalog_fragment(definition: &Block3dSnapshot, wanted_tags: &[&str]) -> Value {
     let vec3 = |v: [f64; 3]| array(v.iter().map(|c| Value::from(*c)));
     let vortices: Vec<Value> = definition.vortices.iter().map(|vortex| json!({ "id": vortex.id.as_str(), "vortexKind": vortex.vortex_kind.as_str(), "position": vec3(vortex.position), "direction": vec3(vortex.direction), "radius": vortex.radius })).collect();
     let object_kind = json!({
@@ -123,11 +123,11 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧸️Fixtures
-    async fn vortex(id: &str, position: [f64; 3], radius: f64) -> Block3dVortexTemplate {
+    fn vortex(id: &str, position: [f64; 3], radius: f64) -> Block3dVortexTemplate {
         Block3dVortexTemplate { id: id.into(), vortex_kind: "door".into(), position, direction: [0.0, 1.0, 0.0], radius, label: None }
     }
 
-    async fn snapshot_with_vortices(vortices: Vec<Block3dVortexTemplate>) -> Block3dSnapshot {
+    fn snapshot_with_vortices(vortices: Vec<Block3dVortexTemplate>) -> Block3dSnapshot {
         Block3dSnapshot { object_kind: BlockKindIdentity { id: "capsule".into(), name: "capsule".into(), label: "Capsule".into(), ..Default::default() }, vortices, ..Block3dSnapshot::default() }
     }
     //#endregion 🧸️Fixtures

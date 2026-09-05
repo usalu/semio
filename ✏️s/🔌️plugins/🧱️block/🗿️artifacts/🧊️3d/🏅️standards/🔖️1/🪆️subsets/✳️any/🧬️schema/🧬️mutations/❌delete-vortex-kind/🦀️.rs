@@ -17,23 +17,23 @@ pub struct DeleteVortexKind {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn delete_vortex_kind(id: String) -> Block3dMutation {
+pub fn delete_vortex_kind(id: String) -> Block3dMutation {
     Block3dMutation::DeleteVortexKind(DeleteVortexKind { id })
 }
 
 impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for DeleteVortexKind {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "vortex-kind", kind: "delete-vortex-kind", record: "DeletedVortexKind" };
 
-    async fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+    fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {
+    fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Delete vortex kind \"{}\"", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

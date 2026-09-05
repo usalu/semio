@@ -1,5 +1,184 @@
 /* ../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts */
 if (undefined) {}
+/* ../../../../../../../../../🔨️modules/🔏️hash/🟦️.ts */
+var BLAKE3_IV = new Uint32Array([1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225]);
+var BLAKE3_MSG_PERMUTATION = [2, 6, 3, 10, 7, 0, 4, 13, 1, 11, 12, 5, 9, 14, 15, 8];
+var BLAKE3_CHUNK_START = 1;
+var BLAKE3_CHUNK_END = 2;
+var BLAKE3_PARENT = 4;
+var BLAKE3_ROOT = 8;
+var BLAKE3_CHUNK_LEN = 1024;
+var BLAKE3_BLOCK_LEN = 64;
+var BLAKE3_OUT_LEN = 32;
+function blake3Rotr(x, n) {
+  return (x >>> n | x << 32 - n) >>> 0;
+}
+function blake3G(state, a, b, c, d, mx, my) {
+  state[a] = state[a] + state[b] + mx >>> 0;
+  state[d] = blake3Rotr(state[d] ^ state[a], 16);
+  state[c] = state[c] + state[d] >>> 0;
+  state[b] = blake3Rotr(state[b] ^ state[c], 12);
+  state[a] = state[a] + state[b] + my >>> 0;
+  state[d] = blake3Rotr(state[d] ^ state[a], 8);
+  state[c] = state[c] + state[d] >>> 0;
+  state[b] = blake3Rotr(state[b] ^ state[c], 7);
+}
+function blake3RoundFn(state, m) {
+  blake3G(state, 0, 4, 8, 12, m[0], m[1]);
+  blake3G(state, 1, 5, 9, 13, m[2], m[3]);
+  blake3G(state, 2, 6, 10, 14, m[4], m[5]);
+  blake3G(state, 3, 7, 11, 15, m[6], m[7]);
+  blake3G(state, 0, 5, 10, 15, m[8], m[9]);
+  blake3G(state, 1, 6, 11, 12, m[10], m[11]);
+  blake3G(state, 2, 7, 8, 13, m[12], m[13]);
+  blake3G(state, 3, 4, 9, 14, m[14], m[15]);
+}
+function blake3Permute(m) {
+  const out = new Uint32Array(16);
+  for (let i = 0;i < 16; i++)
+    out[i] = m[BLAKE3_MSG_PERMUTATION[i]];
+  return out;
+}
+function blake3Compress(cv, block, counter, blockLen, flags) {
+  const state = new Uint32Array(16);
+  state.set(cv, 0);
+  state.set(BLAKE3_IV.subarray(0, 4), 8);
+  state[12] = counter >>> 0;
+  state[13] = Math.floor(counter / 2 ** 32) >>> 0;
+  state[14] = blockLen;
+  state[15] = flags;
+  let m = block;
+  for (let r = 0;r < 7; r++) {
+    blake3RoundFn(state, m);
+    if (r < 6)
+      m = blake3Permute(m);
+  }
+  for (let i = 0;i < 8; i++) {
+    state[i] = (state[i] ^ state[i + 8]) >>> 0;
+    state[i + 8] = (state[i + 8] ^ cv[i]) >>> 0;
+  }
+  return state;
+}
+function blake3WordsFromBytes(bytes, offset) {
+  const words = new Uint32Array(16);
+  for (let i = 0;i < 16; i++) {
+    const o = offset + i * 4;
+    words[i] = (bytes[o] | bytes[o + 1] << 8 | bytes[o + 2] << 16 | bytes[o + 3] << 24) >>> 0;
+  }
+  return words;
+}
+function blake3OutputChainingValue(output) {
+  return blake3Compress(output.inputCv, output.block, output.counter, output.blockLen, output.flags).subarray(0, 8);
+}
+function blake3RootOutputBytes(output, outLen) {
+  const out = new Uint8Array(outLen);
+  let outputBlockCounter = 0;
+  let written = 0;
+  while (written < outLen) {
+    const words = blake3Compress(output.inputCv, output.block, outputBlockCounter, output.blockLen, output.flags | BLAKE3_ROOT);
+    for (let i = 0;i < 16 && written < outLen; i++) {
+      const w = words[i];
+      out[written++] = w & 255;
+      if (written < outLen)
+        out[written++] = w >>> 8 & 255;
+      if (written < outLen)
+        out[written++] = w >>> 16 & 255;
+      if (written < outLen)
+        out[written++] = w >>> 24 & 255;
+    }
+    outputBlockCounter++;
+  }
+  return out;
+}
+
+class Blake3ChunkState {
+  cv;
+  chunkCounter;
+  block = new Uint8Array(BLAKE3_BLOCK_LEN);
+  blockLen = 0;
+  blocksCompressed = 0;
+  flags;
+  constructor(key, chunkCounter, flags) {
+    this.cv = key.slice();
+    this.chunkCounter = chunkCounter;
+    this.flags = flags;
+  }
+  len() {
+    return this.blocksCompressed * BLAKE3_BLOCK_LEN + this.blockLen;
+  }
+  startFlag() {
+    return this.blocksCompressed === 0 ? BLAKE3_CHUNK_START : 0;
+  }
+  update(input) {
+    let offset = 0;
+    while (offset < input.length) {
+      if (this.blockLen === BLAKE3_BLOCK_LEN) {
+        const words = blake3WordsFromBytes(this.block, 0);
+        this.cv = blake3Compress(this.cv, words, this.chunkCounter, BLAKE3_BLOCK_LEN, this.flags | this.startFlag()).subarray(0, 8);
+        this.blocksCompressed++;
+        this.block = new Uint8Array(BLAKE3_BLOCK_LEN);
+        this.blockLen = 0;
+      }
+      const take = Math.min(BLAKE3_BLOCK_LEN - this.blockLen, input.length - offset);
+      this.block.set(input.subarray(offset, offset + take), this.blockLen);
+      this.blockLen += take;
+      offset += take;
+    }
+  }
+  output() {
+    const words = blake3WordsFromBytes(this.block, 0);
+    return { inputCv: this.cv, block: words, counter: this.chunkCounter, blockLen: this.blockLen, flags: this.flags | this.startFlag() | BLAKE3_CHUNK_END };
+  }
+}
+function blake3ParentOutput(leftCv, rightCv, key, flags) {
+  const block = new Uint32Array(16);
+  block.set(leftCv, 0);
+  block.set(rightCv, 8);
+  return { inputCv: key, block, counter: 0, blockLen: BLAKE3_BLOCK_LEN, flags: flags | BLAKE3_PARENT };
+}
+function blake3ParentCv(leftCv, rightCv, key, flags) {
+  return blake3OutputChainingValue(blake3ParentOutput(leftCv, rightCv, key, flags));
+}
+
+class Blake3Hasher {
+  key = BLAKE3_IV;
+  chunkState = new Blake3ChunkState(BLAKE3_IV, 0, 0);
+  cvStack = [];
+  flags = 0;
+  addChunkChainingValue(newCvIn, totalChunksIn) {
+    let newCv = newCvIn;
+    let totalChunks = totalChunksIn;
+    while ((totalChunks & 1) === 0) {
+      const left = this.cvStack.pop();
+      newCv = blake3ParentCv(left, newCv, this.key, this.flags);
+      totalChunks >>>= 1;
+    }
+    this.cvStack.push(newCv);
+  }
+  update(input) {
+    let offset = 0;
+    while (offset < input.length) {
+      if (this.chunkState.len() === BLAKE3_CHUNK_LEN) {
+        const chunkCv = blake3OutputChainingValue(this.chunkState.output());
+        const totalChunks = this.chunkState.chunkCounter + 1;
+        this.addChunkChainingValue(chunkCv, totalChunks);
+        this.chunkState = new Blake3ChunkState(this.key, totalChunks, this.flags);
+      }
+      const take = Math.min(BLAKE3_CHUNK_LEN - this.chunkState.len(), input.length - offset);
+      this.chunkState.update(input.subarray(offset, offset + take));
+      offset += take;
+    }
+  }
+  digest(outLen = BLAKE3_OUT_LEN) {
+    let output = this.chunkState.output();
+    let parentNodesRemaining = this.cvStack.length;
+    while (parentNodesRemaining > 0) {
+      parentNodesRemaining--;
+      output = blake3ParentOutput(this.cvStack[parentNodesRemaining], blake3OutputChainingValue(output), this.key, this.flags);
+    }
+    return blake3RootOutputBytes(output, outLen);
+  }
+}
 /* ../../../../../../../../../🔨️modules/🧬️schema/🟦️.ts */
 var GRAPHQL_STATE_PREAMBLE = `enum StateClass { ARTIFACT CONFIG PRESENCE TRANSIENT }
 ` + `directive @state(class: StateClass!) on FIELD_DEFINITION
@@ -18800,7 +18979,7 @@ var PLUGIN_BUILD_TARGETS = [
   { pluginId: "animate", packageId: "semio:animate", cratePath: "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_animate.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:animate.present"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "5fff7e3ac148177243275445e12535fd89c433f6fa50316572bcdda9b3d97590", coreWasmSha256: "5fff7e3ac148177243275445e12535fd89c433f6fa50316572bcdda9b3d97590", descriptorSha256: "12a912e82f98d54f405262123150f41035a15234332a1abc971062ac7e973b17" } },
   { pluginId: "architect", packageId: "semio:architect", cratePath: "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_architect.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:data.program"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "2301bc724c96c3f6ea698bc1eba4feb50a0b0b4d1dfdbffa94a912c7e9dab510", coreWasmSha256: "2301bc724c96c3f6ea698bc1eba4feb50a0b0b4d1dfdbffa94a912c7e9dab510", descriptorSha256: "09d0f7320243a4aa38d5c83fa7d0a75ed398756edcb093c848adf515d1c1c4d8" } },
   { pluginId: "block", packageId: "semio:block", cratePath: "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_block.wasm", role: "plugin", capabilities: [], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: [], extensionPoints: [] },
-  { pluginId: "cad", packageId: "semio:cad", cratePath: "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_cad.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:3d.cad"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "64a36cc37cb80d8d0c122af7c22272e1749730a45e2eb18657e435f6614c8823", coreWasmSha256: "64a36cc37cb80d8d0c122af7c22272e1749730a45e2eb18657e435f6614c8823", descriptorSha256: "ff3daed49568aaec15d35de6067f2df0956bf988de1db8baa98560f10063b867" } },
+  { pluginId: "cad", packageId: "semio:cad", cratePath: "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_cad.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:3d.cad"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "919ca3b975a3d0786fd750f95f138b65239223402b91fd765379edc3cea1bb42", coreWasmSha256: "d884d1a39ca11fd8f82249bd71ac50075bd49e59d6f3b214db1556656a9f4aa0", descriptorSha256: "2953136523691dc1e5277832dbf615f83c6c798e7125cec1414feaaf317818ad" } },
   { pluginId: "dag", packageId: "semio:dag", cratePath: "✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_dag.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:graph.dag"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "55c9da9026706dbcd47277335eda53abf66e3ecf19fd848280a95b7a531f51e2", coreWasmSha256: "55c9da9026706dbcd47277335eda53abf66e3ecf19fd848280a95b7a531f51e2", descriptorSha256: "53d81f2b0927fbc1383cccb1c989a5fe190fd98ea582786bd6ea1846aea5258d" } },
   { pluginId: "demonstrator", packageId: "semio:demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_demonstrator.wasm", role: "plugin", capabilities: [], contributes: [], consumes: ["forms.questionKind", "flow.extension", "process.machines"], dependsOn: ["cad", "gis", "procedural", "process", "puzzle", "sourcing", "stdio"], activationEvents: [], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "e39095467e06ec3d2fd45543e73bdcfa12d03e4a5a941d9145cd46f570d0ae63", coreWasmSha256: "e39095467e06ec3d2fd45543e73bdcfa12d03e4a5a941d9145cd46f570d0ae63", descriptorSha256: "72e0822284f68c9fd9fa60552db84cd489b1ca9c770adf389dd6e17cb57a2ff3" } },
   { pluginId: "draw", packageId: "semio:draw", cratePath: "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_draw.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["draw-fsm", "stdio"], activationEvents: ["on-artifact-kind:2d.drawing"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "4bccf647dd64b0d6088e7338a25e7ed1326a412f44660459f0d6c9cab0e79714", coreWasmSha256: "4bccf647dd64b0d6088e7338a25e7ed1326a412f44660459f0d6c9cab0e79714", descriptorSha256: "b9d12f23271b085b41da39d7ba395ea78604cab8006b6b00e1ee39aa5265a1bd" } },
@@ -20889,6 +21068,22 @@ function admittedCount2(value) {
   return Number.isSafeInteger(value) && value >= 0;
 }
 
+/* ../../../../../../📇️directory/🧬️schema/🟦️.ts */
+var DIRECTORY_EVENT_PAGE_MAX_BYTES = 64 * 1024;
+var DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES = 48 * 1024;
+var DIRECTORY_COMMAND_REQUEST_MAX_BYTES = 8 * 1024;
+var DIRECTORY_COMMAND_RECEIPT_MAX_BYTES = 64 * 1024;
+var DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES = 48 * 1024;
+var DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES = 64 * 1024 * 1024;
+var DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES = 4 * 1024 * 1024;
+var DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1 = Object.freeze({
+  verifying: Object.freeze({ en: "Verifying document component…", de: "Dokumentkomponente wird überprüft…" }),
+  "integrity-failed": Object.freeze({ en: "The document component could not be verified. Reopen the document.", de: "Die Dokumentkomponente konnte nicht verifiziert werden. Öffnen Sie das Dokument erneut." }),
+  stale: Object.freeze({ en: "The document target changed. Reopen the document.", de: "Das Dokumentziel wurde geändert. Öffnen Sie das Dokument erneut." }),
+  cancelled: Object.freeze({ en: "Opening the document was cancelled.", de: "Das Öffnen des Dokuments wurde abgebrochen." }),
+  "renderer-unavailable": Object.freeze({ en: "The verified document component is ready, but this renderer is unavailable.", de: "Die überprüfte Dokumentkomponente ist bereit, aber dieser Renderer ist nicht verfügbar." })
+});
+
 /* ../../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️.ts */
 function localInteractionIdentityEquals(left, right) {
   return left.appInstanceId === right.appInstanceId && left.generation === right.generation && left.revision === right.revision && left.documentRevision === right.documentRevision && left.topologyRevision === right.topologyRevision;
@@ -22419,7 +22614,9 @@ class AppChannelClient {
 if (undefined) {}
 if (undefined) {}
 if (undefined) {
-  let sampleDirectoryEvent = function(seq) {};
+  let sampleDirectoryEvent = function(seq) {}, administrationResponse = function(canonical) {};
+  async function sampleCanonicalDirectoryEventPage(after = 3) {}
+  async function sampleCanonicalAdministrationPage(access, overrides = {}) {}
 }
 /* ../../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts */
 var SHARD_WORKER_URL = "/🔌️plugin-modules/🧵️shard/🟨️shard-worker.js";

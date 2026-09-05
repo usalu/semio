@@ -6,34 +6,304 @@
       "toolIdsConstant": "BLOCK2D_RETAINED_TOOL_IDS",
       "source": "🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "routes": [
-        { "id": "patchNodeKind", "lane": "Artifact" },
-        { "id": "addHandleKind", "lane": "Artifact" },
-        { "id": "removeHandleKind", "lane": "Artifact" },
-        { "id": "addHandle", "lane": "Artifact" },
-        { "id": "removeHandle", "lane": "Artifact" },
-        { "id": "addCompatibilityRule", "lane": "Artifact" },
-        { "id": "removeCompatibilityRule", "lane": "Artifact" },
-        { "id": "setActiveExample", "lane": "Artifact" },
-        { "id": "edit", "lane": "Artifact" }
+        {
+          "id": "patchNodeKind",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "addHandleKind",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "removeHandleKind",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "addHandle",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "removeHandle",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "addCompatibilityRule",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "removeCompatibilityRule",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "setActiveExample",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "edit",
+          "lanes": [
+            "Artifact"
+          ]
+        }
       ],
-      "laws": { "bounded": true, "cancel": true, "replay": true, "freshness": true, "ack": true, "incrementalClose": true },
-      "ui": { "locales": ["en", "de"], "accessibleLabels": true, "customizableUi": true }
+      "laws": {
+        "bounded": true,
+        "cancel": true,
+        "replay": true,
+        "freshness": true,
+        "ack": true,
+        "incrementalClose": true
+      },
+      "ui": {
+        "locales": [
+          "en",
+          "de"
+        ],
+        "accessibleLabels": true,
+        "customizableUi": true
+      }
+    },
+    {
+      "owner": "Block3dPlayApp",
+      "toolIdsConstant": "BLOCK3D_RETAINED_TOOL_IDS",
+      "source": "🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "routes": [
+        {
+          "id": "patchObjectKind",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "addRepresentation",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "removeRepresentation",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "addVortexKind",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "removeVortexKind",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "addVortex",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "removeVortex",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "setActiveExample",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "edit",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "setActiveRepresentation",
+          "lanes": [
+            "Config"
+          ]
+        },
+        {
+          "id": "setWindowRepresentations",
+          "lanes": [
+            "Config"
+          ]
+        },
+        {
+          "id": "toggleWindowRepresentation",
+          "lanes": [
+            "Config"
+          ]
+        },
+        {
+          "id": "setWindowArrangement",
+          "lanes": [
+            "Config"
+          ]
+        },
+        {
+          "id": "setWindowSpacing",
+          "lanes": [
+            "Config"
+          ]
+        },
+        {
+          "id": "setActiveUtility",
+          "lanes": [
+            "Config"
+          ]
+        },
+        {
+          "id": "setBrushVortexKind",
+          "lanes": [
+            "Config"
+          ]
+        },
+        {
+          "id": "setBrushRadius",
+          "lanes": [
+            "Config"
+          ]
+        },
+        {
+          "id": "setBrushFlip",
+          "lanes": [
+            "Config"
+          ]
+        },
+        {
+          "id": "worldSurfaceHover",
+          "lanes": [
+            "Config"
+          ]
+        },
+        {
+          "id": "worldSurfaceLeave",
+          "lanes": [
+            "Config"
+          ]
+        },
+        {
+          "id": "worldSurfacePlace",
+          "lanes": [
+            "Artifact",
+            "Config"
+          ]
+        },
+        {
+          "id": "setCamera",
+          "lanes": [
+            "Config"
+          ]
+        },
+        {
+          "id": "patchRepresentation",
+          "lanes": [
+            "Artifact"
+          ]
+        }
+      ],
+      "laws": {
+        "bounded": true,
+        "cancel": true,
+        "replay": true,
+        "freshness": true,
+        "ack": true,
+        "incrementalClose": true
+      },
+      "ui": {
+        "locales": [
+          "en",
+          "de"
+        ],
+        "accessibleLabels": true,
+        "customizableUi": true
+      }
     },
     {
       "owner": "Block5dPlayApp",
       "toolIdsConstant": "BLOCK5D_RETAINED_TOOL_IDS",
       "source": "🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "routes": [
-        { "id": "patchPartKind", "lane": "Artifact" },
-        { "id": "addGripKind", "lane": "Artifact" },
-        { "id": "removeGripKind", "lane": "Artifact" },
-        { "id": "addGrip", "lane": "Artifact" },
-        { "id": "removeGrip", "lane": "Artifact" },
-        { "id": "setActiveExample", "lane": "Artifact" },
-        { "id": "edit", "lane": "Artifact" }
+        {
+          "id": "patchPartKind",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "addGripKind",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "removeGripKind",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "addGrip",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "removeGrip",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "setActiveExample",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "edit",
+          "lanes": [
+            "Artifact"
+          ]
+        }
       ],
-      "laws": { "bounded": true, "cancel": true, "replay": true, "freshness": true, "ack": true, "incrementalClose": true },
-      "ui": { "locales": ["en", "de"], "accessibleLabels": true, "customizableUi": true }
+      "laws": {
+        "bounded": true,
+        "cancel": true,
+        "replay": true,
+        "freshness": true,
+        "ack": true,
+        "incrementalClose": true
+      },
+      "ui": {
+        "locales": [
+          "en",
+          "de"
+        ],
+        "accessibleLabels": true,
+        "customizableUi": true
+      }
     }
   ]
 }

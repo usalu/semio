@@ -7,7 +7,7 @@
 use crate::artifacts::block5d::{Block5dSnapshot, BLOCK5D_DIALECT, BLOCK_5D_SCHEMA};
 use crate::viewer::block5d::modes::view;
 use crate::viewer::block5d::modes::view::windows::world;
-use semio_framework_plugin::{ArtifactView, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
+use semio_framework_plugin::{ArtifactView, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 // 🚧️ SDK GAP: `ArtifactViewer`/`Viewer`/`ViewEmit` are in the crate-root re-export list now
 // (ticket 26/08/16 W0-F closed that gap), but `Dialect` itself is not — only reachable through
 // `app`. Flagged in this packet's migration report, not fixable here (`🧰️framework/**` is
@@ -27,10 +27,10 @@ pub enum Block5dViewCommand {
 }
 
 impl protocol::OpBinary for Block5dViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(Block5dViewCommand::Noop)
     }
 }
@@ -54,15 +54,19 @@ impl ArtifactViewer for Block5dViewer {
     const DIALECT: Dialect = BLOCK5D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = BLOCK_5D_SCHEMA;
 
-    async fn initial_snapshot() -> Block5dSnapshot {
-        crate::artifacts::block5d::schema::empty_block5d_snapshot()
+    /// 📄️ Boots on the bundled `hexagonal-cut-concrete-forest-left` example document so the view's
+    /// mesh window renders a real representation instead of the fallback mesh kind — the
+    /// artifact-side `default_block5d_snapshot` the editor boots on too (no editor import: this is
+    /// `crate::artifacts::block5d::schema`).
+    fn initial_snapshot() -> Block5dSnapshot {
+        crate::artifacts::block5d::schema::default_block5d_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Block5dViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (camera
     /// orbit, "jump to representation") is a pure addition here, never a signature change.
-    async fn handle(
+    fn handle(
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -72,11 +76,13 @@ impl ArtifactViewer for Block5dViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
-            world::BODY_KEY => world::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let node = match body_key {
+            world::BODY_KEY => world::render(doc.snapshot)?,
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
+                .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block5d viewer unknown-body label admission failed"))?,
+        };
+        Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 }
 //#endregion 🔖️Viewer

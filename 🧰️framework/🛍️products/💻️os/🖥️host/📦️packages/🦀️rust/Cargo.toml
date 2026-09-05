@@ -34,7 +34,6 @@ ui_wgpu = { path = "../../../../../🔨️modules/🖱️ui/📦️packages/🦀
 # and their supporting registry (`//#region SolidMediaExport`, `🖥️host/🦀️.rs`), deleted this same
 # wave as dead weight with zero production callers. Verified with `grep -rn "semio_framework_3d"` across this
 # crate's whole mounted input set (not just this directory) before removing the line.
-semio-s-plugin-stdio = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 # 🔤️ `base64` (third-party, unconditional) REMOVED: all 13 call sites in `🖥️host/🦀️.rs`
@@ -48,6 +47,7 @@ base64_codec = { path = "../../../../../🔨️modules/🚪️io/🔤️base64/�
 # 🖼️ SVG parsing/rasterization is a native-host capability.  Keep its renderer stack out of a
 # wasm32-wasip2 guest while retaining the target-neutral SVG and DWG helpers in this crate.
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+semio-s-plugin-stdio = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false, features = ["full-artifact-catalog"] }
 png = "0.17.16"
 resvg = "0.45.1"
 tiny-skia = "0.11.4"
@@ -77,4 +77,5 @@ semio-framework-async = { workspace = true }
 
 [features]
 default = []
-os-host-full = ["dep:zip", "semio-framework-os-kernel/sync"]
+space-guest = []
+os-host-full = ["space-guest", "dep:zip", "semio-framework-os-kernel/sync"]

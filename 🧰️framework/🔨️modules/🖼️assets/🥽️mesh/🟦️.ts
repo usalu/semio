@@ -1,5 +1,5 @@
-import delivery from "./📇️catalog.json";
-import metabolism from "../🌱️metabolism/🎨️representation/📇️catalog.json";
+import delivery from "./📇️catalog.json" with { type: "json" };
+import metabolism from "../🌱️metabolism/🎨️representation/📇️catalog.json" with { type: "json" };
 
 export type MeshAsset = { readonly url: string; readonly source: string; readonly path: string };
 export type MeshDeliveryCatalog = readonly MeshAsset[];

@@ -48,15 +48,15 @@ pub const RELATIONSHIP_NAMESPACES: [&str; 2] = [TRANSITIONAL_REL, STRICT_REL];
 /// 📐️ Typed conformance-class mutation for `stdio.docx` under ISO/IEC 29500-4
 /// Transitional. Every variant addresses ONE axis of the class; none addresses document content.
 //#region 🔖️Leaves
-#[path = "🔧set-snapshot/🦀️.rs"]
+#[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🔩set-main-namespace/🦀️.rs"]
+#[path = "🌐️set-main-namespace/🦀️.rs"]
 pub mod set_main_namespace;
-#[path = "⚙️set-relationship-base/🦀️.rs"]
+#[path = "🔗️set-relationship-base/🦀️.rs"]
 pub mod set_relationship_base;
-#[path = "🧩set-conformance-attribute/🦀️.rs"]
+#[path = "✅️set-conformance-attribute/🦀️.rs"]
 pub mod set_conformance_attribute;
-#[path = "🔖remove-conformance-attribute/🦀️.rs"]
+#[path = "🚫️remove-conformance-attribute/🦀️.rs"]
 pub mod remove_conformance_attribute;
 //#endregion 🔖️Leaves
 

@@ -1,0 +1,279 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schemas/os/gis-map-inference-port-fixture-v1.json",
+  "title": "Host-owned ephemeral GIS Map inference port corpus",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "phases",
+    "terminalPhases",
+    "ariaRoles",
+    "codes",
+    "locales",
+    "serverJobStates",
+    "serverProposalStates",
+    "limits",
+    "serviceId",
+    "sampleJobId",
+    "otherJobId",
+    "proposalHash",
+    "preview",
+    "initial",
+    "successLifecycle",
+    "cancelLifecycle",
+    "leaseRefusal",
+    "hostileTransitions",
+    "crossFixture",
+    "nonclaims"
+  ],
+  "$defs": {
+    "phase": { "enum": ["idle", "submitting", "running", "offered", "approving", "applied", "cancelled", "stale", "failed"] },
+    "code": {
+      "enum": [
+        "inference.unavailable",
+        "inference.denied",
+        "inference.not-found",
+        "inference.invalid",
+        "inference.bounds",
+        "inference.conflict",
+        "inference.capacity",
+        "inference.expired",
+        "inference.cancelled",
+        "approval.commit-unavailable",
+        "inference.storage",
+        "inference.transport",
+        "inference.lease-unverified"
+      ]
+    },
+    "hex32": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+    "hex64": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "jobState": { "enum": ["accepted", "running", "succeeded", "failed", "cancelled"] },
+    "proposalState": { "enum": ["none", "offered", "approved", "stale", "cancelled"] },
+    "preview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "jobId", "proposalHash", "regionId", "ring"],
+      "properties": {
+        "schema": { "const": "semio.hub.gis-map-inference-preview/v1" },
+        "jobId": { "$ref": "#/$defs/hex32" },
+        "proposalHash": { "$ref": "#/$defs/hex64" },
+        "regionId": { "type": "string", "pattern": "^inference-[0-9a-f]{32}$" },
+        "ring": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "prefixItems": [
+              { "type": "number", "minimum": -180, "maximum": 180 },
+              { "type": "number", "minimum": -90, "maximum": 90 }
+            ],
+            "items": false
+          }
+        }
+      }
+    },
+    "status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "jobId", "cursor", "completed", "total", "proposalHash", "cancelRequested", "code"],
+      "properties": {
+        "phase": { "$ref": "#/$defs/phase" },
+        "jobId": { "oneOf": [{ "$ref": "#/$defs/hex32" }, { "type": "null" }] },
+        "cursor": { "type": "integer", "minimum": 0, "maximum": 16 },
+        "completed": { "type": "integer", "minimum": 0 },
+        "total": { "type": "integer", "minimum": 0 },
+        "proposalHash": { "oneOf": [{ "$ref": "#/$defs/hex64" }, { "type": "null" }] },
+        "preview": { "$ref": "#/$defs/preview" },
+        "cancelRequested": { "type": "boolean" },
+        "code": { "oneOf": [{ "$ref": "#/$defs/code" }, { "type": "null" }] }
+      }
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cursor", "runEpoch", "completed", "total", "atMs"],
+      "properties": {
+        "cursor": { "type": "integer", "minimum": 1, "maximum": 16 },
+        "runEpoch": { "type": "integer", "minimum": 0 },
+        "completed": { "type": "integer", "minimum": 0 },
+        "total": { "type": "integer", "minimum": 1 },
+        "atMs": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "jobId", "state", "proposalState", "cursor", "expiresAtMs"],
+      "properties": {
+        "schema": { "type": "string", "minLength": 1 },
+        "jobId": { "$ref": "#/$defs/hex32" },
+        "state": { "$ref": "#/$defs/jobState" },
+        "proposalState": { "$ref": "#/$defs/proposalState" },
+        "proposalHash": { "$ref": "#/$defs/hex64" },
+        "cursor": { "type": "integer", "minimum": 0, "maximum": 16 },
+        "expiresAtMs": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "jobId", "state", "proposalState", "cancelRequested", "stale", "events", "progress", "nextCursor"],
+      "properties": {
+        "schema": { "type": "string", "minLength": 1 },
+        "jobId": { "$ref": "#/$defs/hex32" },
+        "state": { "$ref": "#/$defs/jobState" },
+        "proposalState": { "$ref": "#/$defs/proposalState" },
+        "cancelRequested": { "type": "boolean" },
+        "stale": { "type": "boolean" },
+        "proposalHash": { "$ref": "#/$defs/hex64" },
+        "preview": { "$ref": "#/$defs/preview" },
+        "events": { "type": "array", "maxItems": 8, "items": { "type": "object" } },
+        "progress": { "type": "array", "maxItems": 16, "items": { "$ref": "#/$defs/progress" } },
+        "nextCursor": { "type": "integer", "minimum": 0, "maximum": 16 }
+      }
+    },
+    "approvalReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "jobId", "mutationId", "commandHash", "proposalHash", "applied"],
+      "properties": {
+        "schema": { "type": "string", "minLength": 1 },
+        "jobId": { "$ref": "#/$defs/hex32" },
+        "mutationId": { "$ref": "#/$defs/hex64" },
+        "commandHash": { "$ref": "#/$defs/hex64" },
+        "proposalHash": { "$ref": "#/$defs/hex64" },
+        "applied": { "type": "boolean" }
+      }
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["start", "lease-unverified", "receipt", "page", "approve", "approval", "cancel", "failed", "clear"] },
+        "receipt": { "oneOf": [{ "$ref": "#/$defs/receipt" }, { "$ref": "#/$defs/approvalReceipt" }] },
+        "page": { "$ref": "#/$defs/page" },
+        "code": { "$ref": "#/$defs/code" }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "event", "expected"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "event": { "$ref": "#/$defs/event" },
+        "expected": { "$ref": "#/$defs/status" }
+      }
+    },
+    "hostile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "from", "event", "expected"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "from": { "$ref": "#/$defs/status" },
+        "event": { "$ref": "#/$defs/event" },
+        "expected": { "$ref": "#/$defs/status" }
+      }
+    }
+  },
+  "properties": {
+    "schema": { "const": "semio.os.gis-map-inference-port-fixture/v1" },
+    "version": { "const": 1 },
+    "phases": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/phase" }
+    },
+    "terminalPhases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": { "enum": ["applied", "cancelled", "stale", "failed"] }
+    },
+    "ariaRoles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["idle", "submitting", "running", "offered", "approving", "applied", "cancelled", "stale", "failed"],
+      "properties": {
+        "idle": { "const": "status" },
+        "submitting": { "const": "status" },
+        "running": { "const": "status" },
+        "offered": { "const": "status" },
+        "approving": { "const": "status" },
+        "applied": { "const": "alert" },
+        "cancelled": { "const": "alert" },
+        "stale": { "const": "alert" },
+        "failed": { "const": "alert" }
+      }
+    },
+    "codes": { "type": "array", "minItems": 13, "maxItems": 13, "uniqueItems": true, "items": { "$ref": "#/$defs/code" } },
+    "locales": { "type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": { "enum": ["en", "de"] } },
+    "serverJobStates": { "type": "array", "minItems": 5, "maxItems": 5, "uniqueItems": true, "items": { "$ref": "#/$defs/jobState" } },
+    "serverProposalStates": { "type": "array", "minItems": 5, "maxItems": 5, "uniqueItems": true, "items": { "$ref": "#/$defs/proposalState" } },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requestMaxBytes", "responseMaxBytes", "progressMaxCursor", "eventPageMaxItems", "jobMaxLifetimeMs", "pollIntervalMs", "maxPollTurns"],
+      "properties": {
+        "requestMaxBytes": { "const": 1024 },
+        "responseMaxBytes": { "const": 16384 },
+        "progressMaxCursor": { "const": 16 },
+        "eventPageMaxItems": { "const": 8 },
+        "jobMaxLifetimeMs": { "const": 120000 },
+        "pollIntervalMs": { "const": 750 },
+        "maxPollTurns": { "const": 240 }
+      }
+    },
+    "serviceId": { "const": "s.gis.gismap.inference" },
+    "sampleJobId": { "$ref": "#/$defs/hex32" },
+    "otherJobId": { "$ref": "#/$defs/hex32" },
+    "proposalHash": { "$ref": "#/$defs/hex64" },
+    "preview": { "$ref": "#/$defs/preview" },
+    "initial": { "$ref": "#/$defs/status" },
+    "successLifecycle": { "type": "array", "minItems": 7, "maxItems": 7, "items": { "$ref": "#/$defs/step" } },
+    "cancelLifecycle": { "type": "array", "minItems": 5, "maxItems": 5, "items": { "$ref": "#/$defs/step" } },
+    "leaseRefusal": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "$ref": "#/$defs/step" } },
+    "hostileTransitions": { "type": "array", "minItems": 12, "maxItems": 12, "items": { "$ref": "#/$defs/hostile" } },
+    "crossFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["approvalFixture", "serverLifecycleKinds", "serverCancelLifecycleKinds", "serverKindToPhase"],
+      "properties": {
+        "approvalFixture": { "const": "🌎️hub/🧪️fixtures/🗳️gis-map-proposal-approval-v1" },
+        "serverLifecycleKinds": { "type": "array", "minItems": 5, "maxItems": 5, "items": { "type": "string", "minLength": 1 } },
+        "serverCancelLifecycleKinds": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "string", "minLength": 1 } },
+        "serverKindToPhase": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["accepted", "running", "succeeded", "approval-prepared", "approved", "cancel-requested", "cancelled"],
+          "properties": {
+            "accepted": { "$ref": "#/$defs/phase" },
+            "running": { "$ref": "#/$defs/phase" },
+            "succeeded": { "$ref": "#/$defs/phase" },
+            "approval-prepared": { "$ref": "#/$defs/phase" },
+            "approved": { "$ref": "#/$defs/phase" },
+            "cancel-requested": { "$ref": "#/$defs/phase" },
+            "cancelled": { "$ref": "#/$defs/phase" }
+          }
+        }
+      }
+    },
+    "nonclaims": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": { "enum": ["no-wgpu-map-rendering", "no-external-model-provider", "no-two-user-process-journey", "nothing-persisted-into-the-map-artifact"] }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "contract": "generated-catalog-projection-filter-v1",
+  "entries": [
+    { "pluginId": "stdio", "packageId": "semio:stdio", "cratePath": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", "packageName": "semio-s-plugin-stdio", "wasmOut": "semio_s_plugin_stdio.wasm", "role": "plugin", "capabilities": [], "contributes": [], "consumes": [], "dependsOn": [], "activationEvents": [], "extensionPoints": [] },
+    { "pluginId": "s", "packageId": "semio:s", "cratePath": "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust", "packageName": "semio-s-plugin-space", "wasmOut": "semio_s_plugin_space.wasm", "role": "plugin", "capabilities": ["documents.write"], "contributes": [], "consumes": [], "dependsOn": ["stdio"], "activationEvents": ["on-artifact-kind:space.sspace"], "extensionPoints": [], "host": { "landingAppId": "home", "hostAppId": "studio" } },
+    { "pluginId": "flow", "packageId": "semio:flow", "cratePath": "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust", "packageName": "semio-s-plugin-flow", "wasmOut": "semio_s_plugin_flow.wasm", "role": "plugin", "capabilities": ["documents.write"], "contributes": ["flow.graph"], "consumes": ["flow.extension"], "dependsOn": ["stdio"], "activationEvents": ["on-artifact-kind:flow.flow"], "extensionPoints": ["flow.extension"] },
+    { "pluginId": "flow-extension-draw", "packageId": "semio:flow-extension-draw", "cratePath": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust", "packageName": "semio-s-plugin-flow-extension-draw", "wasmOut": "semio_s_plugin_flow_extension_draw.wasm", "role": "extension", "capabilities": ["flow.extension"], "contributes": ["flow.extension"], "consumes": [], "dependsOn": ["flow", "draw"], "activationEvents": [], "extensionPoints": [], "extends": "flow" },
+    { "pluginId": "draw", "packageId": "semio:draw", "cratePath": "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust", "packageName": "semio-s-plugin-draw", "wasmOut": "semio_s_plugin_draw.wasm", "role": "plugin", "capabilities": ["documents.write"], "contributes": [], "consumes": [], "dependsOn": ["draw-fsm", "stdio"], "activationEvents": ["on-artifact-kind:2d.drawing"], "extensionPoints": [] },
+    { "pluginId": "draw-fsm", "packageId": "semio:draw-fsm", "cratePath": "✏️s/🔌️plugins/🖍️draw/🧩️extensions/🔄️fsm/📦️packages/🦀️rust", "packageName": "semio-s-plugin-draw-fsm", "wasmOut": "semio_s_plugin_draw_fsm.wasm", "role": "extension", "capabilities": [], "contributes": [], "consumes": [], "dependsOn": [], "activationEvents": [], "extensionPoints": [], "extends": "draw" },
+    { "pluginId": "note", "packageId": "semio:note", "cratePath": "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust", "packageName": "semio-s-plugin-note", "wasmOut": "semio_s_plugin_note.wasm", "role": "plugin", "capabilities": ["documents.write"], "contributes": [], "consumes": [], "dependsOn": ["stdio"], "activationEvents": ["on-artifact-kind:note.note"], "extensionPoints": [] }
+  ],
+  "playgrounds": [
+    { "variant": "s", "pluginId": "s", "cratePath": "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust", "aliases": ["studio"], "ports": { "react": 6070, "wgpu": 6066 }, "examples": [], "engines": [], "assets": [] },
+    { "variant": "flow", "pluginId": "flow", "cratePath": "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust", "aliases": ["graph"], "ports": { "react": 6031, "wgpu": 6030 }, "examples": [], "engines": [], "assets": [] },
+    { "variant": "draw", "pluginId": "draw", "cratePath": "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust", "aliases": [], "ports": { "react": 6011, "wgpu": 6010 }, "examples": [], "engines": [], "assets": [] },
+    { "variant": "note", "pluginId": "note", "cratePath": "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust", "aliases": [], "ports": { "react": 6041, "wgpu": 6040 }, "examples": [], "engines": [], "assets": [] }
+  ],
+  "expectations": [
+    { "filter": null, "host": true, "pluginIds": ["draw", "draw-fsm", "flow", "flow-extension-draw", "note", "s", "stdio"] },
+    { "filter": "s", "host": true, "pluginIds": ["draw", "draw-fsm", "flow", "flow-extension-draw", "note", "s", "stdio"] },
+    { "filter": "studio", "host": true, "pluginIds": ["draw", "draw-fsm", "flow", "flow-extension-draw", "note", "s", "stdio"] },
+    { "filter": "flow", "host": false, "pluginIds": ["draw", "draw-fsm", "flow", "flow-extension-draw", "stdio"] },
+    { "filter": "graph", "host": false, "pluginIds": ["draw", "draw-fsm", "flow", "flow-extension-draw", "stdio"] },
+    { "filter": "draw", "host": false, "pluginIds": ["draw", "draw-fsm", "stdio"] },
+    { "filter": "note", "host": false, "pluginIds": ["note", "stdio"] },
+    { "filter": "unknown-plugin", "host": false, "pluginIds": [] }
+  ]
+}

@@ -69,7 +69,10 @@ import {
 } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
 export { fetchDescriptorManifest };
 import {
+  assertShardJspiAvailable,
   createShardCommandIngressPages,
+  isShardLostError,
+  SHARD_LIVENESS_POLICY,
   ShardClient,
   type OwnedNativeUiPatchAuthority,
   type OwnedNativeUiPatchSubmissionReceipt,
@@ -81,6 +84,7 @@ import {
   type ShardInstanceOpenInput,
   type ShardWorkerLike,
 } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import { SHARD_WORKER_URL } from "../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
 import type { ActorInstanceLifecycleReceipt } from "../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
 import { decodeActorUiPatchReceipt, encodeActorUiPatchReceipt } from "../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
 import { OwnedResidentLedger } from "../../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts";
@@ -198,7 +202,18 @@ export type { PluginRegistryEntry };
  * "ShardClient... replaces PluginWorkerClient" framing (one pool, not one per caller). Lazily
  * constructed on first use so a pure SSR/test import of this module never touches `Worker`/
  * `navigator`. */
-const SHARD_WORKER_URL = "/plugin-modules/_shard/🟨️shard-worker.js";
+/** 🛣️ 🩺️ The shard worker URL is now the ONE `SHARD_WORKER_URL` `🎭️actor/🧵️shard-runtime/🟦️.ts`
+ * already publishes (and the wgpu bridge already uses), asserted equal to the schema-owned
+ * distribution route authority (`🔌️plugin/📇️registry/📦️deployment/🛣️routes.json` +
+ * `MODULE_SHARD_DIRECTORY` + `SHARD_WORKER_FILE`) by that module's own suite.
+ *
+ * This file used to declare its own worker path: an ASCII transliteration of the route (`_shard`
+ * beneath an ASCII `plugin-modules`) that exists NOWHERE else in the repository. Vite answered it with the
+ * SPA fallback (`200 text/html`, measured against the live served shell on 2026-09-05, versus
+ * `200 text/javascript` for the canonical route), a module `Worker` refuses an HTML body, and that
+ * failure reaches the page as a parent-side `error` event carrying no message at all. Every shard in
+ * the pool therefore died at spawn, the boot logged four anonymous `shard N worker error Event` lines,
+ * and the ~60 downstream `timeout loading <plugin>` faults all descended from that one dead path. */
 
 /** ⛽️ Provisional constant turn budget — same honestly-flagged gap `🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s
  * native `TURN_BUDGET` documents ("until the DRR scheduler threads a real per-lane one through");
@@ -256,9 +271,42 @@ function buildShardClientOptions(createWorker: () => ShardWorkerLike = () => new
   };
 }
 
+export { SHARD_LIVENESS_POLICY };
+
+/** 🩺️ Typed boot fault for the ONE failure the shell retries rather than surfaces: the shard hosting
+ * the primary plugin's first turn was taken down (watchdog kill under load, or a worker crash) and
+ * `ShardClient.rebuild` already replaced it. Carries `code` so `windowFaultFromError` names the cause
+ * on the error surface instead of leaking `shard 0 terminated` as the whole story. */
+export const PLUGIN_BOOT_SHARD_LOST_FAULT = "plugin.boot.shard-lost";
+
+export class PluginBootShardLostError extends Error {
+  readonly code = PLUGIN_BOOT_SHARD_LOST_FAULT;
+  constructor(pluginId: string, cause: unknown) {
+    super(`${PLUGIN_BOOT_SHARD_LOST_FAULT}: primary program ${pluginId} lost its shard twice while booting (${cause instanceof Error ? cause.message : String(cause)})`);
+  }
+}
+
+/** 🫀️ Per-plugin proof-of-progress clock backing `loadPluginModuleResilient`'s IDLE deadline: a load
+ * that is still moving (descriptor fetched, manifest registered, module handed over) must not be
+ * killed just because the whole pipeline is slow under load — only one that has stopped moving. */
+const pluginLoadProgress = new Map<string, number>();
+
+export function notePluginLoadProgress(pluginId: string, atMs: number = Date.now()): void {
+  pluginLoadProgress.set(pluginId, atMs);
+}
+
+export function pluginLoadProgressAt(pluginId: string): number | undefined {
+  return pluginLoadProgress.get(pluginId);
+}
+
 let sharedShardClient: ShardClient | null = null;
 function getShardClient(): ShardClient {
   if (sharedShardClient) return sharedShardClient;
+  // 🧪️ Probed ONCE on the main thread before the first worker exists. Without JSPI every shard's
+  // script throws at module top level, `worker.onerror` fires for all of them, and the boot degrades
+  // into dozens of unrelated-looking `timeout loading <plugin>` lines with the real cause nowhere in
+  // the log — observed verbatim on 2026-09-05 (four `shard N worker error Event` lines, no beacon).
+  assertShardJspiAvailable();
   sharedShardClient = new ShardClient(buildShardClientOptions());
   // 🚑️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-web-plugin-runtime): before this packet, neither
   // `checkHeartbeats` nor `pollHeartbeatSab` had a production caller anywhere in the repo (`ShardClient`'s
@@ -1059,8 +1107,11 @@ export async function resolveDescriptorBeforeRuntime<TManifest, TRuntime>(loadDe
  * actor entry via `ShardClient.dispose` (not a `LeasePool` release — there is no shared module lease
  * to refcount anymore, one actor belongs to exactly one instance). */
 export async function loadPluginModule(pluginId: string, moduleUrl: string, signal?: AbortSignal): Promise<PluginWasmHandle> {
+  notePluginLoadProgress(pluginId);
   const { manifest, runtime: registry } = await resolveDescriptorBeforeRuntime(() => fetchDescriptorManifest(pluginId, moduleUrl, signal), getActivationRegistry);
+  notePluginLoadProgress(pluginId);
   registry.registerManifest({ pluginId, moduleUrl, caps: [] });
+  notePluginLoadProgress(pluginId);
   const shardClient = getShardClient();
   const actorIdByInstance = new Map<number, string>();
   /** 🚪️ One captured lifecycle owner per live instance — `createApp` opens through it so the guest

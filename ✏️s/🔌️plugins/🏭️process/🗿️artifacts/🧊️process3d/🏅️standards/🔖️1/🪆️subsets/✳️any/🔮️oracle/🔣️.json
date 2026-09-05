@@ -15,7 +15,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🐍️ No third-party library reads or writes process.process3d's .dsl.semio carrier — G-code parsers and STEP/BREP kernels were surveyed and DECLINED (kept verbatim below in this history). The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../../../🧪️tests/🌷️mutate-process3d-1/🐍️.py, written from this subset's own committed ../🧬️schema/📸️snapshot/🔣️.json and each mutation's 🧬️.schema.json, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's create/delete/rename/change/replace/move/reorder verb entries and 📓️derivation-rules.md's per-shape recipes. It imports nothing from the Rust it judges and transliterates none of it. Honest boundary: steps is a content-addressed child handle minting a new childId (and toolSolids entries mint their own) on every stepPayloads change, through a digest algorithm no schema in this repository publishes, so the seven step-scoped kinds verify stepPayloads itself (the real content) rather than claiming to reproduce that hash; the other nine kinds touch no content-addressed field (replace-stock-solid's new handle is supplied verbatim by the payload, not computed) and are verified as a full snapshot equality. A first standalone run caught a real bug (change-step-origin's inverse assumed the optional origin key was always present) fixed before registration. All sixteen kinds' forward and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan — all thirty-two passed after the fix.",
+      "rationale": "🐍️ No third-party library reads or writes process.process3d's .dsl.semio carrier — G-code parsers and STEP/BREP kernels were surveyed and DECLINED (kept verbatim below in this history). The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../../../🧪️tests/🏭️mutate-process3d-1/🐍️.py, written from this subset's own committed ../🧬️schema/📸️snapshot/🔣️.json and each mutation's 🧬️.schema.json, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's create/delete/rename/change/replace/move/reorder verb entries and 📓️derivation-rules.md's per-shape recipes. It imports nothing from the Rust it judges and transliterates none of it. Honest boundary: steps is a content-addressed child handle minting a new childId (and toolSolids entries mint their own) on every stepPayloads change, through a digest algorithm no schema in this repository publishes, so the seven step-scoped kinds verify stepPayloads itself (the real content) rather than claiming to reproduce that hash; the other nine kinds touch no content-addressed field (replace-stock-solid's new handle is supplied verbatim by the payload, not computed) and are verified as a full snapshot equality. A first standalone run caught a real bug (change-step-origin's inverse assumed the optional origin key was always present) fixed before registration. All sixteen kinds' forward and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan — all thirty-two passed after the fix.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -65,7 +65,7 @@
           "scenarios": [
             {
               "id": "pins-the-replay-cursor-to-two-steps",
-              "directoryName": "🟠️pins-the-replay-cursor-to-two-steps"
+              "directoryName": "⏯️pins-the-replay-cursor-to-two-steps"
             }
           ]
         },
@@ -76,7 +76,7 @@
           "scenarios": [
             {
               "id": "swaps-the-saw-icon",
-              "directoryName": "🟥️swaps-the-saw-icon"
+              "directoryName": "🪚️swaps-the-saw-icon"
             }
           ]
         },
@@ -87,7 +87,7 @@
           "scenarios": [
             {
               "id": "accepts-a-disable-flag-and-applies-it",
-              "directoryName": "🌾️accepts-a-disable-flag-and-applies-it"
+              "directoryName": "⏸️accepts-a-disable-flag-and-applies-it"
             }
           ]
         },
@@ -98,7 +98,7 @@
           "scenarios": [
             {
               "id": "accepts-a-machine-provenance-and-applies-it",
-              "directoryName": "🌳️accepts-a-machine-provenance-and-applies-it"
+              "directoryName": "🏭️accepts-a-machine-provenance-and-applies-it"
             }
           ]
         },
@@ -120,7 +120,7 @@
           "scenarios": [
             {
               "id": "adds-a-drill-press-to-the-workshop",
-              "directoryName": "🐯️adds-a-drill-press-to-the-workshop"
+              "directoryName": "🪛️adds-a-drill-press-to-the-workshop"
             }
           ]
         },
@@ -131,7 +131,7 @@
           "scenarios": [
             {
               "id": "accepts-a-rip-cut-step-and-inserts-it",
-              "directoryName": "🐺️accepts-a-rip-cut-step-and-inserts-it"
+              "directoryName": "🪚️accepts-a-rip-cut-step-and-inserts-it"
             }
           ]
         },
@@ -142,7 +142,7 @@
           "scenarios": [
             {
               "id": "empties-the-workshop-of-the-saw",
-              "directoryName": "🌴️empties-the-workshop-of-the-saw"
+              "directoryName": "➖️empties-the-workshop-of-the-saw"
             }
           ]
         },
@@ -175,7 +175,7 @@
           "scenarios": [
             {
               "id": "retitles-the-saw",
-              "directoryName": "⚓️retitles-the-saw"
+              "directoryName": "🏷️retitles-the-saw"
             }
           ]
         },
@@ -197,7 +197,7 @@
           "scenarios": [
             {
               "id": "accepts-a-target-index-and-reorders-them",
-              "directoryName": "🚪️accepts-a-target-index-and-reorders-them"
+              "directoryName": "🔀️accepts-a-target-index-and-reorders-them"
             }
           ]
         },
@@ -208,7 +208,7 @@
           "scenarios": [
             {
               "id": "trades-the-blade-cut-for-a-gated-pocket-cut",
-              "directoryName": "🦉️trades-the-blade-cut-for-a-gated-pocket-cut"
+              "directoryName": "🕳️trades-the-blade-cut-for-a-gated-pocket-cut"
             }
           ]
         },
@@ -219,7 +219,7 @@
           "scenarios": [
             {
               "id": "accepts-a-bore-measure-and-replaces-it",
-              "directoryName": "🧭️accepts-a-bore-measure-and-replaces-it"
+              "directoryName": "🕳️accepts-a-bore-measure-and-replaces-it"
             }
           ]
         },
@@ -230,7 +230,7 @@
           "scenarios": [
             {
               "id": "reissues-the-stock-brep-child-handle",
-              "directoryName": "🎫️reissues-the-stock-brep-child-handle"
+              "directoryName": "🧊️reissues-the-stock-brep-child-handle"
             }
           ]
         }

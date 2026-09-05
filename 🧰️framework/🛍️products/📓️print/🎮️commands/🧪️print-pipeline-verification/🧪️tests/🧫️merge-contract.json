@@ -1,0 +1,59 @@
+{
+  "templates": [
+    "report",
+    "paper",
+    "flyer",
+    "forschungsbericht",
+    "zwischenbericht",
+    "kompaktbericht"
+  ],
+  "reports": [
+    "zwischenbericht",
+    "forschungsbericht",
+    "kompaktbericht"
+  ],
+  "vizSections": 80,
+  "vizLeaves": 1966,
+  "vizApiCommands": 17,
+  "vizText": ["Cell text", "Module text", "Chip text", "Label text", "Title text", "42"],
+  "documentCommands": [
+    "SemioOpenAny",
+    "SemioSignaturePadding",
+    "AddressOrg",
+    "AddressPeople"
+  ],
+  "graphCommands": [
+    "SemioGraphNode",
+    "SemioGraphEdge"
+  ],
+  "treeCommands": [
+    "SemioTree"
+  ],
+  "markdownCases": [
+    {
+      "source": "## 0 Marks\n- Point `dot` mark\n## 1 Charts\n- Bars `vertical-bar-chart` chart\n- Parent `trees` group\n",
+      "leaves": [
+        "0/dot",
+        "1/vertical-bar-chart"
+      ]
+    },
+    {
+      "source": "- No section `dot` mark\n## 76 Composition\n- Composition `charts` layout\n",
+      "leaves": [
+        "76/charts"
+      ]
+    }
+  ],
+  "staging": {
+    "inputs": {
+      "📄️document.tex": "\\input{📎️appendix}\\includegraphics{🖼️assets/🎞️image.png}",
+      "📎️appendix.tex": "Staged appendix",
+      "🖼️assets/🎞️image.png": "fixture-asset"
+    },
+    "outputs": {
+      "document.tex": "\\input{appendix}\\includegraphics{assets/image.png}",
+      "appendix.tex": "Staged appendix",
+      "assets/image.png": "fixture-asset"
+    }
+  }
+}

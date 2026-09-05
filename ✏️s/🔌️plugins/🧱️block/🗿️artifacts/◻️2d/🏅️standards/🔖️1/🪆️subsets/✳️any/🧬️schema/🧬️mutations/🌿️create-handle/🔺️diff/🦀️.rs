@@ -4,7 +4,7 @@ use crate::artifacts::block2d::{Block2dHandleTemplate, Block2dSnapshot};
 use crate::artifacts::block2d::diff::{Block2dDiff, Block2dHandlesDelta};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::CreateHandle, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
+pub fn diff(payload: &super::CreateHandle, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
     if base.handles.iter().any(|item| item.id == payload.handle.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} \"{}\" already exists", "handle", payload.handle.id), vec![payload.handle.id.clone()]);
     }

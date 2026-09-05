@@ -17,20 +17,20 @@ pub struct RenameObjectKind {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn rename_object_kind(new_name: String) -> Block3dMutation {
+pub fn rename_object_kind(new_name: String) -> Block3dMutation {
     Block3dMutation::RenameObjectKind(RenameObjectKind { new_name })
 }
 
 impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for RenameObjectKind {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "object-kind", kind: "rename-object-kind", record: "RenamedObjectKind" };
 
-    async fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+    fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {
+    fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Rename object kind to \"{}\"", self.new_name)
     }
 }

@@ -310,7 +310,7 @@ mod tests {
         let _: storage::DbBackend = storage::DbBackend::Memory(memory_storage.await.unwrap());
 
         assert_eq!(wal::WAL_SEGMENT_HEADER, 0x40);
-        assert!(wal::is_wal_record_kind(wal::WAL_COMMAND).await);
+        assert!(wal::is_wal_record_kind(wal::WAL_COMMAND));
 
         assert_eq!(snapshot::SnapshotOrigin::FullBaseline, snapshot::SnapshotOrigin::FullBaseline);
 

@@ -6,7 +6,7 @@
 //! Honest lossy points (documented, never fabricated):
 //! - Every OTHER `DwgGeometry` variant (`Line`/`Point`/`Circle`/`Arc`/`Ellipse`/`LwPolyline`/
 //!   `Spline`/`Text`/`Polyline3d`) has no mesh-shaped equivalent and is dropped — this bridge is
-//!   mesh<->mesh only (curves/annotations are the `✳️drawing` bridge's job, not this one's).
+//!   mesh<->mesh only (curves/annotations are the `🖊️drawing` bridge's job, not this one's).
 //! - `normals`/`uvs`/`colors`/`material_id` have no DWG polyface-mesh field to recover from and
 //!   are left empty/`None`, mirroring the sibling export leaf's own drop list.
 //! - Malformed logical geometry is a hard `Err`, not a fabricated empty mesh.

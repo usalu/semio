@@ -19,11 +19,11 @@ pub const XLSX_ARTIFACT_SCHEMA_ID: &str = "s.stdio.xlsx";
 /// `s.model` exemplar: headless library artifact, zero `ArtifactApp`s, so `.document_codec_bare`
 /// stands in for the old `store::register_document_codec(store::ArtifactCodec::of::<XlsxSnapshot,
 /// XlsxMutation>(...))` call. `.composers(...)` reaches the engine's own `io_registry` (through the
-/// `engine` shim), whose `entries()` already aggregates the `✳️base`/`✳️strict`/`✳️transitional`
+/// `engine` shim), whose `entries()` already aggregates the `🧱️base`/`🔒️strict`/`🌉️transitional`
 /// `ComposerEntry` rows — NOT this file's own shadowing `io_registry` below, whose `entries()`
 /// returns `&'static [&'static ComposerEntry]` (references) and would silently rebind under a bare
 /// call (this ticket's "SILENT REBIND" hazard). `.subset_validators(...)` re-derives the two
-/// `SubsetValidatorEntry` rows the old `register()`'s `✳️strict`/`✳️transitional` `io::register()`
+/// `SubsetValidatorEntry` rows the old `register()`'s `🔒️strict`/`🌉️transitional` `io::register()`
 /// calls used to install, via the same side-effect-free `subset_validator_entry_of::<V>()`
 /// constructor those (module-private) `validator_entry()` fns call — no visibility widening into
 /// `🚪️io/` needed.
@@ -52,7 +52,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .try_build()
 }
 
-/// 🛡️ The `✳️strict`/`✳️transitional` subsets' `SubsetValidatorEntry` rows, re-derived (not moved)
+/// 🛡️ The `🔒️strict`/`🌉️transitional` subsets' `SubsetValidatorEntry` rows, re-derived (not moved)
 /// from the same side-effect-free `subset_validator_entry_of::<V>()` constructor each subset's own
 /// `🚪️io/🦀️.rs` (module-private) `validator_entry()` calls.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

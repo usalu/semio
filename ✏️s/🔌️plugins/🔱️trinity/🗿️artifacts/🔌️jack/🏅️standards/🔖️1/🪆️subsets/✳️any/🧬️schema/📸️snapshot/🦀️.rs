@@ -85,7 +85,7 @@ impl Default for JackSnapshot {
 
 //#region 🌉️ExternalCodecBridge
 /// 📤️ Renders a [`JackSnapshot`] as this facet's own camelCase JSON projection — the comparison
-/// surface `🦅️mutate-jack-1`'s scenarios are measured through, and the shape the committed
+/// surface `🔌️mutate-jack-1`'s scenarios are measured through, and the shape the committed
 /// `../🧬️mutations/<slug>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
 /// specification vectors are written in. It carries `content` as a HANDLE, never as a scene, and
 /// that handle's `childId` is a digest of the child — so it moves if and only if the working scene
@@ -99,7 +99,7 @@ pub fn encode_jack_snapshot_json(snapshot: &JackSnapshot) -> String {
 }
 
 /// 📥️ The inverse of [`encode_jack_snapshot_json`] — decodes those committed specification vectors
-/// into real [`JackSnapshot`] values, so `🦅️mutate-jack-1`'s adapter reads the committed fixture
+/// into real [`JackSnapshot`] values, so `🔌️mutate-jack-1`'s adapter reads the committed fixture
 /// rather than re-declaring it as a Rust literal beside it.
 pub fn decode_jack_snapshot_json(text: &str) -> Result<JackSnapshot, String> {
     let parsed = pack::parse_json(text).map_err(|error| error.to_string())?;
@@ -110,7 +110,7 @@ pub fn decode_jack_snapshot_json(text: &str) -> Result<JackSnapshot, String> {
 /// handle it mints — a named, non-async pass-through of this type's own `store::ArtifactDsl` impl
 /// (`📝️text/🦀️.rs`), whose trait and error type are both unnameable outside this crate.
 /// This is the only way an external caller can obtain a jack document whose composed
-/// `s.stdio.semio.graph` child actually resolves, which is what `🦅️mutate-jack-1` needs before any
+/// `s.stdio.semio.graph` child actually resolves, which is what `🔌️mutate-jack-1` needs before any
 /// kind can have a visible effect.
 pub fn parse_jack_dsl(text: &str) -> Result<JackSnapshot, String> {
     <JackSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))

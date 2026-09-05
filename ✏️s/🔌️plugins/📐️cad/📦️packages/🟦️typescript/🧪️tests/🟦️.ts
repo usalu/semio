@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
-import { createWorkspaceViteResolveConfig } from "./🟦️";
+import { createWorkspaceViteResolveConfig } from "../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const configDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -41,7 +41,7 @@ export default defineConfig({
   test: {
     name: "@semio-tech/cad-js",
     mode: "test",
-    include: [],
+    include: ["🗿️artifacts/**/📚️examples/**/🧪️tests/🟦️.ts"],
     includeSource: DOMAIN_FILES,
     coverage: { include: DOMAIN_FILES },
     environment: "node",

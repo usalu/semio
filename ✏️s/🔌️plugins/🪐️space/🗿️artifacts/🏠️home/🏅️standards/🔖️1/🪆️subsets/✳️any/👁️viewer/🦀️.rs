@@ -102,7 +102,7 @@ impl ArtifactViewer for HomeViewer {
         let root = match body_key {
             main::S_HOME_VIEW_BODY => {
                 let directory = cfg.snapshot.directory().map_err(|_| PluginAssemblyError::new("s.home.directory-projection-malformed", "Home directory projection is invalid"))?;
-                main::render(&directory, &cfg.snapshot.locale)?
+                main::render(&directory, &cfg.snapshot.locale, &cfg.snapshot.client_id)?
             }
             _ => semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}")))
                 .map_err(|_| PluginAssemblyError::new("s.home.viewer.render.unknown-body", "unknown body key text admission failed"))?,

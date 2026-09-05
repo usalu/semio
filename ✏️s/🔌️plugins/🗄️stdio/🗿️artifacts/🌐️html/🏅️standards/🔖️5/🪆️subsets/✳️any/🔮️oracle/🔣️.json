@@ -56,7 +56,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "homepage": "https://github.com/html5lib/html5lib-python",
-      "rationale": "📖️ A READER, registered separately from this file's existing `cross-semio-implementation` entry, which COMPUTES what a mutation should produce from this repository's own reading of the spec and therefore cannot discharge this requirement — both halves would descend from one reading of it. html5lib 1.1 is a from-scratch, pure-Python implementation of the WHATWG HTML5 parsing algorithm — spec-conformant tree construction, tokenizer states and all — entirely independent of this repository's Rust `html5ever` reimplementation (a different codebase in a different language implementing the same published algorithm). `html5lib.parse(path, treebuilder=\"lxml\")` builds the real DOM tree — element names, namespaces, attributes, text content, document order — directly witnessing this subset's HTML5 document vocabulary. Verified against this subset's own committed `shared://🧪️zukunft-bau-entwerfen-mit-bestand/🌐️.html`: the parser reported the real `{http://www.w3.org/1999/xhtml}html` root, the namespace HTML5 parsing always assigns.",
+      "rationale": "📖️ A READER, registered separately from this file's existing `cross-semio-implementation` entry, which COMPUTES what a mutation should produce from this repository's own reading of the spec and therefore cannot discharge this requirement — both halves would descend from one reading of it. html5lib 1.1 is a from-scratch, pure-Python implementation of the WHATWG HTML5 parsing algorithm — spec-conformant tree construction, tokenizer states and all — entirely independent of this repository's Rust `html5ever` reimplementation (a different codebase in a different language implementing the same published algorithm). `html5lib.parse(path, treebuilder=\"lxml\")` builds the real DOM tree — element names, namespaces, attributes, text content, document order — directly witnessing this subset's HTML5 document vocabulary. Verified against this subset's own committed `shared://🏚️zukunft-bau-entwerfen-mit-bestand/🌐️.html`: the parser reported the real `{http://www.w3.org/1999/xhtml}html` root, the namespace HTML5 parsing always assigns.",
       "comparisonProfiles": [
         "semantic-html-v1"
       ]
@@ -84,7 +84,7 @@
           "scenarios": [
             {
               "id": "declares-the-document-language-on-the-root-html-element",
-              "directoryName": "🧪️declares-the-document-language-on-the-root-html-element"
+              "directoryName": "🗣️declares-the-document-language-on-the-root-html-element"
             }
           ]
         }

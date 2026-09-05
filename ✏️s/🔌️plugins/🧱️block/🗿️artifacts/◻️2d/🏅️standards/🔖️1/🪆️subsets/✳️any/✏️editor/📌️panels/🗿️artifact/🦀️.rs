@@ -3,15 +3,16 @@
 
 use crate::artifacts::block2d::Block2dSnapshot;
 use crate::editor::block2d::terminology::Block2dLabels;
-use crate::editor::block2d::{ui_node_list, BLOCK2D_INTERACTION_HANDLE};
-use semio_framework_plugin::{tree_item_desc, BuiltNode, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use crate::editor::block2d::{ui_label, ui_node_list, BLOCK2D_INTERACTION_HANDLE};
+use semio_framework_plugin::plugin_app_close_prelude::Label;
+use semio_framework_plugin::{tree_item_desc, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const BLOCK2D_BODY_DOCUMENT: &str = "block2d.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -35,13 +36,13 @@ fn icon_item(id: String, label: Label, description: Option<String>, icon: &str) 
 /// `handleKind:{id}`/`handle:{id}` targets `Block2dPlayApp::interaction_topology` declares for the
 /// `handle` domain — the framework stamps this tree's selection/hover presence from that domain
 /// (`.interaction_domain`) and prunes stale ids through that same topology.
-pub async fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let builder = PanelTreeBuilder::new("block2d-play-document")?;
-    let handle_kind_items = ui_node_list(definition.handle_kinds.iter().map(|kind| icon_item(format!("handleKind:{}", kind.id), Label::data(kind.label.clone()), Some(kind.color.clone()), "circle")))?;
-    let handle_items = ui_node_list(definition.handles.iter().map(|handle| icon_item(format!("handle:{}", handle.id), Label::data(handle.handle_kind.clone()), Some(format!("{:.2}", handle.angle)), "circle-dot")))?;
+    let handle_kind_items = ui_node_list(definition.handle_kinds.iter().map(|kind| icon_item(format!("handleKind:{}", kind.id), ui_label(&kind.label)?, Some(kind.color.clone()), "circle")))?;
+    let handle_items = ui_node_list(definition.handles.iter().map(|handle| icon_item(format!("handle:{}", handle.id), ui_label(&handle.handle_kind)?, Some(format!("{:.2}", handle.angle)), "circle-dot")))?;
     builder
-        .section_or_placeholder("block2d-play-document.handle-kinds", Some(labels.handle_kinds.into()), true, handle_kind_items, labels.no_handle_kinds)?
-        .section_or_placeholder("block2d-play-document.handles", Some(labels.handles.into()), true, handle_items, labels.no_handles)?
+        .section_or_placeholder("block2d-play-document.handle-kinds", Some(ui_label(labels.handle_kinds.as_str())?), true, handle_kind_items, ui_label(labels.no_handle_kinds.as_str())?)?
+        .section_or_placeholder("block2d-play-document.handles", Some(ui_label(labels.handles.as_str())?), true, handle_items, ui_label(labels.no_handles.as_str())?)?
         .interaction_domain(BLOCK2D_INTERACTION_HANDLE)?
         .build()
 }

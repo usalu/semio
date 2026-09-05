@@ -27,7 +27,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 /// 🏷️ Kebab-case spelling of every [`SourcingMutation`] variant, in declaration order — the
 /// vocabulary the `curation-1-any` mutation catalog (`../../🔣️oracle.json`) declares and
-/// `🟨️mutate-curation-1`'s exhaustive case measures itself against. Three kinds and no more: `stock` is
+/// `🗂️mutate-curation-1`'s exhaustive case measures itself against. Three kinds and no more: `stock` is
 /// a bulk-populated reference catalogue that reaches the document through
 /// `ArtifactStore::reset`, `CuratedItem` carries no name and no nested collection, and
 /// whole-document replace was removed with no replacement — so `create`/`delete`/`change` over the
@@ -72,7 +72,7 @@ mod tests {
 
     /// 🏷️ The three declarations of this vocabulary — the enum, [`KINDS`] and the committed catalog
     /// — must agree, in spelling AND in order. The framework never parses Rust, so without this test
-    /// `KINDS` could drift from the enum and the catalog could keep measuring `🟨️mutate-curation-1`
+    /// `KINDS` could drift from the enum and the catalog could keep measuring `🗂️mutate-curation-1`
     /// against a vocabulary the artifact no longer has.
     #[test]
     fn kinds_match_the_enum_and_the_catalog() {

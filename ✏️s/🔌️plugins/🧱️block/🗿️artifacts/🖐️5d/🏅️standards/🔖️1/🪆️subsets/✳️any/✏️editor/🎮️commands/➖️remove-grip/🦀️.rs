@@ -12,6 +12,6 @@ pub struct RemoveGrip {
     pub id: String,
 }
 
-pub async fn handle(payload: &RemoveGrip, _doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> Result<Emit<Block5dMutation, Block5dConfigMutation>, Fault> {
+pub fn handle(payload: &RemoveGrip, _doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> Result<Emit<Block5dMutation, Block5dConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![crate::artifacts::block5d::mutations::delete_grip(payload.id.clone())]))
 }

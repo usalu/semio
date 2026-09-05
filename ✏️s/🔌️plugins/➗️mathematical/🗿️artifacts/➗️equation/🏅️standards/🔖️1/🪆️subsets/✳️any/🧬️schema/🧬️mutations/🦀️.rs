@@ -53,7 +53,7 @@ pub enum EquationMutation {
     RemovePoint(remove_point::RemovePoint),
     MovePoint(move_point::MovePoint),
     // 🚚 Wave M3a (26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS): first
-    // mutation over the new `equation` field — see `🔄️change-coefficient/`.
+    // mutation over the new `equation` field — see `🎚️change-coefficient/`.
     ChangeCoefficient(change_coefficient::ChangeCoefficient),
 }
 //#endregion 🔖️Mutations
@@ -469,9 +469,9 @@ mod kinds_conformance {
         }
         let manifests = [
             include_str!("../../🔮️oracle/🔣️.json"),
-            include_str!("../../../🕸️graph/🧪️oracle/🔣️.json"),
-            include_str!("../../../📐️geometry/🧪️oracle/🔣️.json"),
-            include_str!("../../../➗️equation/🧪️oracle/🔣️.json"),
+            include_str!("../../../🕸️graph/🔮️oracle/🔣️.json"),
+            include_str!("../../../📐️geometry/🔮️oracle/🔣️.json"),
+            include_str!("../../../➗️equation/🔮️oracle/🔣️.json"),
         ];
         for kind in KINDS {
             let needle = format!("\"{kind}\"");

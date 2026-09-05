@@ -1,4 +1,4 @@
-import authority from "./🚚️delivery.json";
+import authority from "./🚚️delivery.json" with { type: "json" };
 
 export interface AssetDeliveryAuthority {
   readonly $schema: "./🧬️delivery.schema.json";

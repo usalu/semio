@@ -129,7 +129,7 @@ pub mod artifacts {
                                             pub mod v1_4 {
                                                 #[path = "."]
                                                 pub mod any {
-                                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🌳️pdf/🔖️1.4/✳️any/🦀️.rs"]
+                                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🦀️.rs"]
                                                     mod component;
                                                     pub use component::*;
                                                 }
@@ -210,7 +210,7 @@ pub mod artifacts {
                                             pub mod v1_4 {
                                                 #[path = "."]
                                                 pub mod any {
-                                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🌳️pdf/🔖️1.4/✳️any/🦀️.rs"]
+                                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🦀️.rs"]
                                                     mod component;
                                                     pub use component::*;
                                                 }
@@ -297,7 +297,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/✏️change-pencil-width/🧪️tests/🪄️thickens-pencil/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/✏️change-pencil-width/🧪️tests/✏️thickens-pencil/🦀️.rs"]
                                     mod tests_thickens_pencil;
                                 }
                                 #[path = "."]
@@ -310,7 +310,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🧽️change-eraser-radius/🧪️tests/🟦️enlarges-eraser/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🧽️change-eraser-radius/🧪️tests/🧽️enlarges-eraser/🦀️.rs"]
                                     mod tests_enlarges_eraser;
                                 }
                                 #[path = "."]
@@ -323,7 +323,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🖊️change-block-ink-width/🧪️tests/🦉️thickens-the-sketch-stroke/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🖊️change-block-ink-width/🧪️tests/🖊️thickens-the-sketch-stroke/🦀️.rs"]
                                     mod tests_thickens_the_sketch_stroke;
                                 }
                                 #[path = "."]
@@ -336,7 +336,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🎨️edit-block-ink-stroke/🧪️tests/🐺️redraws-the-sketch-polyline/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🎨️edit-block-ink-stroke/🧪️tests/🎨️redraws-the-sketch-polyline/🦀️.rs"]
                                     mod tests_redraws_the_sketch_polyline;
                                 }
                             }
@@ -358,7 +358,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📝️text/🧬️schema/🧬️mutations/📝️edit-block-text/🧪️tests/🌳️replaces-the-intro-paragraphs/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📝️text/🧬️schema/🧬️mutations/📝️edit-block-text/🧪️tests/📝️replaces-the-intro-paragraphs/🦀️.rs"]
                                     mod tests_replaces_the_intro_paragraphs;
                                 }
                             }
@@ -380,7 +380,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧮️math/🧬️schema/🧬️mutations/🧮️edit-block-math/🧪️tests/🧿️replaces-the-tex-with-pythagoras/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧮️math/🧬️schema/🧬️mutations/🧮️edit-block-math/🧪️tests/📐️replaces-the-tex-with-pythagoras/🦀️.rs"]
                                     mod tests_replaces_the_tex_with_pythagoras;
                                 }
                             }
@@ -402,7 +402,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬇️insert-table-row/🧪️tests/🟤️appends-a-blank-third-row/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬇️insert-table-row/🧪️tests/⬇️appends-a-blank-third-row/🦀️.rs"]
                                     mod tests_appends_a_blank_third_row;
                                 }
                                 #[path = "."]
@@ -415,7 +415,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬆️remove-table-row/🧪️tests/🌱️drops-the-trailing-blank-row/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬆️remove-table-row/🧪️tests/⬆️drops-the-trailing-blank-row/🦀️.rs"]
                                     mod tests_drops_the_trailing_blank_row;
                                 }
                                 #[path = "."]
@@ -428,7 +428,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/➡️insert-table-column/🧪️tests/🦅️appends-the-lettered-column-c/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/➡️insert-table-column/🧪️tests/➡️appends-the-lettered-column-c/🦀️.rs"]
                                     mod tests_appends_the_lettered_column_c;
                                 }
                                 #[path = "."]
@@ -441,7 +441,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬅️remove-table-column/🧪️tests/🔵️drops-the-trailing-column-b/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬅️remove-table-column/🧪️tests/⬅️drops-the-trailing-column-b/🦀️.rs"]
                                     mod tests_drops_the_trailing_column_b;
                                 }
                             }
@@ -463,7 +463,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧬️schema/🧬️mutations/🆕️create-asset/🧪️tests/🖼️adds-a-second-image-asset/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧬️schema/🧬️mutations/🆕️create-asset/🧪️tests/➕️adds-a-second-image-asset/🦀️.rs"]
                                     mod tests_adds_a_second_image_asset;
                                 }
                                 #[path = "."]
@@ -511,7 +511,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/➕️create-block/🧪️tests/🧩️inserts-a-photo-block-at-root-index-2/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/➕️create-block/🧪️tests/📷️inserts-a-photo-block-at-root-index-2/🦀️.rs"]
                                     mod tests_inserts_a_photo_block_at_root_index_2;
                                 }
                                 #[path = "."]
@@ -524,33 +524,33 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/❌️delete-block/🧪️tests/🧩️removes-the-math-block/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/❌️delete-block/🧪️tests/➖️removes-the-math-block/🦀️.rs"]
                                     mod tests_removes_the_math_block;
                                 }
                                 #[path = "."]
                                 pub mod delete_blocks {
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🧺️delete-blocks/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🧹️delete-blocks/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🧺️delete-blocks/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🧹️delete-blocks/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🧺️delete-blocks/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🧹️delete-blocks/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🧺️delete-blocks/🧪️tests/🖼️removes-the-ink-and-image-blocks/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🧹️delete-blocks/🧪️tests/🗑️removes-the-ink-and-image-blocks/🦀️.rs"]
                                     mod tests_removes_the_ink_and_image_blocks;
                                 }
                                 #[path = "."]
                                 pub mod duplicate_block {
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🎯️duplicate-block/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/📋️duplicate-block/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🎯️duplicate-block/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/📋️duplicate-block/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🎯️duplicate-block/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/📋️duplicate-block/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🎯️duplicate-block/🧪️tests/🧩️copies-the-math-block-right-after-its-source/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/📋️duplicate-block/🧪️tests/📋️copies-the-math-block-right-after-its-source/🦀️.rs"]
                                     mod tests_copies_the_math_block_right_after_its_source;
                                 }
                                 #[path = "."]
@@ -563,7 +563,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/👥️duplicate-blocks/🧪️tests/📌️copies-ink-and-table-with-shifting-indices/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/👥️duplicate-blocks/🧪️tests/👥️copies-ink-and-table-with-shifting-indices/🦀️.rs"]
                                     mod tests_copies_ink_and_table_with_shifting_indices;
                                 }
                                 #[path = "."]
@@ -576,7 +576,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🚚️move-block-to-container/🧪️tests/🟩️reparents-ink-into-the-callout-group/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🚚️move-block-to-container/🧪️tests/📥️reparents-ink-into-the-callout-group/🦀️.rs"]
                                     mod tests_reparents_ink_into_the_callout_group;
                                 }
                                 #[path = "."]
@@ -589,7 +589,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🤏️drag-blocks/🧪️tests/🌳️nudges-ink-and-the-whole-group-subtree/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🤏️drag-blocks/🧪️tests/🤏️nudges-ink-and-the-whole-group-subtree/🦀️.rs"]
                                     mod tests_nudges_ink_and_the_whole_group_subtree;
                                 }
                                 #[path = "."]
@@ -602,7 +602,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🔖️rename-block/🧪️tests/🧩️renames-the-table-block/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🔖️rename-block/🧪️tests/🏷️renames-the-table-block/🦀️.rs"]
                                     mod tests_renames_the_table_block;
                                 }
                                 #[path = "."]
@@ -615,7 +615,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/👀️change-block-visible/🧪️tests/🖼️hides-the-image-block/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/👀️change-block-visible/🧪️tests/🙈️hides-the-image-block/🦀️.rs"]
                                     mod tests_hides_the_image_block;
                                 }
                                 #[path = "."]
@@ -641,7 +641,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/📍️move-block/🧪️tests/🧩️repositions-the-math-block/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/📍️move-block/🧪️tests/📍️repositions-the-math-block/🦀️.rs"]
                                     mod tests_repositions_the_math_block;
                                 }
                                 #[path = "."]
@@ -654,7 +654,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/↔️resize-block/🧪️tests/🖼️enlarges-the-image-block/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/↔️resize-block/🧪️tests/📐️enlarges-the-image-block/🦀️.rs"]
                                     mod tests_enlarges_the_image_block;
                                 }
                                 #[path = "."]
@@ -689,7 +689,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/👁️change-grid-visible/🧪️tests/⚫️hides-the-grid/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/👁️change-grid-visible/🧪️tests/🙈️hides-the-grid/🦀️.rs"]
                                     mod tests_hides_the_grid;
                                 }
                                 #[path = "."]
@@ -702,7 +702,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/📏️change-grid-spacing/🧪️tests/🔵️widens-grid-spacing/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/📏️change-grid-spacing/🧪️tests/📏️widens-grid-spacing/🦀️.rs"]
                                     mod tests_widens_grid_spacing;
                                 }
                                 #[path = "."]
@@ -715,7 +715,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/🔢️change-grid-subdivisions/🧪️tests/🐨️doubles-grid-subdivisions/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/🔢️change-grid-subdivisions/🧪️tests/🔢️doubles-grid-subdivisions/🦀️.rs"]
                                     mod tests_doubles_grid_subdivisions;
                                 }
                                 #[path = "."]
@@ -728,7 +728,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/🌫️change-grid-opacity/🧪️tests/🟢️raises-grid-opacity/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/🌫️change-grid-opacity/🧪️tests/🌫️raises-grid-opacity/🦀️.rs"]
                                     mod tests_raises_grid_opacity;
                                 }
                                 #[path = "."]
@@ -741,7 +741,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/🧲️change-snap-enabled/🧪️tests/🛰️enables-snap/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/🧲️change-snap-enabled/🧪️tests/🧲️enables-snap/🦀️.rs"]
                                     mod tests_enables_snap;
                                 }
                                 #[path = "."]
@@ -754,7 +754,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/📐️change-snap-grid-spacing/🧪️tests/🌷️halves-snap-grid-spacing/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/📐️change-snap-grid-spacing/🧪️tests/📐️halves-snap-grid-spacing/🦀️.rs"]
                                     mod tests_halves_snap_grid_spacing;
                                 }
                             }
@@ -776,7 +776,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📜️document/🧬️schema/🧬️mutations/🏷️rename-note/🧪️tests/📃️retitles-the-document/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📜️document/🧬️schema/🧬️mutations/🏷️rename-note/🧪️tests/🏷️retitles-the-document/🦀️.rs"]
                                     mod tests_retitles_the_document;
                                 }
                             }

@@ -49,6 +49,13 @@ pub fn plugin() -> Result<Plugin<DemonstratorApps>, semio_framework_plugin::Plug
         .label(PLUGIN_LABEL)
         .version(PLUGIN_VERSION)
         .package_id("semio:demonstrator")
+        .depends_on("cad", semio_framework::VersionReq::Any)
+        .depends_on("gis", semio_framework::VersionReq::Any)
+        .depends_on("procedural", semio_framework::VersionReq::Any)
+        .depends_on("process", semio_framework::VersionReq::Any)
+        .depends_on("puzzle", semio_framework::VersionReq::Any)
+        .depends_on("sourcing", semio_framework::VersionReq::Any)
+        .depends_on("stdio", semio_framework::VersionReq::Any)
         .artifact(crate::artifacts::playground::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .editor::<crate::editor::playground::PlaygroundEditor>(crate::editor::playground::create_playground_editor())
         .editor_mutation_roster::<crate::editor::playground::PlaygroundEditor>()
@@ -111,6 +118,17 @@ mod tests {
         assert_eq!(manifest.plugin_id, PLUGIN_ID);
         assert_eq!(manifest.label, PLUGIN_LABEL);
         assert_eq!(manifest.version, PLUGIN_VERSION);
+        assert_eq!(manifest.dependencies.iter().map(|dependency| dependency.plugin_id.as_str()).collect::<Vec<_>>(), vec!["cad", "gis", "procedural", "process", "puzzle", "sourcing", "stdio"]);
+    }
+
+    /// 🔗️ Ticket 26/09/05/S-END-TO-END lane H: the dependency list above is not free-standing prose —
+    /// every surface this bundle registers for an artifact kind it does NOT own must name that kind's
+    /// owner among its dependencies, or the host's `AppRouter` excludes the whole plugin
+    /// (`surface.contribution-not-permitted`) and none of its ten surfaces route. Derived from the
+    /// built manifest's own app dialects, so adding a borrowed app without its dependency fails here.
+    #[test]
+    fn every_borrowed_surface_is_backed_by_a_declared_dependency() {
+        semio_framework_plugin::testkit::assert_surface_dependencies_declared(&test_bundle().manifest);
     }
 
     /// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: playground's own two native

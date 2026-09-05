@@ -4,7 +4,7 @@ use crate::artifacts::block5d::{Block5dGripKind, Block5dSnapshot};
 use crate::artifacts::block5d::diff::{Block5dDiff, Block5dGripKindsDelta, Block5dGripKindsPatch, Block5dGripKindsPatchEntry};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::ChangeGripKindColor, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+pub fn diff(payload: &super::ChangeGripKindColor, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
     let Some(existing) = base.grip_kinds.iter().find(|item| item.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "grip-kind", payload.id), vec![payload.id.clone()]);
     };

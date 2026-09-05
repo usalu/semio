@@ -52,7 +52,7 @@ crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
-semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
+semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false, features = ["full-artifact-catalog"] }
 # 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `InteractionDefinition`/`InteractionRef`/
 # `GranularityDefinition`/`HierarchyProvider`/`HoverSpec`/`SelectionSpec`/`SelectionMode`/`SelectionMethod`/
 # `MergeMode` live in `semio-framework` itself (not re-exported by `semio-framework-plugin`), so apps
@@ -63,6 +63,12 @@ semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
+# 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (26/08/20): plugin render boundaries return
+# `ComponentTree` built from the contract's own `ui::*` builder DSL, and `scene_surface` takes the
+# CONTRACT `SurfaceKind` (distinct from the retained `ui_wgpu` one `WindowKindDefinition` still
+# carries) — depended on directly, exactly as puzzle/flow/trinity do, mirroring the SDK's own
+# registrar-request note ("add semio-framework-ui-contract ... in [ui_wgpu's] place").
+semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 semio-framework-job = { workspace = true }
 
 [dev-dependencies]

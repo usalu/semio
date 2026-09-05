@@ -8,7 +8,7 @@
 // 🏗️ Fixture generator for `s.stdio.semio@v1/📐️cad`. Two families, and their PROVENANCE DIFFERS —
 // which is why they are separate families rather than one corpus:
 //
-//   🖊️dxf-entities     class `third-party-generated`. Built by the `dxf` crate's OWN `Drawing`
+//   🖋️dxf-entities     class `third-party-generated`. Built by the `dxf` crate's OWN `Drawing`
 //                      builder and written by its OWN `save_file`. Nothing of ours writes DXF here.
 //
 //   ⭕️step-line-circle class `handcrafted`. `ruststep` 0.4.0 has NO Part-21 writer — no AST type

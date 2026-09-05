@@ -6,7 +6,7 @@ start op
 # DKM drawing-vocabulary wave: real one-line `OpText::print_op`/`parse_op` shape emitted by
 # `../📝️text/🦀️.rs` (`print_drawing_mutation`/`parse_drawing_mutation`) — `tag:args` (no
 # space; `:` separates the keyword from its positional, comma-separated argument list), same
-# convention `✳️text`'s own mutations grammar established. Seventeen keywords, one per SMO-approved
+# convention `🔤️text`'s own mutations grammar established. Seventeen keywords, one per SMO-approved
 # verb this facet registers (`📌️important.md`'s binding vocabulary ruling) — no
 # `noMutation`/`setSnapshot`/`set*` (banned/superseded vocabulary). `NodePath` addresses a
 # scene-graph node: `layer` selects `layers[layer]`, `path` is a chain of child indices from that

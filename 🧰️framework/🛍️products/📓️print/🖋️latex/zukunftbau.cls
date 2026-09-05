@@ -30,3 +30,22 @@
   \LoadClass[language=de,theme=\zukunftbau@theme,type=report]{semio}
 }
 \ExplSyntaxOff
+
+%region CoverAssets
+\makeatletter
+\IfFileExists{asset/logo/zukunft-bau/logo.png}{%
+  \ifdefstring{\zukunftbau@theme}{dark}{%
+    \renewcommand{\semio@cover@zukunftbau@logo}{asset/logo/zukunft-bau/logo-dark.png}%
+    \renewcommand{\semio@cover@bbsr@logo}{asset/logo/bbsr/logo-dark.png}%
+    \renewcommand{\semio@cover@bundesministerium@logo}{asset/logo/bmwsb/logo-dark.png}%
+  }{%
+    \renewcommand{\semio@cover@zukunftbau@logo}{asset/logo/zukunft-bau/logo.png}%
+    \renewcommand{\semio@cover@bbsr@logo}{asset/logo/bbsr/logo.png}%
+    \renewcommand{\semio@cover@bundesministerium@logo}{asset/logo/bmwsb/logo.png}%
+  }%
+}{}
+\IfFileExists{asset/demonstrator/aggegator.png}{%
+  \renewcommand{\semio@cover@arbeitsprobe@image}{asset/demonstrator/aggegator.png}%
+}{}
+\makeatother
+%endregion

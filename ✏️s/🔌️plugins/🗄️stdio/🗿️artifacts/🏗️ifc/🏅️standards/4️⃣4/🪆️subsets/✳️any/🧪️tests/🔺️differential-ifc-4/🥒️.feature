@@ -2,7 +2,7 @@
 @oracle-ifcopenshell-ifc-4-any-differential
 @comparison-semantic-ifc-v1
 Feature: Produce every schema-expressible IFC4 mutation twice, in two independent implementations
-  This case exists for one reason: the sibling `../🦋️mutate-ifc-4` cannot make a differential claim.
+  This case exists for one reason: the sibling `../🏗️mutate-ifc-4` cannot make a differential claim.
   `ruststep` 0.4 READS ISO 10303-21 and has no writer anywhere in the crate, so all 23 of its
   scenarios are honestly typed `@mode-property`/`@mode-round-trip` — a second READER standing beside
   this repository's own producer, never a second producer. **IfcOpenShell 0.8.4.post1 both reads and
@@ -41,7 +41,7 @@ Feature: Produce every schema-expressible IFC4 mutation twice, in two independen
       fixture: `#16976` disappears from `#16991`'s member aggregate. This subset's
       `IfcMutation::RemoveEntity` deliberately does not cascade and leaves that reference dangling.
       Comparing two different verbs is not a differential, so it is not claimed as one.
-  All four keep their `ruststep`-backed scenarios in `../🦋️mutate-ifc-4`, unchanged and unweakened.
+  All four keep their `ruststep`-backed scenarios in `../🏗️mutate-ifc-4`, unchanged and unweakened.
   The removal primitive is used here only as the inverse of `insert-entity`, and only behind an
   explicit `get_total_inverses(...) == 0` guard, so the cascading path can never be taken silently.
 

@@ -36,7 +36,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     fn renders_the_computed_checks() {
-        let mut app = testkit::new_app();
+        let mut app = testkit::app_with_registry();
         let rendered = testkit::render(&mut app, BODY_RESULTS);
         assert!(!rendered.contains("No checks computed."), "the default document must compute at least one check: {rendered}");
     }

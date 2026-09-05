@@ -38,15 +38,16 @@ pub struct InferenceRequestV1 {
 
 impl InferenceRequestV1 {
     pub fn decode(bytes: &[u8]) -> Result<Self, super::InferenceErrorV1> {
-        if bytes.len() > REQUEST_MAX_BYTES { return Err(super::InferenceErrorV1::Bounds); }
+        if bytes.len() > REQUEST_MAX_BYTES {
+            return Err(super::InferenceErrorV1::Bounds);
+        }
         let request: Self = serde_json::from_slice(bytes).map_err(|_| super::InferenceErrorV1::Invalid)?;
         request.validate()?;
         Ok(request)
     }
 
     pub fn validate(&self) -> Result<(), super::InferenceErrorV1> {
-        if self.schema != "semio.hub.inference-request/v1" || self.version != 1 || !hex(&self.request_id, 32)
-            || self.service_id != GIS_SERVICE_ID || self.policy_version != 1 || self.lifetime_ms == 0 || self.lifetime_ms > JOB_MAX_LIFETIME_MS {
+        if self.schema != "semio.hub.inference-request/v1" || self.version != 1 || !hex(&self.request_id, 32) || self.service_id != GIS_SERVICE_ID || self.policy_version != 1 || self.lifetime_ms == 0 || self.lifetime_ms > JOB_MAX_LIFETIME_MS {
             return Err(super::InferenceErrorV1::Invalid);
         }
         Ok(())
@@ -130,7 +131,8 @@ impl InferenceIdentityV1 {
             || [&self.descriptor_digest, &self.chain_hash, &self.input_hash].iter().any(|digest| !hex(digest, 64))
             || self.authorization_generation == 0
             || [self.authorization_generation, self.head_ordinal, self.last_commit_seq].iter().any(|value| *value > SAFE_INTEGER_MAX)
-            || !(server_id(&self.head_edit_id) || self.head_ordinal == 0 && self.head_edit_id.is_empty()) {
+            || !(server_id(&self.head_edit_id) || self.head_ordinal == 0 && self.head_edit_id.is_empty())
+        {
             return Err(super::InferenceErrorV1::Invalid);
         }
         Ok(())
@@ -146,17 +148,28 @@ impl InferenceIdentityV1 {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub enum InferenceJobStateV1 { Accepted, Running, Succeeded, Failed, Cancelled }
+pub enum InferenceJobStateV1 {
+    Accepted,
+    Running,
+    Succeeded,
+    Failed,
+    Cancelled,
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub enum InferenceProposalStateV1 { None, Offered, Approved, Stale, Cancelled }
+pub enum InferenceProposalStateV1 {
+    None,
+    Offered,
+    Approved,
+    Stale,
+    Cancelled,
+}
 
 pub fn hex(value: &str, length: usize) -> bool {
     value.len() == length && value.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
 pub(super) fn server_id(value: &str) -> bool {
-    !value.is_empty() && value.len() <= SERVER_ID_MAX_BYTES
-        && value.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b':' | b'-'))
+    !value.is_empty() && value.len() <= SERVER_ID_MAX_BYTES && value.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b':' | b'-'))
 }

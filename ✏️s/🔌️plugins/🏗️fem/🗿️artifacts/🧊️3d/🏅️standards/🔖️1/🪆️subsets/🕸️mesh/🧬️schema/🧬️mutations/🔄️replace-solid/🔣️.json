@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-solid",
   "semanticKind": "replace-solid",
   "displayName": "Replace Solid",
-  "emoji": "🔁",
+  "emoji": "🔄️",
   "aggregateVariant": "ReplaceSolid",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": "replace-solid",

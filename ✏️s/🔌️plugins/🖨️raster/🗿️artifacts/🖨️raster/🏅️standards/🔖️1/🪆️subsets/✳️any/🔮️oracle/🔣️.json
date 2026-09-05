@@ -16,7 +16,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "A second implementation of the `s.raster.raster` layered document and all twelve typed mutations, in Python, at `../🧪️tests/🟠️mutate-raster-1/🐍️.py`. Written from `../🧬️schema/🧬️mutations/🔣️.json` (all twelve variants, their internally tagged wire form and each one's required members), `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` (the twelve verbs and their positional argument lists) and the twelve committed `(before, mutation, after, outcome)` specification vectors. It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `png`, `image` and `tiff` read image FILES and this artifact is a layer tree over an id-keyed asset pool; Pillow reads the pixel payloads and has no authority over a group's `children`, a blend mode, or a reorder that lifts a node out of a group. What a reference can adjudicate is the tree algebra, and that is what this one implements. DEFECT FOUND WHILE WRITING IT, reported rather than worked around: `../🧬️schema/📸️snapshot/🔣️.json` does not describe this artifact — it is a verbatim copy of `s.stdio.json`'s `JsonSnapshot` schema with the wrong `$id`, so the mutation schema's `RasterLayerNode` reference points at nothing; the document shape was read off the twelve committed vectors, which agree with one another on every field. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `raster-1-mutate`'s external-oracle requirement for its 12-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 12 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "rationale": "A second implementation of the `s.raster.raster` layered document and all twelve typed mutations, in Python, at `../🧪️tests/🖨️mutate-raster-1/🐍️.py`. Written from `../🧬️schema/🧬️mutations/🔣️.json` (all twelve variants, their internally tagged wire form and each one's required members), `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` (the twelve verbs and their positional argument lists) and the twelve committed `(before, mutation, after, outcome)` specification vectors. It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `png`, `image` and `tiff` read image FILES and this artifact is a layer tree over an id-keyed asset pool; Pillow reads the pixel payloads and has no authority over a group's `children`, a blend mode, or a reorder that lifts a node out of a group. What a reference can adjudicate is the tree algebra, and that is what this one implements. DEFECT FOUND WHILE WRITING IT, reported rather than worked around: `../🧬️schema/📸️snapshot/🔣️.json` does not describe this artifact — it is a verbatim copy of `s.stdio.json`'s `JsonSnapshot` schema with the wrong `$id`, so the mutation schema's `RasterLayerNode` reference points at nothing; the document shape was read off the twelve committed vectors, which agree with one another on every field. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `raster-1-mutate`'s external-oracle requirement for its 12-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 12 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -75,7 +75,7 @@
           "scenarios": [
             {
               "id": "switches-the-tone-layer-from-levels-to-curves",
-              "directoryName": "🟪️switches-the-tone-layer-from-levels-to-curves"
+              "directoryName": "📈️switches-the-tone-layer-from-levels-to-curves"
             }
           ]
         },
@@ -86,7 +86,7 @@
           "scenarios": [
             {
               "id": "switches-the-glow-layer-to-screen",
-              "directoryName": "🧿️switches-the-glow-layer-to-screen"
+              "directoryName": "💡️switches-the-glow-layer-to-screen"
             }
           ]
         },
@@ -97,7 +97,7 @@
           "scenarios": [
             {
               "id": "fades-the-highlight-layer-to-a-quarter",
-              "directoryName": "🔵️fades-the-highlight-layer-to-a-quarter"
+              "directoryName": "🌫️fades-the-highlight-layer-to-a-quarter"
             }
           ]
         },
@@ -108,7 +108,7 @@
           "scenarios": [
             {
               "id": "hides-the-overlay-layer",
-              "directoryName": "🟠️hides-the-overlay-layer"
+              "directoryName": "🙈️hides-the-overlay-layer"
             }
           ]
         },
@@ -119,7 +119,7 @@
           "scenarios": [
             {
               "id": "creates-an-ink-layer-inside-the-artwork-group",
-              "directoryName": "🟢️creates-an-ink-layer-inside-the-artwork-group"
+              "directoryName": "🖋️creates-an-ink-layer-inside-the-artwork-group"
             }
           ]
         },
@@ -141,7 +141,7 @@
           "scenarios": [
             {
               "id": "slides-the-stamp-layer-off-the-origin",
-              "directoryName": "🎞️slides-the-stamp-layer-off-the-origin"
+              "directoryName": "📍️slides-the-stamp-layer-off-the-origin"
             }
           ]
         },
@@ -174,7 +174,7 @@
           "scenarios": [
             {
               "id": "lifts-the-caption-layer-out-of-the-frame-group",
-              "directoryName": "🔮️lifts-the-caption-layer-out-of-the-frame-group"
+              "directoryName": "⤴️lifts-the-caption-layer-out-of-the-frame-group"
             }
           ]
         },

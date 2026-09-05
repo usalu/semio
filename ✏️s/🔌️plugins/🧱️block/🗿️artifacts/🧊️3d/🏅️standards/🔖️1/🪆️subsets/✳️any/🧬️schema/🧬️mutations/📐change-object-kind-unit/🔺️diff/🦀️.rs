@@ -5,7 +5,7 @@ use crate::artifacts::block3d::Block3dSnapshot;
 use crate::artifacts::block3d::diff::Block3dDiff;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::ChangeObjectKindUnit, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+pub fn diff(payload: &super::ChangeObjectKindUnit, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
     if payload.new_unit == base.object_kind.unit {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Object kind unit is unchanged.");
     }

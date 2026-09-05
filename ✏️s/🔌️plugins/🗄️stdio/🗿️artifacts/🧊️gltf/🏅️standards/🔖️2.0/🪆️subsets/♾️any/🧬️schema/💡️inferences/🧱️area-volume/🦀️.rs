@@ -1,20 +1,20 @@
 //! 🧱 GLTF area-volume indicators.
 
-#[path = "🦅️contact-area/🦀️.rs"]
+#[path = "🤝️contact-area/🦀️.rs"]
 pub mod contact_area;
-#[path = "🐯️enclosed-volume/🦀️.rs"]
+#[path = "📥️enclosed-volume/🦀️.rs"]
 pub mod enclosed_volume;
-#[path = "🍐️exposed-area/🦀️.rs"]
+#[path = "☀️exposed-area/🦀️.rs"]
 pub mod exposed_area;
 #[path = "🧊️material-volume/🦀️.rs"]
 pub mod material_volume;
-#[path = "🖱️surface-area/🦀️.rs"]
+#[path = "🧥️surface-area/🦀️.rs"]
 pub mod surface_area;
-#[path = "🐨️total-area/🦀️.rs"]
+#[path = "🧮️total-area/🦀️.rs"]
 pub mod total_area;
-#[path = "⚪️void-volume/🦀️.rs"]
+#[path = "🕳️void-volume/🦀️.rs"]
 pub mod void_volume;
-#[path = "🟫️volume/🦀️.rs"]
+#[path = "📦️volume/🦀️.rs"]
 pub mod volume;
 
 use super::super::modules::measurement_contracts::*;

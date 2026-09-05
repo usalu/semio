@@ -16,7 +16,7 @@
           "scenarios": [
             {
               "id": "appends-bar-e2-between-n2-and-n3",
-              "directoryName": "🧪️appends-bar-e2-between-n2-and-n3"
+              "directoryName": "➖️appends-bar-e2-between-n2-and-n3"
             }
           ]
         },
@@ -27,7 +27,7 @@
           "scenarios": [
             {
               "id": "appends-node-n3",
-              "directoryName": "🧪️appends-node-n3"
+              "directoryName": "📍️appends-node-n3"
             }
           ]
         },
@@ -38,7 +38,7 @@
           "scenarios": [
             {
               "id": "appends-a-solid-rectangular-slab",
-              "directoryName": "🧪️appends-a-solid-rectangular-slab"
+              "directoryName": "🧱️appends-a-solid-rectangular-slab"
             }
           ]
         },
@@ -49,7 +49,7 @@
           "scenarios": [
             {
               "id": "appends-the-ipe300-profile",
-              "directoryName": "🧪️appends-the-ipe300-profile"
+              "directoryName": "📐️appends-the-ipe300-profile"
             }
           ]
         },
@@ -60,7 +60,7 @@
           "scenarios": [
             {
               "id": "removes-bar-e2-and-keeps-its-end-nodes",
-              "directoryName": "🧪️removes-bar-e2-and-keeps-its-end-nodes"
+              "directoryName": "🚫️removes-bar-e2-and-keeps-its-end-nodes"
             }
           ]
         },
@@ -71,7 +71,7 @@
           "scenarios": [
             {
               "id": "removes-node-n3-without-cascading-to-its-support",
-              "directoryName": "🧪️removes-node-n3-without-cascading-to-its-support"
+              "directoryName": "🚫️removes-node-n3-without-cascading-to-its-support"
             }
           ]
         },
@@ -82,7 +82,7 @@
           "scenarios": [
             {
               "id": "removes-the-slab-and-keeps-its-material",
-              "directoryName": "🧪️removes-the-slab-and-keeps-its-material"
+              "directoryName": "🚫️removes-the-slab-and-keeps-its-material"
             }
           ]
         },
@@ -93,7 +93,7 @@
           "scenarios": [
             {
               "id": "removes-the-spare-hollow-section",
-              "directoryName": "🧪️removes-the-spare-hollow-section"
+              "directoryName": "🚫️removes-the-spare-hollow-section"
             }
           ]
         },
@@ -104,7 +104,7 @@
           "scenarios": [
             {
               "id": "converts-beam-e1-into-a-bar-in-place",
-              "directoryName": "🧪️converts-beam-e1-into-a-bar-in-place"
+              "directoryName": "♻️converts-beam-e1-into-a-bar-in-place"
             }
           ]
         },
@@ -115,7 +115,7 @@
           "scenarios": [
             {
               "id": "punches-a-stair-opening-through-the-slab",
-              "directoryName": "🧪️punches-a-stair-opening-through-the-slab"
+              "directoryName": "🪜️punches-a-stair-opening-through-the-slab"
             }
           ]
         },
@@ -126,7 +126,7 @@
           "scenarios": [
             {
               "id": "stiffens-ipe200-with-a-reinforced-profile",
-              "directoryName": "🧪️stiffens-ipe200-with-a-reinforced-profile"
+              "directoryName": "💪️stiffens-ipe200-with-a-reinforced-profile"
             }
           ]
         }

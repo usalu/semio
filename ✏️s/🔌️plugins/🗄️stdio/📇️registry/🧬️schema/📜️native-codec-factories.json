@@ -25,7 +25,7 @@
     "document_schema": "stdio.bcf",
     "extension": "bcf",
     "pack_schema_sha256": "1465da1dff96abd6a625ded26f479c7fa37c4740b79f1817856a30b3cd7a7a22",
-    "protocol_path": "🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️markup/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
+    "protocol_path": "🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
   },
   {
     "artifact": "csv",
@@ -80,7 +80,7 @@
     "document_schema": "stdio.dxf",
     "extension": "dxf",
     "pack_schema_sha256": "b0d5eb41ea2a3e261d99cb7387688720c225d74dad1b4d260b35e8ca28b9fd99",
-    "protocol_path": "🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️header/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
+    "protocol_path": "🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
   },
   {
     "artifact": "gltf",
@@ -113,7 +113,7 @@
     "document_schema": "stdio.json",
     "extension": "json",
     "pack_schema_sha256": "7de40335bcca019c81ea7c1cb791e5e438358851fbe32117b5ad8276494b695e",
-    "protocol_path": "🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
+    "protocol_path": "🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
   },
   {
     "artifact": "las",
@@ -168,7 +168,7 @@
     "document_schema": "stdio.obj",
     "extension": "obj",
     "pack_schema_sha256": "c66960b9a3ae9b20cd6acc31c344d39b0f217b8d2423bb39082baa8c8bfba787",
-    "protocol_path": "🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
+    "protocol_path": "🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
   },
   {
     "artifact": "pdf",
@@ -179,7 +179,7 @@
     "document_schema": "stdio.pdf",
     "extension": "pdf",
     "pack_schema_sha256": "d0d6337bfab4ea66b3328098e4fec68ed13e909683c25232d2dfe86a02847f2b",
-    "protocol_path": "🗿️artifacts/🌳️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
+    "protocol_path": "🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
   },
   {
     "artifact": "ply",
@@ -212,7 +212,7 @@
     "document_schema": "stdio.pptx",
     "extension": "pptx",
     "pack_schema_sha256": "83c2f6a9860ca932773a56bd3af8d558ebee223162e7b6bcecfff263988ea705",
-    "protocol_path": "🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
+    "protocol_path": "🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
   },
   {
     "artifact": "step",
@@ -267,7 +267,7 @@
     "document_schema": "stdio.xlsx",
     "extension": "xlsx",
     "pack_schema_sha256": "e2bbdb5cdb474f7c003f5648673867868ebf172836d36d6e74dcd5296cc72366",
-    "protocol_path": "🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
+    "protocol_path": "🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
   },
   {
     "artifact": "xml",

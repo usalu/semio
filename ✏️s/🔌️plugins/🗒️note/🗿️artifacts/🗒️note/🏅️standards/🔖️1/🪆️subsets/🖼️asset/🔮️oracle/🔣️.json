@@ -24,7 +24,7 @@
           "scenarios": [
             {
               "id": "adds-a-second-image-asset",
-              "directoryName": "🖼️adds-a-second-image-asset"
+              "directoryName": "➕️adds-a-second-image-asset"
             }
           ]
         },

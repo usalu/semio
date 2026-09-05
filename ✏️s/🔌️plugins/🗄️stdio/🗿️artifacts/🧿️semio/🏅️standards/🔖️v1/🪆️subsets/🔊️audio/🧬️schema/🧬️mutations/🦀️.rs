@@ -58,7 +58,7 @@ pub enum SemioAudioMutation {
 }
 
 /// 🏷️ The declared kebab-case mutation vocabulary of `s.stdio.semio.audio`, in enum declaration
-/// order — what the `🍋️mutate-semio-audio` case's completeness gate counts against and what
+/// order — what the `🔊️mutate-semio-audio` case's completeness gate counts against and what
 /// `../../🔣️oracle.json`'s catalog repeats. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this declaration honest.
 pub const KINDS: &[&str] = &["set-snapshot", "set-sample-rate", "set-format", "insert-channel", "remove-channel", "set-channel-samples", "insert-tag", "remove-tag", "set-tag-value"];
@@ -376,7 +376,7 @@ mod tests {
     /// declaration order `variant_ordinal` assigns and the spelling `print_audio_mutation` emits,
     /// and every one of those names also appears in the committed oracle manifest's catalog. The
     /// bijection against `all_variants` is what makes a newly added variant fail here instead of
-    /// silently shrinking the vocabulary the `🍋️mutate-semio-audio` case claims to cover.
+    /// silently shrinking the vocabulary the `🔊️mutate-semio-audio` case claims to cover.
     #[test]
     fn kinds_match_the_enum_and_the_catalog() {
         assert_eq!(KINDS, &OP_KEYWORDS[..], "KINDS must be exactly the op keyword table — one kebab-case name per declared variant, in declaration order");

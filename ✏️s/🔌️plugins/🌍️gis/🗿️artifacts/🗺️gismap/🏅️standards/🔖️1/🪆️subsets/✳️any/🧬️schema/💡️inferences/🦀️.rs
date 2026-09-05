@@ -273,9 +273,28 @@ mod tests {
             apply_gis_map_mutation(&mut parent_after, inverse).expect("parent inverse applies");
         }
         assert_eq!(parent_after, snapshot);
-        let mut forged = snapshot.clone();
-        forged.drawing.child_id = "forged".into();
-        assert_eq!(inferred.create_region_group_work(&forged, "11111111111111111111111111111111").unwrap_err(), GisMapProposalError::Composition);
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️fixtures/🧩️map-create-region-group/🔣️.json"))).expect("neutral Map membership corpus");
+        for row in fixture["membershipCases"].as_array().expect("membership cases") {
+            let mut candidate = snapshot.clone();
+            candidate.drawing.child_id = row["drawingChildId"].as_str().unwrap().into();
+            candidate.value.child_id = row["valueChildId"].as_str().unwrap().into();
+            candidate.image = row["imageChildId"].as_str().map(|id| store::ArtifactChild::new(id.to_owned(), store::os_io::ArtifactRef {
+                artifact_id: id.to_owned(),
+                dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() },
+            }));
+            let supplied_image = candidate.image.clone();
+            if row["deriveChildren"].as_bool().unwrap() {
+                candidate = gis_map_snapshot_with_derived_children(candidate);
+            }
+            assert_eq!(candidate.image, supplied_image, "deriving children must preserve a supplied image");
+            let unchanged = candidate.clone();
+            let result = GisMapInference::infer(&candidate).create_region_group_work(&candidate, fixture["jobId"].as_str().unwrap());
+            assert_eq!(result.is_ok(), row["accepted"].as_bool().unwrap(), "{}", row["name"]);
+            if !row["accepted"].as_bool().unwrap() {
+                assert_eq!(result.unwrap_err(), GisMapProposalError::Composition);
+            }
+            assert_eq!(candidate, unchanged, "planning must not change the supplied snapshot");
+        }
     }
     //#endregion 🧪️InferenceLaws
 }

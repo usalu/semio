@@ -1,7 +1,7 @@
 //! 📚️ Example "note" for `stdio.semio.text` — the first real, non-scaffold fixture for this
 //! subset (ticket UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM, W2a/text). `PRIMARY_TEXT` is the genuine
 //! `SemioTextSnapshot::print_dsl` output for `snapshot::demo_text_snapshot()`
-//! (`🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/📸️snapshot/🦀️.rs`) — asserted
+//! (`🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/🦀️.rs`) — asserted
 //! byte-identical to it by that subset's own `fixture_honesty_law` (`🚪️io/🦀️.rs`), so
 //! this fixture can never silently drift back to a fake.
 

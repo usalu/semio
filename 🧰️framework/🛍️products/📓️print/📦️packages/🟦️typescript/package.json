@@ -2,7 +2,7 @@
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "name": "@semio-tech/print",
   "version": "0.1.0",
-  "description": "print \u00b7 semio LaTeX document framework",
+  "description": "print · semio LaTeX document framework",
   "type": "module",
   "private": true,
   "license": "LGPL-3.0-or-later",
@@ -20,5 +20,8 @@
     "@napi-rs/canvas": "^1.0.2",
     "pdfjs-dist": "^6.1.200",
     "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "markdown-it": "14.3.0"
   }
 }

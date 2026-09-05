@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/✂️delete-combination",
   "semanticKind": "delete-combination",
   "displayName": "Delete Combination",
-  "emoji": "🗑🔗️",
+  "emoji": "✂️",
   "aggregateVariant": "DeleteCombination",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": "delete-combination",

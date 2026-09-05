@@ -10,7 +10,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "addHandle")]
 pub struct AddHandle {}
 
-pub async fn handle(_payload: &AddHandle, doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
+pub fn handle(_payload: &AddHandle, doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
     let Some(handle_kind_id) = doc.snapshot.handle_kinds.first().map(|kind| kind.id.clone()) else {
         return Ok(Emit::default());
     };

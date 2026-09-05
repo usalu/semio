@@ -76,6 +76,8 @@ const CAPABILITY_ID_BY_COMMAND_TYPE: Record<ShellCommand["type"], string> = {
   setSyncCardKind: "sync.setCardKind",
   setSyncDraftPath: "sync.setDraftPath",
   setDocumentSyncStatus: "sync.setDocumentStatus",
+  setDocumentInferencePort: "inference.setDocumentPort",
+  clearDocumentInferencePort: "inference.clearDocumentPort",
   setMergePolicy: "merge.setPolicy",
   setConflicts: "merge.setConflicts",
   selectConflict: "merge.selectConflict",
@@ -480,6 +482,19 @@ function applyCommand(next: ShellState, original: ShellState, command: ShellComm
     }
     //#endregion 🔄️Sync
 
+    //#region 💡️InferencePort
+    case "setDocumentInferencePort": {
+      requireNonEmpty(command.documentId, "document_id");
+      next.inferencePortByDocument[command.documentId] = command.port;
+      break;
+    }
+    case "clearDocumentInferencePort": {
+      requireNonEmpty(command.documentId, "document_id");
+      delete next.inferencePortByDocument[command.documentId];
+      break;
+    }
+    //#endregion 💡️InferencePort
+
     //#region 🤝️Merge
     case "setMergePolicy": {
       next.mergePolicy = command.policy;
@@ -580,6 +595,7 @@ if (import.meta.vitest) {
     syncCardKind: null,
     syncDraftPath: "",
     syncStatusByDocument: {},
+    inferencePortByDocument: {},
     mergePolicy: "manual",
     conflicts: [],
     selectedConflictId: null,
@@ -613,7 +629,7 @@ if (import.meta.vitest) {
       const here = dirname(fileURLToPath(import.meta.url));
       const fixturesDir = join(here, "🧫️fixtures");
       const files = readdirSync(fixturesDir).filter((name) => name.endsWith(".json"));
-      expect(files.length).toBeGreaterThanOrEqual(63);
+      expect(files.length).toBeGreaterThanOrEqual(65);
 
       for (const file of files) {
         const fixture = JSON.parse(readFileSync(join(fixturesDir, file), "utf8"));

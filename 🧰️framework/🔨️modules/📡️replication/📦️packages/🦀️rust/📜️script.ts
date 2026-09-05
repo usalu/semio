@@ -126,6 +126,22 @@ export class RetainedVerificationScript extends BundleScript {
     const bytes = Buffer.concat(parts);
     const inspect = (input: Buffer, limits = fixture.limits) => inspectRetainedSprNeutral(input, checksum, hash, limits);
     assert.deepEqual(inspect(bytes), { end: 255, sequence: 2, frames: 5, tail: 0 });
+    for (const cut of fixture.resume.cuts) {
+      const prior = inspect(bytes.subarray(0, cut));
+      const last = fixture.commits.filter((row: { end: number }) => row.end <= cut).at(-1);
+      const prefix = bytes.subarray(0, prior.end);
+      const priorChain = last ? prefix.subarray(last.offset + 35, last.offset + 67) : hash(header);
+      const record = fixture.resume.record;
+      const encoded = frame(record.kind, record.flags, Buffer.from(record.payloadHex, "hex"));
+      const payload = Buffer.alloc(64);
+      payload.writeBigUInt64LE(BigInt(prior.sequence + 1)); payload.writeBigUInt64LE(BigInt(last?.offset ?? 0), 8);
+      payload.writeBigUInt64LE(BigInt(encoded.length), 16); payload.writeUInt32LE(1, 24);
+      hash(Buffer.concat([priorChain, hash(encoded)])).copy(payload, 32);
+      const resumed = Buffer.concat([prefix, encoded, frame(12, 2, payload)]);
+      assert.equal(resumed.length - prefix.length, fixture.resume.addedBytes);
+      assert.deepEqual(resumed.subarray(0, prefix.length), prefix);
+      assert.deepEqual(inspect(resumed), { end: resumed.length, sequence: prior.sequence + 1, frames: prior.frames + 2, tail: 0 });
+    }
     let recoveryCases = 0;
     for (let end = 32; end <= bytes.length; end++) {
       const commit = fixture.commits.filter((row: { end: number }) => row.end <= end).at(-1);
@@ -163,13 +179,17 @@ export class RetainedVerificationScript extends BundleScript {
     }
     process.stdout.write(`[DEBUG] independent retained SPR oracle: 2 commits, ${recoveryCases} exact LastCommit prefixes, ${fixture.negative.length} strict hostile denials, ${fixture.compressed.length} compressed grammar cases; no typed history publication\n`);
     const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
-    const laws = ["retained_spr_verification_matches_neutral_commits_and_torn_prefixes", "retained_spr_verification_rejects_hostile_frames_without_publication"];
+    const laws = ["retained_spr_verification_matches_neutral_commits_and_torn_prefixes", "retained_spr_verification_rejects_hostile_frames_without_publication", "retained_spr_resume_preserves_exact_prefix_and_commit_chain"];
     for (const law of laws) assert(source.includes(`fn ${law}(`), `missing retained SPR law ${law}`);
     assert(source.includes("fn verify_compressed_fixture(") && source.includes("verify_compressed_fixture(&fixture).await;"), "native compressed raw-length parity law is missing");
+    assert(readFileSync(join(owner, "../🦀️.rs"), "utf8").includes("pub async fn resume_verified("), "protocol-owned verified writer resume is missing");
+    assert.equal(BigInt(fixture.resume.exhaustedSequence) + 1n, 1n << 64n);
+    assert(readFileSync(join(owner, "../🦀️.rs"), "utf8").includes("let next_commit_seq = self.next_commit_seq.checked_add(1)"), "commit sequence must reject exhaustion before writing");
+    console.log(`retained SPR resume oracle: ${fixture.resume.cuts.length} exact prefixes, next sequence/previous offset/hash chain preserved`);
     if (segments.includes("--oracle-only")) return;
     assert(readFileSync(join(owner, "../🦀️.rs"), "utf8").includes("pub mod retained;"), "retained SPR module is not mounted; native selection cannot run");
     const receipts = await runExactCargoLaws({ cwd: this.repoRoot, groups: [{ package: "semio-framework-replication", target: { kind: "lib", name: "protocol" }, laws: laws.map(law => `format::retained::tests::${law}`) }] });
-    assert.equal(receipts[0]!.assertions, 2);
+    assert.equal(receipts[0]!.assertions, laws.length);
   }
 }
 
@@ -222,6 +242,49 @@ class RetainedRecordObservationScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("build", BuildScript).register("test-source", SourceTestScript).register("test-local-interaction-source", LocalInteractionSourceTestScript).register("test-local-interaction-native", LocalInteractionNativeTestScript).register("retained-verification-check", RetainedVerificationScript).register("retained-record-observation-check", RetainedRecordObservationScript);
+/** 🛡️ Cross-language hostile-input oracle for the exact bounded PresencePeer codec. */
+class PresencePeerCodecScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.some(segment => segment !== "--oracle-only")) throw new Error("presence-peer-codec-check accepts only --oracle-only");
+    const { default: assert } = await import("node:assert/strict");
+    const { default: Ajv } = await import("ajv/dist/2020.js");
+    const owner = join(this.root, "../../🧫️fixtures/👥️presence-peer-codec-v1");
+    const fixture = JSON.parse(readFileSync(join(owner, "🧪️fixture/🔣️.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
+    const validate = new Ajv({ strict: true }).compile(schema);
+    assert(validate(fixture), validate.errors?.map(error => `${error.instancePath} ${error.message}`).join("; "));
+    const codec = await import(join(this.root, "../../🟦️.ts"));
+    assert.deepEqual(codec.PRESENCE_PEER_WIRE_LIMITS_V1, fixture.limits);
+    const ids = new Set<string>();
+    for (const row of fixture.cases) {
+      assert(!ids.has(row.id), `duplicate fixture id ${row.id}`); ids.add(row.id);
+      const bytes = Buffer.concat([Buffer.from(row.prefixHex, "hex"), Buffer.alloc(row.repeatCount, Number.parseInt(row.repeatHex, 16)), Buffer.from(row.suffixHex, "hex")]);
+      const position: [number] = [0];
+      if (row.accepted) {
+        const peer = codec.decodePresencePeer(bytes, position);
+        assert.equal(position[0], bytes.length, row.id);
+        assert.equal(Buffer.from(codec.encodePresencePeer(peer)).toString("hex"), row.canonicalHex, row.id);
+        const semantic = JSON.parse(JSON.stringify(peer));
+        if (peer.presencePack !== undefined) semantic.presencePack = Buffer.from(peer.presencePack).toString("base64");
+        if (peer.interaction !== undefined) { semantic.interaction.appId = peer.interaction.app_id; delete semantic.interaction.app_id; }
+        assert.deepEqual(semantic, row.expected, row.id);
+      } else {
+        assert.throws(() => codec.decodePresencePeer(bytes, position), undefined, row.id);
+        assert.equal(position[0], 0, `${row.id} advanced the caller cursor`);
+      }
+    }
+    const extra = structuredClone(fixture); extra.cases[0].authority = true; assert(!validate(extra));
+    const source = readFileSync(join(this.root, "../../📡️wire/🦀️.rs"), "utf8");
+    const laws = ["presence_peer_decoder_matches_neutral_bounded_exact_corpus", "presence_peer_decoder_rejects_hostile_counts_before_allocation"];
+    for (const law of laws) assert(source.includes(`fn ${law}(`), `missing native presence codec law ${law}`);
+    assert(source.includes("PRESENCE_PEER_WIRE_LIMITS_V1") && source.includes("reader.position != bytes.len()"), "Rust bounded exact decoder is absent");
+    console.log(`presence peer codec oracle: ${fixture.cases.length} neutral Rust/TypeScript vectors, ${fixture.cases.filter((row: { accepted: boolean }) => !row.accepted).length} hostile inputs rejected exactly`);
+    if (segments.includes("--oracle-only")) return;
+    const receipts = await runExactCargoLaws({ cwd: this.repoRoot, groups: [{ package: "semio-framework-replication", target: { kind: "lib", name: "protocol" }, laws: laws.map(law => `wire::frames::presence_codec_tests::${law}`) }] });
+    assert.equal(receipts[0]!.assertions, laws.length);
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("build", BuildScript).register("test-source", SourceTestScript).register("test-local-interaction-source", LocalInteractionSourceTestScript).register("test-local-interaction-native", LocalInteractionNativeTestScript).register("retained-verification-check", RetainedVerificationScript).register("retained-record-observation-check", RetainedRecordObservationScript).register("presence-peer-codec-check", PresencePeerCodecScript);
 
 if (import.meta.main) await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

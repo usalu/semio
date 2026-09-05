@@ -53,6 +53,9 @@
     "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript": {
       "name": "@semio-tech/mit-bestand-bericht",
       "version": "0.1.0",
+      "devDependencies": {
+        "d3-force": "3.0.0",
+      },
     },
     "♻️mit-bestand/🧺️demonstrator": {
       "name": "@semio-tech/mit-bestand-demonstrator",
@@ -247,7 +250,7 @@
       "name": "@semio-tech/framework",
       "version": "0.1.0",
     },
-    "🧰️framework/🔨️modules/◻2d/📦️packages/🟦️typescript": {
+    "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript": {
       "name": "@semio-tech/s-2d-js",
       "version": "0.1.0",
     },
@@ -501,6 +504,9 @@
         "@napi-rs/canvas": "^1.0.2",
         "pdfjs-dist": "^6.1.200",
         "sharp": "^0.34.5",
+      },
+      "devDependencies": {
+        "markdown-it": "14.3.0",
       },
     },
     "🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript": {
@@ -1498,7 +1504,7 @@
 
     "@semio-tech/repo-test": ["@semio-tech/repo-test@workspace:🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript"],
 
-    "@semio-tech/s-2d-js": ["@semio-tech/s-2d-js@workspace:🧰️framework/🔨️modules/◻2d/📦️packages/🟦️typescript"],
+    "@semio-tech/s-2d-js": ["@semio-tech/s-2d-js@workspace:🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript"],
 
     "@semio-tech/s-3d-js": ["@semio-tech/s-3d-js@workspace:🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript"],
 
@@ -2070,7 +2076,11 @@
 
     "d3-ease": ["d3-ease@3.0.1", "", {}, "sha512-wR/XK3D3XcLIZwpbvQwQ5fK+8Ykds1ip7A2Txe0yxncXSdq1L9skcG7blcedkOX+ZcgxGAmLX1FrRGbADwzi0w=="],
 
+    "d3-force": ["d3-force@3.0.0", "", { "dependencies": { "d3-dispatch": "1 - 3", "d3-quadtree": "1 - 3", "d3-timer": "1 - 3" } }, "sha512-zxV/SsA+U4yte8051P4ECydjD/S+qeYtnaIyAs9tgHCqfguma/aAQDjo85A9Z6EKhBirHRJHXIgJUlffT4wdLg=="],
+
     "d3-interpolate": ["d3-interpolate@3.0.1", "", { "dependencies": { "d3-color": "1 - 3" } }, "sha512-3bYs1rOD33uo8aqJfKP3JWPAibgw8Zm2+L9vBKEHJ2Rg+viTR7o5Mmv5mZcieN+FRYaAOWX5SJATX6k1PWz72g=="],
+
+    "d3-quadtree": ["d3-quadtree@3.0.1", "", {}, "sha512-04xDrxQTDTCFwP5H6hRhsRcb9xxv2RzkcsygFzmkSIOJy3PeRJP7sNk3VRIbKXcog561P9oU0/rVH6vDROAgUw=="],
 
     "d3-selection": ["d3-selection@3.0.0", "", {}, "sha512-fmTRWbNMmsmWq6xJV8D19U/gw/bwrHfNXxrIN+HfZgnzqTHp9jOmKMhsTUjXOJnZOdZY9Q28y4yebKzqDKlxlQ=="],
 

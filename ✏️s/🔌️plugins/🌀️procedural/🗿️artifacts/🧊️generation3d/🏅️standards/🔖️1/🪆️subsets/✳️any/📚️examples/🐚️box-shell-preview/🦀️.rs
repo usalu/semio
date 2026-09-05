@@ -7,7 +7,7 @@ pub fn label() -> LocalizedLabel {
     LocalizedLabel::native("Box Shell Preview", "Hohlkörper Vorschau")
 }
 pub const ICON: &str = "file";
-pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🧪️box-shell-preview/🗣️.dsl.semio");
+pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🐚️box-shell-preview/🗣️.dsl.semio");
 pub fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
 }

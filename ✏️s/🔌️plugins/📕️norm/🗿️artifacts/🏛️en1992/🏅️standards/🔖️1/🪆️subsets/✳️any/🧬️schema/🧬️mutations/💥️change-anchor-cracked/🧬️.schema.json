@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeAnchorCracked",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newAnchorCracked"
+  ],
+  "properties": {
+    "newAnchorCracked": {
+      "type": "boolean"
+    }
+  }
+}

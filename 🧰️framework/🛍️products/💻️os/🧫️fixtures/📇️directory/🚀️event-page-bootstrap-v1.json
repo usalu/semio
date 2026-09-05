@@ -1,0 +1,52 @@
+{
+  "schema": "semio.directory.event-page-bootstrap-trace.v1",
+  "bootstrapEpoch": 7,
+  "initialAfter": 3,
+  "pages": [
+    {
+      "afterSeqExclusive": 3,
+      "throughSeqInclusive": 5,
+      "hasMore": true,
+      "sessionBindingSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "authorizationGeneration": 9,
+      "receiptSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    {
+      "afterSeqExclusive": 5,
+      "throughSeqInclusive": 8,
+      "hasMore": false,
+      "sessionBindingSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "authorizationGeneration": 9,
+      "receiptSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    }
+  ],
+  "wakeups": [99, 101],
+  "expectedSocketSince": 8,
+  "forgedAckFields": ["bootstrapEpoch", "sessionBindingSha256", "authorizationGeneration", "throughSeqInclusive", "receiptSha256"],
+  "retainedHome": {
+    "pluginId": "s",
+    "appId": "s.home",
+    "instanceId": 41,
+    "switchedVisibleInstanceId": 73,
+    "expectedDestroyCount": 1
+  },
+  "retry": {
+    "transportAfter": 3,
+    "homeRejectedReceiptSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "expectedAfter": 3
+  },
+  "cancellation": {
+    "lateThroughSeqInclusive": 13,
+    "expectedAckCount": 0
+  },
+  "rebootstrap": {
+    "nextEpoch": 8,
+    "expectedAfter": 0
+  },
+  "terminalClose": {
+    "code": 4401,
+    "expectedBootstrapEpoch": 9,
+    "expectedAfter": 0,
+    "expectedReconnects": 0
+  }
+}

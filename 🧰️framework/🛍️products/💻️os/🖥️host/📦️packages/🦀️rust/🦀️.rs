@@ -1,10 +1,10 @@
 //! 🖥️ Semio framework OS host — Shape V2 glue.
 
-#[cfg(feature = "os-host-full")]
+#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 extern crate semio_framework_os_kernel as dsl;
-#[cfg(feature = "os-host-full")]
+#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 extern crate semio_framework_os_kernel as protocol;
-#[cfg(feature = "os-host-full")]
+#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 extern crate semio_framework_value_derive as value_derive;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
@@ -20,11 +20,11 @@ mod retirement;
 // 🧬️ `workflow_kernel` is the private path-mount of `🔨️modules/🔁️workflow` — kept distinct from the
 // public OS-layer `pub mod workflow` in host so that module can re-export the kernel vocabulary and
 // layer media/registry helpers on top. Public spelling beside `space` is `workflow` only.
-#[cfg(feature = "os-host-full")]
+#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 #[path = "../../../🔨️modules/🔁️workflow/🦀️.rs"]
 mod workflow_kernel;
 
-#[cfg(feature = "os-host-full")]
+#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 #[path = "../../../🔨️modules/🪐️space/🦀️.rs"]
 pub mod space;
 

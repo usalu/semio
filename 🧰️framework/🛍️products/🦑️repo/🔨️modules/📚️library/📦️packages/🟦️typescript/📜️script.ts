@@ -47,6 +47,7 @@ class TestScript extends BundleScript {
     }
     if (segments[0] === "path-emoji-statutes") {
       if (segments.length !== 1) throw new Error("Expected test path-emoji-statutes");
+      resolveTestLevel(["long"]);
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔏️path-emoji-statutes/🟦️.ts");
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
       return;
@@ -180,6 +181,11 @@ class TestScript extends BundleScript {
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
+    if (segments[0] === "cargo-target-discovery-skip") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎯️cargo-target-discovery-skip/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
     if (segments[0] === "registry-catalog-gitlink-boundary") {
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧾️registry-catalog-gitlink-boundary/🟦️.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
@@ -282,7 +288,7 @@ class TestScript extends BundleScript {
     }
     if (segments[0] === "draw-destination-observation") {
       if (segments.length !== 1) throw new Error("Draw destination observation accepts no extra arguments");
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎯️draw-destination-observation/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📍️draw-destination-observation/🟦️.ts");
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
       return;
     }

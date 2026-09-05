@@ -16,7 +16,7 @@
           "scenarios": [
             {
               "id": "moves-the-default-scene-pointer-to-the-second-scene",
-              "directoryName": "🧪️moves-the-default-scene-pointer-to-the-second-scene"
+              "directoryName": "🎞️moves-the-default-scene-pointer-to-the-second-scene"
             }
           ]
         },
@@ -27,7 +27,7 @@
           "scenarios": [
             {
               "id": "binds-the-perspective-camera-to-the-eye-node",
-              "directoryName": "🧪️binds-the-perspective-camera-to-the-eye-node"
+              "directoryName": "🔗️binds-the-perspective-camera-to-the-eye-node"
             }
           ]
         },
@@ -38,7 +38,7 @@
           "scenarios": [
             {
               "id": "adopts-the-child-node-under-the-parent-node",
-              "directoryName": "🧪️adopts-the-child-node-under-the-parent-node"
+              "directoryName": "🔗️adopts-the-child-node-under-the-parent-node"
             }
           ]
         },
@@ -49,7 +49,7 @@
           "scenarios": [
             {
               "id": "binds-the-hull-mesh-to-the-body-node",
-              "directoryName": "🧪️binds-the-hull-mesh-to-the-body-node"
+              "directoryName": "🔗️binds-the-hull-mesh-to-the-body-node"
             }
           ]
         },
@@ -60,7 +60,7 @@
           "scenarios": [
             {
               "id": "binds-the-jointed-skin-to-the-rig-node",
-              "directoryName": "🧪️binds-the-jointed-skin-to-the-rig-node"
+              "directoryName": "🔗️binds-the-jointed-skin-to-the-rig-node"
             }
           ]
         },
@@ -71,7 +71,7 @@
           "scenarios": [
             {
               "id": "promotes-the-root-node-into-the-main-scene",
-              "directoryName": "🧪️promotes-the-root-node-into-the-main-scene"
+              "directoryName": "📥️promotes-the-root-node-into-the-main-scene"
             }
           ]
         },
@@ -82,7 +82,7 @@
           "scenarios": [
             {
               "id": "attaches-a-punctual-light-extension-to-the-root-node",
-              "directoryName": "🧪️attaches-a-punctual-light-extension-to-the-root-node"
+              "directoryName": "🔌️attaches-a-punctual-light-extension-to-the-root-node"
             }
           ]
         },
@@ -93,7 +93,7 @@
           "scenarios": [
             {
               "id": "attaches-a-unit-extras-object-to-the-root-node",
-              "directoryName": "🧪️attaches-a-unit-extras-object-to-the-root-node"
+              "directoryName": "📝️attaches-a-unit-extras-object-to-the-root-node"
             }
           ]
         },
@@ -104,7 +104,7 @@
           "scenarios": [
             {
               "id": "sets-the-node-morph-weights-to-a-half-and-a-quarter",
-              "directoryName": "🧪️sets-the-node-morph-weights-to-a-half-and-a-quarter"
+              "directoryName": "⚖️sets-the-node-morph-weights-to-a-half-and-a-quarter"
             }
           ]
         },
@@ -115,7 +115,7 @@
           "scenarios": [
             {
               "id": "renames-the-root-node-to-pivot",
-              "directoryName": "🧪️renames-the-root-node-to-pivot"
+              "directoryName": "✏️renames-the-root-node-to-pivot"
             }
           ]
         },
@@ -126,7 +126,7 @@
           "scenarios": [
             {
               "id": "attaches-an-xmp-extension-object-to-the-main-scene",
-              "directoryName": "🧪️attaches-an-xmp-extension-object-to-the-main-scene"
+              "directoryName": "🧩️attaches-an-xmp-extension-object-to-the-main-scene"
             }
           ]
         },
@@ -137,7 +137,7 @@
           "scenarios": [
             {
               "id": "attaches-a-units-extras-object-to-the-main-scene",
-              "directoryName": "🧪️attaches-a-units-extras-object-to-the-main-scene"
+              "directoryName": "📏️attaches-a-units-extras-object-to-the-main-scene"
             }
           ]
         },
@@ -148,7 +148,7 @@
           "scenarios": [
             {
               "id": "renames-the-main-scene-to-alternate",
-              "directoryName": "🧪️renames-the-main-scene-to-alternate"
+              "directoryName": "✏️renames-the-main-scene-to-alternate"
             }
           ]
         },
@@ -159,7 +159,7 @@
           "scenarios": [
             {
               "id": "inserts-an-empty-node-ahead-of-the-root-node",
-              "directoryName": "🧪️inserts-an-empty-node-ahead-of-the-root-node"
+              "directoryName": "🌱️inserts-an-empty-node-ahead-of-the-root-node"
             }
           ]
         },
@@ -170,7 +170,7 @@
           "scenarios": [
             {
               "id": "inserts-an-empty-scene-ahead-of-the-default-scene",
-              "directoryName": "🧪️inserts-an-empty-scene-ahead-of-the-default-scene"
+              "directoryName": "🎞️inserts-an-empty-scene-ahead-of-the-default-scene"
             }
           ]
         },
@@ -181,7 +181,7 @@
           "scenarios": [
             {
               "id": "removes-the-root-node-and-drops-it-from-the-scene",
-              "directoryName": "🧪️removes-the-root-node-and-drops-it-from-the-scene"
+              "directoryName": "🚫️removes-the-root-node-and-drops-it-from-the-scene"
             }
           ]
         },
@@ -192,7 +192,7 @@
           "scenarios": [
             {
               "id": "removes-the-first-scene-and-remaps-the-default-scene",
-              "directoryName": "🧪️removes-the-first-scene-and-remaps-the-default-scene"
+              "directoryName": "🚫️removes-the-first-scene-and-remaps-the-default-scene"
             }
           ]
         },
@@ -203,7 +203,7 @@
           "scenarios": [
             {
               "id": "swaps-the-two-scene-root-nodes",
-              "directoryName": "🧪️swaps-the-two-scene-root-nodes"
+              "directoryName": "🚚️swaps-the-two-scene-root-nodes"
             }
           ]
         },
@@ -214,7 +214,7 @@
           "scenarios": [
             {
               "id": "refuses-a-move-whose-destination-is-the-childs-current-slot",
-              "directoryName": "🧪️refuses-a-move-whose-destination-is-the-childs-current-slot"
+              "directoryName": "⏸️refuses-a-move-whose-destination-is-the-childs-current-slot"
             }
           ]
         },
@@ -225,7 +225,7 @@
           "scenarios": [
             {
               "id": "demotes-the-first-scene-and-slides-the-default-pointer",
-              "directoryName": "🧪️demotes-the-first-scene-and-slides-the-default-pointer"
+              "directoryName": "⬇️demotes-the-first-scene-and-slides-the-default-pointer"
             }
           ]
         },
@@ -236,7 +236,7 @@
           "scenarios": [
             {
               "id": "refuses-to-move-a-node-that-is-not-a-root-of-the-scene",
-              "directoryName": "🧪️refuses-to-move-a-node-that-is-not-a-root-of-the-scene"
+              "directoryName": "🛑️refuses-to-move-a-node-that-is-not-a-root-of-the-scene"
             }
           ]
         },
@@ -247,7 +247,7 @@
           "scenarios": [
             {
               "id": "refuses-an-order-that-repeats-the-same-child-twice",
-              "directoryName": "🧪️refuses-an-order-that-repeats-the-same-child-twice"
+              "directoryName": "🚫️refuses-an-order-that-repeats-the-same-child-twice"
             }
           ]
         },
@@ -258,7 +258,7 @@
           "scenarios": [
             {
               "id": "flips-the-two-nodes-and-renumbers-the-scene-roots",
-              "directoryName": "🧪️flips-the-two-nodes-and-renumbers-the-scene-roots"
+              "directoryName": "🔢️flips-the-two-nodes-and-renumbers-the-scene-roots"
             }
           ]
         },
@@ -269,7 +269,7 @@
           "scenarios": [
             {
               "id": "refuses-a-scene-index-past-the-end-of-the-scene-list",
-              "directoryName": "🧪️refuses-a-scene-index-past-the-end-of-the-scene-list"
+              "directoryName": "🚫️refuses-a-scene-index-past-the-end-of-the-scene-list"
             }
           ]
         },
@@ -280,7 +280,7 @@
           "scenarios": [
             {
               "id": "flips-the-two-scenes-and-remaps-the-default-pointer",
-              "directoryName": "🧪️flips-the-two-scenes-and-remaps-the-default-pointer"
+              "directoryName": "🗺️flips-the-two-scenes-and-remaps-the-default-pointer"
             }
           ]
         },
@@ -291,7 +291,7 @@
           "scenarios": [
             {
               "id": "adopts-the-second-scene-root-under-the-first-node",
-              "directoryName": "🧪️adopts-the-second-scene-root-under-the-first-node"
+              "directoryName": "🌿️adopts-the-second-scene-root-under-the-first-node"
             }
           ]
         },
@@ -302,7 +302,7 @@
           "scenarios": [
             {
               "id": "replaces-a-translation-with-a-scaled-trs-transform",
-              "directoryName": "🧪️replaces-a-translation-with-a-scaled-trs-transform"
+              "directoryName": "🔀️replaces-a-translation-with-a-scaled-trs-transform"
             }
           ]
         },
@@ -313,7 +313,7 @@
           "scenarios": [
             {
               "id": "clears-the-default-scene-pointer",
-              "directoryName": "🧪️clears-the-default-scene-pointer"
+              "directoryName": "🎞️clears-the-default-scene-pointer"
             }
           ]
         },
@@ -324,7 +324,7 @@
           "scenarios": [
             {
               "id": "clears-the-camera-binding-on-the-eye-node",
-              "directoryName": "🧪️clears-the-camera-binding-on-the-eye-node"
+              "directoryName": "🔗️clears-the-camera-binding-on-the-eye-node"
             }
           ]
         },
@@ -335,7 +335,7 @@
           "scenarios": [
             {
               "id": "releases-the-child-node-from-the-parent-node",
-              "directoryName": "🧪️releases-the-child-node-from-the-parent-node"
+              "directoryName": "✂️releases-the-child-node-from-the-parent-node"
             }
           ]
         },
@@ -346,7 +346,7 @@
           "scenarios": [
             {
               "id": "clears-the-mesh-binding-on-the-body-node",
-              "directoryName": "🧪️clears-the-mesh-binding-on-the-body-node"
+              "directoryName": "🔗️clears-the-mesh-binding-on-the-body-node"
             }
           ]
         },
@@ -357,7 +357,7 @@
           "scenarios": [
             {
               "id": "clears-the-skin-binding-on-the-rig-node",
-              "directoryName": "🧪️clears-the-skin-binding-on-the-rig-node"
+              "directoryName": "🔗️clears-the-skin-binding-on-the-rig-node"
             }
           ]
         },
@@ -368,7 +368,7 @@
           "scenarios": [
             {
               "id": "demotes-the-root-node-out-of-the-main-scene",
-              "directoryName": "🧪️demotes-the-root-node-out-of-the-main-scene"
+              "directoryName": "📤️demotes-the-root-node-out-of-the-main-scene"
             }
           ]
         }

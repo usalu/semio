@@ -9,12 +9,12 @@ pub const BLOCK3D_VIEW_MODE_VIEW: &str = "view";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::block3d::create_block3d_viewer`.
-pub async fn definition() -> ModeDefinition {
+pub fn definition() -> ModeDefinition {
     ModeDefinition { id: BLOCK3D_VIEW_MODE_VIEW.into(), label: LocalizedLabel::native("View", "Ansicht"), icon_id: "eye".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ Single full-pane world window — the read-only viewer has no quadrant layout to allocate.
-pub async fn layout() -> WindowLayout {
+pub fn layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
             kind: "stack".into(),

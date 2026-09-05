@@ -27,6 +27,13 @@ pub const MCP_SCOPE_TABLE: &[(&str, &[&str])] = &[
     ("workspace.read", &["registry.query", "documents.read"]),
     ("artifact.read", &["documents.read"]),
     ("artifact.write", &["documents.write", "jobs.spawn"]),
+    //#region 💡️Inference
+    // 💡️ Local ADMISSION only: it grants the four hub-backed inference job tools the right to be
+    // CALLED by this connection. It is never hub authorization — the hub re-runs its own live
+    // `Author`/session/authorization-generation predicate on accept, claim, every checkpoint,
+    // offer, read, cancel and approval, and an `Admin` is not implicitly allowed there.
+    ("inference.execute", &["documents.read", "documents.write", "jobs.spawn"]),
+    //#endregion 💡️Inference
     ("ui.observe", &["shell.observe"]),
     ("ui.control", &["shell.control", "ui.window", "ui.dialog", "shell.navigate"]),
     ("ui.raw-control", &["shell.raw"]),

@@ -819,8 +819,30 @@ import {
   canonicalSurfaceId,
   reloadRetainsActiveApp,
   directoryCommandFromAction,
+  mintDirectoryCommandRequestId,
+  retainDirectoryCommandResult,
+  DIRECTORY_COMMAND_RESULT_SLOTS,
+  type DirectoryCommandResultSlotV1,
+  type DirectoryCommandReceiptV1,
 } from "../../../../🧱️elements/🏛️ShellHost/🟦️.tsx";
-export { SetWindowTitleContext, SetWindowIconContext, useAppKeybindingsByActionId, useMapContextMenuSpecs, TutorialRecorder, type FrameworkOsShellProps, FrameworkOsShell, shellActorId, canonicalSurfaceId, reloadRetainsActiveApp, directoryCommandFromAction };
+export {
+  SetWindowTitleContext,
+  SetWindowIconContext,
+  useAppKeybindingsByActionId,
+  useMapContextMenuSpecs,
+  TutorialRecorder,
+  type FrameworkOsShellProps,
+  FrameworkOsShell,
+  shellActorId,
+  canonicalSurfaceId,
+  reloadRetainsActiveApp,
+  directoryCommandFromAction,
+  mintDirectoryCommandRequestId,
+  retainDirectoryCommandResult,
+  DIRECTORY_COMMAND_RESULT_SLOTS,
+  type DirectoryCommandResultSlotV1,
+  type DirectoryCommandReceiptV1,
+};
 //#endregion FrameworkOsShell
 
 //#region 🔖️plugin-runtime

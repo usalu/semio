@@ -1,0 +1,23 @@
+{
+  "reason": "Vite loads ⚙️vite.config.ts with --configLoader bundle, so every module the config statically imports is parsed on every boot AND watched: one edit anywhere in the graph restarts the dev server. These bounds keep the graph config-shaped.",
+  "entry": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
+  "deny": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️builder/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts",
+    "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts"
+  ],
+  "require": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🔌️vite-plugins.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts"
+  ],
+  "maxModules": 40,
+  "maxSourceBytes": 700000
+}

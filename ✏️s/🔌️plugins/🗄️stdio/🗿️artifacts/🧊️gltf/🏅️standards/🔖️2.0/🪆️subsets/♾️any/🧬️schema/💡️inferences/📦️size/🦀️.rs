@@ -1,14 +1,14 @@
 //! 📦 GLTF size indicators.
 
-#[path = "🌳️axis-aligned-bounds/🦀️.rs"]
+#[path = "↔️axis-aligned-bounds/🦀️.rs"]
 pub mod axis_aligned_bounds;
 #[path = "📐️bounding-box-dimensions/🦀️.rs"]
 pub mod bounding_box_dimensions;
-#[path = "🐯️characteristic-length/🦀️.rs"]
+#[path = "🔗️characteristic-length/🦀️.rs"]
 pub mod characteristic_length;
-#[path = "🖨️footprint-area/🦀️.rs"]
+#[path = "🦶️footprint-area/🦀️.rs"]
 pub mod footprint_area;
-#[path = "🌹️oriented-bounds/🦀️.rs"]
+#[path = "🧭️oriented-bounds/🦀️.rs"]
 pub mod oriented_bounds;
 #[path = "📏️overall-size/🦀️.rs"]
 pub mod overall_size;

@@ -19,9 +19,9 @@
 //! bounded `ComputePool` semaphore instead of an unbounded `std::thread::spawn` per call.
 
 use super::schema::{
-    DirectoryCommand, DirectoryEvent, DirectoryEventPageV1, DirectorySpaceDetailV1, DirectorySpaceListEntryV1, DirectoryStreamMessage, DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1,
+    DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEvent, DirectoryEventPageV1, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceListEntryV1, DirectorySpaceRole, DocumentView, MemberSpaceViewV1, DirectoryStreamMessage, DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1,
     DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanV1, DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1,
-    DocumentPlanSocketGrantIntentV1, DocumentScope, DIRECTORY_EVENT_PAGE_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER,
+    DocumentPlanSocketGrantIntentV1, DocumentScope, GisMapInferenceApprovalReceiptV1, GisMapInferenceApprovalRequestV1, GisMapInferenceEventPageV1, GisMapInferenceJobReceiptV1, GisMapInferenceJobRequestV1, GisMapInferencePortCodeV1, GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR, GIS_MAP_INFERENCE_REQUEST_MAX_BYTES, GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES, lease_fields_from_plan_v1, same_lease_fields_v1, DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER,
 };
 use crate::os_dsl::{DslValue, FromValue, ToValue, ValueError};
 use semio_framework_async::OperationContext;
@@ -191,15 +191,13 @@ impl From<ValueError> for DirectoryClientError {
 //#endregion 🔖️Errors
 
 //#region 🔖️Wire
-/// 📮️ `POST /directory/commands`'s `202` body (contract §C2). `result` is genuinely untyped
-/// per-command payload (contract does not pin a shape) — `DslValue`, this crate's own
-/// schema-erased dynamic value, replaces `serde_json::Value` as the untyped carrier.
-#[derive(Clone, Debug, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct CommandOutcome {
-    pub events: Vec<DirectoryEvent>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub result: Option<DslValue>,
+/// 📮️ One canonical `POST /directory/commands` completion, preserving the exact response bytes the
+/// receipt digest covers. The public command boundary is closed: no `DslValue` and no open
+/// `unknown` crosses it.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CanonicalDirectoryCommandReceiptV1 {
+    pub canonical_json: String,
+    pub receipt: DirectoryCommandReceiptV1,
 }
 
 /// 🪪️ `GET /auth/sessions/me`'s body (contract §C2, camelCase — this route is NEW this wave).
@@ -221,6 +219,19 @@ pub struct SessionView {
 pub struct SessionMintResponse {
     pub token: String,
     pub user_id: String,
+}
+
+/// 🏛️ One administration page plus the exact response bytes its receipt covers.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CanonicalDirectorySpaceAdministrationPageV1 {
+    canonical_json: String,
+    page: DirectorySpaceAdministrationPageV1,
+}
+
+impl CanonicalDirectorySpaceAdministrationPageV1 {
+    pub fn canonical_json(&self) -> &str { &self.canonical_json }
+    pub fn page(&self) -> &DirectorySpaceAdministrationPageV1 { &self.page }
+    pub fn receipt_sha256(&self) -> &str { self.page.receipt_sha256() }
 }
 
 /// 📄️ Immutable original page bytes plus only the authenticated header needed for ACK ordering.
@@ -395,16 +406,33 @@ pub struct DocumentSocketAuthorityV1 {
 }
 
 impl DocumentSocketAuthorityV1 {
-    pub fn matches_surface(&self, expected: &DocumentSocketSurfaceExpectationV1) -> bool {
-        self.artifact.kind == expected.artifact_kind
-            && self.package.plugin_id == expected.plugin_id
-            && self.package.package_id == expected.package_id
-            && self.package.version == expected.version
-            && self.surface.surface_id == expected.surface_id
-            && self.surface.app_id == expected.app_id
-            && self.surface.window_kind_id == expected.window_kind_id
-            && self.surface.role == expected.role
-            && self.surface.renderer_target == expected.renderer_target
+    /// 🧾 Receipt-free lease projection of this retained authority at the byte lengths under
+    /// comparison. The plan constrains every identity but no byte length.
+    pub fn lease_fields(&self, component_byte_length: u64, descriptor_byte_length: u64) -> DocumentExecutionTargetLeaseFieldsV1 {
+        DocumentExecutionTargetLeaseFieldsV1 {
+            schema: "semio.os.document-execution-target-lease/v1".to_string(),
+            version: 1,
+            scope: self.scope.clone(),
+            descriptor_digest_v1: self.descriptor_digest_v1.clone(),
+            catalog: self.catalog.clone(),
+            package: self.package.clone(),
+            component: DocumentExecutionTargetComponentV1 { sha256: self.package.component_sha256.clone(), blake3: self.package.component_blake3.clone(), byte_length: component_byte_length },
+            descriptor: DocumentExecutionTargetDescriptorV1 { sha256: self.package.descriptor_byte_sha256.clone(), byte_length: descriptor_byte_length },
+            artifact: self.artifact.clone(),
+            parent_dialect: self.parent_dialect.clone(),
+            surface: self.surface.clone(),
+            grant: self.grant,
+            checkpoint: self.checkpoint.clone(),
+            revalidation: self.revalidation,
+        }
+    }
+
+    /// ⚖️ The one shared full-field lease relation, replacing every partial surface predicate: it
+    /// compares both scope ids, the descriptor digest, catalog generation, all three package
+    /// digests, both byte lengths, artifact, parent dialect, every surface field, every grant bit,
+    /// the checkpoint and every revalidation generation.
+    pub fn matches_lease_fields(&self, expected: &DocumentExecutionTargetLeaseFieldsV1) -> bool {
+        same_lease_fields_v1(&self.lease_fields(expected.component.byte_length, expected.descriptor.byte_length), expected)
     }
 }
 
@@ -414,22 +442,9 @@ pub struct DocumentSocketAdmissionV1 {
     pub authority: DocumentSocketAuthorityV1,
 }
 
-/// 🎯 Exact local plugin/surface identity that a server-selected plan must authorize before exchange.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct DocumentSocketSurfaceExpectationV1 {
-    pub artifact_kind: String,
-    pub plugin_id: String,
-    pub package_id: String,
-    pub version: String,
-    pub surface_id: String,
-    pub app_id: String,
-    pub window_kind_id: String,
-    pub role: DocumentOpenSurfaceRoleV1,
-    pub renderer_target: DocumentOpenRendererTargetV1,
-}
-
-/// 🧬 Local codec and optional UI selection expected from a server-authoritative open plan.
+/// 🧬 Local codec expectation plus the complete verified execution-target lease a server-authoritative
+/// open plan must satisfy. There is no partial surface expectation: a locally installed target is
+/// compared through the one shared full-field relation or not at all.
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DocumentSocketExpectationV1 {
@@ -438,7 +453,7 @@ pub struct DocumentSocketExpectationV1 {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub requested_surface_id: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub surface: Option<DocumentSocketSurfaceExpectationV1>,
+    pub lease: Option<DocumentExecutionTargetLeaseFieldsV1>,
 }
 
 pub trait HubSocketGrantSource: Send + Sync {
@@ -780,6 +795,30 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         }
     }
 
+    /// 🛡️ Bounded request/response variant used by the closed command boundary: it caps raw bytes
+    /// BEFORE decoding and maps every failure into a closed code, never a raw server body.
+    async fn request_bytes_limited(&self, ctx: &OperationContext, method: HttpMethod, path: &str, body: Option<Vec<u8>>, response_max_bytes: usize) -> Result<Vec<u8>, DirectoryCommandErrorCodeV1> {
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryCommandErrorCodeV1::Cancelled);
+        }
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose().map_err(|_| DirectoryCommandErrorCodeV1::Unauthorized)?;
+        let response = match self.transport.http(ctx, method, &self.url(path), bearer, body).await {
+            Ok(response) => response,
+            Err(TransportError::Cancelled) => return Err(DirectoryCommandErrorCodeV1::Cancelled),
+            Err(_) => return Err(DirectoryCommandErrorCodeV1::Transport),
+        };
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryCommandErrorCodeV1::Cancelled);
+        }
+        if !(200..=299).contains(&response.status) {
+            return Err(DirectoryCommandErrorCodeV1::from_status(response.status));
+        }
+        if response.body.len() > response_max_bytes {
+            return Err(DirectoryCommandErrorCodeV1::TooLarge);
+        }
+        Ok(response.body)
+    }
+
     pub async fn spaces(&self, ctx: &OperationContext) -> Result<Vec<DirectorySpaceListEntryV1>, DirectoryClientError> {
         let spaces: Vec<DirectorySpaceListEntryV1> = self.request_json(ctx, HttpMethod::Get, "/directory/spaces", None).await?;
         if spaces.iter().all(DirectorySpaceListEntryV1::validate) {
@@ -789,13 +828,40 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         }
     }
 
-    pub async fn space(&self, ctx: &OperationContext, id: &str) -> Result<DirectorySpaceDetailV1, DirectoryClientError> {
-        let detail: DirectorySpaceDetailV1 = self.request_json(ctx, HttpMethod::Get, &format!("/directory/spaces/{id}"), None).await?;
-        if detail.validate() {
-            Ok(detail)
-        } else {
-            Err(DirectoryClientError::Decode("directory space detail access discriminator mismatch".into()))
+    /// 🏛️ Fetches one bounded canonical administration page for exactly one space. `cursor`
+    /// advances precisely the window it was issued for; every other window restarts at its head.
+    pub async fn space_administration_page(&self, ctx: &OperationContext, id: &str, cursor: Option<&str>) -> Result<CanonicalDirectorySpaceAdministrationPageV1, DirectoryClientError> {
+        if let Some(cursor) = cursor {
+            if cursor.is_empty() || cursor.len() > DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES || !cursor.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_')) {
+                return Err(DirectoryClientError::Decode("directory space administration cursor is not opaque-safe".into()));
+            }
         }
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose()?;
+        let path = match cursor {
+            Some(cursor) => format!("/directory/spaces/{id}?cursor={cursor}"),
+            None => format!("/directory/spaces/{id}"),
+        };
+        let response = self.transport.http(ctx, HttpMethod::Get, &self.url(&path), bearer, None).await?;
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        match response.status {
+            401 => return Err(DirectoryClientError::Unauthorized),
+            200..=299 => {}
+            status => return Err(DirectoryClientError::Http { status, body: String::from_utf8_lossy(&response.body).into_owned() }),
+        }
+        if response.body.len() > DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES {
+            return Err(DirectoryClientError::Decode("directory space administration page response exceeded 48 KiB".into()));
+        }
+        let canonical_json = String::from_utf8(response.body).map_err(|error| DirectoryClientError::Decode(error.to_string()))?;
+        let page = DirectorySpaceAdministrationPageV1::parse_canonical_json(&canonical_json).map_err(|_| DirectoryClientError::Decode("directory space administration page response is not canonical".into()))?;
+        if page.space_id() != id {
+            return Err(DirectoryClientError::Decode("directory space administration page space mismatch".into()));
+        }
+        Ok(CanonicalDirectorySpaceAdministrationPageV1 { canonical_json, page })
     }
 
     pub async fn events(&self, ctx: &OperationContext, since: u64) -> Result<Vec<DirectoryEvent>, DirectoryClientError> {
@@ -844,10 +910,79 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         self.request_json(ctx, HttpMethod::Get, "/auth/sessions/me", None).await
     }
 
-    pub async fn command(&self, ctx: &OperationContext, command: &DirectoryCommand) -> Result<CommandOutcome, DirectoryClientError> {
-        let body = crate::os_pack::json::to_json_string(command).into_bytes();
-        self.request_json(ctx, HttpMethod::Post, "/directory/commands", Some(body)).await
+    /// 🧾️ Posts one sealed V1 request and parses only a raw-byte-capped canonical receipt bound to
+    /// it. Every non-2xx becomes a closed {@link DirectoryCommandErrorCodeV1}; the response body is
+    /// never decoded into a UI-facing error. `ctx.cancel` cancels the HTTP wait only — a command
+    /// already past its server linearization point stays committed and the operation is indeterminate.
+    pub async fn command(&self, ctx: &OperationContext, request: &DirectoryCommandRequestV1) -> Result<CanonicalDirectoryCommandReceiptV1, DirectoryCommandErrorCodeV1> {
+        request.validate()?;
+        let body = request.canonical_json().into_bytes();
+        let response = self.request_bytes_limited(ctx, HttpMethod::Post, "/directory/commands", Some(body), DIRECTORY_COMMAND_RECEIPT_MAX_BYTES).await?;
+        let canonical_json = String::from_utf8(response).map_err(|_| DirectoryCommandErrorCodeV1::Invalid)?;
+        let receipt = DirectoryCommandReceiptV1::parse_canonical_json(&canonical_json, request)?;
+        Ok(CanonicalDirectoryCommandReceiptV1 { canonical_json, receipt })
     }
+
+    //#region 💡️InferencePort
+    /// 🚪 The only four inference calls this client may make, each rebuilt from the caller's own
+    /// document scope. No package, digest, generation, path or receipt selector is accepted, so a
+    /// caller can never widen the request beyond the document it already holds.
+    fn gis_map_inference_path(scope: &DocumentScope, suffix: &str) -> String {
+        format!("/spaces/{}/documents/{}/inference/gis-map{}", encode_url_component(&scope.space_id), encode_url_component(&scope.document_id), suffix)
+    }
+
+    async fn gis_map_inference_call<R: FromValue>(&self, ctx: &OperationContext, method: HttpMethod, scope: &DocumentScope, suffix: &str, body: Option<Vec<u8>>) -> Result<R, GisMapInferencePortCodeV1> {
+        if body.as_ref().is_some_and(|bytes| bytes.len() > GIS_MAP_INFERENCE_REQUEST_MAX_BYTES) {
+            return Err(GisMapInferencePortCodeV1::Bounds);
+        }
+        if ctx.cancel.is_cancelled().await {
+            return Err(GisMapInferencePortCodeV1::Cancelled);
+        }
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose().map_err(|_| GisMapInferencePortCodeV1::Denied)?;
+        let path = Self::gis_map_inference_path(scope, suffix);
+        let response = match self.transport.http(ctx, method, &self.url(&path), bearer, body).await {
+            Ok(response) => response,
+            Err(TransportError::Cancelled) => return Err(GisMapInferencePortCodeV1::Cancelled),
+            Err(_) => return Err(GisMapInferencePortCodeV1::Transport),
+        };
+        if ctx.cancel.is_cancelled().await {
+            return Err(GisMapInferencePortCodeV1::Cancelled);
+        }
+        if !(200..=299).contains(&response.status) {
+            return Err(GisMapInferencePortCodeV1::from_status(response.status));
+        }
+        if response.body.len() > GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES {
+            return Err(GisMapInferencePortCodeV1::Bounds);
+        }
+        decode_json_bytes(&response.body).map_err(|_: DirectoryClientError| GisMapInferencePortCodeV1::Invalid)
+    }
+
+    /// 📮 Submits exactly one job. It is never retried: an indeterminate transport is terminal, so a
+    /// replay can never mint a second job behind the operator's back.
+    pub async fn submit_gis_map_inference_job(&self, ctx: &OperationContext, scope: &DocumentScope, request: &GisMapInferenceJobRequestV1) -> Result<GisMapInferenceJobReceiptV1, GisMapInferencePortCodeV1> {
+        let body = crate::os_pack::json::to_json_string(request).into_bytes();
+        self.gis_map_inference_call(ctx, HttpMethod::Post, scope, "/jobs", Some(body)).await
+    }
+
+    /// 📃 Reads one bounded owner-private page after an exact progress cursor.
+    pub async fn read_gis_map_inference_events(&self, ctx: &OperationContext, scope: &DocumentScope, job_id: &str, after: u64) -> Result<GisMapInferenceEventPageV1, GisMapInferencePortCodeV1> {
+        if after > GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR {
+            return Err(GisMapInferencePortCodeV1::Bounds);
+        }
+        self.gis_map_inference_call(ctx, HttpMethod::Get, scope, &format!("/jobs/{}/events?after={after}", encode_url_component(job_id)), None).await
+    }
+
+    /// 🛑 Requests cancellation and returns the server's own next page; the caller never assumes it.
+    pub async fn cancel_gis_map_inference_job(&self, ctx: &OperationContext, scope: &DocumentScope, job_id: &str) -> Result<GisMapInferenceEventPageV1, GisMapInferencePortCodeV1> {
+        self.gis_map_inference_call(ctx, HttpMethod::Post, scope, &format!("/jobs/{}/cancel", encode_url_component(job_id)), None).await
+    }
+
+    /// ✅ Approves exactly the offered proposal, echoing back the hash the server itself published.
+    pub async fn approve_gis_map_inference_job(&self, ctx: &OperationContext, scope: &DocumentScope, request: &GisMapInferenceApprovalRequestV1) -> Result<GisMapInferenceApprovalReceiptV1, GisMapInferencePortCodeV1> {
+        let body = crate::os_pack::json::to_json_string(request).into_bytes();
+        self.gis_map_inference_call(ctx, HttpMethod::Post, scope, &format!("/jobs/{}/approval", encode_url_component(&request.job_id)), Some(body)).await
+    }
+    //#endregion 💡️InferencePort
 
     pub fn stream(self: &Arc<Self>, since: u64) -> DirectoryStream<T>
     where
@@ -1002,17 +1137,11 @@ impl<T: DirectoryTransport + Send + Sync> HubSocketGrantSource for DirectoryClie
         let mut plan: DocumentOpenPlanV1 = decode_json_bytes(&plan_body.bytes).map_err(|_| DirectoryClientError::Decode("document open plan response invalid".into()))?;
         let now_ms = u64::try_from(wall_now_ms()).map_err(|_| DirectoryClientError::Decode("document open clock invalid".into()))?;
         let pack_schema_hash = decode_lower_hex_32(&plan.artifact.pack_schema_hash);
-        let surface_matches = expectation.surface.as_ref().is_none_or(|expected| {
-            plan.artifact.kind == expected.artifact_kind
-                && plan.package.plugin_id == expected.plugin_id
-                && plan.package.package_id == expected.package_id
-                && plan.package.version == expected.version
-                && plan.surface.surface_id == expected.surface_id
-                && plan.surface.app_id == expected.app_id
-                && plan.surface.window_kind_id == expected.window_kind_id
-                && plan.surface.role == expected.role
-                && plan.surface.renderer_target == expected.renderer_target
-        }) && expectation.requested_surface_id.as_ref().is_none_or(|surface| plan.surface.surface_id == *surface);
+        let surface_matches = expectation
+            .lease
+            .as_ref()
+            .is_none_or(|expected| same_lease_fields_v1(&lease_fields_from_plan_v1(&plan, expected.component.byte_length, expected.descriptor.byte_length), expected))
+            && expectation.requested_surface_id.as_ref().is_none_or(|surface| plan.surface.surface_id == *surface);
         if plan.validate(now_ms).is_err()
             || plan.scope != scope
             || plan.artifact.schema != expectation.artifact_schema
@@ -1483,6 +1612,30 @@ pub mod native {
         }
     }
 
+    //#region 💡️Inference
+    impl<R: HostAsyncRuntime> NativeDirectoryTransport<R> {
+        /// 🛡️ Issues one protected bounded JSON request without ever exposing bearer text to the
+        /// caller — the small-body twin of [`NativeDirectoryTransport::fetch_protected_stream`], for
+        /// hub routes whose request and response are closed JSON documents rather than a stream.
+        /// The URL must be an exact path under the credential's own origin, so a caller can never
+        /// redirect a protected credential at a foreign host.
+        pub async fn request_protected_json(&self, ctx: &OperationContext, credential: &LocalHubCredential, method: HttpMethod, url: &str, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError>
+        where
+            R: 'static,
+        {
+            if ctx.cancel.is_cancelled().await {
+                return Err(TransportError::Cancelled);
+            }
+            let origin = credential.hub_origin().trim_end_matches('/');
+            if !url.strip_prefix(origin).is_some_and(|path| path.starts_with('/') && !path.starts_with("//")) {
+                return Err(TransportError::Io("protected json request authority mismatch".into()));
+            }
+            let bearer = credential.capability().map_err(|_| TransportError::Io("protected json credential was invalid".into()))?;
+            self.http(ctx, method, url, Some(bearer), body).await
+        }
+    }
+    //#endregion 💡️Inference
+
     impl NativeDirectoryTransport<TokioHostRuntime> {
         pub async fn with_new_http_pool(runtime: Arc<TokioHostRuntime>, scope: ScopeHandle, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32, package: PackageId, actor: ActorId) -> Self {
             Self::with_new_http_pool_now(runtime, scope, compute, bytes_per_minute_cap, outstanding_cap, package, actor)
@@ -1880,7 +2033,7 @@ pub mod test_support {
 
     impl super::DirectoryTransport for FakeTransport {
         type Ws = FakeWs;
-        async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, _body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
+        async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
             for _ in 0..self.yields_before_response.load(Ordering::SeqCst) {
                 if ctx.cancel.is_cancelled().await {
                     return Err(TransportError::Cancelled);
@@ -1890,7 +2043,7 @@ pub mod test_support {
             if ctx.cancel.is_cancelled().await {
                 return Err(TransportError::Cancelled);
             }
-            self.requests.lock().unwrap().push(RecordedRequest { method, url: url.to_string(), bearer: bearer.map(str::to_string), body: Vec::new() });
+            self.requests.lock().unwrap().push(RecordedRequest { method, url: url.to_string(), bearer: bearer.map(str::to_string), body: body.unwrap_or_default() });
             self.responses.lock().unwrap().pop_front().unwrap_or_else(|| Err(TransportError::Io("no scripted response".to_string())))
         }
 
@@ -1928,6 +2081,7 @@ pub mod test_support {
 mod tests {
     use super::test_support::{FakeTransport, FakeWs};
     use super::*;
+    use crate::os_directory::{directory_command_sha256, DirectoryCommandOutcomeV1, DirectoryCommandResultV1};
     use semio_framework_async::{CancelToken, TraceId};
     use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -2145,23 +2299,97 @@ mod tests {
         receipt
     }
 
+    /// 🪪️ The exact receipt-free lease projection of the same neutral plan {@link push_document_plan}
+    /// serves, at pinned byte lengths. It is built through the one shared relation, so a test can only
+    /// make admission fail by changing a real field.
+    fn document_lease_fields(space_id: &str, document_id: &str, schema: &str, surface_id: &str) -> DocumentExecutionTargetLeaseFieldsV1 {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("neutral plan fixture");
+        let mut plan = fixture["validPlan"].clone();
+        plan["expiresAtUnixMs"] = serde_json::json!(u64::try_from(wall_now_ms()).expect("wall clock") + 20_000);
+        plan["scope"] = serde_json::json!({ "spaceId": space_id, "documentId": document_id });
+        plan["artifact"]["schema"] = serde_json::json!(schema);
+        plan["surface"]["surfaceId"] = serde_json::json!(surface_id);
+        plan["checkpoint"]["baselineFrontier"]["documentId"] = serde_json::json!(document_id);
+        let decoded: DocumentOpenPlanV1 = crate::os_pack::json::from_json_str(&serde_json::to_string(&plan).expect("plan json")).expect("neutral plan");
+        lease_fields_from_plan_v1(&decoded, 1_024, 512)
+    }
+
     fn document_expectation(schema: &str, surface_id: Option<&str>) -> DocumentSocketExpectationV1 {
         DocumentSocketExpectationV1 {
             artifact_schema: schema.to_string(),
             pack_schema_hash: [0x11; 32],
             requested_surface_id: surface_id.map(str::to_string),
-            surface: surface_id.map(|surface_id| DocumentSocketSurfaceExpectationV1 {
-                artifact_kind: "s.gis:gismap".into(),
-                plugin_id: "s.gis:地図".into(),
-                package_id: "s.gis.gismap:codec".into(),
-                version: "1.0.0:β".into(),
-                surface_id: surface_id.to_string(),
-                app_id: "app.gis".into(),
-                window_kind_id: "window.document".into(),
-                role: DocumentOpenSurfaceRoleV1::Editor,
-                renderer_target: DocumentOpenRendererTargetV1::React,
-            }),
+            lease: None,
         }
+    }
+
+    /// 🪪️ The one shared full-field lease relation, driven by the language-neutral
+    /// `document-execution-target-lease-v1` corpus: the positive GIS Map viewer vector's plan
+    /// projection equals its manifest, its exact component and descriptor bytes hash to the declared
+    /// SHA-256/BLAKE3 digests, and every single-field substitution in the corpus is denied by the
+    /// same relation the retained `DocumentSocketAuthorityV1` uses.
+    #[test]
+    fn execution_target_lease_compares_every_plan_and_verified_byte_field() {
+        let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🌎️hub/🧪️fixtures/📇️directory/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
+        let decode_fields = |value: &serde_json::Value| -> Result<DocumentExecutionTargetLeaseFieldsV1, ()> {
+            crate::os_pack::json::from_json_str::<DocumentExecutionTargetLeaseFieldsV1>(&serde_json::to_string(value).expect("fields json")).map_err(|_| ())
+        };
+        let manifest = decode_fields(&corpus["manifest"]).expect("corpus manifest");
+        manifest.validate().expect("corpus manifest is a valid lease projection");
+        let hex_bytes = |text: &str| -> Vec<u8> { (0..text.len() / 2).map(|index| u8::from_str_radix(&text[index * 2..index * 2 + 2], 16).expect("hex")).collect() };
+        let component = hex_bytes(corpus["componentHex"].as_str().expect("component hex"));
+        let descriptor_bytes = hex_bytes(corpus["descriptorHex"].as_str().expect("descriptor hex"));
+        assert_eq!(semio_framework_hash::sha256_hex(&component), manifest.component.sha256);
+        assert_eq!(semio_framework_hash::hash_bytes(&component), manifest.component.blake3);
+        assert_eq!(semio_framework_hash::sha256_hex(&descriptor_bytes), manifest.descriptor.sha256);
+        assert_eq!(component.len() as u64, manifest.component.byte_length);
+        assert_eq!(descriptor_bytes.len() as u64, manifest.descriptor.byte_length);
+
+        let mut plan_json = corpus["plan"].clone();
+        plan_json["expiresAtUnixMs"] = serde_json::json!(u64::try_from(wall_now_ms()).expect("wall clock") + 20_000);
+        let plan: DocumentOpenPlanV1 = crate::os_pack::json::from_json_str(&serde_json::to_string(&plan_json).expect("plan json")).expect("corpus plan");
+        plan.validate(u64::try_from(wall_now_ms()).expect("wall clock")).expect("corpus plan validates");
+        let projected = lease_fields_from_plan_v1(&plan, manifest.component.byte_length, manifest.descriptor.byte_length);
+        assert!(same_lease_fields_v1(&projected, &manifest));
+
+        let authority = DocumentSocketAuthorityV1 {
+            hub_origin: corpus["hubOrigin"].as_str().expect("hub origin").to_string(),
+            expires_at_unix_ms: plan.expires_at_unix_ms,
+            scope: plan.scope.clone(),
+            descriptor_digest_v1: plan.descriptor_digest_v1.clone(),
+            catalog: plan.catalog.clone(),
+            package: plan.package.clone(),
+            artifact: plan.artifact.clone(),
+            parent_dialect: plan.parent_dialect.clone(),
+            pack_schema_hash: decode_lower_hex_32(&plan.artifact.pack_schema_hash).expect("pack schema hash"),
+            surface: plan.surface.clone(),
+            grant: plan.grant,
+            checkpoint: plan.checkpoint.clone(),
+            revalidation: plan.revalidation,
+        };
+        assert!(authority.matches_lease_fields(&manifest));
+
+        let mut substitutions = 0usize;
+        for vector in corpus["hostile"].as_array().expect("hostile rows") {
+            if vector["kind"] != "manifest-field" {
+                continue;
+            }
+            assert_eq!(vector["expected"], "unpublished");
+            let mut candidate = corpus["manifest"].clone();
+            let mut cursor = &mut candidate;
+            let path: Vec<&str> = vector["path"].as_str().expect("hostile path").split('.').collect();
+            for segment in &path[..path.len() - 1] {
+                cursor = cursor.get_mut(*segment).expect("hostile path segment");
+            }
+            cursor[path[path.len() - 1]] = vector["value"].clone();
+            let denied = match decode_fields(&candidate) {
+                Err(()) => true,
+                Ok(mutated) => mutated.validate().is_err() || (!same_lease_fields_v1(&projected, &mutated) && !authority.matches_lease_fields(&mutated)),
+            };
+            assert!(denied, "single-field substitution {} was admitted", vector["name"]);
+            substitutions += 1;
+        }
+        assert!(substitutions >= 30, "corpus lost single-field substitutions: {substitutions}");
     }
 
     #[test]
@@ -2179,7 +2407,8 @@ mod tests {
         let receipt = push_document_plan(&transport, space_id, document_id, "demo/v1", surface_id).await;
         push_grant(&transport).await;
         let client = authenticated_client(transport.clone(), "protected-session");
-        let expectation = document_expectation("demo/v1", Some(surface_id));
+        let mut expectation = document_expectation("demo/v1", Some(surface_id));
+        expectation.lease = Some(document_lease_fields(space_id, document_id, "demo/v1", surface_id));
 
         let admission = client
             .admit_document_socket(&root_ctx(), space_id, document_id, &expectation, "native-instance", 30_000)
@@ -2286,7 +2515,9 @@ mod tests {
         let receipt = push_document_plan(&transport, "space", "document", "expected/v1", "surface").await;
         let client = authenticated_client(transport.clone(), "protected-session");
         let mut expectation = document_expectation("expected/v1", Some("surface"));
-        expectation.surface.as_mut().expect("surface").package_id = "foreign.package".into();
+        let mut lease = document_lease_fields("space", "document", "expected/v1", "surface");
+        lease.package.package_id = "foreign.package".into();
+        expectation.lease = Some(lease);
         let error = match client.admit_document_socket(&root_ctx(), "space", "document", &expectation, "native-instance", 5_000) {
             Err(error) => error,
             Ok(_) => panic!("foreign plugin selection accepted"),
@@ -2358,41 +2589,48 @@ mod tests {
     async fn space_exposes_the_durable_document_descriptor() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📇️directory/🪪️document-descriptor.json")).expect("descriptor fixture");
         let descriptor = fixture.get("valid").expect("valid descriptor").clone();
+        let document: DocumentView = crate::os_pack::json::from_json_str(&serde_json::json!({ "descriptor": descriptor, "headSeq": 7, "commitSeq": 6, "epoch": 2 }).to_string()).expect("document view fixture");
+        let space = MemberSpaceViewV1 {
+            id: "space-a".into(),
+            name: "Fixture".into(),
+            kind: crate::os_directory::DirectorySpaceKind::Studio,
+            visibility: crate::os_directory::DirectorySpaceVisibility::Private,
+            owner_user_id: "user-owner".into(),
+            role: DirectorySpaceRole::Author,
+            member_count: 1,
+            document_count: 1,
+            active_connections: 0,
+            created_at_ms: 1,
+            updated_at_ms: 2,
+        };
+        let mut page = DirectorySpaceAdministrationPageV1::Author {
+            schema: crate::os_directory::DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA.into(),
+            session_binding_sha256: "a".repeat(64),
+            authorization_generation: 7,
+            space_id: "space-a".into(),
+            space,
+            members: DirectorySpaceAdministrationMemberWindowV1 { rows: Vec::new(), next_cursor: None },
+            documents: DirectorySpaceAdministrationDocumentWindowV1 { rows: vec![document], next_cursor: None },
+            invites: DirectorySpaceAdministrationInviteWindowV1 { rows: Vec::new(), next_cursor: None },
+            capabilities: DirectorySpaceAdministrationCapabilitiesV1 { rename_space: true, set_visibility: true, delete_space: true, upsert_member: true, remove_member: true, create_invite: true, revoke_invite: true },
+            receipt_sha256: String::new(),
+        };
+        let receipt = semio_framework_hash::sha256_hex(page.canonical_unsigned_json().as_bytes());
+        if let DirectorySpaceAdministrationPageV1::Author { receipt_sha256, .. } = &mut page {
+            *receipt_sha256 = receipt;
+        }
+        let canonical = crate::os_pack::json::to_json_string(&page);
+        assert!(!canonical.contains("selector") && !canonical.contains("secretDigest") && !canonical.contains("passwordHash"));
         let transport = FakeTransport::default();
-        transport
-            .push_response(
-                FakeTransport::json_response(
-                    200,
-                    &serde_json::json!({
-                        "access": "author",
-                        "space": {
-                            "id": "space-a",
-                            "name": "Fixture",
-                            "kind": "studio",
-                            "visibility": "private",
-                            "ownerUserId": "user-owner",
-                            "role": "author",
-                            "memberCount": 1,
-                            "documentCount": 1,
-                            "activeConnections": 0,
-                            "createdAtMs": 1,
-                            "updatedAtMs": 2
-                        },
-                        "members": [],
-                        "documents": [{ "descriptor": descriptor, "headSeq": 7, "commitSeq": 6, "epoch": 2 }],
-                        "invites": []
-                    }),
-                )
-                .await,
-            )
-            .await;
+        transport.push_response(Ok(HttpResponse { status: 200, body: canonical.clone().into_bytes() })).await;
         let client = authenticated_client(transport.clone(), "member-token");
 
-        let detail = client.space(&root_ctx(), "space-a").await.expect("space detail decodes");
-        let DirectorySpaceDetailV1::Author { documents, .. } = detail else { panic!("author projection") };
-        assert_eq!(documents[0].descriptor.document_id, "shared-document");
-        assert_eq!(documents[0].descriptor.owner.plugin_id, "s.gis");
-        assert_eq!(documents[0].descriptor.bootstrap_frontier.head_seq, 7);
+        let fetched = client.space_administration_page(&root_ctx(), "space-a", None).await.expect("administration page decodes");
+        assert_eq!(fetched.canonical_json(), canonical);
+        let DirectorySpaceAdministrationPageV1::Author { documents, .. } = fetched.page().clone() else { panic!("author projection") };
+        assert_eq!(documents.rows[0].descriptor.document_id, "shared-document");
+        assert_eq!(documents.rows[0].descriptor.owner.plugin_id, "s.gis");
+        assert_eq!(documents.rows[0].descriptor.bootstrap_frontier.head_seq, 7);
         let requests = transport.requests.lock().unwrap();
         assert_eq!(requests[0].bearer.as_deref(), Some("member-token"));
     }
@@ -2473,6 +2711,67 @@ mod tests {
         }
         assert_eq!(seqs, vec![1, 2]);
         assert!(started.elapsed() < std::time::Duration::from_millis(8));
+    }
+
+    /// 🧪️ The closed command boundary: a canonical sealed request in, a raw-byte-capped canonical
+    /// receipt out, closed codes for every failure, and no raw server text in any UI-facing error.
+    #[semio_framework_async_macros::async_test]
+    async fn directory_command_parses_only_a_bounded_canonical_receipt_and_never_echoes_server_text() {
+        let capability = format!("session.v1.{}.{}", "a".repeat(32), "b".repeat(64));
+        let command = DirectoryCommand::CreateInvite { space_id: "space-a".into(), role: DirectorySpaceRole::Spectator, ttl_secs: 3_600 };
+        let request = DirectoryCommandRequestV1::new("1f2e3d4c5b6a7988a1b2c3d4e5f60718", command.clone());
+        let receipt = DirectoryCommandReceiptV1::seal(
+            request.request_id.clone(),
+            directory_command_sha256(&command),
+            DirectoryCommandOutcomeV1::Accepted,
+            Vec::new(),
+            DirectoryCommandResultV1::Invite { invite_token: "invite.v1.one-shot".into() },
+        );
+        let canonical = crate::os_pack::json::to_json_string(&receipt);
+
+        let transport = FakeTransport::default();
+        transport.push_response(Ok(HttpResponse { status: 200, body: canonical.as_bytes().to_vec() })).await;
+        let client = authenticated_client(transport.clone(), &capability);
+        let delivered = client.command(&root_ctx(), &request).await.expect("canonical receipt");
+        assert_eq!(delivered.canonical_json, canonical);
+        assert_eq!(delivered.receipt, receipt);
+        assert_eq!(transport.requests.lock().unwrap().first().map(|entry| entry.body.clone()).expect("sealed request bytes"), request.canonical_json().into_bytes());
+
+        for (status, code) in [(401u16, DirectoryCommandErrorCodeV1::Unauthorized), (403, DirectoryCommandErrorCodeV1::Forbidden), (409, DirectoryCommandErrorCodeV1::RequestConflict), (413, DirectoryCommandErrorCodeV1::TooLarge), (503, DirectoryCommandErrorCodeV1::Overloaded), (500, DirectoryCommandErrorCodeV1::Invalid)] {
+            let transport = FakeTransport::default();
+            transport.push_response(Ok(HttpResponse { status, body: b"hub text a UI-facing error must never carry".to_vec() })).await;
+            let client = authenticated_client(transport, &capability);
+            let error = client.command(&root_ctx(), &request).await.expect_err("closed denial");
+            assert_eq!(error, code, "status {status}");
+            assert!(!format!("{error:?}").contains("hub text"));
+        }
+
+        let oversized = FakeTransport::default();
+        oversized.push_response(Ok(HttpResponse { status: 200, body: vec![b'x'; DIRECTORY_COMMAND_RECEIPT_MAX_BYTES + 1] })).await;
+        assert_eq!(authenticated_client(oversized, &capability).command(&root_ctx(), &request).await.expect_err("byte ceiling"), DirectoryCommandErrorCodeV1::TooLarge);
+
+        let forged = FakeTransport::default();
+        let mut substituted = receipt.clone();
+        substituted.command_sha256 = directory_command_sha256(&DirectoryCommand::RenameSpace { space_id: "space-a".into(), name: "Substituted".into() });
+        forged.push_response(Ok(HttpResponse { status: 200, body: crate::os_pack::json::to_json_string(&substituted).into_bytes() })).await;
+        assert_eq!(authenticated_client(forged, &capability).command(&root_ctx(), &request).await.expect_err("digest substitution"), DirectoryCommandErrorCodeV1::Invalid);
+
+        let redacted = FakeTransport::default();
+        let leaking = DirectoryCommandReceiptV1::seal(request.request_id.clone(), directory_command_sha256(&command), DirectoryCommandOutcomeV1::SecretUndeliverable, Vec::new(), DirectoryCommandResultV1::Invite { invite_token: "invite.v1.replayed".into() });
+        redacted.push_response(Ok(HttpResponse { status: 200, body: crate::os_pack::json::to_json_string(&leaking).into_bytes() })).await;
+        assert_eq!(authenticated_client(redacted, &capability).command(&root_ctx(), &request).await.expect_err("redaction violation"), DirectoryCommandErrorCodeV1::Invalid);
+
+        let cancelled = FakeTransport::default();
+        cancelled.push_response(Ok(HttpResponse { status: 200, body: canonical.as_bytes().to_vec() })).await;
+        let client = authenticated_client(cancelled.clone(), &capability);
+        let ctx = root_ctx();
+        ctx.cancel.cancel_now();
+        assert_eq!(client.command(&ctx, &request).await.expect_err("pre-cancelled"), DirectoryCommandErrorCodeV1::Cancelled);
+        assert!(cancelled.requests.lock().unwrap().is_empty(), "an already-cancelled operation never builds a command request");
+
+        let mut malformed = request.clone();
+        malformed.request_id = "not-hex".into();
+        assert_eq!(authenticated_client(FakeTransport::default(), &capability).command(&root_ctx(), &malformed).await.expect_err("malformed correlation"), DirectoryCommandErrorCodeV1::Invalid);
     }
 
     //#region 🔖️CancellationTests

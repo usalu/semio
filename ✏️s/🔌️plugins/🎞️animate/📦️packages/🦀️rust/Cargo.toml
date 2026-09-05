@@ -32,7 +32,7 @@ crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
-semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
+semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false, features = ["full-artifact-catalog"] }
 geometry = { path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }

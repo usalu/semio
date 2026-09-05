@@ -164,3 +164,224 @@ this ticket's own dev boot was starved behind. Log: scratchpad `check-lowpoly-li
 | 1 | Died in `ensurePluginRegistry` → plugin registry generation: `EINTR: interrupted system call, scandir` on a `📕️norm` fixture dir, thrown from `entries()` at `🔍️discovery/🟦️.ts:8754`. Transient — the peer's rename wave was churning the filesystem under the directory walk. Not a lowpoly defect. Worth noting as a robustness gap: that `readdirSync` is not retried on `EINTR`, which is survivable normally but not under 45 concurrent sessions. |
 | 2 | Cleared the EINTR on retry — "plugin registry catalog refreshed (59 plugin crates, 60 playgrounds, 45 framework packages)", launch.json regenerated. Then queued on the cargo build-directory lock. In flight. |
 
+
+## GREEN — re-verified this round by running, not inherited
+
+### TypeScript / JS (`📓️e2e-typescript-verification.md`)
+
+- `bun nx run @semio-tech/lowpoly-js:test --skip-nx-cache` → **exit 0**. Real assertions: the
+  interactive-job route oracle cross-checks all 47 Rust action registrations, an Ajv schema
+  round-trip, and 4 hostile-mutation rejections. It is the only test the package defines — narrow,
+  but genuinely green.
+- `bun ./📜️script.ts test discover` → **exit 0, 240 cases** repo-wide, with all four lowpoly ids
+  present (`io-lowpoly-1`, `command-lowpoly-1`, `mutate-lowpoly-1`, `io-lowpoly-png-1`). The
+  silent-zero/taxonomy-drift failure mode did not occur. (Was 172 at the 08/29 round; +68 repo-wide.)
+- Typecheck: **no `typecheck`/`tsc` nx target exists anywhere in the repo.** A scoped `tsc -p` over
+  lowpoly's TS tree reports **zero errors in lowpoly's own files**, and the check was proven
+  non-vacuous by injecting `const x: number = "not-a-number"`, seeing tsc catch it at the exact
+  file/line, then reverting (confirmed clean by `git diff`).
+- Nothing needed fixing. Real `tsc` errors reachable from lowpoly are all outside it: lowpoly's own
+  `📜️script.ts` uses Bun-only `import.meta.dir` with no `bun-types`/`@types/bun` installed anywhere
+  (repo-wide tooling gap), plus shared framework files. Reported, not touched.
+
+### Schema (`📓️e2e-schema-validation.md`, helper `🔬️validate-lowpoly-fixtures.ts` kept in this folder)
+
+- **17 mutations, set-equal in both directions** across the Rust enum, the 17 directories on disk,
+  and the json / proto / graphql / typescript catalogs — same order, same spelling, no drift.
+- **85/85 fixtures with real ajv output** (ajv 8.20.0 from the repo's own node_modules, no new dep):
+  68/68 real schema validations (17 mutation-envelope + 17 snapshot-before + 17 snapshot-after +
+  17 diff) all pass; the remaining 17 outcome fixtures are valid JSON with no lowpoly-owned schema
+  to check against (generic protocol `MutationOutcome`, outside the five-representation scope).
+  Re-run twice, green both times.
+- Both historical defects confirmed gone: no `meshJson`/`mesh_json` survives as a schema property
+  anywhere, and `LowpolySelection` is fully defined in every representation including the diff
+  family's `$defs`. A repo-wide scan for the same defect class (any `$ref` to an undefined `$defs`
+  entry) across every non-fixture `🔣️.json` under the schema root found **zero**.
+- Field parity checked beyond the brief: `LowpolyArtifact` (37 fields), `LowpolySnapshot` (2),
+  `LowpolyDiff` (38 + nested delta/patch types) match across all five representations, nullability
+  included. **Nothing needed fixing; no lowpoly file was modified.**
+
+### The TS io serializer stubs are NOT a gap — question closed
+
+The coordinator flagged that all nine lowpoly export serializers are byte-identical 1-line stubs.
+Checked against cad, raster, remodel, gis (both artifacts) and puzzle (all three artifacts): **every
+plugin's per-format TS serializers are `export {};` stubs** (lowpoly/raster/remodel/gis/puzzle
+byte-identical `e2ebd7dd…`; cad differs only by a one-line JSDoc). Real serialization lives only in
+the Rust siblings, repo-wide. This is the convention, not a lowpoly defect. No serializers written.
+
+## Framework fix landed this round — EINTR in the discovery walk
+
+`bun run dev:lowpoly` died **2/2** in `ensurePluginRegistry` → plugin-registry generation with
+`EINTR: interrupted system call, scandir`, thrown from `entries()` in
+`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts` — a **different directory
+each time** (`📕️norm` once, `🧱️block` once), which is what rules out a taxonomy/data cause and
+points at load. Signal delivery interrupts `scandir`/`lstat` when this many processes work the tree
+at once, and the `node:fs` sync wrappers surface that as a throw instead of retrying. There was **no
+EINTR handling anywhere in the library** before this.
+
+Added `retryOnEintr` (`🟦️.ts:8532`) and applied it at the three call sites on that walk:
+`readdirSync` in `entries` (`:8771`), `lstatSync` in `kind` (`:8753`), and `readdirSafe` (`:8545`).
+Bundles clean (`bun build`, 196 modules).
+
+The `readdirSafe` site is the important one: it caught **every** error and returned `[]`, so under
+EINTR it silently truncated discovery instead of failing. A short catalog would have been reported
+as a successful generate with a plausible count. That is strictly worse than the crash, and it is
+the same silent-zero class of defect this repo has been bitten by before.
+
+Reported to peer semio-f4, whose dev boots were dying in the same stage; they confirmed it is on
+their boot path and that they had attributed the flakiness to taxonomy edits landing mid-walk.
+
+**This did not fully unblock the boot**: the next attempt cleared discovery and then hit
+`NX EINTR reading node_modules/nx/plugins/package-json.js` — the same environmental condition inside
+nx's own reader, which is not ours to patch. A bounded retry loop is now driving the boot.
+
+## Where this round stands at 05:06
+
+### The stdio measurement, cross-examined and upheld
+
+Peer semio-f4 challenged the 225 with three observations reading "0 E0277", then **retracted** it:
+a crate that aborts at module expansion never type-checks, so its error count reads clean for the
+wrong reason. Their test for telling the two apart is good, so it was applied to this round's own log
+rather than assumed:
+
+- stdio **warning** lines in the lowpoly check: **1335**.
+
+rustc therefore genuinely type-checked stdio here. The 225 is a real result (160 E0277 mentions /
+82 distinct headers, 33 stale `couldn't read`), not a false clean.
+
+The competing "feature unification" hypothesis — that lowpoly enables stdio features the others do
+not, so only lowpoly sees the migrated code — is **dead**:
+
+```
+cargo tree -e features -p semio-s-plugin-lowpoly -i semio-s-plugin-stdio
+semio-s-plugin-stdio v0.1.0
+└── semio-s-plugin-lowpoly v0.1.0
+    └── semio-s-plugin-lowpoly feature "default" (command-line)
+```
+
+Lowpoly declares `default-features = false` and adds nothing back, so it enables the **minimal**
+stdio surface — strictly less than procedural/process/cad, not more. There is no gate to decline.
+
+What survives is the stronger reading: stdio has **two stacked problems** — a self-healing rename
+race that aborts compiles early, and a genuinely in-flight serde → `ToValue`/`FromValue` migration
+underneath it. You only see the second after surviving the first. Lowpoly is not specially cursed;
+it merely got *further*. Peers should expect the same 225-class result one blocker later.
+
+stdio's newest source was written **05:04:08** — still under active edit by its owner
+(`26/04/08/ENFORCE-UNIQUE-SEMANTIC-EMOJIS-ACROSS-REPOSITORY`). Not ours to repair.
+
+### Verification scoreboard
+
+| # | Gate | State |
+|---|---|---|
+| 1 | `cargo check -p semio-s-plugin-lowpoly --lib` | **BLOCKED** on stdio — 0 lowpoly errors, but lowpoly never compiled |
+| 2 | `cargo check … --target wasm32-wasip2` | BLOCKED (same, plus shared `target/wasm32-wasip2` has been wiped) |
+| 3 | `cargo clippy … -D warnings` | BLOCKED (same) |
+| 4 | `cargo test … --lib` | BLOCKED (same) — every Rust test from the 08/29 round remains **written but unrun** |
+| 5 | `test discover` + lowpoly TS suite | **GREEN, re-run this session** (240 cases; `@semio-tech/lowpoly-js:test` exit 0) |
+| 5b | schema / ajv fixtures | **GREEN, re-run this session** (17 mutations set-equal, 85/85 fixtures) |
+| 6 | `bun run dev:lowpoly` observed in a browser | **NOT ACHIEVED** — see below |
+
+### Boot: honest status
+
+Attempt 3 has run **40 minutes** and is still pre-Vite. It is alive and CPU-bound in JS (8-11% CPU
+under load ~126, `sample` shows it running, not blocked on IO), past `ensurePluginRegistry` and
+launch.json regeneration, with no `plugin-build-lowpoly.json` lease and no cargo child yet. It is
+starved, not wedged.
+
+The decisive structural point, from the dev script's own sequence
+(`🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts:1664-1763`):
+`acquirePluginBuildLease` → `ensurePluginRegistry` → `buildEngineWasm` → Vite listens →
+`buildPluginsStreaming`. The lowpoly plugin wasm is built in that **last** stage, and it links
+`semio-s-plugin-stdio`. So even a successful Vite boot would serve a shell whose lowpoly plugin
+fails to build. **A browser-verified lowpoly render is not reachable while stdio is red**, no matter
+how long the boot is given. Saying otherwise would be inventing a result.
+
+The boot is left running under a bounded retry loop on the chance stdio lands.
+
+## The 225 was cascade, not a real migration — retracted and replaced
+
+The round's own earlier conclusion ("stdio has two stacked problems, the E0277s are a genuine
+serde → `ToValue`/`FromValue` migration in flight") is **wrong** and is retracted here.
+
+What settled it, in order:
+
+1. The 225 is not 225 problems. It is **150** × `SemioModelMutation: Mutation<SemioModelSnapshot>`
+   + **10** × `<Leaf>: MutationLeaf` (InsertElement, RemoveElement, SetElement, InsertRelation,
+   RemoveRelation, SetRelation, InsertSpatialNode, RemoveSpatialNode, SetSpatialNode, SetSnapshot)
+   + **33** × `couldn't read`. One shape, not many.
+2. Opening one of the ten supposedly-missing impls on disk: `🧱insert-element/🦀️.rs:8` carries
+   `#[derive(… dsl::MutationLeaf)]` with `#[mutation_leaf(contract = ::protocol)]`. **The impl was
+   never missing.** Module resolution was broken above it.
+3. Every error path in that log names `✳️model` — the pre-rename directory, which no longer exists.
+4. Peer semio-f4 independently died on `SetSnapshot` — one of the same ten — in a *different*
+   artifact (`📐️step`), under the same `🟤️` → `📸️` emoji reassignment.
+
+So: the mutations parent module fails to load a renamed sibling → `super::*` breaks for the leaves →
+the `MutationLeaf` derives go unresolved → the aggregate `Mutation` bound then fails once per call
+site. All 225 hang off the 33 module-resolution failures.
+
+### The methodological lesson, which is the durable part
+
+Three sessions produced four measurements tonight and **every one failed a different condition**:
+- "0 E0277" from a compile that aborted at module expansion → the count meant "no trait bounds were
+  ever evaluated", not "none fail". Caught by: **zero stdio warnings**.
+- This round's 225, which *did* type-check (1335 stdio warnings) — but type-checking a tree with
+  broken module resolution **manufactures** bogus trait errors. So "it type-checked" does **not**
+  license "the trait bounds genuinely fail".
+
+The acceptance test now agreed across sessions, all three conditions required:
+
+> zero `couldn't read` in the log **AND** warnings non-zero **AND** *then* read the error count.
+
+### `🔎️scan-dangling-path-refs.py` — answering condition one without compiling
+
+Written this round and kept in this ticket folder (shared with peers on request). It walks every
+`.rs` file, resolves each `include_str!("…")` and `#[path = "…"]` target against the filesystem, and
+reports the ones that do not exist. **13,911 files in ~90 seconds**, versus a 20-minute lock-blocked
+compile. Limits stated honestly: it only sees string literals (a `concat!`/`env!`-built path is
+invisible) and it proves the reference resolves, not that the contents are right.
+
+Baseline at 05:32 — **stdio 0, lowpoly 0**; repo-wide 1399, concentrated in 📕️norm 868,
+📸️remodel 102, 🏭️process 80, 📏️layout 75, 🌍️gis 70, 🕸️dag 56. Both crates on this ticket's
+dependency path had already healed.
+
+### The feature hypothesis, raised by semio-1d and falsified
+
+Proposal: lowpoly's `default-features = false` might *disable* the features carrying the
+`MutationLeaf` impls — a one-line manifest fix. Checked: stdio has exactly one feature,
+`default = ["plugin-root"]`, and exactly one gate on it, `🦀️.rs:133`
+`#[cfg(feature = "plugin-root")] plugin_exports!(plugin, plugin::StdioApps)` — the WASM component
+entry point. No schema, no subset, no `MutationLeaf` impl sits behind it. Turning it on would trade
+a compile error for a `rust-lld: duplicate symbol` link error, since two crates in one component
+would each emit `#[no_mangle] semio_plugin_install_bundle`. **`default-features = false` is
+load-bearing and correct.** Hypothesis dead; no manifest fix exists.
+
+## The real machine-wide blocker: a dead sccache server
+
+`sccache --show-stats` reported **all zeros** with **nothing listening** on its socket — the server
+was gone. Four sccache client processes sat pinned at **0.0% CPU for 20 minutes** holding the shared
+`target/debug/.cargo-lock`, one of them under a **65-minute** `cargo check --workspace`. That
+deadlock — not stdio — is what most sessions had actually been queued behind all night.
+
+Escaped it with a private target dir **and** an sccache bypass:
+
+```
+CARGO_TARGET_DIR=…/target-lowpoly-e2e RUSTC_WRAPPER= cargo check -p semio-s-plugin-lowpoly --lib -j 4
+```
+
+Cost: a cold dependency rebuild. Started at 73 MB free RAM with swap at 53.8G/55.3G; free RAM dipped
+to 17 MB twice and it survived, but that was luck, not headroom. semio-1d's framing is the right one
+and is recorded here as guidance: **the machine is past the point where starting another isolated
+build is a free action.** Anyone else should let a warm target finish instead of copying this.
+
+## Settled-tree measurement (in flight at time of writing)
+
+`target-lowpoly-e2e` is warm (3.2 GB, 245 deps). Re-run at 13:19 with the current tree:
+
+- `semio-framework-os-kernel` — **compiled clean**, so the `DirectorySpaceDetailV1` blocker that
+  stopped procedural/puzzle3d/process3d has healed too.
+- `semio-s-plugin-stdio` — type-checking for **~55 minutes**, **0 errors, 0 `couldn't read`**,
+  warnings flowing. This is the settled-tree measurement no session had managed to obtain.
+
+Confirms the cascade reading: stdio is not 225-errors broken. Lowpoly not yet reached.

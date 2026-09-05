@@ -43,7 +43,7 @@ use crate::db_ids::{check_len, ArtifactId, DbError};
 use crate::db_storage::{
     close_db_io_backend, db_io_close_platform, db_io_copy_observed_text, db_io_hash_pages, db_io_prepare_platform, db_io_prepare_platform_slices, db_io_transfer_list, db_io_write_observed_bytes_range, register_db_io_backend, retire_db_io_backend,
     submit_db_io_task, CatalogStorage, DbIoArtifactId, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoDriverReservation, DbIoExecutionStep, DbIoExecutorMode, DbIoExternalBytes, DbIoLeaseResult, DbIoPageWriter,
-    DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage, DB_IO_PAGE_BYTES,
+    DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalSegmentState, WalStorage, DB_IO_PAGE_BYTES,
 };
 
 macro_rules! with_admitted_artifact {
@@ -63,10 +63,7 @@ use semio_framework_async::WorkerPool;
 use std::sync::Arc;
 
 //#region 🔖️Codec
-/// @emoji 🛡️ Ceiling on any single blob this backend reads into memory in one call — mirrors
-/// `db_storage`'s own `MAX_READ_BYTES` choice (this crate's own choice too, the contract doesn't
-/// fix a number): validated before the driver byte owner is admitted.
-const MAX_READ_BYTES: u64 = 496 * 1024;
+use crate::db_storage::DB_IO_MAX_READ_BYTES;
 
 async fn write_driver_bytes(reservation: DbIoDriverReservation, bytes: BoltBytes, offset: usize, length: usize, output: &mut DbIoPageWriter) -> Result<DbIoPages, DbError> {
     db_io_write_observed_bytes_range(reservation, bytes.value.to_vec(), offset, length, output)?.await
@@ -228,6 +225,18 @@ const CYPHER_WAL_CREATE_SEGMENT: &str = "
 const CYPHER_WAL_READ_ROW: &str = "
     MATCH (n:WalSegment {document: $document, segIndex: $index})
     RETURN n.bytes AS bytes, n.sealed AS sealed, n.len AS len";
+
+const CYPHER_WAL_STATE: &str = "
+    MATCH (n:WalSegment {document: $document, segIndex: $index})
+    RETURN n.sealed AS sealed";
+
+fn neo4j_wal_segment_state(sealed: bool) -> WalSegmentState {
+    if sealed {
+        WalSegmentState::Sealed
+    } else {
+        WalSegmentState::Active
+    }
+}
 
 const CYPHER_WAL_WRITE_BYTES: &str = "
     MATCH (n:WalSegment {document: $document, segIndex: $index})
@@ -404,10 +413,10 @@ impl WalStorage for Neo4jDbIoExecutor {
     }
 
     async fn append(&self, document: &ArtifactId, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
-        check_len(bytes.len() as u64, MAX_READ_BYTES, "wal_storage::append")?;
+        check_len(bytes.len() as u64, DB_IO_MAX_READ_BYTES, "wal_storage::append")?;
         let prepared = db_io_prepare_platform(&bytes)?.await?;
         let idx = u64_to_i64(index, "wal segment index")?;
-        let mut current_reservation = self.reserve_driver_read(MAX_READ_BYTES)?;
+        let mut current_reservation = self.reserve_driver_read(DB_IO_MAX_READ_BYTES)?;
         let mut txn = self.graph()?.start_txn().await.map_err(map_neo4rs_error)?;
         let mut stream = txn.execute(query(CYPHER_WAL_READ_ROW).param("document", document.0.clone()).param("index", idx)).await.map_err(map_neo4rs_error)?;
         let row = stream.next(txn.handle()).await.map_err(map_neo4rs_error)?;
@@ -415,7 +424,7 @@ impl WalStorage for Neo4jDbIoExecutor {
             return Err(DbError::NotFound(format!("wal segment {index} for {document} not found")));
         };
         let current_len = i64_to_u64(row.get("len").map_err(map_de_error)?, "wal segment length")?;
-        check_len(current_len, MAX_READ_BYTES, "wal_storage::append current length")?;
+        check_len(current_len, DB_IO_MAX_READ_BYTES, "wal_storage::append current length")?;
         let current: BoltBytes = row.get("bytes").map_err(map_de_error)?;
         let mut current = DbIoExternalBytes::new(current.value.to_vec());
         current_reservation.observe_capacity(current.capacity()?)?;
@@ -424,7 +433,7 @@ impl WalStorage for Neo4jDbIoExecutor {
             return Err(DbError::InvalidArgument("cannot append to sealed wal segment".to_string()));
         }
         let new_len = current.as_slice()?.len().checked_add(prepared.as_slice().len()).ok_or(DbError::LimitExceeded("Neo4j WAL append length"))?;
-        check_len(new_len as u64, MAX_READ_BYTES, "wal_storage::append result")?;
+        check_len(new_len as u64, DB_IO_MAX_READ_BYTES, "wal_storage::append result")?;
         let combined = db_io_prepare_platform_slices(self.active_operation, current.as_slice()?, prepared.as_slice()).await?;
         let write = txn
             .run(query(CYPHER_WAL_WRITE_BYTES).param("document", document.0.clone()).param("index", idx).param("bytes", combined.as_static_driver_slice().to_vec()).param("len", u64_to_i64(new_len as u64, "wal segment length")?))
@@ -458,13 +467,13 @@ impl WalStorage for Neo4jDbIoExecutor {
     }
 
     async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<DbIoPages, DbError> {
-        check_len(range.len, MAX_READ_BYTES, "wal_storage::read")?;
+        check_len(range.len, DB_IO_MAX_READ_BYTES, "wal_storage::read")?;
         let idx = u64_to_i64(index, "wal segment index")?;
-        let reservation = self.reserve_driver_read(MAX_READ_BYTES)?;
+        let reservation = self.reserve_driver_read(DB_IO_MAX_READ_BYTES)?;
         let row = self.fetch_one(query(CYPHER_WAL_READ_ROW).param("document", document.0.clone()).param("index", idx)).await?;
         let row = row.ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
         let current_len = i64_to_u64(row.get("len").map_err(map_de_error)?, "wal segment length")?;
-        check_len(current_len, MAX_READ_BYTES, "wal_storage::read current length")?;
+        check_len(current_len, DB_IO_MAX_READ_BYTES, "wal_storage::read current length")?;
         let bytes: BoltBytes = row.get("bytes").map_err(map_de_error)?;
         let _ = slice_range(&bytes.value, range)?;
         let mut output = DbIoPageWriter::try_reserve_for_operation(self.active_operation, (range.len as usize).div_ceil(DB_IO_PAGE_BYTES)).map_err(DbIoPageWriterRejected::into_error)?;
@@ -478,6 +487,13 @@ impl WalStorage for Neo4jDbIoExecutor {
         i64_to_u64(row.get("len").map_err(map_de_error)?, "wal segment length")
     }
 
+    async fn segment_state(&self, document: &ArtifactId, index: u64) -> Result<WalSegmentState, DbError> {
+        let idx = u64_to_i64(index, "wal segment index")?;
+        let row = self.fetch_one(query(CYPHER_WAL_STATE).param("document", document.0.clone()).param("index", idx)).await?;
+        let row = row.ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
+        Ok(neo4j_wal_segment_state(row.get("sealed").map_err(map_de_error)?))
+    }
+
     async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         let mut stream = self.graph()?.execute(query(CYPHER_WAL_LIST_SEGMENTS).param("document", document.0.clone())).await.map_err(map_neo4rs_error)?;
         let mut out = DbIoU64List::new();
@@ -489,7 +505,7 @@ impl WalStorage for Neo4jDbIoExecutor {
 
     async fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
         let idx = u64_to_i64(index, "wal segment index")?;
-        let mut current_reservation = self.reserve_driver_read(MAX_READ_BYTES)?;
+        let mut current_reservation = self.reserve_driver_read(DB_IO_MAX_READ_BYTES)?;
         let mut txn = self.graph()?.start_txn().await.map_err(map_neo4rs_error)?;
         let mut stream = txn.execute(query(CYPHER_WAL_READ_ROW).param("document", document.0.clone()).param("index", idx)).await.map_err(map_neo4rs_error)?;
         let row = stream.next(txn.handle()).await.map_err(map_neo4rs_error)?;
@@ -497,7 +513,7 @@ impl WalStorage for Neo4jDbIoExecutor {
             return Err(DbError::NotFound(format!("wal segment {index} for {document} not found")));
         };
         let current_len = i64_to_u64(row.get("len").map_err(map_de_error)?, "wal segment length")?;
-        check_len(current_len, MAX_READ_BYTES, "wal_storage::truncate_tail current length")?;
+        check_len(current_len, DB_IO_MAX_READ_BYTES, "wal_storage::truncate_tail current length")?;
         let current: BoltBytes = row.get("bytes").map_err(map_de_error)?;
         let mut current = DbIoExternalBytes::new(current.value.to_vec());
         current_reservation.observe_capacity(current.capacity()?)?;
@@ -534,7 +550,7 @@ impl WalStorage for Neo4jDbIoExecutor {
 //#region 🔖️SnapshotStorage
 impl SnapshotStorage for Neo4jDbIoExecutor {
     async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError> {
-        check_len(bytes.len() as u64, MAX_READ_BYTES, "snapshot_storage::write_generation")?;
+        check_len(bytes.len() as u64, DB_IO_MAX_READ_BYTES, "snapshot_storage::write_generation")?;
         let generation_param = u64_to_i64(generation, "snapshot generation")?;
         let prepared = db_io_prepare_platform(&bytes)?.await?;
         let result = self
@@ -552,11 +568,11 @@ impl SnapshotStorage for Neo4jDbIoExecutor {
 
     async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<DbIoPages, DbError> {
         let generation_param = u64_to_i64(generation, "snapshot generation")?;
-        let reservation = self.reserve_driver_read(MAX_READ_BYTES)?;
+        let reservation = self.reserve_driver_read(DB_IO_MAX_READ_BYTES)?;
         let row = self.fetch_one(query(CYPHER_SNAPSHOT_READ).param("document", document.0.clone()).param("generation", generation_param)).await?;
         let row = row.ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))?;
         let len = i64_to_u64(row.get("len").map_err(map_de_error)?, "snapshot generation length")?;
-        check_len(len, MAX_READ_BYTES, "snapshot_storage::read_generation")?;
+        check_len(len, DB_IO_MAX_READ_BYTES, "snapshot_storage::read_generation")?;
         let bytes: BoltBytes = row.get("bytes").map_err(map_de_error)?;
         let mut output = DbIoPageWriter::try_reserve_for_operation(self.active_operation, (len as usize).div_ceil(DB_IO_PAGE_BYTES)).map_err(DbIoPageWriterRejected::into_error)?;
         write_driver_bytes(reservation, bytes, 0, len as usize, &mut output).await
@@ -589,7 +605,7 @@ impl SnapshotStorage for Neo4jDbIoExecutor {
 //#region 🔖️PayloadStorage
 impl PayloadStorage for Neo4jDbIoExecutor {
     async fn put(&self, bytes: DbIoPages) -> Result<ContentHash, DbError> {
-        check_len(bytes.len() as u64, MAX_READ_BYTES, "payload_storage::put")?;
+        check_len(bytes.len() as u64, DB_IO_MAX_READ_BYTES, "payload_storage::put")?;
         let hash = db_io_hash_pages(&bytes).await;
         let prepared = db_io_prepare_platform(&bytes)?.await?;
         let result = self.run(query(CYPHER_PAYLOAD_PUT).param("hash", hash.to_string()).param("bytes", prepared.as_static_driver_slice().to_vec()).param("len", u64_to_i64(bytes.len() as u64, "payload length")?)).await;
@@ -599,11 +615,11 @@ impl PayloadStorage for Neo4jDbIoExecutor {
     }
 
     async fn get(&self, hash: &ContentHash) -> Result<DbIoPages, DbError> {
-        let reservation = self.reserve_driver_read(MAX_READ_BYTES)?;
+        let reservation = self.reserve_driver_read(DB_IO_MAX_READ_BYTES)?;
         let row = self.fetch_one(query(CYPHER_PAYLOAD_GET).param("hash", hash.to_string())).await?;
         let row = row.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))?;
         let len = i64_to_u64(row.get("len").map_err(map_de_error)?, "payload length")?;
-        check_len(len, MAX_READ_BYTES, "payload_storage::get")?;
+        check_len(len, DB_IO_MAX_READ_BYTES, "payload_storage::get")?;
         let bytes: BoltBytes = row.get("bytes").map_err(map_de_error)?;
         let mut output = DbIoPageWriter::try_reserve_for_operation(self.active_operation, (len as usize).div_ceil(DB_IO_PAGE_BYTES)).map_err(DbIoPageWriterRejected::into_error)?;
         write_driver_bytes(reservation, bytes, 0, len as usize, &mut output).await
@@ -630,7 +646,7 @@ impl PayloadStorage for Neo4jDbIoExecutor {
 //#region 🔖️CatalogStorage
 impl CatalogStorage for Neo4jDbIoExecutor {
     async fn read_root(&self) -> Result<Option<(DbIoPages, EpochFence)>, DbError> {
-        let mut reservation = self.reserve_driver_read(MAX_READ_BYTES)?;
+        let mut reservation = self.reserve_driver_read(DB_IO_MAX_READ_BYTES)?;
         let row = self.fetch_one(query(CYPHER_CATALOG_READ)).await?;
         let Some(row) = row else {
             reservation.close_step()?;
@@ -638,14 +654,14 @@ impl CatalogStorage for Neo4jDbIoExecutor {
         };
         let epoch = i64_to_u64(row.get("epoch").map_err(map_de_error)?, "catalog epoch")?;
         let len = i64_to_u64(row.get("len").map_err(map_de_error)?, "catalog root length")?;
-        check_len(len, MAX_READ_BYTES, "catalog_storage::read_root")?;
+        check_len(len, DB_IO_MAX_READ_BYTES, "catalog_storage::read_root")?;
         let bytes: BoltBytes = row.get("bytes").map_err(map_de_error)?;
         let mut output = DbIoPageWriter::try_reserve_for_operation(self.active_operation, (len as usize).div_ceil(DB_IO_PAGE_BYTES)).map_err(DbIoPageWriterRejected::into_error)?;
         Ok(Some((write_driver_bytes(reservation, bytes, 0, len as usize, &mut output).await?, EpochFence { epoch })))
     }
 
     async fn cas_root(&self, expected: EpochFence, new_bytes: DbIoPages) -> Result<EpochFence, DbError> {
-        check_len(new_bytes.len() as u64, MAX_READ_BYTES, "catalog_storage::cas_root")?;
+        check_len(new_bytes.len() as u64, DB_IO_MAX_READ_BYTES, "catalog_storage::cas_root")?;
         let new_fence = expected.next();
         let prepared = db_io_prepare_platform(&new_bytes)?.await?;
         let row = self
@@ -674,7 +690,7 @@ impl CatalogStorage for Neo4jDbIoExecutor {
 //#region 🔖️IndexStorage
 impl IndexStorage for Neo4jDbIoExecutor {
     async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: DbIoPages) -> Result<(), DbError> {
-        check_len(bytes.len() as u64, MAX_READ_BYTES, "index_storage::write_run")?;
+        check_len(bytes.len() as u64, DB_IO_MAX_READ_BYTES, "index_storage::write_run")?;
         let run_id_param = u64_to_i64(run_id, "index run id")?;
         let prepared = db_io_prepare_platform(&bytes)?.await?;
         let result = self
@@ -686,11 +702,11 @@ impl IndexStorage for Neo4jDbIoExecutor {
 
     async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<DbIoPages, DbError> {
         let run_id_param = u64_to_i64(run_id, "index run id")?;
-        let reservation = self.reserve_driver_read(MAX_READ_BYTES)?;
+        let reservation = self.reserve_driver_read(DB_IO_MAX_READ_BYTES)?;
         let row = self.fetch_one(query(CYPHER_INDEX_READ).param("document", document.0.clone()).param("runId", run_id_param)).await?;
         let row = row.ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))?;
         let len = i64_to_u64(row.get("len").map_err(map_de_error)?, "index run length")?;
-        check_len(len, MAX_READ_BYTES, "index_storage::read_run")?;
+        check_len(len, DB_IO_MAX_READ_BYTES, "index_storage::read_run")?;
         let bytes: BoltBytes = row.get("bytes").map_err(map_de_error)?;
         let mut output = DbIoPageWriter::try_reserve_for_operation(self.active_operation, (len as usize).div_ceil(DB_IO_PAGE_BYTES)).map_err(DbIoPageWriterRejected::into_error)?;
         write_driver_bytes(reservation, bytes, 0, len as usize, &mut output).await
@@ -788,9 +804,9 @@ impl LeaseStorage for Neo4jDbIoExecutor {
 //#region 🔖️TypedExecutor
 impl Neo4jDbIoExecutor {
     async fn wal_read_into(&self, document: &str, index: u64, range: ByteRange, output: &mut DbIoPageWriter) -> Result<DbIoPages, DbError> {
-        check_len(range.len, MAX_READ_BYTES, "Neo4j WAL task read")?;
+        check_len(range.len, DB_IO_MAX_READ_BYTES, "Neo4j WAL task read")?;
         let index = u64_to_i64(index, "wal segment index")?;
-        let reservation = self.reserve_driver_read(MAX_READ_BYTES)?;
+        let reservation = self.reserve_driver_read(DB_IO_MAX_READ_BYTES)?;
         let row = self.fetch_one(query(CYPHER_WAL_READ_ROW).param("document", document).param("index", index)).await?;
         let row = row.ok_or_else(|| DbError::NotFound("Neo4j WAL segment not found".to_string()))?;
         let length = i64_to_u64(row.get("len").map_err(map_de_error)?, "wal segment length")?;
@@ -807,34 +823,34 @@ impl Neo4jDbIoExecutor {
             "index" => (CYPHER_INDEX_READ, "runId", u64_to_i64(ordinal, "index run")?),
             _ => return Err(DbError::Internal("Neo4j named blob taxonomy mismatch".to_string())),
         };
-        let reservation = self.reserve_driver_read(MAX_READ_BYTES)?;
+        let reservation = self.reserve_driver_read(DB_IO_MAX_READ_BYTES)?;
         let row = self.fetch_one(query(query_text).param("document", document).param(key, value)).await?;
         let row = row.ok_or_else(|| DbError::NotFound("Neo4j named blob not found".to_string()))?;
         let length = i64_to_u64(row.get("len").map_err(map_de_error)?, "Neo4j named blob length")?;
-        check_len(length, MAX_READ_BYTES, "Neo4j named blob")?;
+        check_len(length, DB_IO_MAX_READ_BYTES, "Neo4j named blob")?;
         let bytes: BoltBytes = row.get("bytes").map_err(map_de_error)?;
         write_driver_bytes(reservation, bytes, 0, length as usize, output).await
     }
 
     async fn payload_read_into(&self, hash: &ContentHash, output: &mut DbIoPageWriter) -> Result<DbIoPages, DbError> {
-        let reservation = self.reserve_driver_read(MAX_READ_BYTES)?;
+        let reservation = self.reserve_driver_read(DB_IO_MAX_READ_BYTES)?;
         let row = self.fetch_one(query(CYPHER_PAYLOAD_GET).param("hash", hash.to_string())).await?;
         let row = row.ok_or_else(|| DbError::NotFound("Neo4j payload not found".to_string()))?;
         let length = i64_to_u64(row.get("len").map_err(map_de_error)?, "payload length")?;
-        check_len(length, MAX_READ_BYTES, "Neo4j payload")?;
+        check_len(length, DB_IO_MAX_READ_BYTES, "Neo4j payload")?;
         let bytes: BoltBytes = row.get("bytes").map_err(map_de_error)?;
         write_driver_bytes(reservation, bytes, 0, length as usize, output).await
     }
 
     async fn catalog_read_into(&self, output: &mut DbIoPageWriter) -> Result<Option<(DbIoPages, EpochFence)>, DbError> {
-        let mut reservation = self.reserve_driver_read(MAX_READ_BYTES)?;
+        let mut reservation = self.reserve_driver_read(DB_IO_MAX_READ_BYTES)?;
         let Some(row) = self.fetch_one(query(CYPHER_CATALOG_READ)).await? else {
             reservation.close_step()?;
             return Ok(None);
         };
         let epoch = i64_to_u64(row.get("epoch").map_err(map_de_error)?, "catalog epoch")?;
         let length = i64_to_u64(row.get("len").map_err(map_de_error)?, "catalog length")?;
-        check_len(length, MAX_READ_BYTES, "Neo4j catalog")?;
+        check_len(length, DB_IO_MAX_READ_BYTES, "Neo4j catalog")?;
         let bytes: BoltBytes = row.get("bytes").map_err(map_de_error)?;
         Ok(Some((write_driver_bytes(reservation, bytes, 0, length as usize, output).await?, EpochFence { epoch })))
     }
@@ -869,6 +885,7 @@ impl Neo4jDbIoExecutor {
             }
             DbIoTask::WalRead { document, index, range, output, .. } => Ok(DbIoResult::Pages(self.wal_read_into(document.as_str(), *index, *range, output).await?)),
             DbIoTask::WalLength { document, index, .. } => Ok(DbIoResult::Length(with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::segment_len(self, artifact, *index))?)),
+            DbIoTask::WalState { document, index, .. } => Ok(DbIoResult::WalSegmentState(with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::segment_state(self, artifact, *index))?)),
             DbIoTask::WalList { document, output, .. } => {
                 let list = with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::list_segments(self, artifact))?;
                 Ok(DbIoResult::List(db_io_transfer_list(list, output).await?))
@@ -1090,6 +1107,12 @@ impl WalStorage for Neo4jStorage {
             _ => Err(DbError::Internal("Neo4j executor returned a non-length result".to_string())),
         }
     }
+    async fn segment_state(&self, document: &ArtifactId, index: u64) -> Result<WalSegmentState, DbError> {
+        match self.execute(DbIoTask::WalState { backend: self.control, document: neo4j_document(document)?, index }).await? {
+            DbIoResult::WalSegmentState(state) => Ok(state),
+            _ => Err(DbError::Internal("Neo4j executor returned a non-WAL-state result".to_string())),
+        }
+    }
     async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         neo4j_list(self.execute(DbIoTask::WalList { backend: self.control, document: neo4j_document(document)?, output: DbIoU64List::new() }).await?)
     }
@@ -1106,7 +1129,7 @@ impl SnapshotStorage for Neo4jStorage {
         neo4j_unit(self.execute(DbIoTask::SnapshotWrite { backend: self.control, document: neo4j_document(document)?, generation, input: bytes }).await?)
     }
     async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<DbIoPages, DbError> {
-        neo4j_pages(self.execute(DbIoTask::SnapshotRead { backend: self.control, document: neo4j_document(document)?, generation, output: neo4j_output(MAX_READ_BYTES)? }).await?)
+        neo4j_pages(self.execute(DbIoTask::SnapshotRead { backend: self.control, document: neo4j_document(document)?, generation, output: neo4j_output(DB_IO_MAX_READ_BYTES)? }).await?)
     }
     async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
         match self.execute(DbIoTask::SnapshotLatest { backend: self.control, document: neo4j_document(document)?, output: DbIoU64List::new() }).await? {
@@ -1130,7 +1153,7 @@ impl PayloadStorage for Neo4jStorage {
         }
     }
     async fn get(&self, hash: &ContentHash) -> Result<DbIoPages, DbError> {
-        neo4j_pages(self.execute(DbIoTask::PayloadGet { backend: self.control, hash: *hash, output: neo4j_output(MAX_READ_BYTES)? }).await?)
+        neo4j_pages(self.execute(DbIoTask::PayloadGet { backend: self.control, hash: *hash, output: neo4j_output(DB_IO_MAX_READ_BYTES)? }).await?)
     }
     async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
         match self.execute(DbIoTask::PayloadExists { backend: self.control, hash: *hash }).await? {
@@ -1151,7 +1174,7 @@ impl PayloadStorage for Neo4jStorage {
 
 impl CatalogStorage for Neo4jStorage {
     async fn read_root(&self) -> Result<Option<(DbIoPages, EpochFence)>, DbError> {
-        match self.execute(DbIoTask::CatalogRead { backend: self.control, output: neo4j_output(MAX_READ_BYTES)? }).await? {
+        match self.execute(DbIoTask::CatalogRead { backend: self.control, output: neo4j_output(DB_IO_MAX_READ_BYTES)? }).await? {
             DbIoResult::OptionalCatalog(catalog) => Ok(catalog),
             _ => Err(DbError::Internal("Neo4j executor returned a non-catalog result".to_string())),
         }
@@ -1169,7 +1192,7 @@ impl IndexStorage for Neo4jStorage {
         neo4j_unit(self.execute(DbIoTask::IndexWrite { backend: self.control, document: neo4j_document(document)?, run_id, input: bytes }).await?)
     }
     async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<DbIoPages, DbError> {
-        neo4j_pages(self.execute(DbIoTask::IndexRead { backend: self.control, document: neo4j_document(document)?, run_id, output: neo4j_output(MAX_READ_BYTES)? }).await?)
+        neo4j_pages(self.execute(DbIoTask::IndexRead { backend: self.control, document: neo4j_document(document)?, run_id, output: neo4j_output(DB_IO_MAX_READ_BYTES)? }).await?)
     }
     async fn list_runs(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         neo4j_list(self.execute(DbIoTask::IndexList { backend: self.control, document: neo4j_document(document)?, output: DbIoU64List::new() }).await?)
@@ -1366,11 +1389,15 @@ mod tests {
     //#region 🔖️Cypher
     #[semio_framework_async_macros::async_test]
     async fn wal_cypher_statements_reference_the_expected_label_and_keys() {
-        for statement in [CYPHER_WAL_CREATE_SEGMENT, CYPHER_WAL_READ_ROW, CYPHER_WAL_WRITE_BYTES, CYPHER_WAL_SEAL, CYPHER_WAL_LIST_SEGMENTS, CYPHER_WAL_DELETE_SEGMENT] {
+        for statement in [CYPHER_WAL_CREATE_SEGMENT, CYPHER_WAL_READ_ROW, CYPHER_WAL_STATE, CYPHER_WAL_WRITE_BYTES, CYPHER_WAL_SEAL, CYPHER_WAL_LIST_SEGMENTS, CYPHER_WAL_DELETE_SEGMENT] {
             assert!(statement.contains("WalSegment"));
         }
         assert!(CYPHER_WAL_CREATE_SEGMENT.contains("MERGE") && CYPHER_WAL_CREATE_SEGMENT.contains("fresh"));
         assert!(CYPHER_WAL_LIST_SEGMENTS.contains("ORDER BY"));
+        assert!(CYPHER_WAL_STATE.contains("RETURN n.sealed AS sealed"));
+        assert!(!CYPHER_WAL_STATE.contains("bytes"));
+        assert_eq!(neo4j_wal_segment_state(false), WalSegmentState::Active);
+        assert_eq!(neo4j_wal_segment_state(true), WalSegmentState::Sealed);
     }
 
     #[semio_framework_async_macros::async_test]

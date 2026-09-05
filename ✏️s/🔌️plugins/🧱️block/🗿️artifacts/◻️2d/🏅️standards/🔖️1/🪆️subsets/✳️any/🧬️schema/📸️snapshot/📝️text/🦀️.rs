@@ -10,17 +10,17 @@ use crate::artifacts::block2d::Block2dSnapshot;
 
 /// 📄️ The `hexagonal-cut-concrete-forest-left` example fixture, handcrafted in the `.block2d` DSL —
 /// the `NodeKind` half of `s/plugin/puzzle/app/2d/manifest/🔣️.json`.
-pub const BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️hexagonal-cut-concrete-forest-left/🖼️assets/🧪️hexagonal-cut-concrete-forest-left/🗣️.dsl.semio");
+pub const BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🌲️hexagonal-cut-concrete-forest-left/🗣️.dsl.semio");
 /// 📄️ The `hexagonal-cut-concrete-forest-right` example fixture, handcrafted in the `.block2d` DSL.
-pub const BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/➡️hexagonal-cut-concrete-forest-right/🖼️assets/🧪️hexagonal-cut-concrete-forest-right/🗣️.dsl.semio");
+pub const BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/➡️hexagonal-cut-concrete-forest-right/🖼️assets/➡️hexagonal-cut-concrete-forest-right/🗣️.dsl.semio");
 
 /// 📖️ Parses `.block2d` DSL text into a `Block2dSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<Block2dSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<Block2dSnapshot, store::TextError> {
     <Block2dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Block2dSnapshot` back to `.block2d` DSL text.
-pub async fn print_dsl(document: &Block2dSnapshot) -> String {
+pub fn print_dsl(document: &Block2dSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -37,7 +37,7 @@ mod tests {
     // against `f64::consts::FRAC_PI_2` — these are handcrafted fixture values copied verbatim from the
     // real puzzle example file, not meant to reference the named constant.
     #[allow(clippy::approx_constant)]
-    pub async fn hexagonal_cut_concrete_forest_left() -> Block2dSnapshot {
+    pub fn hexagonal_cut_concrete_forest_left() -> Block2dSnapshot {
         let mut definition = Block2dSnapshot {
             node_kind: BlockKindIdentity { id: "Hexagonal Cut Concrete Forest Left".into(), name: "Hexagonal Cut Concrete Forest Left".into(), label: "Hexagonal Cut Concrete Forest Left".into(), ..Default::default() },
             camera2d: BlockCamera2d { x: 230.7, y: 93.5, zoom: 2.0 },

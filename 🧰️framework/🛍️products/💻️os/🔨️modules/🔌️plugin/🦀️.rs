@@ -4468,6 +4468,32 @@ pub mod app {
         Ok(())
     }
 
+    /// ✅️ Contract freeze §3's surface twin of `register_contributions`: an app surface bound to an
+    /// artifact kind this manifest does NOT own must name that kind's owner among its dependencies —
+    /// the same rule the host's `AppRouter::register_manifest` enforces at load, moved to assembly
+    /// time so a plugin can never ship a manifest that the router will exclude (ticket
+    /// 26/09/05/S-END-TO-END lane H: `demonstrator` shipped eight such surfaces and was excluded from
+    /// every session's routing). Ownership is derived exactly once, from the canonical
+    /// `s.<plugin>.<artifact>` grammar `preflight_artifact_identity` already forces on every declared
+    /// kind — never a second dependency list to keep in sync. Returns one message per breaching
+    /// surface, in manifest order; empty means the manifest is admissible.
+    pub(crate) fn surface_dependency_breaches(manifest: &semio_framework::PluginManifest) -> Vec<String> {
+        let owned: std::collections::BTreeSet<&str> = manifest.artifact_kinds.iter().map(|spec| spec.id.as_str()).collect();
+        let mut breaches = Vec::new();
+        for app in &manifest.apps {
+            if owned.contains(app.dialect.artifact_kind.as_str()) {
+                continue;
+            }
+            let Ok(kind) = ArtifactKindId::parse(&app.dialect.artifact_kind) else { continue };
+            let owner = kind.plugin();
+            if owner == manifest.plugin_id || manifest.dependencies.iter().any(|dependency| dependency.plugin_id == owner) {
+                continue;
+            }
+            breaches.push(format!("app `{}` contributes a surface for `{}` owned by `{owner}`, which `{}` does not declare as a dependency", app.id, app.dialect.to_coordinate(), manifest.plugin_id));
+        }
+        breaches
+    }
+
     /// 🗂️ One roster row of `contributor.list-artifact-mutations` — an owner mutation
     /// (`"<document-schema>#<kebab-kind>"`, `contributor`/`artifact_kind` both `None`) or a contributed
     /// one (`contributor`/`artifact_kind` both `Some`).
@@ -7073,6 +7099,17 @@ pub mod app {
         /// (`…#editor` / `…#viewer`) for what the contract treats as one subset's two surfaces.
         pub async fn assert_editor_and_viewer_share_dialect<E: ArtifactEditor, V: ArtifactViewer>() {
             assert_eq!(E::DIALECT, V::DIALECT, "an editor and its viewer over the same subset must share one Dialect coordinate");
+        }
+
+        /// 🔗️ Contract freeze §3 — every surface a plugin contributes for a FOREIGN artifact kind must
+        /// be backed by a declared dependency on that kind's owner, or the host's `AppRouter` excludes
+        /// the whole plugin (`surface.contribution-not-permitted`). Asserts over an already-assembled
+        /// manifest so a bundle that borrows other plugins' apps proves the property from its own test,
+        /// not only from the assembly gate (ticket 26/09/05/S-END-TO-END lane H).
+        // 🚫️async: pure predicate over already-assembled manifest data, no suspension point — see R9.
+        pub fn assert_surface_dependencies_declared(manifest: &semio_framework::PluginManifest) {
+            let breaches = super::surface_dependency_breaches(manifest);
+            assert!(breaches.is_empty(), "plugin `{}` contributes surfaces without the matching dependency: {}", manifest.plugin_id, breaches.join("; "));
         }
 
         /// 👁️ Contract §2.5 helper 3/3 — the viewer twin of `new_app::<A: ArtifactApp>()`. `ViewerApp<V>`
@@ -28687,6 +28724,7 @@ pub mod plugin_runtime {
         instance: std::sync::Mutex<AppInstance<PA>>,
         maintenance_pump: std::sync::Mutex<RuntimeLiveCleanupPump<PA>>,
         maintenance_status: AtomicU8,
+        maintenance_fault_us: AtomicU64,
         maintenance_generation: AtomicU64,
         maintenance_stalled_steps: AtomicU32,
         #[cfg(target_arch = "wasm32")]
@@ -28703,7 +28741,8 @@ pub mod plugin_runtime {
                 id: instance.id,
                 instance: std::sync::Mutex::new(instance),
                 maintenance_pump: std::sync::Mutex::new(RuntimeLiveCleanupPump::new()),
-                maintenance_status: AtomicU8::new(RUNTIME_MAINTENANCE_READY),
+                maintenance_status: AtomicU8::new(RuntimeMaintenanceStatus::Ready.repr()),
+                maintenance_fault_us: AtomicU64::new(0),
                 maintenance_generation: AtomicU64::new(0),
                 maintenance_stalled_steps: AtomicU32::new(0),
                 #[cfg(target_arch = "wasm32")]
@@ -28716,18 +28755,202 @@ pub mod plugin_runtime {
         }
     }
 
-    const RUNTIME_MAINTENANCE_READY: u8 = 0;
-    const RUNTIME_MAINTENANCE_QUEUED: u8 = 1;
-    const RUNTIME_MAINTENANCE_RUNNING: u8 = 2;
-    const RUNTIME_MAINTENANCE_FAULT: u8 = 3;
-    const RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT: u32 = 256;
+    /// 🩺️ The single cause taxonomy shared by both supervisory cleanup loops (live maintenance and
+    /// close), replacing the bare magic `u8` fault constants: every store site names its own cause,
+    /// so the one decode site per loop can emit a distinct `plugin.internal.*` wire fault code
+    /// instead of collapsing thirteen unrelated conditions into one opaque string. The language
+    /// neutral vector table is `🩺️runtime-fault-vectors.json`, validated by
+    /// `🧯️runtime-fault-vectors.schema.json` and consumed by the React shell's window-fault
+    /// classifier.
+    #[derive(Clone, Copy, PartialEq, Eq, Debug)]
+    #[repr(u8)]
+    pub(crate) enum RuntimeCleanupFault {
+        Clock = 0,
+        ClockRegression = 1,
+        InteractiveCeiling = 2,
+        ZeroProgress = 3,
+        AlreadyClosing = 4,
+        AdmissionRejected = 5,
+        Resume = 6,
+        PriorOutcome = 7,
+        MissingSession = 8,
+        AbiMismatch = 9,
+        Checkout = 10,
+        CheckedOutJob = 11,
+        TakeOutcome = 12,
+        CooperativeClock = 13,
+        OwnerPoisoned = 14,
+        InstancePoisoned = 15,
+        InstanceNotDrained = 16,
+        MaintenancePoisoned = 17,
+        MaintenanceNotDrained = 18,
+    }
 
-    const RUNTIME_CLOSE_READY: u8 = 0;
-    const RUNTIME_CLOSE_QUEUED: u8 = 1;
-    const RUNTIME_CLOSE_RUNNING: u8 = 2;
-    const RUNTIME_CLOSE_COMPLETE: u8 = 3;
-    const RUNTIME_CLOSE_EXTERNAL_WAIT: u8 = 4;
-    const RUNTIME_CLOSE_FAULT: u8 = 5;
+    /// 🩺️ Wire projection of one {@link RuntimeCleanupFault}: the fixture key, the emitted
+    /// `Fault::code`, and the human sentence spliced into `Fault::message`.
+    pub(crate) struct RuntimeCleanupFaultVector {
+        pub(crate) slug: &'static str,
+        pub(crate) code: &'static str,
+        pub(crate) detail: &'static str,
+    }
+
+    pub(crate) const RUNTIME_CLEANUP_FAULTS: [RuntimeCleanupFault; 19] = [
+        RuntimeCleanupFault::Clock,
+        RuntimeCleanupFault::ClockRegression,
+        RuntimeCleanupFault::InteractiveCeiling,
+        RuntimeCleanupFault::ZeroProgress,
+        RuntimeCleanupFault::AlreadyClosing,
+        RuntimeCleanupFault::AdmissionRejected,
+        RuntimeCleanupFault::Resume,
+        RuntimeCleanupFault::PriorOutcome,
+        RuntimeCleanupFault::MissingSession,
+        RuntimeCleanupFault::AbiMismatch,
+        RuntimeCleanupFault::Checkout,
+        RuntimeCleanupFault::CheckedOutJob,
+        RuntimeCleanupFault::TakeOutcome,
+        RuntimeCleanupFault::CooperativeClock,
+        RuntimeCleanupFault::OwnerPoisoned,
+        RuntimeCleanupFault::InstancePoisoned,
+        RuntimeCleanupFault::InstanceNotDrained,
+        RuntimeCleanupFault::MaintenancePoisoned,
+        RuntimeCleanupFault::MaintenanceNotDrained,
+    ];
+
+    const RUNTIME_CLEANUP_FAULT_VECTORS: [RuntimeCleanupFaultVector; 19] = [
+        RuntimeCleanupFaultVector { slug: "clock", code: "plugin.internal.clock", detail: "no monotonic clock reading at turn start" },
+        RuntimeCleanupFaultVector { slug: "clock-regression", code: "plugin.internal.clock-regression", detail: "the monotonic clock ran backwards across the turn" },
+        RuntimeCleanupFaultVector { slug: "interactive-ceiling", code: "plugin.internal.interactive-ceiling", detail: "the turn overran the interactive step ceiling" },
+        RuntimeCleanupFaultVector { slug: "zero-progress", code: "plugin.internal.zero-progress", detail: "the cleanup pump made no progress for its whole stall credit" },
+        RuntimeCleanupFaultVector { slug: "already-closing", code: "plugin.internal.already-closing", detail: "a close is already in flight for this instance" },
+        RuntimeCleanupFaultVector { slug: "admission-rejected", code: "plugin.internal.admission-rejected", detail: "the cleanup job session was refused admission and has now drained" },
+        RuntimeCleanupFaultVector { slug: "resume", code: "plugin.internal.resume", detail: "the cleanup job session refused to resume after its outcome drained" },
+        RuntimeCleanupFaultVector { slug: "prior-outcome", code: "plugin.internal.prior-outcome", detail: "a prior step outcome faulted or was cancelled" },
+        RuntimeCleanupFaultVector { slug: "missing-session", code: "plugin.internal.missing-session", detail: "the cleanup pump lost the job session it was driving" },
+        RuntimeCleanupFaultVector { slug: "abi-mismatch", code: "plugin.internal.abi-mismatch", detail: "the component step trapped, so its exports no longer match the host abi" },
+        RuntimeCleanupFaultVector { slug: "checkout", code: "plugin.internal.checkout", detail: "the cleanup job session produced no checkout after a step" },
+        RuntimeCleanupFaultVector { slug: "checked-out-job", code: "plugin.internal.checked-out-job", detail: "the checked out cleanup job body was unreachable" },
+        RuntimeCleanupFaultVector { slug: "take-outcome", code: "plugin.internal.take-outcome", detail: "the cleanup job session produced no step outcome" },
+        RuntimeCleanupFaultVector { slug: "clock-cooperative", code: "plugin.internal.clock-cooperative", detail: "cooperative maintenance requires an installed monotonic clock" },
+        RuntimeCleanupFaultVector { slug: "owner-poisoned", code: "plugin.internal.owner-poisoned", detail: "the instance owner lock was poisoned by a panicking turn" },
+        RuntimeCleanupFaultVector { slug: "instance-poisoned", code: "plugin.internal.instance-poisoned", detail: "the app instance lock was poisoned by a panicking turn" },
+        RuntimeCleanupFaultVector { slug: "instance-not-drained", code: "plugin.internal.instance-not-drained", detail: "the app instance still held terminal state at retirement" },
+        RuntimeCleanupFaultVector { slug: "maintenance-poisoned", code: "plugin.internal.maintenance-poisoned", detail: "the maintenance pump lock was poisoned by a panicking turn" },
+        RuntimeCleanupFaultVector { slug: "maintenance-not-drained", code: "plugin.internal.maintenance-not-drained", detail: "the maintenance pump still held terminal state at retirement" },
+    ];
+
+    impl RuntimeCleanupFault {
+        pub(crate) const fn vector(self) -> &'static RuntimeCleanupFaultVector {
+            &RUNTIME_CLEANUP_FAULT_VECTORS[self as usize]
+        }
+
+        fn from_index(index: u8) -> Option<Self> {
+            RUNTIME_CLEANUP_FAULTS.get(index as usize).copied()
+        }
+    }
+
+    /// 🩺️ Live maintenance-loop status stored in `RuntimeAppCell::maintenance_status`. The three
+    /// non-fault states keep their historic `0..2` encoding; every fault is `3 + cause`, so the
+    /// atomic carries the discriminator the decode site needs without a second word.
+    #[derive(Clone, Copy, PartialEq, Eq, Debug)]
+    pub(crate) enum RuntimeMaintenanceStatus {
+        Ready,
+        Queued,
+        Running,
+        Fault(RuntimeCleanupFault),
+    }
+
+    const RUNTIME_MAINTENANCE_FAULT_BASE: u8 = 3;
+
+    impl RuntimeMaintenanceStatus {
+        const fn repr(self) -> u8 {
+            match self {
+                Self::Ready => 0,
+                Self::Queued => 1,
+                Self::Running => 2,
+                Self::Fault(cause) => RUNTIME_MAINTENANCE_FAULT_BASE + cause as u8,
+            }
+        }
+
+        fn from_repr(repr: u8) -> Self {
+            match repr {
+                0 => Self::Ready,
+                1 => Self::Queued,
+                2 => Self::Running,
+                other => Self::Fault(RuntimeCleanupFault::from_index(other - RUNTIME_MAINTENANCE_FAULT_BASE).expect("maintenance status repr is written only by this module")),
+            }
+        }
+
+        const fn cause(self) -> Option<RuntimeCleanupFault> {
+            match self {
+                Self::Fault(cause) => Some(cause),
+                _ => None,
+            }
+        }
+    }
+
+    /// 🩺️ Close-worker status stored in `RuntimeCloseWorkerState::status`, laid out like
+    /// {@link RuntimeMaintenanceStatus} with two extra terminal states before the fault base.
+    #[derive(Clone, Copy, PartialEq, Eq, Debug)]
+    pub(crate) enum RuntimeCloseStatus {
+        Ready,
+        Queued,
+        Running,
+        Complete,
+        ExternalWait,
+        Fault(RuntimeCleanupFault),
+    }
+
+    const RUNTIME_CLOSE_FAULT_BASE: u8 = 5;
+
+    impl RuntimeCloseStatus {
+        const fn repr(self) -> u8 {
+            match self {
+                Self::Ready => 0,
+                Self::Queued => 1,
+                Self::Running => 2,
+                Self::Complete => 3,
+                Self::ExternalWait => 4,
+                Self::Fault(cause) => RUNTIME_CLOSE_FAULT_BASE + cause as u8,
+            }
+        }
+
+        fn from_repr(repr: u8) -> Self {
+            match repr {
+                0 => Self::Ready,
+                1 => Self::Queued,
+                2 => Self::Running,
+                3 => Self::Complete,
+                4 => Self::ExternalWait,
+                other => Self::Fault(RuntimeCleanupFault::from_index(other - RUNTIME_CLOSE_FAULT_BASE).expect("close status repr is written only by this module")),
+            }
+        }
+
+        const fn cause(self) -> Option<RuntimeCleanupFault> {
+            match self {
+                Self::Fault(cause) => Some(cause),
+                _ => None,
+            }
+        }
+    }
+
+    /// 🩺️ The one decoded wire fault both cleanup loops emit — `origin`/`code`/`severity`/`message`
+    /// keep their shape, the discrimination lives entirely in `code`, and the message always names
+    /// the instance, the variant slug, and the measured turn cost against the interactive ceiling.
+    fn runtime_cleanup_fault(scope: &str, cause: RuntimeCleanupFault, instance_id: u32, elapsed_us: u64) -> Fault {
+        let vector = cause.vector();
+        let elapsed = if elapsed_us == RUNTIME_CLEANUP_UNMEASURED_US { "unmeasured".to_string() } else { format!("{elapsed_us}us") };
+        Fault::new(
+            FaultOrigin::Plugin,
+            FaultCode::new(vector.code),
+            format!("runtime {scope} cleanup faulted for instance {instance_id}: {} [{}] (elapsed {elapsed}, ceiling {}us)", vector.detail, vector.slug, semio_framework_trace::INTERACTIVE_STEP_CEILING_US),
+        )
+    }
+
+    /// ⏱️ Sentinel the two cleanup loops already store when the clock itself failed, so the decoded
+    /// message says `unmeasured` instead of printing `u64::MAX` microseconds as if it were a reading.
+    const RUNTIME_CLEANUP_UNMEASURED_US: u64 = u64::MAX;
+
+    const RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT: u32 = 256;
 
     struct RuntimeCloseWorkerState<PA: PluginApp> {
         instance_id: u32,
@@ -29487,14 +29710,14 @@ pub mod plugin_runtime {
         rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<RuntimeLiveCleanupJob<PA>>>,
         outcome: Option<semio_framework_job::StepOutcome>,
         terminal: bool,
-        pending_status: u8,
+        pending_status: RuntimeMaintenanceStatus,
         closing: bool,
         faulted: bool,
     }
 
     impl<PA: PluginApp> RuntimeLiveCleanupPump<PA> {
         fn new() -> Self {
-            Self { session: None, rejected: None, outcome: None, terminal: false, pending_status: RUNTIME_MAINTENANCE_READY, closing: false, faulted: false }
+            Self { session: None, rejected: None, outcome: None, terminal: false, pending_status: RuntimeMaintenanceStatus::Ready, closing: false, faulted: false }
         }
 
         fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
@@ -29543,13 +29766,13 @@ pub mod plugin_runtime {
         terminal: bool,
         complete: bool,
         blocked: bool,
-        pending_status: u8,
+        pending_status: RuntimeCloseStatus,
         faulted: bool,
     }
 
     impl<PA: PluginApp> RuntimeCloseCleanupPump<PA> {
         fn new() -> Self {
-            Self { session: None, rejected: None, outcome: None, terminal: false, complete: false, blocked: false, pending_status: RUNTIME_CLOSE_READY, faulted: false }
+            Self { session: None, rejected: None, outcome: None, terminal: false, complete: false, blocked: false, pending_status: RuntimeCloseStatus::Ready, faulted: false }
         }
     }
 
@@ -29636,59 +29859,74 @@ pub mod plugin_runtime {
         }
     }
 
-    fn runtime_live_cleanup_nonterminal_status(contended: bool, progress: Option<crate::app::PluginCloseStep>, stalled_steps: &AtomicU32) -> u8 {
+    fn runtime_live_cleanup_nonterminal_status(contended: bool, progress: Option<crate::app::PluginCloseStep>, stalled_steps: &AtomicU32) -> RuntimeMaintenanceStatus {
         if contended {
-            return RUNTIME_MAINTENANCE_READY;
+            return RuntimeMaintenanceStatus::Ready;
         }
         if matches!(progress, Some(crate::app::PluginCloseStep::AwaitingInput { .. })) {
             stalled_steps.store(0, Ordering::SeqCst);
-            return RUNTIME_MAINTENANCE_READY;
+            return RuntimeMaintenanceStatus::Ready;
         }
         let zero_progress = matches!(progress, Some(crate::app::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 } | crate::app::PluginCloseStep::Blocked { .. }));
         if !zero_progress {
             stalled_steps.store(0, Ordering::SeqCst);
-            return RUNTIME_MAINTENANCE_READY;
+            return RuntimeMaintenanceStatus::Ready;
         }
         let stalled = stalled_steps.fetch_add(1, Ordering::SeqCst).saturating_add(1);
         if stalled >= RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT {
-            RUNTIME_MAINTENANCE_FAULT
+            RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::ZeroProgress)
         } else {
-            RUNTIME_MAINTENANCE_READY
+            RuntimeMaintenanceStatus::Ready
         }
+    }
+
+    /// ⏱️ Publishes one maintenance turn: the measured wall cost is recorded next to the status so
+    /// the decode site can name the overrun in microseconds, and a clock failure or a ceiling
+    /// overrun outranks whatever the pump itself concluded.
+    fn runtime_live_cleanup_publish_turn<PA: PluginApp>(cell: &RuntimeAppCell<PA>, status: RuntimeMaintenanceStatus, elapsed: Result<u64, RuntimeCleanupFault>) {
+        let verdict = match elapsed {
+            Err(cause) => RuntimeMaintenanceStatus::Fault(cause),
+            Ok(elapsed_us) if semio_framework_trace::interactive_step_contract_violated(elapsed_us) => RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::InteractiveCeiling),
+            Ok(_) => status,
+        };
+        cell.maintenance_fault_us.store(elapsed.unwrap_or(RUNTIME_CLEANUP_UNMEASURED_US), Ordering::SeqCst);
+        cell.maintenance_status.store(verdict.repr(), Ordering::SeqCst);
     }
 
     fn run_runtime_live_cleanup_turn<PA: PluginApp + 'static>(cell: &std::sync::Arc<RuntimeAppCell<PA>>, generation: semio_framework_job::Generation) {
         let mut now_us = semio_framework_job::default_now_us;
         let clock = runtime_callback_clock_begin(&mut now_us);
-        if cell.maintenance_status.compare_exchange(RUNTIME_MAINTENANCE_QUEUED, RUNTIME_MAINTENANCE_RUNNING, Ordering::SeqCst, Ordering::SeqCst).is_err() {
+        if cell.maintenance_status.compare_exchange(RuntimeMaintenanceStatus::Queued.repr(), RuntimeMaintenanceStatus::Running.repr(), Ordering::SeqCst, Ordering::SeqCst).is_err() {
             return;
         }
-        let Ok(clock) = clock else { cell.maintenance_status.store(RUNTIME_MAINTENANCE_FAULT, Ordering::SeqCst); return };
+        let clock = match clock {
+            Ok(clock) => clock,
+            Err(cause) => return runtime_live_cleanup_publish_turn(cell, RuntimeMaintenanceStatus::Ready, Err(cause)),
+        };
         let status = match cell.maintenance_pump.try_lock() {
             Ok(mut pump) => runtime_live_cleanup_pump_one(cell, generation, &mut pump),
-            Err(_) => RUNTIME_MAINTENANCE_READY,
+            Err(_) => RuntimeMaintenanceStatus::Ready,
         };
-        let elapsed = runtime_callback_clock_elapsed(&mut now_us, clock);
-        cell.maintenance_status.store(if elapsed.is_err() || elapsed.is_ok_and(semio_framework_trace::interactive_step_contract_violated) { RUNTIME_MAINTENANCE_FAULT } else { status }, Ordering::SeqCst);
+        runtime_live_cleanup_publish_turn(cell, status, runtime_callback_clock_elapsed(&mut now_us, clock));
     }
 
-    fn runtime_live_cleanup_pump_one<PA: PluginApp + 'static>(cell: &std::sync::Arc<RuntimeAppCell<PA>>, generation: semio_framework_job::Generation, pump: &mut RuntimeLiveCleanupPump<PA>) -> u8 {
+    fn runtime_live_cleanup_pump_one<PA: PluginApp + 'static>(cell: &std::sync::Arc<RuntimeAppCell<PA>>, generation: semio_framework_job::Generation, pump: &mut RuntimeLiveCleanupPump<PA>) -> RuntimeMaintenanceStatus {
         if pump.closing {
             let _ = pump.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-            return RUNTIME_MAINTENANCE_FAULT;
+            return RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::AlreadyClosing);
         }
         if let Some(rejected) = pump.rejected.as_mut() {
             let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
             if rejected.terminal_is_empty() {
                 pump.rejected = None;
-                return RUNTIME_MAINTENANCE_FAULT;
+                return RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::AdmissionRejected);
             }
-            return RUNTIME_MAINTENANCE_READY;
+            return RuntimeMaintenanceStatus::Ready;
         }
         if let Some(outcome) = pump.outcome.as_mut() {
             let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
             if !outcome.terminal_is_empty() {
-                return RUNTIME_MAINTENANCE_READY;
+                return RuntimeMaintenanceStatus::Ready;
             }
             pump.outcome = None;
             if pump.terminal {
@@ -29696,7 +29934,7 @@ pub mod plugin_runtime {
                     session.begin_close();
                 }
             } else if pump.session.as_mut().is_some_and(|session| session.resume().is_err()) {
-                return RUNTIME_MAINTENANCE_FAULT;
+                return RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::Resume);
             } else {
                 return pump.pending_status;
             }
@@ -29710,9 +29948,9 @@ pub mod plugin_runtime {
             if session.terminal_is_empty() {
                 pump.session = None;
                 pump.terminal = false;
-                return if pump.faulted { RUNTIME_MAINTENANCE_FAULT } else { pump.pending_status };
+                return if pump.faulted { RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::PriorOutcome) } else { pump.pending_status };
             }
-            return RUNTIME_MAINTENANCE_READY;
+            return RuntimeMaintenanceStatus::Ready;
         }
         if pump.session.is_none() {
             let job = RuntimeLiveCleanupJob { instance_id: cell.id, cell: Some(std::sync::Arc::downgrade(cell)), progress: None, contended: false, closing: false };
@@ -29727,27 +29965,28 @@ pub mod plugin_runtime {
                 Ok(session) => pump.session = Some(session),
                 Err(rejected) => {
                     pump.rejected = Some(rejected);
-                    return RUNTIME_MAINTENANCE_READY;
+                    return RuntimeMaintenanceStatus::Ready;
                 }
             }
         }
-        let Some(session) = pump.session.as_mut() else { return RUNTIME_MAINTENANCE_FAULT };
-        if session.step().is_err() {
-            return RUNTIME_MAINTENANCE_FAULT;
+        let Some(session) = pump.session.as_mut() else { return RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::MissingSession) };
+        if let Err(step) = session.step() {
+            drop(step);
+            return RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::AbiMismatch);
         }
-        if !session.checkout_outcome() { return RUNTIME_MAINTENANCE_FAULT; }
-        let Some(job) = session.checked_out_job_mut() else { return RUNTIME_MAINTENANCE_FAULT };
+        if !session.checkout_outcome() { return RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::Checkout); }
+        let Some(job) = session.checked_out_job_mut() else { return RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::CheckedOutJob) };
         pump.pending_status = runtime_live_cleanup_nonterminal_status(job.contended, job.progress, &cell.maintenance_stalled_steps);
         #[cfg(test)]
         if matches!(job.progress, Some(crate::app::PluginCloseStep::AwaitingInput { .. })) {
             cell.maintenance_probe_input_waits.fetch_add(1, Ordering::SeqCst);
         }
-        let Some(outcome) = session.take_outcome() else { return RUNTIME_MAINTENANCE_FAULT };
+        let Some(outcome) = session.take_outcome() else { return RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::TakeOutcome) };
         pump.terminal = outcome.is_terminal();
         let faulted = matches!(outcome, semio_framework_job::StepOutcome::Fault(_) | semio_framework_job::StepOutcome::Cancelled);
         pump.faulted = faulted;
         pump.outcome = Some(outcome);
-        RUNTIME_MAINTENANCE_READY
+        RuntimeMaintenanceStatus::Ready
     }
 
     struct RuntimeCloseCleanupJob<PA: PluginApp> {
@@ -29891,9 +30130,9 @@ pub mod plugin_runtime {
         semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores))
     }
 
-    fn runtime_close_nonterminal_status(contended: bool, progress: Option<crate::app::PluginCloseStep>, stalled_steps: &AtomicU8) -> u8 {
+    fn runtime_close_nonterminal_status(contended: bool, progress: Option<crate::app::PluginCloseStep>, stalled_steps: &AtomicU8) -> RuntimeCloseStatus {
         if contended {
-            return RUNTIME_CLOSE_READY;
+            return RuntimeCloseStatus::Ready;
         }
         let zero_progress = matches!(progress, Some(crate::app::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 })) || progress.is_none();
         let stalled = if zero_progress {
@@ -29903,14 +30142,14 @@ pub mod plugin_runtime {
             0
         };
         if stalled >= RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT {
-            RUNTIME_CLOSE_FAULT
+            RuntimeCloseStatus::Fault(RuntimeCleanupFault::ZeroProgress)
         } else {
-            RUNTIME_CLOSE_READY
+            RuntimeCloseStatus::Ready
         }
     }
 
-    fn run_runtime_close_turn_inner<PA: PluginApp + 'static>(state: &std::sync::Arc<RuntimeCloseWorkerState<PA>>) -> Option<u8> {
-        if state.status.compare_exchange(RUNTIME_CLOSE_QUEUED, RUNTIME_CLOSE_RUNNING, Ordering::SeqCst, Ordering::SeqCst).is_err() {
+    fn run_runtime_close_turn_inner<PA: PluginApp + 'static>(state: &std::sync::Arc<RuntimeCloseWorkerState<PA>>) -> Option<RuntimeCloseStatus> {
+        if state.status.compare_exchange(RuntimeCloseStatus::Queued.repr(), RuntimeCloseStatus::Running.repr(), Ordering::SeqCst, Ordering::SeqCst).is_err() {
             return None;
         }
         #[cfg(test)]
@@ -29926,48 +30165,48 @@ pub mod plugin_runtime {
                 runtime_close_phase(state, 21);
                 status
             }
-            Err(_) => RUNTIME_CLOSE_READY,
+            Err(_) => RuntimeCloseStatus::Ready,
         };
         runtime_close_phase(state, 6);
-        let candidate = if status == RUNTIME_CLOSE_COMPLETE { runtime_close_retire_cell(state) } else { status };
+        let candidate = if status == RuntimeCloseStatus::Complete { runtime_close_retire_cell(state) } else { status };
         runtime_close_phase(state, 7);
         Some(candidate)
     }
 
-    fn runtime_close_retire_cell<PA: PluginApp>(state: &RuntimeCloseWorkerState<PA>) -> u8 {
+    fn runtime_close_retire_cell<PA: PluginApp>(state: &RuntimeCloseWorkerState<PA>) -> RuntimeCloseStatus {
         let mut owner = match state.cell.try_lock() {
             Ok(owner) => owner,
-            Err(std::sync::TryLockError::WouldBlock) => return RUNTIME_CLOSE_READY,
-            Err(std::sync::TryLockError::Poisoned(_)) => return runtime_close_fault(state, 3),
+            Err(std::sync::TryLockError::WouldBlock) => return RuntimeCloseStatus::Ready,
+            Err(std::sync::TryLockError::Poisoned(_)) => return runtime_close_fault(state, RuntimeCleanupFault::OwnerPoisoned),
         };
-        let Some(cell) = owner.as_ref() else { return RUNTIME_CLOSE_COMPLETE };
+        let Some(cell) = owner.as_ref() else { return RuntimeCloseStatus::Complete };
         {
             let instance = match cell.instance.try_lock() {
                 Ok(instance) => instance,
-                Err(std::sync::TryLockError::WouldBlock) => return RUNTIME_CLOSE_READY,
-                Err(std::sync::TryLockError::Poisoned(_)) => return runtime_close_fault(state, 2),
+                Err(std::sync::TryLockError::WouldBlock) => return RuntimeCloseStatus::Ready,
+                Err(std::sync::TryLockError::Poisoned(_)) => return runtime_close_fault(state, RuntimeCleanupFault::InstancePoisoned),
             };
-            if !instance.app.close_terminal_is_empty() { return runtime_close_fault(state, 2); }
+            if !instance.app.close_terminal_is_empty() { return runtime_close_fault(state, RuntimeCleanupFault::InstanceNotDrained); }
             let maintenance = match cell.maintenance_pump.try_lock() {
                 Ok(maintenance) => maintenance,
-                Err(std::sync::TryLockError::WouldBlock) => return RUNTIME_CLOSE_READY,
-                Err(std::sync::TryLockError::Poisoned(_)) => return runtime_close_fault(state, 13),
+                Err(std::sync::TryLockError::WouldBlock) => return RuntimeCloseStatus::Ready,
+                Err(std::sync::TryLockError::Poisoned(_)) => return runtime_close_fault(state, RuntimeCleanupFault::MaintenancePoisoned),
             };
-            if !maintenance.terminal_is_empty() { return runtime_close_fault(state, 13); }
+            if !maintenance.terminal_is_empty() { return runtime_close_fault(state, RuntimeCleanupFault::MaintenanceNotDrained); }
         }
         let detached = owner.take().expect("captured owner remains under the same guard");
         match std::sync::Arc::try_unwrap(detached) {
-            Ok(cell) => { drop(cell); RUNTIME_CLOSE_COMPLETE }
-            Err(detached) => { **owner = Some(detached); RUNTIME_CLOSE_EXTERNAL_WAIT }
+            Ok(cell) => { drop(cell); RuntimeCloseStatus::Complete }
+            Err(detached) => { **owner = Some(detached); RuntimeCloseStatus::ExternalWait }
         }
     }
 
-    fn runtime_close_fault<PA: PluginApp>(state: &RuntimeCloseWorkerState<PA>, origin: u8) -> u8 {
+    fn runtime_close_fault<PA: PluginApp>(state: &RuntimeCloseWorkerState<PA>, cause: RuntimeCleanupFault) -> RuntimeCloseStatus {
         #[cfg(test)]
-        state.last_fault_origin.store(origin, Ordering::SeqCst);
+        state.last_fault_origin.store(cause as u8, Ordering::SeqCst);
         #[cfg(not(test))]
-        let _ = (state, origin);
-        RUNTIME_CLOSE_FAULT
+        let _ = state;
+        RuntimeCloseStatus::Fault(cause)
     }
 
     fn runtime_close_phase<PA: PluginApp>(state: &RuntimeCloseWorkerState<PA>, phase: usize) {
@@ -29979,16 +30218,16 @@ pub mod plugin_runtime {
         let _ = (state, phase);
     }
 
-    fn runtime_close_cleanup_pump_one<PA: PluginApp + 'static>(state: &std::sync::Arc<RuntimeCloseWorkerState<PA>>, pump: &mut RuntimeCloseCleanupPump<PA>) -> u8 {
+    fn runtime_close_cleanup_pump_one<PA: PluginApp + 'static>(state: &std::sync::Arc<RuntimeCloseWorkerState<PA>>, pump: &mut RuntimeCloseCleanupPump<PA>) -> RuntimeCloseStatus {
         runtime_close_phase(state, 0);
         if let Some(rejected) = pump.rejected.as_mut() {
             let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
             runtime_close_phase(state, 5);
             if rejected.terminal_is_empty() {
                 pump.rejected = None;
-                return runtime_close_fault(state, 4);
+                return runtime_close_fault(state, RuntimeCleanupFault::AdmissionRejected);
             }
-            return RUNTIME_CLOSE_READY;
+            return RuntimeCloseStatus::Ready;
         }
         if let Some(outcome) = pump.outcome.as_mut() {
             let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
@@ -29997,7 +30236,7 @@ pub mod plugin_runtime {
             let terminal = outcome.terminal_is_empty();
             runtime_close_phase(state, 16);
             if !terminal {
-                return RUNTIME_CLOSE_READY;
+                return RuntimeCloseStatus::Ready;
             }
             pump.outcome = None;
             runtime_close_phase(state, 17);
@@ -30009,26 +30248,26 @@ pub mod plugin_runtime {
                 runtime_close_phase(state, 18);
                 let failed = pump.session.as_mut().is_some_and(|session| session.resume().is_err());
                 runtime_close_phase(state, 19);
-                return if failed { runtime_close_fault(state, 5) } else { pump.pending_status };
+                return if failed { runtime_close_fault(state, RuntimeCleanupFault::Resume) } else { pump.pending_status };
             }
         }
         if pump.terminal {
-            let Some(session) = pump.session.as_mut() else { return runtime_close_fault(state, 6) };
+            let Some(session) = pump.session.as_mut() else { return runtime_close_fault(state, RuntimeCleanupFault::MissingSession) };
             let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
             runtime_close_phase(state, 5);
             if !session.terminal_is_empty() {
-                return RUNTIME_CLOSE_READY;
+                return RuntimeCloseStatus::Ready;
             }
             pump.session = None;
             pump.terminal = false;
             if pump.faulted {
-                return runtime_close_fault(state, 10);
+                return runtime_close_fault(state, RuntimeCleanupFault::PriorOutcome);
             }
             if pump.blocked {
-                return RUNTIME_CLOSE_EXTERNAL_WAIT;
+                return RuntimeCloseStatus::ExternalWait;
             }
             if pump.complete {
-                return RUNTIME_CLOSE_COMPLETE;
+                return RuntimeCloseStatus::Complete;
             }
             return pump.pending_status;
         }
@@ -30046,26 +30285,26 @@ pub mod plugin_runtime {
                 Ok(session) => pump.session = Some(session),
                 Err(rejected) => {
                     pump.rejected = Some(rejected);
-                    return RUNTIME_CLOSE_READY;
+                    return RuntimeCloseStatus::Ready;
                 }
             }
             runtime_close_phase(state, 2);
         }
-        let Some(session) = pump.session.as_mut() else { return runtime_close_fault(state, 6) };
+        let Some(session) = pump.session.as_mut() else { return runtime_close_fault(state, RuntimeCleanupFault::MissingSession) };
         runtime_close_phase(state, 22);
         let stepped = session.step();
         runtime_close_phase(state, 23);
         if stepped.is_err() {
-            return runtime_close_fault(state, 7);
+            return runtime_close_fault(state, RuntimeCleanupFault::AbiMismatch);
         }
         runtime_close_phase(state, 3);
-        if !session.checkout_outcome() { return runtime_close_fault(state, 8); }
-        let Some(job) = session.checked_out_job_mut() else { return runtime_close_fault(state, 9) };
+        if !session.checkout_outcome() { return runtime_close_fault(state, RuntimeCleanupFault::Checkout); }
+        let Some(job) = session.checked_out_job_mut() else { return runtime_close_fault(state, RuntimeCleanupFault::CheckedOutJob) };
         pump.complete = job.progress == Some(crate::app::PluginCloseStep::Complete);
         pump.blocked = matches!(job.progress, Some(crate::app::PluginCloseStep::Blocked { .. }));
         pump.pending_status = runtime_close_nonterminal_status(job.contended, job.progress, &state.stalled_steps);
-        if pump.pending_status == RUNTIME_CLOSE_FAULT { runtime_close_fault(state, 11); }
-        let Some(outcome) = session.take_outcome() else { return runtime_close_fault(state, 12) };
+        if let Some(cause) = pump.pending_status.cause() { runtime_close_fault(state, cause); }
+        let Some(outcome) = session.take_outcome() else { return runtime_close_fault(state, RuntimeCleanupFault::TakeOutcome) };
         runtime_close_phase(state, 4);
         pump.terminal = outcome.is_terminal();
         let faulted = matches!(outcome, semio_framework_job::StepOutcome::Fault(_) | semio_framework_job::StepOutcome::Cancelled);
@@ -30079,7 +30318,7 @@ pub mod plugin_runtime {
             }
         }
         pump.outcome = Some(outcome);
-        RUNTIME_CLOSE_READY
+        RuntimeCloseStatus::Ready
     }
 
     #[cfg(test)]
@@ -30090,7 +30329,7 @@ pub mod plugin_runtime {
         fn repeated_transient_close_lock_contention_never_consumes_structural_livelock_credit() {
             let stalled = AtomicU8::new(0);
             for _ in 0..1_024 {
-                assert_eq!(runtime_close_nonterminal_status(true, None, &stalled), RUNTIME_CLOSE_READY);
+                assert_eq!(runtime_close_nonterminal_status(true, None, &stalled), RuntimeCloseStatus::Ready);
             }
             assert_eq!(stalled.load(Ordering::SeqCst), 0);
         }
@@ -30099,9 +30338,9 @@ pub mod plugin_runtime {
         fn structural_zero_progress_exhausts_its_exact_close_credit() {
             let stalled = AtomicU8::new(0);
             for _ in 1..RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT {
-                assert_eq!(runtime_close_nonterminal_status(false, Some(crate::app::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }), &stalled), RUNTIME_CLOSE_READY);
+                assert_eq!(runtime_close_nonterminal_status(false, Some(crate::app::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }), &stalled), RuntimeCloseStatus::Ready);
             }
-            assert_eq!(runtime_close_nonterminal_status(false, Some(crate::app::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }), &stalled), RUNTIME_CLOSE_FAULT);
+            assert_eq!(runtime_close_nonterminal_status(false, Some(crate::app::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }), &stalled), RuntimeCloseStatus::Fault(RuntimeCleanupFault::ZeroProgress));
         }
 
         #[test]
@@ -30109,9 +30348,9 @@ pub mod plugin_runtime {
             let stalled = AtomicU32::new(0);
             let blocked = Some(crate::app::PluginCloseStep::Blocked { reason: "injected permanent external wait" });
             for _ in 1..RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT {
-                assert_eq!(runtime_live_cleanup_nonterminal_status(false, blocked, &stalled), RUNTIME_MAINTENANCE_READY);
+                assert_eq!(runtime_live_cleanup_nonterminal_status(false, blocked, &stalled), RuntimeMaintenanceStatus::Ready);
             }
-            assert_eq!(runtime_live_cleanup_nonterminal_status(false, blocked, &stalled), RUNTIME_MAINTENANCE_FAULT);
+            assert_eq!(runtime_live_cleanup_nonterminal_status(false, blocked, &stalled), RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::ZeroProgress));
             assert_eq!(stalled.load(Ordering::SeqCst), RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT);
         }
 
@@ -30120,7 +30359,7 @@ pub mod plugin_runtime {
             let stalled = AtomicU32::new(RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT - 1);
             let awaiting_input = Some(crate::app::PluginCloseStep::AwaitingInput { reason: "typed operation awaits its exact host result ACK" });
             for _ in 0..1_024 {
-                assert_eq!(runtime_live_cleanup_nonterminal_status(false, awaiting_input, &stalled), RUNTIME_MAINTENANCE_READY);
+                assert_eq!(runtime_live_cleanup_nonterminal_status(false, awaiting_input, &stalled), RuntimeMaintenanceStatus::Ready);
             }
             assert_eq!(stalled.load(Ordering::SeqCst), 0);
         }
@@ -30129,9 +30368,57 @@ pub mod plugin_runtime {
         fn contended_live_cleanup_does_not_consume_structural_stall_credit() {
             let stalled = AtomicU32::new(0);
             for _ in 0..1_024 {
-                assert_eq!(runtime_live_cleanup_nonterminal_status(true, None, &stalled), RUNTIME_MAINTENANCE_READY);
+                assert_eq!(runtime_live_cleanup_nonterminal_status(true, None, &stalled), RuntimeMaintenanceStatus::Ready);
             }
             assert_eq!(stalled.load(Ordering::SeqCst), 0);
+        }
+    }
+
+    /// 🩺️ Language-neutral decode conformance: every declared cleanup-fault variant must round-trip
+    /// through its status atom and produce exactly the fixture's wire code and message shape, so the
+    /// React shell's classifier and this module can never drift apart silently.
+    #[cfg(test)]
+    mod runtime_cleanup_fault_vector_tests {
+        use super::*;
+
+        const FIXTURE: &str = include_str!("🩺️runtime-fault-vectors.json");
+
+        #[test]
+        fn every_declared_variant_decodes_to_its_language_neutral_wire_vector() {
+            let fixture: Value = serde_json::from_str(FIXTURE).expect("language-neutral cleanup fault vectors");
+            assert_eq!(fixture["ceilingUs"].as_u64(), Some(semio_framework_trace::INTERACTIVE_STEP_CEILING_US));
+            let vectors = fixture["vectors"].as_array().expect("fixture vectors");
+            assert_eq!(vectors.len(), RUNTIME_CLEANUP_FAULTS.len());
+            for (declared, expected) in RUNTIME_CLEANUP_FAULTS.iter().zip(vectors) {
+                let vector = declared.vector();
+                assert_eq!(vector.slug, expected["variant"].as_str().expect("variant"));
+                assert_eq!(vector.code, expected["code"].as_str().expect("code"), "{}", vector.slug);
+                assert_eq!(vector.detail, expected["detail"].as_str().expect("detail"), "{}", vector.slug);
+                assert_eq!(RuntimeMaintenanceStatus::from_repr(RuntimeMaintenanceStatus::Fault(*declared).repr()).cause(), Some(*declared), "{}", vector.slug);
+                assert_eq!(RuntimeCloseStatus::from_repr(RuntimeCloseStatus::Fault(*declared).repr()).cause(), Some(*declared), "{}", vector.slug);
+                for scope in ["live", "close"] {
+                    let fault = runtime_cleanup_fault(scope, *declared, 7, 12_345);
+                    assert_eq!(fault.origin, FaultOrigin::Plugin);
+                    assert_eq!(format!("{:?}", fault.severity), "Error");
+                    assert_eq!(fault.code.0, vector.code);
+                    assert_eq!(fault.message, format!("runtime {scope} cleanup faulted for instance 7: {} [{}] (elapsed 12345us, ceiling {}us)", vector.detail, vector.slug, semio_framework_trace::INTERACTIVE_STEP_CEILING_US));
+                    assert!(runtime_cleanup_fault(scope, *declared, 7, RUNTIME_CLEANUP_UNMEASURED_US).message.ends_with(&format!("(elapsed unmeasured, ceiling {}us)", semio_framework_trace::INTERACTIVE_STEP_CEILING_US)));
+                }
+            }
+        }
+
+        #[test]
+        fn non_fault_status_reprs_never_collide_with_a_fault_variant() {
+            for status in [RuntimeMaintenanceStatus::Ready, RuntimeMaintenanceStatus::Queued, RuntimeMaintenanceStatus::Running] {
+                assert_eq!(RuntimeMaintenanceStatus::from_repr(status.repr()), status);
+                assert_eq!(status.cause(), None);
+            }
+            for status in [RuntimeCloseStatus::Ready, RuntimeCloseStatus::Queued, RuntimeCloseStatus::Running, RuntimeCloseStatus::Complete, RuntimeCloseStatus::ExternalWait] {
+                assert_eq!(RuntimeCloseStatus::from_repr(status.repr()), status);
+                assert_eq!(status.cause(), None);
+            }
+            let codes: std::collections::BTreeSet<&str> = RUNTIME_CLEANUP_FAULTS.iter().map(|fault| fault.vector().code).collect();
+            assert_eq!(codes.len(), RUNTIME_CLEANUP_FAULTS.len());
         }
     }
 
@@ -30139,26 +30426,26 @@ pub mod plugin_runtime {
         run_runtime_close_turn_with_clock(state, semio_framework_job::default_now_us);
     }
 
-    fn runtime_callback_clock_begin(now_us: &mut impl FnMut() -> Option<u64>) -> Result<(u64, u64), u8> {
-        let start = now_us().ok_or(14)?;
-        let preflight = now_us().ok_or(14)?;
-        if preflight < start { return Err(15); }
+    fn runtime_callback_clock_begin(now_us: &mut impl FnMut() -> Option<u64>) -> Result<(u64, u64), RuntimeCleanupFault> {
+        let start = now_us().ok_or(RuntimeCleanupFault::Clock)?;
+        let preflight = now_us().ok_or(RuntimeCleanupFault::Clock)?;
+        if preflight < start { return Err(RuntimeCleanupFault::ClockRegression); }
         Ok((start, preflight))
     }
 
-    fn runtime_callback_clock_elapsed(now_us: &mut impl FnMut() -> Option<u64>, (start, preflight): (u64, u64)) -> Result<u64, u8> {
-        let finished = now_us().ok_or(14)?;
-        if finished < preflight { return Err(15); }
+    fn runtime_callback_clock_elapsed(now_us: &mut impl FnMut() -> Option<u64>, (start, preflight): (u64, u64)) -> Result<u64, RuntimeCleanupFault> {
+        let finished = now_us().ok_or(RuntimeCleanupFault::Clock)?;
+        if finished < preflight { return Err(RuntimeCleanupFault::ClockRegression); }
         Ok(finished - start)
     }
 
     fn run_runtime_close_turn_with_clock<PA: PluginApp + 'static>(state: &std::sync::Arc<RuntimeCloseWorkerState<PA>>, mut now_us: impl FnMut() -> Option<u64>) {
         let clock = match runtime_callback_clock_begin(&mut now_us) {
             Ok(clock) => clock,
-            Err(origin) => {
-                if state.status.compare_exchange(RUNTIME_CLOSE_QUEUED, RUNTIME_CLOSE_RUNNING, Ordering::SeqCst, Ordering::SeqCst).is_ok() {
+            Err(cause) => {
+                if state.status.compare_exchange(RuntimeCloseStatus::Queued.repr(), RuntimeCloseStatus::Running.repr(), Ordering::SeqCst, Ordering::SeqCst).is_ok() {
                     state.last_callback_elapsed_us.store(u64::MAX, Ordering::SeqCst);
-                    state.status.store(runtime_close_fault(state, origin), Ordering::SeqCst);
+                    state.status.store(runtime_close_fault(state, cause).repr(), Ordering::SeqCst);
                 }
                 return;
             }
@@ -30166,23 +30453,23 @@ pub mod plugin_runtime {
         let Some(status) = run_runtime_close_turn_inner(state) else { return };
         let elapsed_us = match runtime_callback_clock_elapsed(&mut now_us, clock) {
             Ok(elapsed) => elapsed,
-            Err(origin) => {
+            Err(cause) => {
                 state.last_callback_elapsed_us.store(u64::MAX, Ordering::SeqCst);
-                state.status.store(runtime_close_fault(state, origin), Ordering::SeqCst);
+                state.status.store(runtime_close_fault(state, cause).repr(), Ordering::SeqCst);
                 return;
             }
         };
         runtime_close_publish_turn(state, status, elapsed_us);
     }
 
-    fn runtime_close_publish_turn<PA: PluginApp>(state: &RuntimeCloseWorkerState<PA>, status: u8, elapsed_us: u64) {
+    fn runtime_close_publish_turn<PA: PluginApp>(state: &RuntimeCloseWorkerState<PA>, status: RuntimeCloseStatus, elapsed_us: u64) {
         state.last_callback_elapsed_us.store(elapsed_us, Ordering::SeqCst);
-        let verdict = if semio_framework_trace::interactive_step_contract_violated(elapsed_us) { runtime_close_fault(state, 1) } else { status };
-        state.status.store(verdict, Ordering::SeqCst);
+        let verdict = if semio_framework_trace::interactive_step_contract_violated(elapsed_us) { runtime_close_fault(state, RuntimeCleanupFault::InteractiveCeiling) } else { status };
+        state.status.store(verdict.repr(), Ordering::SeqCst);
     }
 
     fn try_schedule_runtime_close<PA: PluginApp + 'static>(pool: &semio_framework_async::WorkerPool, state: &std::sync::Arc<RuntimeCloseWorkerState<PA>>) -> bool {
-        if state.status.compare_exchange(RUNTIME_CLOSE_READY, RUNTIME_CLOSE_QUEUED, Ordering::SeqCst, Ordering::SeqCst).is_err() {
+        if state.status.compare_exchange(RuntimeCloseStatus::Ready.repr(), RuntimeCloseStatus::Queued.repr(), Ordering::SeqCst, Ordering::SeqCst).is_err() {
             return false;
         }
         let scheduled_state = std::sync::Arc::downgrade(state);
@@ -30190,14 +30477,14 @@ pub mod plugin_runtime {
         let job: semio_framework_async::Job = Box::new(move || {
             let Some(scheduled_state) = scheduled_state.upgrade() else { return };
             run_runtime_close_turn(&scheduled_state);
-            if scheduled_state.status.load(Ordering::SeqCst) == RUNTIME_CLOSE_READY {
+            if scheduled_state.status.load(Ordering::SeqCst) == RuntimeCloseStatus::Ready.repr() {
                 let _ = try_schedule_runtime_close(&scheduled_pool, &scheduled_state);
             }
         });
         match pool.try_submit(semio_framework_async::Lane::Maintenance, job) {
             Ok(()) => true,
             Err(error) => {
-                state.status.compare_exchange(RUNTIME_CLOSE_QUEUED, RUNTIME_CLOSE_READY, Ordering::SeqCst, Ordering::SeqCst).ok();
+                state.status.compare_exchange(RuntimeCloseStatus::Queued.repr(), RuntimeCloseStatus::Ready.repr(), Ordering::SeqCst, Ordering::SeqCst).ok();
                 drop(error.into_job());
                 false
             }
@@ -30242,7 +30529,7 @@ pub mod plugin_runtime {
             generation: semio_framework_job::Generation(generation),
             cell: std::sync::Mutex::new(std::mem::ManuallyDrop::new(Some(cell))),
             pump: std::sync::Mutex::new(RuntimeCloseCleanupPump::new()),
-            status: AtomicU8::new(RUNTIME_CLOSE_READY),
+            status: AtomicU8::new(RuntimeCloseStatus::Ready.repr()),
             stalled_steps: AtomicU8::new(0),
             preview_sequence: AtomicU64::new(0),
             last_callback_elapsed_us: AtomicU64::new(0),
@@ -30272,25 +30559,25 @@ pub mod plugin_runtime {
         let entry = runtime.close_quarantine.try_borrow().map_err(|_| plugin_internal_fault("runtime close quarantine is busy"))?.next_entry_from(runtime.close_cleanup_cursor.get()).map(|(index, instance_id, entry)| (index, instance_id, entry.state.clone()));
         let Some((index, instance_id, state)) = entry else { return Ok(false) };
         runtime.close_cleanup_cursor.set((index + 1) % PLUGIN_RUNTIME_INSTANCE_SLOTS);
-        match state.status.load(Ordering::SeqCst) {
-            RUNTIME_CLOSE_COMPLETE => {
+        match RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)) {
+            RuntimeCloseStatus::Complete => {
                 let removed = runtime.close_quarantine.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime close quarantine is busy"))?.take(instance_id);
                 drop(removed);
                 Ok(true)
             }
-            RUNTIME_CLOSE_FAULT => Err(plugin_internal_fault(format!("runtime close cleanup faulted for instance {instance_id}"))),
-            RUNTIME_CLOSE_EXTERNAL_WAIT => {
-                if state.status.compare_exchange(RUNTIME_CLOSE_EXTERNAL_WAIT, RUNTIME_CLOSE_READY, Ordering::SeqCst, Ordering::SeqCst).is_err() {
+            RuntimeCloseStatus::Fault(cause) => Err(runtime_cleanup_fault("close", cause, instance_id, state.last_callback_elapsed_us.load(Ordering::SeqCst))),
+            RuntimeCloseStatus::ExternalWait => {
+                if state.status.compare_exchange(RuntimeCloseStatus::ExternalWait.repr(), RuntimeCloseStatus::Ready.repr(), Ordering::SeqCst, Ordering::SeqCst).is_err() {
                     return Ok(false);
                 }
                 Ok(try_schedule_runtime_close(&runtime_close_pool(), &state))
             }
             status => {
                 let pool = runtime_close_pool();
-                let scheduled = status == RUNTIME_CLOSE_READY && try_schedule_runtime_close(&pool, &state);
+                let scheduled = status == RuntimeCloseStatus::Ready && try_schedule_runtime_close(&pool, &state);
                 #[cfg(target_arch = "wasm32")]
                 if let Some(now_ms) = semio_framework_job::default_now_ms() { pool.pump(now_ms); }
-                Ok(scheduled || status == RUNTIME_CLOSE_QUEUED || status == RUNTIME_CLOSE_RUNNING)
+                Ok(scheduled || status == RuntimeCloseStatus::Queued || status == RuntimeCloseStatus::Running)
             }
         }
     }
@@ -30305,29 +30592,30 @@ pub mod plugin_runtime {
         if let Some(now_ms) = now_ms {
             pool.pump(now_ms);
         } else {
-            cell.maintenance_status.store(RUNTIME_MAINTENANCE_FAULT, Ordering::SeqCst);
+            cell.maintenance_fault_us.store(RUNTIME_CLEANUP_UNMEASURED_US, Ordering::SeqCst);
+            cell.maintenance_status.store(RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::CooperativeClock).repr(), Ordering::SeqCst);
         }
         if turn <= 4096 && turn.is_power_of_two() {
             let phase = cell.maintenance_pump.try_lock().ok().map(|pump| u8::from(pump.session.is_some()) | (u8::from(pump.outcome.is_some()) << 1) | (u8::from(pump.rejected.is_some()) << 2) | (u8::from(pump.closing) << 3) | (u8::from(pump.faulted) << 4) | (u8::from(pump.terminal) << 5));
             eprintln!("[DEBUG] cooperative-maintenance instance={} turn={} generation={} status={}->{} entries={} phase={:?} clock={} pool={:?}", cell.id, turn, cell.maintenance_generation.load(Ordering::SeqCst), before, cell.maintenance_status.load(Ordering::SeqCst), cell.maintenance_probe_entries.load(Ordering::Relaxed), phase, now_ms.is_some(), pool.try_cooperative_snapshot());
         }
-        now_ms.map(|_| ()).ok_or_else(|| plugin_internal_fault("cooperative maintenance requires an installed monotonic clock"))
+        now_ms.map(|_| ()).ok_or_else(|| runtime_cleanup_fault("live", RuntimeCleanupFault::CooperativeClock, cell.id, RUNTIME_CLEANUP_UNMEASURED_US))
     }
 
     pub fn plugin_step_live_cleanup<PA: PluginApp + 'static>(runtime: &PluginRuntime<PA>) -> Result<bool, Fault> {
         let cell = runtime.instances.try_borrow().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?.next_entry_from(runtime.live_cleanup_cursor.get()).map(|(index, _, cell)| (index, cell.clone()));
         let Some((index, cell)) = cell else { return Ok(false) };
         runtime.live_cleanup_cursor.set((index + 1) % PLUGIN_RUNTIME_INSTANCE_SLOTS);
-        match cell.maintenance_status.load(Ordering::SeqCst) {
-            RUNTIME_MAINTENANCE_FAULT => Err(plugin_internal_fault(format!("runtime live cleanup faulted for instance {}", cell.id))),
-            RUNTIME_MAINTENANCE_READY => {
+        match RuntimeMaintenanceStatus::from_repr(cell.maintenance_status.load(Ordering::SeqCst)) {
+            RuntimeMaintenanceStatus::Fault(cause) => Err(runtime_cleanup_fault("live", cause, cell.id, cell.maintenance_fault_us.load(Ordering::SeqCst))),
+            RuntimeMaintenanceStatus::Ready => {
                 let generation = cell
                     .maintenance_generation
                     .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |generation| generation.checked_add(1))
                     .map_err(|_| plugin_internal_fault(format!("runtime live cleanup generation exhausted for instance {}", cell.id)))?
                     .checked_add(1)
                     .expect("checked maintenance generation");
-                if cell.maintenance_status.compare_exchange(RUNTIME_MAINTENANCE_READY, RUNTIME_MAINTENANCE_QUEUED, Ordering::SeqCst, Ordering::SeqCst).is_err() {
+                if cell.maintenance_status.compare_exchange(RuntimeMaintenanceStatus::Ready.repr(), RuntimeMaintenanceStatus::Queued.repr(), Ordering::SeqCst, Ordering::SeqCst).is_err() {
                     return Ok(false);
                 }
                 let scheduled_cell = std::sync::Arc::downgrade(&cell);
@@ -30343,18 +30631,17 @@ pub mod plugin_runtime {
                         Ok(true)
                     }
                     Err(error) => {
-                        cell.maintenance_status.compare_exchange(RUNTIME_MAINTENANCE_QUEUED, RUNTIME_MAINTENANCE_READY, Ordering::SeqCst, Ordering::SeqCst).ok();
+                        cell.maintenance_status.compare_exchange(RuntimeMaintenanceStatus::Queued.repr(), RuntimeMaintenanceStatus::Ready.repr(), Ordering::SeqCst, Ordering::SeqCst).ok();
                         drop(error.into_job());
                         Ok(false)
                     }
                 }
             }
-            RUNTIME_MAINTENANCE_QUEUED | RUNTIME_MAINTENANCE_RUNNING => {
+            RuntimeMaintenanceStatus::Queued | RuntimeMaintenanceStatus::Running => {
                 #[cfg(target_arch = "wasm32")]
                 pump_runtime_live_cooperative_turn(&cell)?;
                 Ok(true)
             }
-            _ => Err(plugin_internal_fault(format!("runtime live cleanup has an invalid state for instance {}", cell.id))),
         }
     }
 
@@ -34319,7 +34606,7 @@ pub mod plugin_runtime {
                     let state = &entries.get(id).unwrap().state;
                     let pump = state.pump.lock().unwrap();
                     let detail = state.last_fault.lock().unwrap();
-                    panic!("{error:?}: elapsed={} stalled={} terminal={} complete={} blocked={} faulted={} pending={} origin={} detail={}", state.last_callback_elapsed_us.load(std::sync::atomic::Ordering::SeqCst), state.stalled_steps.load(std::sync::atomic::Ordering::SeqCst), pump.terminal, pump.complete, pump.blocked, pump.faulted, pump.pending_status, state.last_fault_origin.load(std::sync::atomic::Ordering::SeqCst), String::from_utf8_lossy(&detail[..]));
+                    panic!("{error:?}: elapsed={} stalled={} terminal={} complete={} blocked={} faulted={} pending={:?} origin={} detail={}", state.last_callback_elapsed_us.load(std::sync::atomic::Ordering::SeqCst), state.stalled_steps.load(std::sync::atomic::Ordering::SeqCst), pump.terminal, pump.complete, pump.blocked, pump.faulted, pump.pending_status, state.last_fault_origin.load(std::sync::atomic::Ordering::SeqCst), String::from_utf8_lossy(&detail[..]));
                 }
                 if runtime.close_quarantine.borrow().get(id).is_none() { break; }
                 std::thread::yield_now();
@@ -34347,7 +34634,7 @@ pub mod plugin_runtime {
             for turn in 0..100_000 {
                 if let Err(error) = super::plugin_step_live_cleanup(&runtime) {
                     let pump = cell.maintenance_pump.lock().expect("failed maintenance pump");
-                    panic!("[DEBUG] {error:?}: turn={turn} status={} generation={} stalled={} entries={} session={} outcome={} rejected={} terminal={} pending={} closing={} faulted={}", cell.maintenance_status.load(std::sync::atomic::Ordering::SeqCst), cell.maintenance_generation.load(std::sync::atomic::Ordering::SeqCst), cell.maintenance_stalled_steps.load(std::sync::atomic::Ordering::SeqCst), cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed), pump.session.is_some(), pump.outcome.is_some(), pump.rejected.is_some(), pump.terminal, pump.pending_status, pump.closing, pump.faulted);
+                    panic!("[DEBUG] {error:?}: turn={turn} status={} generation={} stalled={} entries={} session={} outcome={} rejected={} terminal={} pending={:?} closing={} faulted={}", cell.maintenance_status.load(std::sync::atomic::Ordering::SeqCst), cell.maintenance_generation.load(std::sync::atomic::Ordering::SeqCst), cell.maintenance_stalled_steps.load(std::sync::atomic::Ordering::SeqCst), cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed), pump.session.is_some(), pump.outcome.is_some(), pump.rejected.is_some(), pump.terminal, pump.pending_status, pump.closing, pump.faulted);
                 }
                 let (output, mut more) = super::plugin_continue_typed_operations(&runtime).await.expect("drive one production publication turn");
                 if let Some((receiver, output)) = output {
@@ -34382,7 +34669,7 @@ pub mod plugin_runtime {
                                 super::plugin_step_live_cleanup(&runtime).expect("reach one processed exact ACK-wait maintenance stage");
                                 crate::app::plugin_job_yield_once().await;
                                 if cell.maintenance_probe_input_waits.load(std::sync::atomic::Ordering::SeqCst) > input_waits_before_alignment
-                                    && cell.maintenance_status.load(std::sync::atomic::Ordering::SeqCst) == super::RUNTIME_MAINTENANCE_READY
+                                    && super::RuntimeMaintenanceStatus::from_repr(cell.maintenance_status.load(std::sync::atomic::Ordering::SeqCst)) == super::RuntimeMaintenanceStatus::Ready
                                     && cell.maintenance_stalled_steps.load(std::sync::atomic::Ordering::SeqCst) == 0
                                 {
                                     break;

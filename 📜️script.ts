@@ -180,9 +180,11 @@ function resolvePlaygroundDevApp(segments: string[]): { readonly app: string; re
   return { app: resolved.plugin, rest: [...resolved.rest] };
 }
 
-/** 🍽️ `served` boots the REACT OS shell over Vite against whatever `🔌️plugin-modules/` already
- * holds, skipping the ~59-crate plugin build — the exact `SEMIO_RENDERER=react` +
- * `SKIP_PLUGIN_BUILD=1` pair `collabStartUserDevServer` spawns each collab user with.
+/** 🍽️ `served` boots the REACT OS shell over Vite against whatever `🔌️plugin-modules/` and the
+ * engine `🕸️bindings/` already hold, skipping the ~59-crate plugin build and the engine wasm builds —
+ * the `SEMIO_RENDERER=react` + `SKIP_PLUGIN_BUILD=1` pair `collabStartUserDevServer` spawns each
+ * collab user with, plus `SKIP_ENGINE_BUILD=1` so a peer holding the shared `target/` Cargo lock
+ * cannot stall a serve-only boot for the length of their build.
  *
  * Both halves are load-bearing. `frameworkOsPlaygroundDevEnv` defaults `SEMIO_RENDERER` to `wgpu`,
  * so a bare `dev s` builds all 59 crates and then hands off to `trunk serve`, never to Vite on
@@ -196,7 +198,7 @@ function runFrameworkOsPlaygroundDev(plugin: string, rest: string[] = []): void 
   const args = rest.filter((segment) => segment !== "served");
   runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:dev", "--", plugin, ...args], {
     cwd: WORKSPACE_ROOT,
-    env: frameworkOsPlaygroundDevEnv(ensureFrameworkOsPlaygroundCatalog(), plugin, served ? { SEMIO_RENDERER: "react", SKIP_PLUGIN_BUILD: "1" } : {}),
+    env: frameworkOsPlaygroundDevEnv(ensureFrameworkOsPlaygroundCatalog(), plugin, served ? { SEMIO_RENDERER: "react", SKIP_PLUGIN_BUILD: "1", SKIP_ENGINE_BUILD: "1" } : {}),
     ...daemonBudgetOpts(),
   });
 }
@@ -21412,12 +21414,13 @@ function cleanIsSemioRootName(name: string): boolean {
   return name === ".🧬semio" || (name.startsWith(".🧬") && name.endsWith("semio"));
 }
 
-const CLEAN_WINDOWS_RESERVED_DEVICE_NAMES = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\..*)?$/i;
+const CLEAN_WINDOWS_RESERVED_DEVICE_NAMES = /^(con|prn|aux|nul|com[1-9¹²³]|lpt[1-9¹²³])(\..*)?$/iu;
 const CLEAN_WINDOWS_FORBIDDEN_CHARS = /[<>:"|?*\x00-\x1f]/;
 
 /** 🪟️ Checks whether a path component is forbidden on Windows filesystems (NTFS/Win32). */
 export function cleanIsWindowsIllegalName(name: string): boolean {
-  if (!name || name === "." || name === "..") return false;
+  if (!name) return true;
+  if (name === "." || name === "..") return false;
   if (name.trim().length === 0 || name.endsWith(" ") || name.endsWith(".") || name.startsWith(" ")) return true;
   if (CLEAN_WINDOWS_FORBIDDEN_CHARS.test(name)) return true;
   if (CLEAN_WINDOWS_RESERVED_DEVICE_NAMES.test(name)) return true;

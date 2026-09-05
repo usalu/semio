@@ -28,6 +28,17 @@ assert_wellformed, assert_zip_valid, sha256_of = _mod.assert_wellformed, _mod.as
 ROOT = Path("/Users/ueli/Documents/semio")
 OPENPYXL_VERSION = "3.1.5"
 WORKSHEET_CT_STRICT = "application/vnd.openxmlformats-officedocument.spreadsheetml.chartsheet+xml"
+SUBSET_DIRECTORIES = {"strict": "🔒️strict", "transitional": "🌉️transitional"}
+FIXTURE_DIRECTORIES = {
+    "set-snapshot": "📸️set-snapshot-applied",
+    "set-conformance-attribute": "✅️set-conformance-attribute-applied",
+    "remove-conformance-attribute": "🚫️remove-conformance-attribute-applied",
+    "set-main-namespace": "🌐️set-main-namespace-applied",
+    "set-relationships-namespace": "🔗️set-relationships-namespace-applied",
+    "set-worksheet-content-type": "🏷️set-worksheet-content-type-applied",
+    "insert-vml-part": "✒️insert-vml-part-applied",
+    "remove-vml-part": "🧹️remove-vml-part-applied",
+}
 
 
 def base_xlsx() -> bytes:
@@ -134,17 +145,18 @@ def build_for_subset(subset: str):
 
 
 def emit(subset: str):
-    subset_dir = ROOT / f"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️{subset}"
+    subset_dir = ROOT / "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets" / SUBSET_DIRECTORIES[subset]
     fixtures = subset_dir / "🧫️fixtures"
-    oracle_json = subset_dir / "🧪️oracle/🔣️.json"
+    oracle_json = subset_dir / "🔮️oracle/🔣️.json"
     reader_oracle = f"openpyxl-xlsx-ecma-376-{subset}-mutate-reader"
 
     manifests = []
     for mutation_id, klass, before_bytes, after_bytes, note in build_for_subset(subset):
-        case_dir = fixtures / f"{mutation_id}-applied"
+        directory = FIXTURE_DIRECTORIES[mutation_id]
+        case_dir = fixtures / directory
         case_dir.mkdir(parents=True, exist_ok=True)
-        (case_dir / "before.xlsx").write_bytes(before_bytes)
-        (case_dir / "after.xlsx").write_bytes(after_bytes)
+        (case_dir / "⬅️before.xlsx").write_bytes(before_bytes)
+        (case_dir / "➡️after.xlsx").write_bytes(after_bytes)
 
         entry = {
             "schema": "semio.repository-test.fixture/v2",
@@ -155,8 +167,8 @@ def emit(subset: str):
             "outcome": "applied",
             "units": {"length": "unitless", "angle": "degree"},
             "files": [
-                {"role": "expected-before-xlsx", "path": f"../🧫️fixtures/{mutation_id}-applied/before.xlsx", "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "sha256": sha256_of(before_bytes), "bytes": len(before_bytes)},
-                {"role": "expected-after-xlsx", "path": f"../🧫️fixtures/{mutation_id}-applied/after.xlsx", "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "sha256": sha256_of(after_bytes), "bytes": len(after_bytes)},
+                {"role": "expected-before-xlsx", "path": f"../🧫️fixtures/{directory}/⬅️before.xlsx", "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "sha256": sha256_of(before_bytes), "bytes": len(before_bytes)},
+                {"role": "expected-after-xlsx", "path": f"../🧫️fixtures/{directory}/➡️after.xlsx", "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "sha256": sha256_of(after_bytes), "bytes": len(after_bytes)},
             ],
             "provenance": {
                 "source": "generated" if klass == "third-party-generated" else "authored",

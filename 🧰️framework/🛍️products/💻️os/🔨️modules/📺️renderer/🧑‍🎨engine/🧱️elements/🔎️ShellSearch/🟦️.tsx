@@ -78,7 +78,7 @@ export function UISearch({
         {Object.entries(grouped).map(([category, categoryResults]) => (
           <CommandGroup key={category || "__default"} heading={category || undefined}>
             {categoryResults.map((result, idx) => (
-              <CommandItem key={`${result.item.id}-${idx}`} value={`${result.item.label} ${result.item.description ?? ""} ${result.item.category ?? ""}`.trim()} onSelect={() => handleSelect(result.item)}>
+              <CommandItem key={`${result.item.id}-${idx}`} data-command-item-id={result.item.id} value={`${result.item.label} ${result.item.description ?? ""} ${result.item.category ?? ""}`.trim()} onSelect={() => handleSelect(result.item)}>
                 <div className="flex items-center gap-single">
                   {result.item.icon}
                   <div className="flex flex-col">

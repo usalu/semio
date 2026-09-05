@@ -9,13 +9,14 @@
  */
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readSync, realpathSync, readdirSync, rmSync, statSync, writeSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readSync, realpathSync, readdirSync, renameSync, rmSync, statSync, writeSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
-import { BundleScript, ScriptRouter, buildBudgetMs, devToolingEnv, resolveWorkspaceBin, runBundleScriptMain, runCargoTestBudgeted, runCmd, runCmdStatus, resolveTestLevel } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { verifyFreshCatalogPackageV1 } from "../../../📇️registry/📜️script.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, devToolingEnv, parseExtensionCargoManifest, resolveWorkspaceBin, runBundleScriptMain, runCargoTestBudgeted, runCmd, runCmdStatus, resolveTestLevel } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { verifyDescriptorPairBytesV1, verifyFreshCatalogPackageV1 } from "../../../📇️registry/📜️script.ts";
 
 const CRATE_NAME = "semio-framework-plugin-describe";
+const DESCRIPTOR_PACK_FILENAME = "🛂️.descriptor.semio";
+const DESCRIPTOR_JSON_FILENAME = "🔣️.json";
 const FRESH_COMPONENT_MAX_BYTES = 64 * 1024 * 1024;
 const FRESH_DESCRIPTOR_MAX_BYTES = 4 * 1024 * 1024;
 const FRESH_IO_CHUNK_BYTES = 64 * 1024;
@@ -111,10 +112,126 @@ export function extractPluginCore(repoRoot: string, component: string, outDir: s
   return core;
 }
 
-/** @emoji 🛂️ Emits one canonical descriptor from independently supplied raw/core artifacts. */
-export function emitPluginDescriptor(repoRoot: string, component: string, core: string, outDir: string, budgetMs = buildBudgetMs()): number {
-  const bin = ensureBuiltBin(repoRoot, budgetMs);
-  return runCmdStatus(bin, ["describe", component, "--core", core, "--out", outDir], { cwd: repoRoot, env: devToolingEnv(), budgetMs });
+export type DescriptorEmissionRequestV1 = Readonly<{
+  rawComponentPath: string;
+  extractedCorePath: string;
+  ownerRoot: string;
+  artifactRoot?: string;
+}>;
+
+export type DescriptorEmissionReceiptV1 = Readonly<{
+  pluginId: string;
+  packageId: string;
+  role: "plugin" | "extension";
+  version: string;
+  ownerRoot: string;
+  jsonPath: string;
+  packPath: string;
+  rawSha256: string;
+  coreSha256: string;
+  descriptorSha256: string;
+  jsonByteLength: number;
+  packByteLength: number;
+}>;
+
+export type DescriptorEmissionControlV1 = Readonly<{
+  cancelled?: () => boolean;
+  deadlineMs?: number;
+  checkpoint?: (stage: string) => void;
+}>;
+
+function emissionGuard(control: DescriptorEmissionControlV1, startedAt: number, budgetMs: number, stage: string): void {
+  if (control.cancelled?.()) throw new Error(`descriptor emission cancelled at ${stage}`);
+  if (Date.now() - startedAt > budgetMs) throw new Error(`descriptor emission deadline of ${budgetMs}ms exceeded at ${stage}`);
+  control.checkpoint?.(stage);
+}
+
+function emissionDirectory(root: string, path: string, label: string): string {
+  const exact = resolve(path);
+  const info = lstatSync(exact);
+  if (info.isSymbolicLink() || !info.isDirectory()) throw new Error(`${label} ${exact} must be a regular non-symlink directory`);
+  const real = realpathSync(exact);
+  if (!freshPathIsWithin(realpathSync(root), real)) throw new Error(`${label} ${exact} resolves outside ${root}`);
+  return real;
+}
+
+function emissionArtifact(root: string, path: string, label: string, maximum: number): { readonly path: string; readonly sha256: string } {
+  const exact = resolve(path);
+  const info = lstatSync(exact);
+  if (info.isSymbolicLink() || !info.isFile() || info.size === 0 || info.size > maximum) throw new Error(`${label} ${exact} must be a regular non-symlink file of 1..${maximum} bytes`);
+  const real = realpathSync(exact);
+  if (!freshPathIsWithin(realpathSync(root), real)) throw new Error(`${label} ${exact} resolves outside the declared artifact root ${root}`);
+  const handle = openSync(real, "r");
+  const chunk = Buffer.allocUnsafe(FRESH_IO_CHUNK_BYTES);
+  const hash = createHash("sha256");
+  try {
+    let read = 0;
+    while (read < info.size) {
+      const count = readSync(handle, chunk, 0, Math.min(chunk.byteLength, info.size - read), read);
+      if (count === 0) throw new Error(`${label} ${exact} shrank while being hashed`);
+      hash.update(chunk.subarray(0, count));
+      read += count;
+    }
+  } finally {
+    chunk.fill(0);
+    closeSync(handle);
+  }
+  if (statSync(real).size !== info.size) throw new Error(`${label} ${exact} changed while being hashed`);
+  return { path: real, sha256: hash.digest("hex") };
+}
+
+/** @emoji 🛂️ The owner descriptor receipt contract: emits `🛂️.descriptor.semio` + `🔣️.json` for
+ * `ownerRoot` from ONE decoded descriptor, out of two independently supplied artifacts — the raw
+ * `wasm32-wasip2` component and the separately extracted core module. Both are hashed here, in this
+ * process, from the exact bytes on disk; the emitter blanks exactly `hashes.descriptorSha256` for its
+ * two-pass self hash; both forms are strict-decoded, compared semantically, re-encoded canonically and
+ * checked against those two hashes BEFORE a single owner byte moves. Inputs must be regular
+ * non-symlink files inside `artifactRoot` (cargo's target root by default, never the source tree) and
+ * `ownerRoot` a regular directory inside the repository; every stage is cancellable and deadline
+ * bounded, and a failure at any stage leaves the previous owner pair exactly as it was. */
+export function emitOwnerDescriptorPairV1(repoRoot: string, request: DescriptorEmissionRequestV1, control: DescriptorEmissionControlV1 = {}): DescriptorEmissionReceiptV1 {
+  const startedAt = Date.now();
+  const budgetMs = control.deadlineMs ?? buildBudgetMs();
+  emissionGuard(control, startedAt, budgetMs, "validate");
+  const artifactRoot = emissionDirectory(repoRoot, request.artifactRoot ?? cargoTargetRoot(repoRoot), "artifact root");
+  const ownerRoot = emissionDirectory(repoRoot, request.ownerRoot, "owner root");
+  const raw = emissionArtifact(artifactRoot, request.rawComponentPath, "raw component", FRESH_COMPONENT_MAX_BYTES);
+  const core = emissionArtifact(artifactRoot, request.extractedCorePath, "extracted core module", FRESH_COMPONENT_MAX_BYTES);
+  if (raw.path === core.path) throw new Error("raw component and extracted core module are the same file");
+  if (raw.sha256 === core.sha256) throw new Error("raw component and extracted core module have the same SHA-256");
+  emissionGuard(control, startedAt, budgetMs, "emit");
+  const staging = mkdtempSync(join(ownerRoot, ".🛂️descriptor-staging-"));
+  try {
+    const emitter = ensureBuiltBin(repoRoot, Math.max(1, budgetMs - (Date.now() - startedAt)));
+    emissionGuard(control, startedAt, budgetMs, "describe");
+    const status = runCmdStatus(emitter, ["describe", raw.path, "--core", core.path, "--out", staging], { cwd: repoRoot, env: devToolingEnv(), budgetMs: Math.max(1, budgetMs - (Date.now() - startedAt)) });
+    if (status !== 0) throw new Error(`descriptor emitter exited with ${status}`);
+    emissionGuard(control, startedAt, budgetMs, "verify");
+    const packPath = join(staging, DESCRIPTOR_PACK_FILENAME);
+    const jsonPath = join(staging, DESCRIPTOR_JSON_FILENAME);
+    const packBytes = readFileSync(packPath);
+    const jsonBytes = readFileSync(jsonPath);
+    const pair = verifyDescriptorPairBytesV1(jsonBytes, packBytes, { wasmSha256: raw.sha256, coreWasmSha256: core.sha256 });
+    emissionGuard(control, startedAt, budgetMs, "publish");
+    renameSync(packPath, join(ownerRoot, DESCRIPTOR_PACK_FILENAME));
+    renameSync(jsonPath, join(ownerRoot, DESCRIPTOR_JSON_FILENAME));
+    return {
+      pluginId: pair.pluginId,
+      packageId: pair.packageId,
+      role: pair.role,
+      version: pair.version,
+      ownerRoot,
+      jsonPath: join(ownerRoot, DESCRIPTOR_JSON_FILENAME),
+      packPath: join(ownerRoot, DESCRIPTOR_PACK_FILENAME),
+      rawSha256: raw.sha256,
+      coreSha256: core.sha256,
+      descriptorSha256: pair.hashes.descriptorSha256,
+      jsonByteLength: jsonBytes.byteLength,
+      packByteLength: packBytes.byteLength,
+    };
+  } finally {
+    rmSync(staging, { recursive: true, force: true });
+  }
 }
 
 function freshPathIsWithin(root: string, candidate: string): boolean {
@@ -233,8 +350,8 @@ export async function produceFreshComponentV1(repoRoot: string, request: FreshCo
     const descriptorRoot = join(workRoot, "descriptor");
     mkdirSync(descriptorRoot, { mode: 0o700 });
     await freshRun(emitter, ["describe", component, "--core", core, "--out", descriptorRoot], repoRoot, env, control, "emit-descriptor", 4, total);
-    const descriptorPack = join(descriptorRoot, "🛂️.descriptor.semio");
-    const descriptorJson = join(descriptorRoot, "🔣️.json");
+    const descriptorPack = join(descriptorRoot, DESCRIPTOR_PACK_FILENAME);
+    const descriptorJson = join(descriptorRoot, DESCRIPTOR_JSON_FILENAME);
     freshFile(descriptorPack, FRESH_DESCRIPTOR_MAX_BYTES, "fresh descriptor pack");
     freshFile(descriptorJson, FRESH_DESCRIPTOR_MAX_BYTES, "fresh descriptor JSON");
     const descriptorJsonBytes = readFileSync(descriptorJson);
@@ -284,15 +401,30 @@ export async function produceFreshComponentV1(repoRoot: string, request: FreshCo
  * root, sibling of the tracked `🛂️manifest.json` — NOT `🤖️generated/`, which is gitignored). One
  * shared function so every migrated plugin crate's own `describe` command stays a thin two-line
  * wrapper around it rather than duplicating the build+emit sequence 33 times. */
-export function describePluginComponent(repoRoot: string, packageName: string, ownerRoot: string, rootCdylib = false): number {
+export function describePluginComponent(repoRoot: string, packageName: string, ownerRoot: string, rootCdylib = false, control: DescriptorEmissionControlV1 = {}): number {
+  const artifactRoot = cargoTargetRoot(repoRoot);
   const component = buildPluginComponent(repoRoot, packageName, rootCdylib);
-  const scratch = mkdtempSync(join(tmpdir(), "semio-plugin-core-"));
+  const scratch = mkdtempSync(join(artifactRoot, ".semio-describe-core-"));
   try {
     const core = extractPluginCore(repoRoot, component, scratch, packageName.replace(/-/g, "_"));
-    return emitPluginDescriptor(repoRoot, component, core, ownerRoot);
+    const receipt = emitOwnerDescriptorPairV1(repoRoot, { rawComponentPath: component, extractedCorePath: core, ownerRoot, artifactRoot }, control);
+    console.log(`described ${receipt.pluginId} (${receipt.role} ${receipt.packageId}@${receipt.version}) -> ${relative(repoRoot, receipt.ownerRoot)} (wasm=${receipt.rawSha256} core=${receipt.coreSha256} descriptor=${receipt.descriptorSha256})`);
+    return 0;
+  } catch (error) {
+    console.error(`describe ${packageName} failed: ${(error as Error).message}`);
+    return 1;
   } finally {
     rmSync(scratch, { recursive: true, force: true });
   }
+}
+
+/** @emoji 🧩 The shared extension `describe` route: the same owner receipt contract as a plugin's, with
+ * the crate identity read from the extension's own `[package]`/`[package.metadata.component]` block and
+ * the owner root taken as the extension root (the `.sxt` runtime package that `package` builds is a
+ * separate artifact and never a descriptor source). */
+export function describeExtensionComponent(repoRoot: string, rsDir: string, control: DescriptorEmissionControlV1 = {}): number {
+  const manifest = parseExtensionCargoManifest(join(resolve(rsDir), "Cargo.toml"), repoRoot);
+  return describePluginComponent(repoRoot, manifest.packageName, resolve(rsDir, "..", ".."), false, control);
 }
 
 if (import.meta.main) {

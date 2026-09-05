@@ -2,9 +2,9 @@
 
 #[path = "📊️face-normal-distribution/🦀️.rs"]
 pub mod face_normal_distribution;
-#[path = "🚪️main-axis-direction/🦀️.rs"]
+#[path = "➡️main-axis-direction/🦀️.rs"]
 pub mod main_axis_direction;
-#[path = "🌻️orientation-consistency/🦀️.rs"]
+#[path = "🧲️orientation-consistency/🦀️.rs"]
 pub mod orientation_consistency;
 
 use super::super::modules::measurement_contracts::*;

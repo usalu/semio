@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔢️set-scalar",
+  "semanticKind": "set-scalar",
+  "displayName": "Set Scalar",
+  "emoji": "✏️",
+  "aggregateVariant": "SetScalar",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "set-scalar",
+  "binaryTag": 5,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

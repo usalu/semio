@@ -49,8 +49,8 @@
       "vectors": [
         {
           "mutationId": "change-coefficient",
-          "sourceMutationDirectoryName": "🔄️change-coefficient",
-          "mutationDirectoryName": "🔄️change-coefficient",
+          "sourceMutationDirectoryName": "🎚️change-coefficient",
+          "mutationDirectoryName": "🎚️change-coefficient",
           "scenarios": [
             {
               "id": "raises-the-leading-coefficient-to-three-halves",

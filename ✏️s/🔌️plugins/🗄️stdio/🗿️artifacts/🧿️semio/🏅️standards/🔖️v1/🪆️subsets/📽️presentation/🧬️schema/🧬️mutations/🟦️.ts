@@ -1,6 +1,6 @@
 /** 🧬️ SemioPresentationMutation — named-variant mutation vocabulary, discriminated by `mutation`. */
 import type { SemioPresentationSnapshot, Slide, SlideShape, SlideFrame, SlideMaster, SlideLayout } from "../📸️snapshot/🟦️";
-import type { DocBlock } from "../../../✳️document/🧬️schema/📸️snapshot/🟦️";
+import type { DocBlock } from "../../../📑️document/🧬️schema/📸️snapshot/🟦️";
 
 export type SemioPresentationMutation =
   | { mutation: "setSnapshot"; snapshot: SemioPresentationSnapshot }

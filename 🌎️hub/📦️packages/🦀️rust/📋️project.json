@@ -3,7 +3,10 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🌎️hub/**/*.rs", "{projectRoot}/**/*"]
+    "default": [
+      "{workspaceRoot}/🌎️hub/**/*.rs",
+      "{projectRoot}/**/*"
+    ]
   },
   "targets": {
     "setup": {
@@ -15,7 +18,14 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "dependsOn": [{ "target": "build", "projects": ["os-hub-admin"] }],
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": [
+            "os-hub-admin"
+          ]
+        }
+      ],
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build"
@@ -92,6 +102,30 @@
         "command": "bun ./📜️script.ts scoped-directory-socket-check process"
       }
     },
+    "presence-normalization-source-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts presence-normalization-check source"
+      }
+    },
+    "presence-normalization-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts presence-normalization-check native"
+      }
+    },
+    "admin-presence-target-recovery-source-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "cwd": "🌎️hub/📦️packages/🦀️rust", "command": "bun ./📜️script.ts admin-presence-target-recovery-check source" }
+    },
+    "admin-presence-target-recovery-native-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "cwd": "🌎️hub/📦️packages/🦀️rust", "command": "bun ./📜️script.ts admin-presence-target-recovery-check native" }
+    },
     "presence-lease-source-check": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -140,6 +174,78 @@
         "command": "bun ./📜️script.ts directory-event-page-v1-check process"
       }
     },
+    "space-administration-source-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts space-administration-check source"
+      }
+    },
+    "space-administration-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts space-administration-check native"
+      }
+    },
+    "directory-command-receipt-source-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-command-receipt-check source"
+      }
+    },
+    "directory-command-receipt-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-command-receipt-check native"
+      }
+    },
+    "directory-command-receipt-process-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-command-receipt-check process"
+      }
+    },
+    "directory-home-browser-process-source-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-home-browser-process-check source"
+      }
+    },
+    "directory-home-browser-process-runtime-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-home-browser-process-check runtime"
+      }
+    },
+    "directory-home-browser-process-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-home-browser-process-check process"
+      }
+    },
+    "scoped-presence-browser-serve": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts scoped-presence-browser-serve"
+      }
+    },
     "invite-redemption-transaction-check": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -171,6 +277,19 @@
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts invite-redemption-transaction-check --neo4j"
       }
+    },
+    "execution-target-relay-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts execution-target-relay-check"
+      }
+    },
+    "execution-target-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "cwd": "🌎️hub/📦️packages/🦀️rust", "command": "bun ./📜️script.ts execution-target-relay-check --native" }
     },
     "browser-broker-check": {
       "executor": "nx:run-commands",
@@ -268,6 +387,22 @@
         "command": "bun ./📜️script.ts browser-document-open-check"
       }
     },
+    "execution-target-lease-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts execution-target-lease-check"
+      }
+    },
+    "execution-target-lease-browser-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts execution-target-lease-browser-check"
+      }
+    },
     "space-public-boundary-check": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -304,22 +439,58 @@
     "gis-inference-ledger-oracle": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": { "cwd": "🌎️hub/📦️packages/🦀️rust", "command": "bun ./📜️script.ts gis-inference-ledger-oracle" }
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts gis-inference-ledger-oracle"
+      }
     },
     "gis-inference-ledger-check": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": { "cwd": "🌎️hub/📦️packages/🦀️rust", "command": "bun ./📜️script.ts gis-inference-ledger-check" }
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts gis-inference-ledger-check"
+      }
     },
     "gis-map-frozen-binding-source-check": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": { "cwd": "🌎️hub/📦️packages/🦀️rust", "command": "bun ./📜️script.ts gis-map-frozen-binding-check" }
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts gis-map-frozen-binding-check"
+      }
     },
     "gis-map-frozen-binding-native-check": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": { "cwd": "🌎️hub/📦️packages/🦀️rust", "command": "bun ./📜️script.ts gis-map-frozen-binding-check --native" }
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts gis-map-frozen-binding-check --native"
+      }
+    },
+    "gis-map-proposal-source-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts gis-map-proposal-check --source"
+      }
+    },
+    "gis-map-proposal-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts gis-map-proposal-check --native"
+      }
+    },
+    "gis-map-proposal-process-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts gis-map-proposal-check --process"
+      }
     },
     "native-document-open-check": {
       "executor": "nx:run-commands",
@@ -331,7 +502,14 @@
     },
     "dev": {
       "executor": "nx:run-commands",
-      "dependsOn": [{ "target": "build", "projects": ["os-hub-admin"] }],
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": [
+            "os-hub-admin"
+          ]
+        }
+      ],
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts dev"
@@ -339,7 +517,14 @@
     },
     "dev-secure-suite": {
       "executor": "nx:run-commands",
-      "dependsOn": [{ "target": "build", "projects": ["os-hub-admin"] }],
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": [
+            "os-hub-admin"
+          ]
+        }
+      ],
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts dev secure-suite"
@@ -347,7 +532,14 @@
     },
     "dev-secure-native": {
       "executor": "nx:run-commands",
-      "dependsOn": [{ "target": "build", "projects": ["os-hub-admin"] }],
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": [
+            "os-hub-admin"
+          ]
+        }
+      ],
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts dev secure-native"
@@ -355,7 +547,14 @@
     },
     "dev-secure-mcp": {
       "executor": "nx:run-commands",
-      "dependsOn": [{ "target": "build", "projects": ["os-hub-admin"] }],
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": [
+            "os-hub-admin"
+          ]
+        }
+      ],
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts dev secure-mcp"
@@ -363,7 +562,14 @@
     },
     "dev-secure-admin": {
       "executor": "nx:run-commands",
-      "dependsOn": [{ "target": "build", "projects": ["os-hub-admin"] }],
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": [
+            "os-hub-admin"
+          ]
+        }
+      ],
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts dev secure-admin"
@@ -371,7 +577,14 @@
     },
     "secure-local-smoke": {
       "executor": "nx:run-commands",
-      "dependsOn": [{ "target": "build", "projects": ["os-hub-admin"] }],
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": [
+            "os-hub-admin"
+          ]
+        }
+      ],
       "cache": false,
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",

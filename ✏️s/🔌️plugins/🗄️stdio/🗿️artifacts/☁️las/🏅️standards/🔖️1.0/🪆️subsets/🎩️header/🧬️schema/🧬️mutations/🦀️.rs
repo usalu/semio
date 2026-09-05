@@ -21,7 +21,7 @@ use protocol::Mutation;
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.las`.
 //#region 🔖️Leaves
-#[path = "🟤️set-snapshot/🦀️.rs"]
+#[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🔢set-version/🦀️.rs"]
 pub mod set_version;
@@ -1150,7 +1150,7 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "🟤️set-snapshot/🧪️tests/🍊️lifts-the-second-point-and-stretches-the-z-bound/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/📈️lifts-the-second-point-and-stretches-the-z-bound/🦀️.rs"]
     mod tests_set_snapshot_lifts_the_second_point_and_stretches_the_z_bound;
 }
 //#endregion 🧪️FixtureTests

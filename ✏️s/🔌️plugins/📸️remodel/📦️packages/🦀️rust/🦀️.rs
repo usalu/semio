@@ -137,7 +137,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-stream/🧪️tests/🍎️adds-stream-c-bound-to-cam-b/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-stream/🧪️tests/🎥️adds-stream-c-bound-to-cam-b/🦀️.rs"]
                                     mod tests_adds_stream_c_bound_to_cam_b;
                                 }
                                 #[path = "."]
@@ -163,7 +163,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-stream-sync/🧪️tests/🔄️shifts-stream-a-sync-offset-to-minus-seven-and-a-half/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-stream-sync/🧪️tests/⏱️shifts-stream-a-sync-offset-to-minus-seven-and-a-half/🦀️.rs"]
                                     mod tests_shifts_stream_a_sync_offset_to_minus_seven_and_a_half;
                                 }
                                 #[path = "."]
@@ -176,7 +176,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-stream-frame/🧪️tests/🍐️appends-a-third-frame-to-stream-a/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-stream-frame/🧪️tests/🎞️appends-a-third-frame-to-stream-a/🦀️.rs"]
                                     mod tests_appends_a_third_frame_to_stream_a;
                                 }
                                 #[path = "."]
@@ -202,7 +202,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-stream-source/🧪️tests/🍎️clears-the-video-source-of-stream-a/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-stream-source/🧪️tests/🧹️clears-the-video-source-of-stream-a/🦀️.rs"]
                                     mod tests_clears_the_video_source_of_stream_a;
                                 }
                                 #[path = "."]
@@ -228,7 +228,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗞️delete-asset/🧪️tests/🖼️removes-asset-a-and-reports-its-stale-references/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗞️delete-asset/🧪️tests/🗑️removes-asset-a-and-reports-its-stale-references/🦀️.rs"]
                                     mod tests_removes_asset_a_and_reports_its_stale_references;
                                 }
                                 #[path = "."]
@@ -241,7 +241,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭create-camera-calibration/🧪️tests/⛵️adds-the-cam-c-fisheye-calibration/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭create-camera-calibration/🧪️tests/📷️adds-the-cam-c-fisheye-calibration/🦀️.rs"]
                                     mod tests_adds_the_cam_c_fisheye_calibration;
                                 }
                                 #[path = "."]
@@ -254,7 +254,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️update-camera-calibration/🧪️tests/🔮️refines-the-cam-a-focal-length-and-rms/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️update-camera-calibration/🧪️tests/🔍️refines-the-cam-a-focal-length-and-rms/🦀️.rs"]
                                     mod tests_refines_the_cam_a_focal_length_and_rms;
                                 }
                                 #[path = "."]
@@ -280,7 +280,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛓️create-rig-extrinsic/🧪️tests/🟢️adds-a-rig-extrinsic-for-cam-b/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛓️create-rig-extrinsic/🧪️tests/🔗️adds-a-rig-extrinsic-for-cam-b/🦀️.rs"]
                                     mod tests_adds_a_rig_extrinsic_for_cam_b;
                                 }
                                 #[path = "."]
@@ -293,7 +293,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-rig-extrinsic/🧪️tests/🟩️drops-the-cam-a-rig-extrinsic/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-rig-extrinsic/🧪️tests/✂️drops-the-cam-a-rig-extrinsic/🦀️.rs"]
                                     mod tests_drops_the_cam_a_rig_extrinsic;
                                 }
                                 #[path = "."]
@@ -306,7 +306,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩update-rig-extrinsic/🧪️tests/⚪️retunes-the-cam-a-rig-translation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩update-rig-extrinsic/🧪️tests/📍️retunes-the-cam-a-rig-translation/🦀️.rs"]
                                     mod tests_retunes_the_cam_a_rig_translation;
                                 }
                                 #[path = "."]
@@ -319,7 +319,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧿create-gcp/🧪️tests/🟨️adds-gcp-tower-with-one-observation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧿create-gcp/🧪️tests/📍️adds-gcp-tower-with-one-observation/🦀️.rs"]
                                     mod tests_adds_gcp_tower_with_one_observation;
                                 }
                                 #[path = "."]
@@ -345,7 +345,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎add-gcp-observation/🧪️tests/🟧️adds-the-first-observation-to-gcp-ridge/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎add-gcp-observation/🧪️tests/🔎️adds-the-first-observation-to-gcp-ridge/🦀️.rs"]
                                     mod tests_adds_the_first_observation_to_gcp_ridge;
                                 }
                                 #[path = "."]
@@ -371,7 +371,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥣update-ingest-params/🧪️tests/🔴️tightens-the-ingest-sharpness-gate/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥣update-ingest-params/🧪️tests/🔍️tightens-the-ingest-sharpness-gate/🦀️.rs"]
                                     mod tests_tightens_the_ingest_sharpness_gate;
                                 }
                                 #[path = "."]
@@ -384,7 +384,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌠update-feature-params/🧪️tests/🦀️switches-the-detector-to-akaze/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌠update-feature-params/🧪️tests/🔎️switches-the-detector-to-akaze/🦀️.rs"]
                                     mod tests_switches_the_detector_to_akaze;
                                 }
                                 #[path = "."]
@@ -423,7 +423,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌁update-dense-params/🧪️tests/🌲️raises-the-dense-resolution-and-confidence-gate/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌁update-dense-params/🧪️tests/🔬️raises-the-dense-resolution-and-confidence-gate/🦀️.rs"]
                                     mod tests_raises_the_dense_resolution_and_confidence_gate;
                                 }
                                 #[path = "."]
@@ -436,7 +436,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️update-mesh-params/🧪️tests/🔤️doubles-the-texture-size-and-drops-the-watertight-guarantee/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️update-mesh-params/🧪️tests/🔳️doubles-the-texture-size-and-drops-the-watertight-guarantee/🦀️.rs"]
                                     mod tests_doubles_the_texture_size_and_drops_the_watertight_guarantee;
                                 }
                                 #[path = "."]
@@ -449,7 +449,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏎️update-motion-params/🧪️tests/🟪️enables-motion-tracking/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏎️update-motion-params/🧪️tests/🏃️enables-motion-tracking/🦀️.rs"]
                                     mod tests_enables_motion_tracking;
                                 }
                                 #[path = "."]
@@ -462,7 +462,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐update-geo-params/🧪️tests/🟨️enables-georeferencing-with-an-origin/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐update-geo-params/🧪️tests/🌐️enables-georeferencing-with-an-origin/🦀️.rs"]
                                     mod tests_enables_georeferencing_with_an_origin;
                                 }
                                 #[path = "."]
@@ -475,7 +475,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️replace-job/🧪️tests/🔤️advances-the-job-to-texturing/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️replace-job/🧪️tests/🎨️advances-the-job-to-texturing/🦀️.rs"]
                                     mod tests_advances_the_job_to_texturing;
                                 }
                                 #[path = "."]
@@ -498,7 +498,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭐replace-sparse/🧪️tests/🧿️swaps-in-an-uncolored-four-point-sparse-cloud/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭐replace-sparse/🧪️tests/✨️swaps-in-an-uncolored-four-point-sparse-cloud/🦀️.rs"]
                                     mod tests_swaps_in_an_uncolored_four_point_sparse_cloud;
                                 }
                                 #[path = "."]
@@ -511,7 +511,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☁️replace-dense/🧪️tests/🦅️swaps-in-a-two-point-classified-dense-cloud/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☁️replace-dense/🧪️tests/☁️swaps-in-a-two-point-classified-dense-cloud/🦀️.rs"]
                                     mod tests_swaps_in_a_two_point_classified_dense_cloud;
                                 }
                                 #[path = "."]
@@ -524,7 +524,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱replace-mesh-result/🧪️tests/🔤️swaps-in-an-imported-untextured-mesh/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱replace-mesh-result/🧪️tests/🕸️swaps-in-an-imported-untextured-mesh/🦀️.rs"]
                                     mod tests_swaps_in_an_imported_untextured_mesh;
                                 }
                                 #[path = "."]
@@ -537,7 +537,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️replace-trajectory/🧪️tests/🍐️clears-the-camera-trajectory/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️replace-trajectory/🧪️tests/🧹️clears-the-camera-trajectory/🦀️.rs"]
                                     mod tests_clears_the_camera_trajectory;
                                 }
                                 #[path = "."]
@@ -550,7 +550,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚂replace-tracks/🧪️tests/🪻️replaces-the-moving-track-with-two-static-tracks/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚂replace-tracks/🧪️tests/⏸️replaces-the-moving-track-with-two-static-tracks/🦀️.rs"]
                                     mod tests_replaces_the_moving_track_with_two_static_tracks;
                                 }
                                 #[path = "."]
@@ -563,7 +563,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗾replace-geo-products/🧪️tests/🟣️adds-the-dtm-and-ortho-rasters/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗾replace-geo-products/🧪️tests/🗺️adds-the-dtm-and-ortho-rasters/🦀️.rs"]
                                     mod tests_adds_the_dtm_and_ortho_rasters;
                                 }
                                 #[path = "."]
@@ -576,7 +576,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾replace-qc/🧪️tests/📓️records-a-qc-report-carrying-a-watertight-summary/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾replace-qc/🧪️tests/📋️records-a-qc-report-carrying-a-watertight-summary/🦀️.rs"]
                                     mod tests_records_a_qc_report_carrying_a_watertight_summary;
                                 }
                             }

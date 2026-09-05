@@ -26,7 +26,7 @@ use protocol::{Mutation, OpBinary, OpText};
 pub mod set_snapshot;
 #[path = "🎬insert-slide/🦀️.rs"]
 pub mod insert_slide;
-#[path = "🪒remove-slide/🦀️.rs"]
+#[path = "📤️remove-slide/🦀️.rs"]
 pub mod remove_slide;
 #[path = "🧭set-slide-layout/🦀️.rs"]
 pub mod set_slide_layout;
@@ -42,11 +42,11 @@ pub mod set_shape_frame;
 pub mod set_textbox_blocks;
 #[path = "🎓insert-master/🦀️.rs"]
 pub mod insert_master;
-#[path = "🪄remove-master/🦀️.rs"]
+#[path = "🚫️remove-master/🦀️.rs"]
 pub mod remove_master;
 #[path = "🧩insert-layout/🦀️.rs"]
 pub mod insert_layout;
-#[path = "🪃remove-layout/🦀️.rs"]
+#[path = "🧹️remove-layout/🦀️.rs"]
 pub mod remove_layout;
 #[path = "🔧set-layout-master/🦀️.rs"]
 pub mod set_layout_master;
@@ -59,7 +59,7 @@ pub mod set_layout_master;
 /// is KEPT here, unlike the `tiff` reference this migration was derived from (which carries none):
 /// serde's internally tagged representation flattens a newtype variant's struct payload into the
 /// same JSON object the tag lives in, so every committed fixture under `📸️set-snapshot/🧪️tests/`
-/// and the `🐸️mutate-semio-presentation` test adapter's `{"mutation":"insertSlide",...}` vectors keep
+/// and the `📽️mutate-semio-presentation` test adapter's `{"mutation":"insertSlide",...}` vectors keep
 /// decoding byte-for-byte unchanged after this migration.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioPresentationSnapshot, diff = SemioPresentationDiff, schema = "SemioPresentationMutation")]
@@ -95,7 +95,7 @@ pub enum SemioPresentationMutation {
 }
 
 /// 🏷️ This subset's DECLARED mutation vocabulary, kebab-case, in enum declaration order — the one
-/// list the repository test platform's completeness gate measures `🐸️mutate-semio-presentation`
+/// list the repository test platform's completeness gate measures `📽️mutate-semio-presentation`
 /// against (catalog `semio-v1-presentation` in `../../🔣️oracle.json`). It aliases
 /// [`OP_KEYWORDS`], which the binary op frame's `tag` byte already indexes by [`variant_ordinal`],
 /// so the vocabulary is declared exactly once and `kinds_match_the_enum_and_the_catalog` keeps that

@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "limits": {
+    "maximumEntryBytes": 4096,
+    "maximumTextBytes": 1024,
+    "maximumPresencePackBytes": 2048,
+    "maximumViews": 16,
+    "maximumInteractionDomains": 16,
+    "maximumDomainIds": 64,
+    "maximumConnectedAtMs": 9007199254740991
+  },
+  "cases": [
+    {
+      "id": "every-field-absent",
+      "prefixHex": "01610001",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": true,
+      "canonicalHex": "01610001",
+      "expected": { "actor": "a", "connectedAtMs": 1, "views": [] }
+    },
+    {
+      "id": "every-field-present",
+      "prefixHex": "06706565722d32ff0780d095ffbc31034164610301020306757365722d39056f776e65720f7b226b696e64223a226d6f7665227d046472617701056772617068046e6f646501026e3101026e320309737572666163652d31010277310663616e76617300000000000000f03f0000000000000040000000000000f83f00000000000089400000000000c08240010000000000002440000000000000344000000000000000000108726f775b305d236100010b62746e5b315d2373617665",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": true,
+      "canonicalHex": "06706565722d32ff0780d095ffbc31034164610301020306757365722d39056f776e65720f7b226b696e64223a226d6f7665227d046472617701056772617068046e6f646501026e3101026e320309737572666163652d31010277310663616e76617300000000000000f03f0000000000000040000000000000f83f00000000000089400000000000c08240010000000000002440000000000000344000000000000000000108726f775b305d236100010b62746e5b315d2373617665",
+      "expected": {
+        "actor": "peer-2",
+        "connectedAtMs": 1700000000000,
+        "label": "Ada",
+        "presencePack": "AQID",
+        "userId": "user-9",
+        "role": "owner",
+        "dragGhostJson": "{\"kind\":\"move\"}",
+        "interaction": { "appId": "draw", "domains": [{ "domain": "graph", "granularity": "node", "selected": ["n1"], "hovered": ["n2"] }] },
+        "color": 3,
+        "surface": "surface-1",
+        "views": [{ "windowId": "w1", "space": "canvas", "kind": { "kind": "canvas", "x": 1, "y": 2, "zoom": 1.5 }, "size": [800, 600], "pointer": [10, 20, 0] }],
+        "ui": { "hoveredPath": "row[0]#a", "pressedPath": "btn[1]#save" }
+      }
+    },
+    { "id": "unknown-flag", "prefixHex": "0161800801", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
+    { "id": "unknown-high-flag", "prefixHex": "016180808080802001", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
+    { "id": "truncated-field", "prefixHex": "0261", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
+    { "id": "trailing-byte", "prefixHex": "0161000100", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
+    { "id": "noncanonical-varint", "prefixHex": "8100610001", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
+    { "id": "huge-views-count", "prefixHex": "0161800201ffffffffffffffffff01", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
+    { "id": "huge-domains-count", "prefixHex": "0161200100ffffffffffffffffff01", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
+    { "id": "huge-selected-count", "prefixHex": "0161200100010000ffffffffffffffffff01", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
+    { "id": "huge-hovered-count", "prefixHex": "016120010001000000ffffffffffffffffff01", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
+    { "id": "entry-over-limit", "prefixHex": "01610001", "repeatHex": "00", "repeatCount": 4093, "suffixHex": "", "accepted": false },
+    { "id": "text-over-limit", "prefixHex": "8108", "repeatHex": "61", "repeatCount": 1025, "suffixHex": "0001", "accepted": false },
+    { "id": "pack-over-limit", "prefixHex": "016102018110", "repeatHex": "00", "repeatCount": 2049, "suffixHex": "", "accepted": false },
+    { "id": "nonfinite-view-number", "prefixHex": "0161800201010000000000000000f87f", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
+    { "id": "invalid-boolean", "prefixHex": "016180040102", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
+    { "id": "invalid-utf8", "prefixHex": "01ff0001", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
+    { "id": "connected-over-exact-range", "prefixHex": "0161008080808080808010", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false }
+  ]
+}

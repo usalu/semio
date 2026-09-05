@@ -863,7 +863,7 @@ const TAXONOMY_RELATIVE_PATH = "🧰️framework/🛍️products/🦑️repo/�
 const TRANSACTION_SENTINEL_CASES_FIXTURE_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️transaction-sentinel-cases.json";
 const TICKET_IMPORTANT_EXACT_MUTATIONS_FIXTURE_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️ticket-important-exact-mutations.json";
 const TICKET_IMPORTANT_EXACT_GOVERNED_SOURCES = [
-  ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️12/ENFORCE-WINDOW-APP-PANEL-AND-PLUGIN-CONTRACTS-AT-COMPILE-TIME/🧪️window-policy-fixture/🎛️apps/🧪️fixture/🎭️modes/🧪️mode/🪟️windows/🧪️component-window/👥️presence/📌️important.md",
+  ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️12/WINDOW-APP-PANEL-CONTRACTS/🧪️window-policy-fixture/🎛️apps/🧪️fixture/🎭️modes/🧪️mode/🪟️windows/🧪️component-window/👥️presence/📌️important.md",
   ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-5-DE-ASYNC-REPAIR-SWEEP/📌️important.md",
   ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/📌️important.md",
 ] as const;

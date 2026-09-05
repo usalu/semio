@@ -192,9 +192,9 @@ mod structural_correspondence_tests {
         {
             let kind = "edit-lhs";
             let aggregate_variant = "EditLhs";
-            let directory = "🔍️edit-lhs";
+            let directory = "👈️edit-lhs";
             let binary_tag = 1;
-            let owner = mutation_root.join("🔍️edit-lhs");
+            let owner = mutation_root.join("👈️edit-lhs");
             let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
             let descriptor_source = std::fs::read_to_string(owner.join("🔣️.json")).expect("direct language-neutral descriptor");
             let descriptor: pack::JsonValue = pack::parse_json(&descriptor_source).expect("direct descriptor must be valid JSON");
@@ -240,9 +240,9 @@ mod structural_correspondence_tests {
         {
             let kind = "edit-rhs";
             let aggregate_variant = "EditRhs";
-            let directory = "🎯️edit-rhs";
+            let directory = "👉️edit-rhs";
             let binary_tag = 2;
-            let owner = mutation_root.join("🎯️edit-rhs");
+            let owner = mutation_root.join("👉️edit-rhs");
             let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
             let descriptor_source = std::fs::read_to_string(owner.join("🔣️.json")).expect("direct language-neutral descriptor");
             let descriptor: pack::JsonValue = pack::parse_json(&descriptor_source).expect("direct descriptor must be valid JSON");

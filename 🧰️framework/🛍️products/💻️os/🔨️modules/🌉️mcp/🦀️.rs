@@ -153,6 +153,7 @@ pub fn core_tool_capabilities() -> Vec<CapabilityDefinition> {
     let mut capabilities = vec![capabilities_search_capability(), capabilities_describe_capability(), context_resolve_capability()];
     capabilities.extend(artifact_capabilities());
     capabilities.extend(inference_capabilities());
+    capabilities.extend(inference_job_capabilities());
     capabilities.extend(ui_capabilities());
     capabilities
 }
@@ -258,7 +259,7 @@ fn context_resolve_handler(catalog: &Catalog, counter: &std::sync::atomic::Atomi
 /// stubs (`artifact.*`, `job.*`, `ui.*`), so this is now purely a census: there is no such thing
 /// as a declared-but-unimplemented tool here any more. A tool's PRESENCE never depends on which
 /// progressive-enhancement tier the server is running in; only a call's RESULT does.
-pub const GATEWAY_TOOL_NAMES: [&str; 22] = [
+pub const GATEWAY_TOOL_NAMES: [&str; 26] = [
     "capabilities_search",
     "capabilities_describe",
     "context_resolve",
@@ -277,6 +278,10 @@ pub const GATEWAY_TOOL_NAMES: [&str; 22] = [
     "artifact_export",
     "inference_list",
     "inference_get",
+    "inference_submit",
+    "inference_events",
+    "inference_cancel",
+    "inference_approve",
     "ui_focus",
     "ui_reveal",
     "job_get",
@@ -294,9 +299,9 @@ fn now_ms() -> u64 {
 /// 🪪️ Every mutation-protocol tool call runs as this one fixed session, until a later packet makes
 /// `McpServer` connection/session-aware (`📓️terra-P1b-report.md` §7.2 already documents this as a
 /// P1b-only simplification every downstream facet inherits, not something this packet narrows).
-const DEFAULT_SESSION_ID: &str = "sess_default";
+pub(crate) const DEFAULT_SESSION_ID: &str = "sess_default";
 
-fn default_session() -> SessionHandle {
+pub(crate) fn default_session() -> SessionHandle {
     SessionHandle::new(DEFAULT_SESSION_ID)
 }
 
@@ -461,9 +466,11 @@ fn history_redo_handler(actions: &ActionAdapter, arguments: serde_json::Value) -
     }
 }
 
-/// 🏗️ Builds the real `ToolRegistry` this crate serves — 22 tools, none of them a stub: the 3 core
+/// 🏗️ Builds the real `ToolRegistry` this crate serves — 26 tools, none of them a stub: the 3 core
 /// gateway tools, the 8 mutation-protocol tools (`P6-actions-policy`, backed by `actions`/
-/// `principal`), the 5 `🗿️artifact` tools, the 2 `💡️inference` tools, and the 4 `🖥️ui` tools
+/// `principal`), the 5 `🗿️artifact` tools, the 2 `💡️inference` discovery tools, the 4 hub-backed
+/// `💡️inference` job tools (`inference_submit`/`inference_events`/`inference_cancel`/
+/// `inference_approve`), and the 4 `🖥️ui` tools
 /// (`ui_focus`/`ui_reveal`/`job_get`/`job_cancel`). Ticket 26/08/29/AI-MCP-END-TO-END retired
 /// the last of these stubs entirely.
 ///
@@ -544,6 +551,9 @@ pub fn build_tool_registry(
 
     register_artifact_tools(&mut registry, workspace.clone());
     register_inference_tools(&mut registry, workspace.clone());
+    //#region 💡️Inference
+    register_inference_job_tools(&mut registry, workspace.clone(), actions.clone(), principal.clone(), default_session());
+    //#endregion 💡️Inference
     register_ui_tools(&mut registry, bridge, workspace);
 
     registry
@@ -789,14 +799,14 @@ mod quick {
         assert_eq!(options.bind, "127.0.0.1");
     }
 
-    /// 🎯️ `tools/list` is 22 tools and every one of them is real: 3 core gateway + 8 mutation-protocol
+    /// 🎯️ `tools/list` is 26 tools and every one of them is real: 3 core gateway + 8 mutation-protocol
     /// + 5 `🗿️artifact` + 2 `💡️inference` + 4 `🖥️ui`. Ticket 26/08/29/AI-MCP-END-TO-END retired the
     /// last stub, so there is no longer a "declared but unimplemented" bucket to assert against.
     #[test]
     fn tools_list_is_the_full_real_gateway_surface() {
         let server = fixture_server();
         let tools = server.tools.list();
-        assert_eq!(tools.len(), 22, "tools: {:?}", tools.iter().map(|tool| &tool.name).collect::<Vec<_>>());
+        assert_eq!(tools.len(), 26, "tools: {:?}", tools.iter().map(|tool| &tool.name).collect::<Vec<_>>());
         for name in GATEWAY_TOOL_NAMES {
             assert!(tools.iter().any(|tool| tool.name == name), "missing tool {name}");
         }

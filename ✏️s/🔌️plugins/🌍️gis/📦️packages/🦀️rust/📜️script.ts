@@ -154,7 +154,15 @@ export async function proveGisMapCreateRegionGroup(repoRoot: string): Promise<vo
     if (hostile === "oversize") candidate.expected.maximumBytes++;
     if (admitted(candidate)) throw new Error(`GIS Map hostile group admitted ${hostile}`);
   }
-  console.log(`gis-map-create-region-group-check: checks=${14 + fixture.hostile.length} clean; atomic durable publication not claimed`);
+  const membershipSchema = JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")).$defs.groupMembership;
+  const validateMembership = new Ajv2020({ strict: true, allErrors: true }).compile(membershipSchema);
+  for (const row of fixture.membershipCases) {
+    const membership = { drawingChildId: row.deriveChildren ? "gismap-drawing" : row.drawingChildId, valueChildId: row.deriveChildren ? "gismap-value" : row.valueChildId, imageChildId: row.imageChildId };
+    const accepted = membership.drawingChildId === "gismap-drawing" && membership.valueChildId === "gismap-value" && membership.imageChildId === null;
+    if (validateMembership(membership) !== row.accepted || accepted !== row.accepted) throw new Error(`GIS Map membership parity failed: ${row.name}`);
+  }
+  if (!source.includes('fixture["membershipCases"]')) throw new Error("GIS Map native law does not consume membership cases");
+  console.log(`gis-map-create-region-group-check: checks=${14 + fixture.hostile.length + fixture.membershipCases.length} clean; atomic durable publication not claimed`);
 }
 
 class MapCreateRegionGroupCheckScript extends BundleScript {

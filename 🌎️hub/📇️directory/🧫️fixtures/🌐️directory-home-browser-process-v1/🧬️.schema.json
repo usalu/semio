@@ -3,7 +3,7 @@
   "$id": "semio.hub.directory-home-browser-process-fixture/v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "limits", "profiles", "home", "pages", "traces", "hostile"],
+  "required": ["schema", "limits", "spaceGuest", "profiles", "home", "pages", "traces", "hostile"],
   "properties": {
     "schema": { "const": "semio.hub.directory-home-browser-process-fixture/v1" },
     "limits": {
@@ -12,9 +12,26 @@
       "required": ["journeyMs", "stepMs", "responseBytes", "appliedEvents"],
       "properties": {
         "journeyMs": { "type": "integer", "minimum": 30000, "maximum": 180000 },
-        "stepMs": { "type": "integer", "minimum": 1000, "maximum": 15000 },
+        "stepMs": { "type": "integer", "minimum": 1000, "maximum": 60000 },
         "responseBytes": { "const": 65536 },
         "appliedEvents": { "type": "integer", "minimum": 8, "maximum": 512 }
+      }
+    },
+    "spaceGuest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target", "package", "nativeFeature", "forbiddenPackages"],
+      "properties": {
+        "target": { "const": "wasm32-wasip2" },
+        "package": { "const": "semio-s-plugin-space" },
+        "nativeFeature": { "const": "os-host-full" },
+        "forbiddenPackages": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": { "enum": ["ring", "cc", "tokio"] }
+        }
       }
     },
     "profiles": {
@@ -32,7 +49,7 @@
       "required": ["pluginId", "appId", "actionId", "moduleDirectory"],
       "properties": {
         "pluginId": { "const": "s" },
-        "appId": { "const": "s.home@1/*#editor" },
+        "appId": { "const": "s.space.home@1/*#editor" },
         "actionId": { "const": "applyDirectoryEventPage" },
         "moduleDirectory": { "const": "🪐️s" }
       }

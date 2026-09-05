@@ -1,0 +1,35 @@
+{
+  "schema": "semio.db.compaction.committed-effects/v1",
+  "floorHeadSeq": 10,
+  "segments": [
+    {
+      "index": 0,
+      "state": "sealed",
+      "transactions": [
+        {
+          "id": 1,
+          "outcome": "abort",
+          "records": [
+            { "kind": "snapshot", "headSeq": 100 },
+            { "kind": "payload", "payload": "aborted" }
+          ]
+        },
+        {
+          "id": 2,
+          "outcome": "commit",
+          "records": [
+            { "kind": "frontier", "headSeq": 1 },
+            { "kind": "payload", "payload": "committed" }
+          ]
+        }
+      ]
+    },
+    { "index": 1, "state": "active", "transactions": [] }
+  ],
+  "expected": {
+    "deletedSegments": 1,
+    "deletedPayloads": 1,
+    "remainingSegments": [1],
+    "retainedPayloads": ["aborted"]
+  }
+}

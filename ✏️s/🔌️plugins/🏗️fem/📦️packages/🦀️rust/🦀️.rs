@@ -179,7 +179,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/⚪️create-node/🧪️tests/🟫️appends-node-n3/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/⚪️create-node/🧪️tests/📍️appends-node-n3/🦀️.rs"]
                                     mod tests_appends_node_n3;
                                 }
                                 #[path = "."]
@@ -205,7 +205,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧩️create-element/🧪️tests/🦊️appends-bar-e2-between-n2-and-n3/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧩️create-element/🧪️tests/➖️appends-bar-e2-between-n2-and-n3/🦀️.rs"]
                                     mod tests_appends_bar_e2_between_n2_and_n3;
                                 }
                                 #[path = "."]
@@ -231,7 +231,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element/🧪️tests/🐺️converts-beam-e1-into-a-bar-in-place/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element/🧪️tests/♻️converts-beam-e1-into-a-bar-in-place/🦀️.rs"]
                                     mod tests_converts_beam_e1_into_a_bar_in_place;
                                 }
                                 #[path = "."]
@@ -244,7 +244,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🟠️appends-concrete-c30/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🧱️appends-concrete-c30/🦀️.rs"]
                                     mod tests_appends_concrete_c30;
                                 }
                                 #[path = "."]
@@ -270,7 +270,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🦁️restates-steel-as-s355-in-its-original-slot/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🏗️restates-steel-as-s355-in-its-original-slot/🦀️.rs"]
                                     mod tests_restates_steel_as_s355_in_its_original_slot;
                                 }
                                 #[path = "."]
@@ -283,7 +283,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📐️create-section/🧪️tests/🐬️appends-the-ipe300-profile/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📐️create-section/🧪️tests/📐️appends-the-ipe300-profile/🦀️.rs"]
                                     mod tests_appends_the_ipe300_profile;
                                 }
                                 #[path = "."]
@@ -309,7 +309,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/🌾️stiffens-ipe200-with-a-reinforced-profile/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/💪️stiffens-ipe200-with-a-reinforced-profile/🦀️.rs"]
                                     mod tests_stiffens_ipe200_with_a_reinforced_profile;
                                 }
                                 #[path = "."]
@@ -322,7 +322,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🟣️adds-a-vertical-roller-at-node-n2/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🛞️adds-a-vertical-roller-at-node-n2/🦀️.rs"]
                                     mod tests_adds_a_vertical_roller_at_node_n2;
                                 }
                                 #[path = "."]
@@ -335,7 +335,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔖️releases-the-roller-at-node-n2/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-roller-at-node-n2/🦀️.rs"]
                                     mod tests_releases_the_roller_at_node_n2;
                                 }
                                 #[path = "."]
@@ -348,7 +348,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/⚪️upgrades-the-roller-at-n2-to-a-full-fixity/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔒️upgrades-the-roller-at-n2-to-a-full-fixity/🦀️.rs"]
                                     mod tests_upgrades_the_roller_at_n2_to_a_full_fixity;
                                 }
                                 #[path = "."]
@@ -361,7 +361,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗺️create-region/🧪️tests/🌷️appends-a-solid-rectangular-slab/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗺️create-region/🧪️tests/🧱️appends-a-solid-rectangular-slab/🦀️.rs"]
                                     mod tests_appends_a_solid_rectangular_slab;
                                 }
                                 #[path = "."]
@@ -387,7 +387,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-region/🧪️tests/📬️punches-a-stair-opening-through-the-slab/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-region/🧪️tests/🪜️punches-a-stair-opening-through-the-slab/🦀️.rs"]
                                     mod tests_punches_a_stair_opening_through_the_slab;
                                 }
                                 #[path = "."]
@@ -400,7 +400,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/⚓️appends-a-live-case-carrying-one-nodal-load/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/📍️appends-a-live-case-carrying-one-nodal-load/🦀️.rs"]
                                     mod tests_appends_a_live_case_carrying_one_nodal_load;
                                 }
                                 #[path = "."]
@@ -426,7 +426,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➕️add-load/🧪️tests/🦀️appends-a-member-udl-to-the-dead-case/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➕️add-load/🧪️tests/📏️appends-a-member-udl-to-the-dead-case/🦀️.rs"]
                                     mod tests_appends_a_member_udl_to_the_dead_case;
                                 }
                                 #[path = "."]
@@ -439,7 +439,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/🪻️strips-the-trailing-member-udl-from-the-dead-case/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/➖️strips-the-trailing-member-udl-from-the-dead-case/🦀️.rs"]
                                     mod tests_strips_the_trailing_member_udl_from_the_dead_case;
                                 }
                                 #[path = "."]
@@ -452,7 +452,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/🌳️switches-self-weight-on-for-the-dead-case/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/⚖️switches-self-weight-on-for-the-dead-case/🦀️.rs"]
                                     mod tests_switches_self_weight_on_for_the_dead_case;
                                 }
                                 #[path = "."]
@@ -465,7 +465,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🤖️appends-an-uls-combination-over-both-cases/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🔗️appends-an-uls-combination-over-both-cases/🦀️.rs"]
                                     mod tests_appends_an_uls_combination_over_both_cases;
                                 }
                                 #[path = "."]
@@ -478,7 +478,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/🤖️removes-the-uls-combination-and-keeps-both-cases/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/✂️removes-the-uls-combination-and-keeps-both-cases/🦀️.rs"]
                                     mod tests_removes_the_uls_combination_and_keeps_both_cases;
                                 }
                                 #[path = "."]
@@ -806,7 +806,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/⚪️create-node/🧪️tests/🪻️appends-the-column-head-node-n3/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/⚪️create-node/🧪️tests/📍️appends-the-column-head-node-n3/🦀️.rs"]
                                     mod tests_appends_the_column_head_node_n3;
                                 }
                                 #[path = "."]
@@ -832,7 +832,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧩️create-element/🧪️tests/🟦️appends-a-diagonal-bracing-bar/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧩️create-element/🧪️tests/➖️appends-a-diagonal-bracing-bar/🦀️.rs"]
                                     mod tests_appends_a_diagonal_bracing_bar;
                                 }
                                 #[path = "."]
@@ -858,7 +858,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element/🧪️tests/🛰️rolls-the-column-about-its-own-axis/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element/🧪️tests/🔄️rolls-the-column-about-its-own-axis/🦀️.rs"]
                                     mod tests_rolls_the_column_about_its_own_axis;
                                 }
                                 #[path = "."]
@@ -871,7 +871,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🪄️appends-an-aluminium-alloy/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🪙️appends-an-aluminium-alloy/🦀️.rs"]
                                     mod tests_appends_an_aluminium_alloy;
                                 }
                                 #[path = "."]
@@ -897,7 +897,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🪻️softens-the-steel-shear-modulus-in-place/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/📉️softens-the-steel-shear-modulus-in-place/🦀️.rs"]
                                     mod tests_softens_the_steel_shear_modulus_in_place;
                                 }
                                 #[path = "."]
@@ -910,7 +910,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📐️create-section/🧪️tests/🌲️appends-a-square-hollow-profile/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📐️create-section/🧪️tests/🔳️appends-a-square-hollow-profile/🦀️.rs"]
                                     mod tests_appends_a_square_hollow_profile;
                                 }
                                 #[path = "."]
@@ -936,7 +936,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/🌾️raises-the-torsion-constant-of-hea200/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/🌀️raises-the-torsion-constant-of-hea200/🦀️.rs"]
                                     mod tests_raises_the_torsion_constant_of_hea200;
                                 }
                                 #[path = "."]
@@ -949,7 +949,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🐬️clamps-the-column-base-in-all-six-dofs/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🔒️clamps-the-column-base-in-all-six-dofs/🦀️.rs"]
                                     mod tests_clamps_the_column_base_in_all_six_dofs;
                                 }
                                 #[path = "."]
@@ -962,7 +962,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔖️releases-the-pinned-node-n2/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-pinned-node-n2/🦀️.rs"]
                                     mod tests_releases_the_pinned_node_n2;
                                 }
                                 #[path = "."]
@@ -975,7 +975,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🎨️frees-the-three-rotations-at-the-column-base/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔄️frees-the-three-rotations-at-the-column-base/🦀️.rs"]
                                     mod tests_frees_the_three_rotations_at_the_column_base;
                                 }
                                 #[path = "."]
@@ -988,7 +988,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧊️create-solid/🧪️tests/🎨️appends-an-extruded-roof-slab/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧊️create-solid/🧪️tests/🏠️appends-an-extruded-roof-slab/🦀️.rs"]
                                     mod tests_appends_an_extruded_roof_slab;
                                 }
                                 #[path = "."]
@@ -1014,7 +1014,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-solid/🧪️tests/🌷️thickens-the-slab-and-adds-a-mesh-layer/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-solid/🧪️tests/📚️thickens-the-slab-and-adds-a-mesh-layer/🦀️.rs"]
                                     mod tests_thickens_the_slab_and_adds_a_mesh_layer;
                                 }
                                 #[path = "."]
@@ -1027,7 +1027,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/🟥️appends-a-wind-case-pushing-on-the-column-head/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/🌬️appends-a-wind-case-pushing-on-the-column-head/🦀️.rs"]
                                     mod tests_appends_a_wind_case_pushing_on_the_column_head;
                                 }
                                 #[path = "."]
@@ -1053,7 +1053,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➕️add-load/🧪️tests/🎯️lays-an-area-pressure-over-the-roof-slab/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➕️add-load/🧪️tests/🏠️lays-an-area-pressure-over-the-roof-slab/🦀️.rs"]
                                     mod tests_lays_an_area_pressure_over_the_roof_slab;
                                 }
                                 #[path = "."]
@@ -1066,7 +1066,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/🟡️drops-the-trailing-member-udl-from-the-dead-case/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/➖️drops-the-trailing-member-udl-from-the-dead-case/🦀️.rs"]
                                     mod tests_drops_the_trailing_member_udl_from_the_dead_case;
                                 }
                                 #[path = "."]
@@ -1079,7 +1079,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/🟠️switches-self-weight-off-for-the-dead-case/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/⏸️switches-self-weight-off-for-the-dead-case/🦀️.rs"]
                                     mod tests_switches_self_weight_off_for_the_dead_case;
                                 }
                                 #[path = "."]
@@ -1092,7 +1092,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🪪️appends-a-serviceability-combination-keyed-by-case-id/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🔗️appends-a-serviceability-combination-keyed-by-case-id/🦀️.rs"]
                                     mod tests_appends_a_serviceability_combination_keyed_by_case_id;
                                 }
                                 #[path = "."]
@@ -1105,7 +1105,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/🤖️removes-the-serviceability-combination-and-keeps-both-cases/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/✂️removes-the-serviceability-combination-and-keeps-both-cases/🦀️.rs"]
                                     mod tests_removes_the_serviceability_combination_and_keeps_both_cases;
                                 }
                                 #[path = "."]

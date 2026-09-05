@@ -34,7 +34,7 @@
 //! ## §6: `ruststep` is the independent READER, never a second producer
 //! `ruststep` 0.4 parses real ISO 10303-21 clear text but has no writer, so nothing here claims a
 //! differential against a third-party PRODUCER; every scenario in
-//! `../../../../🧪️tests/🏔️mutate-ifc-2x3-sav/🥒️.feature` is typed `@mode-property`/
+//! `../../../../🧪️tests/🧮️mutate-ifc-2x3-sav/🥒️.feature` is typed `@mode-property`/
 //! `@mode-round-trip`. `ruststep` IS what reads every result back, through `project_ifc_2x3_sav`.
 //!
 //! @see 🔣️.json — the oracle registration and the `ifc-2x3-sav` mutation catalog.
@@ -250,7 +250,7 @@ mod tests {
     use super::{oracle_apply_mutation, project_ifc_2x3_sav};
     use semio_repo_test_host::Json;
 
-    const FIXTURE: &[u8] = include_bytes!("../../../../../🧫️fixtures/🏗️wellness-center-sama-structural-seed/🏗️wellness-center-sama-structural-seed.ifc");
+    const FIXTURE: &[u8] = include_bytes!("../🧫️fixtures/🏗️wellness-center-sama-structural-seed/🏗️wellness-center-sama-structural-seed.ifc");
 
     fn obj(entries: Vec<(&str, Json)>) -> Json {
         Json::Object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect())

@@ -4,7 +4,7 @@
 //! `add-layer`'s production diff (`📐️cad/🧬️schema/🧬️mutations/🗂️add-layer/🦀️.rs` delegating into
 //! `agg_diff`) is `NamedTripleDiff{added: vec![layer.clone()], removed: [], modified: []}` on
 //! `SemioCadSnapshot::layers` — a plain unique-named append, validated only for a non-duplicate
-//! `name` (`validate_named_triple`, `✳️base/🧬️schema/🧰️triples/🦀️.rs`). No computed field, no
+//! `name` (`validate_named_triple`, `✉️base/🧬️schema/🧰️triples/🦀️.rs`). No computed field, no
 //! cross-reference. A genuinely fresh layer name makes a domain-blind JSON array push structurally
 //! identical to production's own outcome.
 

@@ -2,7 +2,7 @@
   "schema": "semio.hub.gis-inference-ledger-fixture/v1",
   "version": 1,
   "nowMs": 1000,
-  "identityDigest": "ed553932b204a9932a172c52ca36bf08610b7000626d199d5416a365fdceb128",
+  "identityDigest": "68d680b3aa08a1fb3efe23fcf0f514f7f991a60e9d48ae0e9fab59e1877a57cd",
   "identity": {
     "request": { "schema": "semio.hub.inference-request/v1", "version": 1, "requestId": "11111111111111111111111111111111", "serviceId": "s.gis.gismap.inference", "policyVersion": 1, "lifetimeMs": 120000 },
     "userId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
@@ -12,7 +12,7 @@
     "documentId": "dddddddddddddddddddddddddddddddd",
     "descriptorDigest": "1111111111111111111111111111111111111111111111111111111111111111",
     "binding": {
-      "digest": "8e190c785b3f436141c539bf06468f8bd07c5f41a712aeea752ca505c56b85d1",
+      "digest": "435e02065db2d2e0694b6b1c468ee24ae8fe8711432f112f510aaa103a546386",
       "catalogGenerationId": "0101010101010101010101010101010101010101010101010101010101010101",
       "packageId": "semio:gis",
       "packageVersion": "0.1.0",
@@ -48,11 +48,11 @@
   ],
   "outbox": {
     "proposal": "ledger-only-proposal",
-    "commandHex": "2063656337396636613535386231323136363636356465646539656230636536364976313a33323a33323a636363636363636363636363636363636363636363636363636363636363636364646464646464646464646464646464646464646464646464646464646464644e757365723a61616161616161616161616161616161616161616161616161616161616161612373657373696f6e3a626262626262626262626262626262626262626262626262626262626262626200076769732e6d617003010203076769732e6d61700303020101e80700",
-    "jobId": "def1e2178d0dbbc3a290ec4715c21dc9",
+    "commandHex": "2038636633326462326261376338313235313532383264323632633939363938654976313a33323a33323a636363636363636363636363636363636363636363636363636363636363636364646464646464646464646464646464646464646464646464646464646464644e757365723a61616161616161616161616161616161616161616161616161616161616161612373657373696f6e3a626262626262626262626262626262626262626262626262626262626262626200076769732e6d617003010203076769732e6d61700303020101e80700",
+    "jobId": "f653d75998c20ce644be85b6ca94c3a2",
     "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc",
-    "commandHash": "61f583b4a007941be3537433dabeeb42c5d777bd8d5078c8c810f09e70e8f995",
-    "mutationId": "cec79f6a558b12166665dede9eb0ce66",
+    "commandHash": "1713556819f9e4f58ffbba3b6be7237a6ad14d05a19c3327052303a66f66bf6d",
+    "mutationId": "8cf32db2ba7c812515282d262c99698e",
     "preparedCount": 1,
     "reconciledCount": 1
   },
@@ -70,7 +70,7 @@
     { "name": "uppercase-catalog-generation", "path": ["binding", "catalogGenerationId"], "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" },
     { "name": "removed-generation-alias", "path": ["catalogGeneration"], "value": 1 },
     { "name": "removed-package-hash-alias", "path": ["packageHash"], "value": "2222222222222222222222222222222222222222222222222222222222222222" },
-    { "name": "binding-digest-short", "path": ["binding", "digest"], "value": "8e190c785b3f436141c539bf06468f8bd07c5f41a712aeea752ca505c56b85d" },
+    { "name": "binding-digest-short", "path": ["binding", "digest"], "value": "435e02065db2d2e0694b6b1c468ee24ae8fe8711432f112f510aaa103a54638" },
     { "name": "foreign-component-blake3", "path": ["binding", "componentBlake3"], "value": "1212121212121212121212121212121212121212121212121212121212121212ff" },
     { "name": "empty-package-version", "path": ["binding", "packageVersion"], "value": "" },
     { "name": "foreign-package", "path": ["binding", "packageId"], "value": "semio:stdio" },

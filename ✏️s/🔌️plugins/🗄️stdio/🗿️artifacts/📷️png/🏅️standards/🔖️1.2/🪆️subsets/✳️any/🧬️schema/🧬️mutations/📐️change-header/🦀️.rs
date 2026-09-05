@@ -59,8 +59,8 @@ pub fn contribute(base: &PngSnapshot, width: u32, height: u32, bit_depth: u8, co
 
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
-    serde_json::from_str(include_str!("🧪️tests/🟣️direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-header payload")
+    serde_json::from_str(include_str!("🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-header payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/🟣️direct-behavior/🦀️.rs"]
+#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
 mod tests_direct_behavior;

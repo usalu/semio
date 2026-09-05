@@ -17,23 +17,23 @@ pub struct DeleteGripKind {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn delete_grip_kind(id: String) -> Block5dMutation {
+pub fn delete_grip_kind(id: String) -> Block5dMutation {
     Block5dMutation::DeleteGripKind(DeleteGripKind { id })
 }
 
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for DeleteGripKind {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "grip-kind", kind: "delete-grip-kind", record: "DeletedGripKind" };
 
-    async fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+    fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
+    fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Delete grip kind \"{}\"", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

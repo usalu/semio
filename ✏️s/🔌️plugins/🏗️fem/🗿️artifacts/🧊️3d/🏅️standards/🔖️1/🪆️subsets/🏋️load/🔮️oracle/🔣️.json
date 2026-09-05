@@ -16,7 +16,7 @@
           "scenarios": [
             {
               "id": "lays-an-area-pressure-over-the-roof-slab",
-              "directoryName": "🧪️lays-an-area-pressure-over-the-roof-slab"
+              "directoryName": "🏠️lays-an-area-pressure-over-the-roof-slab"
             }
           ]
         },
@@ -27,7 +27,7 @@
           "scenarios": [
             {
               "id": "switches-self-weight-off-for-the-dead-case",
-              "directoryName": "🧪️switches-self-weight-off-for-the-dead-case"
+              "directoryName": "⏸️switches-self-weight-off-for-the-dead-case"
             }
           ]
         },
@@ -38,7 +38,7 @@
           "scenarios": [
             {
               "id": "appends-a-serviceability-combination-keyed-by-case-id",
-              "directoryName": "🧪️appends-a-serviceability-combination-keyed-by-case-id"
+              "directoryName": "🔗️appends-a-serviceability-combination-keyed-by-case-id"
             }
           ]
         },
@@ -49,7 +49,7 @@
           "scenarios": [
             {
               "id": "appends-a-wind-case-pushing-on-the-column-head",
-              "directoryName": "🧪️appends-a-wind-case-pushing-on-the-column-head"
+              "directoryName": "🌬️appends-a-wind-case-pushing-on-the-column-head"
             }
           ]
         },
@@ -60,7 +60,7 @@
           "scenarios": [
             {
               "id": "removes-the-serviceability-combination-and-keeps-both-cases",
-              "directoryName": "🧪️removes-the-serviceability-combination-and-keeps-both-cases"
+              "directoryName": "✂️removes-the-serviceability-combination-and-keeps-both-cases"
             }
           ]
         },
@@ -71,7 +71,7 @@
           "scenarios": [
             {
               "id": "removes-the-wind-case-together-with-its-load",
-              "directoryName": "🧪️removes-the-wind-case-together-with-its-load"
+              "directoryName": "🚫️removes-the-wind-case-together-with-its-load"
             }
           ]
         },
@@ -82,7 +82,7 @@
           "scenarios": [
             {
               "id": "drops-the-trailing-member-udl-from-the-dead-case",
-              "directoryName": "🧪️drops-the-trailing-member-udl-from-the-dead-case"
+              "directoryName": "➖️drops-the-trailing-member-udl-from-the-dead-case"
             }
           ]
         }

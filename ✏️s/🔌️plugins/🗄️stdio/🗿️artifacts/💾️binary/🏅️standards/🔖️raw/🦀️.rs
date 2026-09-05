@@ -11,6 +11,7 @@ use semio_framework_plugin::StandardId;
 
 /// 🌳️ `standard "raw"`'s complete declaration — one subset, `any`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+#[cfg(feature = "full-artifact-catalog")]
 pub fn standard() -> StandardDeclaration<crate::plugin::StdioApps> {
     StandardDeclaration { id: StandardId("raw"), media: MediaDeclaration { mimes: &["application/octet-stream"], extensions: &["bin"] }, subsets: vec![subsets::any::subset()] }
 }

@@ -29,6 +29,7 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 /// too is a follow-up, not required for the carrier law or for this tree to register cleanly
 /// (see `📓️w2-p-report.md` `## openQuestions`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+#[cfg(feature = "full-artifact-catalog")]
 pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::plugin::StdioApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;

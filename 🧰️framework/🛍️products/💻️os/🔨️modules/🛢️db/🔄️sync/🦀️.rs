@@ -123,39 +123,44 @@ pub struct ArtifactSyncState {
     pub floor_head_seq: u64,
 }
 
-/// @emoji 🔁️ Replays `document`'s entire currently-retained WAL via `db_wal::replay_document` and
+/// @emoji 🔁️ Replays committed transactions via `db_wal::replay_committed_document` and
 /// derives its `ArtifactSyncState` — see the struct's doc for exactly how each field is derived.
 pub async fn replay_sync_state(storage: &impl db_storage::WalStorage, document: ArtifactId) -> Result<ArtifactSyncState, DbError> {
     let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
     let control = db_wal::WalCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
-    let mut records = db_wal::replay_document(storage, &document, control).await?;
+    let mut records = db_wal::replay_committed_document(storage, &document, control).await?;
     let mut decode_control = db_wal::WalCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
     let mut commands = Vec::new();
     let mut chain = semio_framework_hash::Hasher::new();
     let mut commit_seq = 0u64;
     let mut floor_head_seq = 0u64;
-    loop {
-        let mut record = match records.next_step().await? {
-            db_wal::WalReplayStep::Record(record) => record,
-            db_wal::WalReplayStep::Yield => continue,
-            db_wal::WalReplayStep::Done => break,
-        };
-        match &mut record {
-            db_wal::WalRecord::Command(bytes) => {
-                commands.push(decode_retained_command_envelope(bytes, &mut decode_control).await?);
-                chain.update(&bytes.hash().await);
+    let replay = async {
+        loop {
+            let mut transaction = match records.next_transaction_step().await? {
+                db_wal::WalCommittedStep::Transaction(transaction) => transaction,
+                db_wal::WalCommittedStep::Yield => { semio_framework_async::yield_once().await; continue; }
+                db_wal::WalCommittedStep::Done => break,
+            };
+            loop {
+                match transaction.next_record_step()? {
+                    db_wal::WalCommittedRecordStep::Record(db_wal::WalRecord::Command(bytes)) => {
+                        commands.push(decode_retained_command_envelope(bytes, &mut decode_control).await?);
+                        chain.update(&bytes.hash().await);
+                    }
+                    db_wal::WalCommittedRecordStep::Record(db_wal::WalRecord::SnapshotPub { frontier, .. }) => floor_head_seq = frontier.head_seq,
+                    db_wal::WalCommittedRecordStep::Record(_) => {}
+                    db_wal::WalCommittedRecordStep::Yield => { semio_framework_async::yield_once().await; continue; }
+                    db_wal::WalCommittedRecordStep::Done => break,
+                }
+                while transaction.close_record_step()? { semio_framework_async::yield_once().await; }
             }
-            db_wal::WalRecord::TxCommit { .. } => commit_seq += 1,
-            // 🎯️ Overwritten on every occurrence rather than max()'d: `WalRecord`s replay in
-            // on-disk (chronological) order, so the last one seen is always the most recent.
-            db_wal::WalRecord::SnapshotPub { frontier, .. } => floor_head_seq = frontier.head_seq,
-            _ => {}
+            transaction.finish()?;
+            commit_seq = commit_seq.checked_add(1).ok_or(DbError::LimitExceeded("sync replay commit sequence"))?;
         }
-        let _ = record.close_step()?;
-        drop(record);
-        semio_framework_async::yield_once().await;
-    }
-    let _ = records.close_step().await?;
+        Ok::<(), DbError>(())
+    }.await;
+    while records.close_owner_step()? { semio_framework_async::yield_once().await; }
+    replay?;
     drop(records);
     let head_seq = commands.len() as u64;
     let chain_hash = if commands.is_empty() { [0; 32] } else { *chain.finalize().as_bytes() };
@@ -721,6 +726,23 @@ fn database_sync_hello_control(cancelled: &std::sync::atomic::AtomicBool, expire
     Ok(())
 }
 
+fn database_sync_hello_turn_exhausted(error: &DbError) -> bool {
+    matches!(error, DbError::LimitExceeded("wal cursor fuel")) || matches!(error, DbError::Unavailable(message) if message == "wal cursor deadline reached")
+}
+
+async fn database_sync_hello_read<T>(control: &mut db_wal::WalCursorControl, cancelled: &std::sync::atomic::AtomicBool, expired: &std::sync::atomic::AtomicBool, mut read: impl FnMut(&mut db_wal::WalCursorControl) -> Result<T, DbError>) -> Result<T, DbError> {
+    loop {
+        database_sync_hello_control(cancelled, expired)?;
+        match read(control) {
+            Err(error) if database_sync_hello_turn_exhausted(&error) => {
+                database_sync_hello_opportunity(cancelled, expired).await?;
+                control.replenish(std::time::Instant::now() + std::time::Duration::from_millis(DATABASE_SYNC_HELLO_TURN_MS), DATABASE_SYNC_HELLO_MAX_ITEMS)?;
+            }
+            result => return result,
+        }
+    }
+}
+
 fn database_sync_hello_allocate_envelope_vec<T>(ledger: &mut DatabaseSyncHelloBackingLedger, count: usize) -> Result<Vec<T>, DbError> {
     if count == 0 {
         return Ok(Vec::new());
@@ -819,11 +841,11 @@ async fn database_sync_hello_decode_text(
     cancelled: &std::sync::atomic::AtomicBool,
     expired: &std::sync::atomic::AtomicBool,
 ) -> Result<String, DbError> {
-    let mut remaining = cursor.begin_field(4_096, control)?;
+    let mut remaining = database_sync_hello_read(control, cancelled, expired, |control| cursor.begin_field(4_096, control)).await?;
     let mut output = database_sync_hello_allocate_envelope_vec::<u8>(ledger, remaining)?;
     let mut fragment = [0u8; 1_024];
     while remaining != 0 {
-        let copied = match cursor.read_field_fragment(&mut remaining, &mut fragment, control) {
+        let copied = match database_sync_hello_read(control, cancelled, expired, |control| cursor.read_field_fragment(&mut remaining, &mut fragment, control)).await {
             Ok(copied) => copied,
             Err(error) => {
                 database_sync_hello_retire_vec(&mut output, ledger)?;
@@ -853,11 +875,11 @@ async fn database_sync_hello_decode_payload(
     cancelled: &std::sync::atomic::AtomicBool,
     expired: &std::sync::atomic::AtomicBool,
 ) -> Result<Vec<u8>, DbError> {
-    let mut remaining = cursor.begin_field(DATABASE_SYNC_HELLO_MAX_BYTES as u64, control)?;
+    let mut remaining = database_sync_hello_read(control, cancelled, expired, |control| cursor.begin_field(DATABASE_SYNC_HELLO_MAX_BYTES as u64, control)).await?;
     let mut output = database_sync_hello_allocate_envelope_vec::<u8>(ledger, remaining)?;
     let mut fragment = [0u8; 4_096];
     while remaining != 0 {
-        let copied = match cursor.read_field_fragment(&mut remaining, &mut fragment, control) {
+        let copied = match database_sync_hello_read(control, cancelled, expired, |control| cursor.read_field_fragment(&mut remaining, &mut fragment, control)).await {
             Ok(copied) => copied,
             Err(error) => {
                 database_sync_hello_retire_vec(&mut output, ledger)?;
@@ -886,7 +908,7 @@ async fn database_sync_hello_decode_envelope(
         owner.mutation_id = database_sync_hello_decode_text(&mut cursor, control, ledger, cancelled, expired).await?;
         owner.document_id = database_sync_hello_decode_text(&mut cursor, control, ledger, cancelled, expired).await?;
         owner.actor = database_sync_hello_decode_text(&mut cursor, control, ledger, cancelled, expired).await?;
-        let count = cursor.varint(control)?;
+        let count = database_sync_hello_read(control, cancelled, expired, |control| cursor.varint(control)).await?;
         check_len(count, DATABASE_SYNC_HELLO_MAX_ITEMS as u64, "database sync hello WAL dependencies")?;
         owner.dependencies = database_sync_hello_allocate_envelope_vec::<protocol::MutationId>(ledger, count as usize)?;
         for _ in 0..count {
@@ -897,7 +919,11 @@ async fn database_sync_hello_decode_envelope(
         owner.diff_payload = database_sync_hello_decode_payload(&mut cursor, control, ledger, cancelled, expired).await?;
         owner.inverse_schema = database_sync_hello_decode_text(&mut cursor, control, ledger, cancelled, expired).await?;
         owner.inverse_payload = database_sync_hello_decode_payload(&mut cursor, control, ledger, cancelled, expired).await?;
-        let timestamp = protocol::HybridLogicalTimestamp { actor: cursor.varint(control)?, physical_ms: cursor.varint(control)?, logical: cursor.varint(control)? };
+        let timestamp = protocol::HybridLogicalTimestamp {
+            actor: database_sync_hello_read(control, cancelled, expired, |control| cursor.varint(control)).await?,
+            physical_ms: database_sync_hello_read(control, cancelled, expired, |control| cursor.varint(control)).await?,
+            logical: database_sync_hello_read(control, cancelled, expired, |control| cursor.varint(control)).await?,
+        };
         if cursor.remaining() != 0 {
             return Err(DbError::Corrupt("database sync hello WAL command has trailing bytes".to_string()));
         }
@@ -957,7 +983,7 @@ async fn replay_sync_state_retained(
     database_sync_hello_control(&cancelled, &expired)?;
     let wal = storage.wal().await;
     database_sync_hello_control(&cancelled, &expired)?;
-    let mut records = db_wal::replay_document(&wal, &document, control).await?;
+    let mut records = db_wal::replay_committed_document(&wal, &document, control).await?;
     let mut decode_control = db_wal::WalCursorControl::new(cancelled.clone(), deadline, DATABASE_SYNC_HELLO_MAX_ITEMS)?;
     let mut commands = database_sync_hello_allocate_vec::<protocol::MutationEnvelope>(ledger, DATABASE_SYNC_HELLO_MAX_ITEMS, "database sync hello command shell")?;
     let mut chain = semio_framework_hash::Hasher::new();
@@ -969,38 +995,51 @@ async fn replay_sync_state_retained(
             records.replenish(deadline, DATABASE_SYNC_HELLO_MAX_ITEMS)?;
             decode_control.replenish(deadline, DATABASE_SYNC_HELLO_MAX_ITEMS)?;
             database_sync_hello_control(&cancelled, &expired)?;
-            let mut record = match records.next_step().await? {
-                db_wal::WalReplayStep::Record(record) => record,
-                db_wal::WalReplayStep::Yield => {
+            let mut transaction = match records.next_transaction_step().await {
+                Ok(db_wal::WalCommittedStep::Transaction(transaction)) => transaction,
+                Ok(db_wal::WalCommittedStep::Yield) => {
                     database_sync_hello_opportunity(&cancelled, &expired).await?;
                     continue;
                 }
-                db_wal::WalReplayStep::Done => break,
+                Ok(db_wal::WalCommittedStep::Done) => break,
+                Err(error) if database_sync_hello_turn_exhausted(&error) => { database_sync_hello_opportunity(&cancelled, &expired).await?; continue; }
+                Err(error) => return Err(error),
             };
-            match &mut record {
-                db_wal::WalRecord::Command(bytes) => {
-                    progress.store(DatabaseSyncHelloProgress::Decode as u8, std::sync::atomic::Ordering::Release);
-                    let envelope = database_sync_hello_decode_envelope(bytes, &mut decode_control, ledger, &cancelled, &expired).await?;
-                    commands.push(envelope);
-                    chain.update(&bytes.hash().await);
+            loop {
+                let deadline = std::time::Instant::now() + std::time::Duration::from_millis(DATABASE_SYNC_HELLO_TURN_MS);
+                transaction.replenish(deadline, DATABASE_SYNC_HELLO_MAX_ITEMS)?;
+                decode_control.replenish(deadline, DATABASE_SYNC_HELLO_MAX_ITEMS)?;
+                database_sync_hello_control(&cancelled, &expired)?;
+                match transaction.next_record_step() {
+                    Ok(db_wal::WalCommittedRecordStep::Record(db_wal::WalRecord::Command(bytes))) => {
+                        progress.store(DatabaseSyncHelloProgress::Decode as u8, std::sync::atomic::Ordering::Release);
+                        let envelope = database_sync_hello_decode_envelope(bytes, &mut decode_control, ledger, &cancelled, &expired).await?;
+                        commands.push(envelope);
+                        chain.update(&bytes.hash().await);
+                    }
+                    Ok(db_wal::WalCommittedRecordStep::Record(db_wal::WalRecord::SnapshotPub { frontier, .. })) => floor_head_seq = frontier.head_seq,
+                    Ok(db_wal::WalCommittedRecordStep::Record(_)) => {}
+                    Ok(db_wal::WalCommittedRecordStep::Yield) => { database_sync_hello_opportunity(&cancelled, &expired).await?; continue; }
+                    Ok(db_wal::WalCommittedRecordStep::Done) => break,
+                    Err(error) if database_sync_hello_turn_exhausted(&error) => { database_sync_hello_opportunity(&cancelled, &expired).await?; continue; }
+                    Err(error) => return Err(error),
                 }
-                db_wal::WalRecord::TxCommit { .. } => commit_seq = commit_seq.checked_add(1).ok_or(DbError::LimitExceeded("database sync hello commit sequence"))?,
-                db_wal::WalRecord::SnapshotPub { frontier, .. } => floor_head_seq = frontier.head_seq,
-                _ => {}
+                while transaction.close_record_step()? { semio_framework_async::yield_once().await; }
+                database_sync_hello_opportunity(&cancelled, &expired).await?;
             }
-            let _ = record.close_step()?;
+            transaction.finish()?;
+            commit_seq = commit_seq.checked_add(1).ok_or(DbError::LimitExceeded("database sync hello commit sequence"))?;
             database_sync_hello_opportunity(&cancelled, &expired).await?;
         }
-        records.replenish(std::time::Instant::now() + std::time::Duration::from_millis(DATABASE_SYNC_HELLO_TURN_MS), DATABASE_SYNC_HELLO_MAX_ITEMS)?;
         database_sync_hello_control(&cancelled, &expired)?;
-        while records.close_step().await? {
-            records.replenish(std::time::Instant::now() + std::time::Duration::from_millis(DATABASE_SYNC_HELLO_TURN_MS), DATABASE_SYNC_HELLO_MAX_ITEMS)?;
-            database_sync_hello_opportunity(&cancelled, &expired).await?;
-            database_sync_hello_control(&cancelled, &expired)?;
-        }
         Ok::<(), DbError>(())
     }
     .await;
+    let close = async {
+        while records.close_owner_step()? { semio_framework_async::yield_once().await; }
+        Ok::<(), DbError>(())
+    }.await;
+    let replay = replay.and(close);
     if let Err(error) = replay {
         let mut control_error = None;
         while let Some(envelope) = commands.pop() {
@@ -2555,6 +2594,59 @@ pub async fn handle_frontier_advertise(storage: &impl db_storage::WalStorage, do
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn sync_retained_reads_resume_neutral_varints_without_renewing_overall_deadline() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../📝️wal/🧪️fixtures/📖️retained-decoder/🔣️.json")).unwrap();
+        let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let expired = std::sync::atomic::AtomicBool::new(false);
+        for row in fixture["varints"].as_array().unwrap().iter().filter(|row| !row["value"].is_null()) {
+            let hex = row["hex"].as_str().unwrap();
+            let input: Vec<_> = (0..hex.len()).step_by(2).map(|offset| u8::from_str_radix(&hex[offset..offset + 2], 16).unwrap()).collect();
+            let mut control = db_wal::WalCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
+            let mut bytes = db_wal::WalBytes::try_admit(input, 16, &mut control).await.unwrap();
+            let mut cursor = bytes.cursor();
+            control.replenish(std::time::Instant::now(), 1).unwrap();
+            let mut attempts = 0;
+            let actual = database_sync_hello_read(&mut control, &cancelled, &expired, |control| { attempts += 1; cursor.varint(control) }).await.unwrap();
+            assert!(attempts >= 2);
+            assert_eq!(actual, row["value"].as_str().unwrap().parse::<u64>().unwrap());
+            while bytes.close_step().unwrap().is_some() {}
+        }
+        let mut control = db_wal::WalCursorControl::new(cancelled.clone(), std::time::Instant::now(), 1).unwrap();
+        expired.store(true, std::sync::atomic::Ordering::Release);
+        assert!(matches!(database_sync_hello_read(&mut control, &cancelled, &expired, |_| Ok(())).await, Err(DbError::Timeout(_))));
+        expired.store(false, std::sync::atomic::Ordering::Release);
+        cancelled.store(true, std::sync::atomic::Ordering::Release);
+        assert!(matches!(database_sync_hello_read(&mut control, &cancelled, &expired, |_| Ok(())).await, Err(DbError::Closed)));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn sync_replay_ignores_neutral_aborted_command_snapshot_and_cas() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../📝️wal/🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+        let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == "aborted-commands-snapshot-cas-have-no-effects").unwrap();
+        let document = ArtifactId::from("committed-sync");
+        let storage = db_wal::tests::committed_fixture_storage(row, &document).await;
+        let ordinary = replay_sync_state(&storage, document.clone()).await.unwrap();
+        assert!(ordinary.commands.is_empty());
+        assert_eq!(ordinary.floor_head_seq, 0);
+        assert_eq!(ordinary.frontier.head_seq, 0);
+        assert_eq!(ordinary.frontier.commit_seq, 0);
+        assert_eq!(ordinary.frontier.chain_hash, [0; 32]);
+        let storage = db_storage::DbBackend::Memory(storage);
+        let mut ledger = DatabaseSyncHelloBackingLedger::default();
+        let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let expired = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let progress = std::sync::atomic::AtomicU8::new(0);
+        let mut retained = replay_sync_state_retained(&storage, document, cancelled, expired, &mut ledger, &progress).await.unwrap();
+        assert!(retained.commands.is_empty());
+        assert_eq!(retained.floor_head_seq, 0);
+        assert_eq!(retained.frontier, ordinary.frontier);
+        database_sync_hello_retire_vec(&mut retained.commands, &mut ledger).unwrap();
+        assert_eq!(ledger.items, 0);
+        assert_eq!(ledger.bytes, 0);
+    }
+
     use db_storage::MemoryStorage;
     use db_wal::{ArtifactWal, GroupCommitPolicy, WalRecord};
     use ArtifactId;

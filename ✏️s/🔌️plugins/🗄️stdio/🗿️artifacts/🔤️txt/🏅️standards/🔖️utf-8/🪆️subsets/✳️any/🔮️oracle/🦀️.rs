@@ -340,7 +340,7 @@ mod tests {
     #[test]
     fn whole_document_crlf_detection_can_collapse_real_mostly_lf_content_into_few_lines() {
         // 📓️ The real captured fixture's own shape: 27,471 bytes, 158 bare LF, only 2 genuine
-        // embedded CRLF sequences (see `../../../../../🧫️fixtures/🔤️.txt` and its
+        // embedded CRLF sequences (see `../🧫️fixtures/🔤️.txt` and its
         // provenance note in the case feature file). Because the subset's detection rule is
         // "the whole document is CrLf iff it contains AT LEAST ONE literal `\r\n`", this real
         // file splits into exactly 3 giant "lines" (the two `\r\n` occurrences are the only split
@@ -350,7 +350,7 @@ mod tests {
         // exactly why the exhaustive mutate-<kind>/inverse-<kind> scenarios use a real fixture
         // with a SINGLE consistent line-ending style instead, where indexing into "line 5" means
         // what it looks like it means.
-        let bytes = include_bytes!("../../../../../🧫️fixtures/🔤️.txt");
+        let bytes = include_bytes!("../🧫️fixtures/🔤️.txt");
         let body = std::str::from_utf8(bytes).expect("fixture is valid UTF-8");
         let (lines, trailing, crlf) = independent_split(body);
         assert!(crlf, "one real \\r\\n anywhere makes the whole document CrLf under this subset's rule");

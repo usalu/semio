@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "contract": "cargo-target-discovery-skip-v1",
+  "taxonomyDirectoryKind": "ticket-cargo-target-evidence",
+  "skipped": [
+    "target",
+    "target-block",
+    "target-demonstrator",
+    "target-demonstrator-dev",
+    "target-gen3d",
+    "target-p3d-e2e",
+    "target-s-e2e",
+    "target-sourcing-e2e",
+    "node_modules",
+    "🔌️plugin-modules",
+    "🤖️generated"
+  ],
+  "admitted": [
+    "targets",
+    "🎯️targets",
+    "target_x",
+    "Target-A",
+    "target-",
+    "target-A",
+    "target--dup",
+    "retarget-x",
+    "📦️packages",
+    "🧪️tests"
+  ],
+  "execution": {
+    "target": "test-cargo-target-discovery-skip",
+    "command": "bun ./📜️script.ts test cargo-target-discovery-skip",
+    "launchName": "🧹clean🧩️taxonomy🎯️cargo-target-discovery-skip",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-cargo-target-discovery-skip --skip-nx-cache",
+    "launchGroup": "4_gate",
+    "launchOrder": 410.2154
+  }
+}

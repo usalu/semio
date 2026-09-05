@@ -12,6 +12,6 @@ pub struct RemoveRepresentation {
     pub id: String,
 }
 
-pub async fn handle(payload: &RemoveRepresentation, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+pub fn handle(payload: &RemoveRepresentation, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![crate::artifacts::block3d::mutations::delete_representation(payload.id.clone())]))
 }

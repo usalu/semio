@@ -254,7 +254,7 @@ pub mod artifacts {
                                             pub mod v1_4 {
                                                 #[path = "."]
                                                 pub mod any {
-                                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🌳️pdf/🔖️1.4/✳️any/🦀️.rs"]
+                                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🦀️.rs"]
                                                     mod component;
                                                     pub use component::*;
                                                 }
@@ -323,7 +323,7 @@ pub mod artifacts {
                                             pub mod v1_4 {
                                                 #[path = "."]
                                                 pub mod any {
-                                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🌳️pdf/🔖️1.4/✳️any/🦀️.rs"]
+                                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🦀️.rs"]
                                                     mod component;
                                                     pub use component::*;
                                                 }

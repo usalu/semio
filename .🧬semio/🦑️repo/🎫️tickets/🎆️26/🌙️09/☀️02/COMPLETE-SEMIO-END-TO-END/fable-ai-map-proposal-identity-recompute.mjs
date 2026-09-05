@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 const root = process.cwd();
 const ledgerPath = `${root}/🌎️hub/🧪️fixtures/🗺️gis-inference-job-v1/🔣️.json`;
 const walPath = `${root}/🌎️hub/🧪️fixtures/🧾️inference-wal-proof-v1/🔣️.json`;
-const frozenPath = `${root}/🌎️hub/🧪️fixtures/🗺️gis-map-frozen-binding-v1/🔣️.json`;
+const frozenPath = `${root}/🌎️hub/🧪️fixtures/🧊️gis-map-frozen-binding-v1/🔣️.json`;
 
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
 const ledger = JSON.parse(readFileSync(ledgerPath, "utf8"));

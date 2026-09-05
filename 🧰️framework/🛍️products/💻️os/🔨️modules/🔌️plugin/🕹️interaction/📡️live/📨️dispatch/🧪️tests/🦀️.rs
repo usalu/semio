@@ -2,6 +2,17 @@
 use super::*;
 
 //#region 🚪️ExactRuntimeCloseLease
+/// ⏱️ Mirrors the close worker's clock contract so a fixture clock row pins WHICH cleanup-fault
+/// variant the turn must publish, not merely that some fault was published.
+fn expected_clock_cause(samples: &[Option<u64>]) -> super::super::RuntimeCleanupFault {
+    use super::super::RuntimeCleanupFault;
+    let (Some(Some(start)), Some(Some(preflight))) = (samples.first().copied(), samples.get(1).copied()) else { return RuntimeCleanupFault::Clock };
+    if preflight < start { return RuntimeCleanupFault::ClockRegression; }
+    let Some(Some(finished)) = samples.get(2).copied() else { return RuntimeCleanupFault::Clock };
+    if finished < preflight { return RuntimeCleanupFault::ClockRegression; }
+    RuntimeCleanupFault::InteractiveCeiling
+}
+
 fn terminal_close_state(complete: bool, faulted: bool, blocked: bool) -> std::sync::Arc<super::super::RuntimeCloseWorkerState<TestRuntimeApps>> {
     use super::super::*;
     let job = RuntimeCloseCleanupJob { instance_id: 7, state: None, progress: None, contended: false, closing: true };
@@ -20,7 +31,7 @@ fn terminal_close_state(complete: bool, faulted: bool, blocked: bool) -> std::sy
     std::sync::Arc::new(RuntimeCloseWorkerState {
         instance_id: 7, generation: semio_framework_job::Generation(1),
         cell: std::sync::Mutex::new(std::mem::ManuallyDrop::new(None)), pump: std::sync::Mutex::new(pump),
-        status: std::sync::atomic::AtomicU8::new(RUNTIME_CLOSE_QUEUED), stalled_steps: std::sync::atomic::AtomicU8::new(0),
+        status: std::sync::atomic::AtomicU8::new(RuntimeCloseStatus::Queued.repr()), stalled_steps: std::sync::atomic::AtomicU8::new(0),
         preview_sequence: std::sync::atomic::AtomicU64::new(0), last_callback_elapsed_us: std::sync::atomic::AtomicU64::new(0),
         last_fault: std::sync::Mutex::new([0; 256]), last_fault_origin: std::sync::atomic::AtomicU8::new(0),
         callback_phase_started_us: std::sync::atomic::AtomicU64::new(0), callback_phase_us: std::array::from_fn(|_| std::sync::atomic::AtomicU64::new(0)),
@@ -33,13 +44,15 @@ fn instance_lifetime_close_does_not_publish_terminal_before_watchdog() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     let state = terminal_close_state(true, false, false);
     let _ = run_runtime_close_turn_inner(&state);
-    assert_eq!(state.status.load(std::sync::atomic::Ordering::SeqCst) == RUNTIME_CLOSE_COMPLETE, fixture["owners"]["terminalVisibleBeforeWatchdog"].as_bool().unwrap());
+    assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(std::sync::atomic::Ordering::SeqCst)) == RuntimeCloseStatus::Complete, fixture["owners"]["terminalVisibleBeforeWatchdog"].as_bool().unwrap());
     for row in fixture["callbacks"].as_array().unwrap() {
-        let status = |name: &str| match name { "ready" => RUNTIME_CLOSE_READY, "complete" => RUNTIME_CLOSE_COMPLETE, "external-wait" => RUNTIME_CLOSE_EXTERNAL_WAIT, "fault" => RUNTIME_CLOSE_FAULT, _ => unreachable!() };
-        state.status.store(RUNTIME_CLOSE_RUNNING, std::sync::atomic::Ordering::SeqCst);
-        runtime_close_publish_turn(&state, status(row["candidate"].as_str().unwrap()), row["elapsedUs"].as_u64().unwrap());
-        assert_eq!(state.status.load(std::sync::atomic::Ordering::SeqCst), status(row["published"].as_str().unwrap()));
-        assert_eq!(state.last_callback_elapsed_us.load(std::sync::atomic::Ordering::SeqCst), row["elapsedUs"].as_u64().unwrap());
+        let named = |name: &str| match name { "ready" => RuntimeCloseStatus::Ready, "complete" => RuntimeCloseStatus::Complete, "external-wait" => RuntimeCloseStatus::ExternalWait, "fault" => RuntimeCloseStatus::Fault(RuntimeCleanupFault::PriorOutcome), _ => unreachable!() };
+        let elapsed_us = row["elapsedUs"].as_u64().unwrap();
+        state.status.store(RuntimeCloseStatus::Running.repr(), std::sync::atomic::Ordering::SeqCst);
+        runtime_close_publish_turn(&state, named(row["candidate"].as_str().unwrap()), elapsed_us);
+        let expected = if elapsed_us >= semio_framework_trace::INTERACTIVE_STEP_CEILING_US { RuntimeCloseStatus::Fault(RuntimeCleanupFault::InteractiveCeiling) } else { named(row["published"].as_str().unwrap()) };
+        assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(std::sync::atomic::Ordering::SeqCst)), expected, "{row}");
+        assert_eq!(state.last_callback_elapsed_us.load(std::sync::atomic::Ordering::SeqCst), elapsed_us);
     }
 }
 
@@ -50,7 +63,7 @@ fn instance_lifetime_close_fault_outcome_dominates_complete_progress() {
     for row in fixture["terminalPump"].as_array().unwrap() {
         let state = terminal_close_state(row["complete"].as_bool().unwrap(), row["faulted"].as_bool().unwrap(), row["blocked"].as_bool().unwrap());
         let actual = runtime_close_cleanup_pump_one(&state, &mut state.pump.lock().unwrap());
-        let expected = match row["status"].as_str().unwrap() { "complete" => RUNTIME_CLOSE_COMPLETE, "fault" => RUNTIME_CLOSE_FAULT, "external-wait" => RUNTIME_CLOSE_EXTERNAL_WAIT, _ => unreachable!() };
+        let expected = match row["status"].as_str().unwrap() { "complete" => RuntimeCloseStatus::Complete, "fault" => RuntimeCloseStatus::Fault(RuntimeCleanupFault::PriorOutcome), "external-wait" => RuntimeCloseStatus::ExternalWait, _ => unreachable!() };
         assert_eq!(actual, expected, "exact terminal outcome {row}");
     }
 }
@@ -61,10 +74,11 @@ fn instance_lifetime_close_optional_monotonic_clock_rejects_missing_and_backward
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     for row in fixture["clocks"].as_array().unwrap() {
         let state = terminal_close_state(true, false, false);
-        let mut samples = row["samples"].as_array().unwrap().iter().map(serde_json::Value::as_u64);
+        let readings: Vec<Option<u64>> = row["samples"].as_array().unwrap().iter().map(serde_json::Value::as_u64).collect();
+        let mut samples = readings.clone().into_iter();
         run_runtime_close_turn_with_clock(&state, || samples.next().flatten());
-        let expected = if row["published"] == "complete" { RUNTIME_CLOSE_COMPLETE } else { RUNTIME_CLOSE_FAULT };
-        assert_eq!(state.status.load(std::sync::atomic::Ordering::SeqCst), expected, "{row}");
+        let expected = if row["published"] == "complete" { RuntimeCloseStatus::Complete } else { RuntimeCloseStatus::Fault(expected_clock_cause(&readings)) };
+        assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(std::sync::atomic::Ordering::SeqCst)), expected, "{row}");
         assert_eq!(state.pump.lock().unwrap().session.is_none(), row["workEntered"].as_bool().unwrap(), "{row}");
         if !row["workEntered"].as_bool().unwrap() {
             let mut pump = state.pump.lock().unwrap();
@@ -81,7 +95,7 @@ async fn instance_lifetime_close_preflight_and_shared_restore_preserve_exact_own
     let cell = std::sync::Arc::new(RuntimeAppCell::new(crate::app::AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await) }));
     let state = terminal_close_state(true, false, false);
     **state.cell.lock().unwrap() = Some(cell.clone());
-    assert_eq!(runtime_close_retire_cell(&state), RUNTIME_CLOSE_FAULT);
+    assert_eq!(runtime_close_retire_cell(&state), RuntimeCloseStatus::Fault(RuntimeCleanupFault::InstanceNotDrained));
     assert_eq!(std::sync::Arc::ptr_eq(state.cell.lock().unwrap().as_ref().unwrap(), &cell), fixture["owners"]["nonterminalPreflightKeepsExactAllocation"].as_bool().unwrap());
     {
         let mut instance = cell.instance.lock().unwrap();
@@ -89,10 +103,10 @@ async fn instance_lifetime_close_preflight_and_shared_restore_preserve_exact_own
         assert!(instance.app.close_terminal_is_empty());
     }
     let _ = cell.maintenance_pump.lock().unwrap().close_step(1, 4096);
-    assert_eq!(runtime_close_retire_cell(&state), RUNTIME_CLOSE_EXTERNAL_WAIT);
+    assert_eq!(runtime_close_retire_cell(&state), RuntimeCloseStatus::ExternalWait);
     assert_eq!(std::sync::Arc::ptr_eq(state.cell.lock().unwrap().as_ref().unwrap(), &cell), fixture["owners"]["sharedRestoreKeepsExactAllocation"].as_bool().unwrap());
     drop(cell);
-    assert_eq!(runtime_close_retire_cell(&state), RUNTIME_CLOSE_COMPLETE);
+    assert_eq!(runtime_close_retire_cell(&state), RuntimeCloseStatus::Complete);
     assert!(state.cell.lock().unwrap().is_none());
 }
 
@@ -128,7 +142,7 @@ fn instance_lifetime_close_contended_pump_keeps_exact_outcome_source() {
     run_runtime_close_turn_with_clock(&state, || Some(10));
     let _ = release_tx.send(());
     holder.join().unwrap();
-    let status = state.status.load(std::sync::atomic::Ordering::SeqCst);
+    let status = RuntimeCloseStatus::from_repr(state.status.load(std::sync::atomic::Ordering::SeqCst));
     let mut pump = state.pump.lock().unwrap();
     let session_preserved = pump.session.is_some();
     let source_preserved = matches!(pump.outcome.as_ref(), Some(semio_framework_job::StepOutcome::Complete(candidate)) if candidate.state.single_page().is_some_and(|bytes| bytes.as_ptr() as usize == identity && bytes == [7, 0, 0, 0]));
@@ -141,7 +155,7 @@ fn instance_lifetime_close_contended_pump_keeps_exact_outcome_source() {
     }
     pump.session = None;
     pump.terminal = false;
-    assert_eq!(status, RUNTIME_CLOSE_READY);
+    assert_eq!(status, RuntimeCloseStatus::Ready);
     assert_eq!(session_preserved, fixture["owners"]["contendedPumpPreservesSession"].as_bool().unwrap());
     assert_eq!(source_preserved, fixture["owners"]["contendedOutcomePreservesSource"].as_bool().unwrap());
 }
@@ -160,7 +174,7 @@ fn drive_close_lease(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeA
             let fault = state.last_fault.lock().unwrap();
             let length = fault.iter().position(|byte| *byte == 0).unwrap_or(fault.len());
             let phases = state.callback_phase_us.each_ref().map(|phase| phase.load(std::sync::atomic::Ordering::SeqCst));
-            panic!("[DEBUG] exact close {error:?}: generation={} origin={} elapsed={} phases={phases:?} stalled={} terminal={} complete={} blocked={} faulted={} pending={} detail={}", state.generation.0, state.last_fault_origin.load(std::sync::atomic::Ordering::SeqCst), state.last_callback_elapsed_us.load(std::sync::atomic::Ordering::SeqCst), state.stalled_steps.load(std::sync::atomic::Ordering::SeqCst), pump.terminal, pump.complete, pump.blocked, pump.faulted, pump.pending_status, String::from_utf8_lossy(&fault[..length]));
+            panic!("[DEBUG] exact close {error:?}: generation={} origin={} elapsed={} phases={phases:?} stalled={} terminal={} complete={} blocked={} faulted={} pending={:?} detail={}", state.generation.0, state.last_fault_origin.load(std::sync::atomic::Ordering::SeqCst), state.last_callback_elapsed_us.load(std::sync::atomic::Ordering::SeqCst), state.stalled_steps.load(std::sync::atomic::Ordering::SeqCst), pump.terminal, pump.complete, pump.blocked, pump.faulted, pump.pending_status, String::from_utf8_lossy(&fault[..length]));
         }
         if lease.is_retired().unwrap() && runtime.close_quarantine.borrow().get(7).is_none() { return; }
         std::thread::yield_now();

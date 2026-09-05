@@ -16,7 +16,7 @@
           "scenarios": [
             {
               "id": "inserts-a-two-byte-buffer-ahead-of-the-four-byte-buffer",
-              "directoryName": "🧪️inserts-a-two-byte-buffer-ahead-of-the-four-byte-buffer"
+              "directoryName": "💿️inserts-a-two-byte-buffer-ahead-of-the-four-byte-buffer"
             }
           ]
         },
@@ -27,7 +27,7 @@
           "scenarios": [
             {
               "id": "inserts-a-two-byte-window-ahead-of-the-four-byte-window",
-              "directoryName": "🧪️inserts-a-two-byte-window-ahead-of-the-four-byte-window"
+              "directoryName": "🪟️inserts-a-two-byte-window-ahead-of-the-four-byte-window"
             }
           ]
         },
@@ -38,7 +38,7 @@
           "scenarios": [
             {
               "id": "removes-the-two-byte-buffer-and-retargets-the-buffer-view",
-              "directoryName": "🧪️removes-the-two-byte-buffer-and-retargets-the-buffer-view"
+              "directoryName": "🚫️removes-the-two-byte-buffer-and-retargets-the-buffer-view"
             }
           ]
         },
@@ -49,7 +49,7 @@
           "scenarios": [
             {
               "id": "removes-the-two-byte-window-and-renumbers-the-accessor",
-              "directoryName": "🧪️removes-the-two-byte-window-and-renumbers-the-accessor"
+              "directoryName": "🗑️removes-the-two-byte-window-and-renumbers-the-accessor"
             }
           ]
         },
@@ -60,7 +60,7 @@
           "scenarios": [
             {
               "id": "swaps-the-two-buffers-and-their-byte-lanes",
-              "directoryName": "🧪️swaps-the-two-buffers-and-their-byte-lanes"
+              "directoryName": "🚚️swaps-the-two-buffers-and-their-byte-lanes"
             }
           ]
         },
@@ -71,7 +71,7 @@
           "scenarios": [
             {
               "id": "swaps-the-two-windows-and-renumbers-both-accessors",
-              "directoryName": "🧪️swaps-the-two-windows-and-renumbers-both-accessors"
+              "directoryName": "🚚️swaps-the-two-windows-and-renumbers-both-accessors"
             }
           ]
         },
@@ -82,7 +82,7 @@
           "scenarios": [
             {
               "id": "flips-the-two-windows-and-remaps-both-accessors",
-              "directoryName": "🧪️flips-the-two-windows-and-remaps-both-accessors"
+              "directoryName": "🔀️flips-the-two-windows-and-remaps-both-accessors"
             }
           ]
         },
@@ -93,7 +93,7 @@
           "scenarios": [
             {
               "id": "flips-the-two-buffers-and-their-byte-lanes",
-              "directoryName": "🧪️flips-the-two-buffers-and-their-byte-lanes"
+              "directoryName": "🔀️flips-the-two-buffers-and-their-byte-lanes"
             }
           ]
         }

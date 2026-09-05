@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "scope", "surfaceId", "members", "remove", "expected"],
+  "properties": {
+    "schema": { "const": "semio.hub.admin-presence-target-recovery/v1" },
+    "scope": { "type": "object", "additionalProperties": false, "required": ["spaceId", "documentId"], "properties": { "spaceId": { "const": "default" }, "documentId": { "const": "admin-presence-recovery" } } },
+    "surfaceId": { "const": "surface.test.editor" },
+    "members": { "type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": { "type": "object", "additionalProperties": false, "required": ["id", "role"], "properties": { "id": { "enum": ["removed", "observer"] }, "role": { "const": "author" } } } },
+    "remove": { "const": "removed" },
+    "expected": { "type": "object", "additionalProperties": false, "required": ["members", "removedCloseCode", "removedStatus", "removedCode", "observerStatus", "visibleAfterRemoval", "sqliteReopen"], "properties": { "members": { "const": ["observer"] }, "removedCloseCode": { "const": 4401 }, "removedStatus": { "const": 401 }, "removedCode": { "const": "denied" }, "observerStatus": { "const": 200 }, "visibleAfterRemoval": { "const": 0 }, "sqliteReopen": { "const": true } } }
+  }
+}

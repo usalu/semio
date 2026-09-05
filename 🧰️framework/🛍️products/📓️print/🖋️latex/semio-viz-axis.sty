@@ -1,0 +1,145 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-axis}[2026/08/18 v0.1.0 semio viz axes]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-scale}
+\RequirePackage{semio-viz-mark}
+
+\ExplSyntaxOn
+
+%region Frame
+\tl_new:N \l_semio_viz_axis_scale_tl
+\tl_new:N \l_semio_viz_axis_orient_tl
+\tl_new:N \l_semio_viz_legend_kind_tl
+\fp_new:N \l_semio_viz_pad_fp
+\fp_set:Nn \l_semio_viz_pad_fp { 8 }
+
+\cs_new_protected:Npn \semio_viz_axis_keys_reset: {
+  \tl_set:Nn \l_semio_viz_axis_scale_tl { x }
+  \tl_set:Nn \l_semio_viz_axis_orient_tl { bottom }
+}
+
+\keys_define:nn { semio / viz / axis } {
+  scale .tl_set:N = \l_semio_viz_axis_scale_tl,
+  orient .tl_set:N = \l_semio_viz_axis_orient_tl,
+  legend .tl_set:N = \l_semio_viz_legend_kind_tl,
+}
+
+\cs_new_protected:Npn \semio_viz_plot_frame:nn #1#2 {
+  \draw [ semio-chrome-border-normal, line~width=\semio@stroke@hairline ]
+    ( \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_pad_fp } )
+    rectangle ( \fp_eval:n { #1 - 2 } , \fp_eval:n { #2 - 2 } ) ;
+}
+
+\cs_new_protected:Npn \semio_viz_axis_draw:n #1 {
+  \semio_viz_frame_require:n { SemioVizAxis }
+  \semio_viz_axis_keys_reset:
+  \keys_set:nn { semio / viz / axis } {#1}
+  \str_case:VnF \l_semio_viz_axis_orient_tl {
+    { left } {
+      \draw [ semio-chrome-border-emphasized, line~width=\semio@stroke@hairline ]
+        ( \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_pad_fp } ) -- ( \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_height_fp - 2 } ) ;
+    }
+    { right } {
+      \draw [ semio-chrome-border-emphasized, line~width=\semio@stroke@hairline ]
+        ( \fp_eval:n { \l_semio_viz_width_fp - 2 } , \fp_eval:n { \l_semio_viz_pad_fp } ) -- ( \fp_eval:n { \l_semio_viz_width_fp - 2 } , \fp_eval:n { \l_semio_viz_height_fp - 2 } ) ;
+    }
+    { top } {
+      \draw [ semio-chrome-border-emphasized, line~width=\semio@stroke@hairline ]
+        ( \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_height_fp - 2 } ) -- ( \fp_eval:n { \l_semio_viz_width_fp - 2 } , \fp_eval:n { \l_semio_viz_height_fp - 2 } ) ;
+    }
+  } {
+    \draw [ semio-chrome-border-emphasized, line~width=\semio@stroke@hairline ]
+      ( \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_pad_fp } ) -- ( \fp_eval:n { \l_semio_viz_width_fp - 2 } , \fp_eval:n { \l_semio_viz_pad_fp } ) ;
+  }
+  \semio_viz_axis_ticks:
+}
+
+\cs_new_protected:Npn \semio_viz_axis_ticks: {
+  \exp_args:NV \semio_viz_axis_ticks_aux:n \l_semio_viz_axis_scale_tl
+}
+
+\cs_new_protected:Npn \semio_viz_axis_ticks_aux:n #1 {
+  \seq_if_in:NnT \g_semio_viz_scale_names_seq {#1} {
+    \semio_viz_scale_ticks:nN {#1} \l_semio_viz_ticks_seq
+    \seq_map_inline:Nn \l_semio_viz_ticks_seq {
+      \semio_viz_scale_map:nnN {#1} {##1} \l_semio_viz_mx_fp
+      \str_case:VnF \l_semio_viz_axis_orient_tl {
+        { left } {
+          \draw [ semio-chrome-border-emphasized, line~width=\semio@stroke@hairline ]
+            ( \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_mx_fp } )
+            -- ( \fp_eval:n { \l_semio_viz_pad_fp - 1.4 } , \fp_eval:n { \l_semio_viz_mx_fp } ) ;
+          \node [ anchor=east, font=\SemioSans\tiny, text=semio-chrome-text-normal ]
+            at ( \fp_eval:n { \l_semio_viz_pad_fp - 1.8 } , \fp_eval:n { \l_semio_viz_mx_fp } ) { ##1 } ;
+        }
+        { right } {
+          \draw [ semio-chrome-border-emphasized, line~width=\semio@stroke@hairline ]
+            ( \fp_eval:n { \l_semio_viz_width_fp - 2 } , \fp_eval:n { \l_semio_viz_mx_fp } )
+            -- ( \fp_eval:n { \l_semio_viz_width_fp } , \fp_eval:n { \l_semio_viz_mx_fp } ) ;
+          \node [ anchor=west, font=\SemioSans\tiny, text=semio-chrome-text-normal ]
+            at ( \fp_eval:n { \l_semio_viz_width_fp } , \fp_eval:n { \l_semio_viz_mx_fp } ) { ##1 } ;
+        }
+        { top } {
+          \draw [ semio-chrome-border-emphasized, line~width=\semio@stroke@hairline ]
+            ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_height_fp - 2 } )
+            -- ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_height_fp } ) ;
+          \node [ anchor=south, font=\SemioSans\tiny, text=semio-chrome-text-normal ]
+            at ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_height_fp } ) { ##1 } ;
+        }
+      } {
+        \draw [ semio-chrome-border-emphasized, line~width=\semio@stroke@hairline ]
+          ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_pad_fp } )
+          -- ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_pad_fp - 1.4 } ) ;
+        \node [ anchor=north, font=\SemioSans\tiny, text=semio-chrome-text-normal ]
+          at ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_pad_fp - 1.8 } ) { ##1 } ;
+      }
+    }
+  }
+}
+
+\cs_new_protected:Npn \semio_viz_grid_draw: {
+  \semio_viz_frame_require:n { SemioVizGrid }
+  \int_step_inline:nn { 4 } {
+    \draw [ semio-chrome-border-normal, line~width=0.3pt, draw~opacity=0.45 ]
+      ( \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_pad_fp + ##1 * ( \l_semio_viz_height_fp - 10 ) / 5 } )
+      -- ( \fp_eval:n { \l_semio_viz_width_fp - 2 } , \fp_eval:n { \l_semio_viz_pad_fp + ##1 * ( \l_semio_viz_height_fp - 10 ) / 5 } ) ;
+  }
+}
+
+\cs_new_protected:Npn \semio_viz_legend_draw:n #1 {
+  \tl_set:Nn \l_semio_viz_legend_kind_tl { swatch }
+  \str_if_eq:nnT {#1} { gradient } { \tl_set:Nn \l_semio_viz_legend_kind_tl { gradient } }
+  \str_if_eq:nnT {#1} { size } { \tl_set:Nn \l_semio_viz_legend_kind_tl { size } }
+  \str_case:VnF \l_semio_viz_legend_kind_tl {
+    { gradient } {
+      \fill [ left~color=semio-secondary, right~color=semio-primary ]
+        ( \fp_eval:n { \l_semio_viz_width_fp - 28 } , \fp_eval:n { \l_semio_viz_height_fp - 6 } )
+        rectangle ( \fp_eval:n { \l_semio_viz_width_fp - 4 } , \fp_eval:n { \l_semio_viz_height_fp - 3 } ) ;
+    }
+    { size } {
+      \fill [ semio-primary ] ( \fp_eval:n { \l_semio_viz_width_fp - 18 } , \fp_eval:n { \l_semio_viz_height_fp - 5 } ) circle [ radius=1pt ] ;
+      \fill [ semio-primary ] ( \fp_eval:n { \l_semio_viz_width_fp - 10 } , \fp_eval:n { \l_semio_viz_height_fp - 5 } ) circle [ radius=2pt ] ;
+    }
+  } {
+    \fill [ semio-primary ] ( \fp_eval:n { \l_semio_viz_width_fp - 22 } , \fp_eval:n { \l_semio_viz_height_fp - 5 } ) rectangle ++( 3, 2 ) ;
+    \fill [ semio-secondary ] ( \fp_eval:n { \l_semio_viz_width_fp - 14 } , \fp_eval:n { \l_semio_viz_height_fp - 5 } ) rectangle ++( 3, 2 ) ;
+  }
+}
+
+% 📏 Draws one plot axis from the current orient key.
+\NewDocumentCommand \SemioVizAxis { O{} } { \semio_viz_axis_draw:n {#1} }
+% 🪟 Cartesian grid inside the plot frame.
+\NewDocumentCommand \SemioVizGrid { O{} } {
+  \keys_set:nn { semio / viz / axis } {#1}
+  \semio_viz_grid_draw:
+}
+% 🎨 Swatch, gradient, or size legend in the frame corner.
+\NewDocumentCommand \SemioVizLegend { O{} } {
+  \tl_set:Nn \l_semio_viz_legend_kind_tl { swatch }
+  \keys_set:nn { semio / viz / axis } {#1}
+  \exp_args:NV \semio_viz_legend_draw:n \l_semio_viz_legend_kind_tl
+}
+%endregion Frame
+
+\ExplSyntaxOff

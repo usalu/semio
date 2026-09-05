@@ -78,7 +78,7 @@
           "const": "replace-pixel-data"
         },
         "payload": {
-          "$ref": "🧮️replace-pixel-data/🧬️.schema.json"
+          "$ref": "🔲️replace-pixel-data/🧬️.schema.json"
         }
       }
     }

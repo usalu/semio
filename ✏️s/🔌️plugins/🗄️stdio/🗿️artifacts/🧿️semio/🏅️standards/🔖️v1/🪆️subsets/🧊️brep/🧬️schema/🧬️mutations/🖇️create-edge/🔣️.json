@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🖇️create-edge",
   "semanticKind": "create-edge",
   "displayName": "Create Edge",
-  "emoji": "🔗",
+  "emoji": "🖇️",
   "aggregateVariant": "CreateEdge",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,

@@ -26,7 +26,7 @@
 //
 //   bun 📜️script.ts generate [--only <fixture-id>]
 //
-// @see ../../../../../💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️markup/🏭️generator/📜️script.ts — the working
+// @see ../../../../../💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts — the working
 //      reference this file's CLI shape, FIXED_DATE handling and recipe-table shape are mirrored from
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/
 
@@ -157,7 +157,7 @@ export function corePropsXml(title: string): string {
 // 📌️ Fixed epoch for every zip entry: `jszip` stamps each entry's DOS date/time from `Date.now()` by
 // default, AND auto-creates an implicit parent-folder entry for any nested path, stamping THAT folder
 // entry with `new Date()` too and ignoring the child's own `date` option — confirmed empirically per
-// ../../../../../💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️markup/🏭️generator/📜️script.ts's own comment. Every
+// ../../../../../💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts's own comment. Every
 // directory level therefore gets its own explicit dated entry BEFORE the file that lives in it.
 const FIXED_DATE = new Date(Date.UTC(2026, 0, 1, 0, 0, 0));
 

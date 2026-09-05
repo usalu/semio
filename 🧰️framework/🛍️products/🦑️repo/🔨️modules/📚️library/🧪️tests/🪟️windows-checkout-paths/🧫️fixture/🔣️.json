@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "checkout": {
+    "root": "C:\\Users\\username\\source\\repos\\semio",
+    "maxPathUnits": 259,
+    "ticketRoot": ".🧬semio/🦑️repo/🎫️tickets"
+  },
+  "components": [
+    { "name": "", "illegal": true },
+    { "name": ".", "illegal": false },
+    { "name": "..", "illegal": false },
+    { "name": " ", "illegal": true },
+    { "name": " leading", "illegal": true },
+    { "name": "trailing ", "illegal": true },
+    { "name": "trailing.", "illegal": true },
+    { "name": "name:part", "illegal": true },
+    { "name": "name\u0000part", "illegal": true },
+    { "name": "CON", "illegal": true },
+    { "name": "nul.txt", "illegal": true },
+    { "name": "COM1", "illegal": true },
+    { "name": "LPT9.log", "illegal": true },
+    { "name": "COM¹", "illegal": true },
+    { "name": "COM0", "illegal": false },
+    { "name": "ticket.md", "illegal": false }
+  ]
+}

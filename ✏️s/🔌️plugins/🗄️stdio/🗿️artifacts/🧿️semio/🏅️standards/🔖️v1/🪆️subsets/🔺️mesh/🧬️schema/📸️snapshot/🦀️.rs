@@ -131,7 +131,7 @@ impl Default for SemioMeshSnapshot {
 /// same style as this subset's own `🔺️diff`/`🧬️mutations` facets (`GifDiff`/`SvgDiff`/`DocxDiff`'s
 /// established hand-rolled convention), duplicated here (not imported from `schema::diff`) to keep
 /// `snapshot` — the base type `diff`/`mutations` both depend ON — free of a reverse dependency on
-/// either sibling facet (same rationale `✳️flow`'s own pilot documents).
+/// either sibling facet (same rationale `🌊️flow`'s own pilot documents).
 ///
 /// 🧩️ The `#[derive(dsl::DslArtifact)]` path was tried first per this ticket's brief now that the
 /// shared `⚙️engine/🧮️geometry` types derive `dsl::DslRecord`. It is still blocked here: this
@@ -363,7 +363,7 @@ fn parse_mesh_snapshot_body(body: &str) -> Result<SemioMeshSnapshot, String> {
 
 //#region 🔖️BinaryPrimitives
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
-/// `store::ByteReader`, same helpers `✳️flow`'s own upgraded `ArtifactPack` uses) backing the
+/// `store::ByteReader`, same helpers `🌊️flow`'s own upgraded `ArtifactPack` uses) backing the
 /// real `ArtifactPack` below — replaces the old `serde_json::to_vec`-in-envelope shortcut.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
@@ -621,7 +621,7 @@ impl store::ArtifactPack for SemioMeshSnapshot {
 
 //#region 🌉️ExternalCodecBridge
 /// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
-/// `s.stdio.semio.mesh` — the shape `🟥️mutate-semio-mesh` compares under `ordered-json-v1`, derived from the
+/// `s.stdio.semio.mesh` — the shape `🔺️mutate-semio-mesh` compares under `ordered-json-v1`, derived from the
 /// snapshot type itself rather than hand-written a second time in the adapter, where it could drift
 /// away from the type it claims to project. A mesh snapshot is dominated by bulk arrays — per-primitive `positions`/`normals`/`uvs`/
 /// `indices` — where transcribing a fixture into a Rust literal is both the most laborious and the
@@ -634,7 +634,7 @@ pub fn encode_semio_mesh_snapshot_json(snapshot: &SemioMeshSnapshot) -> String {
 
 /// 📥️ The `pack::from_json_str` inverse of [`encode_semio_mesh_snapshot_json`] — decodes the committed
 /// `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
-/// specification vectors into real [`SemioMeshSnapshot`] values, so `🟥️mutate-semio-mesh`'s adapter reads the
+/// specification vectors into real [`SemioMeshSnapshot`] values, so `🔺️mutate-semio-mesh`'s adapter reads the
 /// committed fixture instead of re-declaring it as a Rust literal beside it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_mesh_snapshot_json(text: &str) -> Result<SemioMeshSnapshot, String> {

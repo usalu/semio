@@ -18,8 +18,8 @@
     {
       "id": "presence-owned-markdown-projection",
       "disposition": "move",
-      "sourcePath": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️12/ENFORCE-WINDOW-APP-PANEL-AND-PLUGIN-CONTRACTS-AT-COMPILE-TIME/🧪️window-policy-fixture/🎛️apps/🧪️fixture/🎭️modes/🧪️mode/🪟️windows/🧪️component-window/👥️presence/📌️important.md",
-      "destinationPath": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️12/ENFORCE-WINDOW-APP-PANEL-AND-PLUGIN-CONTRACTS-AT-COMPILE-TIME/🧪️window-policy-fixture/🎛️apps/🧪️fixture/🎭️modes/🧪️mode/🪟️windows/🧪️component-window/👥️presence/📝️.md",
+      "sourcePath": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️12/WINDOW-APP-PANEL-CONTRACTS/🧪️window-policy-fixture/🎛️apps/🧪️fixture/🎭️modes/🧪️mode/🪟️windows/🧪️component-window/👥️presence/📌️important.md",
+      "destinationPath": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️12/WINDOW-APP-PANEL-CONTRACTS/🧪️window-policy-fixture/🎛️apps/🧪️fixture/🎭️modes/🧪️mode/🪟️windows/🧪️component-window/👥️presence/📝️.md",
       "sourcePreimage": { "nodeKind": "file", "contentHash": "70c33aee4ee34077f2c965b1c7d193e08f401631526da44bb8cac042ee555d83", "mode": 420, "size": 139 }
     }
   ]

@@ -1,0 +1,18 @@
+{
+  "schema": "semio.db.wal.retained-decoder/v1",
+  "varints": [
+    { "name": "zero", "hex": "00", "value": "0", "consumed": 1 },
+    { "name": "one", "hex": "01", "value": "1", "consumed": 1 },
+    { "name": "one-byte-max", "hex": "7f", "value": "127", "consumed": 1 },
+    { "name": "two-byte-min", "hex": "8001", "value": "128", "consumed": 2 },
+    { "name": "three-byte-min", "hex": "808001", "value": "16384", "consumed": 3 },
+    { "name": "u64-max", "hex": "ffffffffffffffffff01", "value": "18446744073709551615", "consumed": 10 },
+    { "name": "following-field-untouched", "hex": "00ff", "value": "0", "consumed": 1 },
+    { "name": "empty", "hex": "", "value": null, "consumed": null },
+    { "name": "truncated", "hex": "80", "value": null, "consumed": null },
+    { "name": "noncanonical-zero", "hex": "8000", "value": null, "consumed": null },
+    { "name": "noncanonical-one", "hex": "8100", "value": null, "consumed": null },
+    { "name": "u64-overflow", "hex": "80808080808080808002", "value": null, "consumed": null },
+    { "name": "unterminated-ten-bytes", "hex": "80808080808080808080", "value": null, "consumed": null }
+  ]
+}

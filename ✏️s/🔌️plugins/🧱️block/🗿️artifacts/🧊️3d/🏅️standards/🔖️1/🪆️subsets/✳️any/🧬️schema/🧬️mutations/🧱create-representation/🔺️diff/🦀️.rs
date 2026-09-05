@@ -4,7 +4,7 @@ use crate::artifacts::block3d::Block3dSnapshot;
 use crate::artifacts::block3d::diff::{Block3dDiff, Block3dRepresentationsDelta};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::CreateRepresentation, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+pub fn diff(payload: &super::CreateRepresentation, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
     if base.representations.iter().any(|item| item.id == payload.representation.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} \"{}\" already exists", "representation", payload.representation.id), vec![payload.representation.id.clone()]);
     }

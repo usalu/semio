@@ -95,6 +95,20 @@
         "command": "bun ./📜️script.ts catalog-root",
         "forwardAllArgs": true
       }
+    },
+    "home-io-surface-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts home-io-surface source"
+      }
+    },
+    "home-io-surface-native-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts home-io-surface native"
+      }
     }
   }
 }

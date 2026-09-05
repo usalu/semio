@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.vcs.native-codec-receipts/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "pluginId", "packageId", "packageVersion", "receipts", "hostile"],
+  "properties": {
+    "schema": { "const": "semio.vcs.native-codec-receipts/v1" },
+    "pluginId": { "const": "vcs" },
+    "packageId": { "const": "semio:vcs" },
+    "packageVersion": { "const": "0.1.0" },
+    "receipts": { "type": "array", "minItems": 1, "maxItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/receipt" } },
+    "hostile": { "type": "array", "minItems": 9, "maxItems": 9, "items": { "enum": ["missing", "duplicate", "foreign-package", "wrong-version", "bare-kind", "legacy-schema", "legacy-kind", "wrong-extension", "zero-hash"] }, "uniqueItems": true }
+  },
+  "$defs": {
+    "receipt": {
+      "type": "object", "additionalProperties": false,
+      "required": ["factoryId", "kind", "schema", "extension", "capability", "protocolPath", "protocolBytes", "protocolSha256"],
+      "properties": {
+        "factoryId": { "const": "vcs.vcs.v1" },
+        "kind": { "const": "s.vcs.vcs" },
+        "schema": { "const": "vcs.vcs" },
+        "extension": { "const": "vcs" },
+        "capability": { "const": "s.vcs.vcs.codec.document" },
+        "protocolPath": { "const": "🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/📡️.protocol.semio" },
+        "protocolBytes": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "protocolSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    }
+  }
+}

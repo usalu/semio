@@ -1,0 +1,1007 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ BCF 2.1/🖊️markup's own contribution to the repository test platform — its mutation oracle registration and its declared mutation vocabulary (wave 7, ticket 26/08/23/END-TO-END-TESTING-REFACTOR). A BCF file IS a ZIP of XML markup/viewpoint/snapshot files, and no standalone BCF crate exists in the Rust ecosystem (BCF support only appears bundled inside much larger MPL-licensed IFC toolkits), so the reference here composes the already-linked, genuinely independent `zip` and `quick-xml` crates over the real BCF-XML 2.1 shapes rather than adopting a weaker/unlicensed substitute. Discovered by convention alongside ✏️s/🔌️plugins/🗄️stdio's own top-level manifest; merged into one registry, no central edit required.",
+  "oracles": [
+    {
+      "id": "zip-quick-xml-bcf-2-1-mutate",
+      "ecosystem": "rust",
+      "package": "zip",
+      "version": "6",
+      "capabilities": [
+        "bcf-2-1-mutate-second-implementation"
+      ],
+      "comparisonProfiles": [
+        "semantic-bcf-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/zip-rs/zip2 ; https://github.com/tafia/quick-xml",
+      "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🦀️.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "packages": [
+        {
+          "package": "quick-xml",
+          "version": "0.42",
+          "license": "MIT",
+          "homepage": "https://github.com/tafia/quick-xml",
+          "role": "independent XML reader/writer for every part inside the archive"
+        }
+      ],
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "zip",
+        "implementation": "zip Rust ZIP reader/writer",
+        "version": "6"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "jszip-fast-xml-parser-bcf-2-1-mutate",
+      "kind": "cross-semio-implementation",
+      "ecosystem": "javascript",
+      "package": "jszip",
+      "version": "3.10.1",
+      "packages": [
+        {
+          "package": "fast-xml-parser",
+          "version": "5.11.1",
+          "license": "MIT",
+          "homepage": "https://github.com/NaturalIntelligence/fast-xml-parser",
+          "role": "independent XML reader/writer for every part inside the archive"
+        }
+      ],
+      "engine": {
+        "family": "zip-xml",
+        "implementation": "jszip + fast-xml-parser (read-only projection; comparison done by the pipeline, never by this composition)",
+        "version": "jszip@3.10.1 + fast-xml-parser@5.11.1"
+      },
+      "capabilities": [
+        "bcf-2-1-mutate-second-implementation"
+      ],
+      "comparisonProfiles": [
+        "semantic-bcf-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://github.com/Stuk/jszip ; https://github.com/NaturalIntelligence/fast-xml-parser",
+      "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🦀️.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🔬️probes"
+    },
+    {
+      "id": "jszip-bcf-2-1-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "jszip",
+      "version": "3.10.1",
+      "engine": {
+        "family": "jszip",
+        "implementation": "jszip reader",
+        "version": "3.10.1"
+      },
+      "capabilities": [
+        "bcf-2-1-mutate",
+        "bcf-2-1-viewpoint-mutate",
+        "bcf-2-1-snapshot-mutate"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "rationale": "📖️ A READER, and that is the whole point of registering it separately.\n\nThis subset also carries a `🦀️.rs` that COMPUTES what each mutation should produce. That entry is registered `cross-semio-implementation` and does not discharge anything, because both halves of such a comparison descend from one reading of the specification.\n\nThis entry is a different mechanism. The expected state is not computed at all — it is COMMITTED, as the `after` half of a byte-reproducible fixture. `jszip` 3.10.1 then parses the BCF 2.1 zip container on BOTH sides and the comparison is over what it recovered. The probes say so in their own header: \"Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should.\"\n\nSo the judge is a third-party implementation of the format, and nothing in this repository predicts the answer it is judging. That is what makes it qualifying where the sibling entry is not.",
+      "comparisonProfiles": [
+        "semantic-bcf-v1"
+      ]
+    }
+  ],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-bcf-v1",
+      "description": "BCF 2.1 documents compared by version, every topic keyed by guid (title/description/status/priority/labels/creationDate/creationAuthor, comments keyed by guid, viewpoints keyed by guid), and every raw retained part keyed by name by size+content digest. A viewpoint's camera/components project as their full typed structure; its PNG snapshot projects as size+digest rather than raw bytes (an opaque binary payload, not a lossy-encoded sample array, so a content digest is the correct treatment per the fleet brief's raster precedent). Topic/comment/viewpoint/part identity keys make document-order irrelevant; label/selection/exception/coloring lists are unordered sets in the BCF domain, so all arrays compare as sets.",
+      "arrays": "set",
+      "ignoreKeys": []
+    },
+    {
+      "id": "semantic-bcf-jszip-v1",
+      "description": "Bundle-style comparison for the jszip+fast-xml-parser oracle: delegates to the bcf-2-1-jszip-compare-v1 pipeline rather than a single-projection diff.",
+      "pipeline": "bcf-2-1-jszip-compare-v1"
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "bcf-2-1-any",
+      "capability": "bcf-2-1-mutate",
+      "standardDirectoryName": "🔖️2.1",
+      "subsetDirectoryName": "🖊️markup",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "🗃️set-snapshot",
+          "mutationDirectoryName": "🗃️set-snapshot",
+          "scenarios": [
+            {
+              "id": "closes-the-clash-topic-and-answers-its-comment",
+              "directoryName": "🤝️closes-the-clash-topic-and-answers-its-comment"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-version",
+        "insert-topic",
+        "remove-topic",
+        "set-topic-markup",
+        "insert-comment",
+        "remove-comment",
+        "set-comment"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "kind": "external-process",
+      "ecosystem": "javascript",
+      "package": "jszip",
+      "version": "3.10.1",
+      "engine": {
+        "family": "zip-xml",
+        "implementation": "jszip + fast-xml-parser",
+        "version": "jszip@3.10.1 + fast-xml-parser@5.11.1"
+      },
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "id": "bcf-import",
+      "capabilities": [
+        "bcf.zip.import"
+      ],
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🔬️probes/📜️script.ts",
+        "bcf-import"
+      ],
+      "rationale": "An INDEPENDENT reader accepts both files at all. Nothing downstream means anything if one of them does not parse.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Run against every generated fixture pair this session (15 recipes, 26 files) — bothImport true in every case.",
+        "checkedAt": "2026-08-27",
+        "criteria": [
+          {
+            "id": "reads-a-real-bcfzip",
+            "met": true,
+            "detail": "parses bcf.version + every topic folder's markup.bcf/.bcfv"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "jszip and fast-xml-parser are both pure-JS, already vendored in node_modules"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "external-process",
+      "ecosystem": "javascript",
+      "package": "jszip",
+      "version": "3.10.1",
+      "engine": {
+        "family": "zip-xml",
+        "implementation": "jszip + fast-xml-parser",
+        "version": "jszip@3.10.1 + fast-xml-parser@5.11.1"
+      },
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "id": "bcf-project",
+      "capabilities": [
+        "bcf.zip.project"
+      ],
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🔬️probes/📜️script.ts",
+        "bcf-project"
+      ],
+      "rationale": "The guid-keyed semantic projection every comparison is measured against — version, every topic's fields, comments, viewpoints (camera/components/snapshot size+digest), and every unconsumed raw part.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Run against insert-comment-applied/➡️after.bcf: reports topicCount 2 and both comments (comment-01, comment-02) with correct fields.",
+        "checkedAt": "2026-08-27",
+        "criteria": [
+          {
+            "id": "keys-by-guid-not-array-order",
+            "met": true,
+            "detail": "topics/comments/viewpoints are objects keyed by guid, matching semantic-bcf-v1's set-comparison rule"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "external-process",
+      "ecosystem": "javascript",
+      "package": "jszip",
+      "version": "3.10.1",
+      "engine": {
+        "family": "zip-xml",
+        "implementation": "jszip + fast-xml-parser",
+        "version": "jszip@3.10.1 + fast-xml-parser@5.11.1"
+      },
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "id": "bcf-compare",
+      "capabilities": [
+        "bcf.zip.compare"
+      ],
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🔬️probes/📜️script.ts",
+        "bcf-compare"
+      ],
+      "rationale": "Set/map-keyed deep-equal over two independently-parsed projections — the GATING comparison. Computes no mutation semantics, only structural equality of two already-existing byte blobs.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways this session with real measured numbers: identical pair -> {equal:true, diffCount:0}; a pair differing in one field (camera fieldOfView 60 vs 999) -> {equal:false, diffCount:1, diffs:[\"$.topics.t1.viewpoints.vp1.camera.fieldOfView: 60 \\u2260 999\"]}.",
+        "checkedAt": "2026-08-27",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "equal:true, diffCount:0"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "equal:false, diffCount:1, exact field named"
+          }
+        ]
+      }
+    }
+  ],
+  "comparisonPipelines": [
+    {
+      "id": "bcf-2-1-jszip-compare-v1",
+      "description": "Reads the subject's produced bcfzip and the fixture's own expected bcfzip with an independent jszip+fast-xml-parser composition, then compares their guid-keyed projections. GATING.",
+      "stages": [
+        {
+          "probe": "bcf-import",
+          "description": "An independent reader accepts both files.",
+          "inputs": [
+            "expected-bcf",
+            "actual-bcf"
+          ],
+          "assertions": {
+            "bothImport": true
+          }
+        },
+        {
+          "probe": "bcf-compare",
+          "description": "Set/map-keyed structural equality — the operative equality.",
+          "inputs": [
+            "expected-bcf",
+            "actual-bcf"
+          ],
+          "assertions": {
+            "equal": true
+          }
+        }
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.bcf",
+      "standard": "2.1",
+      "subset": "markup",
+      "standardDirectoryName": "🔖️2.1",
+      "subsetDirectoryName": "🖊️markup",
+      "mutations": [
+        {
+          "id": "no-mutation",
+          "capability": "bcf-2-1-mutate",
+          "outcomes": [
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "no-mutation",
+            "bridgeVersion": 1,
+            "variant": "NoMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bcf-2-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-bcf-2-1-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "bcf-2-1-mutate",
+          "outcomes": [
+            "no-op",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bcf-2-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-bcf-2-1-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-version",
+          "capability": "bcf-2-1-mutate",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-version",
+            "bridgeVersion": 1,
+            "variant": "SetVersion"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bcf-2-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-bcf-2-1-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "insert-topic",
+          "capability": "bcf-2-1-mutate",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-topic",
+            "bridgeVersion": 1,
+            "variant": "InsertTopic"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bcf-2-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-bcf-2-1-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-topic",
+          "capability": "bcf-2-1-mutate",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-topic",
+            "bridgeVersion": 1,
+            "variant": "RemoveTopic"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bcf-2-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-bcf-2-1-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-topic-markup",
+          "capability": "bcf-2-1-mutate",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-topic-markup",
+            "bridgeVersion": 1,
+            "variant": "SetTopicMarkup"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bcf-2-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-bcf-2-1-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "insert-comment",
+          "capability": "bcf-2-1-mutate",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-comment",
+            "bridgeVersion": 1,
+            "variant": "InsertComment"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bcf-2-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-bcf-2-1-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-comment",
+          "capability": "bcf-2-1-mutate",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-comment",
+            "bridgeVersion": 1,
+            "variant": "RemoveComment"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bcf-2-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-bcf-2-1-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-comment",
+          "capability": "bcf-2-1-mutate",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-comment",
+            "bridgeVersion": 1,
+            "variant": "SetComment"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bcf-2-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-bcf-2-1-mutate-reader"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "no-mutation-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.bcf",
+        "standard": "2.1",
+        "subset": "markup"
+      },
+      "mutation": "no-mutation",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-bcf",
+          "path": "../🧫️fixtures/⏸️no-mutation-applied/⬅️before.bcf",
+          "mediaType": "application/octet-stream",
+          "sha256": "sha256:c6a5e0efbc206065523469bcbd2c95051022590cc2020725ae2970babaad4d02",
+          "bytes": 1555
+        },
+        {
+          "role": "expected-after-bcf",
+          "path": "../🧫️fixtures/⏸️no-mutation-applied/➡️after.bcf",
+          "mediaType": "application/octet-stream",
+          "sha256": "sha256:c6a5e0efbc206065523469bcbd2c95051022590cc2020725ae2970babaad4d02",
+          "bytes": 1555
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-bcf-2-1-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only no-mutation-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-bcf-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": ""
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-version-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.bcf",
+        "standard": "2.1",
+        "subset": "markup"
+      },
+      "mutation": "set-version",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-bcf",
+          "path": "../🧫️fixtures/🔢️set-version-applied/⬅️before.bcf",
+          "mediaType": "application/octet-stream",
+          "sha256": "sha256:c6a5e0efbc206065523469bcbd2c95051022590cc2020725ae2970babaad4d02",
+          "bytes": 1555
+        },
+        {
+          "role": "expected-after-bcf",
+          "path": "../🧫️fixtures/🔢️set-version-applied/➡️after.bcf",
+          "mediaType": "application/octet-stream",
+          "sha256": "sha256:bf6e9e7e41bbcf6e0ad27f60a2fc0c5085a908534d8909340270c5e7e07616e3",
+          "bytes": 1555
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-bcf-2-1-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only set-version-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-bcf-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": ""
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-topic-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.bcf",
+        "standard": "2.1",
+        "subset": "markup"
+      },
+      "mutation": "insert-topic",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-bcf",
+          "path": "../🧫️fixtures/📌️insert-topic-applied/⬅️before.bcf",
+          "mediaType": "application/octet-stream",
+          "sha256": "sha256:c6a5e0efbc206065523469bcbd2c95051022590cc2020725ae2970babaad4d02",
+          "bytes": 1555
+        },
+        {
+          "role": "expected-after-bcf",
+          "path": "../🧫️fixtures/📌️insert-topic-applied/➡️after.bcf",
+          "mediaType": "application/octet-stream",
+          "sha256": "sha256:dad69bae1fb1ab5ed27f39552771ddb8d5d0cc133b69b4e686d70b1df0d0726e",
+          "bytes": 1948
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-bcf-2-1-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only insert-topic-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-bcf-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": ""
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-topic-rejected-duplicate",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.bcf",
+        "standard": "2.1",
+        "subset": "markup"
+      },
+      "mutation": "insert-topic",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-bcf",
+          "path": "../🧫️fixtures/👯️insert-topic-rejected-duplicate/⬅️before.bcf",
+          "mediaType": "application/octet-stream",
+          "sha256": "sha256:c6a5e0efbc206065523469bcbd2c95051022590cc2020725ae2970babaad4d02",
+          "bytes": 1555
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-bcf-2-1-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only insert-topic-rejected-duplicate",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-bcf-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Rejected-outcome recipe: carries only the ⬅️before.bcf state (the state a real subject would refuse to mutate further) — there is no legal after-state to author independently."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-topic-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.bcf",
+        "standard": "2.1",
+        "subset": "markup"
+      },
+      "mutation": "remove-topic",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-bcf",
+          "path": "../🧫️fixtures/🗑️remove-topic-applied/⬅️before.bcf",
+          "mediaType": "application/octet-stream",
+          "sha256": "sha256:c6a5e0efbc206065523469bcbd2c95051022590cc2020725ae2970babaad4d02",
+          "bytes": 1555
+        },
+        {
+          "role": "expected-after-bcf",
+          "path": "../🧫️fixtures/🗑️remove-topic-applied/➡️after.bcf",
+          "mediaType": "application/octet-stream",
+          "sha256": "sha256:c2208513ddb020c910d8c2da0888b92a8ccad94f01851f0f5f8c03cef0fce88a",
+          "bytes": 1124
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-bcf-2-1-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only remove-topic-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-bcf-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": ""
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-topic-rejected-missing",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.bcf",
+        "standard": "2.1",
+        "subset": "markup"
+      },
+      "mutation": "remove-topic",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-bcf",
+          "path": "../🧫️fixtures/🕳️remove-topic-rejected-missing/⬅️before.bcf",
+          "mediaType": "application/octet-stream",
+          "sha256": "sha256:c6a5e0efbc206065523469bcbd2c95051022590cc2020725ae2970babaad4d02",
+          "bytes": 1555
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-bcf-2-1-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only remove-topic-rejected-missing",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-bcf-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Rejected-outcome recipe: carries only the ⬅️before.bcf state (the state a real subject would refuse to mutate further) — there is no legal after-state to author independently."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-topic-markup-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.bcf",
+        "standard": "2.1",
+        "subset": "markup"
+      },
+      "mutation": "set-topic-markup",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-bcf",
+          "path": "../🧫️fixtures/🖊️set-topic-markup-applied/⬅️before.bcf",
+          "mediaType": "application/octet-stream",
+          "sha256": "sha256:c6a5e0efbc206065523469bcbd2c95051022590cc2020725ae2970babaad4d02",
+          "bytes": 1555
+        },
+        {
+          "role": "expected-after-bcf",
+          "path": "../🧫️fixtures/🖊️set-topic-markup-applied/➡️after.bcf",
+          "mediaType": "application/octet-stream",
+          "sha256": "sha256:1ef4f670c4aa12140e41a6604f8f7aa83a8d723406d15791a1ec0697e0e15458",
+          "bytes": 1556
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-bcf-2-1-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only set-topic-markup-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-bcf-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": ""
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-comment-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.bcf",
+        "standard": "2.1",
+        "subset": "markup"
+      },
+      "mutation": "insert-comment",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-bcf",
+          "path": "../🧫️fixtures/🗨️insert-comment-applied/⬅️before.bcf",
+          "mediaType": "application/octet-stream",
+          "sha256": "sha256:c6a5e0efbc206065523469bcbd2c95051022590cc2020725ae2970babaad4d02",
+          "bytes": 1555
+        },
+        {
+          "role": "expected-after-bcf",
+          "path": "../🧫️fixtures/🗨️insert-comment-applied/➡️after.bcf",
+          "mediaType": "application/octet-stream",
+          "sha256": "sha256:6ddc87640c9261a116065086c67e3fe562a6163db21946ae372a6efdb4fc3d54",
+          "bytes": 1592
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-bcf-2-1-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only insert-comment-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-bcf-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": ""
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-comment-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.bcf",
+        "standard": "2.1",
+        "subset": "markup"
+      },
+      "mutation": "remove-comment",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-bcf",
+          "path": "../🧫️fixtures/🧹️remove-comment-applied/⬅️before.bcf",
+          "mediaType": "application/octet-stream",
+          "sha256": "sha256:c6a5e0efbc206065523469bcbd2c95051022590cc2020725ae2970babaad4d02",
+          "bytes": 1555
+        },
+        {
+          "role": "expected-after-bcf",
+          "path": "../🧫️fixtures/🧹️remove-comment-applied/➡️after.bcf",
+          "mediaType": "application/octet-stream",
+          "sha256": "sha256:229299b55fd0beadb7398b0445099159261f67b347052acc652c39dab571328b",
+          "bytes": 1510
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-bcf-2-1-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only remove-comment-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-bcf-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": ""
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-comment-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.bcf",
+        "standard": "2.1",
+        "subset": "markup"
+      },
+      "mutation": "set-comment",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-bcf",
+          "path": "../🧫️fixtures/✏️set-comment-applied/⬅️before.bcf",
+          "mediaType": "application/octet-stream",
+          "sha256": "sha256:c6a5e0efbc206065523469bcbd2c95051022590cc2020725ae2970babaad4d02",
+          "bytes": 1555
+        },
+        {
+          "role": "expected-after-bcf",
+          "path": "../🧫️fixtures/✏️set-comment-applied/➡️after.bcf",
+          "mediaType": "application/octet-stream",
+          "sha256": "sha256:814061034080fa0290bddf2dce8bac0f325c376e2bdc0666ef80a4d88275cbf0",
+          "bytes": 1570
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-bcf-2-1-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts generate --only set-comment-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-bcf-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": ""
+    }
+  ]
+}

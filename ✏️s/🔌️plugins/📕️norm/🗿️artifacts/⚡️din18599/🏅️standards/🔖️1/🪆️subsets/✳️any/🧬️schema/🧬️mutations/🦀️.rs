@@ -64,7 +64,7 @@ pub enum Din18599Mutation {
 
 /// 🏷️ Every declared kind of [`Din18599Mutation`], in `#[derive(dsl::Mutations)]`'s own declaration
 /// order and spelling — the list `../../🔣️oracle.json` publishes as the `din18599-1-any`
-/// mutation catalog and `../../../../../🧪️tests/🌵️mutate-din18599-1` registers its scenarios from. The
+/// mutation catalog and `../../../../../🧪️tests/⚡️mutate-din18599-1` registers its scenarios from. The
 /// test platform never parses Rust, so [`kinds_catalog::kinds_match_the_enum_and_the_catalog`] below
 /// is what keeps the enum, this const and the committed manifest from drifting apart.
 pub const KINDS: &[&str] = &[
@@ -258,7 +258,7 @@ mod fixture_tests {
 /// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) JSON
 /// projection — the exact shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️.json`
 /// specification vectors carry — into a real [`Din18599Mutation`]. The generated test host of
-/// `../../../../../🧪️tests/🌵️mutate-din18599-1` links only this crate, so `serde_json` is unreachable
+/// `../../../../../🧪️tests/⚡️mutate-din18599-1` links only this crate, so `serde_json` is unreachable
 /// from that adapter and the bridge belongs here rather than there.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_din18599_mutation_json(text: &str) -> Result<Din18599Mutation, String> {
@@ -278,7 +278,7 @@ pub fn apply_din18599_mutation(base: &Din18599Snapshot, mutation: &Din18599Mutat
 }
 
 /// ↩️ This mutation's own computed inverse against `base` — the metamorphic property
-/// `🌵️mutate-din18599-1`'s `inverse-<kind>` scenarios assert, exposed under a name the test adapter can
+/// `⚡️mutate-din18599-1`'s `inverse-<kind>` scenarios assert, exposed under a name the test adapter can
 /// reach without naming `protocol::Mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_din18599_mutation(mutation: &Din18599Mutation, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {

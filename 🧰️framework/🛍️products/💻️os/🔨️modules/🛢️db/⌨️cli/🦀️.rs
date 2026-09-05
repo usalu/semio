@@ -454,14 +454,29 @@ impl Drop for MountedWalBatchCommandClose {
 
 /// @emoji 📼️ Mounted replay-cursor close state with one synchronous owner step per poll.
 struct MountedWalReplayCommandClose<'storage> {
-    owner: Option<db::wal::WalReplayCursor<'storage, db::storage::FsStorage>>,
+    owner: Option<MountedWalReplayCommandOwner<'storage>>,
     opportunities: u64,
     terminal: Option<CliCommandCloseTerminal>,
 }
 
+enum MountedWalReplayCommandOwner<'storage> {
+    Raw(db::wal::WalReplayCursor<'storage, db::storage::FsStorage>),
+    Committed(db::wal::WalCommittedCursor<'storage, db::storage::FsStorage>),
+}
+
+impl MountedWalReplayCommandOwner<'_> {
+    fn close_owner_step(&mut self) -> Result<bool, db::DbError> {
+        match self { Self::Raw(owner) => owner.close_owner_step(), Self::Committed(owner) => owner.close_owner_step() }
+    }
+}
+
 impl<'storage> MountedWalReplayCommandClose<'storage> {
     fn new(owner: db::wal::WalReplayCursor<'storage, db::storage::FsStorage>) -> Self {
-        Self { owner: Some(owner), opportunities: 0, terminal: None }
+        Self { owner: Some(MountedWalReplayCommandOwner::Raw(owner)), opportunities: 0, terminal: None }
+    }
+
+    fn committed(owner: db::wal::WalCommittedCursor<'storage, db::storage::FsStorage>) -> Self {
+        Self { owner: Some(MountedWalReplayCommandOwner::Committed(owner)), opportunities: 0, terminal: None }
     }
 }
 
@@ -799,25 +814,37 @@ async fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
 /// 🔬️ The shared per-document check `verify` runs: a full WAL replay (rejects a torn tail) plus,
 /// if a snapshot exists, a full-level `SnapshotManager::verify` of its latest generation.
 async fn verify_document(storage: &db::storage::FsStorage, document: &db::db_ids::ArtifactId) -> Result<String, db::DbError> {
-    let mut records = db::wal::replay_document(storage, document, wal_cursor_control()?).await?;
+    let mut records = db::wal::replay_committed_document(storage, document, wal_cursor_control()?).await?;
     let mut record_count = 0usize;
-    loop {
-        let record = match records.next_step().await? {
-            db::wal::WalReplayStep::Record(record) => record,
-            db::wal::WalReplayStep::Yield => continue,
-            db::wal::WalReplayStep::Done => break,
-        };
-        record_count += 1;
-        MountedWalRecordCommandClose::new(record).await?;
-    }
-    MountedWalReplayCommandClose::new(records).await?;
+    let replay = async {
+        loop {
+            let mut transaction = match records.next_transaction_step().await? {
+                db::wal::WalCommittedStep::Transaction(transaction) => transaction,
+                db::wal::WalCommittedStep::Yield => { db::semio_framework_async::yield_once().await; continue; }
+                db::wal::WalCommittedStep::Done => break,
+            };
+            loop {
+                match transaction.next_record_step()? {
+                    db::wal::WalCommittedRecordStep::Record(_) => record_count += 1,
+                    db::wal::WalCommittedRecordStep::Yield => { db::semio_framework_async::yield_once().await; continue; }
+                    db::wal::WalCommittedRecordStep::Done => break,
+                }
+                while transaction.close_record_step()? { db::semio_framework_async::yield_once().await; }
+            }
+            transaction.finish()?;
+        }
+        Ok::<(), db::DbError>(())
+    }.await;
+    let closed = MountedWalReplayCommandClose::committed(records).await;
+    replay?;
+    closed?;
     let manager = db::snapshot::SnapshotManager::new(storage).await;
     match db::actor::block_on(manager.load_latest(document))? {
         Some((generation, _descriptor)) => {
             db::actor::block_on(manager.verify(document, generation, pack::os_pack::VerificationLevel::Full))?;
-            Ok(format!("wal records={record_count} snapshot generation={generation} (verified)"))
+            Ok(format!("wal committed records={record_count} snapshot generation={generation} (verified)"))
         }
-        None => Ok(format!("wal records={record_count} snapshot=none")),
+        None => Ok(format!("wal committed records={record_count} snapshot=none")),
     }
 }
 
@@ -1422,9 +1449,42 @@ pub async fn main_impl(args: &[String]) -> i32 {
 mod tests {
     use super::*;
 
+    #[semio_framework_async_macros::async_test]
+    async fn cli_verify_checks_neutral_logical_commit_boundaries() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../📝️wal/🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+        for (name, expected) in [("aborted-commands-snapshot-cas-have-no-effects", Some(0)), ("two-commands-only-after-logical-commit", Some(2)), ("wrong-commit-count", None), ("active-incomplete-needs-durable-abort", None)] {
+            let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == name).expect("registered neutral CLI boundary");
+            let document = db::db_ids::ArtifactId::from("committed-cli");
+            let memory = db::wal::tests::committed_fixture_storage(row, &document).await;
+            let root = tempdir(name).await;
+            let storage = db::storage::FsStorage::open(db::storage::db_io_test_pool(), &root).await.unwrap();
+            storage.create_segment(&document, 0).await.unwrap();
+            let len = memory.segment_len(&document, 0).await.unwrap();
+            let mut pages = memory.read(&document, 0, pack::ByteRange { offset: 0, len }).await.unwrap();
+            let mut writer = db::storage::DbIoPageWriter::try_reserve(pages.len().div_ceil(db::storage::DB_IO_PAGE_BYTES)).unwrap();
+            for fragment in pages.fragments() {
+                let mut remaining = fragment;
+                while !remaining.is_empty() {
+                    let copied = writer.write_fragment(remaining).unwrap();
+                    assert_ne!(copied, 0);
+                    remaining = &remaining[copied..];
+                }
+            }
+            while pages.close_step().unwrap().is_some() {}
+            assert_eq!(storage.append(&document, 0, writer.seal_retained().await.unwrap()).await.unwrap(), len);
+            storage.sync(&document, 0, db::DurabilityClass::Fsync).await.unwrap();
+            let result = verify_document(&storage, &document).await;
+            match expected {
+                Some(count) => assert_eq!(result.unwrap(), format!("wal committed records={count} snapshot=none")),
+                None => assert!(matches!(result, Err(db::DbError::Corrupt(_))), "{name}"),
+            }
+            assert_eq!(storage.segment_len(&document, 0).await.unwrap(), len);
+        }
+    }
+
     //#region 🧸️Fixtures
     async fn tempdir(name: &str) -> std::path::PathBuf {
-        let mut dir = std::env::temp_dir();
+        let mut dir = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
         dir.push(format!("db_cli-test-{name}-{}-{}", std::process::id(), now_ms().await));
         std::fs::create_dir_all(&dir).unwrap();
         dir

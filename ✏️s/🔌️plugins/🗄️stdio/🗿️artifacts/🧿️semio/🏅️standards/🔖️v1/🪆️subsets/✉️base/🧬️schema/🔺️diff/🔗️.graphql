@@ -9,17 +9,17 @@
 type SemioDiffNoChange { kind: String! }
 type SemioDiffBrep { kind: String!, brep: SemioBrepDiff! } # defined in 🧊️brep's own diff mirror
 type SemioDiffMesh { kind: String!, mesh: SemioMeshDiff! } # defined in 🔺️mesh's own diff mirror
-type SemioDiffModel { kind: String!, model: SemioModelDiff! } # defined in ✳️model's own diff mirror
-type SemioDiffValue { kind: String!, value: SemioValueTreeDiff! } # defined in ✳️value's own diff mirror
-type SemioDiffDocument { kind: String!, document: SemioDocumentDiff! } # defined in ✳️document's own diff mirror
+type SemioDiffModel { kind: String!, model: SemioModelDiff! } # defined in 🏛️model's own diff mirror
+type SemioDiffValue { kind: String!, value: SemioValueTreeDiff! } # defined in 🔢️value's own diff mirror
+type SemioDiffDocument { kind: String!, document: SemioDocumentDiff! } # defined in 📑️document's own diff mirror
 type SemioDiffCad { kind: String!, cad: SemioCadDiff! } # defined in 📐️cad's own diff mirror
-type SemioDiffDrawing { kind: String!, drawing: SemioDrawingDiff! } # defined in ✳️drawing's own diff mirror
-type SemioDiffImage { kind: String!, image: SemioImageDiff! } # defined in ✳️image's own diff mirror
-type SemioDiffVideo { kind: String!, video: SemioVideoDiff! } # defined in ✳️video's own diff mirror
+type SemioDiffDrawing { kind: String!, drawing: SemioDrawingDiff! } # defined in 🖊️drawing's own diff mirror
+type SemioDiffImage { kind: String!, image: SemioImageDiff! } # defined in 🖼️image's own diff mirror
+type SemioDiffVideo { kind: String!, video: SemioVideoDiff! } # defined in 🎬️video's own diff mirror
 type SemioDiffAudio { kind: String!, audio: SemioAudioDiff! } # defined in 🔊️audio's own diff mirror
-type SemioDiffAnimation { kind: String!, animation: SemioAnimationDiff! } # defined in ✳️animation's own diff mirror
-type SemioDiffPresentation { kind: String!, presentation: SemioPresentationDiff! } # defined in ✳️presentation's own diff mirror
-type SemioDiffFlow { kind: String!, flow: SemioFlowDiff! } # defined in ✳️flow's own diff mirror
+type SemioDiffAnimation { kind: String!, animation: SemioAnimationDiff! } # defined in 🎞️animation's own diff mirror
+type SemioDiffPresentation { kind: String!, presentation: SemioPresentationDiff! } # defined in 📽️presentation's own diff mirror
+type SemioDiffFlow { kind: String!, flow: SemioFlowDiff! } # defined in 🌊️flow's own diff mirror
 type SemioDiffReplace { kind: String!, snapshot: SemioSnapshot! } # SemioSnapshot: defined in this subset's own snapshot mirror
 
 union SemioDiff =

@@ -1,0 +1,15 @@
+{
+  "schema": "semio.hub.native-artifact-provider-frontier/v1",
+  "headless": {
+    "defaultFeatures": false,
+    "features": ["sqlite"],
+    "directPluginDependencies": []
+  },
+  "production": {
+    "feature": "native-artifact-execution",
+    "providerId": "stdio+gis/native-codecs/v1",
+    "receiptCount": 28,
+    "pluginDependencies": ["stdio/full-artifact-catalog", "gis"]
+  },
+  "configuredWithoutProvider": "reject"
+}

@@ -23,7 +23,7 @@
 //! been legitimate. It was not registered anyway: linking it needs a `Cargo.toml` edit this ticket
 //! must not make itself, and `json` 0.12 is already linked (`oracles = […, "dep:json", …]`,
 //! `../../../../../../🧪️oracle/📦️packages/🦀️rust/Cargo.toml`) and already proven independent for
-//! `stdio.json`'s own oracle (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/
+//! `stdio.json`'s own oracle (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/
 //! 🪆️subsets/♾️any/🦀️oracle.rs`) — it appears nowhere in this repository's production
 //! dependency graph. This subset's own production codec also uses `serde_json` (see above), which
 //! rules `serde_json` out as an oracle for the same reason it was ruled out for `stdio.json`.

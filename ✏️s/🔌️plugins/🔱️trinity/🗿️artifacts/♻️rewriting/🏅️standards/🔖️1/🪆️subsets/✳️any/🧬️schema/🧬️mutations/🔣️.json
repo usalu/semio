@@ -4,8 +4,8 @@
   "title": "RewriteRuleMutation",
   "oneOf": [
     { "$ref": "./🖼️edit-before-fixture/🧬️.schema.json" },
-    { "$ref": "./🔍️edit-lhs/🧬️.schema.json" },
-    { "$ref": "./🎯️edit-rhs/🧬️.schema.json" },
+    { "$ref": "./👈️edit-lhs/🧬️.schema.json" },
+    { "$ref": "./👉️edit-rhs/🧬️.schema.json" },
     { "$ref": "./🔧️change-parameter-binding/🧬️.schema.json" },
     { "$ref": "./🧹️remove-parameter-binding/🧬️.schema.json" },
     { "$ref": "./📐️change-rule-layout-point/🧬️.schema.json" },

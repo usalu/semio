@@ -6,7 +6,7 @@
 //! (`🔣️.json`). DWG is a proprietary, undocumented format. The only independent
 //! implementation of any weight is LibreDWG, which is GPL-3.0 C: linking it would put a copyleft C
 //! library on this repository's test host, and no owner ruling permits that. No permissively
-//! licensed Rust DWG reader exists at all (`dxf`, the crate registered for 🖊️dxf, reads DXF — the
+//! licensed Rust DWG reader exists at all (`dxf`, the crate registered for 🖋️dxf, reads DXF — the
 //! published interchange format — and explicitly not DWG).
 //!
 //! What CAN be read independently is the plain preamble every DWG file since R13 begins with, whose
@@ -467,7 +467,7 @@ mod tests {
         for (kind, variant) in KINDS.iter().skip(1).zip(variants.iter()) {
             assert!(vocabulary.contains(&format!("{variant} ")) || vocabulary.contains(&format!("{variant},")) || vocabulary.contains(&format!("{variant} {{")), "DwgMutation is missing variant {variant:?} for kind {kind:?}");
         }
-        for feature in [include_str!("../../../../../🧪️tests/🐸️mutate-dwg-ac1024/🥒️.feature"), include_str!("../../../../../🧪️tests/🦋️mutate-dwg-ac1018/🥒️.feature")] {
+        for feature in [include_str!("../🧪️tests/🖊️mutate-dwg-ac1024/🥒️.feature"), include_str!("../../../../4️⃣ac1018/🪆️subsets/✳️any/🧪️tests/🖊️mutate-dwg-ac1018/🥒️.feature")] {
             for kind in KINDS {
                 assert!(feature.contains(&format!("| {kind} ")) || feature.contains(&format!("| {kind}  ")), "a DWG case's Examples table is missing kind {kind:?}");
             }

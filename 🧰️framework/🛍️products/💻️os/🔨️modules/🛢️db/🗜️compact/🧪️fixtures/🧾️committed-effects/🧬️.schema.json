@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.db.compaction.committed-effects/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "floorHeadSeq", "segments", "expected"],
+  "properties": {
+    "schema": { "const": "semio.db.compaction.committed-effects/v1" },
+    "floorHeadSeq": { "type": "integer", "minimum": 0 },
+    "segments": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["index", "state", "transactions"],
+        "properties": {
+          "index": { "type": "integer", "minimum": 0 },
+          "state": { "enum": ["active", "sealed"] },
+          "transactions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "outcome", "records"],
+              "properties": {
+                "id": { "type": "integer", "minimum": 1 },
+                "outcome": { "enum": ["commit", "abort"] },
+                "records": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": ["kind", "headSeq"],
+                        "properties": { "kind": { "enum": ["frontier", "snapshot"] }, "headSeq": { "type": "integer", "minimum": 0 } }
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": ["kind", "payload"],
+                        "properties": { "kind": { "const": "payload" }, "payload": { "enum": ["aborted", "committed"] } }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deletedSegments", "deletedPayloads", "remainingSegments", "retainedPayloads"],
+      "properties": {
+        "deletedSegments": { "type": "integer", "minimum": 0 },
+        "deletedPayloads": { "type": "integer", "minimum": 0 },
+        "remainingSegments": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "retainedPayloads": { "type": "array", "items": { "enum": ["aborted", "committed"] } }
+      }
+    }
+  }
+}

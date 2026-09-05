@@ -77,7 +77,7 @@
     {
       "kind": "replace-pixel-data",
       "variant": "ReplacePixelData",
-      "directory": "🧮️replace-pixel-data",
+      "directory": "🔲️replace-pixel-data",
       "textOpcode": "replace-pixel-data",
       "binaryTag": 6,
       "requiredFiles": [

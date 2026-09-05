@@ -50,7 +50,7 @@ function sha256(buf) {
 
 async function emit(subsetDir, artifactId, subsetId, readerOracle, cases) {
   const fixturesDir = path.join(ROOT, subsetDir, "🧫️fixtures");
-  const oracleJsonPath = path.join(ROOT, subsetDir, "🧪️oracle/🔣️.json");
+  const oracleJsonPath = path.join(ROOT, subsetDir, "🔮️oracle/🔣️.json");
   const manifests = [];
   for (const c of cases) {
     const beforeBuf = await buildZip(c.before.entries, c.before.comment);
@@ -60,10 +60,10 @@ async function emit(subsetDir, artifactId, subsetId, readerOracle, cases) {
     const afterRead = await verifyZip(afterBuf);
     console.log(`[${subsetId}] ${c.id.padEnd(24)} before entries=${JSON.stringify(beforeRead.entries.map((e) => e.fileName))} after entries=${JSON.stringify(afterRead.entries.map((e) => e.fileName))} beforeComment=${JSON.stringify(beforeRead.comment)} afterComment=${JSON.stringify(afterRead.comment)}`);
 
-    const caseDir = path.join(fixturesDir, `${c.id}-applied`);
+    const caseDir = path.join(fixturesDir, c.directory);
     fs.mkdirSync(caseDir, { recursive: true });
-    fs.writeFileSync(path.join(caseDir, "before.zip"), beforeBuf);
-    fs.writeFileSync(path.join(caseDir, "after.zip"), afterBuf);
+    fs.writeFileSync(path.join(caseDir, "⬅️before.zip"), beforeBuf);
+    fs.writeFileSync(path.join(caseDir, "➡️after.zip"), afterBuf);
 
     manifests.push({
       schema: "semio.repository-test.fixture/v2",
@@ -74,8 +74,8 @@ async function emit(subsetDir, artifactId, subsetId, readerOracle, cases) {
       outcome: "applied",
       units: { length: "unitless", angle: "degree" },
       files: [
-        { role: "expected-before-zip", path: `../🧫️fixtures/${c.id}-applied/before.zip`, mediaType: "application/zip", sha256: sha256(beforeBuf), bytes: beforeBuf.length },
-        { role: "expected-after-zip", path: `../🧫️fixtures/${c.id}-applied/after.zip`, mediaType: "application/zip", sha256: sha256(afterBuf), bytes: afterBuf.length },
+        { role: "expected-before-zip", path: `../🧫️fixtures/${c.directory}/⬅️before.zip`, mediaType: "application/zip", sha256: sha256(beforeBuf), bytes: beforeBuf.length },
+        { role: "expected-after-zip", path: `../🧫️fixtures/${c.directory}/➡️after.zip`, mediaType: "application/zip", sha256: sha256(afterBuf), bytes: afterBuf.length },
       ],
       generator: {
         oracle: readerOracle,
@@ -104,36 +104,36 @@ async function emit(subsetDir, artifactId, subsetId, readerOracle, cases) {
   console.log(`Wrote ${manifests.length} fixtureManifests entries into ${oracleJsonPath}\n`);
 }
 
-const BASE_DIR = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️base";
-const ISO_DIR = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320";
+const BASE_DIR = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base";
+const ISO_DIR = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320";
 
 const BASE_CASES = [
   {
-    id: "add-entry",
+    id: "add-entry", directory: "➕️add-entry-applied",
     before: { entries: [{ name: "file1.txt", data: "Hello" }] },
     after: { entries: [{ name: "file1.txt", data: "Hello" }, { name: "file2.txt", data: "New" }] },
     note: "A new entry file2.txt added to the archive.",
   },
   {
-    id: "remove-entry",
+    id: "remove-entry", directory: "➖️remove-entry-applied",
     before: { entries: [{ name: "file1.txt", data: "Hello" }, { name: "file2.txt", data: "New" }] },
     after: { entries: [{ name: "file1.txt", data: "Hello" }] },
     note: "The entry file2.txt removed from the archive, inverse of add-entry.",
   },
   {
-    id: "rename-entry",
+    id: "rename-entry", directory: "🏷️rename-entry-applied",
     before: { entries: [{ name: "old.txt", data: "Hello" }] },
     after: { entries: [{ name: "new.txt", data: "Hello" }] },
     note: "The single entry's name changed old.txt -> new.txt, content untouched.",
   },
   {
-    id: "set-archive-comment",
+    id: "set-archive-comment", directory: "💬️set-archive-comment-applied",
     before: { entries: [{ name: "file1.txt", data: "Hello" }], comment: "" },
     after: { entries: [{ name: "file1.txt", data: "Hello" }], comment: "Updated archive comment" },
     note: "The end-of-central-directory record's archive comment set.",
   },
   {
-    id: "set-entry-data",
+    id: "set-entry-data", directory: "✍️set-entry-data-applied",
     before: { entries: [{ name: "file1.txt", data: "Hello" }] },
     after: { entries: [{ name: "file1.txt", data: "World" }] },
     note: "The single entry's content replaced, Hello -> World, name untouched.",
@@ -142,43 +142,43 @@ const BASE_CASES = [
 
 const ISO_CASES = [
   {
-    id: "add-deflated-entry",
+    id: "add-deflated-entry", directory: "💨️add-deflated-entry-applied",
     before: { entries: [{ name: "file1.txt", data: "Hello", compress: true }] },
     after: { entries: [{ name: "file1.txt", data: "Hello", compress: true }, { name: "file2.txt", data: "New deflated payload data padded for compression to bite xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", compress: true }] },
     note: "A new entry added with DEFLATE compression (yazl compress:true), ISO 21320's own permitted method 8.",
   },
   {
-    id: "add-stored-entry",
+    id: "add-stored-entry", directory: "📦️add-stored-entry-applied",
     before: { entries: [{ name: "file1.txt", data: "Hello", compress: true }] },
     after: { entries: [{ name: "file1.txt", data: "Hello", compress: true }, { name: "file2.txt", data: "New", compress: false }] },
     note: "A new entry added with STORED (no) compression (yazl compress:false), ISO 21320's own permitted method 0.",
   },
   {
-    id: "remove-entry",
+    id: "remove-entry", directory: "➖️remove-entry-applied",
     before: { entries: [{ name: "file1.txt", data: "Hello" }, { name: "file2.txt", data: "New" }] },
     after: { entries: [{ name: "file1.txt", data: "Hello" }] },
     note: "The entry file2.txt removed from the archive.",
   },
   {
-    id: "rename-entry",
+    id: "rename-entry", directory: "🏷️rename-entry-applied",
     before: { entries: [{ name: "old.txt", data: "Hello" }] },
     after: { entries: [{ name: "new.txt", data: "Hello" }] },
     note: "The single entry's name changed old.txt -> new.txt, content untouched.",
   },
   {
-    id: "set-archive-comment",
+    id: "set-archive-comment", directory: "💬️set-archive-comment-applied",
     before: { entries: [{ name: "file1.txt", data: "Hello" }], comment: "" },
     after: { entries: [{ name: "file1.txt", data: "Hello" }], comment: "Updated archive comment" },
     note: "The end-of-central-directory record's archive comment set.",
   },
   {
-    id: "set-entry-data",
+    id: "set-entry-data", directory: "✍️set-entry-data-applied",
     before: { entries: [{ name: "file1.txt", data: "Hello" }] },
     after: { entries: [{ name: "file1.txt", data: "World" }] },
     note: "The single entry's content replaced, Hello -> World, name untouched.",
   },
   {
-    id: "set-snapshot",
+    id: "set-snapshot", directory: "📸️set-snapshot-applied",
     before: { entries: [{ name: "file1.txt", data: "Hello" }] },
     after: { entries: [{ name: "a.txt", data: "Snapshot A" }, { name: "b.txt", data: "Snapshot B" }], comment: "Snapshot" },
     note: "Whole-archive snapshot replace: an unrelated valid archive substituted wholesale.",

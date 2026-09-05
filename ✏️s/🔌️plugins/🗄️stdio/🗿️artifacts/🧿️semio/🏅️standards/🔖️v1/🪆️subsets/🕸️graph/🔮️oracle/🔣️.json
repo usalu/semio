@@ -1,0 +1,426 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.graph` is a semio-NATIVE format that no third party reads or writes, so the reference is a second IMPLEMENTATION in another language, written from this subset's own committed specification documents.",
+  "oracles": [
+    {
+      "id": "semio-graph-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "capabilities": [
+        "semio-v1-graph-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, so a differential comparison's second PRODUCER cannot be a foreign package — it has to be a second implementation. `🧪️tests/mutate-semio-graph/🐍️component.py` is that implementation: the text envelope, the DSL grammar, the pack frame, the recursive `SemioValue` codec, the JSON projection and all eleven verbs of `SemioGraphMutation`, written in Python from the committed specification documents alone — `../🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio` for the record grammar and its `i|o|x` port tags and `Z|B|I|F|S|Y|L|M|R` value tags, `…/📸️snapshot/💾️binary/📡️.protocol.semio` for the pack header and the sentence naming its node/edge payload, `…/📸️snapshot/🔣️.json` and `🔢️value`'s own snapshot schema for the projection member names, `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` for the eleven verbs and their argument lists, and `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs` for the semio envelope. It imports nothing from the Rust it judges and transliterates none of it. `package` is deliberately empty: the implementation is the adapter file, so this entry contributes no dependency to `🔒️dependencies.json` and nothing to the import-purity probe. The derivation of the pack layout past the header — which the protocol description names but declines to frame — is pinned by the Python re-encoding the committed `🎒️.pack.semio` byte for byte, which a misreading could not do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-graph-mutate`'s external-oracle requirement for its 11-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 11 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.stdio.semio",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "s.stdio.semio",
+              "reason": "No third-party library in any ecosystem reads or writes this repository's own document format, per this entry's own rationale; the ecosystem's package index was searched by name and by domain keywords with no match."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".dsl.semio; .pack.semio; ../🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio; …/📸️snapshot/💾️binary/📡️.protocol.semio; …/📸️snapshot/🔣️.json; …/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio; 🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs; 🔒️dependencies.json; 🎒️.pack.semio",
+        "fixtureCoverage": {
+          "vectors": 11,
+          "capabilitiesCovered": [
+            "semio-v1-graph-mutate"
+          ]
+        }
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "semio-v1-graph",
+      "capability": "semio-v1-graph-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "🕸️graph",
+      "vectors": [
+        {
+          "mutationId": "add-node-port",
+          "sourceMutationDirectoryName": "🔌add-node-port",
+          "mutationDirectoryName": "🔌add-node-port",
+          "scenarios": [
+            {
+              "id": "inserts-an-in-port-ahead-of-the-existing-out-port",
+              "directoryName": "🔌️inserts-an-in-port-ahead-of-the-existing-out-port"
+            }
+          ]
+        },
+        {
+          "mutationId": "add-node-property",
+          "sourceMutationDirectoryName": "➕add-node-property",
+          "mutationDirectoryName": "➕add-node-property",
+          "scenarios": [
+            {
+              "id": "inserts-a-weight-property-ahead-of-the-colour-property",
+              "directoryName": "⚖️inserts-a-weight-property-ahead-of-the-colour-property"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-kind",
+          "sourceMutationDirectoryName": "🔧change-node-kind",
+          "mutationDirectoryName": "🔧change-node-kind",
+          "scenarios": [
+            {
+              "id": "retypes-the-source-node-without-relabelling-it",
+              "directoryName": "🔧️retypes-the-source-node-without-relabelling-it"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-label",
+          "sourceMutationDirectoryName": "🖍️change-node-label",
+          "mutationDirectoryName": "🖍️change-node-label",
+          "scenarios": [
+            {
+              "id": "relabels-the-source-node-without-retyping-it",
+              "directoryName": "🔤️relabels-the-source-node-without-retyping-it"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-edge",
+          "sourceMutationDirectoryName": "🌉️create-edge",
+          "mutationDirectoryName": "🌉️create-edge",
+          "scenarios": [
+            {
+              "id": "connects-the-source-node-to-the-sink-node",
+              "directoryName": "🌉️connects-the-source-node-to-the-sink-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-node",
+          "sourceMutationDirectoryName": "🏗️create-node",
+          "mutationDirectoryName": "🏗️create-node",
+          "scenarios": [
+            {
+              "id": "appends-a-filter-node-to-the-end-of-the-node-set",
+              "directoryName": "🔎️appends-a-filter-node-to-the-end-of-the-node-set"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-edge",
+          "sourceMutationDirectoryName": "✂️delete-edge",
+          "mutationDirectoryName": "✂️delete-edge",
+          "scenarios": [
+            {
+              "id": "removes-the-feedback-edge-and-keeps-both-endpoints",
+              "directoryName": "✂️removes-the-feedback-edge-and-keeps-both-endpoints"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-node",
+          "sourceMutationDirectoryName": "🗑️delete-node",
+          "mutationDirectoryName": "🗑️delete-node",
+          "scenarios": [
+            {
+              "id": "removes-the-sink-node-and-severs-the-edge-into-it",
+              "directoryName": "🚫️removes-the-sink-node-and-severs-the-edge-into-it"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-node",
+          "sourceMutationDirectoryName": "📍move-node",
+          "mutationDirectoryName": "📍move-node",
+          "scenarios": [
+            {
+              "id": "moves-the-sink-node-to-a-new-canvas-position",
+              "directoryName": "📍️moves-the-sink-node-to-a-new-canvas-position"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-node-port",
+          "sourceMutationDirectoryName": "🔚remove-node-port",
+          "mutationDirectoryName": "🔚remove-node-port",
+          "scenarios": [
+            {
+              "id": "detaches-the-trailing-out-port-from-the-source-node",
+              "directoryName": "🔚️detaches-the-trailing-out-port-from-the-source-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-node-property",
+          "sourceMutationDirectoryName": "➖remove-node-property",
+          "mutationDirectoryName": "➖remove-node-property",
+          "scenarios": [
+            {
+              "id": "detaches-the-trailing-weight-property-from-the-source-node",
+              "directoryName": "➖️detaches-the-trailing-weight-property-from-the-source-node"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "create-node",
+        "delete-node",
+        "change-node-kind",
+        "change-node-label",
+        "move-node",
+        "add-node-port",
+        "remove-node-port",
+        "add-node-property",
+        "remove-node-property",
+        "create-edge",
+        "delete-edge"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "graph",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "🕸️graph",
+      "mutations": [
+        {
+          "id": "add-node-port",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-node-port",
+            "bridgeVersion": 1,
+            "variant": "AddNodePort"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "add-node-property",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-node-property",
+            "bridgeVersion": 1,
+            "variant": "AddNodeProperty"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-node-kind",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-node-label",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-label",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeLabel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-edge",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-edge",
+            "bridgeVersion": 1,
+            "variant": "CreateEdge"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-node",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-node",
+            "bridgeVersion": 1,
+            "variant": "CreateNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-edge",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-edge",
+            "bridgeVersion": 1,
+            "variant": "DeleteEdge"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-node",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-node",
+            "bridgeVersion": 1,
+            "variant": "DeleteNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "move-node",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-node",
+            "bridgeVersion": 1,
+            "variant": "MoveNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-node-port",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-node-port",
+            "bridgeVersion": 1,
+            "variant": "RemoveNodePort"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-node-property",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-node-property",
+            "bridgeVersion": 1,
+            "variant": "RemoveNodeProperty"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

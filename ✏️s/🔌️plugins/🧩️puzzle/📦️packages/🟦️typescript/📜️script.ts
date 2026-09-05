@@ -155,8 +155,8 @@ class PublicationAuthorityAuditScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const onlyOwner = segments[0];
     const puzzleRoot = resolve(this.root, "../..");
-    const fixture = await Bun.file(resolve(puzzleRoot, "🧪️publication-authority/🔣️.json")).json() as PublicationFixture;
-    const schema = await Bun.file(resolve(puzzleRoot, "🧪️publication-authority/🧬️.schema.json")).json();
+    const fixture = await Bun.file(resolve(puzzleRoot, "🔏️publication-authority/🔣️.json")).json() as PublicationFixture;
+    const schema = await Bun.file(resolve(puzzleRoot, "🔏️publication-authority/🧬️.schema.json")).json();
     const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
     if (!validate(fixture)) throw new Error(`Puzzle publication fixture failed Ajv validation: ${JSON.stringify(validate.errors)}`);
     if (!fixtureOracle(fixture)) throw new Error("Puzzle publication fixture failed the independent semantic oracle");

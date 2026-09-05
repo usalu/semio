@@ -26,8 +26,13 @@ path = "🦀️.rs"
 name = "native_openable_identity"
 path = "🧪️tests/🪪️native-openable-identity/🦀️.rs"
 
+[[test]]
+name = "native_codecs"
+path = "../../📇️native-codecs/🧪️tests/🦀️.rs"
+
 [dependencies]
-semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
+semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-s-plugin-stdio ={ path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false, features = ["full-artifact-catalog"] }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-job = { path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }

@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧩️create-element",
   "semanticKind": "create-element",
   "displayName": "Create Element",
-  "emoji": "🌱🧩️",
+  "emoji": "🧩️",
   "aggregateVariant": "CreateElement",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": "create-element",

@@ -1,5 +1,44 @@
 # Workspace Repair
 
+## Final Verified Result
+
+This section supersedes every historical progress snapshot below. The final read-only census covers 51,828 live files, 37,893 directories and 88,437 governed entries: zero missing, generic, presentation, spacing, duplicate, multiple-emoji, reserved-name and independent-oracle findings. It includes the newest concurrent files. Inventory scope and reserved-tool exclusions are explicit in the [statute verification report](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️08/ENFORCE-UNIQUE-SEMANTIC-EMOJIS-ACROSS-REPOSITORY/🔏️statute-verification.md); ignored third-party dependencies and arbitrary build outputs are not represented as reviewed authored files.
+
+All four available agent slots were used for independent tree ownership. Meaning was reviewed case by case, including arbitrary animal, fruit, flower and colored-marker identities that the mechanical blacklist cannot judge. The permanent statute requires exactly one handpicked semantic emoji, unique across the combined file-and-directory sibling namespace. README, LICENSE and exact reserved tool names remain literal. The reported Flow command, stacked Kernel schema, Hub chunk store and Value integration-test examples have been physically rechecked. No known naming breach remains in the final governed inventory.
+
+The repair corrected exact path references, generator declarations, test imports, runtime literals and demonstrably polluted fixture provenance without whole-file historical restoration. The old automatic mutation commands are disabled; the ticket helper is read-only. No new emoji selector, palette, compatibility path fallback or migration was introduced. No modifying Git operation was used, and concurrent work was preserved.
+
+### Executed Verification
+
+| Scope | Final executed evidence |
+| --- | --- |
+| Shared naming statutes | 38 tests / 1,356 assertions pass; independent leading-grapheme suite 9 tests / 33,713 assertions across 5,375 catalog members passes; five focused Go regression functions pass. |
+| Semio | All 625 production fixture URIs across 19 cases resolve; 286 fixture records have zero file problems. Independent Mesh TypeScript/Three.js execution passes 52 scenarios. Python executes 640: 610 pass, six fail, 24 error; limits below remain explicit. |
+| Norm and smaller plugins | Norm resolves 6,971 Rust mounts and 1,583 production fixture URIs; Python passes 796 with four retained refusals, and 30 JS examples pass. Ten smaller plugin trees resolve 6,251 Rust paths and 1,417 production fixture URIs; all 22 JS examples pass. |
+| Block, Procedural, FEM, Puzzle and CAD | Block passes 15 JS tests plus publication-authority checks; Procedural passes 11 JS examples and 77 Python vectors; FEM passes 252 Python scenarios and four demos; Puzzle passes 16 JS tests; CAD passes 41 Python scenarios, two demos and two pinned-authority/binding tests. |
+| OS and small framework scopes | OS quick passes 255 tests with two skipped; OS dev quick passes 60 with 28 skipped; administration pane passes eight React tests and focused dev catalog passes six. Energy and Demonstrator each execute and pass their existing demo. |
+| Report and image assets | All three uncached native MIT PDF report builds pass. Country assets retain all 752 PNG hashes; named source and generated-file proofs remain in their reports. |
+
+These are scoped results, not a whole-repository runtime pass. The CAD recovery restored only 155 proven contaminated source-coordinate strings and reproduced the original pinned digest; the 209 fixture bindings and all 20 additional current-only members are checked without changing the golden baseline. FEM's 27 provenance repairs reproduce the original pinned metric digests. Presentation's two polluted `🎞️slide` properties were restored to the schema's literal `slide`, without changing their values.
+
+### Remaining Verification and Source-Contract Limits
+
+Several native attempts ended at the supported 20-minute build budget or unrelated current compiler diagnostics before assertions ran. Other agents' Cargo jobs were not interrupted. Semio's remaining Python failures/errors concern existing Drawing hierarchy/oracle behavior and missing no-mutation registrations, not unresolved fixture paths. Twelve Animation payload schemas remain genuinely absent; no renamed source exists to restore and no replacement schema was invented. The combined CAD/Draw golden test reaches an unchanged, independently attributed Draw contract mismatch; its already valid pinned rows were not rebaselined. The Go library-only target reports no tests and is not counted as verification. Exact details are retained in the linked reports.
+
+Primary evidence: [Semio](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️08/ENFORCE-UNIQUE-SEMANTIC-EMOJIS-ACROSS-REPOSITORY/🧿️semio-repair.md), [CAD](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️08/ENFORCE-UNIQUE-SEMANTIC-EMOJIS-ACROSS-REPOSITORY/📐️cad-repair.md), [FEM](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️08/ENFORCE-UNIQUE-SEMANTIC-EMOJIS-ACROSS-REPOSITORY/🏗️fem-repair.md), [Norm](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️08/ENFORCE-UNIQUE-SEMANTIC-EMOJIS-ACROSS-REPOSITORY/📕️norm-repair.md), [smaller plugins](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️08/ENFORCE-UNIQUE-SEMANTIC-EMOJIS-ACROSS-REPOSITORY/🔌️small-plugin-semantic-repair.md), [PDF owners](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️08/ENFORCE-UNIQUE-SEMANTIC-EMOJIS-ACROSS-REPOSITORY/📖️pdf-owner-repair.md), [Block](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️08/ENFORCE-UNIQUE-SEMANTIC-EMOJIS-ACROSS-REPOSITORY/🧱️block-semantic-repair.md), [Procedural](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️08/ENFORCE-UNIQUE-SEMANTIC-EMOJIS-ACROSS-REPOSITORY/🌀️procedural-semantic-repair.md), [small framework](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️08/ENFORCE-UNIQUE-SEMANTIC-EMOJIS-ACROSS-REPOSITORY/🎯️small-framework-review.md), [report assets](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️08/ENFORCE-UNIQUE-SEMANTIC-EMOJIS-ACROSS-REPOSITORY/♻️mit-bestand-repair.md). The remaining per-tree reports retain individual handpicked decisions, exact changed paths, independent checks and historical limitations.
+
+### Preservation and Handoff
+
+All repair workers and their bounded verification processes have finished. Only this ticket's approximately 625 MiB `🗑️generated` directory was moved, without overwriting, to `/Users/ueli/.Trash/semio-emoji-repair-diagnostics-2026-09-05-0505`. It is recoverable from Trash. Post-move checks confirm the generated directory is absent from the ticket while all 151 root Markdown reports, the read-only audit helper and the five recovery-input folders remain. Shared build trees and other tickets were not cleaned.
+
+The `clean` skill's global command was deliberately not run: its implementation would also remove active outputs belonging to other tasks. Repository ticket MCP resources and open/close/reopen tools are still unavailable after final discovery. Engineering evidence is recorded here, but the repository ticket remains open and no external closure is claimed.
+
+## Historical Progress and Incident Evidence
+
+### Scoped Cleanup Safety
+
+The `clean` skill was read and its current root command inspected. `bun ./📜️script.ts clean` deletes generated output even in open tickets and removes build-artifact trees above 10 GB. A fresh read-only check found the shared `target` at 32 GB with other agents' Cargo processes actively using the workspace. Running that global command would repeat the documented diagnostic-loss incident and interfere with concurrent work. The global skill command was therefore not run. After every repair worker finished, only this ticket's generated diagnostics were moved recoverably as recorded in the handoff above. Research, reports and recovery input folders are retained.
+
 ## Current Manual Batches
 
 The bounded TXT, TSV, STL and PLY families now have separate hand-review reports with byte/reference evidence. TXT has 89 manually reviewed owners and no remaining old carrier path. TSV has 24 initial fixture/test moves plus its production snapshot identity; its six absent payload schemas and casing discrepancy remain open. STL has 31 physical owner moves across the three active lanes and 24 main-tree internal moves, with zero current strict or semantic-role findings in the main tree. PLY has 13 manually reviewed physical owners and 30 main-tree findings repaired, with 209 files accounted for and no remaining old carrier path. This is progress evidence, not a repository-wide completion statement: the last read-only global census still contained thousands of findings in untouched trees and is intentionally not represented as current-zero.

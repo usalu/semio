@@ -18,7 +18,7 @@ import actionSemanticsFixture from "../../../../../../../../../../🧰️framewo
 import tutorialDocumentFixture from "../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🎞️tutorial-document-track.json";
 import tutorialDocumentSchema from "../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🛤️tutorial-document-track.schema.json";
 import boardSessionFixture from "../../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️fixtures/🔣️session-factory.json";
-import boardSessionSchema from "../../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️fixtures/🔣️.schema.json";
+import boardSessionSchema from "../../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️fixtures/🧬️.schema.json";
 import { tutorialSlice, validateTutorial } from "@semio-tech/ui-react";
 import type { TutorialDefinition } from "@semio-tech/framework";
 import presenceOverlayFixture from "../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️fixtures/👥️presence-overlay.json";
@@ -621,6 +621,11 @@ import {
   canonicalSurfaceId,
   reloadRetainsActiveApp,
   directoryCommandFromAction,
+  mintDirectoryCommandRequestId,
+  retainDirectoryCommandResult,
+  DIRECTORY_COMMAND_RESULT_SLOTS,
+  type DirectoryCommandResultSlotV1,
+  type DirectoryCommandReceiptV1,
   AUTO_CHECKIN_IDLE_MS,
   AUTO_CHECKIN_EDIT_THRESHOLD,
   AutoCheckinScheduler,
@@ -5270,6 +5275,27 @@ describe("s workflow flow routing", () => {
       ttlSecs: 60,
     });
     expect(directoryCommandFromAction("os.unknownVerb", {})).toBeNull();
+  });
+
+  it("mints a 32-hex nonzero correlation and retains bounded, request-id-keyed command results", () => {
+    const first = mintDirectoryCommandRequestId();
+    expect(first).toMatch(/^(?!0{32}$)[0-9a-f]{32}$/u);
+    expect(mintDirectoryCommandRequestId()).not.toBe(first);
+
+    const slots = new Map<string, DirectoryCommandResultSlotV1>();
+    const receipt = { schema: "semio.directory.command-receipt.v1", requestId: first, commandSha256: "a".repeat(64), outcome: "accepted", events: [], result: { kind: "invite", inviteToken: "invite.v1.one-shot" }, receiptSha256: "b".repeat(64) } as unknown as DirectoryCommandReceiptV1;
+    retainDirectoryCommandResult(slots, first, { kind: "receipt", receipt });
+    expect(slots.get(first)).toEqual({ kind: "receipt", receipt });
+    retainDirectoryCommandResult(slots, first, { kind: "failed", code: "forbidden" });
+    expect(slots.size).toBe(1);
+    expect(slots.get(first)).toEqual({ kind: "failed", code: "forbidden" });
+
+    for (let index = 0; index < DIRECTORY_COMMAND_RESULT_SLOTS + 4; index += 1) {
+      retainDirectoryCommandResult(slots, index.toString(16).padStart(32, "c"), { kind: "failed", code: "request-conflict" });
+    }
+    expect(slots.size).toBe(DIRECTORY_COMMAND_RESULT_SLOTS);
+    expect(slots.has(first)).toBe(false);
+    expect(slots.has((DIRECTORY_COMMAND_RESULT_SLOTS + 3).toString(16).padStart(32, "c"))).toBe(true);
   });
 
   // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C5 — save/check-in policy

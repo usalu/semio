@@ -105,12 +105,12 @@
       "vectors": [
         {
           "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "🟤️set-snapshot",
-          "mutationDirectoryName": "🟤️set-snapshot",
+          "sourceMutationDirectoryName": "📸️set-snapshot",
+          "mutationDirectoryName": "📸️set-snapshot",
           "scenarios": [
             {
               "id": "repaints-the-right-pixel-of-the-single-image",
-              "directoryName": "🧪️repaints-the-right-pixel-of-the-single-image"
+              "directoryName": "🖼️repaints-the-right-pixel-of-the-single-image"
             }
           ]
         }

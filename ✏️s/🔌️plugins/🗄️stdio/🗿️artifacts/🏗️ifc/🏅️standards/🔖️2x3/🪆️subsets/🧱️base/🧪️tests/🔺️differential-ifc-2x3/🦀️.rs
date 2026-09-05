@@ -3,7 +3,7 @@
 //! The oracle half of this case is `🐍️component.py`: IfcOpenShell 0.8.4.post1 applies each mutation
 //! through its own API and re-serializes the whole exchange structure with its own C++ Part-21
 //! writer. That is the second PRODUCER `ruststep` cannot be, which is why every scenario here is
-//! `@mode-differential` while the sibling `../🐸️mutate-ifc-2x3` — same vocabulary, same fixture, all
+//! `@mode-differential` while the sibling `../🧱️mutate-ifc-2x3` — same vocabulary, same fixture, all
 //! five kinds, `ruststep` as an independent READER — stays `@mode-property` and is left untouched.
 //!
 //! This file therefore registers NOTHING in the oracle role. The subject does exactly what the
@@ -20,7 +20,7 @@
 //! next door.
 //!
 //! @see component.feature — the differential claim and the measurement that bounds it.
-//! @see ../🐸️mutate-ifc-2x3/🦀️.rs — the exhaustive five-kind case this one does not replace.
+//! @see ../🧱️mutate-ifc-2x3/🦀️.rs — the exhaustive five-kind case this one does not replace.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 
@@ -30,7 +30,7 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "upsert-instance", "set-
 /// ↩️ The kinds whose INVERSE both implementations can also produce. `set-snapshot` is absent
 /// because IfcOpenShell cannot read back its own two-identifier `FILE_SCHEMA` output — the defect
 /// `🐍️component.py`'s `open_model` guard names — so there is no second producer for the second half
-/// of that chain. `inverse-set-snapshot` keeps its ruststep-backed scenario in `../🐸️mutate-ifc-2x3`.
+/// of that chain. `inverse-set-snapshot` keeps its ruststep-backed scenario in `../🧱️mutate-ifc-2x3`.
 const INVERSE_KINDS: &[&str] = &["no-mutation", "upsert-instance", "set-header"];
 //#endregion 🔖️Kinds
 
@@ -246,7 +246,7 @@ mod subject {
     /// re-encoding a document it already wrote reproduces it exactly, which is what a correct writer
     /// does. Asserting non-identity on the second cycle asserts something false. The property is
     /// still asserted where it is true and where it matters, against the real committed artifact.
-    /// The sibling `../🐸️mutate-ifc-2x3` never hits this because its inverse handler short-circuits
+    /// The sibling `../🧱️mutate-ifc-2x3` never hits this because its inverse handler short-circuits
     /// `no-mutation` to `input.clone()` and so does not run the codec at all for that row; this case
     /// runs both cycles for every kind, including the trivial one.
     fn apply_and_encode(input: &[u8], spec: &Json, refuse_identity: bool) -> Result<Vec<u8>, String> {

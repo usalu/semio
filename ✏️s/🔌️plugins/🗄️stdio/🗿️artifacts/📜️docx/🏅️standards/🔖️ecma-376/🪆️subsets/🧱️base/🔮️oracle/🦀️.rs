@@ -1198,19 +1198,19 @@ mod tests {
     use super::*;
     use crate::law::feature_rows;
 
-    /// 🧫️ The real committed package `⚪️mutate-docx-ecma-376` runs on — the WordprocessingML document
+    /// 🧫️ The real committed package `📜️mutate-docx-ecma-376` runs on — the WordprocessingML document
     /// derived once from this repository's own `README.md`: 414 top-level body blocks, a real 37-row
     /// `w:tbl`, seven declared styles and seven OPC parts.
-    const FIXTURE: &[u8] = include_bytes!("../../../../../🧫️fixtures/📜️example-readme.docx");
+    const FIXTURE: &[u8] = include_bytes!("../🧫️fixtures/📜️example-readme.docx");
 
     /// 🧾️ The case's own `Examples` rows, read rather than restated — see [`crate::law::feature_rows`].
-    const FEATURE: &str = include_str!("../../../../../🧪️tests/⚪️mutate-docx-ecma-376/🥒️.feature");
+    const FEATURE: &str = include_str!("../🧪️tests/📜️mutate-docx-ecma-376/🥒️.feature");
 
     fn spec(kind: &str, params: &Json) -> Json {
         Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), params.clone())])
     }
 
-    /// ⚖️ The two laws `⚪️mutate-docx-ecma-376`'s adapter asserts in role, proven here against the
+    /// ⚖️ The two laws `📜️mutate-docx-ecma-376`'s adapter asserts in role, proven here against the
     /// real package without the runner: every declared kind moves the projection it is compared
     /// through, and every declared kind's own computed inverse lands back on the untouched
     /// package's projection. Nothing is exempt from either — a DOCX carries its whole typed view in

@@ -13,7 +13,7 @@ use crate::artifacts::home::SHomeSnapshot;
 use crate::editor::home::commands::apply_directory_event_page;
 use crate::editor::home::commands::set_active_panel_tab;
 use crate::editor::home::commands::{bind_space_file, create_studio, import_space, open_space};
-use crate::editor::home::commands::{copy_invite_link, create_space, delete_space, fold_directory_events, presence_heartbeat, rename_space, set_client, share_space};
+use crate::editor::home::commands::{copy_invite_link, create_space, delete_space, fold_directory_events, manage_space, presence_heartbeat, rename_space, set_client, share_space};
 use crate::editor::home::commands::{delete_virtual_file_system_node, go_home, navigate_virtual_file_system_node};
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use crate::editor::home::presence::{HomePresence, HomePresenceMutation};
@@ -48,6 +48,7 @@ app_commands! {
         "deleteSpace" as "delete-space" => delete_space::DeleteSpace,
         "renameSpace" as "rename-space" => rename_space::RenameSpace,
         "shareSpace" as "share-space" => share_space::ShareSpace,
+        "manageSpace" as "manage-space" => manage_space::ManageSpace,
         "copyInviteLink" as "copy-invite-link" => copy_invite_link::CopyInviteLink,
         "foldDirectoryEvents" as "fold-directory-events" => fold_directory_events::FoldDirectoryEvents,
         "presenceHeartbeat" as "presence-heartbeat" => presence_heartbeat::PresenceHeartbeat,
@@ -58,7 +59,7 @@ app_commands! {
 
 //#region 🧵️RetainedCommands
 const HOME_RETAINED_TOOL_IDS: &[&str] = &[
-    "applyDirectoryEventPage", "openSpace", "navigateVirtualFileSystemNode", "goHome", "setActivePanelTab", "createSpace", "deleteSpace", "shareSpace", "copyInviteLink", "presenceHeartbeat", "setClient",
+    "applyDirectoryEventPage", "openSpace", "navigateVirtualFileSystemNode", "goHome", "setActivePanelTab", "createSpace", "deleteSpace", "shareSpace", "manageSpace", "copyInviteLink", "presenceHeartbeat", "setClient",
 ];
 const HOME_RETAINED_PAYLOAD_SCHEMA: &str = "space.home.tool-command.v1";
 const HOME_RETAINED_RAW_BYTES: usize = 128 * 1024;
@@ -75,6 +76,7 @@ const HOME_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = 
     ArtifactToolPublicationContract { tool_id: "createSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "deleteSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "shareSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "manageSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "copyInviteLink", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "presenceHeartbeat", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "setClient", lanes: &[ArtifactToolPublicationLane::Config] },
@@ -94,6 +96,7 @@ fn home_retained_extent(command: &HomeCommand, _snapshot: &SHomeSnapshot, _inter
         HomeCommand::CreateSpace(payload) => payload.name.len().saturating_add(payload.kind.len()).saturating_add(payload.visibility.len()),
         HomeCommand::DeleteSpace(payload) => payload.space_id.len(),
         HomeCommand::ShareSpace(payload) => payload.space_id.len().saturating_add(payload.email.len()).saturating_add(payload.role.len()),
+        HomeCommand::ManageSpace(payload) => payload.space_id.len(),
         HomeCommand::CopyInviteLink(payload) => payload.space_id.len().saturating_add(payload.role.len()),
         HomeCommand::SetClient(payload) => payload.client_id.len().saturating_add(payload.client_name.len()),
         _ => return None,
@@ -374,7 +377,7 @@ impl ArtifactEditor for HomeApp {
         factory: "HomeRetainedCommandJobFactory",
         factory_type: HomeRetainedCommandJobFactory,
         contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 65_536, 7_500),
-        tools: ["applyDirectoryEventPage", "openSpace", "navigateVirtualFileSystemNode", "goHome", "setActivePanelTab", "createSpace", "deleteSpace", "shareSpace", "copyInviteLink", "presenceHeartbeat", "setClient"]
+        tools: ["applyDirectoryEventPage", "openSpace", "navigateVirtualFileSystemNode", "goHome", "setActivePanelTab", "createSpace", "deleteSpace", "shareSpace", "manageSpace", "copyInviteLink", "presenceHeartbeat", "setClient"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -469,6 +472,7 @@ impl ArtifactEditor for HomeApp {
                 confirmed: args.and_then(|value| value.get("confirmed")).and_then(DslValue::as_bool).unwrap_or(false),
             })),
             "renameSpace" => Ok(HomeCommand::RenameSpace(rename_space::RenameSpace { space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default(), name: str_field("name").unwrap_or_default() })),
+            "manageSpace" => Ok(HomeCommand::ManageSpace(manage_space::ManageSpace { space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default() })),
             "shareSpace" => {
                 Ok(HomeCommand::ShareSpace(share_space::ShareSpace { space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default(), email: str_field("email").unwrap_or_default(), role: str_field("role").unwrap_or_default() }))
             }
@@ -593,6 +597,7 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
                 ])
                 .submit_label(LocalizedLabel::native("Share", "Teilen")),
         )
+        .shell_action("manageSpace", LocalizedLabel::native("Manage Space", "Space verwalten"))
         .shell_action("copyInviteLink", LocalizedLabel::native("Copy Invite Link", "Einladungslink kopieren"))
         .view_action("applyDirectoryEventPage", LocalizedLabel::native("Apply Directory Event Page", "Verzeichnis-Ereignisseite anwenden"))
         .view_action("foldDirectoryEvents", LocalizedLabel::native("Fold Directory Events", "Verzeichnisereignisse einspielen"))
@@ -610,6 +615,7 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("deleteSpace", InteractiveJobClassification::Migrated)
         .action_interactive_job("renameSpace", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("shareSpace", InteractiveJobClassification::Migrated)
+        .action_interactive_job("manageSpace", InteractiveJobClassification::Migrated)
         .action_interactive_job("copyInviteLink", InteractiveJobClassification::Migrated)
         .action_interactive_job("applyDirectoryEventPage", InteractiveJobClassification::Migrated)
         .action_interactive_job("foldDirectoryEvents", InteractiveJobClassification::BatchOnlyPendingRewrite)
@@ -628,6 +634,7 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
             "deleteSpace".into(),
             "renameSpace".into(),
             "shareSpace".into(),
+            "manageSpace".into(),
             "copyInviteLink".into(),
         ])
         .keybinding("mod+n", "createStudio")

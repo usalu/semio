@@ -1,0 +1,162 @@
+{
+  "schema": "semio.hub.directory-space-administration-page/v1",
+  "limits": {
+    "windowRows": 64,
+    "pageBytes": 49152,
+    "cursorBytes": 1024,
+    "safeInteger": 9007199254740991
+  },
+  "session": {
+    "sessionId": "session-admin-01",
+    "userId": "user-admin-01",
+    "authorizationGeneration": 5,
+    "expiresAt": 4102444800000,
+    "spaceId": "space-admin-01",
+    "bindingSha256": "f707ba1383bdc45a1ee79550e9dec8f16745a93ac0e9542795b663fc5248c642"
+  },
+  "space": {
+    "id": "space-admin-01",
+    "name": "Fabrication",
+    "kind": "studio",
+    "visibility": "public",
+    "ownerUserId": "user-admin-01",
+    "memberCount": 2,
+    "documentCount": 0,
+    "activeConnections": 0,
+    "createdAtMs": 1,
+    "updatedAtMs": 2
+  },
+  "members": [
+    {
+      "userId": "user-admin-01",
+      "email": "author@example.invalid",
+      "displayName": "Author",
+      "role": "author",
+      "owner": true
+    },
+    {
+      "userId": "user-guest-02",
+      "email": "guest@example.invalid",
+      "displayName": "Guest",
+      "role": "spectator",
+      "owner": false
+    }
+  ],
+  "invites": [
+    {
+      "inviteId": "invite-b",
+      "role": "spectator",
+      "createdAtMs": 400,
+      "expiresAtMs": 900000,
+      "revoked": false,
+      "accepted": false
+    },
+    {
+      "inviteId": "invite-a",
+      "role": "author",
+      "createdAtMs": 200,
+      "expiresAtMs": 900000,
+      "revoked": true,
+      "accepted": false
+    }
+  ],
+  "vectors": [
+    {
+      "name": "author",
+      "access": "author",
+      "expected": {
+        "hasMembers": true,
+        "hasInvites": true,
+        "hasCapabilities": true,
+        "memberRows": 2,
+        "inviteRows": 2
+      }
+    },
+    {
+      "name": "member",
+      "access": "member",
+      "expected": {
+        "hasMembers": true,
+        "hasInvites": false,
+        "hasCapabilities": false,
+        "memberRows": 2,
+        "inviteRows": 0
+      }
+    },
+    {
+      "name": "public",
+      "access": "public",
+      "expected": {
+        "hasMembers": false,
+        "hasInvites": false,
+        "hasCapabilities": false,
+        "memberRows": 0,
+        "inviteRows": 0
+      }
+    },
+    {
+      "name": "author-window-boundary",
+      "access": "author",
+      "expected": {
+        "hasMembers": true,
+        "hasInvites": true,
+        "hasCapabilities": true,
+        "memberRows": 64,
+        "inviteRows": 64
+      }
+    }
+  ],
+  "cursorCases": [
+    {
+      "query": "",
+      "status": 200,
+      "reads": 1
+    },
+    {
+      "query": "cursor=m.75736572.aa",
+      "status": 200,
+      "reads": 1
+    },
+    {
+      "query": "cursor=",
+      "status": 400,
+      "reads": 0
+    },
+    {
+      "query": "cursor=a&cursor=b",
+      "status": 400,
+      "reads": 0
+    },
+    {
+      "query": "cursor=%6d",
+      "status": 400,
+      "reads": 0
+    },
+    {
+      "query": "cursor=m+1",
+      "status": 400,
+      "reads": 0
+    },
+    {
+      "query": "section=members",
+      "status": 400,
+      "reads": 0
+    },
+    {
+      "query": "cursor=m.7573.!!",
+      "status": 400,
+      "reads": 0
+    }
+  ],
+  "hostiles": [
+    "receipt-substituted",
+    "trailing-whitespace",
+    "unknown-field",
+    "space-mismatch",
+    "member-order-reversed",
+    "invite-order-reversed",
+    "window-row-max-plus-one",
+    "page-byte-max-plus-one",
+    "invite-secret-field"
+  ]
+}

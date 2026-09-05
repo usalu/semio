@@ -4,6 +4,7 @@
 \RequirePackage{expl3}
 \RequirePackage{xparse}
 \RequirePackage{calc}
+\RequirePackage{etoolbox}
 \RequirePackage{semio-core}
 \RequirePackage{semio-fonts}
 \RequirePackage{semio-logo}
@@ -18,13 +19,68 @@
 
 \providecommand{\semio@chrome@titlebar@height}{1.4em}
 \providecommand{\semio@chrome@padding}{0.2em}
+% Inner inset between a window's frame and its body content (text / image), for
+% every non-table window kind (generic Window, Figure, Photo, Image, Blockquote,
+% Epigraph, and the cover tiles). Deliberately SEPARATE from
+% \semio@chrome@padding — that token also drives the title-tab cap height (see
+% \semio@window@cap@metrics@set), so growing the content inset through it would
+% balloon the tabs. This token touches only the four tcolorbox body insets and
+% the image/text-fit content geometry. Set to 5.5pt to match the visible inset
+% of table cells (\semio@table@hpad + frame gap ≈ 5.5pt), so window content and
+% table content sit the same distance from their borders document-wide. Tables
+% zero the window inset and supply their own padding, so they are untouched.
+\providecommand{\semio@window@bodypad}{5.5pt}
+% 🔲 Title-tab content inset. Matches the document inset constant
+% (\semio@window@bodypad = table cell \semio@table@hpad + frame gap ≈ 5.5pt) so a
+% tab's label sits the SAME distance from its four borders as body/table content
+% does. Applied by the muted cap core (\semio@heading@cap@muted@core → the
+% table / figure / contents / window title & number tabs) AND the section/appendix
+% heading chips (solid \semio@heading@chip and outline \semio@heading@cap@nofill@core,
+% via \semio@window@cap@hpad + the vpad budget), so heading boxes match the window/
+% table tabs; accent tabs and the nav/footer chips keep the tighter \semio@chrome@padding.
+% The tab is anchored so growing this inset never moves the borders that must
+% stay continuous with the frame: the title tab is flush-left (left border fixed,
+% grows right), the number tab flush-right (right border fixed, grows left), and
+% the depth-0 cap raisebox sends all vertical growth upward (bottom border, the
+% shared top rule, fixed).
+\providecommand{\semio@tab@inset}{\semio@window@bodypad}
+% 🔲 Vertical tab/heading inset = 70% of the horizontal \semio@tab@inset. Every
+% cap that uses the roomy inset (window/table title & number tabs AND the
+% section/appendix heading boxes) drives its top/bottom label gap from THIS token
+% and its left/right gap from \semio@tab@inset, so the vertical air is uniformly
+% 30% tighter than the horizontal while the two stay locked in one ratio. Written
+% as a nested \dimexpr so it scales if \semio@tab@inset changes.
+\providecommand{\semio@tab@inset@v}{\dimexpr\semio@tab@inset*7/10\relax}
 \providecommand{\semio@window@imagefit}{contain}
 \providecommand{\semio@chrome@navbar@height}{1.8em}
 \providecommand{\semio@chrome@footer@height}{1.8em}
 \providecommand{\semio@chrome@font@chip}{7.2pt}
-\providecommand{\semio@chrome@font@body}{9.6pt}
+% LR-consistency: body/window/table text unified to the 7.2pt chip size. The
+% canonical token lives in semio-tokens.sty (kept at 9.6pt by a design-token
+% guard), so override it here — window.sty loads after tokens, so this wins.
+% Define-then-force so it is safe whether or not tokens.sty ran first.
+\providecommand{\semio@chrome@font@body}{7.2pt}%
+\renewcommand{\semio@chrome@font@body}{7.2pt}
+% LR-table-header-bold: Anta ships only a Regular weight, so the \bfseries inside
+% \semio@table@header@cell is a no-op — header cells (Schlüssel, Titel, …) render
+% identical to the body cells, set apart only by the shaded background. Give the
+% header row a genuine SYNTHETIC bold (fontspec FakeBold) at the unchanged 7.2pt
+% size. Overridden here (window.sty loads after semio-table.sty) so the table
+% file stays untouched. \semio@text@emphasized only sets the text colour.
+\newfontfamily\SemioSansBold[FakeBold=2.5]{Anta-Regular.ttf}
+\renewcommand{\semio@table@header@cell}[1]{%
+  \SemioSansBold\semio@table@fontsize@apply
+  \semio@text@emphasized{#1}%
+}
 \providecommand{\semio@chrome@icon@scale}{1}
 \providecommand{\semio@chrome@icon@scale@footer}{1}
+% Layout spacing (defined here, not in the generated semio-tokens.sty):
+% \semio@spacing@par  = gap after body paragraphs (\parskip)
+% \semio@spacing@single = block↔block / block↔paragraph junction (\semio@block@before)
+% \semio@spacing@table@outer = air above/below tables
+% \semio@window@gap = \semio@spacing@par after preamble (WindowArrangement H/V)
+\providecommand{\semio@spacing@par}{0.5em}
+\providecommand{\semio@spacing@table@outer}{0.85em}
 
 \ExplSyntaxOn
 
@@ -38,12 +94,20 @@
 \tl_new:N \l_semio_window_valign_tl
 \tl_new:N \l_semio_window_halign_tl
 \tl_set:Nn \l_semio_window_valign_tl { top }
-\tl_set:Nn \l_semio_window_halign_tl { justify }
+\tl_set:Nn \l_semio_window_halign_tl { left }
 \dim_new:N \l_semio_window_height_dim
 \bool_new:N \l_semio_window_height_set_bool
 \dim_new:N \l_semio_window_textsize_dim
 \bool_new:N \l_semio_window_textsize_set_bool
 \bool_new:N \l_semio_window_textfit_bool
+% 🔒 Per-window opt-out of page breaking. A kind window (Table, Figure, …) is
+% `breakable` by default (see the `semio~window` tcbset style), so a table that
+% does not fit the remaining page space splits across the break. `break=false`
+% forces breakable=false on that one window, so tcolorbox floats the whole box
+% to the next page and keeps it intact instead. Defaults to true → unchanged
+% behaviour for every window that does not pass the key.
+\bool_new:N \l_semio_window_break_bool
+\bool_set_true:N \l_semio_window_break_bool
 \tl_new:N \l_semio_window_imagefit_tl
 \tl_set:Nn \l_semio_window_imagefit_tl { contain }
 \tl_new:N \l_semio_image_fit_tl
@@ -68,7 +132,7 @@
 \bool_set_true:N \l_semio_window_hierarchy_bool
 
 %region WindowBreakParts state
-% 🧩️ Two-pass (aux-file) state for the page-break part suffix (":<N>") on the
+% 🧩 Two-pass (aux-file) state for the page-break part suffix (":<N>") on the
 % hierarchy chip — mirrors the `.register-toc` write-this-pass/read-next-pass
 % convention already used by \semio_window_toc_append:nnn above. Key = the
 % *unsuffixed* register number (\l_semio_window_register_number_tl, e.g.
@@ -119,7 +183,7 @@
   }
 }
 
-% 🔢️ Called right after \semio_window_register_write:nn has computed the
+% 🔢 Called right after \semio_window_register_write:nn has computed the
 % (unsuffixed) \l_semio_window_register_number_tl for this window instance:
 % remembers it as the lookup key for the continuation-page overlay writer,
 % and — if the *previous* compile pass recorded this same window as having
@@ -156,7 +220,7 @@
       \int_to_alph:n { \int_use:c { c@semio@window@slot } }
     }
   }
-  % 🔑️ Hierarchy key (e.g. TZ.a), not the bare kind counter — keeps
+  % 🔑 Hierarchy key (e.g. TZ.a), not the bare kind counter — keeps
   % \tableref / list-of-X "Schlüssel" aligned with the window chip.
   \cs_gset:Npx \@currentlabel { \tl_use:N \l_semio_window_register_number_tl }
   \str_set:Nx \l_tmpb_str { semio-register-#2-\tl_use:N \l_semio_window_register_number_tl }
@@ -264,6 +328,17 @@
     \tl_if_in:NnT \l_tmpa_tl { Hy@SectionAnchorHref } {
       \tl_clear:N \l_tmpa_tl
     }
+    % LR-2.15: the register / TOC / bookmark write path stringifies this title
+    % with \tl_to_str, which turns the control symbol \& into a literal backslash
+    % + ampersand ("\&" shows in the contents). Normalise once here, at the single
+    % choke point, so every downstream \tl_to_str is idempotent and a plain "&"
+    % reaches the contents; body text and hyperref bookmarks are untouched.
+    \tl_if_empty:NF \l_tmpa_tl {
+      \str_set:Nx \l_tmpb_str { \tl_to_str:N \l_tmpa_tl }
+      \str_set:Nx \l_tmpc_str { \tl_to_str:n { \& } }
+      \str_replace_all:NVn \l_tmpb_str \l_tmpc_str { & }
+      \tl_set:Nx \l_tmpa_tl { \l_tmpb_str }
+    }
   }
 }
 
@@ -281,14 +356,21 @@
           \exp_args:Nc \seq_gput_right:Nn { g_semio_register_toc_label_seq }
             { \str_use:N \l_tmpb_str }
         \group_end:
-        \semio_window_toc_iow_open:
-        \tl_set:Nx \l_tmpe_tl {
+        % 🩹 Buffer the aux line in a seq instead of writing it to the file now.
+        % The file is (re)written in one shot at \AtEndDocument. Writing
+        % incrementally opened — and truncated — jobname.register-toc on the
+        % first tracked heading; a report whose first heading precedes
+        % \tableofcontents (e.g. \makefundingacknowledgement's \chapter*) thus
+        % wiped the previous run's aux before the TOC could read it, leaving the
+        % TOC permanently blank. Deferring the write keeps the prior run's aux
+        % intact on disk until end-of-document, so \semio_window_toc_aux_load:
+        % always reads a complete file regardless of heading/TOC order.
+        \seq_gput_right:Nx \g_semio_toc_aux_seq {
           \SemioTocAuxLine
             { #2 }
             { \tl_to_str:N \l_tmpa_tl }
             { \str_use:N \l_tmpb_str }
         }
-        \iow_now:Nx \g_semio_toc_iow { \tl_use:N \l_tmpe_tl }
       }
     }
   }
@@ -309,15 +391,10 @@
 }
 
 \iow_new:N \g_semio_toc_iow
-\bool_new:N \g_semio_toc_iow_open_bool
-\bool_gset_false:N \g_semio_toc_iow_open_bool
-
-\cs_new_protected:Npn \semio_window_toc_iow_open: {
-  \bool_if:NF \g_semio_toc_iow_open_bool {
-    \iow_open:Nn \g_semio_toc_iow { \c_sys_jobname_str .register-toc }
-    \bool_gset_true:N \g_semio_toc_iow_open_bool
-  }
-}
+% Buffer of \SemioTocAuxLine{..}{..}{..} entries collected during the run and
+% flushed to jobname.register-toc once, at \AtEndDocument (see the rationale at
+% the buffering site in \semio_window_toc_append:nnn).
+\seq_new:N \g_semio_toc_aux_seq
 
 \cs_new_protected:Npn \semio_window_toc_aux_line:nnn #1#2#3 {
   \tl_if_in:nnTF {#2} { Hy@SectionAnchorHref } { } {
@@ -337,9 +414,27 @@
 }
 
 \cs_new_protected:Npn \semio_window_vskip_stroke_hairline: {
+  % 🔒 break=false: the tcolorbox opened right after this vskip is non-breakable,
+  % so if it does not fit the remaining page it floats whole to the next page —
+  % but the title tab was emitted just above and this vskip is a legal page-break
+  % point (glue), so the tab is left orphaned on the old page. \nobreak forbids
+  % the break here; the last legal breakpoint is then the \addvspace above the
+  % tab (\semio_block_sep_before:), so tab and box move to the next page together.
+  % Only for non-breakable windows — a breakable window keeps its byte-for-byte
+  % output (its box breaks internally and always fits, so this never triggered).
+  \bool_if:NF \l_semio_window_break_bool { \nobreak }
   \group_begin:
   \ExplSyntaxOff
-  \vskip\dimexpr-3\semio@stroke@hairline\relax
+  % LR-2.14 seam: overlap the content frame onto the tab so the frame's top edge
+  % sits on the tab's baseline rule (one shared rule, no gap, no doubling) — the
+  % tab must SIT ON the component, not float above it.
+  % The -\semio@stroke@hairline is the original one-hairline seam. The extra
+  % -5.75pt cancels the vertical space a breakable tcolorbox emits at the top of
+  % its first part despite before~skip=0/nobeforeafter (a fixed, font-independent
+  % amount, measured empirically); without it the title tab floated ~5pt above
+  % the table/figure/window body. Errs a hair toward a sub-pt gap rather than an
+  % overlap, so the tab never collides with the first body line.
+  \vskip\dimexpr-\semio@stroke@hairline-5.75pt\relax
   \group_end:
 }
 
@@ -386,6 +481,11 @@
     \group_begin:
     \ExplSyntaxOff
     \makeatletter
+    % Inhaltsverzeichnis exception: half the standard cell padding (dense index).
+    % Local to this group, so no other table — including the appendix list at
+    % \semio_window_appendix_register_render: — is affected.
+    \renewcommand{\semio@table@vtop}{\semio@table@vtop@toc}%
+    \renewcommand{\semio@table@vbot}{\semio@table@vbot@toc}%
     \semio@register@window@open{\SemioTocTitle}%
     \SemioTableRegister{\semio@register@table@body}%
     \semio@register@window@close
@@ -395,9 +495,18 @@
   }
 }
 
+\cs_new_protected:Npn \semio_toc_aux_write:n #1 {
+  \iow_now:Nn \g_semio_toc_iow {#1}
+}
+% Flush the buffered TOC aux entries to disk in one shot, now that the whole
+% document (and thus every tracked heading) has been seen. Opening here truncates
+% the previous run's file only after this run's TOC has already read it.
 \AtEndDocument {
-  \iow_close:N \g_semio_toc_iow
-  \bool_gset_false:N \g_semio_toc_iow_open_bool
+  \seq_if_empty:NF \g_semio_toc_aux_seq {
+    \iow_open:Nn \g_semio_toc_iow { \c_sys_jobname_str .register-toc }
+    \seq_map_function:NN \g_semio_toc_aux_seq \semio_toc_aux_write:n
+    \iow_close:N \g_semio_toc_iow
+  }
 }
 
 \cs_new_protected:Npn \semio@toc@track #1#2 {
@@ -412,28 +521,37 @@
   \group_end:
 }
 
+% LR-winsep: external space BEFORE a window's title tab. The generic 0.2em
+% block separation is too small when the preceding element is a heading (a
+% paragraph brings ~5pt of intrinsic leading, a window brings none), which left
+% a table/figure tab flush against the heading bar. Use a dedicated window
+% before-space so heading->window matches heading->paragraph (~5pt). Merges with
+% the previous window's after-skip (0.85em still wins between two windows) and
+% vanishes at the top of a page.
+\providecommand{\semio@window@sep@before}{7pt}
 \cs_new_protected:Npn \semio_block_sep_before: {
   \bool_if:NF \l_semio_window_in_item_bool {
     \bool_if:NF \l_semio_register_list_bool {
       \group_begin:
       \ExplSyntaxOff
-      \semio@block@before
+      \ifhmode\par\fi
+      \ifnum\lastnodetype=-1 \else\addvspace{\semio@window@sep@before}\fi
       \group_end:
     }
   }
 }
 
 %region WindowHeaderKeep
-% 🧲️ Keeps the complete title bar attached to the first visible body line.
+% 🧲 Keeps the complete title bar attached to the first visible body line.
 \cs_new_protected:Npn \semio_window_header_keep_with_body: {
   \bool_if:NF \l_semio_window_in_item_bool {
     \group_begin:
     \ExplSyntaxOff
     \Needspace{\dimexpr
       \semio@chrome@titlebar@height
-      + 2\semio@chrome@padding
-      + 2\semio@chrome@font@body
-      + 2\semio@stroke@hairline
+      + \semio@window@bodypad + \semio@window@bodypad
+      + \semio@chrome@font@body + \semio@chrome@font@body
+      + \semio@stroke@hairline + \semio@stroke@hairline
     \relax}
     \ExplSyntaxOn
     \group_end:
@@ -448,8 +566,10 @@
   \semio_window_header_store:
   \semio_block_sep_before:
   \semio_window_header_keep_with_body:
-  \semio_window_header_muted_use:
-  \semio_window_vskip_stroke_hairline:
+  % 🩹 Title bar is emitted inside the long-table firsthead (see
+  % \semio@table@long@render), not as a separate chip here — a chip drawn
+  % before the longtable floated below its firsthead. Drawing it here too
+  % would double the title bar.
 }
 
 \cs_new_protected:Npn \semio_register_list_begin:n #1 {
@@ -478,7 +598,7 @@
 \cs_new_protected:Npn \SemioTocTrackNum #1#2#3 { \semio_window_toc_append:nnn {#1}{#2}{#3} }
 
 %region TableLongWindow
-% 📋️ Long tables need register/number/label like \begin{Table}, but must not
+% 📋 Long tables need register/number/label like \begin{Table}, but must not
 % open a tcolorbox (longtable supplies its own rules and page-break chrome).
 \cs_new_protected:Npn \semio_table_long_open:n #1 {
   \semio_window_content_state_reset:
@@ -493,8 +613,12 @@
   \semio_window_header_store:
   \semio_block_sep_before:
   \semio_window_header_keep_with_body:
-  \semio_window_header_muted_use:
-  \semio_window_vskip_stroke_hairline:
+  % 🩹 The title bar is NOT drawn here as a separate chip anymore. A chip drawn
+  % before \begin{longtable} was floated *below* longtable's firsthead (the
+  % column-header row hoists to the galley top), so the title rendered under
+  % the header. The title is now emitted inside the longtable's firsthead
+  % itself (see \semio@table@long@render), exactly like the continuation head,
+  % so it stacks above the column header on every page.
 }
 \cs_new_protected:Npn \semio_table_long_close: {
   \use:c { semio@window@leave }
@@ -509,6 +633,8 @@
 \tl_new:N \l_semio_termlist_title_tl
 \tl_new:N \l_semio_termlist_definition_tl
 \tl_new:N \l_semio_termlist_term_tl
+\bool_new:N \g_semio_termlist_shipped_bool
+\bool_gset_false:N \g_semio_termlist_shipped_bool
 
 \cs_new_protected:Npn \semio_termlist_term_ensure:nn #1#2 {
   \exp_args:Nc \prop_if_in:NnF { g_semio_#1_pages_prop } {#2} {
@@ -544,7 +670,7 @@
   } { }
 }
 
-\cs_new_protected:Npn \semio_termlist_use:nn #1#2 {
+\cs_new_protected:Npn \semio_termlist_use:nnn #1#2#3 {
   \semio_termlist_term_ensure:nn {#1} {#2}
   \refstepcounter { semio#1usage }
   \group_begin:
@@ -555,7 +681,11 @@
   \makeatother
   \group_end:
   \semio_termlist_label_append:nnx {#1} {#2} { \semio@termlist@label }
-  #2
+  #3
+}
+
+\cs_new_protected:Npn \semio_termlist_use:nn #1#2 {
+  \semio_termlist_use:nnn {#1} {#2} {#2}
 }
 
 \cs_new:Npn \semio_termlist_sort_compare:nn #1#2 {
@@ -615,6 +745,12 @@
   \int_compare:nNnT { \exp_args:Nc \seq_count:N { g_semio_#1_terms_seq } } > { 0 } {
     \semio_termlist_body_materialize:n {#1}
     \tl_set:Nx \l_semio_termlist_title_tl { \use:c { semio_#1_title_text: } }
+    % 🩹 Keep consecutive termlists on separate pages (Glossar then
+    % Abkürzungen). Chrome/header for the second table is restored by omitting
+    % empty \endfirsthead in \semio@table@long@render; clearpage avoids stacking
+    % LTpost/LTpre cream between two register tables on one page.
+    \bool_if:NT \g_semio_termlist_shipped_bool { \clearpage }
+    \bool_gset_true:N \g_semio_termlist_shipped_bool
     \group_begin:
     \ExplSyntaxOff
     \makeatletter
@@ -630,7 +766,7 @@
   \exp_args:Nc \seq_new:N { g_semio_#1_terms_seq }
   \exp_args:Nc \prop_new:N { g_semio_#1_definition_prop }
   \exp_args:Nc \prop_new:N { g_semio_#1_pages_prop }
-  % 🩹️ \makeatletter/\makeatother must stay scoped to this group — this
+  % 🩹 \makeatletter/\makeatother must stay scoped to this group — this
   % function is called at file top level (see \semio_termlist_new:nnnn calls
   % below), so an unwrapped \makeatother here would permanently flip the
   % catcode of `@` to "other" for the rest of the package, breaking every
@@ -655,6 +791,14 @@
 \cs_set_protected:Npn \AbbreviationDefine #1#2#3 {
   \semio_termlist_define:nnn { abbreviations } {#1} { #2~--~#3 }
 }
+
+% Optional display form for German inflection: \Gls[Baukomponenten]{Baukomponente}
+\cs_undefine:N \Gls
+\NewDocumentCommand \Gls { o m } {
+  \IfNoValueTF {#1}
+    { \semio_termlist_use:nn { glossary } {#2} }
+    { \semio_termlist_use:nnn { glossary } {#2} {#1} }
+}
 %endregion Termlist
 
 \cs_new_protected:Npn \semio_window_listof_cmd_define:nn #1#2 {
@@ -665,8 +809,8 @@
   \semio@register@hooks@install { listof #2 }
 }
 
-% 📎️ Appendix register — tracked like a window kind (num/title/label seqs +
-% \listofappendices), but populated by \appendixchapter (🖋️semio-components.sty)
+% 📎 Appendix register — tracked like a window kind (num/title/label seqs +
+% \listofappendices), but populated by \appendixchapter (semio-components.sty)
 % instead of a window environment, since an appendix is a heading, not a window.
 \newcounter{semioappendix}
 \tl_const:cn { semio@window@semioappendix@kind } { appendix }
@@ -690,12 +834,26 @@
   }
 }
 
-\cs_new_protected:Npn \semio_window_table_border_finish: {
+\cs_new_protected:Npn \semio_window_header_overlay_baseline: {
   \draw[
     draw=semio-chrome-border-normal,
     line~width=\semio@stroke@hairline,
-  ] ([xshift=\dimexpr\semio@stroke@hairline/2\relax]frame.north~west)
-    -- ([xshift=\dimexpr\semio@stroke@hairline/2\relax]frame.south~west);
+  ] (frame.north~west) -- (frame.north~east);
+}
+% @-named alias: overlay chips run under \ExplSyntaxOff, where a bare
+% \semio_window_... token splits at `_` into \semio + junk. Keep the expl3
+% name for call sites inside ExplSyntaxOn; latex overlays use this alias.
+\cs_new_eq:NN \semio@window@header@overlay@baseline \semio_window_header_overlay_baseline:
+
+% 🪟 Breakable `enhanced` skins reserve bottomrule-at-break geometry but do not
+% paint the south hairline on first/middle parts — sides hang open into the
+% footer. Define here (before tcbset) so overlay~first/~middle tokens resolve.
+% Unbroken/last still use skin bottomrule. Spaces as ~ under ExplSyntaxOn.
+\cs_new_protected:Npn \semio@window@frame@bottom@stroke {
+  \draw[
+    draw=semio-chrome-border-normal,
+    line~width=\semio@stroke@hairline,
+  ] (frame.south~west) -- (frame.south~east);
 }
 
 \tcbset{
@@ -707,28 +865,48 @@
     boxrule=\semio@stroke@hairline,
     boxsep=0pt,
     colframe=semio-chrome-border-normal,
+    % toprule=0: the shared top hairline is the inline chip baseline (page 1)
+    % / the continuation chip baseline — not a skin toprule (that doubled).
     toprule=0pt,
+    % Continuations own the top via chip baseline — no skin toprule at break.
+    toprule~at~break=0pt,
+    % Continuous L/R: skin leftrule/rightrule are single strokes for the whole
+    % frame (not per-row segments). Flush chips sit on these same x-positions.
     leftrule=\semio@stroke@hairline,
     rightrule=\semio@stroke@hairline,
     bottomrule=\semio@stroke@hairline,
+    % First/middle parts need the same bottom hairline budget as unbroken/last
+    % so side rules meet a real south edge (overlay paints it — enhanced does
+    % not draw horizontals at break by itself).
+    bottomrule~at~break=\semio@stroke@hairline,
     colback=semio-chrome-canvas,
     coltext=semio-chrome-text-normal,
-    top=\semio@chrome@padding,
-    left=\semio@chrome@padding,
-    right=\semio@chrome@padding,
-    bottom=\semio@chrome@padding,
+    top=\semio@window@bodypad,
+    left=\semio@window@bodypad,
+    right=\semio@window@bodypad,
+    bottom=\semio@window@bodypad,
+    % LR-2.14 seam: the title tab is welded on immediately above this box, so any
+    % `before skip` becomes a gap between the tab and the content frame (the tab
+    % floats, the borders start too low). External top spacing is provided
+    % separately by \semio@block@before before the tab, so this must be zero — the
+    % content frame then rises to meet the tab's baseline rule as one component.
     before~skip=0pt,
-    after~skip=\semio@block@sep@skip,
+    after~skip=\semio@spacing@table@outer,
     parbox=false,
-    % 🪟️ Repeat the header chip row (title chip + hierarchy chip, see
-    % \semio@window@header@repeat) on every continuation page-part of a
-    % genuinely broken window, and record how many parts this instance
-    % rendered into into so the *next* compile pass can show the ":<N>"
-    % suffix on page 1 too (see \semio@window@break@record and the
-    % `.window-breaks` aux file loaded by \semio_window_break_aux_load:).
+    % Page 1: chips+baseline are inline; do NOT TikZ-restroke frame.north (that
+    % was the extra parallel hairline when the seam was a hair off). Continuations
+    % redraw chips+baseline (no inline header on those parts). First/middle also
+    % close the south edge (enhanced leaves break bottoms undrawn).
     overlay~unbroken={\semio@window@break@record{1}},
-    overlay~middle={\semio@window@header@repeat},
-    overlay~last={\semio@window@header@repeat\semio@window@break@record{\arabic{tcbbreakpart}}},
+    overlay~first={\semio@window@frame@bottom@stroke},
+    overlay~middle={%
+      \semio@window@header@overlay@continuation
+      \semio@window@frame@bottom@stroke
+    },
+    overlay~last={%
+      \semio@window@header@overlay@continuation
+      \semio@window@break@record{\arabic{tcbbreakpart}}%
+    },
   },
   semio~window~table/.style={
     semio~window,
@@ -737,11 +915,16 @@
     left=0pt,
     right=0pt,
     bottom=0pt,
-    finish={\semio_window_table_border_finish:},
+    % Side/bottom frame comes from leftrule/rightrule/bottomrule alone.
   },
   semio~window~row/.style={
     semio~window,
     width=\linewidth,
+    % LR-arrangement: WindowColumn/WindowRow supply inter-item air via
+    % \semio@window@gap (= \semio@spacing@par); suppress tcolorbox external
+    % skips so only that token governs both axes.
+    before~skip=0pt,
+    after~skip=0pt,
   },
   semio~window~image~cover/.style={
     clip~upper=true,
@@ -762,6 +945,8 @@
   key .tl_set:N = \l_semio_window_key_tl,
   hierarchy .bool_set:N = \l_semio_window_hierarchy_bool,
   hierarchy .default:n = true,
+  break .bool_set:N = \l_semio_window_break_bool,
+  break .default:n = true,
   anchor .choice:,
   anchor / nw .code:n = { \semio_window_anchor_set:nn { top } { left } },
   anchor / n .code:n = { \semio_window_anchor_set:nn { top } { center } },
@@ -795,18 +980,19 @@
 
 \cs_new_protected:Npn \semio_window_content_state_reset: {
   \tl_set:Nn \l_semio_window_valign_tl { top }
-  \tl_set:Nn \l_semio_window_halign_tl { justify }
+  \tl_set:Nn \l_semio_window_halign_tl { left }
   \bool_set_false:N \l_semio_window_height_set_bool
   \dim_zero:N \l_semio_window_height_dim
   \bool_set_false:N \l_semio_window_textsize_set_bool
   \bool_set_false:N \l_semio_window_textfit_bool
+  \bool_set_true:N \l_semio_window_break_bool
   \tl_clear:N \l_semio_window_key_tl
   \semio_window_imagefit_set:n { contain }
   \group_begin:
   \ExplSyntaxOff
   \makeatletter
   \gdef\semio@window@valign{top}
-  \gdef\semio@window@halign{justify}
+  \gdef\semio@window@halign{left}
   \gdef\semio@window@height@dim{}
   \makeatother
   \group_end:
@@ -993,7 +1179,7 @@
   }
 }
 
-% 🩹️ Not \group_begin:/\ExplSyntaxOff/.../\group_end: (the pattern used
+% 🩹 Not \group_begin:/\ExplSyntaxOff/.../\group_end: (the pattern used
 % elsewhere in this file for \gdef payloads, where the group only needs to
 % scope the catcode change): \fontsize/\selectfont is a *local* assignment,
 % so wrapping it in a group discards the font change at \group_end: before
@@ -1014,7 +1200,7 @@
   \makeatletter
   \setlength{\semio@window@textfit@target@h}{%
     \dimexpr\semio@window@height@dim - \semio@chrome@titlebar@height
-      - \semio@chrome@padding - \semio@chrome@padding
+      - \semio@window@bodypad - \semio@window@bodypad
       - \semio@stroke@hairline - \semio@stroke@hairline
     \relax
   }
@@ -1090,7 +1276,7 @@
   \gdef\semio@window@header@title{#2}
   \makeatother
   \group_end:
-  % 🔢️ A *separate* page-1-only display copy — see
+  % 🔢 A *separate* page-1-only display copy — see
   % \semio_window_break_suffix_apply: — so the live ":<N>" that
   % \semio@window@header@repeat appends to \semio@window@header@number on
   % continuation pages never doubles up with this ":1".
@@ -1118,13 +1304,13 @@
   \makeatletter
   \ifvmode\else\par\fi
   \semio@noindent@noparskip
-  \semio@window@header@invoke
+  \semio@window@header@invoke@tcb
   \makeatother
   \group_end:
-  % 🧲️ Keep the next vertical-list item flush with the header outside the
-  % rendering group; a grouped \nointerlineskip restores \prevdepth on exit.
-  \par
-  \nointerlineskip
+  % 🧲 Keep the next vertical-list item flush with the header outside the
+  % rendering group; only in vertical mode (\nointerlineskip touches \prevdepth).
+  \ifvmode\else\par\fi
+  \ifvmode\nointerlineskip\fi
 }
 
 \cs_new_protected:Npn \semio_window_kind_number_set:n #1 {
@@ -1195,7 +1381,7 @@
   \semio_window_header_keep_with_body:
   \semio_window_header_muted_use:
   \semio_window_vskip_stroke_hairline:
-  % 🩹️ A "kind" window (Table, Figure, Photo, ...) never checked
+  % 🩹 A "kind" window (Table, Figure, Photo, ...) never checked
   % \l_semio_window_in_item_bool the way the generic \Window does (compare
   % \semio_window_generic_begin: below, which passes breakable=false when
   % inside a WindowItem) — so a kind window placed in a WindowRow/WindowItem
@@ -1205,18 +1391,22 @@
   % generic \Window's behavior for the same context.
   \str_if_eq:nnTF {#1} { semiotable }
     {
-      \bool_if:NTF \l_semio_window_in_item_bool
-        { \semio_window_tcb_open:n { semio~window~tier~#2, semio~window~table, breakable=false } }
-        { \semio_window_tcb_open:n { semio~window~tier~#2, semio~window~table } }
+      \tl_set:Nn \l_tmpa_tl { semio~window~tier~#2, semio~window~table }
+      % breakable=false when inside a WindowItem (see note above) OR when the
+      % window explicitly opted out of breaking via `break=false`.
+      \bool_lazy_or:nnT
+        { \l_semio_window_in_item_bool } { ! \l_semio_window_break_bool }
+        { \tl_put_right:Nn \l_tmpa_tl { , breakable=false } }
+      \exp_args:NV \semio_window_tcb_open:n \l_tmpa_tl
     }
     {
       \tl_set:Nn \l_tmpa_tl { semio~window~tier~#2 }
       \str_if_eq:VnT \l_semio_window_imagefit_tl { cover } {
         \tl_put_right:Nn \l_tmpa_tl { , semio~window~image~cover }
       }
-      \bool_if:NT \l_semio_window_in_item_bool {
-        \tl_put_right:Nn \l_tmpa_tl { , breakable=false }
-      }
+      \bool_lazy_or:nnT
+        { \l_semio_window_in_item_bool } { ! \l_semio_window_break_bool }
+        { \tl_put_right:Nn \l_tmpa_tl { , breakable=false } }
       \exp_args:NV \semio_window_tcb_open:n \l_tmpa_tl
     }
   \semio_window_textsize_apply:
@@ -1284,7 +1474,7 @@
       } {
         \dim_set:Nn \l_semio_image_target_h_dim {
           \dimexpr \semio@window@height@dim
-            - \semio@chrome@padding - \semio@chrome@padding
+            - \semio@window@bodypad - \semio@window@bodypad
             - \semio@stroke@hairline
           \relax
         }
@@ -1300,7 +1490,7 @@
   }
 }
 
-% 🎯️ Distributes a crop-scaled image's overflow into an offset from its
+% 🎯 Distributes a crop-scaled image's overflow into an offset from its
 % kept edge, per a CSS object-position-style keyword: #1 = resolved align
 % value, #2 = keyword that keeps the leading edge (offset stays 0), #3 =
 % keyword that keeps the trailing edge (offset becomes the full excess);
@@ -1393,7 +1583,7 @@
   } {
     \dim_set:Nn \l_semio_image_target_w_dim {
       \dimexpr \linewidth
-        - \semio@chrome@padding - \semio@chrome@padding
+        - \semio@window@bodypad - \semio@window@bodypad
         - \semio@stroke@hairline - \semio@stroke@hairline
       \relax
     }
@@ -1405,7 +1595,7 @@
   \semio@image@graphics@w { \semio@image@target@w@plain } {#1}
 }
 
-% 🖼️ Renders width-only (see \semio_image_typeset:n's "contain" branch for
+% 🖼 Renders width-only (see \semio_image_typeset:n's "contain" branch for
 % why a WindowItem image can never let the box's own fixed height reach the
 % *sizing* of the graphic), then clips the result to that height via a
 % TikZ path — a value used only as a clip boundary on an already-rendered
@@ -1438,7 +1628,7 @@
   \xdef\semio@image@target@h@plain{#2}
 }
 
-% 🖼️ See \semio_image_typeset:n's "contain" branch for why this is now only
+% 🖼 See \semio_image_typeset:n's "contain" branch for why this is now only
 % ever reached outside a WindowItem — a height-bound image rendered while
 % its own enclosing tcolorbox also carries that same fixed height made
 % tcolorbox typeset the box body twice, confirmed by counting
@@ -1487,7 +1677,7 @@
       \semio_image_graphics_fill:n {#1}
     }
     { cover } {
-      % 🎯️ Cover derives one proportional render dimension from the source
+      % 🎯 Cover derives one proportional render dimension from the source
       % ratio, clips locally, and relies on the cover window's outer clip as
       % the CSS-like overflow boundary for the tcolorbox/driver paint pass.
       \semio_image_bounded_height_required:n { cover }
@@ -1495,7 +1685,7 @@
       \semio_image_typeset_cover:n {#1}
     }
     { contain } {
-      % 🖼️ A window-height-bound "contain" image, rendered while its own
+      % 🖼 A window-height-bound "contain" image, rendered while its own
       % enclosing tcolorbox also carries that same fixed height (only
       % reachable via WindowArrangement — introduced this session for the
       % Projekte Katalog), makes tcolorbox typeset the box body twice —
@@ -1739,14 +1929,22 @@
   \ExplSyntaxOff
   \makeatletter
   \setlength { \semio@block@sep@skip } { \semio@spacing@single }
-  \setlength { \parskip } { \semio@block@sep@skip }
+  \setlength { \semio@window@gap } { \semio@spacing@par }
+  \setlength { \parskip } { \semio@spacing@par }
   \setlength { \parindent } { 0pt }
+  % LR-2.6: keep the shared 0.5em document \parskip (above) from leaking into
+  % compact list contexts, where it would loosen inter-item spacing past the
+  % surrounding body text. Reset it locally at each list start via etoolbox hooks
+  % (this build's LaTeX predates the kernel env/.../begin hooks).
+  \AtBeginEnvironment{itemize}{\setlength{\parskip}{\z@}}%
+  \AtBeginEnvironment{enumerate}{\setlength{\parskip}{\z@}}%
+  \AtBeginEnvironment{description}{\setlength{\parskip}{\z@}}%
   \ifcsname chapterheadstartvskip\endcsname
     \renewcommand*{\chapterheadstartvskip}{}%
   \fi
   \semio@chrome@dims@compute
   \setcounter{tocdepth}{\semio@toc@depth@unlimited}
-  % 🪜️ Every heading level through \subparagraph gets its own chip color and
+  % 🪜 Every heading level through \subparagraph gets its own chip color and
   % chip style (\semio@heading@installall below), so every level must also
   % actually be numbered — KOMA's own default secnumdepth (3, chapter…
   % subsubsection) silently leaves \paragraph/\subparagraph unnumbered, which
@@ -1819,7 +2017,9 @@
   \use:c { semio@window@leave }
 }
 \cs_new_protected:Npn \semio_window_generic_end: {
-  \bool_if:NF \l_semio_window_textfit_bool { \par }
+  \bool_if:NF \l_semio_window_textfit_bool {
+    \bool_if:NF \l_semio_window_in_item_bool { \par }
+  }
   \end{tcolorbox}
   \semio_window_generic_end_tail:
 }
@@ -1839,9 +2039,14 @@
 \newcommand{\semio@register@table@body}{}
 
 \newcommand{\semio@register@table@header}{%
+  % 4-arg form {col1-frac}{col1-label}{col2-label}{col3-label} — matching
+  % \semio@table@long@header@repeat@three's signature and the continuation head
+  % \semio@register@table@header@long@repeat. Columns 2–3 take their widths from the
+  % body colspec (the header cells drop into it), so no per-column fraction is
+  % passed; the old 6-arg form leaked "0.78"/"0.10" into the header row. Shared by
+  % both register tables (Inhaltsverzeichnis + appendix Verzeichnisse).
   \semio@table@long@header@repeat@three
-    {0.12}
-    {\semio@register@header@key}
+    {0.12}{\semio@register@header@key}
     {\semio@register@header@title}
     {\semio@register@header@page}%
 }
@@ -1862,13 +2067,6 @@
   \fi
 }
 
-\newcommand{\semio@render@toc}{%
-  \semio@register@window@open{\SemioTocTitle}%
-  \SemioTableRegister{\semio@register@table@body}%
-  \semio@register@window@close
-  \clearpage
-}
-
 %region References
 \defbibenvironment{semioreferences}
   {\list
@@ -1878,12 +2076,15 @@
       \setlength{\labelsep}{\biblabelsep}%
       \addtolength{\leftmargin}{\labelsep}%
       \setlength{\itemsep}{\bibitemsep}%
-      \setlength{\parsep}{\bibparsep}}%
+      \setlength{\parsep}{\bibparsep}%
+      \setlength{\parskip}{\z@}}% LR-2.6: bib is a compact list
       \renewcommand*{\makelabel}[1]{\hss##1}}
   {\endlist}
   {\item}
 
 \newcommand{\SemioReferences}{%
+  % LR-2.17: shrinkable inter-entry spacing so the last bib page isn't sparse.
+  \setlength{\bibitemsep}{0.5em plus 0.2em minus 0.45em}%
   \semio@register@window@open{\SemioReferencesTitle}%
   \printbibliography[env=semioreferences,heading=none]%
   \semio@register@window@close
@@ -1966,8 +2167,18 @@
 \def\semio@window@header@number@page1{}
 \def\semio@window@header@title{}
 
+% 📌 Chip number for callers that draw title chrome outside a window and so never
+% pass through \semio_window_header_store_aux:nn (the project catalogue card).
+% Such a card is an unbreakable box, so the page-1 display copy read by
+% \semio@window@header@invoke equals the base number — set both here rather than
+% leaving @page1 empty, which drops the chip.
+\newcommand{\semio@window@header@number@set}[1]{%
+  \gdef\semio@window@header@number{#1}%
+  \gdef\semio@window@header@number@page1{#1}%
+}
+
 \newcommand{\semio@window@header@invoke}{%
-  % 🔢️ Page 1 uses \semio@window@header@number@page1 (base number, plus a
+  % 🔢 Page 1 uses \semio@window@header@number@page1 (base number, plus a
   % ":1" suffix if the *previous* compile pass recorded this window as
   % having broken — see \semio_window_break_suffix_apply:), never the bare
   % \semio@window@header@number that \semio@window@header@repeat reuses (and
@@ -1976,7 +2187,7 @@
 }
 
 %region WindowBreakParts chrome
-% 🧩️ Records (into the `.window-breaks` aux file, via
+% 🧩 Records (into the `.window-breaks` aux file, via
 % \semio_window_break_record:n) how many page-parts this window instance
 % rendered into on *this* compile pass — read back on the *next* pass by
 % \semio_window_break_suffix_apply: to decide whether page 1's hierarchy
@@ -1998,46 +2209,66 @@
 }
 \ExplSyntaxOff
 
-% 🪟️ Redraws the *exact* header chip row (same \semio@window@header@muted
-% routine used for page 1, above/before the box) as a tcolorbox `overlay`
-% anchored to that page-part's own `frame` node, so a continuation page of a
-% genuinely broken window shows the identical title/hierarchy chip chrome —
-% just with the live `\thetcbbreakpart` part index appended to the number.
-% Wired into the `semio~window` tcbset style as `overlay middle=` /
-% `overlay last=` (never fires for `unbroken` or single-part boxes, so a
-% window that never breaks renders byte-for-byte as before). Defined outside
-% ExplSyntaxOn — it needs real (non-ignored) spaces for the `\node[...]` key
-% list (see the ExplSyntaxOn note above).
-\newcommand{\semio@window@header@repeat}{%
+% 🪟 Page 1 / unbroken: chips+baseline are inline — do not TikZ-restroke
+% frame.north (a second parallel hairline when the seam is a hair off).
+% Continuation parts redraw the full chip row (no inline header on those pages).
+\newcommand{\semio@window@header@overlay@continuation}{%
   \edef\semio@window@header@part@num{\arabic{tcbbreakpart}}%
-  \node[anchor=south, inner sep=0pt, yshift=\semio@stroke@hairline] at (frame.north) {%
+  % south west @ frame.north west + flush chips: outer chip verticals sit on the
+  % continuous leftrule/rightrule (centered south @ frame.north + moveleft made
+  % a 1–2px jog / second edge).
+  \node[anchor=south west, inner sep=0pt, yshift=\semio@stroke@hairline] at (frame.north west) {%
+    \semio@window@header@flushtrue
     \semio@window@header@muted{\semio@window@header@number:\semio@window@header@part@num}{\semio@window@header@title}%
+    \semio@window@header@flushfalse
   };%
 }
 
-\ExplSyntaxOff
-%endregion WindowBreakParts chrome
-
-\newcommand{\semio@chrome@heading@set}[1]{%
-  \gdef\semio@chrome@heading{#1}%
+\newcommand{\semio@window@header@overlay}{%
+  \ifnum\value{tcbbreakpart}=1\relax
+  \else
+    \semio@window@header@overlay@continuation
+  \fi
 }
 
+\newcommand{\semio@window@header@repeat}{\semio@window@header@overlay}
+
+%endregion WindowBreakParts chrome
+
+% 🧭 The running-header chip follows the document's highest heading tier. Once a
+% part appears, sections and every lower tier stop replacing it; documents whose
+% highest tier is chapter or section keep that tier instead. A mark travels with
+% the heading box, avoiding TeX page-builder read-ahead, while the global value
+% covers pages without a fresh mark. Lower tiers repeat the retained root mark
+% to supersede KOMA's numbered marks. \SemioNavShort is consumed by the next
+% heading even when that heading is below the tracked tier, so it cannot leak.
+\let\semio@nav@short@pending\relax
+\newcommand{\SemioNavShort}[1]{\gdef\semio@nav@short@pending{#1}}
+\newcommand{\semio@chrome@heading@set}[1]{%
+  \ifx\semio@nav@short@pending\relax
+    \gdef\semio@chrome@heading{#1}%
+    \markright{#1}%
+  \else
+    \global\let\semio@chrome@heading\semio@nav@short@pending
+    \expandafter\markright\expandafter{\semio@nav@short@pending}%
+    \global\let\semio@nav@short@pending\relax
+  \fi
+}
+
+\newcount\semio@chrome@heading@level
+\newcount\semio@chrome@heading@candidate@level
+\semio@chrome@heading@level=99\relax
 \newcommand{\semio@chrome@heading@track}[2]{%
-  \def\semio@chrome@track@level{#1}%
-  \def\semio@chrome@track@part{part}%
-  \def\semio@chrome@track@chapter{chapter}%
-  \def\semio@chrome@track@section{section}%
-  \ifx\semio@chrome@track@level\semio@chrome@track@part
+  \semio@chrome@heading@candidate@level=\numexpr\semio@toc@level{#1}\relax
+  \ifnum\semio@chrome@heading@candidate@level<\semio@chrome@heading@level
+    \global\semio@chrome@heading@level=\semio@chrome@heading@candidate@level
+  \fi
+  \ifnum\semio@chrome@heading@candidate@level=\semio@chrome@heading@level
     \semio@chrome@heading@set{#2}%
-  \else\ifx\semio@chrome@track@level\semio@chrome@track@chapter
-    \semio@chrome@heading@set{#2}%
-  \else\ifx\semio@chrome@track@level\semio@chrome@track@section
-    \ifcsname c@chapter\endcsname
-      \ifnum\value{chapter}>0 \else \semio@chrome@heading@set{#2}\fi
-    \else
-      \semio@chrome@heading@set{#2}%
-    \fi
-  \fi\fi\fi
+  \else
+    \global\let\semio@nav@short@pending\relax
+    \expandafter\markright\expandafter{\semio@chrome@heading}%
+  \fi
 }
 
 \newsavebox{\semio@window@cap@slot}
@@ -2046,25 +2277,80 @@
 \newlength{\semio@window@gap@w}
 \newlength{\semio@window@cap@w}
 \newlength{\semio@window@cap@body@h}
+% 📐 Floor for \semio@window@cap@titleh during a heading-pair rebuild. Zero
+% outside pairs; set to max(tab,ctrl) so both chips (and the solid gap band)
+% share one height — otherwise the shorter number chip steps below/above the
+% title+gap band (Bauteileinspeisung).
+\newlength{\semio@window@cap@min@titleh}
+\setlength{\semio@window@cap@min@titleh}{\z@}
 
+% 🔲 Effective cap-box height. The nominal \semio@chrome@titlebar@height (1.4em)
+% resolves against the *ambient* body font, so an enlarged chip font (e.g. 14pt
+% headings) leaves the borders sitting on the letters. \semio@window@cap@titleh
+% is instead the max of that nominal height and the *measured* slot content plus
+% symmetric vertical padding, so the box grows with its text and the letters
+% keep clear air above and below. body@h@set seeds it (before the slot exists);
+% metrics@set recomputes it from the boxed slot.
+\newlength{\semio@window@cap@titleh}
 \newcommand{\semio@window@cap@body@h@set}{%
+  \setlength{\semio@window@cap@titleh}{\dimexpr\semio@chrome@titlebar@height\relax}%
   \setlength{\semio@window@cap@body@h}{%
-    \dimexpr\semio@chrome@titlebar@height-\semio@stroke@hairline\relax
+    \dimexpr\semio@window@cap@titleh-\semio@stroke@hairline\relax
+  }%
+}
+% Vertical padding budget added to the measured slot to form the cap height.
+% Default = 3·\semio@chrome@padding (unchanged for accent tabs). The muted cap
+% core and the heading chips locally \renewcommand this — each scoped to its own
+% \hbox — so their label gets \semio@tab@inset@v (70% of \semio@tab@inset) above
+% and below.
+\newcommand{\semio@window@cap@vpad@budget}{%
+  \semio@chrome@padding+\semio@chrome@padding+\semio@chrome@padding}
+% Horizontal label inset inside a cap slot. Default = \semio@chrome@padding
+% (unchanged for accent tabs). Section/appendix heading chips \renewcommand this
+% — scoped to their own box — to the full \semio@tab@inset, so a heading box's
+% label sits the same distance from its left/right borders as a window/table
+% title tab's does (which uses \semio@tab@inset via the muted cap core).
+\newcommand{\semio@window@cap@hpad}{\semio@chrome@padding}
+\newcommand{\semio@window@cap@metrics@set}{%
+  \setlength{\semio@window@cap@titleh}{%
+    \dimexpr\ht\semio@window@cap@slot+\dp\semio@window@cap@slot
+      +\semio@window@cap@vpad@budget\relax
+  }%
+  \ifdim\semio@window@cap@titleh<\dimexpr\semio@chrome@titlebar@height\relax
+    \setlength{\semio@window@cap@titleh}{\dimexpr\semio@chrome@titlebar@height\relax}%
+  \fi
+  \ifdim\semio@window@cap@titleh<\semio@window@cap@min@titleh\relax
+    \setlength{\semio@window@cap@titleh}{\semio@window@cap@min@titleh}%
+  \fi
+  \setlength{\semio@window@cap@body@h}{%
+    \dimexpr\semio@window@cap@titleh-\semio@stroke@hairline\relax
   }%
 }
 
-\newcommand{\semio@window@stroke@v}[1]{%
-  \color{#1}%
-  \rule{\semio@stroke@hairline}{\semio@chrome@titlebar@height}%
+\newcommand{\semio@window@stroke@h}[2]{%
+  \textcolor{#1}{\rule{\dimexpr#2\relax}{\semio@stroke@hairline}}%
 }
 
-\newcommand{\semio@window@stroke@h}[2]{%
-  \color{#1}%
-  \rule{\dimexpr#2\relax}{\semio@stroke@hairline}%
+\newcommand{\semio@window@stroke@v}[1]{%
+  \textcolor{#1}{\rule{\semio@stroke@hairline}{\semio@window@cap@titleh}}%
+}
+
+\newcommand{\semio@window@stroke@v@to}[2]{%
+  \textcolor{#1}{\rule{\semio@stroke@hairline}{\dimexpr#2\relax}}%
 }
 
 \newcommand{\semio@window@cap@raise}[1]{%
-  \raisebox{0pt}[\dimexpr\semio@chrome@titlebar@height\relax][0pt]{#1}%
+  \raisebox{0pt}[\semio@window@cap@titleh][0pt]{#1}%
+}
+
+\newcommand{\semio@window@cap@raise@to}[2]{%
+  \raisebox{0pt}[\dimexpr#1\relax][0pt]{#2}%
+}
+
+\newcommand{\semio@window@cap@left@overlay}[1]{%
+  \kern-\semio@window@cap@w
+  \semio@window@cap@raise{\semio@window@stroke@v{#1}}%
+  \kern\dimexpr\semio@window@cap@w-\semio@stroke@hairline\relax
 }
 
 \newcommand{\semio@window@cap@paint}[3]{%
@@ -2092,7 +2378,7 @@
 }
 
 \newcommand{\semio@window@cap@muted@vbox}[1]{%
-  \vbox to \semio@chrome@titlebar@height{%
+  \vbox to \semio@window@cap@titleh{%
     \nointerlineskip
     \hbox{\semio@window@stroke@h{semio-chrome-border-normal}{\semio@window@cap@w}}%
     \nointerlineskip
@@ -2101,7 +2387,7 @@
 }
 
 \newcommand{\semio@window@cap@accent@vbox}[1]{%
-  \vbox to \semio@chrome@titlebar@height{%
+  \vbox to \semio@window@cap@titleh{%
     \nointerlineskip
     \hbox{\semio@window@stroke@h{#1}{\semio@window@cap@w}}%
     \nointerlineskip
@@ -2114,13 +2400,41 @@
   \sbox{\semio@window@cap@slot}{%
     \begingroup
     #3\relax
-    \hspace{\semio@chrome@padding}#2\hspace{\semio@chrome@padding}%
+    \hspace{\semio@window@cap@hpad}#2\hspace{\semio@window@cap@hpad}%
     \endgroup
   }%
   \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
+    \semio@window@cap@metrics@set
   \hbox{%
     \semio@window@cap@raise{\semio@window@stroke@v{#1}}%
     \semio@window@cap@raise{\semio@window@cap@accent@vbox{#1}}%
+    \semio@window@cap@left@overlay{#1}%
+    \semio@window@cap@raise{\semio@window@stroke@v{#1}}%
+  }%
+}
+
+% 📐 Open-bottom solid chip for pairs: identical to \semio@window@cap except the
+% box stops one hairline above the pair baseline, so the row's shared full-width
+% rule supplies the chip's bottom edge (and continues across the gap between the
+% two chips) instead of the gap being filled into one solid rectangle.
+\newcommand{\semio@window@cap@open}[3]{%
+  \semio@window@cap@body@h@set
+  \sbox{\semio@window@cap@slot}{%
+    \begingroup
+    #3\relax
+    \hspace{\semio@window@cap@hpad}#2\hspace{\semio@window@cap@hpad}%
+    \endgroup
+  }%
+  \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
+  \semio@window@cap@metrics@set
+  \addtolength{\semio@window@cap@titleh}{-\semio@stroke@hairline}%
+  \setlength{\semio@window@cap@body@h}{%
+    \dimexpr\semio@window@cap@titleh-\semio@stroke@hairline\relax
+  }%
+  \hbox{%
+    \semio@window@cap@raise{\semio@window@stroke@v{#1}}%
+    \semio@window@cap@raise{\semio@window@cap@accent@vbox{#1}}%
+    \semio@window@cap@left@overlay{#1}%
     \semio@window@cap@raise{\semio@window@stroke@v{#1}}%
   }%
 }
@@ -2142,46 +2456,97 @@
   \SemioSans\fontsize{\semio@chrome@font@chip}{\semio@chrome@font@chip}\selectfont
 }
 
+% 🔠 Section/appendix heading bars use a larger font than the small chrome
+% chip font (navbar, footer, table captions keep the 7.2pt chip size). The
+% title-bar height is em-based, so it scales with this font automatically.
+\providecommand{\semio@chrome@font@heading}{11pt}
+\newcommand{\semio@heading@bar@font}{%
+  \SemioSans\fontsize{\semio@chrome@font@heading}{\semio@chrome@font@heading}\selectfont
+}
+
+% 📐 Outer outline-chip width = label slot + left hairline + right hairline.
+% Written as a sum (not 2\semio@stroke@hairline): hairline is a macro starting
+% with a digit (0.75pt), so 2\semio@stroke@hairline token-glues to 20.75pt and
+% the top/bottom strokes overshoot the verticals by ~19pt (Bauteilportal).
+% Returned as a dimexpr *term* so \semio@window@stroke@h's \dimexpr#2 wraps once.
+\newcommand{\semio@window@cap@outer@w}{%
+  \semio@window@cap@w+\semio@stroke@hairline+\semio@stroke@hairline
+}
+
 \newcommand{\semio@heading@cap@nofill@vbox}[1]{%
   \if\relax\detokenize{#1}\relax
-    \vbox to \semio@chrome@titlebar@height{%
+    \vbox to \semio@window@cap@titleh{%
       \vfil
       \nointerlineskip
       \hbox to \semio@window@cap@w{\hfil\usebox{\semio@window@cap@slot}\hfil}%
       \vfil
     }%
   \else
-    \vbox to \semio@chrome@titlebar@height{%
+    \vbox to \semio@window@cap@titleh{%
       \nointerlineskip
-      \hbox{\semio@window@stroke@h{#1}{\semio@window@cap@w}}%
-      \nointerlineskip
-      \semio@window@cap@paint@nofill{\semio@window@cap@w}{\dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax}%
-      \nointerlineskip
-      \hbox{\semio@window@stroke@h{#1}{\semio@window@cap@w}}%
+      \hbox{%
+        \semio@window@stroke@v@to{#1}{\semio@window@cap@titleh}%
+        \vbox{%
+          \nointerlineskip
+          \hbox{\semio@window@stroke@h{#1}{\semio@window@cap@w}}%
+          \nointerlineskip
+          \hbox{\semio@window@cap@paint@nofill{\semio@window@cap@w}{\dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax}}%
+          \nointerlineskip
+          \hbox{\semio@window@stroke@h{#1}{\semio@window@cap@w}}%
+        }%
+        \semio@window@stroke@v@to{#1}{\semio@window@cap@titleh}%
+      }%
     }%
   \fi
 }
 
-\newcommand{\semio@heading@cap@nofill@core}[3]{%
+\newcommand{\semio@heading@cap@nofill}[3]{%
   \semio@window@cap@body@h@set
   \sbox{\semio@window@cap@slot}{%
     \begingroup
-    \semio@heading@chip@font\color{#2}%
-    \hspace{\semio@chrome@padding}#1\hspace{\semio@chrome@padding}%
+    \semio@heading@bar@font\color{#2}%
+    \hspace{\semio@tab@inset}#1\hspace{\semio@tab@inset}%
     \endgroup
   }%
   \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
-  \semio@window@cap@raise{\semio@heading@cap@nofill@vbox{#3}}%
+  \renewcommand{\semio@window@cap@vpad@budget}{%
+    \semio@tab@inset@v+\semio@tab@inset@v+\semio@stroke@hairline}%
+  \semio@window@cap@metrics@set
+  \hbox{\semio@window@cap@raise{\semio@heading@cap@nofill@vbox{#3}}}%
 }
 
-\newcommand{\semio@heading@cap@nofill}[3]{%
+% 📐 Open-bottom outline chip for pairs: top is full outer width; sides stop above
+% the shared pair baseline so verticals sit on that rule (no chip-local bottom).
+\newcommand{\semio@heading@cap@nofill@open}[3]{%
+  \semio@window@cap@body@h@set
+  \sbox{\semio@window@cap@slot}{%
+    \begingroup
+    \semio@heading@bar@font\color{#2}%
+    \hspace{\semio@tab@inset}#1\hspace{\semio@tab@inset}%
+    \endgroup
+  }%
+  \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
+  \renewcommand{\semio@window@cap@vpad@budget}{%
+    \semio@tab@inset@v+\semio@tab@inset@v+\semio@stroke@hairline}%
+  \semio@window@cap@metrics@set
   \if\relax\detokenize{#3}\relax
-    \hbox{\semio@heading@cap@nofill@core{#1}{#2}{#3}}%
-  \else
     \hbox{%
-      \semio@window@cap@raise{\semio@window@stroke@v{#3}}%
-      \semio@heading@cap@nofill@core{#1}{#2}{#3}%
-      \semio@window@cap@raise{\semio@window@stroke@v{#3}}%
+      \semio@window@cap@raise@to{\semio@window@cap@titleh-\semio@stroke@hairline}{%
+        \semio@window@cap@paint@nofill{\semio@window@cap@w}{\dimexpr\semio@window@cap@titleh-\semio@stroke@hairline\relax}%
+      }%
+    }%
+  \else
+    \semio@window@cap@raise@to{\semio@window@cap@titleh-\semio@stroke@hairline}{%
+      \hbox{%
+        \semio@window@stroke@v@to{#3}{\semio@window@cap@titleh-\semio@stroke@hairline}%
+        \vbox{%
+          \nointerlineskip
+          \hbox{\semio@window@stroke@h{#3}{\semio@window@cap@w}}%
+          \nointerlineskip
+          \hbox{\semio@window@cap@paint@nofill{\semio@window@cap@w}{\dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax}}%
+        }%
+        \semio@window@stroke@v@to{#3}{\semio@window@cap@titleh-\semio@stroke@hairline}%
+      }%
     }%
   \fi
 }
@@ -2190,11 +2555,19 @@
   \semio@window@cap@body@h@set
   \sbox{\semio@window@cap@slot}{%
     \begingroup
-    \semio@heading@chip@font\color{semio-chrome-text-normal}%
-    \hspace{\semio@chrome@padding}#1\hspace{\semio@chrome@padding}%
+    \semio@heading@bar@font\color{semio-chrome-text-normal}%
+    \hspace{\semio@tab@inset}#1\hspace{\semio@tab@inset}%
     \endgroup
   }%
   \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
+  % Title-tab vertical inset: the label sits \semio@tab@inset@v (70% of the
+  % horizontal \semio@tab@inset) from the top and bottom borders. The +hairline
+  % compensates the tab's own top border stroke, so the canvas body (titleh−hairline)
+  % yields \semio@tab@inset@v above AND below the vertically-centred label. Local to
+  % the enclosing \hbox → other caps unaffected.
+  \renewcommand{\semio@window@cap@vpad@budget}{%
+    \semio@tab@inset@v+\semio@tab@inset@v+\semio@stroke@hairline}%
+  \semio@window@cap@metrics@set
   \semio@window@cap@raise{\semio@window@cap@muted@vbox{semio-chrome-canvas}}%
 }
 
@@ -2209,18 +2582,68 @@
   \hbox{%
     \semio@window@cap@raise{\semio@window@stroke@v{semio-chrome-border-normal}}%
     \semio@heading@cap@muted@core{#1}%
+    \semio@window@cap@left@overlay{semio-chrome-border-normal}%
     \semio@window@cap@raise{\semio@window@stroke@v{semio-chrome-border-normal}}%
   }%
 }
 
-\newcommand{\semio@heading@chip}[3]{%
-  \semio@window@cap{#1}{#3}{%
-    \semio@heading@chip@font\color{#2}%
+% 📐 Open-bottom muted tab for window/table headers. Mirror
+% \semio@heading@cap@nofill@open: top + sides + canvas only, height
+% titleh−hairline, so the shared baseline row is the sole bottom edge.
+\newcommand{\semio@heading@cap@muted@open}[1]{%
+  \semio@window@cap@body@h@set
+  \sbox{\semio@window@cap@slot}{%
+    \begingroup
+    \semio@heading@bar@font\color{semio-chrome-text-normal}%
+    \hspace{\semio@tab@inset}#1\hspace{\semio@tab@inset}%
+    \endgroup
+  }%
+  \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
+  \renewcommand{\semio@window@cap@vpad@budget}{%
+    \semio@tab@inset@v+\semio@tab@inset@v+\semio@stroke@hairline}%
+  \semio@window@cap@metrics@set
+  % Post-and-rail: L/R posts are full open height; top rail sits between them
+  % (cap@w, not outer@w). Stacking a full-width top \rule above separate
+  % verticals left a 1px cream butt-join notch at each outer top corner.
+  \semio@window@cap@raise@to{\semio@window@cap@titleh-\semio@stroke@hairline}{%
+    \hbox{%
+      \semio@window@stroke@v@to{semio-chrome-border-normal}{\semio@window@cap@titleh-\semio@stroke@hairline}%
+      \vbox{%
+        \nointerlineskip
+        \hbox{\semio@window@stroke@h{semio-chrome-border-normal}{\semio@window@cap@w}}%
+        \nointerlineskip
+        \hbox{\semio@window@cap@paint{\semio@window@cap@w}{semio-chrome-canvas}{\dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax}}%
+      }%
+      \semio@window@stroke@v@to{semio-chrome-border-normal}{\semio@window@cap@titleh-\semio@stroke@hairline}%
+    }%
   }%
 }
 
-\newcommand{\semio@window@gap@inbox}[1]{%
-  \semio@window@header@gap@paint{#1}%
+\newcommand{\semio@heading@chip}[3]{%
+  % LR-headbox-inset: match the window/table title tabs — the label sits
+  % \semio@tab@inset from the left/right borders (via \semio@window@cap@hpad) and
+  % \semio@tab@inset@v (70% of that) from top/bottom (via the vpad budget), instead
+  % of the tight \semio@chrome@padding. Scoped to this box so accent tabs
+  % (\semio@window@tab/@ctrl) keep their inset.
+  \begingroup
+  \renewcommand{\semio@window@cap@hpad}{\semio@tab@inset}%
+  \renewcommand{\semio@window@cap@vpad@budget}{%
+    \semio@tab@inset@v+\semio@tab@inset@v+\semio@stroke@hairline}%
+  \semio@window@cap{#1}{#3}{%
+    \semio@heading@bar@font\color{#2}%
+  }%
+  \endgroup
+}
+
+\newcommand{\semio@heading@chip@open}[3]{%
+  \begingroup
+  \renewcommand{\semio@window@cap@hpad}{\semio@tab@inset}%
+  \renewcommand{\semio@window@cap@vpad@budget}{%
+    \semio@tab@inset@v+\semio@tab@inset@v+\semio@stroke@hairline}%
+  \semio@window@cap@open{#1}{#3}{%
+    \semio@heading@bar@font\color{#2}%
+  }%
+  \endgroup
 }
 
 \newcommand{\semio@heading@number@suffix}[1]{%
@@ -2235,53 +2658,98 @@
   }%
 }
 
-\newcommand{\semio@heading@pair}[5]{%
-  \semio@hierarchy@path@set{\csname the#4\endcsname}%
-  \sbox{\semio@window@tab@box}{\semio@heading@chip{#1}{#2}{#5}}%
-
-  \sbox{\semio@window@ctrl@box}{\semio@heading@chip{#1}{#2}{\semio@heading@kind@number{#3}{#4}}}%
-  \setlength{\semio@window@gap@w}{%
-    \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
+% 📐 Two-pass height sync makes title and number chips the same tallness (max of
+% both) before they are placed on the shared pair baseline.
+\newcommand{\semio@heading@pair@sync@height}{%
+  \setlength{\semio@window@cap@min@titleh}{%
+    \dimexpr\ht\semio@window@tab@box+\dp\semio@window@tab@box\relax
   }%
+  \ifdim\dimexpr\ht\semio@window@ctrl@box+\dp\semio@window@ctrl@box\relax>\semio@window@cap@min@titleh\relax
+    \setlength{\semio@window@cap@min@titleh}{%
+      \dimexpr\ht\semio@window@ctrl@box+\dp\semio@window@ctrl@box\relax
+    }%
+  \fi
+}
+
+% 📐 Heading pairs — solid and outline alike: two open-bottom chips sit
+% flush-left / flush-right on one shared baseline row, and a single full-width
+% rule underneath supplies both chips' bottom edge and the connector between
+% them. Solid levels therefore read as chip + border + chip, never as one
+% continuous coloured rectangle spanning the text width.
+\newcommand{\semio@heading@pair@row}[1]{%
   \semio@heading@row@wrap{%
-    \hbox to \linewidth{%
-      \usebox{\semio@window@tab@box}%
-      \semio@window@header@gap@paint{#1}%
-      \usebox{\semio@window@ctrl@box}%
+    \vbox{%
+      \hbox to \linewidth{%
+        \usebox{\semio@window@tab@box}%
+        \hfil
+        \usebox{\semio@window@ctrl@box}%
+      }%
+      \nointerlineskip
+      \hbox to \linewidth{%
+        \semio@window@stroke@h{#1}{\linewidth}%
+      }%
     }%
   }%
+}
+
+\newcommand{\semio@heading@pair}[5]{%
+  \semio@hierarchy@path@set{\csname the#4\endcsname}%
+  \setlength{\semio@window@cap@min@titleh}{\z@}%
+  \sbox{\semio@window@tab@box}{\semio@heading@chip@open{#1}{#2}{#5}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@chip@open{#1}{#2}{\semio@heading@kind@number{#3}{#4}}}%
+  \semio@heading@pair@sync@height
+  % Open chips box to titleh−hairline (baseline is the pair row below); sync
+  % measured that shorter box, so lift the floor back to full titleh.
+  \addtolength{\semio@window@cap@min@titleh}{\dimexpr\semio@stroke@hairline\relax}%
+  \sbox{\semio@window@tab@box}{\semio@heading@chip@open{#1}{#2}{#5}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@chip@open{#1}{#2}{\semio@heading@kind@number{#3}{#4}}}%
+  \setlength{\semio@window@cap@min@titleh}{\z@}%
+  \semio@heading@pair@row{#1}%
 }
 
 \newcommand{\semio@heading@pair@outline}[5]{%
   \semio@hierarchy@path@set{\csname the#4\endcsname}%
-  \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill{#5}{#2}{#1}}%
-  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill{\semio@heading@kind@number{#3}{#4}}{#2}{#1}}%
-  \setlength{\semio@window@gap@w}{%
-    \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
-  }%
-  \semio@heading@row@wrap{%
-    \hbox to \linewidth{%
-      \usebox{\semio@window@tab@box}%
-      \semio@window@header@gap@paint@nofill{#1}%
-      \usebox{\semio@window@ctrl@box}%
-    }%
-  }%
+  \setlength{\semio@window@cap@min@titleh}{\z@}%
+  \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill@open{#5}{#2}{#1}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill@open{\semio@heading@kind@number{#3}{#4}}{#2}{#1}}%
+  \semio@heading@pair@sync@height
+  % Open chips box to titleh−hairline (baseline is the pair row below); sync
+  % measured that shorter box, so lift the floor back to full titleh.
+  \addtolength{\semio@window@cap@min@titleh}{\dimexpr\semio@stroke@hairline\relax}%
+  \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill@open{#5}{#2}{#1}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill@open{\semio@heading@kind@number{#3}{#4}}{#2}{#1}}%
+  \setlength{\semio@window@cap@min@titleh}{\z@}%
+  \semio@heading@pair@row{#1}%
+}
+
+% 📐 Explicit-number pairs — same construction as the level-driven pairs above,
+% but the number is passed in rather than read from \the<level>, for the nested
+% paragraphs whose numbers are composed by hand (see NestedParagraphs). Both
+% carry the same argument order so the nest can pick one by ladder style alone.
+\newcommand{\semio@heading@pair@num}[4]{%
+  \semio@hierarchy@path@set{#1}%
+  \setlength{\semio@window@cap@min@titleh}{\z@}%
+  \sbox{\semio@window@tab@box}{\semio@heading@chip@open{#4}{#3}{#2}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@chip@open{#4}{#3}{\semio@kind@number@bare{#1}}}%
+  \semio@heading@pair@sync@height
+  \addtolength{\semio@window@cap@min@titleh}{\dimexpr\semio@stroke@hairline\relax}%
+  \sbox{\semio@window@tab@box}{\semio@heading@chip@open{#4}{#3}{#2}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@chip@open{#4}{#3}{\semio@kind@number@bare{#1}}}%
+  \setlength{\semio@window@cap@min@titleh}{\z@}%
+  \semio@heading@pair@row{#4}%
 }
 
 \newcommand{\semio@heading@pair@nofill@num}[4]{%
   \semio@hierarchy@path@set{#1}%
-  \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill{#2}{#3}{#4}}%
-  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill{\semio@kind@number@bare{#1}}{#3}{#4}}%
-  \setlength{\semio@window@gap@w}{%
-    \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
-  }%
-  \semio@heading@row@wrap{%
-    \hbox to \linewidth{%
-      \usebox{\semio@window@tab@box}%
-      \semio@window@header@gap@paint@nofill{#4}%
-      \usebox{\semio@window@ctrl@box}%
-    }%
-  }%
+  \setlength{\semio@window@cap@min@titleh}{\z@}%
+  \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill@open{#2}{#3}{#4}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill@open{\semio@kind@number@bare{#1}}{#3}{#4}}%
+  \semio@heading@pair@sync@height
+  \addtolength{\semio@window@cap@min@titleh}{\dimexpr\semio@stroke@hairline\relax}%
+  \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill@open{#2}{#3}{#4}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill@open{\semio@kind@number@bare{#1}}{#3}{#4}}%
+  \setlength{\semio@window@cap@min@titleh}{\z@}%
+  \semio@heading@pair@row{#4}%
 }
 
 \newcommand{\semio@heading@title@end}[3]{%
@@ -2327,8 +2795,28 @@
 
 \def\semio@heading@style@outline@marker{outline}%
 
+% LR-topspace: tunable extra breathing room above every display heading
+% (section / subsection / subsubsection / paragraph / appendix). Applied in the
+% shared dispatch below via \addvspace, which merges with the block-before glue
+% (no double gap) and is dropped at the top of a page (leading headings aren't
+% pushed down). Adjust this one length to taste.
+\providecommand{\semio@heading@topskip}{1.28em}
+% LR-bottomskip: dedicated space BELOW every heading bar, before the body text
+% (KOMA's afterskip is pinned to 1sp, so without this there is no knob). Used by
+% \semio@koma@heading@lines and the nested-paragraph renderer below; may be
+% negative to tighten below the natural minimum.
+\providecommand{\semio@heading@bottomskip}{-1.38pt}
 \newcommand{\semio@koma@heading@lines}[5]{%
   \semio@block@before
+  \addvspace{\semio@heading@topskip}% LR-topspace: a bit more air above headings
+  % 🧲 Keep the heading bar with its first lines of content so it never sits
+  % orphaned at the foot of a page (reserves the bar + ~3 body lines; if that
+  % much space isn't left, the heading moves to the next page as one unit).
+  % LR-2.7: reserve a SECOND title bar's worth on top, so a heading that
+  % introduces a table (heading -> optional "N Fälle." count -> table title bar)
+  % keeps that title bar with it instead of stranding the heading at the page
+  % foot above a table that migrated to the next page.
+  \Needspace*{\dimexpr\semio@chrome@titlebar@height+3\baselineskip+\semio@chrome@titlebar@height\relax}%
   \ifnum\numexpr\semio@toc@level{#1}\relax>\value{tocdepth}\else
     \semio@toc@track@num{#1}{\csname the#1\endcsname}{#3}%
   \fi
@@ -2351,6 +2839,7 @@
       \fi
     }%
     {#3}%
+  \vspace{\semio@heading@bottomskip}% LR-bottomskip: space below the heading bar
 }
 
 \newcommand{\semio@heading@lines@dispatch}[4]{%
@@ -2358,7 +2847,7 @@
 }
 
 \newcommand{\semio@heading@install@spacing}[1]{%
-  % 🪝️ KOMA suppresses beforeskip when a heading directly follows another
+  % 🪝 KOMA suppresses beforeskip when a heading directly follows another
   % heading (\@nobreak); the real before-space is emitted unconditionally
   % by \semio@block@before inside \semio@koma@heading@lines instead. Both
   % skips stay a strictly positive 1sp only so KOMA keeps display-style
@@ -2369,28 +2858,71 @@
   ]{#1}%
 }
 
+% 🪜 The heading ladder: each of the three brand colours occupies two
+% consecutive rungs, filled first then outlined, so depth reads twice over —
+% once in the hue, once in the fill. Past the last brand pair the ladder runs
+% out of hues and steps down through the neutrals instead, outline-only, so
+% arbitrarily deep nesting still terminates in something legible.
+% Rungs are handed out by a level's position in the *class's own* heading
+% sequence, never by its name: an article-style class has no \chapter, so its
+% \section takes the rung \chapter would have held instead of leaving that
+% outline rung unused and jumping a whole colour. \semio@heading@rung@<level>
+% keeps each level's number so the nested-paragraph chips (which sit below the
+% deepest numbered level, see NestedParagraphs) can carry on down the same
+% ladder rather than starting a second one.
+% {@link https://github.com/usalu/semio/issues/2429}
+\newcommand{\semio@heading@ladder@color}[1]{%
+  \ifcase#1 semio-tertiary%
+  \or semio-tertiary%
+  \or semio-secondary%
+  \or semio-secondary%
+  \or semio-primary%
+  \or semio-primary%
+  \or semio-chrome-panel%
+  \or semio-chrome-border-emphasized%
+  \else semio-chrome-border-normal%
+  \fi
+}
+
+\newcommand{\semio@heading@ladder@style}[1]{%
+  \ifcase#1 solid%
+  \or outline%
+  \or solid%
+  \or outline%
+  \or solid%
+  \or outline%
+  \or solid%
+  \else outline%
+  \fi
+}
+
+\newcommand{\semio@heading@ladder@step}[1]{%
+  \expandafter\edef\csname semio@heading@rung@#1\endcsname{\number\@tempcnta}%
+  \expandafter\edef\csname semio@heading@color@#1\endcsname{%
+    \semio@heading@ladder@color{\number\@tempcnta}%
+  }%
+  \expandafter\edef\csname semio@heading@style@#1\endcsname{%
+    \semio@heading@ladder@style{\number\@tempcnta}%
+  }%
+  \expandafter\def\csname semio@heading@textcolor@#1\endcsname{semio-chrome-foreground}%
+  \advance\@tempcnta\@ne
+}
+
+\newcommand{\semio@heading@ladder@install}{%
+  \@tempcnta\z@
+  \semio@heading@ladder@step{part}%
+  \ifcsname chapter\endcsname
+    \semio@heading@ladder@step{chapter}%
+  \fi
+  \semio@heading@ladder@step{section}%
+  \semio@heading@ladder@step{subsection}%
+  \semio@heading@ladder@step{subsubsection}%
+  \semio@heading@ladder@step{paragraph}%
+  \semio@heading@ladder@step{subparagraph}%
+}
+
 \newcommand{\semio@heading@installall}{%
-  \def\semio@heading@style@part{solid}%
-  \def\semio@heading@color@part{semio-tertiary}%
-  \def\semio@heading@textcolor@part{semio-chrome-foreground}%
-  \def\semio@heading@style@chapter{outline}%
-  \def\semio@heading@color@chapter{semio-tertiary}%
-  \def\semio@heading@textcolor@chapter{semio-chrome-foreground}%
-  \def\semio@heading@style@section{solid}%
-  \def\semio@heading@color@section{semio-secondary}%
-  \def\semio@heading@textcolor@section{semio-chrome-foreground}%
-  \def\semio@heading@style@subsection{outline}%
-  \def\semio@heading@color@subsection{semio-secondary}%
-  \def\semio@heading@textcolor@subsection{semio-chrome-foreground}%
-  \def\semio@heading@style@subsubsection{solid}%
-  \def\semio@heading@color@subsubsection{semio-primary}%
-  \def\semio@heading@textcolor@subsubsection{semio-chrome-foreground}%
-  \def\semio@heading@style@paragraph{outline}%
-  \def\semio@heading@color@paragraph{semio-primary}%
-  \def\semio@heading@textcolor@paragraph{semio-chrome-foreground}%
-  \def\semio@heading@style@subparagraph{solid}%
-  \def\semio@heading@color@subparagraph{semio-chrome-panel}%
-  \def\semio@heading@textcolor@subparagraph{semio-chrome-foreground}%
+  \semio@heading@ladder@install
   \ifcsname chapter\endcsname
     \setkomafont{chapter}{\semio@heading@chip@font}%
   \fi
@@ -2435,7 +2967,7 @@
   \semio@heading@install@spacing{subsubsection}%
   \semio@heading@install@spacing{paragraph}%
   \semio@heading@install@spacing{subparagraph}%
-  % 🪜️ \newcounter{paragraph}[subsubsection] resets paragraph whenever
+  % 🪜 \newcounter{paragraph}[subsubsection] resets paragraph whenever
   % subsubsection steps, but a document may nest \paragraph directly under
   % \subsection (skipping \subsubsection, e.g. the appendix user-story list)
   % — that \subsection call still resets subsubsection to 0, so the kernel's
@@ -2492,33 +3024,42 @@
   \ifnum\value{semio@nest@depth}>4 .\thesemio@nest@e\fi
 }
 
-% 🎨️ SubSubparagraph (depth 1) and deeper are all outline-only chips with
-% emphasized text; only the border weight steps down, frozen from depth 2 on.
-\newcommand{\semio@nest@style@apply}[1]{%
-  \ifcase\numexpr#1-1\relax
-    \def\semio@nest@style@border{semio-chrome-border-emphasized}%
-  \or
-    \def\semio@nest@style@border{semio-chrome-border-normal}%
-  \fi
-}
-
+% 🎨 Nested paragraphs keep walking the heading ladder (see Headings) instead of
+% starting a palette of their own: a nest chip sits exactly one rung below the
+% level whose number it extends — \paragraph once that level has been used,
+% \subsubsection otherwise, mirroring \semio@nest@build@number — and each extra
+% depth steps one rung further. Depths past the last brand pair land on the
+% ladder's neutral outline tail, which is where they lived before.
 \newcommand{\semio@nest@style@resolve}{%
-  \ifnum\value{semio@nest@depth}>2
-    \semio@nest@style@apply{2}%
+  \ifnum\c@paragraph>\z@
+    \edef\semio@nest@rung{\number\numexpr\semio@heading@rung@paragraph+\value{semio@nest@depth}\relax}%
   \else
-    \semio@nest@style@apply{\value{semio@nest@depth}}%
+    \edef\semio@nest@rung{\number\numexpr\semio@heading@rung@subsubsection+\value{semio@nest@depth}\relax}%
   \fi
+  \edef\semio@nest@color{\semio@heading@ladder@color{\semio@nest@rung}}%
+  \edef\semio@nest@style{\semio@heading@ladder@style{\semio@nest@rung}}%
 }
 
 \newcommand{\semio@nest@paragraph}[1]{%
   \semio@block@before
+  \addvspace{\semio@heading@topskip}% LR-topspace: same extra air above nested-paragraph headings (SemioNest redefines \paragraph to this, bypassing the main dispatch)
+  % LR-orphanfix: nested-paragraph headings bypass \semio@koma@heading@lines and
+  % so never got its keep-with-next reservation, leaving them stranded at the
+  % page foot (e.g. "Gestaltung", "Tragwerksplanung"). Reserve the bar + ~3 body
+  % lines so the heading moves to the next page with its content as one unit.
+  \Needspace*{\dimexpr\semio@chrome@titlebar@height+3\baselineskip\relax}%
   \semio@nest@counter@step
   \edef\semio@nest@num{\semio@nest@build@number}%
   \ifnum\numexpr\semio@toc@level@subparagraph+\value{semio@nest@depth}\relax>\value{tocdepth}\else
     \semio@toc@track@num{paragraph}{\semio@nest@num}{#1}%
   \fi
   \semio@nest@style@resolve
-  \semio@heading@pair@nofill@num{\semio@nest@num}{#1}{semio-chrome-foreground}{\semio@nest@style@border}%
+  \ifx\semio@nest@style\semio@heading@style@outline@marker
+    \semio@heading@pair@nofill@num{\semio@nest@num}{#1}{semio-chrome-foreground}{\semio@nest@color}%
+  \else
+    \semio@heading@pair@num{\semio@nest@num}{#1}{semio-chrome-foreground}{\semio@nest@color}%
+  \fi
+  \vspace{\semio@heading@bottomskip}% LR-bottomskip: space below nested-paragraph headings
   \semio@block@after
 }
 
@@ -2534,28 +3075,24 @@
 }
 %endregion NestedParagraphs
 
-%region Header gap — transparent cutout between/after chips, closed only by the baseline stroke; {@link https://github.com/usalu/semio/issues/1965}
-\newcommand{\semio@window@header@gap@paint}[1]{%
-  \semio@window@cap@body@h@set
-  \semio@window@cap@raise{%
-    \vbox to \semio@chrome@titlebar@height{%
-      \hbox to \dimexpr\semio@window@gap@w\relax{\rule{0pt}{\semio@window@cap@body@h}}%
+%region Header gap — open connector joining the title tab to the number/key tab; {@link https://github.com/usalu/semio/issues/1965}
+% Open connector for MUTED title bars (table / figure / contents): the two chips
+% are tabs sitting on the component's top edge, so the middle must stay UNFILLED
+% (paper shows through) with NO top line — only a baseline stroke joining the two
+% tabs along the component's top border. Height comes from the tab box — the chip
+% builders set \semio@window@cap@titleh *inside* the \sbox that measures each chip,
+% so that length has reverted by the time this macro runs in the surrounding row,
+% while \ht+\dp of the tab box persists and is exactly the chip height.
+% Open connector spacer between title and number tabs (no stroke here — the
+% shared full-width baseline row below supplies the bottom edge for both chips).
+\newcommand{\semio@window@header@gap@open}[1]{%
+  \raisebox{0pt}[\dimexpr\ht\semio@window@tab@box+\dp\semio@window@tab@box\relax][0pt]{%
+    \vbox to \dimexpr\ht\semio@window@tab@box+\dp\semio@window@tab@box\relax{%
+      \vfil
       \nointerlineskip
-      \hbox to \dimexpr\semio@window@gap@w\relax{%
-        \semio@window@stroke@h{#1}{\semio@window@gap@w}%
-      }%
+      \hbox to \dimexpr\semio@window@gap@w\relax{\hfil}%
     }%
   }%
-}
-
-\newcommand{\semio@window@header@gap@paint@nofill}[1]{%
-  \if\relax\detokenize{#1}\relax
-    \semio@window@cap@raise{%
-      \hbox to \dimexpr\semio@window@gap@w\relax{\rule{0pt}{\semio@chrome@titlebar@height}}%
-    }%
-  \else
-    \semio@window@header@gap@paint{#1}%
-  \fi
 }
 %endregion Header gap
 
@@ -2566,39 +3103,138 @@
   \ifvmode\nointerlineskip\fi
 }
 
+%region WindowHeaderMuted
+% 🪟 Muted title/number chip row. Open-bottom caps (\semio@heading@cap@muted@open)
+% stop one hairline above the shared baseline so that stroke is the sole bottom
+% edge. Page-1 tcolorbox windows paint chips+baseline inline (same as long
+% tables); the seam vskip welds frame.north onto that baseline. Page-1 overlay
+% does NOT restroke the baseline (that doubled when the seam was off). Omitting
+% the inline baseline left a ~5pt page gap under the open chips (seam was
+% calibrated for chips+baseline height).
+\newif\ifsemio@window@header@draw@baseline
+\semio@window@header@draw@baselinetrue
+% Flush: chip row / baseline span exactly \linewidth (no overhang).
+% Required for tcolorbox windows so chip L/R sit on the continuous leftrule/
+% rightrule. Long-table chrome keeps the overhang path (borders live outside a
+% shrunk \linewidth; pull left by one hairline so chip L matches border@L).
+\newif\ifsemio@window@header@flush
+\semio@window@header@flushfalse
+
 \newcommand{\semio@window@header@muted}[2]{%
-  \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{\textcolor{semio-chrome-foreground}{#2}}}%
+  \semio@window@header@draw@baselinetrue
+  \semio@window@header@muted@core{#1}{#2}%
+}
+
+% tcolorbox page-1: open chips + inline baseline (sole top hairline; no overlay stroke).
+\newcommand{\semio@window@header@invoke@tcb}{%
+  \semio@window@header@flushtrue
+  \semio@window@header@muted{\semio@window@header@number@page1}{\semio@window@header@title}%
+  \semio@window@header@flushfalse
+}
+
+\newcommand{\semio@window@header@muted@rowbox}[1]{%
+  \ifsemio@window@header@flush
+    \hbox to \linewidth{#1}%
+  \else
+    % 🩹 Pull left by one hairline and span inner+2·hairline so chip L/R sit on
+    % the outer faces of border@L/R (title chip L and number chip R). \hspace*
+    % (not \moveleft) so the pull works in the chrome hlist.
+    \hbox{%
+      \hspace*{-\semio@stroke@hairline}%
+      \hbox to \dimexpr\linewidth+\semio@stroke@hairline+\semio@stroke@hairline\relax{#1}%
+    }%
+  \fi
+}
+
+\newcommand{\semio@window@header@muted@core}[2]{%
+  \sbox{\semio@window@tab@box}{\semio@heading@cap@muted@open{\textcolor{semio-chrome-foreground}{#2}}}%
   \edef\semio@window@header@numval{#1}%
   \if\relax\detokenize\expandafter{\semio@window@header@numval}\relax
-    \setlength{\semio@window@gap@w}{%
-      \dimexpr\linewidth-\wd\semio@window@tab@box\relax
-    }%
+    \ifsemio@window@header@flush
+      \setlength{\semio@window@gap@w}{%
+        \dimexpr\linewidth-\wd\semio@window@tab@box\relax
+      }%
+    \else
+      \setlength{\semio@window@gap@w}{%
+        \dimexpr\linewidth+\semio@stroke@hairline+\semio@stroke@hairline-\wd\semio@window@tab@box\relax
+      }%
+    \fi
     \semio@window@header@row@wrap{%
-      \hbox to \linewidth{%
-        \usebox{\semio@window@tab@box}%
-        \semio@window@header@gap@paint{semio-chrome-border-normal}%
+      \vbox{%
+        \semio@window@header@muted@rowbox{%
+          \usebox{\semio@window@tab@box}%
+          \semio@window@header@gap@open{semio-chrome-border-normal}%
+        }%
+        \semio@window@header@baseline@or@slot
       }%
     }%
   \else
-    \sbox{\semio@window@ctrl@box}{\semio@heading@cap@muted{#1}}%
-    \setlength{\semio@window@gap@w}{%
-      \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
-    }%
+    \sbox{\semio@window@ctrl@box}{\semio@heading@cap@muted@open{#1}}%
+    \ifsemio@window@header@flush
+      \setlength{\semio@window@gap@w}{%
+        \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box+\semio@stroke@hairline\relax
+      }%
+    \else
+      \setlength{\semio@window@gap@w}{%
+        \dimexpr\linewidth+\semio@stroke@hairline+\semio@stroke@hairline-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box+\semio@stroke@hairline\relax
+      }%
+    \fi
     \semio@window@header@row@wrap{%
-      \hbox to \linewidth{%
-        \usebox{\semio@window@tab@box}%
-        \semio@window@header@gap@paint{semio-chrome-border-normal}%
-        \usebox{\semio@window@ctrl@box}%
+      \vbox{%
+        \semio@window@header@muted@rowbox{%
+          \usebox{\semio@window@tab@box}%
+          \semio@window@header@gap@open{semio-chrome-border-normal}%
+          \hskip-\semio@stroke@hairline\relax
+          \usebox{\semio@window@ctrl@box}%
+        }%
+        \semio@window@header@baseline@or@slot
       }%
     }%
   \fi
 }
 
+% 🩹 Corner stubs: overlap the shared baseline into body border@L/R below.
+% Plain \hrule/\rule abutting a row \vrule is a butt join — PDF rasterizers
+% leave a 1-device-pixel cream notch at the outer top-left/top-right corners
+% (TOC "Seite", long chrome). Stubs live inside the baseline \hbox (via
+% \rlap/\llap) so this stays legal in both vmode and hmode (cover pages).
+\newcommand{\semio@window@header@baseline@corner@stub}{%
+  \textcolor{semio-chrome-border-normal}{%
+    \vrule width\semio@stroke@hairline
+           height\semio@stroke@hairline
+           depth\dimexpr\semio@stroke@hairline+3pt\relax
+  }%
+}
+\newcommand{\semio@window@header@baseline@or@slot}{%
+  \ifsemio@window@header@draw@baseline
+    \ifvmode\nointerlineskip\fi
+    \ifsemio@window@header@flush
+      \hbox to \linewidth{%
+        \rlap{\smash{\semio@window@header@baseline@corner@stub}}%
+        \semio@window@stroke@h{semio-chrome-border-normal}{\linewidth}%
+        \llap{\smash{\semio@window@header@baseline@corner@stub}}%
+      }%
+    \else
+      \hbox{%
+        \hspace*{-\semio@stroke@hairline}%
+        \hbox to \dimexpr\linewidth+\semio@stroke@hairline+\semio@stroke@hairline\relax{%
+          \rlap{\smash{\semio@window@header@baseline@corner@stub}}%
+          \semio@window@stroke@h{semio-chrome-border-normal}{\dimexpr\linewidth+\semio@stroke@hairline+\semio@stroke@hairline\relax}%
+          \llap{\smash{\semio@window@header@baseline@corner@stub}}%
+        }%
+      }%
+    \fi
+  \fi
+}
+%endregion WindowHeaderMuted
+
 %region WindowArrangement
+% H/V gap between tiles: \semio@window@gap, synced to \semio@spacing@par (0.5em) in
+% \AfterEndPreamble — same unit as paragraph \parskip.
 \newlength{\semio@window@gap}
-\setlength{\semio@window@gap}{\semio@spacing@single}
+\setlength{\semio@window@gap}{\semio@spacing@par}
 \gdef\semio@window@valign{top}
-\gdef\semio@window@halign{justify}
+\gdef\semio@window@halign{left}
 \newcommand{\semio@window@height@dim}{}
 \newcommand{\semio@image@target@w@plain}{0pt}
 \newcommand{\semio@image@target@h@plain}{0pt}
@@ -2617,23 +3253,21 @@
   \ifdim\semio@window@textfit@target@h>2pt
     \setbox\semio@window@textfit@box=\hbox{%
       \resizebox{\linewidth}{!}{%
-        \vbox{\hsize=\linewidth\centering#1}%
+        \vbox{\hsize=\linewidth\raggedright#1}%
       }%
     }%
     \dimen1=\dimexpr\ht\semio@window@textfit@box+\dp\semio@window@textfit@box\relax
     \ifdim\dimen1>\semio@window@textfit@target@h
       \leavevmode\hbox to \linewidth{%
-        \hfill
         \scalebox{\ratio{\semio@window@textfit@target@h}{\dimen1}}{\usebox\semio@window@textfit@box}%
         \hfill
       }%
     \else
-      \leavevmode\hbox to \linewidth{\hfill\box\semio@window@textfit@box\hfill}%
+      \leavevmode\hbox to \linewidth{\box\semio@window@textfit@box\hfill}%
     \fi
   \else
     \leavevmode\hbox to \linewidth{%
-      \hfill
-      \vbox{\hsize=\linewidth\centering#1}%
+      \vbox{\hsize=\linewidth\raggedright#1}%
       \hfill
     }%
   \fi
@@ -2693,6 +3327,7 @@
   \noindent\hbox to \linewidth{
     \semio_window_row_items_render:nn { 1 } { \semio_window_frame_weight_count: }
   }\par
+  \prevdepth\z@\nointerlineskip
   \semio_window_frame_pop:
   \group_end:
 }
@@ -2702,7 +3337,7 @@
   \semio_window_arrangement_height_adopt:
   \semio_window_frame_push:
 } {
-  \semio_window_weights_to_dims:nn { \dim_use:N \l_semio_window_height_dim } { \semio@chrome@titlebar@height + \semio@chrome@padding + \semio@chrome@padding + \semio@stroke@hairline + \semio@stroke@hairline + 3pt }
+  \semio_window_weights_to_dims:nn { \dim_use:N \l_semio_window_height_dim } { \semio@chrome@titlebar@height + \semio@window@bodypad + \semio@window@bodypad + \semio@stroke@hairline + \semio@stroke@hairline + 3pt }
   \semio_window_column_items_render:nn { 1 } { \semio_window_frame_weight_count: }
   \semio_window_frame_pop:
   \group_end:
@@ -2717,6 +3352,11 @@
   \dim_set:Nn \l_semio_window_arrangement_height_dim { \textheight }
   \keys_set:nn { semio / window / arrangement } {#1}
   \group_begin:
+    \ExplSyntaxOff
+    \makeatletter
+    \setlength{\parskip}{0pt}%
+    \makeatother
+    \ExplSyntaxOn
     \semio_window_item_provide:n { \dim_use:N \l_semio_window_arrangement_height_dim }
     #2
   \group_end:
@@ -2914,6 +3554,16 @@
 \newsavebox{\semio@chrome@bar@edge@box}
 \newsavebox{\semio@chrome@bar@center@box}
 
+% LR-2.11: reusable project-card keep-together space test. Reserves the card
+% heading bar + its fixed 30mm arrangement + the start of the following
+% component table, so a card that cannot fit in the remaining space breaks to a
+% fresh page as one unit instead of stranding the heading/image on one page and
+% the table alone on the next (P.K.67). Public (no @) so appendix content files
+% can call it where \semio@... names are not letters.
+\newcommand{\SemioCardKeep}{%
+  \needspace{\dimexpr\semio@chrome@titlebar@height+30mm+6\baselineskip\relax}%
+}
+
 %region PageParity
 \newcommand{\Ifsemiochromemirrored}[2]{%
   \if@twoside\ifodd\value{page}#2\else#1\fi\else#2\fi
@@ -2948,6 +3598,20 @@
   }%
 }
 
+% LR-2.9: bound a running-header field to a maximum width, shrinking to fit only
+% when it would otherwise overflow, so a long running-section title cannot reach
+% back to the centred report-type chip (the three navbar zones are overlaid
+% full-width boxes with no gutter). Footer/threezone untouched.
+\newsavebox\semio@chrome@fit@box
+\newcommand{\semio@chrome@fit@width}[2]{%
+  \sbox\semio@chrome@fit@box{#2}%
+  \ifdim\wd\semio@chrome@fit@box>\dimexpr#1\relax
+    \resizebox{\dimexpr#1\relax}{!}{\usebox\semio@chrome@fit@box}%
+  \else
+    \usebox\semio@chrome@fit@box
+  \fi
+}
+
 \newcommand{\SemioChromeNavbarHead}{%
   \semio@chrome@navbar@bar{%
     \semio@chrome@bar@threezone{\semio@chrome@zone@height}{%
@@ -2958,9 +3622,25 @@
     }{%
       \SemioChromeNavbarCenterChip
     }{%
-      \if\relax\detokenize{\semio@chrome@heading}\relax
+      % LR-2.8: read the heading in effect on THIS page from the mark, not the
+      % read-ahead \gdef. \protected@edef keeps robust tokens (e.g. \& in project
+      % names) unexpanded.
+      \protected@edef\semio@chrome@heading@now{\rightmark}%
+      % LR-hdrfix: \rightmark is empty on pages that start no new heading —
+      % continuation pages and the register/bibliography sections, which issue no
+      % heading mark — leaving those pages with a blank header slot. Fall back to
+      % the persistent \gdef global (last heading set), which never empties, so
+      % every page carries a section label.
+      \ifx\semio@chrome@heading@now\@empty
+        \protected@edef\semio@chrome@heading@now{\semio@chrome@heading}%
+      \fi
+      \ifx\semio@chrome@heading@now\@empty
       \else
-        \semio@chrome@navbar@chip@text{\semio@chrome@font@chip}{\semio@chrome@heading}%
+        % LR-2.9: cap the running-heading chip below half the free width so it
+        % cannot reach the centred report-type chip; long titles scale down.
+        \semio@chrome@fit@width{0.34\headwidth}{%
+          \semio@chrome@navbar@chip@text{\semio@chrome@font@chip}{\semio@chrome@heading@now}%
+        }%
       \fi
     }%
   }%

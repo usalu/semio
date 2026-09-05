@@ -1,0 +1,551 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.kit` is a semio-NATIVE format that no third party reads or writes, so the reference is a second IMPLEMENTATION in another language, written from this subset's own committed specification documents.",
+  "oracles": [
+    {
+      "id": "semio-kit-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "capabilities": [
+        "semio-v1-kit-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, so a differential comparison's second PRODUCER cannot be a foreign package — it has to be a second implementation. `🧪️tests/mutate-semio-kit/🐍️component.py` is that implementation: the text envelope, the DSL grammar, the pack frame, the JSON projection and all fifteen verbs of `SemioKitMutation`, written in Python from the committed specification documents alone — `../🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio` for the record grammar and its `h|c|s` pin tags, `…/📸️snapshot/💾️binary/📡️.protocol.semio` for the pack header and the sentence naming its six collections, `…/📸️snapshot/🔣️.json` for the projection, `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` for the fifteen verbs and their argument lists, `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs` for the semio envelope, and `ArtifactRef::to_uri` plus `LinkPin`/`BlobRef` for the dialect coordinate and the three pin shapes. It imports nothing from the Rust it judges and transliterates none of it. `package` is deliberately empty: the implementation is the adapter file, so this entry contributes no dependency to `🔒️dependencies.json` and nothing to the import-purity probe. The derivation of the pack layout past the header — which the protocol description names but declines to frame — is pinned by the Python re-encoding the committed `🎒️.pack.semio` byte for byte, which a misreading could not do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-kit-mutate`'s external-oracle requirement for its 15-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 15 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.stdio.semio",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "s.stdio.semio",
+              "reason": "No third-party library in any ecosystem reads or writes this repository's own document format, per this entry's own rationale; the ecosystem's package index was searched by name and by domain keywords with no match."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".dsl.semio; .pack.semio; ../🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio; …/📸️snapshot/💾️binary/📡️.protocol.semio; …/📸️snapshot/🔣️.json; …/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio; 🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs; 🔒️dependencies.json; 🎒️.pack.semio",
+        "fixtureCoverage": {
+          "vectors": 15,
+          "capabilitiesCovered": [
+            "semio-v1-kit-mutate"
+          ]
+        }
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "semio-v1-kit",
+      "capability": "semio-v1-kit-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "🧰️kit",
+      "vectors": [
+        {
+          "mutationId": "add-design",
+          "sourceMutationDirectoryName": "🆕add-design",
+          "mutationDirectoryName": "🆕add-design",
+          "scenarios": [
+            {
+              "id": "adds-an-empty-roof-design",
+              "directoryName": "🏠️adds-an-empty-roof-design"
+            }
+          ]
+        },
+        {
+          "mutationId": "add-type",
+          "sourceMutationDirectoryName": "➕add-type",
+          "mutationDirectoryName": "➕add-type",
+          "scenarios": [
+            {
+              "id": "appends-a-slab-type-to-the-catalogue",
+              "directoryName": "📇️appends-a-slab-type-to-the-catalogue"
+            }
+          ]
+        },
+        {
+          "mutationId": "bind-representation",
+          "sourceMutationDirectoryName": "🪢️bind-representation",
+          "mutationDirectoryName": "🪢️bind-representation",
+          "scenarios": [
+            {
+              "id": "binds-a-second-representation-to-an-existing-type",
+              "directoryName": "🔗️binds-a-second-representation-to-an-existing-type"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-representation-pin",
+          "sourceMutationDirectoryName": "📌change-representation-pin",
+          "mutationDirectoryName": "📌change-representation-pin",
+          "scenarios": [
+            {
+              "id": "repins-the-representation-from-head-to-a-checkpoint",
+              "directoryName": "📌️repins-the-representation-from-head-to-a-checkpoint"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-model",
+          "sourceMutationDirectoryName": "🏛️create-model",
+          "mutationDirectoryName": "🏛️create-model",
+          "scenarios": [
+            {
+              "id": "attaches-a-second-model-child",
+              "directoryName": "🏛️attaches-a-second-model-child"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-object",
+          "sourceMutationDirectoryName": "🏗️create-object",
+          "mutationDirectoryName": "🏗️create-object",
+          "scenarios": [
+            {
+              "id": "attaches-a-second-object-child",
+              "directoryName": "🏗️attaches-a-second-object-child"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-properties",
+          "sourceMutationDirectoryName": "🏷️create-properties",
+          "mutationDirectoryName": "🏷️create-properties",
+          "scenarios": [
+            {
+              "id": "attaches-a-properties-child-to-a-kit-that-has-none",
+              "directoryName": "🏷️attaches-a-properties-child-to-a-kit-that-has-none"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-model",
+          "sourceMutationDirectoryName": "💣delete-model",
+          "mutationDirectoryName": "💣delete-model",
+          "scenarios": [
+            {
+              "id": "detaches-the-only-model-child-and-keeps-the-object-child",
+              "directoryName": "💣️detaches-the-only-model-child-and-keeps-the-object-child"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-object",
+          "sourceMutationDirectoryName": "🪓delete-object",
+          "mutationDirectoryName": "🪓delete-object",
+          "scenarios": [
+            {
+              "id": "detaches-the-only-object-child-and-keeps-the-model-child",
+              "directoryName": "🪓️detaches-the-only-object-child-and-keeps-the-model-child"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-properties",
+          "sourceMutationDirectoryName": "🚫delete-properties",
+          "mutationDirectoryName": "🚫delete-properties",
+          "scenarios": [
+            {
+              "id": "detaches-the-properties-child-and-leaves-every-other-collection-alone",
+              "directoryName": "🚫️detaches-the-properties-child-and-leaves-every-other-collection-alone"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-design",
+          "sourceMutationDirectoryName": "🖊️edit-design",
+          "mutationDirectoryName": "🖊️edit-design",
+          "scenarios": [
+            {
+              "id": "replaces-the-designs-pieces-and-connections-in-one-step",
+              "directoryName": "🧩️replaces-the-designs-pieces-and-connections-in-one-step"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-design",
+          "sourceMutationDirectoryName": "🗑️remove-design",
+          "mutationDirectoryName": "🗑️remove-design",
+          "scenarios": [
+            {
+              "id": "removes-the-only-design-together-with-its-pieces",
+              "directoryName": "🚫️removes-the-only-design-together-with-its-pieces"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-type",
+          "sourceMutationDirectoryName": "➖remove-type",
+          "mutationDirectoryName": "➖remove-type",
+          "scenarios": [
+            {
+              "id": "removes-the-column-type-and-keeps-the-beam-type",
+              "directoryName": "🚫️removes-the-column-type-and-keeps-the-beam-type"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-type",
+          "sourceMutationDirectoryName": "✏️rename-type",
+          "mutationDirectoryName": "✏️rename-type",
+          "scenarios": [
+            {
+              "id": "renames-the-beam-type-without-recategorising-it",
+              "directoryName": "✏️renames-the-beam-type-without-recategorising-it"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-representation",
+          "sourceMutationDirectoryName": "✂️unbind-representation",
+          "mutationDirectoryName": "✂️unbind-representation",
+          "scenarios": [
+            {
+              "id": "unbinds-the-leading-representation-and-keeps-the-trailing-one",
+              "directoryName": "🔗️unbinds-the-leading-representation-and-keeps-the-trailing-one"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "create-object",
+        "delete-object",
+        "create-model",
+        "delete-model",
+        "create-properties",
+        "delete-properties",
+        "bind-representation",
+        "unbind-representation",
+        "change-representation-pin",
+        "add-type",
+        "remove-type",
+        "rename-type",
+        "add-design",
+        "remove-design",
+        "edit-design"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "kit",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "🧰️kit",
+      "mutations": [
+        {
+          "id": "add-design",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-design",
+            "bridgeVersion": 1,
+            "variant": "AddDesign"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "add-type",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-type",
+            "bridgeVersion": 1,
+            "variant": "AddType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "bind-representation",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "bind-representation",
+            "bridgeVersion": 1,
+            "variant": "BindRepresentation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-representation-pin",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-representation-pin",
+            "bridgeVersion": 1,
+            "variant": "ChangeRepresentationPin"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-model",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-model",
+            "bridgeVersion": 1,
+            "variant": "CreateModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-object",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-object",
+            "bridgeVersion": 1,
+            "variant": "CreateObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-properties",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-properties",
+            "bridgeVersion": 1,
+            "variant": "CreateProperties"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-model",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-model",
+            "bridgeVersion": 1,
+            "variant": "DeleteModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-object",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-object",
+            "bridgeVersion": 1,
+            "variant": "DeleteObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-properties",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-properties",
+            "bridgeVersion": 1,
+            "variant": "DeleteProperties"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "edit-design",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "edit-design",
+            "bridgeVersion": 1,
+            "variant": "EditDesign"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-design",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-design",
+            "bridgeVersion": 1,
+            "variant": "RemoveDesign"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-type",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-type",
+            "bridgeVersion": 1,
+            "variant": "RemoveType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "rename-type",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-type",
+            "bridgeVersion": 1,
+            "variant": "RenameType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "unbind-representation",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "unbind-representation",
+            "bridgeVersion": 1,
+            "variant": "UnbindRepresentation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

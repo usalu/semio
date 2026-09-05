@@ -1,0 +1,11 @@
+{
+  "schema": "semio.stdio.home-io-surface/v1",
+  "features": {
+    "homeIo": "home-io",
+    "fullArtifactCatalog": "full-artifact-catalog",
+    "spaceGuest": "space-guest"
+  },
+  "directArtifacts": ["csv", "json", "xlsx", "zip"],
+  "sharedCodecs": ["binary", "deflate", "txt", "xml"],
+  "fullArtifactCount": 36
+}

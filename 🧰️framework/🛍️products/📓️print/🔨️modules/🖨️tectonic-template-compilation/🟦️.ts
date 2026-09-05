@@ -1,9 +1,11 @@
+import { stagePrintSources, printCompilerName } from "../📥️source-staging/🟦️.ts";
+import { visualizationTemplates } from "../📊️visualization-gallery/🟦️.ts";
 import { ephemeralBox } from "@semio-tech/framework";
 import { createRequire } from "node:module";
 import { arch, platform } from "node:os";
-import { existsSync, mkdirSync, readFileSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
-import { getWorkspaceRoot, runCmd, runCmdStatus, runProbe, tryRun } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { buildBudgetMs, getWorkspaceRoot, runCmd, runCmdStatus, runProbe, tryRun } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { printFontSearchPaths } from "../🔤print-font-catalog/🟦️.ts";
 import { resolvePrintPanelGlassStyle, type PrintTheme, writePrintLatexTokenStylesheet } from "../🎨print-design-token-paints/🟦️.ts";
 
@@ -27,7 +29,7 @@ const packageRoot = join(productRoot, "📦️packages", "🟦️typescript");
 const latexDirectory = join(productRoot, "🖋️latex");
 const templateDirectory = join(productRoot, "🧾️template");
 const assetDirectory = join(productRoot, "🖼️assets");
-const outputDirectory = join(packageRoot, "dist");
+const outputDirectory = process.env.SEMIO_PRINT_OUTPUT_DIR ?? join(packageRoot, "dist");
 const panelGlassDirectoryName = ".semio-panel-glass";
 const darkTexDirectoryName = ".semio-dark";
 const panelRenderDpi = 200;
@@ -51,8 +53,13 @@ export function registeredPrintTemplates(): readonly PrintTemplate[] {
 /** 🖨️ Resolves registered print templates requested by command segments. */
 export function resolveRegisteredPrintTemplates(filter: readonly string[]): readonly PrintTemplate[] {
   if (filter.length === 0) return TEMPLATES;
-  const requested = new Set(filter.map((id) => id.replace(/-dark$/, "")));
-  const templates = TEMPLATES.filter((template) => requested.has(template.id));
+  const viz = filter[0] === "viz";
+  const catalog = viz ? visualizationTemplates() : TEMPLATES;
+  const names = viz ? filter.slice(1) : filter;
+  if (viz && names.length === 0) return catalog;
+  const requested = new Set(names.map((id) => (viz && !id.startsWith("viz-") ? `viz-${id}` : id).replace(/-dark$/, "")));
+  const templates = catalog.filter((template) => requested.has(template.id));
+  if (templates.length !== requested.size) throw new Error(`unknown template id(s): ${filter.join(", ")}`);
   if (templates.length === 0) throw new Error(`unknown template id(s): ${filter.join(", ")}`);
   return templates;
 }
@@ -256,8 +263,13 @@ async function ensureTectonic(): Promise<string> {
   return binary;
 }
 
-function compileTemplate(tectonic: string, template: PrintTemplate): Promise<void> {
-  return compileLightAndDark(tectonic, join(productRoot, template.texPath), outputDirectory);
+async function compileTemplate(tectonic: string, template: PrintTemplate): Promise<void> {
+  const staged = stagePrintSources(productRoot, [dirname(template.texPath), relative(productRoot, assetDirectory)], join(outputDirectory, "source", template.id));
+  await compileLightAndDark(tectonic, staged.get(template.texPath)!, outputDirectory);
+  for (const name of Object.values(printTemplatePdfNames(template.texPath))) {
+    const compiled = printCompilerName(name);
+    if (compiled !== name) renameSync(join(outputDirectory, compiled), join(outputDirectory, name));
+  }
 }
 
 async function compileLightAndDark(tectonic: string, lightTexPath: string, outDirectory: string): Promise<void> {
@@ -283,7 +295,7 @@ function compilePrintDocument(tectonic: string, texPath: string, outDirectory: s
   clearStaleTableOfContentsFiles(workDirectory, outDirectory, jobname);
   clearStaleTableOfContentsFiles(dirname(texPath), outDirectory, jobname);
   const searchPaths = [latexDirectory, workDirectory, outDirectory, ...printFontSearchPaths()];
-  runCmd(tectonic, ["--keep-logs", "--keep-intermediates", "--synctex", "--reruns", "2", ...searchPaths.flatMap((path) => ["-Z", `search-path=${path}`]), "--outdir", outDirectory, relative(workDirectory, texPath).replaceAll("\\", "/")], { cwd: workDirectory, env: tectonicEnvironment(workDirectory, outDirectory) });
+  runCmd(tectonic, ["--keep-logs", "--keep-intermediates", "--synctex", "--reruns", "2", ...searchPaths.flatMap((path) => ["-Z", `search-path=${path}`]), "--outdir", outDirectory, relative(workDirectory, texPath).replaceAll("\\", "/")], { cwd: workDirectory, env: tectonicEnvironment(workDirectory, outDirectory), budgetMs: buildBudgetMs() });
   const pdf = join(outDirectory, `${jobname}.pdf`);
   if (!existsSync(pdf)) throw new Error(`missing PDF output: ${pdf}`);
   console.log(`[DEBUG] print built ${relative(workspaceRoot, pdf)}`);

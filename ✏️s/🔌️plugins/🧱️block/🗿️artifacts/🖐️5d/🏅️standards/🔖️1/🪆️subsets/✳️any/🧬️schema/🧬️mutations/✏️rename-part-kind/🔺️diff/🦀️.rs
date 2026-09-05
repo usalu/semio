@@ -5,7 +5,7 @@ use crate::artifacts::block5d::Block5dSnapshot;
 use crate::artifacts::block5d::diff::Block5dDiff;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::RenamePartKind, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+pub fn diff(payload: &super::RenamePartKind, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
     // 🪪️ `part_kind` is the document's single root kind (not a catalog member addressed by id), so
     // there is no missing-target case and no collection to collide with — only the no-op check applies.
     if payload.new_name == base.part_kind.name {

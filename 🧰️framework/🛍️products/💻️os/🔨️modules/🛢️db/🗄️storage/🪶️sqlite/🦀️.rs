@@ -7,7 +7,7 @@ mod sqlite_storage {
     use crate::db_ids::{check_len, ArtifactId, DbError};
     use crate::db_storage::{
         close_db_io_backend, register_db_io_backend, retire_db_io_backend, submit_db_io_task, CatalogStorage, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoExecutionStep, DbIoLeaseResult, DbIoPageWriter, DbIoPageWriterRejected,
-        DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage, DB_IO_PAGE_BYTES,
+        DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalSegmentState, WalStorage, DB_IO_PAGE_BYTES,
     };
     use pack::{ByteRange, ContentHash};
     use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
@@ -71,6 +71,14 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
 
     fn to_sql_i64(value: u64, what: &'static str) -> Result<i64, DbError> {
         i64::try_from(value).map_err(|_| DbError::LimitExceeded(what))
+    }
+
+    fn decode_wal_segment_state(sealed: i64) -> Result<WalSegmentState, DbError> {
+        match sealed {
+            0 => Ok(WalSegmentState::Active),
+            1 => Ok(WalSegmentState::Sealed),
+            value => Err(DbError::Corrupt(format!("SQLite WAL sealed flag is {value}"))),
+        }
     }
 
     fn init_connection(connection: &Connection) -> Result<(), DbError> {
@@ -237,10 +245,10 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                     let index = to_sql_i64(*index, "sqlite WAL index")?;
                     let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
                     let sealed: Option<i64> = transaction.query_row("SELECT sealed FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), index], |row| row.get(0)).optional().map_err(sqlite_err)?;
-                    match sealed {
+                    match sealed.map(decode_wal_segment_state).transpose()? {
                         None => return Err(DbError::NotFound(format!("WAL segment {index} not found"))),
-                        Some(1) => return Err(DbError::InvalidArgument("cannot append to sealed WAL segment".to_string())),
-                        _ => {}
+                        Some(WalSegmentState::Sealed) => return Err(DbError::InvalidArgument("cannot append to sealed WAL segment".to_string())),
+                        Some(WalSegmentState::Active) => {}
                     }
                     transaction.execute(WAL_APPEND_STAGE_SQL, params![document.as_str(), index, sql_operation]).map_err(sqlite_err)?;
                     let length: i64 = transaction.query_row("SELECT length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), index], |row| row.get(0)).map_err(sqlite_err)?;
@@ -288,6 +296,12 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                     let length: Option<i64> = connection.query_row("SELECT length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), index], |row| row.get(0)).optional().map_err(sqlite_err)?;
                     Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Length(length.ok_or_else(|| DbError::NotFound(format!("WAL segment {index} not found")))? as u64))))
                 }
+                DbIoTask::WalState { document, index, .. } => {
+                    let index = to_sql_i64(*index, "sqlite WAL index")?;
+                    let sealed: Option<i64> = connection.query_row("SELECT sealed FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), index], |row| row.get(0)).optional().map_err(sqlite_err)?;
+                    let state = decode_wal_segment_state(sealed.ok_or_else(|| DbError::NotFound(format!("WAL segment {index} not found")))?)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::WalSegmentState(state))))
+                }
                 DbIoTask::WalList { document, output, .. } => Self::list_step(connection, "SELECT segment_index FROM wal_segment WHERE document = ?1 ORDER BY segment_index ASC LIMIT 1 OFFSET ?2", document, output),
                 DbIoTask::WalTruncate { document, index, new_len, .. } => {
                     let index = to_sql_i64(*index, "sqlite WAL index")?;
@@ -295,7 +309,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                     let current: Option<(i64, i64)> =
                         connection.query_row("SELECT length(bytes), sealed FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), index], |row| Ok((row.get(0)?, row.get(1)?))).optional().map_err(sqlite_err)?;
                     let (current, sealed) = current.ok_or_else(|| DbError::NotFound(format!("WAL segment {index} not found")))?;
-                    if sealed != 0 || new_len > current {
+                    if decode_wal_segment_state(sealed)? == WalSegmentState::Sealed || new_len > current {
                         return Err(DbError::InvalidArgument("invalid sealed or growing WAL truncation".to_string()));
                     }
                     connection.execute("UPDATE wal_segment SET bytes = substr(bytes, 1, ?3) WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), index, new_len]).map_err(sqlite_err)?;
@@ -657,6 +671,13 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
             length(execute(self.pool.as_ref(), DbIoTask::WalLength { backend: self.control, document: document_text(document)?, index }).await?)
         }
 
+        async fn segment_state(&self, document: &ArtifactId, index: u64) -> Result<WalSegmentState, DbError> {
+            match execute(self.pool.as_ref(), DbIoTask::WalState { backend: self.control, document: document_text(document)?, index }).await? {
+                DbIoResult::WalSegmentState(state) => Ok(state),
+                _ => Err(DbError::Internal("SQLite executor returned a non-WAL-state result".to_string())),
+            }
+        }
+
         async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
             list(execute(self.pool.as_ref(), DbIoTask::WalList { backend: self.control, document: document_text(document)?, output: DbIoU64List::new() }).await?)
         }
@@ -866,6 +887,25 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
             let hash = storage.put(pages(&[]).await).await.unwrap();
             assert_eq!(storage.get(&hash).await.unwrap(), b"");
             storage.close().await.unwrap();
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn wal_segment_state_observes_active_sealed_and_missing_rows() {
+            let storage = SqliteStorage::open_in_memory(crate::db_storage::db_io_test_pool()).await.unwrap();
+            let document: ArtifactId = "typed-sqlite-state".into();
+            storage.create_segment(&document, 0).await.unwrap();
+            assert_eq!(storage.segment_state(&document, 0).await.unwrap(), WalSegmentState::Active);
+            storage.seal(&document, 0).await.unwrap();
+            assert_eq!(storage.segment_state(&document, 0).await.unwrap(), WalSegmentState::Sealed);
+            assert!(matches!(storage.segment_state(&document, 99).await, Err(DbError::NotFound(_))));
+            storage.close().await.unwrap();
+        }
+
+        #[test]
+        fn wal_segment_state_decoder_rejects_non_boolean_storage_values() {
+            assert_eq!(decode_wal_segment_state(0).unwrap(), WalSegmentState::Active);
+            assert_eq!(decode_wal_segment_state(1).unwrap(), WalSegmentState::Sealed);
+            assert!(matches!(decode_wal_segment_state(2), Err(DbError::Corrupt(_))));
         }
 
         #[semio_framework_async_macros::async_test]

@@ -165,7 +165,7 @@ pub async fn content_frontier(protocol_bytes: &[u8]) -> Result<FrontierSummary, 
     } else {
         let mut cursor = FrameCursor::new(protocol_bytes, recovery.last_commit_offset).await;
         let frame = cursor.next_frame().await?.ok_or_else(|| ProtocolError::Malformed { what: "commit frame", offset: recovery.last_commit_offset, detail: "expected a commit frame at the recovered offset".to_string() })?;
-        crate::os_spr::format::parse_commit_payload(frame.payload().await).await?.chain_hash
+        crate::os_spr::format::parse_commit_payload(frame.payload().await)?.chain_hash
     };
 
     let alternatives = log.alternatives.iter().map(|alternative| build_alternative_head(&log, alternative)).collect();
@@ -346,7 +346,7 @@ mod tests {
                 break frame;
             }
         };
-        let expected = crate::os_spr::format::parse_commit_payload(last_commit.payload().await).await.unwrap();
+        let expected = crate::os_spr::format::parse_commit_payload(last_commit.payload().await).unwrap();
         assert_eq!(frontier.chain_hash, expected.chain_hash);
     }
 

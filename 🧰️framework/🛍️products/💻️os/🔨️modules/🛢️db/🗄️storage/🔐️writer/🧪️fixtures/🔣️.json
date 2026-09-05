@@ -1,0 +1,49 @@
+{
+  "schema": "semio.db.wal-writer-authority/v1",
+  "capacity": 32,
+  "resultRetirement": { "pages": 2, "terminal": [false, false, false, false, true] },
+  "guardRetirement": { "operation": 7, "contender": 8, "stages": ["pending-operation", "unlock-error", "unlock-progress", "terminal"], "terminal": [false, false, false, true] },
+  "backendPressure": { "capacity": 64, "retainedWhenFull": true, "terminalAfterCapacityReturns": true },
+  "fairRetirement": { "pinnedSlot": 0, "releasingSlot": 1, "maximumOpportunities": 32, "pinnedRetained": true, "releasingRetired": true },
+  "maintenanceFairness": { "classes": ["lost-owner", "page", "platform", "retry", "rejected-backend", "backend-close", "task-close"], "continuouslyReady": [0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5, 6], "firstClassFaults": [0, 1, 2, 3, 4, 5, 6] },
+  "mutations": ["create", "append", "sync", "seal", "truncate", "delete"],
+  "cases": [
+    {
+      "name": "exclusive-owner-and-stale-generation", "firstGeneration": "1",
+      "steps": [
+        { "action": "acquire", "owner": "a", "document": "one", "backend": 0, "expected": "ok" },
+        { "action": "acquire", "owner": "b", "document": "one", "backend": 0, "expected": "conflict" },
+        { "action": "validate", "owner": "a", "document": "one", "backend": 0, "expected": "ok" },
+        { "action": "release", "owner": "a", "document": "one", "backend": 0, "expected": "ok" },
+        { "action": "acquire", "owner": "b", "document": "one", "backend": 0, "expected": "ok" },
+        { "action": "validate", "owner": "a", "document": "one", "backend": 0, "expected": "fenced" },
+        { "action": "release", "owner": "a", "document": "one", "backend": 0, "expected": "fenced" },
+        { "action": "validate", "owner": "b", "document": "one", "backend": 0, "expected": "ok" },
+        { "action": "release", "owner": "b", "document": "one", "backend": 0, "expected": "ok" }
+      ]
+    },
+    {
+      "name": "exact-document-and-backend", "firstGeneration": "1",
+      "steps": [
+        { "action": "acquire", "owner": "a", "document": "one", "backend": 0, "expected": "ok" },
+        { "action": "acquire", "owner": "b", "document": "two", "backend": 0, "expected": "ok" },
+        { "action": "validate", "owner": "a", "document": "two", "backend": 0, "expected": "fenced" },
+        { "action": "validate", "owner": "a", "document": "one", "backend": 1, "expected": "fenced" },
+        { "action": "release", "owner": "a", "document": "two", "backend": 0, "expected": "fenced" },
+        { "action": "validate", "owner": "a", "document": "one", "backend": 0, "expected": "ok" },
+        { "action": "release", "owner": "a", "document": "one", "backend": 0, "expected": "ok" },
+        { "action": "release", "owner": "b", "document": "two", "backend": 0, "expected": "ok" }
+      ]
+    },
+    {
+      "name": "generation-never-wraps", "firstGeneration": "18446744073709551614",
+      "steps": [
+        { "action": "acquire", "owner": "a", "document": "one", "backend": 0, "expected": "ok" },
+        { "action": "release", "owner": "a", "document": "one", "backend": 0, "expected": "ok" },
+        { "action": "acquire", "owner": "b", "document": "one", "backend": 0, "expected": "exhausted" },
+        { "action": "validate", "owner": "a", "document": "one", "backend": 0, "expected": "fenced" }
+      ]
+    }
+  ],
+  "filesystem": { "sidecar": ".writer.lock", "independentInstancesConflict": true, "independentProcessesConflict": true, "reacquireAfterClose": true, "unlinkOnClose": false }
+}

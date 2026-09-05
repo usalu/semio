@@ -1,8 +1,8 @@
 //! 🧰️ Shared generic diff/op-codec helpers for semio v1 subsets — hex-encoded, bracket-depth-
 //! aware triple codecs for index-keyed and name-keyed collection diffs, ported from the bcf/docx
 //! hand-rolled reference implementations
-//! (`bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️base/🧬️schema/🔺️diff/🦀️.rs`,
-//! `docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️base/🧬️schema/🔺️diff/🦀️.rs`) so all 13 W2
+//! (`bcf/🏅️standards/🔖️2.1/🪆️subsets/✉️base/🧬️schema/🔺️diff/🦀️.rs`,
+//! `docx/🏅️standards/🔖️ecma-376/🪆️subsets/✉️base/🧬️schema/🔺️diff/🦀️.rs`) so all 13 W2
 //! subset agents import this ONE copy instead of reinventing it 13 times. REAL and tested
 //! (round-trip below) — load-bearing shared infrastructure, not a scaffolded placeholder.
 //!

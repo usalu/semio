@@ -3,7 +3,9 @@
 
 use crate::artifacts::block2d::Block2dSnapshot;
 use crate::editor::block2d::terminology::Block2dLabels;
-use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use crate::editor::block2d::{ui_label, ui_node_list};
+use semio_framework_plugin::plugin_app_close_prelude::{column, text, Buildable, HasChildren};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, PluginAssemblyError, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const BLOCK2D_WINDOW_BOARD: &str = "block2d-board";
@@ -12,7 +14,7 @@ pub const BLOCK2D_BODY_BOARD: &str = "block2d.play.board";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::block2d::create_block2d_app`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: BLOCK2D_WINDOW_BOARD.into(),
         label: LocalizedLabel::native("Node Kind", "Knotenart"),
@@ -33,11 +35,20 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> UiNode {
-    ui_stack_vertical(vec![
-        ui_text(Label::data(format!("{}: {}", labels.summary.as_str(), if definition.node_kind.label.is_empty() { "—" } else { &definition.node_kind.label }))),
-        ui_text(Label::data(format!("{} {}, {} {}", definition.handle_kinds.len(), labels.handle_kinds.as_str(), definition.handles.len(), labels.handles.as_str()))),
-    ])
+fn line(value: String) -> UiAssemblyResult<BuiltNode> {
+    text(ui_label(value)?).try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "block2d board line admission failed"))
+}
+
+pub fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> UiAssemblyResult<BuiltNode> {
+    let lines = ui_node_list([
+        line(format!("{}: {}", labels.summary.as_str(), if definition.node_kind.label.is_empty() { "—" } else { &definition.node_kind.label })),
+        line(format!("{} {}, {} {}", definition.handle_kinds.len(), labels.handle_kinds.as_str(), definition.handles.len(), labels.handles.as_str())),
+    ])?;
+    column()
+        .try_children(lines)
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "block2d board children admission failed"))?
+        .try_build()
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "block2d board admission failed"))
 }
 //#endregion 🔖️Render
 

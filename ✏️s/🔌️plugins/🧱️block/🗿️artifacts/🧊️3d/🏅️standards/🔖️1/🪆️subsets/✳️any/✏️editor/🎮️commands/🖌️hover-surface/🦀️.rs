@@ -18,6 +18,6 @@ pub struct HoverSurface {
     pub normal: [f64; 3],
 }
 
-pub async fn handle(payload: &HoverSurface, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+pub fn handle(payload: &HoverSurface, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
     Ok(Emit::config(vec![Block3dConfigMutation::SetBrushPreview { preview: Some(Block3dBrushPreview { position: payload.position, direction: payload.normal }) }]))
 }

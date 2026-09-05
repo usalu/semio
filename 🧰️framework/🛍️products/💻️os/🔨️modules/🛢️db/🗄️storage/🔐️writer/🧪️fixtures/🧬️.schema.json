@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "capacity", "mutations", "cases", "filesystem", "resultRetirement", "guardRetirement", "backendPressure", "fairRetirement", "maintenanceFairness"],
+  "properties": {
+    "schema": { "const": "semio.db.wal-writer-authority/v1" },
+    "capacity": { "const": 32 },
+    "maintenanceFairness": {
+      "type": "object", "additionalProperties": false, "required": ["classes", "continuouslyReady", "firstClassFaults"],
+      "properties": { "classes": { "const": ["lost-owner", "page", "platform", "retry", "rejected-backend", "backend-close", "task-close"] }, "continuouslyReady": { "type": "array", "minItems": 14, "maxItems": 14, "items": { "type": "integer", "minimum": 0, "maximum": 6 } }, "firstClassFaults": { "type": "array", "minItems": 7, "maxItems": 7, "items": { "type": "integer", "minimum": 0, "maximum": 6 } } }
+    },
+    "backendPressure": {
+      "type": "object", "additionalProperties": false, "required": ["capacity", "retainedWhenFull", "terminalAfterCapacityReturns"],
+      "properties": { "capacity": { "const": 64 }, "retainedWhenFull": { "const": true }, "terminalAfterCapacityReturns": { "const": true } }
+    },
+    "fairRetirement": {
+      "type": "object", "additionalProperties": false, "required": ["pinnedSlot", "releasingSlot", "maximumOpportunities", "pinnedRetained", "releasingRetired"],
+      "properties": { "pinnedSlot": { "const": 0 }, "releasingSlot": { "const": 1 }, "maximumOpportunities": { "const": 32 }, "pinnedRetained": { "const": true }, "releasingRetired": { "const": true } }
+    },
+    "resultRetirement": {
+      "type": "object", "additionalProperties": false, "required": ["pages", "terminal"],
+      "properties": { "pages": { "const": 2 }, "terminal": { "type": "array", "minItems": 5, "maxItems": 5, "items": { "type": "boolean" } } }
+    },
+    "guardRetirement": {
+      "type": "object", "additionalProperties": false, "required": ["operation", "contender", "stages", "terminal"],
+      "properties": {
+        "operation": { "const": 7 }, "contender": { "const": 8 },
+        "stages": { "const": ["pending-operation", "unlock-error", "unlock-progress", "terminal"] },
+        "terminal": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "boolean" } }
+      }
+    },
+    "mutations": { "type": "array", "minItems": 6, "maxItems": 6, "uniqueItems": true, "items": { "enum": ["create", "append", "sync", "seal", "truncate", "delete"] } },
+    "cases": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["name", "firstGeneration", "steps"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "firstGeneration": { "type": "string", "pattern": "^[1-9][0-9]{0,19}$" },
+          "steps": {
+            "type": "array", "minItems": 1, "maxItems": 32,
+            "items": {
+              "type": "object", "additionalProperties": false, "required": ["action", "owner", "document", "backend", "expected"],
+              "properties": {
+                "action": { "enum": ["acquire", "validate", "release"] }, "owner": { "enum": ["a", "b"] },
+                "document": { "enum": ["one", "two"] }, "backend": { "enum": [0, 1] },
+                "expected": { "enum": ["ok", "conflict", "fenced", "exhausted"] }
+              }
+            }
+          }
+        }
+      }
+    },
+    "filesystem": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sidecar", "independentInstancesConflict", "independentProcessesConflict", "reacquireAfterClose", "unlinkOnClose"],
+      "properties": { "sidecar": { "const": ".writer.lock" }, "independentInstancesConflict": { "const": true }, "independentProcessesConflict": { "const": true }, "reacquireAfterClose": { "const": true }, "unlinkOnClose": { "const": false } }
+    }
+  }
+}

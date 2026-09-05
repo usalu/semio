@@ -130,7 +130,7 @@
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🧪️direct-behavior"
+              "directoryName": "🎯️direct-behavior"
             }
           ]
         },
@@ -141,7 +141,7 @@
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🧪️direct-behavior"
+              "directoryName": "🎯️direct-behavior"
             }
           ]
         },
@@ -152,7 +152,7 @@
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🧪️direct-behavior"
+              "directoryName": "🎯️direct-behavior"
             }
           ]
         },
@@ -163,18 +163,18 @@
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🧪️direct-behavior"
+              "directoryName": "🎯️direct-behavior"
             }
           ]
         },
         {
           "mutationId": "replace-pixel-data",
-          "sourceMutationDirectoryName": "🧮️replace-pixel-data",
-          "mutationDirectoryName": "🧮️replace-pixel-data",
+          "sourceMutationDirectoryName": "🔲️replace-pixel-data",
+          "mutationDirectoryName": "🔲️replace-pixel-data",
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🧪️direct-behavior"
+              "directoryName": "🎯️direct-behavior"
             }
           ]
         }
@@ -261,7 +261,7 @@
       "rationale": "The typed projection semantic-bmp-reader-v1 is measured against — width, height, storage kind, the full 256-entry palette table (indexed) or null (direct), and the pixel/index payload as size+digest.",
       "qualification": {
         "status": "qualified",
-        "evidence": "Run against 🧮️replace-pixel-data-applied/➡️after.bmp: reports storage \"direct\", width 4, height 4, paletteEntries 0, pixels {size:48, digest:\"sha256:8917afc0…\"}. Run against 📥️insert-palette-entry-applied/⬅️before.bmp: reports storage \"indexed\", paletteEntries 256 (image's own get_palette() zero-pads to 256 regardless of the 7 real entries the recipe wrote), with the 7 real colours present at indices 0-6.",
+        "evidence": "Run against 🔲️replace-pixel-data-applied/➡️after.bmp: reports storage \"direct\", width 4, height 4, paletteEntries 0, pixels {size:48, digest:\"sha256:8917afc0…\"}. Run against 📥️insert-palette-entry-applied/⬅️before.bmp: reports storage \"indexed\", paletteEntries 256 (image's own get_palette() zero-pads to 256 regardless of the 7 real entries the recipe wrote), with the 7 real colours present at indices 0-6.",
         "checkedAt": "2026-08-28",
         "criteria": [
           {
@@ -305,7 +305,7 @@
       "rationale": "Ordered structural equality over two independently-decoded projections — the GATING comparison. Computes no mutation semantics, only structural equality of two already-existing byte blobs.",
       "qualification": {
         "status": "qualified",
-        "evidence": "Validated BOTH ways this session with real measured numbers, for all 4 fixtures. Accept: every fixture's own ⬅️before.bmp compared against itself -> {equal:true, diffCount:0}. Reject, with the diff naming the exact field: 🎨️replace-palette-entry-applied's ⬅️before.bmp vs ➡️after.bmp -> {equal:false, diffCount:3, diffs:[\"$.palette[5].r: 0 ≠ 200\",\"$.palette[5].g: 0 ≠ 150\",\"$.palette[5].b: 0 ≠ 100\"]}; 🧮️replace-pixel-data-applied's ⬅️before.bmp vs ➡️after.bmp -> {equal:false, diffCount:1, diffs:[\"$.pixels.digest: … ≠ …\"]}. A first version of the 📤️remove-palette-entry-applied recipe (six palette entries, the removed one last) round-tripped to equal:true/diffCount:0 — a false pass, because image's get_palette() always zero-pads to 256 entries so shifting only padding into the removed slot is invisible; the recipe was corrected to carry a second, non-zero spare entry after the removed one, and now measures {equal:false, diffCount:6} with the diff naming positions 5 and 6.",
+        "evidence": "Validated BOTH ways this session with real measured numbers, for all 4 fixtures. Accept: every fixture's own ⬅️before.bmp compared against itself -> {equal:true, diffCount:0}. Reject, with the diff naming the exact field: 🎨️replace-palette-entry-applied's ⬅️before.bmp vs ➡️after.bmp -> {equal:false, diffCount:3, diffs:[\"$.palette[5].r: 0 ≠ 200\",\"$.palette[5].g: 0 ≠ 150\",\"$.palette[5].b: 0 ≠ 100\"]}; 🔲️replace-pixel-data-applied's ⬅️before.bmp vs ➡️after.bmp -> {equal:false, diffCount:1, diffs:[\"$.pixels.digest: … ≠ …\"]}. A first version of the 📤️remove-palette-entry-applied recipe (six palette entries, the removed one last) round-tripped to equal:true/diffCount:0 — a false pass, because image's get_palette() always zero-pads to 256 entries so shifting only padding into the removed slot is invisible; the recipe was corrected to carry a second, non-zero spare entry after the removed one, and now measures {equal:false, diffCount:6} with the diff naming positions 5 and 6.",
         "checkedAt": "2026-08-28",
         "criteria": [
           {
@@ -790,14 +790,14 @@
       "files": [
         {
           "role": "expected-before-bmp",
-          "path": "../🧫️fixtures/🧮️replace-pixel-data-applied/⬅️before.bmp",
+          "path": "../🧫️fixtures/🔲️replace-pixel-data-applied/⬅️before.bmp",
           "mediaType": "image/bmp",
           "sha256": "sha256:481a43b47bf4c922b450653efcb4b5c488e6057f084ee37ebb2d1f74b51780eb",
           "bytes": 102
         },
         {
           "role": "expected-after-bmp",
-          "path": "../🧫️fixtures/🧮️replace-pixel-data-applied/➡️after.bmp",
+          "path": "../🧫️fixtures/🔲️replace-pixel-data-applied/➡️after.bmp",
           "mediaType": "image/bmp",
           "sha256": "sha256:864966625f88b80305678d2598562c5598f19165da67e9ce2c2f7dbb27cafc8f",
           "bytes": 102

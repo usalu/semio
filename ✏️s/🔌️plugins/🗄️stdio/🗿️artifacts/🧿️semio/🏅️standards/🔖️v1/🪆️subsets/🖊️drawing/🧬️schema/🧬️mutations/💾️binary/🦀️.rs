@@ -2,7 +2,7 @@
 //! (`OP_BINARY_FORMAT` convention) + `tag u8` (the variant ordinal, [`OP_KEYWORDS`]) are two REAL
 //! fixed fields; the variant's own argument payload follows as one opaque trailing `bytes` chain —
 //! reuses the already-real, already-tested `../📝️text/🦀️.rs` text codec (`print_op`'s
-//! argument tail) rather than re-deriving a second independent encoding, mirroring `✳️text`'s own
+//! argument tail) rather than re-deriving a second independent encoding, mirroring `🔤️text`'s own
 //! established convention.
 
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;

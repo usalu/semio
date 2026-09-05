@@ -9,7 +9,10 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/usalu/semio.git",
-    "directory": "mit-bestand/bericht"
+    "directory": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript"
   },
-  "bundleKind": "asset"
+  "bundleKind": "asset",
+  "devDependencies": {
+    "d3-force": "3.0.0"
+  }
 }

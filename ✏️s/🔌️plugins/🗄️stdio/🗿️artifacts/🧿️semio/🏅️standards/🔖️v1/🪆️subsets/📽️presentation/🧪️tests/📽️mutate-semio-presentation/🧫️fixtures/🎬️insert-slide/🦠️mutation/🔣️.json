@@ -1,0 +1,10 @@
+{
+  "mutation": "insertSlide",
+  "index": 1,
+  "slide": {
+    "id": "slide2",
+    "layoutId": "layout1",
+    "shapes": [],
+    "notes": []
+  }
+}

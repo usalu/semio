@@ -135,11 +135,7 @@ impl VerifiedGisMapArtifactBindingV1 {
             component_blake3: self.projection.package.component_blake3.clone(),
             artifact_kind: self.projection.artifact.kind.clone(),
             document_schema: self.projection.artifact.schema.clone(),
-            parent_dialect: InferenceParentDialectV1 {
-                artifact_kind: self.projection.parent_dialect.artifact_kind.clone(),
-                standard: self.projection.parent_dialect.standard.clone(),
-                subset: self.projection.parent_dialect.subset.clone(),
-            },
+            parent_dialect: InferenceParentDialectV1 { artifact_kind: self.projection.parent_dialect.artifact_kind.clone(), standard: self.projection.parent_dialect.standard.clone(), subset: self.projection.parent_dialect.subset.clone() },
             surface_id: self.projection.surface.surface_id.clone(),
             granted_mode: GIS_GRANTED_MODE.to_owned(),
             service_id: self.projection.service.inference_schema.clone(),
@@ -170,7 +166,7 @@ fn validate_gis_map_binding_projection(projection: &GisMapFrozenBindingProjectio
         || projection.surface.app_id != projection.surface.surface_id
         || projection.surface.window_kind_id != "gis2d-main"
         || projection.surface.role != "editor"
-        || !matches!(projection.surface.renderer_target.as_str(), "react" | "wgpu" | "wasm")
+        || projection.surface.renderer_target != "wasm"
         || !projection.grant.read
         || !projection.grant.write
         || !projection.grant.observe
@@ -335,9 +331,7 @@ pub(crate) struct InferenceIdentitySourceV1<'a> {
 }
 
 /// 🪪️ Derives the whole immutable job identity from the frozen binding; no client bytes contribute.
-pub(crate) async fn identity_from_frozen_binding(
-    binding: &VerifiedGisMapArtifactBindingV1, source: InferenceIdentitySourceV1<'_>, control: &InferenceOperationControlV1,
-) -> Result<InferenceIdentityV1, InferenceErrorV1> {
+pub(crate) async fn identity_from_frozen_binding(binding: &VerifiedGisMapArtifactBindingV1, source: InferenceIdentitySourceV1<'_>, control: &InferenceOperationControlV1) -> Result<InferenceIdentityV1, InferenceErrorV1> {
     let catalog = binding.catalog().as_ref();
     control.checkpoint(0)?;
     source.request.validate()?;
@@ -360,7 +354,12 @@ pub(crate) async fn identity_from_frozen_binding(
     let projection = PackageProjection { plugin_id: package.plugin_id(), package_id: &package.descriptor().package_id, version: package.version(), component_sha256: &package_hash, services: &package.descriptor().contributions.inference_services };
     exact_projection(source.scope, source.descriptor, &projection)?;
     let frozen = binding.identity();
-    if frozen.package_id != source.descriptor.owner.package_id || frozen.package_version != source.descriptor.owner.version || frozen.component_sha256 != package_hash || frozen.artifact_kind != source.descriptor.artifact_kind || frozen.document_schema != source.descriptor.artifact_schema {
+    if frozen.package_id != source.descriptor.owner.package_id
+        || frozen.package_version != source.descriptor.owner.version
+        || frozen.component_sha256 != package_hash
+        || frozen.artifact_kind != source.descriptor.artifact_kind
+        || frozen.document_schema != source.descriptor.artifact_schema
+    {
         return Err(InferenceErrorV1::Denied);
     }
     control.checkpoint(1)?;
@@ -392,7 +391,7 @@ mod tests {
 
     #[test]
     fn gis_map_verified_binding_freezes_catalog_selection_and_native_executable() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🗺️gis-map-frozen-binding-v1/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧊️gis-map-frozen-binding-v1/🔣️.json")).unwrap();
         let projection: GisMapFrozenBindingProjectionV1 = serde_json::from_value(fixture["binding"].clone()).unwrap();
         let native = semio_s_plugin_gis::artifacts::gismap::gis_map_inference_service();
         assert_eq!(validate_gis_map_binding_projection(&projection, native), Ok(()));
@@ -420,7 +419,7 @@ mod tests {
 
     #[test]
     fn inference_catalog_projection_requires_exact_scope_package_and_declared_service() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🪪️inference-catalog-selection-v1/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🎯️inference-catalog-selection-v1/🔣️.json")).unwrap();
         for case in fixture["cases"].as_array().unwrap() {
             let mut row = fixture.clone();
             let path = case["path"].as_array().unwrap();

@@ -748,7 +748,7 @@ def memo(ctx: Context) -> dict:
 
 def vector(ctx: Context, kind: str) -> dict:
     """🧫️ One committed `(before, mutation, after)` specification vector."""
-    return json.loads(ctx.fixture_bytes("local://🦠️%s.json" % kind).decode("utf-8"))
+    return json.loads(ctx.fixture_bytes(next(token for step in ctx.scenario["steps"] for token in step["text"].split() if token.startswith("local://") and token.endswith("%s/🦠️mutation/🔣️.json" % kind))).decode("utf-8"))
 
 
 # endregion 🔖️Scenario input

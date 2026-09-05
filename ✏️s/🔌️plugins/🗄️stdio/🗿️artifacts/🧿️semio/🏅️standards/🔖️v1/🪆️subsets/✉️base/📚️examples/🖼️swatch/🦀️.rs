@@ -1,7 +1,7 @@
 //! 📚️ Example "swatch" for `stdio.semio.image` — the first real, non-hex-scaffold fixture for
 //! this subset (ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION's image wave).
 //! `PRIMARY_TEXT` is the genuine `SemioImageSnapshot::print_dsl` output for
-//! `snapshot::demo_image_snapshot()` (`🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/📸️snapshot/
+//! `snapshot::demo_image_snapshot()` (`🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/
 //! 🦀️.rs`) — asserted byte-identical to it by that subset's own `fixture_honesty_law`
 //! (`🎹️composer/🦀️.rs`), so this fixture can never silently drift back to a fake.
 

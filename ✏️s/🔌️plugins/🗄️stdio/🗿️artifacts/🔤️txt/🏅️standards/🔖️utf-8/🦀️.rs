@@ -11,6 +11,7 @@ use semio_framework_plugin::StandardId;
 
 /// 🌳️ `standard "utf-8"`'s complete declaration — one subset, `any`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+#[cfg(feature = "full-artifact-catalog")]
 pub fn standard() -> StandardDeclaration<crate::plugin::StdioApps> {
     StandardDeclaration { id: StandardId("utf-8"), media: MediaDeclaration { mimes: &["text/plain"], extensions: &["txt"] }, subsets: vec![subsets::any::subset()] }
 }

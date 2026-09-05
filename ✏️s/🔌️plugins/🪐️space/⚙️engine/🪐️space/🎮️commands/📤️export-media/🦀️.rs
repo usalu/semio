@@ -57,26 +57,28 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportMediaPayload(crate::engine::space::commands::import_media_payload::ImportMediaPayload { payload: "data:...".into() }));
     }
 
-    /// 🪪️ Stdio's format registry keys every `FormatDescriptor` by its full schema `representation.id`
-    /// (`kind_id == short_id`, no shorter alias — `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🧬️schema/📜️artifact-definition.json`).
-    /// Confirmed by printing every registered `dwg` descriptor at runtime (only `ac1018`'s document
-    /// representation is actually registered by `stdio_format_descriptors()` — `ac1024`'s own doc
-    /// comment about being the only LIVE composer/`io_registry` standard is about encode/decode, a
-    /// separate registry from the format-descriptor catalog this reads). The bare `"stdio.dwg"`/`"dwg"`
-    /// this test used to dispatch/register under predates stdio's schema migration to full canonical
-    /// representation ids (`🗄️stdio/**` is a forbidden lease here — this only adapts OUR call site,
-    /// mirroring how lane 2-0 already adapted the `stdio_format_descriptors()` rename).
+    /// 🪪️ A neutral format id keeps this command law about typed effects rather than linking an
+    /// unrelated full Stdio codec catalog into Space's four-family Home-I/O build.
     const DWG_FORMAT_ID: &str = "s.stdio.dwg.standard.ac1018.representation.document";
 
     #[semio_framework_async_macros::async_test]
     async fn export_media_emits_download_effect_and_import_requests_file_open() {
         crate::engine::space::testkit::seed_draw_plugin();
-        let stdio_descriptors = semio_s_plugin_stdio::manifest::stdio_format_descriptors().expect("stdio format descriptors");
-        semio_framework::register_format_descriptors(stdio_descriptors).expect("register stdio format descriptors");
+        semio_framework::register_format_descriptors([semio_framework::FormatDescriptor {
+            kind_id: DWG_FORMAT_ID.into(),
+            short_id: DWG_FORMAT_ID.into(),
+            aliases: Vec::new(),
+            mimes: vec!["image/vnd.dwg".into()],
+            extensions: vec![".dwg".into()],
+            name: "Drawing exchange".into(),
+            full_name: "Drawing exchange test carrier".into(),
+            neutral: false,
+            dir_name: "dwg".into(),
+            is_binary: true,
+        }])
+        .expect("register neutral format descriptor");
         semio_framework_os::workflow::register_os_media_export_handler_kind("2d.drawing", DWG_FORMAT_ID, |_doc| {
-            let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
-            let bytes = semio_s_plugin_stdio::artifacts::dwg::dwg_to_bytes(&drawing)?;
-            Ok(semio_framework_os::OsMediaExportResult { data: base64_codec::base64_standard_encode(bytes), mime_type: "image/vnd.dwg".into(), file_name: "draw.dwg".into(), encoding: Some("base64".into()) })
+            Ok(semio_framework_os::OsMediaExportResult { data: base64_codec::base64_standard_encode(b"space-home-io-test"), mime_type: "image/vnd.dwg".into(), file_name: "draw.dwg".into(), encoding: Some("base64".into()) })
         });
         // 🚪️ Ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave IO1:
         // `register_dwg_import_handler` is deleted (see host `🦀️.rs`'s `media_export_raster`
@@ -87,7 +89,9 @@ mod tests {
         // `ComposerEntry` to migrate to -- inlined here rather than deleted, since the test below
         // exercises `SpaceCommand::ImportMedia`'s effect-producing behaviour, not the DWG bridge itself.
         semio_framework_os::workflow::register_os_media_import_handler_kind("2d.drawing", DWG_FORMAT_ID, |bytes| {
-            let _drawing = semio_s_plugin_stdio::artifacts::dwg::dwg_from_bytes(bytes)?;
+            if bytes != b"space-home-io-test" {
+                return Err("unexpected neutral carrier bytes".into());
+            }
             Ok(json!({ "schema": "draw.document", "imported": true }))
         });
 

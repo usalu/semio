@@ -7,11 +7,11 @@
 //! BEFORE and AFTER document is authored directly as a typed `png::Info` value below — never by
 //! executing this repository's own `PngMutation` dispatch/diff — then handed to `png::Encoder` to
 //! become real bytes. `project` decodes real bytes back with `png::Decoder`, independent of, and
-//! never sharing code with, this repository's own `🦀️oracle.rs` (which computes what
+//! never sharing code with, this repository's own `🦀️.rs` (which computes what
 //! a mutation SHOULD produce and is registered `cross-semio-implementation`, not a reader).
 //!
 //! Two subcommands:
-//!   build   <recipe-id> <out-dir>   — writes <out-dir>/<recipe-id>/before.png + after.png
+//!   build   <recipe-id> <out-dir>   — writes <out-dir>/<recipe-id>/⬅️before.png + ➡️after.png
 //!   project <path-to-png>           — decodes a real PNG file and prints a typed JSON projection
 //!                                     on stdout (header, palette, trns, gamma, chromaticities,
 //!                                     srgb intent, physical dims, background, tEXt chunks, and
@@ -424,11 +424,11 @@ fn cmd_build(id: &str, out_dir: &str) -> i32 {
         eprintln!("[png-codec] unknown recipe {id:?} — known: {}", RECIPE_IDS.join(", "));
         return 1;
     };
-    let dir = Path::new(out_dir).join(id);
+    let dir = Path::new(out_dir);
     fs::create_dir_all(&dir).expect("create fixture recipe directory");
-    fs::write(dir.join("before.png"), encode_doc(&before)).expect("write before.png");
-    fs::write(dir.join("after.png"), encode_doc(&after)).expect("write after.png");
-    eprintln!("[png-codec] {id}: before.png + after.png -> {}", dir.display());
+    fs::write(dir.join("⬅️before.png"), encode_doc(&before)).expect("write ⬅️before.png");
+    fs::write(dir.join("➡️after.png"), encode_doc(&after)).expect("write ➡️after.png");
+    eprintln!("[png-codec] {id}: ⬅️before.png + ➡️after.png -> {}", dir.display());
     0
 }
 

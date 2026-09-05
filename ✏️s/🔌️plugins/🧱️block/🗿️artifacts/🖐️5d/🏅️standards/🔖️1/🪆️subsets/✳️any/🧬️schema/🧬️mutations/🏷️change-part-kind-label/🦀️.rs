@@ -17,20 +17,20 @@ pub struct ChangePartKindLabel {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn change_part_kind_label(new_label: String) -> Block5dMutation {
+pub fn change_part_kind_label(new_label: String) -> Block5dMutation {
     Block5dMutation::ChangePartKindLabel(ChangePartKindLabel { new_label })
 }
 
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ChangePartKindLabel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "part-kind", kind: "change-part-kind-label", record: "ChangedPartKindLabel" };
 
-    async fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+    fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
+    fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change part kind label to \"{}\"", self.new_label)
     }
 }

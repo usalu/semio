@@ -278,7 +278,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/📍️move-step/🧪️tests/📖️no-ops-when-the-step-is-already-at-that-position/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/📍️move-step/🧪️tests/🟰️no-ops-when-the-step-is-already-at-that-position/🦀️.rs"]
                                     mod tests_no_ops_when_the_step_is_already_at_that_position;
                                 }
                                 #[path = "."]
@@ -291,7 +291,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🔧️edit-step-params/🧪️tests/📖️no-ops-when-the-params-are-already-identical/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🔧️edit-step-params/🧪️tests/🟰️no-ops-when-the-params-are-already-identical/🦀️.rs"]
                                     mod tests_no_ops_when_the_params_are_already_identical;
                                 }
                                 #[path = "."]
@@ -304,7 +304,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🧪️tests/📖️no-ops-when-the-step-is-already-collapsed/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🧪️tests/🟰️no-ops-when-the-step-is-already-collapsed/🦀️.rs"]
                                     mod tests_no_ops_when_the_step_is_already_collapsed;
                                 }
                                 #[path = "."]

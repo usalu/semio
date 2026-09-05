@@ -45,9 +45,9 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
             include_str!("../../../🏷️metadata/🧬️schema/🧬️mutations/🔒️set-layer-locked/🧪️tests/🔒️locks-shape-a/📸️snapshot/➡️after/🔣️.json"),
         ),
         "set-layer-visible" => (
-            include_str!("../../../🏷️metadata/🧬️schema/🧬️mutations/👁️set-layer-visible/🧪️tests/🐙️hides-shape-a/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🏷️metadata/🧬️schema/🧬️mutations/👁️set-layer-visible/🧪️tests/🐙️hides-shape-a/🦠️mutation/🔣️.json"),
-            include_str!("../../../🏷️metadata/🧬️schema/🧬️mutations/👁️set-layer-visible/🧪️tests/🐙️hides-shape-a/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../🏷️metadata/🧬️schema/🧬️mutations/👁️set-layer-visible/🧪️tests/🙈️hides-shape-a/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🏷️metadata/🧬️schema/🧬️mutations/👁️set-layer-visible/🧪️tests/🙈️hides-shape-a/🦠️mutation/🔣️.json"),
+            include_str!("../../../🏷️metadata/🧬️schema/🧬️mutations/👁️set-layer-visible/🧪️tests/🙈️hides-shape-a/📸️snapshot/➡️after/🔣️.json"),
         ),
         other => panic!("mutate-drawing-1-metadata: {other:?} is not a declared kind of this subset"),
     }

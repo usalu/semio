@@ -11,12 +11,12 @@ use crate::artifacts::block5d::schema::mutations::text::Block5dMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `Block5dMutation` to its binary command form.
-pub async fn encode_op(operation: &Block5dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &Block5dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `Block5dMutation` from its binary command form.
-pub async fn decode_op(bytes: &[u8]) -> Result<Block5dMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<Block5dMutation, protocol::ProtocolError> {
     Block5dMutation::decode_op(bytes)
 }
 

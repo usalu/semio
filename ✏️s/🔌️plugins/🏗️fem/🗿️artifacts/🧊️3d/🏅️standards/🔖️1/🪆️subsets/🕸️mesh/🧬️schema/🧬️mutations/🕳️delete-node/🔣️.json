@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🕳️delete-node",
   "semanticKind": "delete-node",
   "displayName": "Delete Node",
-  "emoji": "🗑⚪️",
+  "emoji": "🕳️",
   "aggregateVariant": "DeleteNode",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": "delete-node",

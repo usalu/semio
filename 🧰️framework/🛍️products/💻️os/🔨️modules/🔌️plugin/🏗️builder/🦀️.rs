@@ -728,6 +728,9 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         for (app, factory) in app_defs {
             plugin = plugin.register_app_factory(app, factory);
         }
+        if let Some(breach) = crate::app::surface_dependency_breaches(&plugin.manifest).into_iter().next() {
+            return Err(PluginAssemblyError::new("plugin-assembly.surface-dependency-gate", breach));
+        }
         let assembly = store::begin_artifact_assembly().map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
         crate::app::commit_artifact_registration_plan(&assembly, registry_plan)?;
         // 🛂️ E2-builder-descriptor (`📓️design-abi.md` §3): installs the SAME builder fields that

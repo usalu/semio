@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.plugin.runtime-fault-vectors.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "ceilingUs", "scopes", "messageTemplate", "vectors", "classifications"],
+  "properties": {
+    "schema": {"const": "semio.plugin.runtime-fault-vectors.v1"},
+    "ceilingUs": {"const": 8000},
+    "scopes": {"const": ["live", "close"]},
+    "messageTemplate": {"const": "runtime {scope} cleanup faulted for instance {instance}: {detail} [{variant}] (elapsed {elapsed}, ceiling {ceilingUs}us)"},
+    "vectors": {
+      "type": "array",
+      "minItems": 19,
+      "maxItems": 19,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["variant", "code", "class", "detail"],
+        "properties": {
+          "variant": {"type": "string", "pattern": "^[a-z][a-z-]*[a-z]$"},
+          "code": {"type": "string", "pattern": "^plugin\\.internal\\.[a-z][a-z-]*[a-z]$"},
+          "class": {"enum": ["abi-mismatch", "interactive-ceiling", "clock", "plugin-internal"]},
+          "detail": {"type": "string", "minLength": 8}
+        }
+      }
+    },
+    "classifications": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "class"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "code": {"type": "string", "minLength": 1},
+          "supervisor": {"enum": ["running", "crashed", "quarantined"]},
+          "class": {"enum": ["abi-mismatch", "interactive-ceiling", "clock", "plugin-internal", "install-failed", "unknown"]}
+        }
+      }
+    }
+  }
+}

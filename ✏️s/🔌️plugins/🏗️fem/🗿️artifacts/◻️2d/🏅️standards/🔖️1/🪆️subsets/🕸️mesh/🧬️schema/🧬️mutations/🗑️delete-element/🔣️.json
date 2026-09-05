@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗑️delete-element",
   "semanticKind": "delete-element",
   "displayName": "Delete Element",
-  "emoji": "🗑🧩️",
+  "emoji": "🗑️",
   "aggregateVariant": "DeleteElement",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": "delete-element",

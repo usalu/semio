@@ -2,19 +2,20 @@
 //! select, plus a vortex count.
 
 use crate::artifacts::block3d::Block3dSnapshot;
-use crate::editor::block3d::{block3d_action, ui_value_map, ui_value_text};
 use crate::editor::block3d::terminology::Block3dLabels;
+use crate::editor::block3d::{block3d_action, ui_label, ui_node_list, ui_value_map, ui_value_text};
 use semio_framework_plugin::{
-    ui_inspector_groups_to_tree, ui_inspector_readonly_field, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode,
-    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    Buildable, BuiltNode, HasBase, HasChildren, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, Trigger, UiAssemblyResult, UiText, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
+use semio_framework_ui_contract::{self as ui, InputKind};
 
 //#region 🔖️Constants
 pub const BLOCK3D_BODY_INSPECTOR: &str = "block3d.play.inspector";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -26,63 +27,71 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn text_field(id: &str, label: impl Into<Label>, value: &str, field: &'static str) -> UiNode {
-    UiNode::Field(UiFieldNode {
-        presence: UiPresence::default(),
-        id: id.into(),
-        label: label.into(),
-        child: Box::new(UiNode::Input(UiInputNode {
-            presence: UiPresence::default(),
-            id: format!("{id}.input"),
-            input_kind: "text".into(),
-            value: value.into(),
-            placeholder: None,
-            commit: Some("blur".into()),
-            on_change: block3d_action("patchObjectKind", Some(ui_value_map([("field", ui_value_text(field).expect("static field name fits ui text capacity"))]).expect("single-entry field map fits ui map capacity"))),
-            min: None,
-            max: None,
-            step: None,
-            accept: None,
-            menu: None,
-        })),
-        description: None,
-        required: None,
-        error: None,
-        menu: None,
-    })
+fn inspector_error(stage: &'static str) -> PluginAssemblyError {
+    PluginAssemblyError::new("ui.fixed-capacity", format!("block3d inspector admission failed at {stage}"))
 }
 
-pub async fn render(definition: &Block3dSnapshot, active_representation_id: Option<&str>, labels: &Block3dLabels) -> UiNode {
-    let representation_select = UiNode::Select(UiSelectNode {
-        id: "block3d-play-inspector.representation".into(),
-        value: active_representation_id.unwrap_or_default().into(),
-        items: definition.representations.iter().map(|representation| UiSelectItem { value: representation.id.clone(), label: Label::data(representation.name.clone()) }).collect(),
-        placeholder: None,
-        on_change: block3d_action("setActiveRepresentation", None),
-        presence: UiPresence::default(),
-        menu: None,
-    });
-    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
-        id: "block3d-play-inspector".into(),
-        label: labels.summary.into(),
-        default_open: Some(true),
-        presence: UiPresence::default(),
-        fields: vec![
-            text_field("block3d-play-inspector.name", labels.name, &definition.object_kind.name, "name"),
-            text_field("block3d-play-inspector.label", labels.label, &definition.object_kind.label, "label"),
-            UiNode::Field(UiFieldNode {
-                presence: UiPresence::default(),
-                id: "block3d-play-inspector.representation-field".into(),
-                label: labels.representation.into(),
-                child: Box::new(representation_select),
-                description: None,
-                required: None,
-                error: None,
-                menu: None,
-            }),
-            ui_inspector_readonly_field("block3d-play-inspector.vortex-count", labels.vortices, definition.vortices.len().to_string()),
-        ],
-    }])
+fn ui_value(value: &str) -> UiAssemblyResult<UiText> {
+    UiText::try_from_str(value).ok_or_else(|| inspector_error("value"))
+}
+
+/// 🏷️ Wraps one built control in its labeled field row.
+fn field_row(id: &str, label: &str, control: BuiltNode) -> UiAssemblyResult<BuiltNode> {
+    ui::field(ui_label(label)?)
+        .try_id(id)
+        .map_err(|_| inspector_error("field-id"))?
+        .try_children([control])
+        .map_err(|_| inspector_error("field-children"))?
+        .try_build()
+        .map_err(|_| inspector_error("field-build"))
+}
+
+/// ✏️ One editable identity row — commits on blur and dispatches `patchObjectKind` for `field`.
+fn text_field(id: &str, label: &str, value: &str, field: &'static str) -> UiAssemblyResult<BuiltNode> {
+    let (action, args) = block3d_action("patchObjectKind", Some(ui_value_map([("field", ui_value_text(field)?)])?))?;
+    let mut input = ui::input(InputKind::Text)
+        .value(ui_value(value)?)
+        .commit(ui_value("blur")?)
+        .try_id(format!("{id}.input"))
+        .map_err(|_| inspector_error("input-id"))?;
+    input = match args {
+        Some(args) => input.try_on_with(Trigger::Change, action, args),
+        None => input.try_on(Trigger::Change, action),
+    }
+    .map_err(|_| inspector_error("input-binding"))?;
+    field_row(id, label, input.try_build().map_err(|_| inspector_error("input-build"))?)
+}
+
+/// 🔒️ One read-only row — a disabled text input, no action binding.
+fn readonly_field(id: &str, label: &str, value: &str) -> UiAssemblyResult<BuiltNode> {
+    let input = ui::input(InputKind::Text).value(ui_value(value)?).try_id(format!("{id}.input")).map_err(|_| inspector_error("readonly-id"))?.disabled(true);
+    field_row(id, label, input.try_build().map_err(|_| inspector_error("readonly-build"))?)
+}
+
+/// 🧱️ The active-representation picker — one item per document representation.
+fn representation_field(definition: &Block3dSnapshot, active_representation_id: Option<&str>, label: &str) -> UiAssemblyResult<BuiltNode> {
+    let (action, args) = block3d_action("setActiveRepresentation", None)?;
+    let mut select = ui::select(ui_value(active_representation_id.unwrap_or_default())?);
+    for representation in &definition.representations {
+        select = select.try_item(ui_value(&representation.id)?, ui_label(&representation.name)?).map_err(|_| inspector_error("select-item"))?;
+    }
+    select = select.try_id("block3d-play-inspector.representation").map_err(|_| inspector_error("select-id"))?;
+    select = match args {
+        Some(args) => select.try_on_with(Trigger::Change, action, args),
+        None => select.try_on(Trigger::Change, action),
+    }
+    .map_err(|_| inspector_error("select-binding"))?;
+    field_row("block3d-play-inspector.representation-field", label, select.try_build().map_err(|_| inspector_error("select-build"))?)
+}
+
+pub fn render(definition: &Block3dSnapshot, active_representation_id: Option<&str>, labels: &Block3dLabels) -> UiAssemblyResult<BuiltNode> {
+    let rows = ui_node_list([
+        text_field("block3d-play-inspector.name", labels.name.as_str(), &definition.object_kind.name, "name"),
+        text_field("block3d-play-inspector.label", labels.label.as_str(), &definition.object_kind.label, "label"),
+        representation_field(definition, active_representation_id, labels.representation.as_str()),
+        readonly_field("block3d-play-inspector.vortex-count", labels.vortices.as_str(), &definition.vortices.len().to_string()),
+    ])?;
+    PanelTreeBuilder::new("block3d-play-inspector")?.section("block3d-play-inspector.summary", Some(ui_label(labels.summary.as_str())?), true, rows)?.build()
 }
 //#endregion 🔖️Render
 

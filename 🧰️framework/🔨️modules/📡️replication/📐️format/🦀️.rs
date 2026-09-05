@@ -55,12 +55,11 @@ async fn build_header_bytes(required_flags: u32, optional_flags: u32) -> [u8; HE
 /// `crate::codec::PackError` variant wrapped in `ProtocolError::Pack` — all are directly constructible
 /// (no protocol_core amendment needed, unlike the contract's fallback-deviation clause anticipated).
 async fn validate_header<S: PackSource>(source: &S) -> Result<(), ProtocolError> {
-    let total_len = source.len().await;
-    if total_len < HEADER_SIZE as u64 {
-        return Err(ProtocolError::Pack(PackError::Truncated(total_len)));
-    }
-    let mut buf = [0u8; HEADER_SIZE];
-    source.read_exact_at(0, &mut buf).await?;
+    read_header(source).await.map(|_| ())
+}
+
+/// 🧮️ Validates one caller-owned fixed header without retaining or borrowing a source future.
+pub fn parse_header_bytes(buf: &[u8; HEADER_SIZE]) -> Result<Header, ProtocolError> {
     if buf[0..8] != MAGIC {
         return Err(ProtocolError::Pack(PackError::BadMagic));
     }
@@ -79,7 +78,7 @@ async fn validate_header<S: PackSource>(source: &S) -> Result<(), ProtocolError>
     if version_major != FORMAT_VERSION_MAJOR {
         return Err(ProtocolError::Pack(PackError::UnsupportedVersion { major: version_major, minor: version_minor }));
     }
-    Ok(())
+    Ok(Header { version_major, version_minor, required_flags, optional_flags: u32::from_le_bytes(buf[16..20].try_into().unwrap()) })
 }
 
 /// @emoji 🪪️ A header's decoded fields — exposed for downstream crates (`protocol_io`'s
@@ -95,15 +94,11 @@ pub struct Header {
 
 /// @emoji 📖️ Validates (see `validate_header`) and returns a source's 32-byte header fields.
 pub async fn read_header<S: PackSource>(source: &S) -> Result<Header, ProtocolError> {
-    validate_header(source).await?;
+    let total_len = source.len().await;
+    if total_len < HEADER_SIZE as u64 { return Err(ProtocolError::Pack(PackError::Truncated(total_len))); }
     let mut buf = [0u8; HEADER_SIZE];
     source.read_exact_at(0, &mut buf).await?;
-    Ok(Header {
-        version_major: u16::from_le_bytes([buf[8], buf[9]]),
-        version_minor: u16::from_le_bytes([buf[10], buf[11]]),
-        required_flags: u32::from_le_bytes(buf[12..16].try_into().unwrap()),
-        optional_flags: u32::from_le_bytes(buf[16..20].try_into().unwrap()),
-    })
+    parse_header_bytes(&buf)
 }
 //#endregion 🔖️Header
 
@@ -350,9 +345,9 @@ async fn write_commit_payload(commit_seq: u64, prev_commit_offset: u64, records_
 /// any `stored` slice, e.g. during `recover`'s source-backed reads). Public per the `CommitPayload`
 /// doc comment above — the sole intended entry point for decoding a `RecordFrame`'s `stored` bytes
 /// once a caller has confirmed `kind == crate::REC_COMMIT` via `FrameCursor`/`ReverseFrameCursor`.
-pub async fn parse_commit_payload(payload: &[u8]) -> Result<CommitPayload, ProtocolError> {
+pub fn parse_commit_payload(payload: &[u8]) -> Result<CommitPayload, ProtocolError> {
     if payload.len() != COMMIT_PAYLOAD_LEN {
-        return Err(malformed("commit payload", 0, format!("expected {COMMIT_PAYLOAD_LEN} bytes, got {}", payload.len())).await);
+        return Err(ProtocolError::Malformed { what: "commit payload", offset: 0, detail: format!("expected {COMMIT_PAYLOAD_LEN} bytes, got {}", payload.len()) });
     }
     let commit_seq = u64::from_le_bytes(payload[0..8].try_into().unwrap());
     let prev_commit_offset = u64::from_le_bytes(payload[8..16].try_into().unwrap());
@@ -464,6 +459,29 @@ impl<S: PackSink> SprWriter<S> {
         Ok(Self { sink, running_chain_hash: chain_0, pending_chain_hasher, pending_records_len: 0, pending_record_count: 0, next_commit_seq: 1, last_commit_offset: None })
     }
 
+    /// ▶️ Resumes without rewriting a header or committed byte. The caller must retain the same
+    /// fully verified prefix in the sink and its exclusive storage authority; the consumed span is
+    /// protocol metadata, not permission to append to arbitrary storage.
+    pub async fn resume_verified(sink: S, span: retained::VerifiedSprSpan) -> Result<Self, ProtocolError> {
+        let position = sink.position().await;
+        if position != span.end() {
+            return Err(malformed("verified append position", position, "sink must end at the verified committed prefix").await);
+        }
+        let next_commit_seq = span.sequence().checked_add(1).ok_or(ProtocolError::LimitExceeded("commit sequence exhausted"))?;
+        let running_chain_hash = *span.chain();
+        let mut pending_chain_hasher = semio_framework_hash::Hasher::new();
+        pending_chain_hasher.update(&running_chain_hash);
+        Ok(Self {
+            sink,
+            running_chain_hash,
+            pending_chain_hasher,
+            pending_records_len: 0,
+            pending_record_count: 0,
+            next_commit_seq,
+            last_commit_offset: (span.sequence() != 0).then_some(span.commit_offset()),
+        })
+    }
+
     /// @emoji 📍️ Current absolute write position — the offset the next record/commit will start at.
     pub async fn position(&self) -> u64 {
         self.sink.position().await
@@ -511,6 +529,7 @@ impl<S: PackSink> SprWriter<S> {
     /// header, for the first).await: `chain_n = blake3(chain_{n-1} || digest_1 || .. || digest_k)`.
     /// Returns the commit frame's start offset.
     pub async fn commit(&mut self) -> Result<u64, ProtocolError> {
+        let next_commit_seq = self.next_commit_seq.checked_add(1).ok_or(ProtocolError::LimitExceeded("commit sequence exhausted"))?;
         let offset = self.sink.position().await;
         let chain_hash = *self.pending_chain_hasher.finalize().as_bytes();
 
@@ -525,7 +544,7 @@ impl<S: PackSink> SprWriter<S> {
         self.pending_chain_hasher.update(&chain_hash);
         self.pending_records_len = 0;
         self.pending_record_count = 0;
-        self.next_commit_seq += 1;
+        self.next_commit_seq = next_commit_seq;
         self.last_commit_offset = Some(offset);
         Ok(offset)
     }
@@ -661,7 +680,7 @@ async fn try_fast_path<S: PackSource>(source: &S, total_len: u64, limits: &Proto
     if kind != crate::REC_COMMIT || frame_len != COMMIT_FRAME_LEN || flags & FRAME_FLAG_CRITICAL == 0 {
         return None;
     }
-    let mut current = parse_commit_payload(&payload).await.ok()?;
+    let mut current = parse_commit_payload(&payload).ok()?;
     let last_commit_seq = current.commit_seq;
     let last_commit_offset = tail_offset;
     let mut num_commits = 1u64;
@@ -683,7 +702,7 @@ async fn try_fast_path<S: PackSource>(source: &S, total_len: u64, limits: &Proto
         if prev_kind != crate::REC_COMMIT || prev_flags & FRAME_FLAG_CRITICAL == 0 {
             return None;
         }
-        let prev_commit = parse_commit_payload(&prev_payload).await.ok()?;
+        let prev_commit = parse_commit_payload(&prev_payload).ok()?;
         if prev_commit.commit_seq != current.commit_seq - 1 {
             return None;
         }
@@ -736,7 +755,7 @@ pub async fn recover<S: PackSource>(source: &S, limits: &ProtocolLimits, mode: R
                 pos += frame_len;
                 last_valid_end = pos;
                 if kind == crate::REC_COMMIT {
-                    if let Ok(commit) = parse_commit_payload(&payload).await {
+                    if let Ok(commit) = parse_commit_payload(&payload) {
                         last_commit_seq = commit.commit_seq;
                         last_commit_offset = frame_start;
                         last_commit_end = pos;
@@ -987,7 +1006,7 @@ mod tests {
         }
         let expected_chain_1 = *semio_framework_hash::hash(&concat).as_bytes();
 
-        let commit = parse_commit_payload(commit_frame.unwrap().stored).await.unwrap();
+        let commit = parse_commit_payload(commit_frame.unwrap().stored).unwrap();
         assert_eq!(commit.commit_seq, 1);
         assert_eq!(commit.prev_commit_offset, 0);
         assert_eq!(commit.record_count, 2);
@@ -1007,7 +1026,7 @@ mod tests {
         let mut reverse = ReverseFrameCursor::at_end(&bytes).await;
         let last = reverse.prev_frame().await.unwrap().unwrap();
         assert_eq!(last.offset, commit_2_offset);
-        let commit_2 = parse_commit_payload(last.stored).await.unwrap();
+        let commit_2 = parse_commit_payload(last.stored).unwrap();
         assert_eq!(commit_2.commit_seq, 2);
         assert_eq!(commit_2.prev_commit_offset, commit_1_offset);
     }
@@ -1030,7 +1049,7 @@ mod tests {
             }
         }
         let commit_frame = commit_frame.unwrap();
-        let payload: CommitPayload = parse_commit_payload(commit_frame.payload().await).await.unwrap();
+        let payload: CommitPayload = parse_commit_payload(commit_frame.payload().await).unwrap();
         assert_eq!(payload.commit_seq, 1);
         assert_eq!(payload.record_count, 2);
     }

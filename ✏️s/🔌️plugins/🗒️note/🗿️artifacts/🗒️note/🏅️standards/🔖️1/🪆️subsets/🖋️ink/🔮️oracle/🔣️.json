@@ -25,7 +25,7 @@
           "scenarios": [
             {
               "id": "thickens-the-sketch-stroke",
-              "directoryName": "🦉️thickens-the-sketch-stroke"
+              "directoryName": "🖊️thickens-the-sketch-stroke"
             }
           ]
         },
@@ -36,7 +36,7 @@
           "scenarios": [
             {
               "id": "enlarges-eraser",
-              "directoryName": "🟦️enlarges-eraser"
+              "directoryName": "🧽️enlarges-eraser"
             }
           ]
         },
@@ -47,7 +47,7 @@
           "scenarios": [
             {
               "id": "thickens-pencil",
-              "directoryName": "🪄️thickens-pencil"
+              "directoryName": "✏️thickens-pencil"
             }
           ]
         },
@@ -58,7 +58,7 @@
           "scenarios": [
             {
               "id": "redraws-the-sketch-polyline",
-              "directoryName": "🐺️redraws-the-sketch-polyline"
+              "directoryName": "🎨️redraws-the-sketch-polyline"
             }
           ]
         }

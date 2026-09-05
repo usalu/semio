@@ -1,0 +1,11 @@
+{
+  "schema": "wal-readable-segment-capacity-v1",
+  "maxSegmentBytes": 507904,
+  "payloadBytes": 250000,
+  "exactPayloadBytes": 507645,
+  "oversizedPayloadBytes": 507646,
+  "cases": [
+    { "durability": "fsync", "segments": [0, 0, 1], "lengths": [500389, 250291] },
+    { "durability": "memory", "segments": [0, 0, 1], "lengths": [500314, 250291] }
+  ]
+}

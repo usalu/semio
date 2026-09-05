@@ -74,7 +74,7 @@ pub mod artifacts {
 
     #[path = "."]
     pub mod iso16757 {
-        #[path = "../../🗿️artifacts/📓️iso16757/🦀️.rs"]
+        #[path = "../../🗿️artifacts/📇️iso16757/🦀️.rs"]
         mod component;
         pub use component::*;
 
@@ -88,250 +88,250 @@ pub mod artifacts {
                     pub mod any {
                         #[path = "."]
                         pub mod schema {
-                            #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
+                            #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
                             mod component;
                             pub use component::*;
                             #[path = "."]
                             pub mod snapshot {
-                                #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
                                 pub mod binary;
-                                #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
                                 pub mod text;
                             }
                             #[path = "."]
                             pub mod inferences {
-                                #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
                                 pub mod binary;
-                                #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
                                 pub mod text;
                                 #[path = "."]
                                 pub mod outline {
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                             }
                             #[path = "."]
                             pub mod diff {
-                                #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
                                 pub mod text;
                                 pub use text::*;
-                                #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
                                 pub mod binary;
                             }
                             #[path = "."]
                             pub mod mutations {
-                                #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                                 pub mod binary;
-                                #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
                                 pub mod text;
 
                                 #[path = "."]
                                 pub mod remove_selection_constraint {
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️remove-selection-constraint/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔓️remove-selection-constraint/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️remove-selection-constraint/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔓️remove-selection-constraint/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️remove-selection-constraint/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔓️remove-selection-constraint/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                 }
                                 #[path = "."]
                                 pub mod rename_product {
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️rename-product/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-product/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️rename-product/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-product/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️rename-product/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-product/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                 }
                                 #[path = "."]
                                 pub mod rename_product_group {
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿rename-product-group/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rename-product-group/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿rename-product-group/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rename-product-group/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿rename-product-group/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rename-product-group/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                 }
                                 #[path = "."]
                                 pub mod add_selection_constraint {
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛁add-selection-constraint/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️add-selection-constraint/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛁add-selection-constraint/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️add-selection-constraint/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛁add-selection-constraint/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️add-selection-constraint/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                 }
                                 #[path = "."]
                                 pub mod remove_part_number_input {
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌿remove-part-number-input/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️remove-part-number-input/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌿remove-part-number-input/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️remove-part-number-input/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌿remove-part-number-input/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️remove-part-number-input/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                 }
                                 #[path = "."]
                                 pub mod create_product_group {
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍀create-product-group/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️create-product-group/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍀create-product-group/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️create-product-group/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍀create-product-group/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️create-product-group/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                 }
                                 #[path = "."]
                                 pub mod create_property_definition {
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌾create-property-definition/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️create-property-definition/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌾create-property-definition/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️create-property-definition/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌾create-property-definition/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️create-property-definition/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                 }
                                 #[path = "."]
                                 pub mod create_subject {
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌵create-subject/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️create-subject/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌵create-subject/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️create-subject/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌵create-subject/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️create-subject/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                 }
                                 #[path = "."]
                                 pub mod change_selection_class {
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌴change-selection-class/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️change-selection-class/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌴change-selection-class/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️change-selection-class/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌴change-selection-class/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️change-selection-class/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                 }
                                 #[path = "."]
                                 pub mod rename_manufacturer {
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳rename-manufacturer/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️rename-manufacturer/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳rename-manufacturer/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️rename-manufacturer/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳rename-manufacturer/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️rename-manufacturer/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                 }
                                 #[path = "."]
                                 pub mod rename_catalogue {
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌲rename-catalogue/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📇️rename-catalogue/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌲rename-catalogue/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📇️rename-catalogue/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌲rename-catalogue/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📇️rename-catalogue/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                 }
                                 #[path = "."]
                                 pub mod create_product {
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍁create-product/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️create-product/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍁create-product/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️create-product/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍁create-product/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️create-product/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                 }
                                 #[path = "."]
                                 pub mod replace_part_number_rule {
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍂replace-part-number-rule/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️replace-part-number-rule/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍂replace-part-number-rule/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️replace-part-number-rule/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍂replace-part-number-rule/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️replace-part-number-rule/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                 }
                                 #[path = "."]
                                 pub mod change_exchange_process {
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃change-exchange-process/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-exchange-process/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃change-exchange-process/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-exchange-process/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃change-exchange-process/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-exchange-process/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                 }
                                 #[path = "."]
                                 pub mod change_part_number_input {
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱change-part-number-input/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-part-number-input/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱change-part-number-input/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-part-number-input/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱change-part-number-input/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-part-number-input/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                 }
                                 #[path = "."]
                                 pub mod update_script_limits {
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌷update-script-limits/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️update-script-limits/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌷update-script-limits/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️update-script-limits/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌷update-script-limits/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️update-script-limits/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                 }
                                 #[path = "."]
                                 pub mod delete_product {
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌸delete-product/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-product/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌸delete-product/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-product/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌸delete-product/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-product/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                 }
                                 #[path = "."]
                                 pub mod delete_product_group {
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌹delete-product-group/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-product-group/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌹delete-product-group/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-product-group/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌹delete-product-group/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-product-group/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                 }
                                 #[path = "."]
                                 pub mod delete_property_definition {
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌺delete-property-definition/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️delete-property-definition/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌺delete-property-definition/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️delete-property-definition/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌺delete-property-definition/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️delete-property-definition/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                 }
                                 #[path = "."]
                                 pub mod delete_subject {
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌻delete-subject/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-subject/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌻delete-subject/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-subject/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌻delete-subject/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-subject/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                 }
                                 #[path = "."]
                                 pub mod change_selection_series {
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌼change-selection-series/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️change-selection-series/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌼change-selection-series/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️change-selection-series/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌼change-selection-series/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️change-selection-series/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                 }
                             }
                         }
                         #[path = "."]
                         pub mod io {
-                            #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
+                            #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
                             mod component;
                             pub use component::*;
                         }
@@ -409,7 +409,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
+                #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -417,7 +417,7 @@ pub mod artifacts {
     }
     #[path = "."]
     pub mod vdi3805 {
-        #[path = "../../🗿️artifacts/📔️vdi3805/🦀️.rs"]
+        #[path = "../../🗿️artifacts/🏭️vdi3805/🦀️.rs"]
         mod component;
         pub use component::*;
 
@@ -431,243 +431,243 @@ pub mod artifacts {
                     pub mod any {
                         #[path = "."]
                         pub mod schema {
-                            #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
+                            #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
                             mod component;
                             pub use component::*;
                             #[path = "."]
                             pub mod snapshot {
-                                #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
                                 pub mod binary;
-                                #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
                                 pub mod text;
                             }
                             #[path = "."]
                             pub mod inferences {
-                                #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
                                 pub mod binary;
-                                #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
                                 pub mod text;
                                 #[path = "."]
                                 pub mod outline {
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                             }
                             #[path = "."]
                             pub mod diff {
-                                #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
                                 pub mod text;
                                 pub use text::*;
-                                #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
                                 pub mod binary;
                             }
                             #[path = "."]
                             pub mod mutations {
-                                #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                                 pub mod binary;
-                                #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
                                 pub mod text;
 
                                 #[path = "."]
                                 pub mod replace_product_configuration {
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗻replace-product-configuration/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️replace-product-configuration/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗻replace-product-configuration/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️replace-product-configuration/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗻replace-product-configuration/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️replace-product-configuration/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod remove_geometry_connection {
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏔️remove-geometry-connection/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️remove-geometry-connection/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏔️remove-geometry-connection/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️remove-geometry-connection/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏔️remove-geometry-connection/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️remove-geometry-connection/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod remove_edition_profile {
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛰️remove-edition-profile/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-edition-profile/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛰️remove-edition-profile/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-edition-profile/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛰️remove-edition-profile/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-edition-profile/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod update_manufacturer_file {
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏕️update-manufacturer-file/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️update-manufacturer-file/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏕️update-manufacturer-file/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️update-manufacturer-file/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏕️update-manufacturer-file/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️update-manufacturer-file/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod rename_product {
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏖️rename-product/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-product/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏖️rename-product/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-product/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏖️rename-product/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-product/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_correction_as_of {
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏜️change-correction-as-of/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️change-correction-as-of/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏜️change-correction-as-of/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️change-correction-as-of/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏜️change-correction-as-of/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️change-correction-as-of/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod create_curve {
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️create-curve/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️create-curve/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️create-curve/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️create-curve/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️create-curve/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️create-curve/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod replace_curve_points {
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏞️replace-curve-points/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️replace-curve-points/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏞️replace-curve-points/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️replace-curve-points/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏞️replace-curve-points/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️replace-curve-points/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod resize_geometry {
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏟️resize-geometry/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-geometry/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏟️resize-geometry/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-geometry/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏟️resize-geometry/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-geometry/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod create_product {
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪵create-product/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️create-product/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪵create-product/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️create-product/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪵create-product/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️create-product/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_edition_profile {
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐝change-edition-profile/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️change-edition-profile/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐝change-edition-profile/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️change-edition-profile/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐝change-edition-profile/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️change-edition-profile/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod add_geometry_connection {
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐞add-geometry-connection/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️add-geometry-connection/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐞add-geometry-connection/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️add-geometry-connection/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐞add-geometry-connection/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️add-geometry-connection/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_strict_mode {
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦋change-strict-mode/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️change-strict-mode/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦋change-strict-mode/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️change-strict-mode/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦋change-strict-mode/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️change-strict-mode/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod replace_geometry_parameters {
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐌replace-geometry-parameters/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️replace-geometry-parameters/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐌replace-geometry-parameters/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️replace-geometry-parameters/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐌replace-geometry-parameters/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️replace-geometry-parameters/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod delete_curve {
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐢delete-curve/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️delete-curve/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐢delete-curve/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️delete-curve/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐢delete-curve/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️delete-curve/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod delete_geometry {
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐬delete-geometry/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮️delete-geometry/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐬delete-geometry/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮️delete-geometry/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐬delete-geometry/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮️delete-geometry/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod delete_product {
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐳delete-product/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-product/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐳delete-product/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-product/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐳delete-product/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-product/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod update_limits {
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦈update-limits/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️update-limits/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦈update-limits/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️update-limits/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦈update-limits/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️update-limits/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod create_geometry {
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦭create-geometry/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️create-geometry/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦭create-geometry/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️create-geometry/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦭create-geometry/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️create-geometry/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
@@ -675,7 +675,7 @@ pub mod artifacts {
                         }
                         #[path = "."]
                         pub mod io {
-                            #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
+                            #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
                             mod component;
                             pub use component::*;
                         }
@@ -753,7 +753,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
+                #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -2691,31 +2691,31 @@ pub mod artifacts {
                                 }
                                 #[path = "."]
                                 pub mod change_a_c_mm2 {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐞change-ac-mm2/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-ac-mm2/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐞change-ac-mm2/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-ac-mm2/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐞change-ac-mm2/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-ac-mm2/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_anchor_a_s_mm2 {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦋change-anchor-as-mm2/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️change-anchor-as-mm2/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦋change-anchor-as-mm2/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️change-anchor-as-mm2/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦋change-anchor-as-mm2/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️change-anchor-as-mm2/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_anchor_c1_mm {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐌change-anchor-c1-mm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️change-anchor-c1-mm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐌change-anchor-c1-mm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️change-anchor-c1-mm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐌change-anchor-c1-mm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️change-anchor-c1-mm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
@@ -2741,11 +2741,11 @@ pub mod artifacts {
                                 }
                                 #[path = "."]
                                 pub mod change_anchor_f_uk_mpa {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐳change-anchor-f-uk-mpa/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💪️change-anchor-f-uk-mpa/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐳change-anchor-f-uk-mpa/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💪️change-anchor-f-uk-mpa/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐳change-anchor-f-uk-mpa/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💪️change-anchor-f-uk-mpa/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
@@ -2761,101 +2761,101 @@ pub mod artifacts {
                                 }
                                 #[path = "."]
                                 pub mod change_anchor_h_ef_mm {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦭change-anchor-h-ef-mm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓️change-anchor-h-ef-mm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦭change-anchor-h-ef-mm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓️change-anchor-h-ef-mm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦭change-anchor-h-ef-mm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓️change-anchor-h-ef-mm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_anchor_n_ed_kn {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐊change-anchor-n-ed-kn/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️change-anchor-n-ed-kn/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐊change-anchor-n-ed-kn/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️change-anchor-n-ed-kn/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐊change-anchor-n-ed-kn/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️change-anchor-n-ed-kn/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_anchor_v_ed_kn {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦎change-anchor-v-ed-kn/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-anchor-v-ed-kn/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦎change-anchor-v-ed-kn/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-anchor-v-ed-kn/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦎change-anchor-v-ed-kn/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-anchor-v-ed-kn/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_a_s_mm2 {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐍change-as-mm2/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜️change-as-mm2/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐍change-as-mm2/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜️change-as-mm2/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐍change-as-mm2/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜️change-as-mm2/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_b_mm {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦂change-b-mm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-b-mm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦂change-b-mm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-b-mm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦂change-b-mm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-b-mm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_bridge_delta_sigma_s_mpa {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦟change-bridge-delta-sigma-s-mpa/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️change-bridge-delta-sigma-s-mpa/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦟change-bridge-delta-sigma-s-mpa/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️change-bridge-delta-sigma-s-mpa/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦟change-bridge-delta-sigma-s-mpa/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️change-bridge-delta-sigma-s-mpa/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_bridge_sigma_c_mpa {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦗change-bridge-sigma-c-mpa/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️change-bridge-sigma-c-mpa/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦗change-bridge-sigma-c-mpa/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️change-bridge-sigma-c-mpa/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦗change-bridge-sigma-c-mpa/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️change-bridge-sigma-c-mpa/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_d_mm {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕷️change-d-mm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-d-mm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕷️change-d-mm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-d-mm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕷️change-d-mm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-d-mm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_f_ck {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐜change-f-ck/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨️change-f-ck/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐜change-f-ck/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨️change-f-ck/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐜change-f-ck/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨️change-f-ck/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_f_yk {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦔change-f-yk/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-f-yk/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦔change-f-yk/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-f-yk/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦔change-f-yk/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-f-yk/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
@@ -2871,121 +2871,121 @@ pub mod artifacts {
                                 }
                                 #[path = "."]
                                 pub mod change_hd_over_h {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦉change-hd-over-h/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊️change-hd-over-h/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦉change-hd-over-h/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊️change-hd-over-h/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦉change-hd-over-h/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊️change-hd-over-h/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_liquid_e_s_mpa {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐴change-liquid-es-mpa/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️change-liquid-es-mpa/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐴change-liquid-es-mpa/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️change-liquid-es-mpa/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐴change-liquid-es-mpa/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️change-liquid-es-mpa/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_liquid_f_ct_eff_mpa {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐎change-liquid-f-ct-eff-mpa/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️change-liquid-f-ct-eff-mpa/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐎change-liquid-f-ct-eff-mpa/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️change-liquid-f-ct-eff-mpa/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐎change-liquid-f-ct-eff-mpa/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️change-liquid-f-ct-eff-mpa/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_liquid_rho_p_eff {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦄change-liquid-rho-p-eff/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️change-liquid-rho-p-eff/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦄change-liquid-rho-p-eff/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️change-liquid-rho-p-eff/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦄change-liquid-rho-p-eff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️change-liquid-rho-p-eff/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_liquid_sigma_s_mpa {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐑change-liquid-sigma-s-mpa/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-liquid-sigma-s-mpa/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐑change-liquid-sigma-s-mpa/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-liquid-sigma-s-mpa/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐑change-liquid-sigma-s-mpa/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-liquid-sigma-s-mpa/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_liquid_s_r_max_mm {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐐change-liquid-sr-max-mm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️change-liquid-sr-max-mm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐐change-liquid-sr-max-mm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️change-liquid-sr-max-mm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐐change-liquid-sr-max-mm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️change-liquid-sr-max-mm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_m_ed_knm {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐮change-m-ed-knm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-m-ed-knm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐮change-m-ed-knm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-m-ed-knm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐮change-m-ed-knm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-m-ed-knm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_n_ed_kn {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐷change-n-ed-kn/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-n-ed-kn/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐷change-n-ed-kn/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-n-ed-kn/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐷change-n-ed-kn/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-n-ed-kn/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_p_kn {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐗change-p-kn/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏹️change-p-kn/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐗change-p-kn/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏹️change-p-kn/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐗change-p-kn/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏹️change-p-kn/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_provided_axis_distance_mm {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦌change-provided-axis-distance-mm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-provided-axis-distance-mm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦌change-provided-axis-distance-mm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-provided-axis-distance-mm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦌change-provided-axis-distance-mm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-provided-axis-distance-mm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_rho_l {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘change-rho-l/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-rho-l/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘change-rho-l/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-rho-l/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘change-rho-l/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-rho-l/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_span_m {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦏change-span-m/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️change-span-m/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦏change-span-m/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️change-span-m/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦏change-span-m/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️change-span-m/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
@@ -3001,11 +3001,11 @@ pub mod artifacts {
                                 }
                                 #[path = "."]
                                 pub mod change_udl_kn_m {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐪change-udl-kn-m/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-udl-kn-m/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐪change-udl-kn-m/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-udl-kn-m/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐪change-udl-kn-m/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-udl-kn-m/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
@@ -3021,11 +3021,11 @@ pub mod artifacts {
                                 }
                                 #[path = "."]
                                 pub mod change_v_ed_kn {
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦒change-v-ed-kn/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️change-v-ed-kn/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦒change-v-ed-kn/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️change-v-ed-kn/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦒change-v-ed-kn/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️change-v-ed-kn/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
@@ -3787,7 +3787,7 @@ pub mod artifacts {
     }
     #[path = "."]
     pub mod en1995 {
-        #[path = "../../🗿️artifacts/📘️en1995/🦀️.rs"]
+        #[path = "../../🗿️artifacts/🪵️en1995/🦀️.rs"]
         mod component;
         pub use component::*;
 
@@ -3801,252 +3801,252 @@ pub mod artifacts {
                     pub mod any {
                         #[path = "."]
                         pub mod schema {
-                            #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
+                            #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
                             mod component;
                             pub use component::*;
                             #[path = "."]
                             pub mod snapshot {
-                                #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
                                 pub mod binary;
-                                #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
                                 pub mod text;
                             }
                             #[path = "."]
                             pub mod inferences {
-                                #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
                                 pub mod binary;
-                                #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
                                 pub mod text;
                                 #[path = "."]
                                 pub mod outline {
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                             }
                             #[path = "."]
                             pub mod diff {
-                                #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
                                 pub mod text;
                                 pub use text::*;
-                                #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
                                 pub mod binary;
                             }
                             #[path = "."]
                             pub mod mutations {
-                                #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                                 pub mod binary;
-                                #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
                                 pub mod text;
                                 #[path = "."]
                                 pub mod set_snapshot {
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-annex/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-annex/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-annex/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_a_ef_mm2 {
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝change-a-ef-mm2/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️change-a-ef-mm2/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝change-a-ef-mm2/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️change-a-ef-mm2/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝change-a-ef-mm2/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️change-a-ef-mm2/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_a_mm2 {
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣change-a-mm2/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-a-mm2/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣change-a-mm2/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-a-mm2/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣change-a-mm2/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-a-mm2/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_a_vert_m_s2 {
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰change-a-vert-ms2/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦶️change-a-vert-ms2/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰change-a-vert-ms2/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦶️change-a-vert-ms2/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰change-a-vert-ms2/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦶️change-a-vert-ms2/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_b_mm {
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵change-b-mm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-b-mm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵change-b-mm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-b-mm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵change-b-mm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-b-mm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_f_ed_kn {
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧶change-f-ed-kn/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️change-f-ed-kn/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧶change-f-ed-kn/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️change-f-ed-kn/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧶change-f-ed-kn/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️change-f-ed-kn/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_f_c_0_k {
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪡change-fc0-k/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️change-fc0-k/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪡change-fc0-k/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️change-fc0-k/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪡change-fc0-k/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️change-fc0-k/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_fire_duration_min {
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢change-fire-duration-min/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-fire-duration-min/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢change-fire-duration-min/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-fire-duration-min/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢change-fire-duration-min/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-fire-duration-min/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_f_m_k {
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-fmk/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️change-fmk/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-fmk/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️change-fmk/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-fmk/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️change-fmk/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_f_v_k {
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲change-fvk/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-fvk/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲change-fvk/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-fvk/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲change-fvk/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-fvk/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_h_mm {
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪤change-h-mm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-h-mm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪤change-h-mm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-h-mm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪤change-h-mm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-h-mm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_load_duration {
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪒change-load-duration/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳️change-load-duration/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪒change-load-duration/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳️change-load-duration/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪒change-load-duration/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳️change-load-duration/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_m_crit_knm {
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪥change-m-crit-knm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚠️change-m-crit-knm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪥change-m-crit-knm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚠️change-m-crit-knm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪥change-m-crit-knm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚠️change-m-crit-knm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_m_ed_knm {
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧴change-m-ed-knm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-m-ed-knm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧴change-m-ed-knm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-m-ed-knm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧴change-m-ed-knm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-m-ed-knm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_n_cycles_bridge {
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧼change-n-cycles-bridge/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️change-n-cycles-bridge/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧼change-n-cycles-bridge/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️change-n-cycles-bridge/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧼change-n-cycles-bridge/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️change-n-cycles-bridge/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_n_ed_kn {
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽change-n-ed-kn/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-n-ed-kn/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽change-n-ed-kn/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-n-ed-kn/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽change-n-ed-kn/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-n-ed-kn/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_section_depth_mm {
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠change-section-depth-mm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-section-depth-mm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠change-section-depth-mm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-section-depth-mm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠change-section-depth-mm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-section-depth-mm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_service_class {
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹change-service-class/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌧️change-service-class/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹change-service-class/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌧️change-service-class/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹change-service-class/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌧️change-service-class/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_v_ed_kn {
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺change-v-ed-kn/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️change-v-ed-kn/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺change-v-ed-kn/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️change-v-ed-kn/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺change-v-ed-kn/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️change-v-ed-kn/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_w_mm3 {
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪑change-w-mm3/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️change-w-mm3/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪑change-w-mm3/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️change-w-mm3/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪑change-w-mm3/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️change-w-mm3/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
@@ -4054,7 +4054,7 @@ pub mod artifacts {
                         }
                         #[path = "."]
                         pub mod io {
-                            #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
+                            #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
                             mod component;
                             pub use component::*;
                         }
@@ -4130,7 +4130,7 @@ pub mod artifacts {
     }
     #[path = "."]
     pub mod en1996 {
-        #[path = "../../🗿️artifacts/📘️en1996/🦀️.rs"]
+        #[path = "../../🗿️artifacts/🪨️en1996/🦀️.rs"]
         mod component;
         pub use component::*;
 
@@ -4144,272 +4144,272 @@ pub mod artifacts {
                     pub mod any {
                         #[path = "."]
                         pub mod schema {
-                            #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
+                            #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
                             mod component;
                             pub use component::*;
                             #[path = "."]
                             pub mod snapshot {
-                                #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
                                 pub mod binary;
-                                #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
                                 pub mod text;
                             }
                             #[path = "."]
                             pub mod inferences {
-                                #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
                                 pub mod binary;
-                                #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
                                 pub mod text;
                                 #[path = "."]
                                 pub mod outline {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                             }
                             #[path = "."]
                             pub mod diff {
-                                #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
                                 pub mod text;
                                 pub use text::*;
-                                #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
                                 pub mod binary;
                             }
                             #[path = "."]
                             pub mod mutations {
-                                #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                                 pub mod binary;
-                                #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
                                 pub mod text;
                                 #[path = "."]
                                 pub mod change_m_ed_knm {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-m-ed-knm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-m-ed-knm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-m-ed-knm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-m-ed-knm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-m-ed-knm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-m-ed-knm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_n_ed_kn {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔽change-n-ed-kn/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-n-ed-kn/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔽change-n-ed-kn/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-n-ed-kn/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔽change-n-ed-kn/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-n-ed-kn/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_v_ed_kn {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼change-v-ed-kn/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️change-v-ed-kn/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼change-v-ed-kn/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️change-v-ed-kn/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼change-v-ed-kn/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️change-v-ed-kn/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_h_ed_kn {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-h-ed-kn/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-h-ed-kn/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-h-ed-kn/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-h-ed-kn/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-h-ed-kn/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-h-ed-kn/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_z_mm3 {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➡️change-z-mm3/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️change-z-mm3/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➡️change-z-mm3/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️change-z-mm3/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➡️change-z-mm3/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️change-z-mm3/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_area_mm2 {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬅️change-area-mm2/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-area-mm2/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬅️change-area-mm2/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-area-mm2/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬅️change-area-mm2/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-area-mm2/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_shear_area_mm2 {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏change-shear-area-mm2/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️change-shear-area-mm2/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏change-shear-area-mm2/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️change-shear-area-mm2/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏change-shear-area-mm2/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️change-shear-area-mm2/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_f_k_mpa {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩change-fk-mpa/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️change-fk-mpa/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩change-fk-mpa/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️change-fk-mpa/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩change-fk-mpa/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️change-fk-mpa/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_f_vk_mpa {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-f-vk-mpa/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-f-vk-mpa/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-f-vk-mpa/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-f-vk-mpa/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-f-vk-mpa/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-f-vk-mpa/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_annex {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔨change-annex/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔨change-annex/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔨change-annex/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_masonry_class {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️change-masonry-class/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-masonry-class/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️change-masonry-class/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-masonry-class/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️change-masonry-class/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-masonry-class/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_design_situation {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-design-situation/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎭️change-design-situation/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-design-situation/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎭️change-design-situation/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-design-situation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎭️change-design-situation/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_mu {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-mu/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-mu/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-mu/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-mu/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-mu/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-mu/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_wall_thickness_mm {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢change-wall-thickness-mm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️change-wall-thickness-mm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢change-wall-thickness-mm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️change-wall-thickness-mm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢change-wall-thickness-mm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️change-wall-thickness-mm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_fire_resistance_min {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊change-fire-resistance-min/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-fire-resistance-min/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊change-fire-resistance-min/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-fire-resistance-min/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊change-fire-resistance-min/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-fire-resistance-min/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_unit {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-unit/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️change-unit/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-unit/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️change-unit/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-unit/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️change-unit/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_exposure {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧change-exposure/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-exposure/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧change-exposure/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-exposure/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧change-exposure/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-exposure/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_mortar {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-mortar/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️change-mortar/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-mortar/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️change-mortar/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-mortar/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️change-mortar/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_bed_joint_thickness_mm {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥change-bed-joint-thickness-mm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥪️change-bed-joint-thickness-mm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥change-bed-joint-thickness-mm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥪️change-bed-joint-thickness-mm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥change-bed-joint-thickness-mm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥪️change-bed-joint-thickness-mm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_storeys {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️change-storeys/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-storeys/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️change-storeys/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-storeys/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️change-storeys/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-storeys/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_h_ef_mm {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡change-h-ef-mm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-h-ef-mm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡change-h-ef-mm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-h-ef-mm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡change-h-ef-mm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-h-ef-mm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_t_ef_mm {
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆change-t-ef-mm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-t-ef-mm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆change-t-ef-mm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-t-ef-mm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆change-t-ef-mm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-t-ef-mm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
@@ -4417,7 +4417,7 @@ pub mod artifacts {
                         }
                         #[path = "."]
                         pub mod io {
-                            #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
+                            #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
                             mod component;
                             pub use component::*;
                         }
@@ -4493,7 +4493,7 @@ pub mod artifacts {
     }
     #[path = "."]
     pub mod en1997 {
-        #[path = "../../🗿️artifacts/📘️en1997/🦀️.rs"]
+        #[path = "../../🗿️artifacts/🌍️en1997/🦀️.rs"]
         mod component;
         pub use component::*;
 
@@ -4507,272 +4507,272 @@ pub mod artifacts {
                     pub mod any {
                         #[path = "."]
                         pub mod schema {
-                            #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
+                            #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
                             mod component;
                             pub use component::*;
                             #[path = "."]
                             pub mod snapshot {
-                                #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
                                 pub mod binary;
-                                #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
                                 pub mod text;
                             }
                             #[path = "."]
                             pub mod inferences {
-                                #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
                                 pub mod binary;
-                                #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
                                 pub mod text;
                                 #[path = "."]
                                 pub mod outline {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                             }
                             #[path = "."]
                             pub mod diff {
-                                #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
                                 pub mod text;
                                 pub use text::*;
-                                #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
                                 pub mod binary;
                             }
                             #[path = "."]
                             pub mod mutations {
-                                #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                                 pub mod binary;
-                                #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
                                 pub mod text;
                                 #[path = "."]
                                 pub mod change_v_ed_kn {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪒change-v-ed-kn/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-v-ed-kn/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪒change-v-ed-kn/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-v-ed-kn/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪒change-v-ed-kn/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-v-ed-kn/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_h_ed_kn {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪥change-h-ed-kn/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➡️change-h-ed-kn/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪥change-h-ed-kn/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➡️change-h-ed-kn/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪥change-h-ed-kn/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➡️change-h-ed-kn/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_footing_area_m2 {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧴change-footing-area-m2/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦶️change-footing-area-m2/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧴change-footing-area-m2/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦶️change-footing-area-m2/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧴change-footing-area-m2/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦶️change-footing-area-m2/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_phi_deg {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧼change-phi-deg/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-phi-deg/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧼change-phi-deg/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-phi-deg/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧼change-phi-deg/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-phi-deg/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_c_kpa {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽change-c-kpa/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-c-kpa/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽change-c-kpa/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-c-kpa/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽change-c-kpa/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-c-kpa/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_gamma_kn_m3 {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠change-gamma-kn-m3/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-gamma-kn-m3/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠change-gamma-kn-m3/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-gamma-kn-m3/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠change-gamma-kn-m3/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-gamma-kn-m3/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_b_m {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹change-bm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-bm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹change-bm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-bm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹change-bm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-bm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_d_f_m {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺change-dfm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-dfm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺change-dfm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-dfm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺change-dfm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-dfm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_e_s_mpa {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪑change-es-mpa/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️change-es-mpa/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪑change-es-mpa/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️change-es-mpa/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪑change-es-mpa/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️change-es-mpa/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_nu {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪞change-nu/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-nu/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪞change-nu/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-nu/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪞change-nu/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-nu/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_design_approach {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️change-design-approach/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-design-approach/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️change-design-approach/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-design-approach/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️change-design-approach/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-design-approach/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_annex {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️change-annex/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️change-annex/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️change-annex/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_settlement_limit_mm {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿change-settlement-limit-mm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️change-settlement-limit-mm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿change-settlement-limit-mm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️change-settlement-limit-mm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿change-settlement-limit-mm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️change-settlement-limit-mm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_n_pile_ed_kn {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛁change-n-pile-ed-kn/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-n-pile-ed-kn/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛁change-n-pile-ed-kn/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-n-pile-ed-kn/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛁change-n-pile-ed-kn/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-n-pile-ed-kn/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_alpha_s {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌿change-alpha-s/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-alpha-s/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌿change-alpha-s/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-alpha-s/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌿change-alpha-s/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-alpha-s/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_pile_d_m {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍀change-pile-dm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭕️change-pile-dm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍀change-pile-dm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭕️change-pile-dm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍀change-pile-dm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭕️change-pile-dm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_q_s_kpa {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌾change-qs-kpa/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪵️change-qs-kpa/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌾change-qs-kpa/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪵️change-qs-kpa/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌾change-qs-kpa/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪵️change-qs-kpa/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_pile_l_m {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌵change-pile-lm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-pile-lm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌵change-pile-lm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-pile-lm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌵change-pile-lm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-pile-lm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_q_b_kpa {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌴change-qb-kpa/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️change-qb-kpa/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌴change-qb-kpa/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️change-qb-kpa/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌴change-qb-kpa/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️change-qb-kpa/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_pile_base_area_m2 {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳change-pile-base-area-m2/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘️change-pile-base-area-m2/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳change-pile-base-area-m2/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘️change-pile-base-area-m2/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳change-pile-base-area-m2/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘️change-pile-base-area-m2/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_pile_n_profiles {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌲change-pile-n-profiles/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️change-pile-n-profiles/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌲change-pile-n-profiles/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️change-pile-n-profiles/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌲change-pile-n-profiles/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️change-pile-n-profiles/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_z_investigated_m {
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍁change-z-investigated-m/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎️change-z-investigated-m/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍁change-z-investigated-m/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎️change-z-investigated-m/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍁change-z-investigated-m/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎️change-z-investigated-m/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
@@ -4780,7 +4780,7 @@ pub mod artifacts {
                         }
                         #[path = "."]
                         pub mod io {
-                            #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
+                            #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
                             mod component;
                             pub use component::*;
                         }
@@ -4858,7 +4858,7 @@ pub mod artifacts {
         pub mod examples {
             #[path = "."]
             pub mod demo {
-                #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
+                #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
                 mod component;
                 pub use component::*;
             }
@@ -5499,7 +5499,7 @@ pub mod artifacts {
     }
     #[path = "."]
     pub mod en1999 {
-        #[path = "../../🗿️artifacts/📘️en1999/🦀️.rs"]
+        #[path = "../../🗿️artifacts/🪶️en1999/🦀️.rs"]
         mod component;
         pub use component::*;
 
@@ -5513,312 +5513,312 @@ pub mod artifacts {
                     pub mod any {
                         #[path = "."]
                         pub mod schema {
-                            #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
+                            #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
                             mod component;
                             pub use component::*;
                             #[path = "."]
                             pub mod snapshot {
-                                #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
                                 pub mod binary;
-                                #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
                                 pub mod text;
                             }
                             #[path = "."]
                             pub mod inferences {
-                                #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
                                 pub mod binary;
-                                #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
                                 pub mod text;
                                 #[path = "."]
                                 pub mod outline {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                             }
                             #[path = "."]
                             pub mod diff {
-                                #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
                                 pub mod text;
                                 pub use text::*;
-                                #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
                                 pub mod binary;
                             }
                             #[path = "."]
                             pub mod mutations {
-                                #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                                 pub mod binary;
-                                #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
                                 pub mod text;
                                 #[path = "."]
                                 pub mod change_n_ed_kn {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦎change-n-ed-kn/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-n-ed-kn/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦎change-n-ed-kn/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-n-ed-kn/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦎change-n-ed-kn/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-n-ed-kn/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_m_ed_knm {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐍change-m-ed-knm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-m-ed-knm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐍change-m-ed-knm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-m-ed-knm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐍change-m-ed-knm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-m-ed-knm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_a_mm2 {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦂change-a-mm2/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-a-mm2/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦂change-a-mm2/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-a-mm2/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦂change-a-mm2/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-a-mm2/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_w_el_mm3 {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦟change-w-el-mm3/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️change-w-el-mm3/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦟change-w-el-mm3/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️change-w-el-mm3/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦟change-w-el-mm3/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️change-w-el-mm3/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_alloy {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦗change-alloy/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚗️change-alloy/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦗change-alloy/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚗️change-alloy/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦗change-alloy/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚗️change-alloy/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_chi {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕷️change-chi/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-chi/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕷️change-chi/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-chi/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕷️change-chi/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-chi/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_i_t_mm4 {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐜change-it-mm4/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️change-it-mm4/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐜change-it-mm4/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️change-it-mm4/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐜change-it-mm4/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️change-it-mm4/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_l_cr_mm {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦔change-l-cr-mm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-l-cr-mm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦔change-l-cr-mm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-l-cr-mm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦔change-l-cr-mm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-l-cr-mm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_theta_c {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦇change-theta-c/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-theta-c/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦇change-theta-c/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-theta-c/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦇change-theta-c/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-theta-c/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_delta_sigma_ed {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦉change-delta-sigma-ed/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-delta-sigma-ed/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦉change-delta-sigma-ed/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-delta-sigma-ed/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦉change-delta-sigma-ed/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-delta-sigma-ed/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_delta_sigma_c {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐴change-delta-sigma-c/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-delta-sigma-c/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐴change-delta-sigma-c/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-delta-sigma-c/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐴change-delta-sigma-c/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-delta-sigma-c/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_fatigue_m {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐎change-fatigue-m/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️change-fatigue-m/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐎change-fatigue-m/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️change-fatigue-m/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐎change-fatigue-m/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️change-fatigue-m/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_n_cycles {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦄change-n-cycles/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️change-n-cycles/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦄change-n-cycles/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️change-n-cycles/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦄change-n-cycles/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️change-n-cycles/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_v_weld_ed_kn {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐑change-v-weld-ed-kn/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-v-weld-ed-kn/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐑change-v-weld-ed-kn/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-v-weld-ed-kn/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐑change-v-weld-ed-kn/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-v-weld-ed-kn/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_weld_throat_mm {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐐change-weld-throat-mm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-weld-throat-mm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐐change-weld-throat-mm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-weld-throat-mm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐐change-weld-throat-mm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-weld-throat-mm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_weld_length_mm {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐮change-weld-length-mm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️change-weld-length-mm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐮change-weld-length-mm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️change-weld-length-mm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐮change-weld-length-mm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️change-weld-length-mm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_beta_w {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐷change-beta-w/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-beta-w/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐷change-beta-w/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-beta-w/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐷change-beta-w/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-beta-w/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_sheet_b_mm {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐗change-sheet-b-mm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-sheet-b-mm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐗change-sheet-b-mm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-sheet-b-mm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐗change-sheet-b-mm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-sheet-b-mm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_sheet_t_mm {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦌change-sheet-t-mm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️change-sheet-t-mm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦌change-sheet-t-mm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️change-sheet-t-mm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦌change-sheet-t-mm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️change-sheet-t-mm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_sheet_k_sigma {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘change-sheet-k-sigma/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-sheet-k-sigma/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘change-sheet-k-sigma/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-sheet-k-sigma/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐘change-sheet-k-sigma/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-sheet-k-sigma/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_sheet_w_el_mm3 {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦏change-sheet-w-el-mm3/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️change-sheet-w-el-mm3/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦏change-sheet-w-el-mm3/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️change-sheet-w-el-mm3/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦏change-sheet-w-el-mm3/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️change-sheet-w-el-mm3/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_sheet_m_ed_knm {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦛change-sheet-m-ed-knm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊️change-sheet-m-ed-knm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦛change-sheet-m-ed-knm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊️change-sheet-m-ed-knm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦛change-sheet-m-ed-knm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊️change-sheet-m-ed-knm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_shell_t_mm {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐪change-shell-t-mm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐚️change-shell-t-mm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐪change-shell-t-mm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐚️change-shell-t-mm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐪change-shell-t-mm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐚️change-shell-t-mm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_shell_r_mm {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐫change-shell-r-mm/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭕️change-shell-r-mm/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐫change-shell-r-mm/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭕️change-shell-r-mm/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐫change-shell-r-mm/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭕️change-shell-r-mm/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_sigma_ed_shell_mpa {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦒change-sigma-ed-shell-mpa/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️change-sigma-ed-shell-mpa/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦒change-sigma-ed-shell-mpa/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️change-sigma-ed-shell-mpa/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦒change-sigma-ed-shell-mpa/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️change-sigma-ed-shell-mpa/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
                                 #[path = "."]
                                 pub mod change_annex {
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦘change-annex/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦘change-annex/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦘change-annex/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                 }
@@ -5826,7 +5826,7 @@ pub mod artifacts {
                         }
                         #[path = "."]
                         pub mod io {
-                            #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
+                            #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
                             mod component;
                             pub use component::*;
                         }
@@ -6191,17 +6191,17 @@ pub mod artifacts {
 pub mod editor {
     #[path = "."]
     pub mod iso16757 {
-        #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
+        #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️.rs"]
+            #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️.rs"]
             pub mod evaluate;
-            #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️.rs"]
+            #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️.rs"]
             pub mod selected_check;
-            #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️.rs"]
+            #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️.rs"]
             pub mod set_snapshot;
         }
 
@@ -6209,15 +6209,15 @@ pub mod editor {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️.rs"]
+                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️.rs"]
                     pub mod inputs;
-                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs"]
+                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs"]
                     pub mod results;
                 }
             }
@@ -6225,27 +6225,27 @@ pub mod editor {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️.rs"]
+            #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️.rs"]
             pub mod catalogue;
-            #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
+            #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
             pub mod document;
-            #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
+            #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
             pub mod inspection;
         }
     }
     #[path = "."]
     pub mod vdi3805 {
-        #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
+        #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️.rs"]
             pub mod evaluate;
-            #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️.rs"]
             pub mod selected_check;
-            #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️.rs"]
             pub mod set_snapshot;
         }
 
@@ -6253,15 +6253,15 @@ pub mod editor {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️.rs"]
+                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️.rs"]
                     pub mod inputs;
-                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs"]
+                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs"]
                     pub mod results;
                 }
             }
@@ -6269,11 +6269,11 @@ pub mod editor {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️.rs"]
             pub mod catalogue;
-            #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
             pub mod document;
-            #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
             pub mod inspection;
         }
     }
@@ -6587,17 +6587,17 @@ pub mod editor {
     }
     #[path = "."]
     pub mod en1995 {
-        #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
+        #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️.rs"]
             pub mod evaluate;
-            #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️.rs"]
             pub mod selected_check;
-            #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️.rs"]
             pub mod set_snapshot;
         }
 
@@ -6605,15 +6605,15 @@ pub mod editor {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️.rs"]
+                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️.rs"]
                     pub mod inputs;
-                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs"]
+                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs"]
                     pub mod results;
                 }
             }
@@ -6621,27 +6621,27 @@ pub mod editor {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️.rs"]
             pub mod catalogue;
-            #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
             pub mod document;
-            #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
             pub mod inspection;
         }
     }
     #[path = "."]
     pub mod en1996 {
-        #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
+        #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️.rs"]
             pub mod evaluate;
-            #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️.rs"]
             pub mod selected_check;
-            #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️.rs"]
             pub mod set_snapshot;
         }
 
@@ -6649,15 +6649,15 @@ pub mod editor {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️.rs"]
+                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️.rs"]
                     pub mod inputs;
-                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs"]
+                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs"]
                     pub mod results;
                 }
             }
@@ -6665,27 +6665,27 @@ pub mod editor {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️.rs"]
             pub mod catalogue;
-            #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
             pub mod document;
-            #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
             pub mod inspection;
         }
     }
     #[path = "."]
     pub mod en1997 {
-        #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
+        #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️.rs"]
             pub mod evaluate;
-            #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️.rs"]
             pub mod selected_check;
-            #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️.rs"]
             pub mod set_snapshot;
         }
 
@@ -6693,15 +6693,15 @@ pub mod editor {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️.rs"]
+                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️.rs"]
                     pub mod inputs;
-                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs"]
+                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs"]
                     pub mod results;
                 }
             }
@@ -6709,11 +6709,11 @@ pub mod editor {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️.rs"]
             pub mod catalogue;
-            #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
             pub mod document;
-            #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
             pub mod inspection;
         }
     }
@@ -6763,17 +6763,17 @@ pub mod editor {
     }
     #[path = "."]
     pub mod en1999 {
-        #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
+        #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️.rs"]
             pub mod evaluate;
-            #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️.rs"]
             pub mod selected_check;
-            #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️.rs"]
             pub mod set_snapshot;
         }
 
@@ -6781,15 +6781,15 @@ pub mod editor {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️.rs"]
+                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️.rs"]
                     pub mod inputs;
-                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs"]
+                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs"]
                     pub mod results;
                 }
             }
@@ -6797,11 +6797,11 @@ pub mod editor {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️.rs"]
             pub mod catalogue;
-            #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
             pub mod document;
-            #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
             pub mod inspection;
         }
     }
@@ -6857,7 +6857,7 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod iso16757 {
-        #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
+        #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
         mod component;
         pub use component::*;
 
@@ -6865,13 +6865,13 @@ pub mod viewer {
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️.rs"]
+                    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️.rs"]
                     pub mod report;
                 }
             }
@@ -6879,7 +6879,7 @@ pub mod viewer {
     }
     #[path = "."]
     pub mod vdi3805 {
-        #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
+        #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
         mod component;
         pub use component::*;
 
@@ -6887,13 +6887,13 @@ pub mod viewer {
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️.rs"]
+                    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️.rs"]
                     pub mod report;
                 }
             }
@@ -7055,7 +7055,7 @@ pub mod viewer {
     }
     #[path = "."]
     pub mod en1995 {
-        #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
+        #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
         mod component;
         pub use component::*;
 
@@ -7063,13 +7063,13 @@ pub mod viewer {
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️.rs"]
+                    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️.rs"]
                     pub mod report;
                 }
             }
@@ -7077,7 +7077,7 @@ pub mod viewer {
     }
     #[path = "."]
     pub mod en1996 {
-        #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
+        #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
         mod component;
         pub use component::*;
 
@@ -7085,13 +7085,13 @@ pub mod viewer {
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️.rs"]
+                    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️.rs"]
                     pub mod report;
                 }
             }
@@ -7099,7 +7099,7 @@ pub mod viewer {
     }
     #[path = "."]
     pub mod en1997 {
-        #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
+        #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
         mod component;
         pub use component::*;
 
@@ -7107,13 +7107,13 @@ pub mod viewer {
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️.rs"]
+                    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️.rs"]
                     pub mod report;
                 }
             }
@@ -7143,7 +7143,7 @@ pub mod viewer {
     }
     #[path = "."]
     pub mod en1999 {
-        #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
+        #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
         mod component;
         pub use component::*;
 
@@ -7151,13 +7151,13 @@ pub mod viewer {
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️.rs"]
+                    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️.rs"]
                     pub mod report;
                 }
             }
@@ -7213,19 +7213,19 @@ pub mod examples {
     pub mod app_en1993_demo_session;
     #[path = "../../🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_en1994_demo_session;
-    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
+    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_en1995_demo_session;
-    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
+    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_en1996_demo_session;
-    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
+    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_en1997_demo_session;
     #[path = "../../🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_en1998_demo_session;
-    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
+    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_en1999_demo_session;
-    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
+    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_iso16757_demo_session;
-    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
+    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_vdi3805_demo_session;
     #[path = "../../🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
     pub mod art_din16798_demo;
@@ -7247,60 +7247,60 @@ pub mod examples {
     #[cfg(test)]
     #[path = "../../🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️high-consequence-office/🧪️tests/🦀️.rs"]
     mod art_en1990_high_consequence_office_tests;
-    #[path = "../../🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️retail-hydrocarbon-fire/🦀️.rs"]
+    #[path = "../../🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🔥️retail-hydrocarbon-fire/🦀️.rs"]
     pub mod art_en1991_retail_hydrocarbon_fire;
     #[cfg(test)]
-    #[path = "../../🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️retail-hydrocarbon-fire/🧪️tests/🦀️.rs"]
+    #[path = "../../🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🔥️retail-hydrocarbon-fire/🧪️tests/🦀️.rs"]
     mod art_en1991_retail_hydrocarbon_fire_tests;
-    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️liquid-retaining-fem-anchor/🦀️.rs"]
+    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🛢️liquid-retaining-fem-anchor/🦀️.rs"]
     pub mod art_en1992_liquid_retaining_fem_anchor;
     #[cfg(test)]
-    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️liquid-retaining-fem-anchor/🧪️tests/🦀️.rs"]
+    #[path = "../../🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🛢️liquid-retaining-fem-anchor/🧪️tests/🦀️.rs"]
     mod art_en1992_liquid_retaining_fem_anchor_tests;
-    #[path = "../../🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️high-strength-connection/🦀️.rs"]
+    #[path = "../../🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🔩️high-strength-connection/🦀️.rs"]
     pub mod art_en1993_high_strength_connection;
     #[cfg(test)]
-    #[path = "../../🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️high-strength-connection/🧪️tests/🦀️.rs"]
+    #[path = "../../🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🔩️high-strength-connection/🧪️tests/🦀️.rs"]
     mod art_en1993_high_strength_connection_tests;
     #[path = "../../🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌉️composite-bridge-girder/🦀️.rs"]
     pub mod art_en1994_composite_bridge_girder;
     #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌉️composite-bridge-girder/🧪️tests/🦀️.rs"]
     mod art_en1994_composite_bridge_girder_tests;
-    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️glulam-footbridge/🦀️.rs"]
+    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌉️glulam-footbridge/🦀️.rs"]
     pub mod art_en1995_glulam_footbridge;
     #[cfg(test)]
-    #[path = "../../🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️glulam-footbridge/🧪️tests/🦀️.rs"]
+    #[path = "../../🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌉️glulam-footbridge/🧪️tests/🦀️.rs"]
     mod art_en1995_glulam_footbridge_tests;
-    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️loadbearing-wall/🦀️.rs"]
+    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧱️loadbearing-wall/🦀️.rs"]
     pub mod art_en1996_loadbearing_wall;
     #[cfg(test)]
-    #[path = "../../🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️loadbearing-wall/🧪️tests/🦀️.rs"]
+    #[path = "../../🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧱️loadbearing-wall/🧪️tests/🦀️.rs"]
     mod art_en1996_loadbearing_wall_tests;
-    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
+    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
     pub mod art_en1997_demo;
     #[cfg(test)]
-    #[path = "../../🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
+    #[path = "../../🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
     mod art_en1997_demo_tests;
     #[path = "../../🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️seismic-rc-frame/🦀️.rs"]
     pub mod art_en1998_seismic_rc_frame;
     #[cfg(test)]
     #[path = "../../🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️seismic-rc-frame/🧪️tests/🦀️.rs"]
     mod art_en1998_seismic_rc_frame_tests;
-    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️aluminium-roof-purlin/🦀️.rs"]
+    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏠️aluminium-roof-purlin/🦀️.rs"]
     pub mod art_en1999_aluminium_roof_purlin;
     #[cfg(test)]
-    #[path = "../../🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️aluminium-roof-purlin/🧪️tests/🦀️.rs"]
+    #[path = "../../🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏠️aluminium-roof-purlin/🧪️tests/🦀️.rs"]
     mod art_en1999_aluminium_roof_purlin_tests;
-    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
+    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
     pub mod art_iso16757_demo;
     #[cfg(test)]
-    #[path = "../../🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
+    #[path = "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
     mod art_iso16757_demo_tests;
-    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
+    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
     pub mod art_vdi3805_demo;
     #[cfg(test)]
-    #[path = "../../🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
+    #[path = "../../🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
     mod art_vdi3805_demo_tests;
 }
 //#endregion 📚️Examples

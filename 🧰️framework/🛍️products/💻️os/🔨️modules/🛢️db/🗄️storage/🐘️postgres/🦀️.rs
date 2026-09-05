@@ -82,7 +82,7 @@ use crate::db_ids::{check_len, ArtifactId, DbError};
 use crate::db_storage::{
     close_db_io_backend, db_io_close_platform, db_io_copy_observed_text, db_io_hash_pages, db_io_prepare_platform, db_io_transfer_list, db_io_write_observed_bytes, register_db_io_backend, retire_db_io_backend, submit_db_io_task, CatalogStorage,
     DbIoArtifactId, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoDriverReservation, DbIoExecutionStep, DbIoExecutorMode, DbIoLeaseResult, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor,
-    DbIoText, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage, DB_IO_PAGE_BYTES,
+    DbIoText, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalSegmentState, WalStorage, DB_IO_PAGE_BYTES,
 };
 
 macro_rules! with_admitted_artifact {
@@ -101,10 +101,16 @@ use semio_framework_async::WorkerPool;
 use sqlx::postgres::{PgPool, PgPoolOptions};
 use std::sync::Arc;
 
-/// @emoji 🛡️ Mirrors `db_storage`'s own read-size ceiling (its `MAX_READ_BYTES` is private to that
-/// crate) — validated via `check_len` before a `Vec<u8>` sized by an untrusted on-disk
-/// length is allocated, per the repo's "validate before allocating" invariant.
-const MAX_READ_BYTES: u64 = 496 * 1024;
+use crate::db_storage::DB_IO_MAX_READ_BYTES;
+const POSTGRES_WAL_STATE_QUERY: &str = "SELECT sealed FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2";
+
+fn postgres_wal_segment_state(sealed: bool) -> WalSegmentState {
+    if sealed {
+        WalSegmentState::Sealed
+    } else {
+        WalSegmentState::Active
+    }
+}
 
 /// @emoji 🐘️ A `db_storage::DbStorage` backend over PostgreSQL — `pool` is the connection pool
 /// every trait method below runs its query against directly (no runtime of its own to bridge
@@ -268,13 +274,13 @@ impl WalStorage for PostgresDbIoExecutor {
     }
 
     async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<DbIoPages, DbError> {
-        check_len(range.len, MAX_READ_BYTES, "wal_storage::read")?;
+        check_len(range.len, DB_IO_MAX_READ_BYTES, "wal_storage::read")?;
         let idx = to_i64(index)?;
         let doc = document.0.as_str();
         let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2").bind(doc).bind(idx).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
         let current_len = len_row.ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?.0 as u64;
         let (offset, len) = validate_read_range(current_len, range)?;
-        let reservation = self.reserve_driver_output(MAX_READ_BYTES)?;
+        let reservation = self.reserve_driver_output(DB_IO_MAX_READ_BYTES)?;
         let (bytes,): (Vec<u8>,) =
             sqlx::query_as("SELECT substring(bytes FROM $1 FOR $2) FROM db_wal_segment WHERE document_id = $3 AND segment_index = $4").bind(offset + 1).bind(len).bind(doc).bind(idx).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
         let mut output = DbIoPageWriter::try_reserve_for_operation(self.active_operation, bytes.len().div_ceil(DB_IO_PAGE_BYTES)).map_err(DbIoPageWriterRejected::into_error)?;
@@ -285,6 +291,12 @@ impl WalStorage for PostgresDbIoExecutor {
         let idx = to_i64(index)?;
         let row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2").bind(document.0.as_str()).bind(idx).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
         row.map(|(len,)| len as u64).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))
+    }
+
+    async fn segment_state(&self, document: &ArtifactId, index: u64) -> Result<WalSegmentState, DbError> {
+        let idx = to_i64(index)?;
+        let row: Option<(bool,)> = sqlx::query_as(POSTGRES_WAL_STATE_QUERY).bind(document.0.as_str()).bind(idx).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
+        row.map(|(sealed,)| postgres_wal_segment_state(sealed)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))
     }
 
     async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
@@ -343,8 +355,8 @@ impl SnapshotStorage for PostgresDbIoExecutor {
         let doc = document.0.as_str();
         let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_snapshot_generation WHERE document_id = $1 AND generation = $2").bind(doc).bind(gen).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
         let len = len_row.ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))?.0;
-        check_len(len as u64, MAX_READ_BYTES, "snapshot_storage::read_generation")?;
-        let reservation = self.reserve_driver_output(MAX_READ_BYTES)?;
+        check_len(len as u64, DB_IO_MAX_READ_BYTES, "snapshot_storage::read_generation")?;
+        let reservation = self.reserve_driver_output(DB_IO_MAX_READ_BYTES)?;
         let (bytes,): (Vec<u8>,) = sqlx::query_as("SELECT bytes FROM db_snapshot_generation WHERE document_id = $1 AND generation = $2").bind(doc).bind(gen).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
         let mut output = DbIoPageWriter::try_reserve_for_operation(self.active_operation, bytes.len().div_ceil(DB_IO_PAGE_BYTES)).map_err(DbIoPageWriterRejected::into_error)?;
         db_io_write_observed_bytes(reservation, bytes, &mut output).await
@@ -378,7 +390,7 @@ impl SnapshotStorage for PostgresDbIoExecutor {
 //#region 🔖️PayloadStorage
 impl PayloadStorage for PostgresDbIoExecutor {
     async fn put(&self, bytes: DbIoPages) -> Result<ContentHash, DbError> {
-        check_len(bytes.len() as u64, MAX_READ_BYTES, "payload_storage::put")?;
+        check_len(bytes.len() as u64, DB_IO_MAX_READ_BYTES, "payload_storage::put")?;
         let hash = db_io_hash_pages(&bytes).await;
         let prepared = db_io_prepare_platform(&bytes)?.await?;
         let result = sqlx::query("INSERT INTO db_payload (hash, bytes) VALUES ($1, $2) ON CONFLICT (hash) DO NOTHING").bind(&hash.0[..]).bind(prepared.as_slice()).execute(&self.pool).await.map_err(map_sqlx_error);
@@ -389,8 +401,8 @@ impl PayloadStorage for PostgresDbIoExecutor {
     async fn get(&self, hash: &ContentHash) -> Result<DbIoPages, DbError> {
         let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
         let len = len_row.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))?.0;
-        check_len(len as u64, MAX_READ_BYTES, "payload_storage::get")?;
-        let reservation = self.reserve_driver_output(MAX_READ_BYTES)?;
+        check_len(len as u64, DB_IO_MAX_READ_BYTES, "payload_storage::get")?;
+        let reservation = self.reserve_driver_output(DB_IO_MAX_READ_BYTES)?;
         let (bytes,): (Vec<u8>,) = sqlx::query_as("SELECT bytes FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
         let mut output = DbIoPageWriter::try_reserve_for_operation(self.active_operation, bytes.len().div_ceil(DB_IO_PAGE_BYTES)).map_err(DbIoPageWriterRejected::into_error)?;
         db_io_write_observed_bytes(reservation, bytes, &mut output).await
@@ -416,7 +428,7 @@ impl PayloadStorage for PostgresDbIoExecutor {
 //#region 🔖️CatalogStorage
 impl CatalogStorage for PostgresDbIoExecutor {
     async fn read_root(&self) -> Result<Option<(DbIoPages, EpochFence)>, DbError> {
-        let reservation = self.reserve_driver_output(MAX_READ_BYTES)?;
+        let reservation = self.reserve_driver_output(DB_IO_MAX_READ_BYTES)?;
         let (epoch, bytes): (i64, Option<Vec<u8>>) = sqlx::query_as("SELECT epoch, bytes FROM db_catalog_root WHERE id = 1").fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
         match bytes {
             Some(bytes) => {
@@ -428,7 +440,7 @@ impl CatalogStorage for PostgresDbIoExecutor {
     }
 
     async fn cas_root(&self, expected: EpochFence, new_bytes: DbIoPages) -> Result<EpochFence, DbError> {
-        check_len(new_bytes.len() as u64, MAX_READ_BYTES, "catalog_storage::cas_root")?;
+        check_len(new_bytes.len() as u64, DB_IO_MAX_READ_BYTES, "catalog_storage::cas_root")?;
         let prepared = db_io_prepare_platform(&new_bytes)?.await?;
         let result = async {
             let mut tx = self.pool.begin().await.map_err(map_sqlx_error)?;
@@ -475,8 +487,8 @@ impl IndexStorage for PostgresDbIoExecutor {
         let doc = document.0.as_str();
         let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_index_run WHERE document_id = $1 AND run_id = $2").bind(doc).bind(run).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
         let len = len_row.ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))?.0;
-        check_len(len as u64, MAX_READ_BYTES, "index_storage::read_run")?;
-        let reservation = self.reserve_driver_output(MAX_READ_BYTES)?;
+        check_len(len as u64, DB_IO_MAX_READ_BYTES, "index_storage::read_run")?;
+        let reservation = self.reserve_driver_output(DB_IO_MAX_READ_BYTES)?;
         let (bytes,): (Vec<u8>,) = sqlx::query_as("SELECT bytes FROM db_index_run WHERE document_id = $1 AND run_id = $2").bind(doc).bind(run).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
         let mut output = DbIoPageWriter::try_reserve_for_operation(self.active_operation, bytes.len().div_ceil(DB_IO_PAGE_BYTES)).map_err(DbIoPageWriterRejected::into_error)?;
         db_io_write_observed_bytes(reservation, bytes, &mut output).await
@@ -629,12 +641,12 @@ impl LeaseStorage for PostgresDbIoExecutor {
 //#region 🔖️TypedExecutor
 impl PostgresDbIoExecutor {
     async fn wal_read_into(&self, document: &str, index: u64, range: ByteRange, output: &mut DbIoPageWriter) -> Result<DbIoPages, DbError> {
-        check_len(range.len, MAX_READ_BYTES, "wal_storage::read")?;
+        check_len(range.len, DB_IO_MAX_READ_BYTES, "wal_storage::read")?;
         let index = to_i64(index)?;
         let current: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2").bind(document).bind(index).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
         let current = current.ok_or_else(|| DbError::NotFound("PostgreSQL WAL segment not found".to_string()))?.0 as u64;
         let (offset, len) = validate_read_range(current, range)?;
-        let reservation = self.reserve_driver_output(MAX_READ_BYTES)?;
+        let reservation = self.reserve_driver_output(DB_IO_MAX_READ_BYTES)?;
         let (bytes,): (Vec<u8>,) =
             sqlx::query_as("SELECT substring(bytes FROM $1 FOR $2) FROM db_wal_segment WHERE document_id = $3 AND segment_index = $4").bind(offset + 1).bind(len).bind(document).bind(index).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
         db_io_write_observed_bytes(reservation, bytes, output).await
@@ -649,8 +661,8 @@ impl PostgresDbIoExecutor {
         };
         let length: Option<(i64,)> = sqlx::query_as(length_sql).bind(document).bind(ordinal).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
         let length = length.ok_or_else(|| DbError::NotFound("PostgreSQL named blob not found".to_string()))?.0 as u64;
-        check_len(length, MAX_READ_BYTES, "PostgreSQL named blob")?;
-        let reservation = self.reserve_driver_output(MAX_READ_BYTES)?;
+        check_len(length, DB_IO_MAX_READ_BYTES, "PostgreSQL named blob")?;
+        let reservation = self.reserve_driver_output(DB_IO_MAX_READ_BYTES)?;
         let (bytes,): (Vec<u8>,) = sqlx::query_as(read_sql).bind(document).bind(ordinal).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
         db_io_write_observed_bytes(reservation, bytes, output).await
     }
@@ -658,14 +670,14 @@ impl PostgresDbIoExecutor {
     async fn payload_read_into(&self, hash: &ContentHash, output: &mut DbIoPageWriter) -> Result<DbIoPages, DbError> {
         let length: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
         let length = length.ok_or_else(|| DbError::NotFound("PostgreSQL payload not found".to_string()))?.0 as u64;
-        check_len(length, MAX_READ_BYTES, "PostgreSQL payload")?;
-        let reservation = self.reserve_driver_output(MAX_READ_BYTES)?;
+        check_len(length, DB_IO_MAX_READ_BYTES, "PostgreSQL payload")?;
+        let reservation = self.reserve_driver_output(DB_IO_MAX_READ_BYTES)?;
         let (bytes,): (Vec<u8>,) = sqlx::query_as("SELECT bytes FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
         db_io_write_observed_bytes(reservation, bytes, output).await
     }
 
     async fn catalog_read_into(&self, output: &mut DbIoPageWriter) -> Result<Option<(DbIoPages, EpochFence)>, DbError> {
-        let reservation = self.reserve_driver_output(MAX_READ_BYTES)?;
+        let reservation = self.reserve_driver_output(DB_IO_MAX_READ_BYTES)?;
         let (epoch, bytes): (i64, Option<Vec<u8>>) = sqlx::query_as("SELECT epoch, bytes FROM db_catalog_root WHERE id = 1").fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
         match bytes {
             Some(bytes) => Ok(Some((db_io_write_observed_bytes(reservation, bytes, output).await?, EpochFence { epoch: epoch as u64 }))),
@@ -705,6 +717,7 @@ impl PostgresDbIoExecutor {
             }
             DbIoTask::WalRead { document, index, range, output, .. } => Ok(DbIoResult::Pages(self.wal_read_into(document.as_str(), *index, *range, output).await?)),
             DbIoTask::WalLength { document, index, .. } => Ok(DbIoResult::Length(with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::segment_len(self, artifact, *index))?)),
+            DbIoTask::WalState { document, index, .. } => Ok(DbIoResult::WalSegmentState(with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::segment_state(self, artifact, *index))?)),
             DbIoTask::WalList { document, output, .. } => {
                 let list = with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::list_segments(self, artifact))?;
                 Ok(DbIoResult::List(db_io_transfer_list(list, output).await?))
@@ -937,6 +950,12 @@ impl WalStorage for PostgresStorage {
             _ => Err(DbError::Internal("PostgreSQL executor returned a non-length result".to_string())),
         }
     }
+    async fn segment_state(&self, document: &ArtifactId, index: u64) -> Result<WalSegmentState, DbError> {
+        match self.execute(DbIoTask::WalState { backend: self.control, document: postgres_document(document)?, index }).await? {
+            DbIoResult::WalSegmentState(state) => Ok(state),
+            _ => Err(DbError::Internal("PostgreSQL executor returned a non-WAL-state result".to_string())),
+        }
+    }
     async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         postgres_list(self.execute(DbIoTask::WalList { backend: self.control, document: postgres_document(document)?, output: DbIoU64List::new() }).await?)
     }
@@ -953,7 +972,7 @@ impl SnapshotStorage for PostgresStorage {
         postgres_unit(self.execute(DbIoTask::SnapshotWrite { backend: self.control, document: postgres_document(document)?, generation, input: bytes }).await?)
     }
     async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<DbIoPages, DbError> {
-        postgres_pages(self.execute(DbIoTask::SnapshotRead { backend: self.control, document: postgres_document(document)?, generation, output: postgres_output(MAX_READ_BYTES)? }).await?)
+        postgres_pages(self.execute(DbIoTask::SnapshotRead { backend: self.control, document: postgres_document(document)?, generation, output: postgres_output(DB_IO_MAX_READ_BYTES)? }).await?)
     }
     async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
         match self.execute(DbIoTask::SnapshotLatest { backend: self.control, document: postgres_document(document)?, output: DbIoU64List::new() }).await? {
@@ -977,7 +996,7 @@ impl PayloadStorage for PostgresStorage {
         }
     }
     async fn get(&self, hash: &ContentHash) -> Result<DbIoPages, DbError> {
-        postgres_pages(self.execute(DbIoTask::PayloadGet { backend: self.control, hash: *hash, output: postgres_output(MAX_READ_BYTES)? }).await?)
+        postgres_pages(self.execute(DbIoTask::PayloadGet { backend: self.control, hash: *hash, output: postgres_output(DB_IO_MAX_READ_BYTES)? }).await?)
     }
     async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
         match self.execute(DbIoTask::PayloadExists { backend: self.control, hash: *hash }).await? {
@@ -998,7 +1017,7 @@ impl PayloadStorage for PostgresStorage {
 
 impl CatalogStorage for PostgresStorage {
     async fn read_root(&self) -> Result<Option<(DbIoPages, EpochFence)>, DbError> {
-        match self.execute(DbIoTask::CatalogRead { backend: self.control, output: postgres_output(MAX_READ_BYTES)? }).await? {
+        match self.execute(DbIoTask::CatalogRead { backend: self.control, output: postgres_output(DB_IO_MAX_READ_BYTES)? }).await? {
             DbIoResult::OptionalCatalog(catalog) => Ok(catalog),
             _ => Err(DbError::Internal("PostgreSQL executor returned a non-catalog result".to_string())),
         }
@@ -1016,7 +1035,7 @@ impl IndexStorage for PostgresStorage {
         postgres_unit(self.execute(DbIoTask::IndexWrite { backend: self.control, document: postgres_document(document)?, run_id, input: bytes }).await?)
     }
     async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<DbIoPages, DbError> {
-        postgres_pages(self.execute(DbIoTask::IndexRead { backend: self.control, document: postgres_document(document)?, run_id, output: postgres_output(MAX_READ_BYTES)? }).await?)
+        postgres_pages(self.execute(DbIoTask::IndexRead { backend: self.control, document: postgres_document(document)?, run_id, output: postgres_output(DB_IO_MAX_READ_BYTES)? }).await?)
     }
     async fn list_runs(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         postgres_list(self.execute(DbIoTask::IndexList { backend: self.control, document: postgres_document(document)?, output: DbIoU64List::new() }).await?)
@@ -1124,6 +1143,15 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn validate_truncate_accepts_shrink() {
         assert!(validate_truncate(false, 10, 5).is_ok());
+    }
+
+    #[test]
+    fn wal_segment_state_query_and_mapper_are_read_only_and_byte_neutral() {
+        assert_eq!(postgres_wal_segment_state(false), WalSegmentState::Active);
+        assert_eq!(postgres_wal_segment_state(true), WalSegmentState::Sealed);
+        assert!(POSTGRES_WAL_STATE_QUERY.contains("SELECT sealed"));
+        assert!(!POSTGRES_WAL_STATE_QUERY.contains("FOR UPDATE"));
+        assert!(!POSTGRES_WAL_STATE_QUERY.contains("bytes"));
     }
     //#endregion 🔖️RangeAndTruncate
 

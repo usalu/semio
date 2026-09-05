@@ -619,9 +619,9 @@ impl store::ArtifactPack for SemioCadSnapshot {
 //#region 🌉️ExternalCodecBridge
 /// 📥️ Parses this subset's own committed `.dsl.semio` text into a real [`SemioCadSnapshot`] — a thin
 /// wrapper over `store::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
-/// crate's private `store` extern-crate item (the `🧭️mutate-semio-cad` test adapter, which reads the
+/// crate's private `store` extern-crate item (the `📐️mutate-semio-cad` test adapter, which reads the
 /// REAL committed example artifact rather than a hand-transcribed Rust literal of it) can still
-/// drive the same codec production does. Same rationale as `✳️kit`'s `decode_kit_snapshot_json`.
+/// drive the same codec production does. Same rationale as `🧰️kit`'s `decode_kit_snapshot_json`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_cad_dsl(text: &str) -> Result<SemioCadSnapshot, String> {
     <SemioCadSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
@@ -648,7 +648,7 @@ pub fn encode_semio_cad_pack(snapshot: &SemioCadSnapshot) -> Vec<u8> {
 }
 
 /// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
-/// `s.stdio.semio.cad` — the shape the `🧭️mutate-semio-cad` case compares under `ordered-json-v1`. A
+/// `s.stdio.semio.cad` — the shape the `📐️mutate-semio-cad` case compares under `ordered-json-v1`. A
 /// thin `pack::to_json_string` wrapper (first-party, over `ToValue`/`DslValue` — see
 /// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/`),
 /// so a projection is derived from the snapshot type itself rather than hand-written a second time
@@ -659,8 +659,8 @@ pub fn encode_semio_cad_snapshot_json(snapshot: &SemioCadSnapshot) -> String {
 }
 
 /// 📥️ The `pack::from_json_str` inverse of [`encode_semio_cad_snapshot_json`] — decodes the
-/// `before`/`after` halves of `🧭️mutate-semio-cad`'s committed specification vectors
-/// (`../../../../../🧪️tests/🧭️mutate-semio-cad/🧫️fixtures/🦠️<kind>.json`) into real [`SemioCadSnapshot`]
+/// `before`/`after` halves of `📐️mutate-semio-cad`'s committed specification vectors
+/// (`../../../../../🧪️tests/📐️mutate-semio-cad/🧫️fixtures/🦠️<kind>.json`) into real [`SemioCadSnapshot`]
 /// values, so the adapter never hand-transcribes a fixture into a Rust literal that could silently
 /// drift away from the JSON it claims to mirror.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

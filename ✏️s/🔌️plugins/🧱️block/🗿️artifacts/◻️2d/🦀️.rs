@@ -91,8 +91,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: BLOCK_2D_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
-        import_stdio_kinds: vec!["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
+        export_stdio_kinds: vec!["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.txt", "stdio.zip"],
+        import_stdio_kinds: vec!["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.txt", "stdio.zip"],
     }
 }
 //#endregion 🔖️ArtifactKind
@@ -118,7 +118,7 @@ mod tests {
 /// that invoked it. `crate::editor::block2d::config::schema::app_schema_descriptor()` is handed to
 /// `ArtifactEditor::app_schema` instead (ticket W1c), not declared here: an app-scope concern
 /// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc).
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
@@ -132,6 +132,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
         ("s.block.block2d.composer.format-3", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
         ("s.block.block2d.composer.format-4", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
         ("s.block.block2d.composer.format-5", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
+        ("s.block.block2d.composer.format-6", "composer", "s.stdio.txt@utf-8/*", &[("dialect", "s.stdio.txt@utf-8/*")], None),
         ("s.block.block2d.grammar.1", "grammar", "block.block2d", &[("grammar", "block.block2d")], None),
         ("s.block.block2d.grammar.2", "grammar", "block.block2d.op", &[("grammar", "block.block2d.op")], None),
         ("s.block.block2d.grammar.3", "grammar", "block.block2d.diff", &[("grammar", "block.block2d.diff")], None),

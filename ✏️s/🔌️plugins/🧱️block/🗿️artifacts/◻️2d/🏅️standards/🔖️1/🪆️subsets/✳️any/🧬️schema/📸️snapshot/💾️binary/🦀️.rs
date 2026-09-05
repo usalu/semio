@@ -10,12 +10,12 @@ use crate::artifacts::block2d::Block2dSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `Block2dSnapshot` to its binary pack form.
-pub async fn encode(document: &Block2dSnapshot) -> Vec<u8> {
+pub fn encode(document: &Block2dSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Block2dSnapshot` from its binary pack form.
-pub async fn decode(bytes: &[u8]) -> Result<Block2dSnapshot, PackError> {
+pub fn decode(bytes: &[u8]) -> Result<Block2dSnapshot, PackError> {
     <Block2dSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 

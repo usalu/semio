@@ -106,7 +106,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-curated-item/💾️binary/🦀️.rs"]
                                     pub mod binary;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-curated-item/🧪️tests/🍐️appends-a-steel-plate-to-the-curation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-curated-item/🧪️tests/🧲️appends-a-steel-plate-to-the-curation/🦀️.rs"]
                                     mod tests_appends_a_steel_plate_to_the_curation;
                                     #[path = "../../🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-curated-item/📝️text/🦀️.rs"]
                                     pub mod text;

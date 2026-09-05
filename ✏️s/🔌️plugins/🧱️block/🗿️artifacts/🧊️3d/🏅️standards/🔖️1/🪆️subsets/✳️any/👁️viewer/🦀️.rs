@@ -7,7 +7,7 @@
 use crate::artifacts::block3d::{Block3dSnapshot, BLOCK3D_DIALECT, BLOCK_3D_SCHEMA};
 use crate::viewer::block3d::modes::view;
 use crate::viewer::block3d::modes::view::windows::world;
-use semio_framework_plugin::{ArtifactView, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
+use semio_framework_plugin::{ArtifactView, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 // 🚧️ SDK GAP: see the identical note in `✏️editor/🦀️.rs` — `Dialect`/`InteractionView` are
 // only reachable through `app`, not yet in the crate-root re-export list (`ArtifactViewer`/`Viewer`/
 // `ViewEmit` are — closed by W0-F).
@@ -26,10 +26,10 @@ pub enum Block3dViewCommand {
 }
 
 impl protocol::OpBinary for Block3dViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(Block3dViewCommand::Noop)
     }
 }
@@ -53,23 +53,27 @@ impl ArtifactViewer for Block3dViewer {
     const DIALECT: Dialect = BLOCK3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = BLOCK_3D_SCHEMA;
 
-    async fn initial_snapshot() -> Block3dSnapshot {
-        crate::artifacts::block3d::schema::empty_block3d_snapshot()
+    /// 🚀️ Boots on the `hexagonal-cut-concrete-forest-left` fixture rather than the empty document —
+    /// a viewer has no `setActiveExample` action at all (its sole command is `Noop`), so an empty boot
+    /// document made this surface permanently blank. See `dsl::block3d_boot_snapshot`.
+    fn initial_snapshot() -> Block3dSnapshot {
+        crate::artifacts::block3d::dsl::block3d_boot_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Block3dViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (camera
     /// orbit, "jump to representation") is a pure addition here, never a signature change.
-    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
-            world::BODY_KEY => world::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let node = match body_key {
+            world::BODY_KEY => world::render(doc.snapshot)?,
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block3d viewer unknown-body label admission failed"))?,
+        };
+        Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 }
 //#endregion 🔖️Viewer
@@ -95,6 +99,16 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<Block3dViewer as ArtifactViewer>::DIALECT, BLOCK3D_DIALECT);
+    }
+
+    /// ⚖️ LAW: the viewer boots non-empty — it can never load an example itself, so an empty initial
+    /// snapshot would leave its `World3d` window blank forever.
+    #[semio_framework_async_macros::async_test]
+    async fn viewer_boots_with_at_least_one_representation() {
+        let mut app = semio_framework_plugin::testkit::new_app::<semio_framework_plugin::ViewerApp<Block3dViewer>>();
+        let snapshot = app.snapshot().expect("snapshot");
+        assert!(!snapshot.representations.is_empty(), "the viewer must boot with a renderable document");
+        assert!(snapshot.representations.iter().all(|representation| representation.mesh_url.is_some()));
     }
 
     #[semio_framework_async_macros::async_test]

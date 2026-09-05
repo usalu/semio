@@ -5,6 +5,22 @@
     "default": ["{workspaceRoot}/✏️s/🔌️plugins/🪐️space/**/*.rs", "{projectRoot}/**/*"]
   },
   "targets": {
+    "home-directory-identity-rows-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts home-directory-identity-rows-check"
+      }
+    },
+    "home-directory-identity-rows-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts home-directory-identity-rows-check --native"
+      }
+    },
     "home-directory-event-page-owner-check": {
       "executor": "nx:run-commands",
       "cache": false,

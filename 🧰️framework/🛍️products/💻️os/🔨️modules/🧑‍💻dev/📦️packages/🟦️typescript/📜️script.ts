@@ -32,14 +32,17 @@ import {
   frameworkOsPlaygroundDefaultPort,
   frameworkOsLockedPrefsEnv,
   resolveTestLevel,
+  atTestLevel,
   cargoProfileDir,
   selectComponentWasmProfile,
   semioBuildMode,
   semioShipEnv,
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, backboneKindFromUri, decodeDocumentPackBytes, encodeDocumentPackBytes, decodePackValue, encodePackValue } from "@semio-tech/framework-os";
+import { decodePackValue, encodePackValue } from "@semio-tech/framework-os";
+import { PLUGIN_MODULES_ROOT, PLUGIN_SOURCE_WATCH_PATH, backboneDbHandleFor, descriptorRouteDecision, scanBuiltPluginModules } from "./🔌️vite-plugins.ts";
 import type { PluginSourceEvent } from "@semio-tech/framework";
-import { generatePluginRegistry, isHostPluginFilter, writePlaygroundSession, type PluginRegistryEntry } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts";
+import { filterProjectedPluginRegistry, generatePluginRegistry, readGeneratedCatalogProjection, writePlaygroundSession, type PluginRegistryEntry } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts";
+import { isHostPlaygroundFilter } from "../../../🔌️plugin/📇️registry/🟦️.ts";
 import { DEFAULT_HOST_VARIANT } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts";
 import {
   ensurePreview2ShimVendorAt,
@@ -64,7 +67,7 @@ import { DISTRIBUTION_LAYOUT, distributionOutputOwner, parseDistributionManifest
 type OwnedParityImage = { readonly width: number; readonly height: number; readonly data: Uint8Array };
 
 const repoRoot = getWorkspaceRoot();
-const pluginOutRoot = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules");
+const pluginOutRoot = PLUGIN_MODULES_ROOT;
 
 /** @emoji 🧵️ Publishes the single package-agnostic shard worker at `🔌️plugin-modules/🧵️shard/`, the
  * URL `ShardClient` pool members are constructed from (H2 design). Idempotent: rewritten on every
@@ -130,427 +133,16 @@ function resolvePlaygroundFilter(filterPlugin: string): ResolvedPlaygroundFilter
 
 /** @emoji 🎯️ Resolves a raw filter to the crate pluginId `generatePluginRegistry`'s `filterPlaygroundPlugin` option expects, or `undefined` for the unfiltered/studio case. */
 function resolveCatalogFilterPluginId(filterPlugin?: string): string | undefined {
-  return filterPlugin && !isHostPluginFilter(filterPlugin) ? resolvePlaygroundFilter(filterPlugin).pluginId : undefined;
+  return filterPlugin && !isHostPlaygroundFilter(filterPlugin) ? resolvePlaygroundFilter(filterPlugin).pluginId : undefined;
 }
 //#endregion 🔖️PlaygroundVariantResolution
 
-//#region BackboneVitePlugin
-/** Lazily imports `bun:sqlite` — a static top-level import breaks Vite's config bundler, which loads this module's exports under Node before the dev server (and its Bun runtime) exists. */
-let backboneDatabaseCtor: typeof import("bun:sqlite").Database | undefined;
-async function backboneDatabaseCtorLazy(): Promise<typeof import("bun:sqlite").Database> {
-  if (!backboneDatabaseCtor) ({ Database: backboneDatabaseCtor } = await import("bun:sqlite"));
-  return backboneDatabaseCtor;
-}
-type BackboneSqliteHandle = InstanceType<typeof import("bun:sqlite").Database>;
-
-/** @emoji 🗄️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P8): per-path `bun:sqlite` handle cache.
- * `readBackbonePayload`/`writeBackbonePayload` used to `new Database(dbPath)` — and re-run the
- * (idempotent but non-free) `CREATE TABLE IF NOT EXISTS` — on EVERY single read/write request, so a
- * hot dev-editing loop against one folder-backed document reopened the same file every keystroke's
- * autosave. Lifetime: opened once, then held open for the lifetime of THIS dev-server process — never
- * explicitly closed or evicted. A dev session only ever touches a handful of distinct folder URIs (the
- * open studio, plus maybe one or two app documents), so the cache's total size is bounded by session
- * variety, not by request volume; there is no observed need for a size/idle eviction policy for that few
- * long-lived, cheap-to-hold connections. If that assumption ever stops holding (e.g. a scripted session
- * that iterates many distinct folders), add one then — not speculatively here. */
-const backboneDbHandles = new Map<string, BackboneSqliteHandle>();
-
-async function backboneDbHandleFor(dbPath: string): Promise<BackboneSqliteHandle> {
-  const existing = backboneDbHandles.get(dbPath);
-  if (existing) return existing;
-  const Database = await backboneDatabaseCtorLazy();
-  const db = new Database(dbPath);
-  db.run("CREATE TABLE IF NOT EXISTS document (id TEXT PRIMARY KEY, schema TEXT, pack BLOB NOT NULL, spr BLOB NOT NULL, updated_at INTEGER NOT NULL)");
-  backboneDbHandles.set(dbPath, db);
-  return db;
-}
-
-/** @emoji 🗂️ Same convention as `vcs::FolderSqliteStorage` (`.semio/documents.db`, a `document(id,
- * schema, json, updated_at)` table) so a folder-bound studio opened by the browser dev path and a
- * native (wgpu) reader agree on the same file. `documentId` defaults to the studio's own
- * single-document convention (mirrors os-core's `SPACE_FOLDER_DOCUMENT_ID`) when the caller doesn't
- * pass one — app documents (per `OsDocumentRef`) always pass their own id explicitly. */
-const SPACE_FOLDER_DOCUMENT_ID = "studio";
-
-async function readBackbonePayload(uri: string, documentId: string | null): Promise<Uint8Array | null> {
-  const kind = backboneKindFromUri(uri);
-  if (kind === "file") {
-    const path = uri.slice("file://".length);
-    if (!existsSync(path)) return null;
-    return new Uint8Array(readFileSync(path));
-  }
-  if (kind === "folder") {
-    const folder = uri.slice("folder://".length);
-    const dbPath = join(folder, ".semio", "documents.db");
-    if (!existsSync(dbPath)) return null;
-    const db = await backboneDbHandleFor(dbPath);
-    const row = db.query("SELECT pack, spr FROM document WHERE id = ?1").get(documentId ?? SPACE_FOLDER_DOCUMENT_ID) as { pack?: Uint8Array; spr?: Uint8Array } | null;
-    if (!row?.pack) return null;
-    const pack = row.pack instanceof Uint8Array ? row.pack : new Uint8Array(row.pack as ArrayBuffer);
-    const spr = row.spr instanceof Uint8Array ? row.spr : new Uint8Array((row.spr ?? []) as ArrayBuffer);
-    return encodeDocumentPackBytes(pack, spr);
-  }
-  return null;
-}
-
-async function writeBackbonePayload(uri: string, documentId: string | null, schema: string | null, payload: Uint8Array): Promise<void> {
-  const kind = backboneKindFromUri(uri);
-  const { pack, spr } = decodeDocumentPackBytes(payload);
-  if (kind === "file") {
-    const path = uri.slice("file://".length);
-    mkdirSync(dirname(path), { recursive: true });
-    writeFileSync(path, payload);
-    return;
-  }
-  if (kind === "folder") {
-    const folder = uri.slice("folder://".length);
-    const dbPath = join(folder, ".semio", "documents.db");
-    mkdirSync(dirname(dbPath), { recursive: true });
-    const db = await backboneDbHandleFor(dbPath);
-    db.run("INSERT INTO document (id, schema, pack, spr, updated_at) VALUES (?1, ?2, ?3, ?4, ?5) ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, pack = excluded.pack, spr = excluded.spr, updated_at = excluded.updated_at", [
-      documentId ?? SPACE_FOLDER_DOCUMENT_ID,
-      schema ?? "",
-      pack,
-      spr,
-      Date.now(),
-    ]);
-    return;
-  }
-  throw new Error(`unsupported backbone uri: ${uri}`);
-}
-
-/** 👁️ Per-folder-uri debounced watchers feeding every subscribed SSE response for that uri — one
- * `node:fs.watch` per folder regardless of subscriber count. Mirrors `store_sync`'s native
- * `notify` watcher (200ms debounce) so both the dev-browser and native paths agree on cadence. */
-const folderWatchSubscribers = new Map<string, Set<{ write: (chunk: string) => void }>>();
-const folderWatchHandles = new Map<string, ReturnType<typeof watch>>();
-const FOLDER_WATCH_DEBOUNCE_MS = 200;
-
-function subscribeFolderWatch(uri: string, subscriber: { write: (chunk: string) => void }): () => void {
-  if (!folderWatchSubscribers.has(uri)) folderWatchSubscribers.set(uri, new Set());
-  const subscribers = folderWatchSubscribers.get(uri)!;
-  subscribers.add(subscriber);
-  if (!folderWatchHandles.has(uri) && backboneKindFromUri(uri) === "folder") {
-    const folder = uri.slice("folder://".length);
-    mkdirSync(join(folder, ".semio"), { recursive: true });
-    let debounceTimer: ReturnType<typeof setTimeout> | undefined;
-    const handle = watch(join(folder, ".semio"), { persistent: false }, () => {
-      if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
-        for (const sub of folderWatchSubscribers.get(uri) ?? []) sub.write("data: changed\n\n");
-      }, FOLDER_WATCH_DEBOUNCE_MS);
-    });
-    folderWatchHandles.set(uri, handle);
-  }
-  return () => {
-    subscribers.delete(subscriber);
-    if (subscribers.size === 0) {
-      folderWatchHandles.get(uri)?.close();
-      folderWatchHandles.delete(uri);
-      folderWatchSubscribers.delete(uri);
-    }
-  };
-}
-
-type BackboneServerRequest = { method?: string; url?: string; on: (event: string, handler: (chunk?: unknown) => void) => void };
-type BackboneServerResponse = { statusCode: number; setHeader: (name: string, value: string) => void; write: (chunk: string) => void; end: (body?: string | Uint8Array) => void };
-
-/** @emoji 💓️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P8): both dev SSE endpoints below previously
- * wrote `: connected\n\n` once on connect and nothing else until a real event fired — a quiet dev
- * session (no file edits, no plugin rebuild) could sit for minutes with nothing crossing the wire, which
- * is exactly the shape a browser or an intermediary dev proxy's idle-connection timeout (commonly in the
- * 30-60s range) silently kills with no client-visible `close`/`error` event, leaving the tab's
- * `EventSource` looking "connected" while actually dead. Periodic `: keepalive\n\n` SSE comments (valid
- * per the SSE spec — a line starting with `:` is ignored by `EventSource` but still resets any
- * intermediary's idle timer) fix that. `req.on("close")` already fires reliably on a real disconnect, so
- * clearing this timer there is the only cleanup needed. */
-const SSE_KEEPALIVE_INTERVAL_MS = 15_000;
-
-function startSseKeepalive(res: BackboneServerResponse): () => void {
-  const timer = setInterval(() => {
-    try {
-      res.write(": keepalive\n\n");
-    } catch {
-      clearInterval(timer);
-    }
-  }, SSE_KEEPALIVE_INTERVAL_MS);
-  return () => clearInterval(timer);
-}
-
-/** 🧹️ Eliminates in-source test branches before production asset URL collection. */
-export function semioProductionTestBoundaryVitePlugin(): { name: string; enforce: "pre"; apply: "build"; transform(source: string, id: string): Promise<{ code: string; map: string } | null> } {
-  return {
-    name: "semio-production-test-boundary",
-    enforce: "pre",
-    apply: "build",
-    async transform(source, id) {
-      if (!source.includes("import.meta.vitest") || !/\.[cm]?[jt]sx?(?:[?#].*)?$/u.test(id)) return null;
-      const { transformWithEsbuild } = await import("vite");
-      const result = await transformWithEsbuild(source, id, { define: { "import.meta.vitest": "undefined" }, minifySyntax: true, target: "esnext", charset: "utf8", jsx: "preserve", sourcemap: true });
-      return { code: result.code, map: JSON.stringify(result.map) };
-    },
-  };
-}
-
-/** @emoji 💾️ Vite middleware for browser file/folder backbone IO: `GET|PUT ${BACKBONE_ENDPOINT_PATH}?uri=&documentId=&schema=`
- * for read/write, plus `GET ${BACKBONE_ENDPOINT_PATH}/watch?uri=` (SSE) for external-edit notification —
- * `🧵️backbone-worker.ts`'s folder transport degrades to polling if this endpoint isn't reachable. */
-export function semioBackboneVitePlugin() {
-  return {
-    name: "semio-backbone",
-    configureServer(server: { middlewares: { use: (handler: (req: BackboneServerRequest, res: BackboneServerResponse, next: () => void) => void) => void } }) {
-      server.middlewares.use((req, res, next) => {
-        if (!req.url?.startsWith(BACKBONE_ENDPOINT_PATH)) return next();
-        const requestUrl = new URL(req.url, "http://127.0.0.1");
-        const uri = requestUrl.searchParams.get("uri");
-        if (!uri) {
-          res.statusCode = 400;
-          res.end("missing uri");
-          return;
-        }
-        if (requestUrl.pathname === `${BACKBONE_ENDPOINT_PATH}/watch`) {
-          if (req.method !== "GET") {
-            res.statusCode = 405;
-            res.end("method not allowed");
-            return;
-          }
-          res.statusCode = 200;
-          res.setHeader("content-type", "text/event-stream");
-          res.setHeader("cache-control", "no-cache");
-          res.setHeader("connection", "keep-alive");
-          res.write(": connected\n\n");
-          const stopKeepalive = startSseKeepalive(res);
-          const unsubscribe = subscribeFolderWatch(uri, res);
-          req.on("close", () => {
-            stopKeepalive();
-            unsubscribe();
-          });
-          return;
-        }
-        const documentId = requestUrl.searchParams.get("documentId");
-        const schema = requestUrl.searchParams.get("schema");
-        if (req.method === "GET") {
-          readBackbonePayload(uri, documentId)
-            .then((payload) => {
-              if (payload == null) {
-                res.statusCode = 404;
-                res.end("");
-                return;
-              }
-              res.statusCode = 200;
-              res.setHeader("content-type", "application/octet-stream");
-              res.end(Buffer.from(payload));
-            })
-            .catch((error) => {
-              res.statusCode = 500;
-              res.end(String(error));
-            });
-          return;
-        }
-        if (req.method === "PUT") {
-          const chunks: Buffer[] = [];
-          req.on("data", (chunk) => {
-            chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk)));
-          });
-          req.on("end", () => {
-            const body = Buffer.concat(chunks);
-            writeBackbonePayload(uri, documentId, schema, new Uint8Array(body))
-              .then(() => {
-                res.statusCode = 200;
-                res.setHeader("content-type", "application/octet-stream");
-                res.end(new Uint8Array());
-              })
-              .catch((error) => {
-                res.statusCode = 500;
-                res.end(String(error));
-              });
-          });
-          return;
-        }
-        res.statusCode = 405;
-        res.end("method not allowed");
-      });
-    },
-  };
-}
-//#endregion BackboneVitePlugin
-
-//#region 🔌️PluginHotSwapVitePlugin
-type PluginHotSwapMarker = { readonly pluginId: string; readonly rebuiltAt: number };
-
-/** @emoji 🔌️ Every plugin dir under `root` (default `plugin-modules/`) that has a completed build right
- * now (a `.core*.wasm` present — same convention `collectPluginWasmSizeRows` walks), newest core-wasm
- * mtime as `rebuiltAt`. Backs the SSE endpoint's connect-time `snapshot` event: a browser that connects
- * (or reconnects) after some builds already finished must still learn about them — `♻️hot-swap.json` alone
- * only ever holds the single most recent build, not the full history. `root` is overridable so this can
- * be exercised against a throwaway temp dir in-source below rather than the real (build-dependent, so
- * flaky) `plugin-modules/` tree. */
-function scanBuiltPluginModules(root: string = pluginOutRoot): readonly PluginHotSwapMarker[] {
-  if (!existsSync(root)) return [];
-  const rows: PluginHotSwapMarker[] = [];
-  for (const entry of readdirSync(root, { withFileTypes: true })) {
-    if (!entry.isDirectory() || !moduleIdForDirectoryName(entry.name)) continue;
-    const pluginDir = join(root, entry.name);
-    let newestMs = 0;
-    for (const file of readdirSync(pluginDir)) {
-      if (!/\.core\d*\.wasm$/.test(file)) continue;
-      newestMs = Math.max(newestMs, statSync(join(pluginDir, file)).mtimeMs);
-    }
-    const pluginId = moduleIdForDirectoryName(entry.name);
-    if (newestMs > 0 && pluginId) rows.push({ pluginId, rebuiltAt: Math.round(newestMs) });
-  }
-  return rows;
-}
-
-/** @emoji 🔌️ OS-owned watcher route supplied explicitly to the neutral kernel source adapter. */
-const PLUGIN_SOURCE_WATCH_PATH = `${MODULE_PLUGIN_ROUTE}/watch`;
-
-/** @emoji 🔌️ Vite middleware backing the shell's `createDevPluginSource` (`@semio-tech/framework`):
- * SSE at `PLUGIN_SOURCE_WATCH_PATH`, mirroring `semioBackboneVitePlugin`'s `/watch` endpoint. Sends one
- * `snapshot` on connect ({@link scanBuiltPluginModules}), then a `built` event every time `buildPlugin`
- * overwrites the shared `♻️hot-swap.json` marker — `buildPlugin` writes it last, after every other output
- * file, so by the time this fires the plugin's module is actually fetchable. Debounced the same 200ms
- * as `subscribeFolderWatch` above (a burst of writes during one build collapses to a single event). One
- * `fs.watch` on `plugin-modules/` for the whole dev server's lifetime — unlike the backbone plugin's
- * per-uri watchers, there is exactly one watch target here, so it is never torn down. */
-export function semioPluginHotSwapVitePlugin() {
-  return {
-    name: "semio-plugin-hot-swap",
-    configureServer(server: { middlewares: { use: (handler: (req: BackboneServerRequest, res: BackboneServerResponse, next: () => void) => void) => void } }) {
-      const subscribers = new Set<BackboneServerResponse>();
-      mkdirSync(pluginOutRoot, { recursive: true });
-      const hotSwapMarker = join(pluginOutRoot, MODULE_HOT_SWAP_FILE);
-      let debounceTimer: ReturnType<typeof setTimeout> | undefined;
-      watch(pluginOutRoot, (_eventType, filename) => {
-        if (filename !== MODULE_HOT_SWAP_FILE) return;
-        if (debounceTimer) clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-          if (!existsSync(hotSwapMarker)) return;
-          let marker: PluginHotSwapMarker;
-          try {
-            marker = JSON.parse(readFileSync(hotSwapMarker, "utf8")) as PluginHotSwapMarker;
-          } catch {
-            return;
-          }
-          const event: PluginSourceEvent = { kind: "built", pluginId: marker.pluginId, rebuiltAt: marker.rebuiltAt };
-          const payload = `data: ${JSON.stringify(event)}\n\n`;
-          for (const sub of subscribers) sub.write(payload);
-        }, FOLDER_WATCH_DEBOUNCE_MS);
-      });
-      server.middlewares.use((req, res, next) => {
-        if (moduleRoutePath(req.url ?? "") !== PLUGIN_SOURCE_WATCH_PATH || req.method !== "GET") return next();
-        res.statusCode = 200;
-        res.setHeader("content-type", "text/event-stream");
-        res.setHeader("cache-control", "no-cache");
-        res.setHeader("connection", "keep-alive");
-        res.write(": connected\n\n");
-        const snapshot: PluginSourceEvent = { kind: "snapshot", plugins: scanBuiltPluginModules() };
-        res.write(`data: ${JSON.stringify(snapshot)}\n\n`);
-        subscribers.add(res);
-        const stopKeepalive = startSseKeepalive(res);
-        req.on("close", () => {
-          stopKeepalive();
-          subscribers.delete(res);
-        });
-      });
-    },
-  };
-}
-//#endregion 🔌️PluginHotSwapVitePlugin
-
 //#region 🔖️Blake3
-/** 🧬️ The first-party BLAKE3 implementation now lives in the runtime module
+/** 🧬️ The first-party BLAKE3 implementation lives in the runtime module
  * `🧰️framework/🔨️modules/🔏️hash/🟦️.ts` so a browser Worker can verify execution-target component
- * bytes with it; this dev-only blob endpoint stays an ordinary consumer of that module. */
-import { blake3Hex } from "../../../../../../🔨️modules/🔏️hash/🟦️.ts";
+ * bytes with it; the crate scripts that hash publication inputs read it through this router. */
 export { blake3Hex, Blake3Hasher } from "../../../../../../🔨️modules/🔏️hash/🟦️.ts";
 //#endregion 🔖️Blake3
-
-//#region BlobVitePlugin
-let blobDatabaseSingleton: InstanceType<typeof import("bun:sqlite").Database> | undefined;
-
-/** 🗄️ Lazily opens the dev-session-wide content-addressed blob store at `<repoRoot>/.🧬semio/🔗space/blobs.db` —
- * unlike backbone documents, blobs aren't scoped to a per-uri folder (there's no folder in the
- * `write-blob`/`read-blob` WIT signature), so this is one shared table for the whole dev server. */
-async function blobDatabase(): Promise<InstanceType<typeof import("bun:sqlite").Database>> {
-  if (!blobDatabaseSingleton) {
-    const Database = await backboneDatabaseCtorLazy();
-    const dbPath = join(repoRoot, ".🧬semio", "🔗space", "blobs.db");
-    mkdirSync(dirname(dbPath), { recursive: true });
-    blobDatabaseSingleton = new Database(dbPath);
-    blobDatabaseSingleton.run("CREATE TABLE IF NOT EXISTS blob (hash TEXT PRIMARY KEY, media_type TEXT NOT NULL, size INTEGER NOT NULL, bytes BLOB NOT NULL)");
-  }
-  return blobDatabaseSingleton;
-}
-
-type BlobServerRequest = { method?: string; url?: string; on: (event: string, handler: (chunk?: unknown) => void) => void };
-type BlobServerResponse = { statusCode: number; setHeader: (name: string, value: string) => void; end: (body?: string | Buffer) => void };
-
-/** @emoji 📦️ Vite middleware for the dev-only content-addressed blob store: `PUT ${BLOB_ENDPOINT_PATH}?mediaType=`
- * (raw bytes body, BLAKE3-hashed above, returns `{"hash":...}`, idempotent via `INSERT OR IGNORE`) and
- * `GET ${BLOB_ENDPOINT_PATH}/:hash` (raw bytes response, 404 if absent). The browser host-shim's
- * `writeBlob`/`readBlob` (see `hostShimSource`) and `🟦️backbone-🟦️worker.ts`'s IndexedDB cache both talk to
- * this. Mirrors `vcs::FolderSqliteStorage`'s `blobs(hash, media_type, size, bytes)` table/shape. */
-export function semioBlobVitePlugin() {
-  return {
-    name: "semio-blob",
-    configureServer(server: { middlewares: { use: (handler: (req: BlobServerRequest, res: BlobServerResponse, next: () => void) => void) => void } }) {
-      server.middlewares.use((req, res, next) => {
-        if (!req.url?.startsWith(BLOB_ENDPOINT_PATH)) return next();
-        const requestUrl = new URL(req.url, "http://127.0.0.1");
-        if (req.method === "PUT") {
-          const chunks: Buffer[] = [];
-          req.on("data", (chunk) => {
-            chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as ArrayBuffer));
-          });
-          req.on("end", () => {
-            void (async () => {
-              const bytes = Buffer.concat(chunks);
-              const mediaType = requestUrl.searchParams.get("mediaType") ?? "application/octet-stream";
-              const hash = blake3Hex(new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength));
-              const db = await blobDatabase();
-              db.run("INSERT OR IGNORE INTO blob (hash, media_type, size, bytes) VALUES (?1, ?2, ?3, ?4)", [hash, mediaType, bytes.length, bytes]);
-              res.statusCode = 200;
-              res.setHeader("content-type", "application/json");
-              res.end(JSON.stringify({ hash }));
-            })().catch((error) => {
-              res.statusCode = 500;
-              res.end(String(error));
-            });
-          });
-          return;
-        }
-        if (req.method === "GET") {
-          const hash = requestUrl.pathname.slice(`${BLOB_ENDPOINT_PATH}/`.length);
-          if (!hash) {
-            res.statusCode = 400;
-            res.end("missing hash");
-            return;
-          }
-          void (async () => {
-            const db = await blobDatabase();
-            const row = db.query("SELECT media_type, bytes FROM blob WHERE hash = ?1").get(hash) as { media_type?: string; bytes?: Uint8Array } | null;
-            if (!row) {
-              res.statusCode = 404;
-              res.end("");
-              return;
-            }
-            res.statusCode = 200;
-            res.setHeader("content-type", row.media_type ?? "application/octet-stream");
-            res.end(Buffer.from(row.bytes ?? new Uint8Array()));
-          })().catch((error) => {
-            res.statusCode = 500;
-            res.end(String(error));
-          });
-          return;
-        }
-        res.statusCode = 405;
-        res.end("method not allowed");
-      });
-    },
-  };
-}
-//#endregion BlobVitePlugin
 
 function preview2ShimVendorDir(): string {
   return join(pluginOutRoot, PREVIEW2_VENDOR_RELATIVE);
@@ -917,8 +509,8 @@ export async function ensurePluginRegistry(filterPlugin?: string): Promise<void>
   if (runCmdStatus("bun", [registryScript, "generate"], { cwd: repoRoot }) !== 0) throw new Error("plugin registry generation failed");
   const variant = filterPlugin ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
   const filterPluginId = resolveCatalogFilterPluginId(filterPlugin);
-  syncBuiltPluginDescriptors(generatePluginRegistry(repoRoot, filterPluginId ? { filterPlaygroundPlugin: filterPluginId } : {}));
-  writePlaygroundSession(variant, playgroundSessionPath, repoRoot);
+  syncBuiltPluginDescriptors(filterProjectedPluginRegistry(readGeneratedCatalogProjection(), filterPluginId));
+  writePlaygroundSession(variant, playgroundSessionPath);
 }
 
 function resolvePluginBuildTargets(entries: readonly PluginRegistryEntry[], filterPlugin?: string): readonly PluginRegistryEntry[] {
@@ -932,7 +524,7 @@ function resolvePluginBuildTargets(entries: readonly PluginRegistryEntry[], filt
     }
     return matched;
   }
-  if (!filterPlugin || isHostPluginFilter(filterPlugin)) return entries;
+  if (!filterPlugin || isHostPlaygroundFilter(filterPlugin)) return entries;
   if (entries.length === 0) {
     throw new Error(`no program build targets for filter ${JSON.stringify(filterPlugin)}`);
   }
@@ -953,7 +545,7 @@ async function preparePluginBuildTargets(filterPlugin?: string): Promise<readonl
   ensureWasmTarget();
   await ensurePluginRegistry(filterPlugin);
   const filterPluginId = resolveCatalogFilterPluginId(filterPlugin);
-  const catalogEntries = generatePluginRegistry(repoRoot, filterPluginId ? { filterPlaygroundPlugin: filterPluginId } : {});
+  const catalogEntries = filterProjectedPluginRegistry(readGeneratedCatalogProjection(), filterPluginId);
   mkdirSync(pluginOutRoot, { recursive: true });
   ensurePreview2ShimVendor();
   ensureGuestSlimTypstFontsAsset();
@@ -963,7 +555,7 @@ async function preparePluginBuildTargets(filterPlugin?: string): Promise<readonl
   assertExtensionOutputsFresh();
   const targets = resolvePluginBuildTargets(catalogEntries, filterPlugin);
   syncBuiltExtensionsToInstallRoot(targets);
-  if (filterPlugin && !isHostPluginFilter(filterPlugin)) {
+  if (filterPlugin && !isHostPlaygroundFilter(filterPlugin)) {
     console.log(`program build scope: ${targets.map((target) => target.pluginId).join(", ")}`);
   } else {
     console.log(`program build scope: all (${targets.length} plugin crates)`);
@@ -1279,7 +871,7 @@ class PluginWatchScript extends BundleScript {
     const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND;
     await buildPlugins(filterPlugin || undefined);
     const filterPluginId = resolveCatalogFilterPluginId(filterPlugin || undefined);
-    const catalogEntries = generatePluginRegistry(repoRoot, filterPluginId ? { filterPlaygroundPlugin: filterPluginId } : {});
+    const catalogEntries = filterProjectedPluginRegistry(readGeneratedCatalogProjection(), filterPluginId);
     const targets = resolvePluginBuildTargets(catalogEntries, filterPlugin || undefined);
     watchPluginRebuilds(targets);
   }
@@ -1342,7 +934,7 @@ export async function buildEngineWasm(
   renderer: string,
   compositionPackageJson = join(dirname(fileURLToPath(import.meta.url)), "package.json"),
   buildEngine = (script: string) => runCmdStatus("bun", [script, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }),
-  hostPluginFilter = isHostPluginFilter,
+  hostPluginFilter = isHostPlaygroundFilter,
 ): Promise<void> {
   ensureAppleDeveloperDir();
   if (renderer !== "react" || process.env.SKIP_ENGINE_BUILD === "1") return;
@@ -1761,7 +1353,7 @@ class DevScript extends BundleScript {
     if (leaseRole === "holder") {
       await buildPluginsStreaming(filterPlugin);
       const filterPluginId = resolveCatalogFilterPluginId(filterPlugin);
-      const catalogEntries = generatePluginRegistry(repoRoot, filterPluginId ? { filterPlaygroundPlugin: filterPluginId } : {});
+      const catalogEntries = filterProjectedPluginRegistry(readGeneratedCatalogProjection(), filterPluginId);
       const targets = resolvePluginBuildTargets(catalogEntries, filterPlugin);
       watchPluginRebuilds(targets);
     }
@@ -2449,6 +2041,294 @@ async function runStudioE2eVerify(baseUrl: string, timeoutMs: number): Promise<v
 }
 //#endregion 🔖️SpaceE2eVerify
 
+//#region 🔖️CatalogSmokeVerify
+/** 🔬️ Catalog-wide render smoke: one live `s` session, every program the shell itself offers spawned in
+ * turn, each proven to mount a window with a non-empty rendered body. The program list is never hardcoded
+ * — it comes from the shell's own dev probe (`window.__semioOsCatalogProbe`, `#region 🔖️CatalogSmokeProbe`
+ * in `🏛️ShellHost/🟦️.tsx`), which also reports every plugin left in `failed`/`crashed` install status.
+ * Report shape: `🧑‍💻dev/🧫️fixtures/🧬️catalog-smoke.schema.json`. */
+type CatalogSmokeStatus = "pass" | "fail" | "skipped";
+
+type CatalogSmokeRow = {
+  readonly pluginId: string;
+  readonly appId: string;
+  readonly label: string;
+  readonly status: CatalogSmokeStatus;
+  readonly durationMs: number;
+  readonly windowId: string | null;
+  readonly descendants: number;
+  readonly width: number;
+  readonly height: number;
+  readonly firstError: string | null;
+};
+
+type CatalogSmokePluginStatus = { readonly pluginId: string; readonly status: string };
+
+/** 🔬️ What the shell itself reported before any program could be spawned. `beacon` is the raw
+ * `semioOsReady`/`semioOsError`/`semioOsNotFound` dataset value (`null` when none was ever set);
+ * `failure` is the boot step that gave up. Recorded rather than thrown so a shell that never boots still
+ * produces the same machine-readable artifact as one that boots and fails a program. */
+type CatalogSmokeBoot = {
+  readonly beacon: string | null;
+  readonly failure: string | null;
+  /** ⏱️Milliseconds from navigation start to each boot phase: the document commit, the first module the
+   * page actually requested, and the readiness beacon. `null` for a phase never reached — the unbundled
+   * dev module graph never fires `load` on a busy machine, so these, not `goto`, are the boot evidence. */
+  readonly phaseMs: { readonly commit: number | null; readonly firstModule: number | null; readonly beacon: number | null };
+  readonly bodyExcerpt: string;
+  readonly consoleErrors: readonly string[];
+};
+
+type CatalogSmokeReport = {
+  readonly baseUrl: string;
+  readonly shellPluginId: string;
+  readonly startedAt: string;
+  readonly durationMs: number;
+  readonly boot: CatalogSmokeBoot;
+  readonly programs: readonly CatalogSmokeRow[];
+  readonly failedPlugins: readonly CatalogSmokePluginStatus[];
+  readonly totals: { readonly pass: number; readonly fail: number; readonly skipped: number };
+};
+
+/** 🔬️ Bound on how much shell console noise and body text the report carries — enough to name the first
+ * cause, never a full session log. */
+const CATALOG_SMOKE_BOOT_ERROR_CAPACITY = 20;
+const CATALOG_SMOKE_BODY_EXCERPT_CAPACITY = 1000;
+
+const CATALOG_SMOKE_FAILED_PLUGIN_STATUSES = ["failed", "crashed"] as const;
+
+/** 🔬️ Default `--out` directory, beside the dev module's other generated artifacts. */
+const CATALOG_SMOKE_DEFAULT_OUT_REL = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🔬️catalog-smoke";
+
+/** 🔬️ Folds per-program outcomes and the shell's install-status table into the report the command writes
+ * and exits on — pure, so the aggregation is unit-testable without a browser. */
+function summarizeCatalogSmoke(input: {
+  readonly baseUrl: string;
+  readonly shellPluginId: string;
+  readonly startedAt: string;
+  readonly durationMs: number;
+  readonly boot: CatalogSmokeBoot;
+  readonly programs: readonly CatalogSmokeRow[];
+  readonly plugins: readonly CatalogSmokePluginStatus[];
+}): CatalogSmokeReport {
+  const totals = { pass: 0, fail: 0, skipped: 0 };
+  for (const row of input.programs) totals[row.status] += 1;
+  return {
+    baseUrl: input.baseUrl,
+    shellPluginId: input.shellPluginId,
+    startedAt: input.startedAt,
+    durationMs: input.durationMs,
+    boot: { ...input.boot, bodyExcerpt: input.boot.bodyExcerpt.slice(0, CATALOG_SMOKE_BODY_EXCERPT_CAPACITY), consoleErrors: input.boot.consoleErrors.slice(0, CATALOG_SMOKE_BOOT_ERROR_CAPACITY) },
+    programs: input.programs,
+    failedPlugins: input.plugins.filter((plugin) => (CATALOG_SMOKE_FAILED_PLUGIN_STATUSES as readonly string[]).includes(plugin.status)),
+    totals,
+  };
+}
+
+/** 🔬️ Non-zero exit whenever the shell never booted, a program failed to render, a plugin never left
+ * `failed`/`crashed`, or nothing at all rendered — a vacuous green is itself a failure. */
+function catalogSmokeExitCode(report: CatalogSmokeReport): number {
+  return report.boot.failure !== null || report.totals.fail > 0 || report.failedPlugins.length > 0 || report.totals.pass === 0 ? 1 : 0;
+}
+
+function catalogSmokeMarkdownCell(value: string): string {
+  return value.replaceAll("|", "\\|").replaceAll("\n", " ").slice(0, 200);
+}
+
+/** 🔬️ Markdown mirror of {@link summarizeCatalogSmoke}'s report — one row per program, ordered as spawned. */
+function catalogSmokeMarkdown(report: CatalogSmokeReport): string {
+  const lines = [
+    `# Catalog smoke — \`${report.shellPluginId}\` @ ${report.baseUrl}`,
+    "",
+    `Started ${report.startedAt} · ${report.durationMs} ms · ${report.totals.pass} pass / ${report.totals.fail} fail / ${report.totals.skipped} skipped`,
+    "",
+    `Shell boot: beacon \`${report.boot.beacon ?? "none"}\` — commit ${report.boot.phaseMs.commit ?? "never"} ms, first module ${report.boot.phaseMs.firstModule ?? "never"} ms, beacon ${report.boot.phaseMs.beacon ?? "never"} ms${report.boot.failure === null ? "" : ` — FAILED: ${report.boot.failure}`}`,
+    "",
+    "| pluginId | appId | status | duration ms | window | nodes | first error |",
+    "|---|---|---|---|---|---|---|",
+  ];
+  for (const row of report.programs) {
+    lines.push(`| ${catalogSmokeMarkdownCell(row.pluginId)} | ${catalogSmokeMarkdownCell(row.appId)} | ${row.status} | ${row.durationMs} | ${catalogSmokeMarkdownCell(row.windowId ?? "-")} | ${row.descendants} | ${catalogSmokeMarkdownCell(row.firstError ?? "-")} |`);
+  }
+  lines.push("", `## Plugins in a failed install status (${report.failedPlugins.length})`, "");
+  if (report.failedPlugins.length === 0) lines.push("none");
+  else {
+    lines.push("| pluginId | status |", "|---|---|");
+    for (const plugin of report.failedPlugins) lines.push(`| ${catalogSmokeMarkdownCell(plugin.pluginId)} | ${catalogSmokeMarkdownCell(plugin.status)} |`);
+  }
+  if (report.boot.failure !== null) {
+    lines.push("", `## Shell boot diagnostics (${report.boot.consoleErrors.length} console error(s))`, "", "```", report.boot.bodyExcerpt || "(empty body)", "```", "");
+    for (const error of report.boot.consoleErrors) lines.push(`- ${catalogSmokeMarkdownCell(error)}`);
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+/** 🔬️ A dev server reloads the page whenever a peer touches a watched file, which destroys the execution
+ * context under any in-flight `evaluate`. Retries such a read on the next document instead of failing the
+ * whole smoke — a transient reload is not a catalog defect. */
+async function catalogSmokeEvaluate<Result>(page: import("playwright").Page, read: () => Promise<Result>, attempts = 4): Promise<Result> {
+  let last: unknown;
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      return await read();
+    } catch (error) {
+      last = error;
+      if (!String(error).includes("Execution context was destroyed")) throw error;
+      await page.waitForLoadState("domcontentloaded").catch(() => undefined);
+      await page.waitForTimeout(1000);
+    }
+  }
+  throw last;
+}
+
+async function readCatalogSmokeProbe(page: import("playwright").Page): Promise<{ shellPluginId: string; ready: boolean; plugins: CatalogSmokePluginStatus[]; programs: { pluginId: string; appId: string; label: string }[] } | null> {
+  return (await catalogSmokeEvaluate(page, () => page.evaluate(() => (window as unknown as { __semioOsCatalogProbe?: unknown }).__semioOsCatalogProbe ?? null))) as never;
+}
+
+async function catalogSmokeWindowIds(page: import("playwright").Page): Promise<string[]> {
+  return await catalogSmokeEvaluate(page, () => page.evaluate(() => [...document.querySelectorAll<HTMLElement>("[id^='framework.window.']")].filter((element) => !element.id.includes(".windowControls")).map((element) => element.id)));
+}
+
+/** 🔬️ Spawns one program through the shell's own command palette (`spawn.<pluginId>` item) and reports the
+ * window element it mounted, or `null` when no new window appeared within the deadline. */
+async function spawnCatalogSmokeProgram(page: import("playwright").Page, pluginId: string, before: readonly string[], timeoutMs: number): Promise<string | null> {
+  await openStudioE2eCommandPalette(page);
+  const paletteInput = page.locator("[role='dialog'] [data-slot='command-input']").first();
+  await paletteInput.fill(pluginId);
+  const item = page.locator(`[data-slot="command-item"][data-command-item-id="spawn.${pluginId}"]`).first();
+  await item.waitFor({ state: "visible", timeout: timeoutMs }).catch(() => undefined);
+  if ((await item.count()) === 0) {
+    await page.keyboard.press("Escape");
+    return null;
+  }
+  await item.click();
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const after = await catalogSmokeWindowIds(page);
+    const opened = after.find((id) => !before.includes(id));
+    if (opened) return opened;
+    await page.waitForTimeout(250);
+  }
+  return null;
+}
+
+async function closeCatalogSmokeWindow(page: import("playwright").Page, windowId: string): Promise<void> {
+  const close = page.locator(`[id="${windowId}.windowControls.close"]`).first();
+  if ((await close.count()) === 0) return;
+  await close.click({ force: true }).catch(() => undefined);
+  await page.waitForTimeout(250);
+}
+
+async function runCatalogSmokeVerify(baseUrl: string, opts: { readonly outDir: string; readonly timeoutMs: number; readonly perProgramMs: number }): Promise<CatalogSmokeReport> {
+  ensureParityPlaywrightBrowsersPath();
+  const { chromium } = await import(PLAYWRIGHT_MODULE_SPECIFIER);
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(String(error)));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+
+  const startedAt = new Date().toISOString();
+  const started = Date.now();
+  const rows: CatalogSmokeRow[] = [];
+  let probe: Awaited<ReturnType<typeof readCatalogSmokeProbe>> = null;
+  let bootFailure: string | null = null;
+  let beacon: string | null = null;
+  let bodyExcerpt = "";
+  const phaseMs: { commit: number | null; firstModule: number | null; beacon: number | null } = { commit: null, firstModule: null, beacon: null };
+  try {
+    console.log(`[catalog-smoke] navigating to ${baseUrl}`);
+    const navigationStarted = Date.now();
+    page.on("request", (request) => {
+      if (phaseMs.firstModule === null && request.resourceType() === "script") phaseMs.firstModule = Date.now() - navigationStarted;
+    });
+    // 🚦️`commit` and not `load`: the unbundled dev module graph legitimately never fires `load` on a busy
+    // machine (observed: `goto` timing out at 300 s against a shell that was booting fine), so the beacon
+    // poll below owns the deadline and a slow boot is reported, never thrown.
+    await page.goto(baseUrl, { waitUntil: "commit", timeout: opts.timeoutMs });
+    phaseMs.commit = Date.now() - navigationStarted;
+    console.log(`[catalog-smoke] document committed after ${phaseMs.commit} ms`);
+    const beaconDeadline = Date.now() + opts.timeoutMs;
+    while (Date.now() < beaconDeadline) {
+      beacon = await catalogSmokeEvaluate(page, () =>
+        page.evaluate(() => {
+          const data = document.documentElement.dataset;
+          if (data.semioOsReady !== undefined) return `ready:${data.semioOsReady}`;
+          if (data.semioOsError !== undefined) return `error:${data.semioOsError}`;
+          if (data.semioOsNotFound !== undefined) return `not-found:${data.semioOsNotFound}`;
+          return null;
+        }),
+      );
+      if (beacon !== null) break;
+      await page.waitForTimeout(1000);
+    }
+    if (beacon !== null) phaseMs.beacon = Date.now() - navigationStarted;
+    console.log(`[catalog-smoke] readiness beacon: ${beacon ?? "none"} (commit ${phaseMs.commit} ms, first module ${phaseMs.firstModule ?? "never"} ms, beacon ${phaseMs.beacon ?? "never"} ms)`);
+    if (beacon === null || !beacon.startsWith("ready:")) bootFailure = `shell never reached a ready beacon (${beacon ?? "no beacon within " + opts.timeoutMs + "ms"})`;
+
+    const deadline = Date.now() + opts.timeoutMs;
+    if (bootFailure === null) {
+      await waitForStudioE2eCondition(page, ({ text }) => /Home/i.test(text) && /Studios|Search/i.test(text), "home shell", deadline).catch((error: unknown) => {
+        bootFailure = `home shell never listed studios: ${String(error)}`;
+      });
+    }
+    if (bootFailure === null) {
+      await openStudioE2e(page, deadline).catch((error: unknown) => {
+        bootFailure = `studio never opened: ${String(error)}`;
+      });
+    }
+    if (bootFailure === null) {
+      await page.waitForFunction(() => document.querySelector(".semio-node-graph-host") != null, undefined, { timeout: opts.timeoutMs }).catch((error: unknown) => {
+        bootFailure = `studio workflow window never rendered: ${String(error)}`;
+      });
+    }
+    if (bootFailure === null) {
+      probe = await readCatalogSmokeProbe(page);
+      if (probe === null) bootFailure = "shell exposed no `window.__semioOsCatalogProbe` — is the dev server serving a development build?";
+    }
+    if (bootFailure !== null) console.error(`[catalog-smoke] boot failed: ${bootFailure}`);
+    else console.log(`[catalog-smoke] ${probe!.programs.length} spawnable programs, ${probe!.plugins.length} registry rows`);
+
+    for (const program of probe?.programs ?? []) {
+      const programStarted = Date.now();
+      const errorCursor = errors.length;
+      const before = await catalogSmokeWindowIds(page);
+      const windowId = await spawnCatalogSmokeProgram(page, program.pluginId, before, opts.perProgramMs);
+      if (windowId === null) {
+        rows.push({ pluginId: program.pluginId, appId: program.appId, label: program.label, status: "fail", durationMs: Date.now() - programStarted, windowId: null, descendants: 0, width: 0, height: 0, firstError: errors[errorCursor] ?? "no window element appeared after spawn" });
+        continue;
+      }
+      const measured = await catalogSmokeEvaluate(page, () => page.evaluate((id) => {
+        const element = document.getElementById(id);
+        if (!element) return { descendants: 0, width: 0, height: 0 };
+        const rect = element.getBoundingClientRect();
+        return { descendants: element.querySelectorAll("*").length, width: Math.round(rect.width), height: Math.round(rect.height) };
+      }, windowId));
+      const rendered = measured.width > 0 && measured.height > 0 && measured.descendants > 0;
+      const firstError = errors[errorCursor] ?? null;
+      rows.push({ pluginId: program.pluginId, appId: program.appId, label: program.label, status: rendered && firstError === null ? "pass" : "fail", durationMs: Date.now() - programStarted, windowId, descendants: measured.descendants, width: measured.width, height: measured.height, firstError: rendered ? firstError : (firstError ?? `window ${windowId} rendered ${measured.width}x${measured.height} with ${measured.descendants} descendants`) });
+      await closeCatalogSmokeWindow(page, windowId);
+    }
+  } finally {
+    bodyExcerpt = await page
+      .locator("body")
+      .innerText()
+      .catch(() => "");
+    await browser.close();
+  }
+
+  const report = summarizeCatalogSmoke({ baseUrl, shellPluginId: probe?.shellPluginId ?? "unknown", startedAt, durationMs: Date.now() - started, boot: { beacon, failure: bootFailure, phaseMs, bodyExcerpt, consoleErrors: errors }, programs: rows, plugins: probe?.plugins ?? [] });
+  mkdirSync(opts.outDir, { recursive: true });
+  writeFileSync(join(opts.outDir, "🔬️catalog-smoke.json"), `${JSON.stringify(report, null, 2)}\n`);
+  writeFileSync(join(opts.outDir, "🔬️catalog-smoke.md"), catalogSmokeMarkdown(report));
+  console.log(catalogSmokeMarkdown(report));
+  console.log(`[catalog-smoke] report written to ${opts.outDir}`);
+  return report;
+}
+//#endregion 🔖️CatalogSmokeVerify
+
 //#region 🔖️CollabE2e
 /** 🤝️ Two-user hub+shell end-to-end collaboration proof — ticket
  * `26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS`, lane 3-C. Boots the real hub plus two
@@ -2567,17 +2447,11 @@ function collabPluginArtifactPath(target: PluginRegistryEntry): string {
  * browser against a build that cannot possibly serve anything. Confirmed (this lane, this session, via
  * `cargo check -p semio-s-plugin-space --target wasm32-wasip2`, reproduced standalone, see
  * `🧪️3-c-cargo-check-space-wasm.txt`): `semio-s-plugin-space`'s own Cargo.toml requests
- * `semio-framework-os = { features = ["os-host-full"] }` UNCONDITIONALLY (line 37, unchanged since
- * commit `19b970280` 2026-08-11 — `git diff HEAD` on that file shows only lane 1-F's later, unrelated
- * `user_ports` addition, so this is NOT something this ticket introduced); `os-host-full` (`🖥️host/
- * 📦️packages/🦀️rust/Cargo.toml:62`) turns on `semio-framework-os-kernel/sync`, which turns on
- * `tokio/net` (`sync = [..., "tokio/net", ...]`), and `tokio/net` is not one of the five features
- * (`sync,macros,io-util,rt,time`) tokio 1.52.3 supports on any wasm target — `cargo tree -e features -p
- * semio-s-plugin-space --target wasm32-wasip2 -i tokio` traces the exact edge. A host-only capability
- * feature is being requested by a wasm GUEST plugin crate, unconditionally — this is a pre-existing,
- * standing architecture gap in `semio-s-plugin-space`'s own dependency declaration, outside this lane's
- * lease (`🧑‍💻dev/📦️packages/🟦️typescript/{📜️script.ts,⚙️vite.config.ts}` + `project.json` only) and
- * squarely lanes 1-E/2-A/2-B's crate, not touched here.
+ * `semio-framework-os = { features = ["os-host-full"] }` was formerly unconditional and pulled the
+ * host sync/network closure into this WASI guest. The retained-Home browser-process packet now keeps
+ * `os-host-full` on the native target-specific edge and gives `wasm32-wasip2` the feature-free host
+ * contract. `cargo tree -e features -p semio-s-plugin-space --target wasm32-wasip2 -i ring`, `-i cc`,
+ * and `-i tokio` are consequently empty, while the native target still selects `os-host-full`.
  *
  * `FLOW_CORE_SKIP_WASM_BUILD=1` (flow-core's own pre-existing escape hatch, `🌊️flow/🫀️core/📦️packages/
  * 🦀️rust/📜️script.ts`'s `WasmScript`) is set here, defaulted only — a SEPARATE, real, confirmed,
@@ -3147,6 +3021,15 @@ class VerifyScript extends BundleScript {
     if (segments[0] === "e2e") {
       await runStudioE2eVerify(studioUrl, timeoutMs);
       console.log(`s studio e2e verify passed (${studioUrl})`);
+      return;
+    }
+    if (segments[0] === "catalog") {
+      const outIndex = segments.indexOf("--out");
+      const outDir = outIndex >= 0 && segments[outIndex + 1] ? resolve(segments[outIndex + 1]!) : join(repoRoot, CATALOG_SMOKE_DEFAULT_OUT_REL);
+      const report = await runCatalogSmokeVerify(studioUrl, { outDir, timeoutMs, perProgramMs: Number(process.env.S_CATALOG_SMOKE_PROGRAM_MS ?? 30_000) });
+      const exit = catalogSmokeExitCode(report);
+      if (exit !== 0) throw new Error(`catalog smoke failed: ${report.boot.failure ?? "shell booted"}; ${report.totals.pass} rendered, ${report.totals.fail} did not, ${report.failedPlugins.length} plugin(s) in a failed install status`);
+      console.log(`s catalog smoke passed (${report.totals.pass} programs, ${studioUrl})`);
       return;
     }
     for (const target of generatePluginRegistry(repoRoot)) {
@@ -5324,10 +5207,15 @@ if (import.meta.main) {
 
 if (import.meta.vitest) {
   const { describe, expect, it, beforeEach, afterEach } = import.meta.vitest;
+  /** ⏱️Cases that drive a real Rollup/Vite build, a strict-TypeScript program, a detached `node`/`bun`
+   * child, or a Wasm instantiation — each measured well past a second on 2026-09-05, together far past the
+   * 30 s `quick` wall-clock budget. They stay in the suite and run from `test long` upwards; `test quick`
+   * keeps every pure-helper case. */
+  const itLong = atTestLevel(it, "long");
 
   //#region 🌉️LinkedSessionEnginesTests
   describe("scaleFixtureArtifacts", () => {
-    it("compares both committed semantic outputs without rewriting them", async () => {
+    itLong("compares both committed semantic outputs without rewriting them", async () => {
       const { execFileSync } = await import("node:child_process");
       const directory = scaleFixtureGeneratedDir(repoRoot);
       const registryJson = readFileSync(join(directory, "📇️registry/🔣️.json"), "utf8");
@@ -5345,7 +5233,7 @@ if (import.meta.vitest) {
   });
 
   describe("linkedSessionEngines", () => {
-    it("matches strict schema validation and deduplicates only exact owner engine paths", async () => {
+    itLong("matches strict schema validation and deduplicates only exact owner engine paths", async () => {
       const { default: Ajv } = await import("ajv");
       const schema = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🔣️.schema.json"), "utf8"));
       const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🔗️linked-session-engines.json"), "utf8"));
@@ -5360,7 +5248,7 @@ if (import.meta.vitest) {
       }
     });
 
-    it("uses actual linked factory module and owner crate declarations for every product composition", async () => {
+    itLong("uses actual linked factory module and owner crate declarations for every product composition", async () => {
       const { default: Ajv } = await import("ajv");
       const ts = await import("typescript");
       const schema = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🔣️.schema.json"), "utf8"));
@@ -5579,7 +5467,7 @@ if (import.meta.vitest) {
       expect(() => cropOwnedParityRgba({ ...image, data: image.data.subarray(0, 47) }, 0, 0, 1, 1)).toThrow("exactly 48 RGBA bytes");
     });
 
-    it("preserves fixed CSS color, alpha, and diagnostic marker pixels through Canvas PNGs", async () => {
+    itLong("preserves fixed CSS color, alpha, and diagnostic marker pixels through Canvas PNGs", async () => {
       ensureParityPlaywrightBrowsersPath();
       const { chromium } = await import(PLAYWRIGHT_MODULE_SPECIFIER);
       const browser = await chromium.launch({ headless: true });
@@ -5605,6 +5493,23 @@ if (import.meta.vitest) {
     }, 30_000);
   });
   //#endregion 🔖️PixelCompare-tests
+
+  describe("descriptorRouteDecision", () => {
+    it("admits an exact declared descriptor and rejects missing or undeclared descriptor paths before SPA fallback", () => {
+      const root = mkdtempSync(join(tmpdir(), "semio-descriptor-route-"));
+      try {
+        mkdirSync(join(root, "🗒️note"), { recursive: true });
+        writeFileSync(join(root, "🗒️note", "🔣️.json"), '{"manifest":{"pluginId":"note"}}\n');
+        const specs = [{ route: "/🔌️plugin-modules", root, directoryNames: new Set(["🗒️note", "🪐️s"]) }];
+        expect(descriptorRouteDecision("/🔌️plugin-modules/🗒️note/🔣️.json", specs)).toEqual({ kind: "pass" });
+        expect(descriptorRouteDecision("/🔌️plugin-modules/🪐️s/🔣️.json?epoch=1", specs)).toEqual({ kind: "missing", moduleDirectory: "🪐️s" });
+        expect(descriptorRouteDecision("/🔌️plugin-modules/unknown/🔣️.json", specs)).toEqual({ kind: "missing", moduleDirectory: "unknown" });
+        expect(descriptorRouteDecision("/other/🪐️s/🔣️.json", specs)).toEqual({ kind: "pass" });
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    });
+  });
 
   describe("scanBuiltPluginModules (plugin hot-swap SSE snapshot)", () => {
     let root: string;
@@ -5740,7 +5645,7 @@ if (import.meta.vitest) {
   });
 
   describe("pluginComponentBridgeSource", () => {
-    it("forwards canonical nested byte pages unchanged into the generated component poll", async () => {
+    itLong("forwards canonical nested byte pages unchanged into the generated component poll", async () => {
       const { execFileSync } = await import("node:child_process");
       const { createShardCommandIngressPages } = await import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts");
       const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📃️page/🧫️fixture/🔣️.json"), "utf8"));
@@ -5779,7 +5684,7 @@ if (import.meta.vitest) {
       expect(JSON.parse(output)).toEqual(inputs.map((entry: { hex: string }, index: number) => ({ same: true, keys: ["cursor", "page"], length: vectors[index].length, hex: entry.hex, zeroTail: true })));
     });
 
-    it("maps issued UI patch receipts and exact ACK or rejection through the generated bridge", async () => {
+    itLong("maps issued UI patch receipts and exact ACK or rejection through the generated bridge", async () => {
       const { execFileSync } = await import("node:child_process");
       const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧫️fixture/🔣️.json"), "utf8"));
       const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
@@ -5844,7 +5749,7 @@ if (import.meta.vitest) {
       }
     });
 
-    it("maps canonical lifecycle requests and receipts through the real generated bridge", async () => {
+    itLong("maps canonical lifecycle requests and receipts through the real generated bridge", async () => {
       const { execFileSync } = await import("node:child_process");
       const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️fixture/🔣️.json"), "utf8"));
       const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
@@ -5910,7 +5815,7 @@ if (import.meta.vitest) {
       }
     });
 
-    it("finalizes genuine descriptor bytes identically to the native descriptor oracle", async () => {
+    itLong("finalizes genuine descriptor bytes identically to the native descriptor oracle", async () => {
       const { decodePackValue, encodePackValue } = await import("@semio-tech/framework-os");
       const { createHash } = await import("node:crypto");
       const bytes = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🎪️demonstrator/🛂️.descriptor.semio"));
@@ -5954,7 +5859,7 @@ if (import.meta.vitest) {
   });
 
   describe("rewriteJcoComponentAssetUrls", () => {
-    it("keeps generated host imports and replies isolated across same-package activations", async () => {
+    itLong("keeps generated host imports and replies isolated across same-package activations", async () => {
       const { execFileSync } = await import("node:child_process");
       const { default: Ajv } = await import("ajv");
       const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🧪️fixtures");
@@ -6007,7 +5912,7 @@ export const describe = {};`);
       expect(new Set(result.requestIds).size).toBe(fixture.activations.length);
     });
 
-    it("rejects a stale effect reply in the actual generated worker dispatcher", async () => {
+    itLong("rejects a stale effect reply in the actual generated worker dispatcher", async () => {
       const { execFileSync } = await import("node:child_process");
       const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
         import { SourceTextModule, createContext } from "node:vm";
@@ -6033,7 +5938,7 @@ export const describe = {};`);
       expect(JSON.parse(output)).toEqual([{ generation: "2", request: "reused", value: "fresh" }]);
     });
 
-    it("forwards lifecycle through the captured scheduled turn and rejects the removed side message", async () => {
+    itLong("forwards lifecycle through the captured scheduled turn and rejects the removed side message", async () => {
       const { execFileSync } = await import("node:child_process");
       const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️fixture/🔣️.json"), "utf8")) as { vectors: Array<{ value: { kind: string }; hex: string }> };
       const request = fixture.vectors.find((row) => row.value.kind === "close")!;
@@ -6086,7 +5991,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
   });
 
   describe("PluginComponentInstantiation", () => {
-    it("executes independent Wasm memories from one cached explicit factory module", async () => {
+    itLong("executes independent Wasm memories from one cached explicit factory module", async () => {
       const { execFileSync } = await import("node:child_process");
       const { default: Ajv } = await import("ajv");
       const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🧪️fixtures");
@@ -6145,7 +6050,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       expect(rewriteJcoAsyncResultLifting(rewritten)).toBe(rewritten);
     });
 
-    it("preserves direct descriptor and job results and lifts large turn results indirectly", async () => {
+    itLong("preserves direct descriptor and job results and lifts large turn results indirectly", async () => {
       const { execFileSync } = await import("node:child_process");
       const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🧪️fixtures/⏳️async-results.json");
       const generated = execFileSync("node", ["--input-type=module", "--eval", `
@@ -6169,7 +6074,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
   });
 
   describe("rewritePreview2ShimImportSource", () => {
-    it("rebases exact declared vendor URLs while preserving the public route", async () => {
+    itLong("rebases exact declared vendor URLs while preserving the public route", async () => {
       const ts = await import("typescript"), fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🪞️vendor.json"), "utf8"));
       const printer = ts.createPrinter();
       for (const row of fixture.cases) {
@@ -6186,7 +6091,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
   });
 
   describe("deployed vendor transport", () => {
-    it("closes static compiler source imports through explicit neutral entry points", async () => {
+    itLong("closes static compiler source imports through explicit neutral entry points", async () => {
       const ts = await import("typescript"), { default: Ajv } = await import("ajv");
       const authority = resolve(dirname(fileURLToPath(import.meta.url)), "../../🚚️distribution");
       const fixture = JSON.parse(readFileSync(join(authority, "🕸️input-graph.json"), "utf8"));
@@ -6248,7 +6153,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       console.log(`[DEBUG] independently checked ${manifest.outputs.length} outputs and preserved ${baseline.length} primary files`);
     });
 
-    it("completes detached compiler configuration imports in Bun and Node", async () => {
+    itLong("completes detached compiler configuration imports in Bun and Node", async () => {
       const { execFileSync, spawnSync } = await import("node:child_process"), { pathToFileURL } = await import("node:url");
       const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/♻️entry-cycle.json"), "utf8"));
       const sandbox = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "distribution-entry-cycle-"));
@@ -6263,7 +6168,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       }
     });
 
-    it("publishes only staged manifest-owned bytes and preserves hostile or unrelated children", async () => {
+    itLong("publishes only staged manifest-owned bytes and preserves hostile or unrelated children", async () => {
       const authority = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution");
       const fixture = JSON.parse(readFileSync(join(authority, "🔬️manifest-cases.json"), "utf8"));
       const { layout } = JSON.parse(readFileSync(join(authority, "🧪️cases.json"), "utf8"));
@@ -6301,7 +6206,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       expect((await glob("**/*", { cwd: destination, onlyFiles: true, dot: true })).sort()).toEqual([...new Bun.Glob("**/*").scanSync({ cwd: destination, onlyFiles: true, dot: true })].sort());
     });
 
-    it("validates exact distribution owner manifests against a neutral digest oracle", async () => {
+    itLong("validates exact distribution owner manifests against a neutral digest oracle", async () => {
       const { default: Ajv } = await import("ajv");
       const authority = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution");
       const fixture = JSON.parse(readFileSync(join(authority, "🔬️manifest-cases.json"), "utf8"));
@@ -6317,7 +6222,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       for (const outputs of [[...fixture.manifest.outputs, fixture.manifest.outputs[1]], [fixture.manifest.outputs[0], { ...fixture.manifest.outputs[1], ownerId: "unknown" }], [fixture.manifest.outputs[0], { ...fixture.manifest.outputs[1], bytes: -1 }], [fixture.manifest.outputs[0], { ...fixture.manifest.outputs[1], sha256: "bad" }], [fixture.manifest.outputs[0], { ...fixture.manifest.outputs[1], extra: true }]]) expect(() => parseDistributionManifest({ ...fixture.manifest, outputs }, layout)).toThrow();
     });
 
-    it("admits only hand-authored collision-free distribution output owners", async () => {
+    itLong("admits only hand-authored collision-free distribution output owners", async () => {
       const { default: Ajv } = await import("ajv"), { default: emojiRegex } = await import("emoji-regex");
       const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution");
       const fixture = JSON.parse(readFileSync(join(root, "🧪️cases.json"), "utf8")), catalog = JSON.parse(readFileSync(join(root, "📇️layout.json"), "utf8"));
@@ -6350,10 +6255,10 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       console.log(`[DEBUG] validated ${actual.chunks.length} chunk owners and ${actual.assets.length} asset owners, including all ${fonts.length} installed KaTeX fonts`);
     });
 
-    it("emits runtime URL assets but no dead in-source-test assets in production", async () => {
+    itLong("emits runtime URL assets but no dead in-source-test assets in production", async () => {
       const ts = await import("typescript"), { execFileSync } = await import("node:child_process");
       const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🧹️production-tests.json");
-      const source = ts.createSourceFile("script.ts", readFileSync(fileURLToPath(import.meta.url), "utf8"), ts.ScriptTarget.Latest, true);
+      const source = ts.createSourceFile("vite-plugins.ts", readFileSync(join(dirname(fileURLToPath(import.meta.url)), "🔌️vite-plugins.ts"), "utf8"), ts.ScriptTarget.Latest, true);
       const node = source.statements.find((item) => ts.isFunctionDeclaration(item) && item.name?.text === "semioProductionTestBoundaryVitePlugin");
       const emitted = node ? ts.transpileModule(node.getText(source).replace("export function", "function"), { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText : "";
       const config = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "⚙️vite.config.ts"), "utf8");
@@ -6382,7 +6287,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       console.log("[DEBUG] production retains the executable runtime asset URL without emitting test assets; test mode retains both");
     }, 40_000);
 
-    it("validates neutral read-only build inspection records against an independent digest oracle", async () => {
+    itLong("validates neutral read-only build inspection records against an independent digest oracle", async () => {
       const { default: Ajv } = await import("ajv");
       const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures");
       const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔎️build-inspection.json"), "utf8"));
@@ -6456,7 +6361,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       console.log(`[DEBUG] inspected ${rows.length} actual Rollup outputs; preserved ${Object.keys(before).length} distribution files`);
     }, 210_000);
 
-    it("excludes test-only Node imports from production output while preserving runtime and test-mode branches", async () => {
+    itLong("excludes test-only Node imports from production output while preserving runtime and test-mode branches", async () => {
       const ts = await import("typescript"), { execFileSync } = await import("node:child_process");
       const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🧹️production-tests.json");
       const fixture = JSON.parse(readFileSync(fixturePath, "utf8"));
@@ -6488,21 +6393,21 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       console.log("[DEBUG] production excludes Node test imports; runtime and test-mode witnesses remain executable");
     }, 40_000);
 
-    it("routes encoded OS watcher and installation requests through the actual adapter handlers", async () => {
+    itLong("routes encoded OS watcher and installation requests through the actual adapter handlers", async () => {
       const ts = await import("typescript"), { EventEmitter } = await import("node:events");
       const { URL: OracleURL } = await import("whatwg-url");
       const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧪️cases.json"), "utf8"));
       const handlers = new Map<string, Function>(), watched: string[] = [];
       const environment = {
         mkdirSync() {}, watch(path: string) { watched.push(path); }, join, moduleRoutePath,
-        pluginOutRoot, MODULE_HOT_SWAP_FILE, PLUGIN_SOURCE_WATCH_PATH,
+        PLUGIN_MODULES_ROOT, MODULE_HOT_SWAP_FILE, PLUGIN_SOURCE_WATCH_PATH,
         startSseKeepalive: () => () => {}, scanBuiltPluginModules: () => [{ pluginId: "puzzle", rebuiltAt: 1 }],
         EXTENSION_WATCH_MARKER: "👀️extension-watch.json", EXTENSION_WATCH_PATH: `${MODULE_EXTENSION_ROUTE}/watch`, EXTENSION_INSTALL_PATH: `${MODULE_EXTENSION_ROUTE}/install`,
         createExtensionStore: () => ({ installRoot: "fixture-install", listInstalled: async () => [], installFromBytes: async () => ({ installed: true }) }),
         readRequestBody: async () => Buffer.from([1]),
       };
       const specs = [
-        { owner: "plugin", path: fileURLToPath(import.meta.url), name: "semioPluginHotSwapVitePlugin" },
+        { owner: "plugin", path: join(dirname(fileURLToPath(import.meta.url)), "🔌️vite-plugins.ts"), name: "semioPluginHotSwapVitePlugin" },
         { owner: "extension", path: join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️store.ts"), name: "semioExtensionStoreVitePlugin" },
       ];
       for (const spec of specs) {
@@ -6530,7 +6435,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       console.log(`[DEBUG] verified ${fixture.httpCases.length} encoded OS adapter request cases without filesystem mutation`);
     });
 
-    it("serves every declared component import and tool-fixed vendor file byte-identically", async () => {
+    itLong("serves every declared component import and tool-fixed vendor file byte-identically", async () => {
       const ts = await import("typescript"), { PassThrough } = await import("node:stream");
       const { isAbsolute } = await import("node:path");
       const styling = ts.createSourceFile("styling.ts", readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
@@ -6596,7 +6501,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
   });
 
   describe("WASI codegen profile policy", () => {
-    it("matches the strict neutral routing fixture and an independent selector", async () => {
+    itLong("matches the strict neutral routing fixture and an independent selector", async () => {
       const { default: Ajv } = await import("ajv");
       const fixtureRoot = join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🦀️wasm-profile-policy/🧬️v1");
       const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
@@ -6618,7 +6523,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       }
     });
 
-    it("keeps single-CGU mitigation WASI-only and preserves release publication settings", async () => {
+    itLong("keeps single-CGU mitigation WASI-only and preserves release publication settings", async () => {
       const { default: toml } = await import("@iarna/toml");
       const manifest = toml.parse(readFileSync(join(repoRoot, "Cargo.toml"), "utf8")) as any;
       expect(manifest.profile.dev["codegen-units"]).toBeUndefined();
@@ -7005,4 +6910,59 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
     });
   });
   //#endregion 🔖️PollHelpers-tests
+
+  //#region 🔖️CatalogSmoke-tests
+  describe("catalog smoke aggregation", () => {
+    const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🔬️catalog-smoke.json"), "utf8"));
+
+    it("folds program outcomes and install statuses into the committed language-agnostic report", () => {
+      const report = summarizeCatalogSmoke(fixture.input);
+      expect(report).toEqual(fixture.report);
+      expect(catalogSmokeExitCode(report)).toBe(fixture.exitCode);
+      expect(catalogSmokeMarkdown(report)).toBe(fixture.markdown);
+    });
+
+    it("matches the committed report schema under an independent validator", async () => {
+      const { default: Ajv } = await import("ajv");
+      const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🧬️catalog-smoke.schema.json"), "utf8")));
+      expect(validate(fixture.report), JSON.stringify(validate.errors)).toBe(true);
+      expect(validate({ ...fixture.report, totals: { pass: 1, fail: 1 } })).toBe(false);
+      expect(validate({ ...fixture.report, programs: [{ ...fixture.report.programs[0], status: "unknown" }] })).toBe(false);
+    });
+
+    it("exits non-zero for a failed program, a failed plugin, or an empty catalog, and zero only for an all-pass run", () => {
+      const green = summarizeCatalogSmoke({ ...fixture.input, programs: [fixture.input.programs[0]], plugins: [{ pluginId: "draw", status: "loaded" }] });
+      expect(catalogSmokeExitCode(green)).toBe(0);
+      expect(catalogSmokeExitCode(summarizeCatalogSmoke({ ...fixture.input, programs: [fixture.input.programs[1]], plugins: [] }))).toBe(1);
+      expect(catalogSmokeExitCode(summarizeCatalogSmoke({ ...fixture.input, programs: [fixture.input.programs[0]], plugins: [{ pluginId: "stdio", status: "crashed" }] }))).toBe(1);
+      expect(catalogSmokeExitCode(summarizeCatalogSmoke({ ...fixture.input, programs: [], plugins: [] }))).toBe(1);
+    });
+
+    it("fails and reports the shell's own boot diagnostics when no program could ever be spawned", () => {
+      const boot = { beacon: "error:s", failure: "shell never reached a ready beacon (error:s)", phaseMs: { commit: 210, firstModule: 260, beacon: 31000 }, bodyExcerpt: "no plugins loaded", consoleErrors: ["[os-shell] plugin install/reload failed", "boom"] };
+      const report = summarizeCatalogSmoke({ ...fixture.input, boot, programs: [], plugins: [] });
+      expect(report.totals).toEqual({ pass: 0, fail: 0, skipped: 0 });
+      expect(catalogSmokeExitCode(report)).toBe(1);
+      const markdown = catalogSmokeMarkdown(report);
+      expect(markdown).toContain("FAILED: shell never reached a ready beacon (error:s)");
+      expect(markdown).toContain("commit 210 ms, first module 260 ms, beacon 31000 ms");
+      expect(markdown).toContain("no plugins loaded");
+      expect(markdown).toContain("- [os-shell] plugin install/reload failed");
+    });
+
+    it("bounds the boot diagnostics it carries instead of embedding a whole session log", () => {
+      const boot = { beacon: null, failure: "timeout", phaseMs: { commit: 190, firstModule: null, beacon: null }, bodyExcerpt: "x".repeat(5000), consoleErrors: Array.from({ length: 100 }, (_, index) => `error ${index}`) };
+      const report = summarizeCatalogSmoke({ ...fixture.input, boot, programs: [], plugins: [] });
+      expect(report.boot.bodyExcerpt).toHaveLength(1000);
+      expect(report.boot.consoleErrors).toHaveLength(20);
+    });
+
+    it("escapes table-breaking cell content instead of corrupting the markdown row", () => {
+      const report = summarizeCatalogSmoke({ ...fixture.input, programs: [{ ...fixture.input.programs[0], firstError: "boom | on\nline two" }], plugins: [] });
+      const row = catalogSmokeMarkdown(report).split("\n").find((line) => line.startsWith("| draw "))!;
+      expect(row.replaceAll("\\|", "").split("|")).toHaveLength(9);
+      expect(row).toContain("boom \\| on line two");
+    });
+  });
+  //#endregion 🔖️CatalogSmoke-tests
 }

@@ -813,7 +813,7 @@
         "accepted": { "type": "boolean" }
       }
     },
-    "DirectorySpaceAdministrationCursorV1": { "type": "string", "minLength": 1, "maxLength": 512, "pattern": "^[A-Za-z0-9._-]+$" },
+    "DirectorySpaceAdministrationCursorV1": { "type": "string", "minLength": 1, "maxLength": 1024, "pattern": "^[A-Za-z0-9._-]+$" },
     "DirectorySpaceAdministrationCapabilitiesV1": {
       "type": "object",
       "additionalProperties": false,

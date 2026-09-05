@@ -1,6 +1,6 @@
 //! 🗄️ 🧹️ `db_compact` — the `db` crate family's compaction and GC engine: WAL segment retention
-//! (folding the "merge/recompress" goal into deleting whole snapshot-covered sealed segments,
-//! since `db_storage::WalStorage` deliberately exposes no "is this segment sealed" query and
+//! (folding the "merge/recompress" goal into deleting whole snapshot-covered sealed segments;
+//! the committed cursor's complete segment ledger keeps its highest live segment protected, and
 //! `db_wal`'s own `.spr` segments accept only its own critical `WAL_*` record kinds — see the
 //! `//#region 🔖️WalRetention` doc for the full rationale), snapshot chain consolidation into a
 //! fresh full baseline, ref-traced payload GC, index-kind merge (which also physically drops
@@ -123,8 +123,8 @@ pub struct SegmentHorizon {
     pub max_head_seq: Option<u64>,
 }
 
-/// @emoji 🪢️ Groups `records` (as returned by `db_wal::replay_document`, already in
-/// segment-then-on-disk order) by the `WalRecord::SegmentHeader` boundaries that open each span —
+/// @emoji 🪢️ Groups already-admitted records in segment-then-on-disk order by the
+/// `WalRecord::SegmentHeader` boundaries that open each span —
 /// the shared traversal `segment_horizons`/`sweep_payloads` both build on.
 /// @emoji 📊️ Computes every segment's `SegmentHorizon` from a document's full replayed record
 /// stream.
@@ -154,9 +154,8 @@ pub async fn segment_horizons<'record>(records: impl IntoIterator<Item = &'recor
 }
 
 /// @emoji 🧹️ Selects which SEALED WAL segments are safe to delete: strictly below the highest
-/// segment index present (the presumed-active segment — `db_storage::WalStorage` has no "is this
-/// sealed" query, so this crate never risks touching one that might still be live, per the module
-/// doc), with a known `max_head_seq` at or below `floor_head_seq`, capped at
+/// segment index present (the live segment, retained even when it contains only its header), with
+/// a known `max_head_seq` at or below `floor_head_seq`, capped at
 /// `budget.max_wal_segments`. Ascending order (oldest first).
 // 🚫️async: E1 pure accessor consumed synchronously by `run_under_lease` and tests — see R9
 #[cfg(test)]
@@ -730,72 +729,29 @@ impl<'storage> Compactor<'storage> {
         let mut report = CompactionReport::default();
 
         let wal = self.storage.wal().await;
-        let control = db_wal::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
-        let mut replay = db_wal::replay_document(&wal, document, control).await?;
-        let mut horizons = Vec::new();
-        let mut current: Option<SegmentHorizon> = None;
-        loop {
-            let mut record = match replay.next_step().await? {
-                db_wal::WalReplayStep::Record(record) => record,
-                db_wal::WalReplayStep::Yield => continue,
-                db_wal::WalReplayStep::Done => break,
-            };
-            match &record {
-                db_wal::WalRecord::SegmentHeader { segment_index, .. } => {
-                    if let Some(horizon) = current.replace(SegmentHorizon { segment_index: *segment_index, max_head_seq: None }) {
-                        horizons.push(horizon);
-                    }
-                }
-                db_wal::WalRecord::Frontier(frontier) | db_wal::WalRecord::SnapshotPub { frontier, .. } => {
-                    if let Some(horizon) = current.as_mut() {
-                        horizon.max_head_seq = Some(horizon.max_head_seq.map_or(frontier.head_seq, |head| head.max(frontier.head_seq)));
-                    }
-                }
-                _ => {}
+        let cancelled = std::sync::atomic::AtomicBool::new(false);
+        let horizons = committed_compaction_horizons(&wal, document, &cancelled).await?;
+        let active_segment = horizons.get(horizons.len().saturating_sub(1)).map(|horizon| horizon.segment_index);
+        let mut selected = DatabaseCompactionSegmentOwners::new();
+        for index in 0..horizons.len() {
+            let horizon = horizons.get(index).ok_or_else(|| DbError::Internal("database compaction horizon owner lost".to_string()))?;
+            if Some(horizon.segment_index) != active_segment && horizon.max_head_seq.is_some_and(|head| head <= wal_floor_head_seq) && selected.len() < usize::try_from(budget.max_wal_segments).unwrap_or(usize::MAX) {
+                selected.push(horizon)?;
             }
-            let _ = record.close_step()?;
-            drop(record);
         }
-        if let Some(horizon) = current {
-            horizons.push(horizon);
+        let (candidates, live) = committed_compaction_payloads(&wal, document, &selected, &cancelled).await?;
+        for index in 0..selected.len() {
+            let segment = selected.get(index).ok_or_else(|| DbError::Internal("database compaction selected segment owner lost".to_string()))?;
+            wal.delete_segment(document, segment.segment_index).await?;
+            report.wal_segments_deleted += 1;
         }
-        let _ = replay.close_step().await?;
-        drop(replay);
-        let selected = plan_wal_retention(&horizons, wal_floor_head_seq, budget);
-
-        let deleted: std::collections::HashSet<u64> = selected.iter().copied().collect();
-        let control = db_wal::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
-        let mut replay = db_wal::replay_document(&wal, document, control).await?;
-        let mut segment = 0u64;
-        let mut candidates = std::collections::HashSet::new();
-        let mut live = std::collections::HashSet::new();
-        loop {
-            let mut record = match replay.next_step().await? {
-                db_wal::WalReplayStep::Record(record) => record,
-                db_wal::WalReplayStep::Yield => continue,
-                db_wal::WalReplayStep::Done => break,
-            };
-            match &record {
-                db_wal::WalRecord::SegmentHeader { segment_index, .. } => segment = *segment_index,
-                db_wal::WalRecord::Payload(db_wal::WalPayloadRef::CasRef(hash)) => {
-                    if deleted.contains(&segment) {
-                        candidates.insert(*hash);
-                    } else {
-                        live.insert(*hash);
-                    }
-                }
-                _ => {}
-            }
-            let _ = record.close_step()?;
-            drop(record);
-        }
-        let _ = replay.close_step().await?;
-        drop(replay);
-        report.wal_segments_deleted = apply_wal_retention(&wal, document, &selected).await?;
         let payloads = self.storage.payload().await;
-        for hash in candidates.difference(&live).take(budget.max_payloads as usize) {
-            payloads.delete(hash).await?;
-            report.payloads_deleted += 1;
+        for index in 0..candidates.len().min(usize::try_from(budget.max_payloads).unwrap_or(usize::MAX)) {
+            let hash = candidates.get(index).ok_or_else(|| DbError::Internal("database compaction candidate hash owner lost".to_string()))?;
+            if !live.contains(hash, &cancelled).await? {
+                payloads.delete(&hash).await?;
+                report.payloads_deleted += 1;
+            }
         }
         drop(payloads);
         drop(wal);
@@ -1066,6 +1022,18 @@ impl DatabaseCompactionSegmentOwners {
     fn len(&self) -> usize {
         usize::from(self.len)
     }
+
+    fn observe_head(&mut self, segment_index: u64, head_seq: u64) -> Result<(), DbError> {
+        let horizon = self
+            .slots
+            .iter_mut()
+            .take(usize::from(self.len))
+            .flatten()
+            .find(|horizon| horizon.segment_index == segment_index)
+            .ok_or_else(|| DbError::Corrupt("committed WAL transaction names an unknown segment".to_string()))?;
+        horizon.max_head_seq = Some(horizon.max_head_seq.map_or(head_seq, |head| head.max(head_seq)));
+        Ok(())
+    }
 }
 
 struct DatabaseCompactionHashOwners {
@@ -1122,11 +1090,7 @@ fn compaction_resource(document: &ArtifactId) -> Result<db_storage::DbIoText, Db
     Ok(resource)
 }
 
-async fn close_compaction_record(mut record: db_wal::WalRecord) -> Result<(), DbError> {
-    close_compaction_owner(|| record.close_step()).await
-}
-
-async fn close_compaction_replay<S: db_storage::WalStorage>(replay: &mut db_wal::WalReplayCursor<'_, S>) -> Result<(), DbError> {
+async fn close_compaction_replay<S: db_storage::WalStorage>(replay: &mut db_wal::WalCommittedCursor<'_, S>) -> Result<(), DbError> {
     close_compaction_owner(|| replay.close_owner_step()).await
 }
 
@@ -1146,6 +1110,111 @@ async fn close_compaction_page(mut page: db_state::Page) -> Result<(), DbError> 
     close_compaction_owner(|| Ok(page.close_step()?.is_some())).await
 }
 
+async fn committed_compaction_horizons<S: db_storage::WalStorage>(
+    storage: &S,
+    document: &ArtifactId,
+    cancelled: &std::sync::atomic::AtomicBool,
+) -> Result<DatabaseCompactionSegmentOwners, DbError> {
+    let control = db_wal::WalCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
+    let mut replay = db_wal::replay_committed_document(storage, document, control).await?;
+    let scan = async {
+        let mut horizons = DatabaseCompactionSegmentOwners::new();
+        for segment_index in replay.segment_indices() {
+            horizons.push(SegmentHorizon { segment_index: *segment_index, max_head_seq: None })?;
+        }
+        loop {
+            compaction_opportunity(cancelled).await?;
+            match replay.next_transaction_step().await? {
+                db_wal::WalCommittedStep::Transaction(mut transaction) => {
+                    let segment_index = transaction.segment_index();
+                    loop {
+                        match transaction.next_record_step()? {
+                            db_wal::WalCommittedRecordStep::Record(record) => {
+                                let observed = if let db_wal::WalRecord::Frontier(frontier) | db_wal::WalRecord::SnapshotPub { frontier, .. } = record {
+                                    horizons.observe_head(segment_index, frontier.head_seq)
+                                } else {
+                                    Ok(())
+                                };
+                                let closed = close_compaction_owner(|| transaction.close_record_step()).await;
+                                observed?;
+                                closed?;
+                            }
+                            db_wal::WalCommittedRecordStep::Yield => compaction_opportunity(cancelled).await?,
+                            db_wal::WalCommittedRecordStep::Done => break,
+                        }
+                    }
+                    transaction.finish()?;
+                }
+                db_wal::WalCommittedStep::Yield => {}
+                db_wal::WalCommittedStep::Done => break,
+            }
+        }
+        Ok(horizons)
+    }
+    .await;
+    let close = close_compaction_replay(&mut replay).await;
+    match (scan, close) {
+        (Err(error), _) => Err(error),
+        (Ok(_), Err(error)) => Err(error),
+        (Ok(horizons), Ok(())) if replay.terminal_is_empty() => Ok(horizons),
+        (Ok(_), Ok(())) => Err(DbError::Internal("database compaction committed horizon cursor retained owners".to_string())),
+    }
+}
+
+async fn committed_compaction_payloads<S: db_storage::WalStorage>(
+    storage: &S,
+    document: &ArtifactId,
+    selected: &DatabaseCompactionSegmentOwners,
+    cancelled: &std::sync::atomic::AtomicBool,
+) -> Result<(DatabaseCompactionHashOwners, DatabaseCompactionHashOwners), DbError> {
+    let control = db_wal::WalCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
+    let mut replay = db_wal::replay_committed_document(storage, document, control).await?;
+    let scan = async {
+        let mut candidates = DatabaseCompactionHashOwners::new();
+        let mut live = DatabaseCompactionHashOwners::new();
+        loop {
+            compaction_opportunity(cancelled).await?;
+            match replay.next_transaction_step().await? {
+                db_wal::WalCommittedStep::Transaction(mut transaction) => {
+                    let segment_index = transaction.segment_index();
+                    loop {
+                        let hash = match transaction.next_record_step()? {
+                            db_wal::WalCommittedRecordStep::Record(db_wal::WalRecord::Payload(db_wal::WalPayloadRef::CasRef(hash))) => Some(*hash),
+                            db_wal::WalCommittedRecordStep::Record(_) => None,
+                            db_wal::WalCommittedRecordStep::Yield => {
+                                compaction_opportunity(cancelled).await?;
+                                continue;
+                            }
+                            db_wal::WalCommittedRecordStep::Done => break,
+                        };
+                        close_compaction_owner(|| transaction.close_record_step()).await?;
+                        if let Some(hash) = hash {
+                            let mut deleted = false;
+                            for index in 0..selected.len() {
+                                compaction_opportunity(cancelled).await?;
+                                deleted |= selected.get(index).is_some_and(|candidate| candidate.segment_index == segment_index);
+                            }
+                            if deleted { candidates.insert(hash, cancelled).await? } else { live.insert(hash, cancelled).await? }
+                        }
+                    }
+                    transaction.finish()?;
+                }
+                db_wal::WalCommittedStep::Yield => {}
+                db_wal::WalCommittedStep::Done => break,
+            }
+        }
+        Ok((candidates, live))
+    }
+    .await;
+    let close = close_compaction_replay(&mut replay).await;
+    match (scan, close) {
+        (Err(error), _) => Err(error),
+        (Ok(_), Err(error)) => Err(error),
+        (Ok(owners), Ok(())) if replay.terminal_is_empty() => Ok(owners),
+        (Ok(_), Ok(())) => Err(DbError::Internal("database compaction committed payload cursor retained owners".to_string())),
+    }
+}
+
 async fn retained_compaction_under_lease(
     storage: &db_storage::DbBackend,
     document: &ArtifactId,
@@ -1158,39 +1227,8 @@ async fn retained_compaction_under_lease(
 ) -> Result<CompactionReport, DbError> {
     let mut report = CompactionReport::default();
     let wal = storage.wal().await;
-    let control = db_wal::WalCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
-    let mut replay = db_wal::WalReplayCursor::open(&wal, document, control).await?;
-    let mut horizons = DatabaseCompactionSegmentOwners::new();
-    let mut current = None;
     progress.store(DatabaseCompactionProgress::WalHorizon as u8, std::sync::atomic::Ordering::Release);
-    loop {
-        compaction_opportunity(cancelled).await?;
-        let step = replay.next_step().await?;
-        match step {
-            db_wal::WalReplayStep::Record(record) => {
-                match &record {
-                    db_wal::WalRecord::SegmentHeader { segment_index, .. } => {
-                        if let Some(previous) = current.replace(SegmentHorizon { segment_index: *segment_index, max_head_seq: None }) {
-                            horizons.push(previous)?;
-                        }
-                    }
-                    db_wal::WalRecord::Frontier(frontier) | db_wal::WalRecord::SnapshotPub { frontier, .. } => {
-                        if let Some(horizon) = current.as_mut() {
-                            horizon.max_head_seq = Some(horizon.max_head_seq.map_or(frontier.head_seq, |head| head.max(frontier.head_seq)));
-                        }
-                    }
-                    _ => {}
-                }
-                close_compaction_record(record).await?;
-            }
-            db_wal::WalReplayStep::Yield => {}
-            db_wal::WalReplayStep::Done => break,
-        }
-    }
-    if let Some(current) = current {
-        horizons.push(current)?;
-    }
-    close_compaction_replay(&mut replay).await?;
+    let horizons = committed_compaction_horizons(&wal, document, cancelled).await?;
     let active_segment = horizons.get(horizons.len().saturating_sub(1)).map(|horizon| horizon.segment_index);
     let mut selected = DatabaseCompactionSegmentOwners::new();
     for index in 0..horizons.len() {
@@ -1202,39 +1240,7 @@ async fn retained_compaction_under_lease(
     }
 
     progress.store(DatabaseCompactionProgress::PayloadTrace as u8, std::sync::atomic::Ordering::Release);
-    let control = db_wal::WalCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
-    let mut replay = db_wal::WalReplayCursor::open(&wal, document, control).await?;
-    let mut segment = 0;
-    let mut candidates = DatabaseCompactionHashOwners::new();
-    let mut live = DatabaseCompactionHashOwners::new();
-    loop {
-        compaction_opportunity(cancelled).await?;
-        let step = replay.next_step().await?;
-        match step {
-            db_wal::WalReplayStep::Record(record) => {
-                match &record {
-                    db_wal::WalRecord::SegmentHeader { segment_index, .. } => segment = *segment_index,
-                    db_wal::WalRecord::Payload(db_wal::WalPayloadRef::CasRef(hash)) => {
-                        let mut deleted = false;
-                        for index in 0..selected.len() {
-                            compaction_opportunity(cancelled).await?;
-                            deleted |= selected.get(index).is_some_and(|candidate| candidate.segment_index == segment);
-                        }
-                        if deleted {
-                            candidates.insert(*hash, cancelled).await?;
-                        } else {
-                            live.insert(*hash, cancelled).await?;
-                        }
-                    }
-                    _ => {}
-                }
-                close_compaction_record(record).await?;
-            }
-            db_wal::WalReplayStep::Yield => {}
-            db_wal::WalReplayStep::Done => break,
-        }
-    }
-    close_compaction_replay(&mut replay).await?;
+    let (candidates, live) = committed_compaction_payloads(&wal, document, &selected, cancelled).await?;
 
     progress.store(DatabaseCompactionProgress::WalDelete as u8, std::sync::atomic::Ordering::Release);
     for index in 0..selected.len() {
@@ -2394,6 +2400,69 @@ mod tests {
         while records.close_step().unwrap() {}
     }
 
+    fn committed_compaction_fixture() -> serde_json::Value {
+        serde_json::from_str(include_str!("🧪️fixtures/🧾️committed-effects/🔣️.json")).unwrap()
+    }
+
+    async fn append_fixture_record(writer: &mut protocol::SprWriter<Vec<u8>>, mut record: WalRecord) {
+        let (kind, critical, payload) = record.encode().await;
+        let mut frame = writer.begin_identity_record(kind, critical, payload.len()).await.unwrap();
+        frame.write_fragment(&payload).await.unwrap();
+        frame.finish().await.unwrap();
+        while record.close_step().unwrap() {}
+    }
+
+    async fn append_committed_compaction_segment(
+        storage: &MemoryStorage,
+        document: &ArtifactId,
+        row: &serde_json::Value,
+        previous: Option<[u8; 32]>,
+        aborted: pack::ContentHash,
+        committed: pack::ContentHash,
+    ) -> [u8; 32] {
+        let index = row["index"].as_u64().unwrap();
+        let options = protocol::format::WriteOptions { required_flags: protocol::wire::REQUIRED_HASH_CHAIN, optional_flags: 0 };
+        let mut writer = protocol::SprWriter::begin(Vec::new(), &options).await.unwrap();
+        append_fixture_record(&mut writer, WalRecord::SegmentHeader { document: document.clone(), segment_index: index, prev_chain_hash: previous }).await;
+        writer.commit().await.unwrap();
+        for transaction in row["transactions"].as_array().unwrap() {
+            let tx_id = transaction["id"].as_u64().unwrap();
+            append_fixture_record(&mut writer, WalRecord::TxBegin { tx_id }).await;
+            for record in transaction["records"].as_array().unwrap() {
+                let record = match record["kind"].as_str().unwrap() {
+                    "frontier" => WalRecord::Frontier(frontier(document, record["headSeq"].as_u64().unwrap()).await),
+                    "snapshot" => WalRecord::SnapshotPub { generation: 1, frontier: frontier(document, record["headSeq"].as_u64().unwrap()).await },
+                    "payload" => WalRecord::Payload(WalPayloadRef::CasRef(match record["payload"].as_str().unwrap() {
+                        "aborted" => aborted,
+                        "committed" => committed,
+                        other => panic!("unknown committed compaction payload {other}"),
+                    })),
+                    other => panic!("unknown committed compaction record {other}"),
+                };
+                append_fixture_record(&mut writer, record).await;
+            }
+            let record_count = transaction["records"].as_array().unwrap().len() as u32;
+            let terminal = match transaction["outcome"].as_str().unwrap() {
+                "commit" => WalRecord::TxCommit { tx_id, record_count },
+                "abort" => WalRecord::TxAbort { tx_id },
+                other => panic!("unknown committed compaction outcome {other}"),
+            };
+            append_fixture_record(&mut writer, terminal).await;
+            writer.commit().await.unwrap();
+        }
+        let bytes = writer.into_sink().await;
+        let mut verification = protocol::format::retained::RetainedSprVerification::new(bytes.len() as u64, protocol::format::retained::RetainedSprLimits::default()).unwrap();
+        let mut fuel = bytes.len();
+        assert_eq!(verification.push(&bytes, &mut fuel).unwrap(), bytes.len());
+        let span = verification.finish().unwrap();
+        assert_eq!(span.tail(), 0);
+        let chain = *span.chain();
+        storage.create_segment(document, index).await.unwrap();
+        assert_eq!(storage.append(document, index, pages(&bytes)).await.unwrap(), bytes.len() as u64);
+        if row["state"] == "sealed" { storage.seal(document, index).await.unwrap(); }
+        chain
+    }
+
     async fn index_put(handle: &db_index::IndexHandle<'_, MemoryStorage>, key: &[u8], value: &[u8]) {
         let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
         let mut control = db_index::IndexCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
@@ -2879,6 +2948,34 @@ mod tests {
         let budget = CompactionBudget { max_wal_segments: 1, ..CompactionBudget::default() };
         let selected = plan_wal_retention(&horizons, 100, &budget);
         assert_eq!(selected.len(), 1);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn compaction_applies_only_committed_frontier_snapshot_and_payload_effects() {
+        let fixture = committed_compaction_fixture();
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let document = doc("committed-compaction-effects").await;
+        let aborted = storage.put(pages(b"aborted-payload")).await.unwrap();
+        let committed = storage.put(pages(b"committed-payload")).await.unwrap();
+        let mut previous = None;
+        for row in fixture["segments"].as_array().unwrap() {
+            previous = Some(append_committed_compaction_segment(&storage, &document, row, previous, aborted, committed).await);
+        }
+        let backend = db_storage::DbBackend::Memory(storage);
+        let report = Compactor::new(&backend)
+            .await
+            .run(&document, "committed-compaction-holder", fixture["floorHeadSeq"].as_u64().unwrap(), false, &CompactionBudget::default(), 0)
+            .await
+            .unwrap();
+        assert_eq!(report.wal_segments_deleted, fixture["expected"]["deletedSegments"].as_u64().unwrap());
+        assert_eq!(report.payloads_deleted, fixture["expected"]["deletedPayloads"].as_u64().unwrap());
+        let wal = backend.wal().await;
+        let remaining_segments: Vec<u64> = fixture["expected"]["remainingSegments"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap()).collect();
+        assert_eq!(wal.list_segments(&document).await.unwrap().as_slice(), remaining_segments.as_slice(), "header-only highest segment remains the active horizon");
+        let payload = backend.payload().await;
+        let retained_payloads = fixture["expected"]["retainedPayloads"].as_array().unwrap();
+        assert_eq!(payload.contains(&aborted).await.unwrap(), retained_payloads.iter().any(|value| value == "aborted"), "aborted CAS reference never becomes a deletion candidate");
+        assert_eq!(payload.contains(&committed).await.unwrap(), retained_payloads.iter().any(|value| value == "committed"), "committed CAS reference in the deleted segment is reclaimed");
     }
 
     #[semio_framework_async_macros::async_test]

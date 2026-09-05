@@ -65,7 +65,7 @@
           "scenarios": [
             {
               "id": "refuses-a-parallel-synapse-as-a-no-op",
-              "directoryName": "🧪️refuses-a-parallel-synapse-as-a-no-op"
+              "directoryName": "🚫️refuses-a-parallel-synapse-as-a-no-op"
             }
           ]
         },
@@ -76,7 +76,7 @@
           "scenarios": [
             {
               "id": "rejects-a-duplicate-widget-id",
-              "directoryName": "🧪️rejects-a-duplicate-widget-id"
+              "directoryName": "🚫️rejects-a-duplicate-widget-id"
             }
           ]
         },
@@ -87,7 +87,7 @@
           "scenarios": [
             {
               "id": "rejects-deleting-a-missing-widget",
-              "directoryName": "🧪️rejects-deleting-a-missing-widget"
+              "directoryName": "🚫️rejects-deleting-a-missing-widget"
             }
           ]
         },
@@ -98,7 +98,7 @@
           "scenarios": [
             {
               "id": "rejects-disconnecting-a-missing-synapse",
-              "directoryName": "🧪️rejects-disconnecting-a-missing-synapse"
+              "directoryName": "🚫️rejects-disconnecting-a-missing-synapse"
             }
           ]
         },
@@ -109,7 +109,7 @@
           "scenarios": [
             {
               "id": "rejects-duplicating-onto-a-taken-id",
-              "directoryName": "🧪️rejects-duplicating-onto-a-taken-id"
+              "directoryName": "🚫️rejects-duplicating-onto-a-taken-id"
             }
           ]
         },
@@ -120,7 +120,7 @@
           "scenarios": [
             {
               "id": "re-applies-the-current-layout-to-both-widgets",
-              "directoryName": "🧪️re-applies-the-current-layout-to-both-widgets"
+              "directoryName": "🟰️re-applies-the-current-layout-to-both-widgets"
             }
           ]
         },
@@ -131,7 +131,7 @@
           "scenarios": [
             {
               "id": "keeps-the-leading-synapse-at-index-zero",
-              "directoryName": "🧪️keeps-the-leading-synapse-at-index-zero"
+              "directoryName": "🟰️keeps-the-leading-synapse-at-index-zero"
             }
           ]
         },
@@ -142,7 +142,7 @@
           "scenarios": [
             {
               "id": "clamps-an-out-of-range-index-onto-the-last-slot",
-              "directoryName": "🧪️clamps-an-out-of-range-index-onto-the-last-slot"
+              "directoryName": "🗜️clamps-an-out-of-range-index-onto-the-last-slot"
             }
           ]
         },
@@ -153,7 +153,7 @@
           "scenarios": [
             {
               "id": "replaces-a-note-with-an-identical-note",
-              "directoryName": "🧪️replaces-a-note-with-an-identical-note"
+              "directoryName": "🟰️replaces-a-note-with-an-identical-note"
             }
           ]
         },
@@ -164,7 +164,7 @@
           "scenarios": [
             {
               "id": "re-declares-the-same-endpoints",
-              "directoryName": "🧪️re-declares-the-same-endpoints"
+              "directoryName": "🟰️re-declares-the-same-endpoints"
             }
           ]
         }

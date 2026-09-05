@@ -15,7 +15,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🔮️ No third party reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and the earlier `semio-presentation-mutation-semantics` decision's survey of `python-pptx` still stands on its merits: it cannot create slide masters or slide layouts at all, which removes a third of the vocabulary, and reaching a `SemioPresentationSnapshot` from pptx bytes needs THIS repository's own pptx bridge, so a differential would run our importer against our exporter. What has changed is that a second producer no longer has to be a third-party library: `🧪️tests/mutate-semio-presentation/🐍️component.py` is an independent Python implementation of the carrier, the DSL grammar, the pack frame, document's own recursive `DocBlock` union and all fifteen verbs, written from the committed specification documents alone — the snapshot and mutation text grammars, the binary protocol and its Kaitai mirror, and the semio envelope in the framework carrier module. It imports nothing from and transliterates nothing of the Rust it judges. It was pinned before use: it reproduces the committed `✳️base/📚️examples/📽️deck` artifact byte for byte in both encodings and reaches all fifteen committed after-snapshots. The pptx fixture is still in the picture, but on the INPUT side only, where the old objection does not apply: the real committed `📽️.pptx` was read once by an independent `zipfile`+`xml.etree` OOXML reader — never our own bridge — to derive the real seven-slide deck both implementations now mutate.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-presentation-mutate`'s external-oracle requirement for its 15-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 1 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "rationale": "🔮️ No third party reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and the earlier `semio-presentation-mutation-semantics` decision's survey of `python-pptx` still stands on its merits: it cannot create slide masters or slide layouts at all, which removes a third of the vocabulary, and reaching a `SemioPresentationSnapshot` from pptx bytes needs THIS repository's own pptx bridge, so a differential would run our importer against our exporter. What has changed is that a second producer no longer has to be a third-party library: `🧪️tests/mutate-semio-presentation/🐍️component.py` is an independent Python implementation of the carrier, the DSL grammar, the pack frame, document's own recursive `DocBlock` union and all fifteen verbs, written from the committed specification documents alone — the snapshot and mutation text grammars, the binary protocol and its Kaitai mirror, and the semio envelope in the framework carrier module. It imports nothing from and transliterates nothing of the Rust it judges. It was pinned before use: it reproduces the committed `✉️base/📚️examples/📽️deck` artifact byte for byte in both encodings and reaches all fifteen committed after-snapshots. The pptx fixture is still in the picture, but on the INPUT side only, where the old objection does not apply: the real committed `📽️.pptx` was read once by an independent `zipfile`+`xml.etree` OOXML reader — never our own bridge — to derive the real seven-slide deck both implementations now mutate.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-presentation-mutate`'s external-oracle requirement for its 15-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 1 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -63,7 +63,7 @@
           "scenarios": [
             {
               "id": "rewrites-the-second-slides-textbox-and-adds-a-speaker-note",
-              "directoryName": "🧪️rewrites-the-second-slides-textbox-and-adds-a-speaker-note"
+              "directoryName": "🔤️rewrites-the-second-slides-textbox-and-adds-a-speaker-note"
             }
           ]
         }
@@ -587,14 +587,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🪃️remove-layout-applied/⬅️before.json",
+          "path": "../🧫️fixtures/🧹️remove-layout-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:5e56b8c2d495a975cdb869f3aeeabcc244cb63c7143532b458777fd746018cab",
           "bytes": 1556525
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🪃️remove-layout-applied/➡️after.json",
+          "path": "../🧫️fixtures/🧹️remove-layout-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:ec009b2eb16cb32a67cb11f65e675da61dac953dc043f1ee01055ee307bf9a81",
           "bytes": 1551333
@@ -638,14 +638,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🪄️remove-master-applied/⬅️before.json",
+          "path": "../🧫️fixtures/🚫️remove-master-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:5e56b8c2d495a975cdb869f3aeeabcc244cb63c7143532b458777fd746018cab",
           "bytes": 1556525
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🪄️remove-master-applied/➡️after.json",
+          "path": "../🧫️fixtures/🚫️remove-master-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:b2308be18b1634d9386e2770a204b50062d69a12d43687b8ae545fde1cf2e9f3",
           "bytes": 446841
@@ -740,14 +740,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🪒️remove-slide-applied/⬅️before.json",
+          "path": "../🧫️fixtures/📤️remove-slide-applied/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:5e56b8c2d495a975cdb869f3aeeabcc244cb63c7143532b458777fd746018cab",
           "bytes": 1556525
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🪒️remove-slide-applied/➡️after.json",
+          "path": "../🧫️fixtures/📤️remove-slide-applied/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:321a409e8a9101631184258cac270db7a99b1261d0956018757740f876cadf39",
           "bytes": 1203818

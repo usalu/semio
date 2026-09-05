@@ -16,7 +16,7 @@
           "scenarios": [
             {
               "id": "appends-a-member-udl-to-the-dead-case",
-              "directoryName": "🧪️appends-a-member-udl-to-the-dead-case"
+              "directoryName": "📏️appends-a-member-udl-to-the-dead-case"
             }
           ]
         },
@@ -27,7 +27,7 @@
           "scenarios": [
             {
               "id": "switches-self-weight-on-for-the-dead-case",
-              "directoryName": "🧪️switches-self-weight-on-for-the-dead-case"
+              "directoryName": "⚖️switches-self-weight-on-for-the-dead-case"
             }
           ]
         },
@@ -38,7 +38,7 @@
           "scenarios": [
             {
               "id": "appends-an-uls-combination-over-both-cases",
-              "directoryName": "🧪️appends-an-uls-combination-over-both-cases"
+              "directoryName": "🔗️appends-an-uls-combination-over-both-cases"
             }
           ]
         },
@@ -49,7 +49,7 @@
           "scenarios": [
             {
               "id": "appends-a-live-case-carrying-one-nodal-load",
-              "directoryName": "🧪️appends-a-live-case-carrying-one-nodal-load"
+              "directoryName": "📍️appends-a-live-case-carrying-one-nodal-load"
             }
           ]
         },
@@ -60,7 +60,7 @@
           "scenarios": [
             {
               "id": "removes-the-uls-combination-and-keeps-both-cases",
-              "directoryName": "🧪️removes-the-uls-combination-and-keeps-both-cases"
+              "directoryName": "✂️removes-the-uls-combination-and-keeps-both-cases"
             }
           ]
         },
@@ -71,7 +71,7 @@
           "scenarios": [
             {
               "id": "removes-the-live-case-together-with-its-loads",
-              "directoryName": "🧪️removes-the-live-case-together-with-its-loads"
+              "directoryName": "🚫️removes-the-live-case-together-with-its-loads"
             }
           ]
         },
@@ -82,7 +82,7 @@
           "scenarios": [
             {
               "id": "strips-the-trailing-member-udl-from-the-dead-case",
-              "directoryName": "🧪️strips-the-trailing-member-udl-from-the-dead-case"
+              "directoryName": "➖️strips-the-trailing-member-udl-from-the-dead-case"
             }
           ]
         }

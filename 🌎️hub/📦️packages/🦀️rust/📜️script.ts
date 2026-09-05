@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, randomBytes, timingSafeEqual, webcrypto } from "node:crypto";
 import { chmodSync, closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeSync } from "node:fs";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
@@ -7,9 +7,11 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
 import type { Duplex } from "node:stream";
 import Ajv from "ajv";
-import { decodeClientFrame, encodeServerFrame, type WireFrontierSummary } from "../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
+import { decodeClientFrame, decodePresencePeer, encodePresencePeer, encodeServerFrame, type ArtifactPresencePeer, type WireFrontierSummary } from "../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
 import { decodeBackboneWorkerResponse, decodePackValue, encodeBackboneWorkerRequest, encodePackValue } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
-import { parseDocumentOpenIntentV1, parseDocumentOpenPlanV1, parseDocumentPlanSocketGrantIntentV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, parseDocumentOpenIntentV1, parseDocumentOpenPlanV1, parseDocumentPlanSocketGrantIntentV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { directoryCommandErrorFromStatus, directoryCommandErrorIsTransient, directoryCommandRequestJson, directoryCommandSha256, parseDirectoryCommandReceiptV1, parseDirectoryCommandRequestV1, sealDirectoryCommandRequestV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import type { DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 import { produceFreshComponentV1, type FreshBuildControlV1, type FreshComponentReceiptV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts";
 import { verifyFreshCatalogPackageV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts";
 /** 🌎️ `os-hub` router: `bun ./📜️script.ts <setup|build|test|dev>`. */
@@ -111,6 +113,10 @@ const LOCAL_RELAY_MAX_BODY_BYTES = 1024 * 1024;
 const LOCAL_RELAY_MAX_STATIC_RESPONSE_BYTES = 4 * 1024 * 1024;
 const LOCAL_RELAY_MAX_IN_FLIGHT = 64;
 const LOCAL_RELAY_DEADLINE_MS = 2_000;
+const EXECUTION_TARGET_RELAY_REQUEST_MAX_BYTES = 8 * 1024;
+const EXECUTION_TARGET_RELAY_MANIFEST_MAX_BYTES = 8 * 1024;
+const EXECUTION_TARGET_RELAY_MAX_IN_FLIGHT = 2;
+const EXECUTION_TARGET_RELAY_DEADLINE_MS = 9_000;
 const BROWSER_BROKER_PROOF_DOMAIN = "semio/browser-broker-proof/v1\0";
 const BROWSER_BROKER_PROOF_TTL_MS = 15_000;
 const ADMIN_RELAY_BOOTSTRAP_PROOF_TTL_MS = 15_000;
@@ -329,6 +335,20 @@ function startLocalAdminRelay(hubOrigin: string, envelope: Record<string, any>, 
   };
 }
 
+function localRelayExecutionTargetAsset(path: string): "manifest" | "component" | "descriptor" | undefined {
+  const matched = /^\/spaces\/([^/]+)\/documents\/([^/]+)\/execution-target\/(manifest|component|descriptor)$/u.exec(path);
+  if (!matched) return undefined;
+  try {
+    for (const encoded of [matched[1]!, matched[2]!]) {
+      const id = decodeURIComponent(encoded);
+      if (!id || id === "." || id === ".." || encodeURIComponent(id) !== encoded || /[\/\\\u0000-\u0020\u007f%?#]/u.test(id)) return undefined;
+    }
+    return matched[3] as "manifest" | "component" | "descriptor";
+  } catch {
+    return undefined;
+  }
+}
+
 function localRelayUpstreamPath(method: string, url: URL): string | undefined {
   if (!url.pathname.startsWith("/_semio/hub/")) return undefined;
   const upstream = url.pathname.slice("/_semio/hub".length);
@@ -340,25 +360,36 @@ function localRelayUpstreamPath(method: string, url: URL): string | undefined {
   if (method === "POST" && /^\/directory\/spaces\/[^/]+\/documents\/[^/]+\/socket-grants$/u.test(upstream) && noQuery) return upstream;
   if (method === "POST" && /^\/spaces\/[^/]+\/documents\/[^/]+\/open-plan$/u.test(upstream) && noQuery) return upstream;
   if (method === "POST" && /^\/spaces\/[^/]+\/documents\/[^/]+\/socket-grants$/u.test(upstream) && noQuery) return upstream;
+  if (method === "POST" && localRelayExecutionTargetAsset(upstream) && noQuery) return upstream;
   return undefined;
 }
 
-async function readLocalRelayBody(request: Request, maximumBytes = LOCAL_RELAY_MAX_BODY_BYTES): Promise<Uint8Array | undefined> {
+async function readLocalRelayBody(request: Request, maximumBytes = LOCAL_RELAY_MAX_BODY_BYTES, signal?: AbortSignal): Promise<Uint8Array | undefined> {
+  signal?.throwIfAborted();
   if (request.method === "GET" || request.method === "DELETE" || request.body === null) return undefined;
   const contentLength = Number(request.headers.get("content-length") ?? "0");
   if (!Number.isSafeInteger(contentLength) || contentLength < 0 || contentLength > maximumBytes) throw new Error("payload too large");
   const reader = request.body.getReader();
+  const cancel = (): void => { void reader.cancel().catch(() => undefined); };
+  signal?.addEventListener("abort", cancel, { once: true });
   const chunks: Uint8Array[] = [];
   let retained = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    retained += value.byteLength;
-    if (retained > maximumBytes) {
-      await reader.cancel();
-      throw new Error("payload too large");
+  try {
+    for (;;) {
+      signal?.throwIfAborted();
+      const { done, value } = await reader.read();
+      signal?.throwIfAborted();
+      if (done) break;
+      retained += value.byteLength;
+      if (retained > maximumBytes) {
+        await reader.cancel();
+        throw new Error("payload too large");
+      }
+      chunks.push(value);
     }
-    chunks.push(value);
+  } finally {
+    signal?.removeEventListener("abort", cancel);
+    reader.releaseLock();
   }
   const body = new Uint8Array(retained);
   let offset = 0;
@@ -414,6 +445,7 @@ function startLocalBrowserRelay(hubOrigin: string, uiOrigin: string, envelope: R
   let capability = envelope.capability;
   envelope.capability = "";
   let inFlight = 0;
+  let executionTargetsInFlight = 0;
   let stopping = false;
   let stopPromise: Promise<void> | undefined;
   const upstreamControllers = new Set<AbortController>();
@@ -443,8 +475,12 @@ function startLocalBrowserRelay(hubOrigin: string, uiOrigin: string, envelope: R
       const url = new URL(request.url);
       const upstreamPath = localRelayUpstreamPath(request.method, url);
       if (!upstreamPath || inFlight >= LOCAL_RELAY_MAX_IN_FLIGHT) return new Response("unavailable", { status: upstreamPath ? 503 : 404 });
+      const executionTarget = localRelayExecutionTargetAsset(upstreamPath);
+      if (executionTarget && executionTargetsInFlight >= EXECUTION_TARGET_RELAY_MAX_IN_FLIGHT) return new Response("unavailable", { status: 503 });
+      const requestMaxBytes = executionTarget ? EXECUTION_TARGET_RELAY_REQUEST_MAX_BYTES : LOCAL_RELAY_MAX_BODY_BYTES;
+      const responseMaxBytes = executionTarget === "component" ? DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES : executionTarget === "descriptor" ? DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES : executionTarget === "manifest" ? EXECUTION_TARGET_RELAY_MANIFEST_MAX_BYTES : LOCAL_RELAY_MAX_BODY_BYTES;
       const contentLength = Number(request.headers.get("content-length") ?? "0");
-      if (!Number.isSafeInteger(contentLength) || contentLength < 0 || contentLength > LOCAL_RELAY_MAX_BODY_BYTES) return new Response("payload too large", { status: 413 });
+      if (!Number.isSafeInteger(contentLength) || contentLength < 0 || contentLength > requestMaxBytes) return new Response("payload too large", { status: 413 });
       const currentProof = request.headers.get("x-semio-browser-broker");
       const nextProofDigest = request.headers.get("x-semio-browser-broker-next");
       if (Date.now() > browserProofExpiresAtMs || currentProof === null || nextProofDigest === null || !/^[0-9a-f]{64}$/u.test(currentProof) || !/^[0-9a-f]{64}$/u.test(nextProofDigest)) {
@@ -462,23 +498,25 @@ function startLocalBrowserRelay(hubOrigin: string, uiOrigin: string, envelope: R
       browserProofDigest = Buffer.from(nextProofDigest, "hex");
       browserProofExpiresAtMs = Date.now() + proofTtlMs;
       inFlight += 1;
+      if (executionTarget) executionTargetsInFlight += 1;
       const upstreamController = new AbortController();
       const cancelUpstream = (): void => upstreamController.abort();
       request.signal.addEventListener("abort", cancelUpstream, { once: true });
       upstreamControllers.add(upstreamController);
+      const signal = AbortSignal.any([request.signal, upstreamController.signal, AbortSignal.timeout(executionTarget ? EXECUTION_TARGET_RELAY_DEADLINE_MS : LOCAL_RELAY_DEADLINE_MS)]);
       try {
-        const body = await readLocalRelayBody(request, upstreamPath === "/admin/api/intents" ? 8 * 1024 : LOCAL_RELAY_MAX_BODY_BYTES);
+        const body = await readLocalRelayBody(request, requestMaxBytes, signal);
         const upstream = await fetch(`${hubOrigin}${upstreamPath}`, {
           method: request.method,
           headers: { authorization: `Bearer ${capability}`, ...(body?.byteLength ? { "content-type": "application/json" } : {}) },
           body,
           redirect: "error",
-          signal: AbortSignal.any([upstreamController.signal, AbortSignal.timeout(LOCAL_RELAY_DEADLINE_MS)]),
+          signal,
         });
         if (upstream.status === 401) capability = "";
-        const responseBody = await readLocalRelayResponse(upstream);
+        const responseBody = await readLocalRelayResponse(upstream, responseMaxBytes);
         const contentType = upstream.headers.get("content-type");
-        return new Response(responseBody, { status: upstream.status, headers: { "x-semio-browser-broker-advanced": "1", ...(contentType ? { "content-type": contentType } : {}) } });
+        return new Response(responseBody, { status: upstream.status, headers: { "x-semio-browser-broker-advanced": "1", "content-length": String(responseBody.byteLength), "cache-control": "no-store", ...(contentType ? { "content-type": contentType } : {}) } });
       } catch (error) {
         return new Response(error instanceof Error && error.message === "payload too large" ? "payload too large" : "unavailable", {
           status: error instanceof Error && error.message === "payload too large" ? 413 : 503,
@@ -486,8 +524,10 @@ function startLocalBrowserRelay(hubOrigin: string, uiOrigin: string, envelope: R
         });
       } finally {
         request.signal.removeEventListener("abort", cancelUpstream);
+        upstreamController.abort();
         upstreamControllers.delete(upstreamController);
         inFlight -= 1;
+        if (executionTarget) executionTargetsInFlight -= 1;
         if (inFlight === 0) {
           for (const resolveIdle of idleWaiters) resolveIdle();
           idleWaiters.clear();
@@ -963,8 +1003,8 @@ function proveMcpCredentialSourceOrder(repoRoot: string): void {
   if (openHub < 0 || injectCredential < openHub || injectGrantSource < injectCredential || returnWorkspace < injectGrantSource) throw new Error("MCP ArtifactHost credential/grant injection no longer precedes document access");
   if (!workspace.includes(`PROBE_PACK_SCHEMA_HASH: &str = "${MCP_PROBE_PACK_SCHEMA_HASH}"`) || !workspace.includes("authenticated_probe_document_is_known") || !workspace.includes("Some(probe_record_spec())"))
     throw new Error("MCP authenticated probe document schema binding drift");
-  if (!workspace.includes("probe_document_socket_surface()") || !workspace.includes("set_document_socket_surface(&document_key") || !workspace.includes("artifact_document_key(artifact_id)"))
-    throw new Error("MCP probe document transport lost its full-scope package/surface preclaim");
+  if (workspace.includes("probe_document_socket_surface") || workspace.includes("set_document_execution_target_lease(") || !workspace.includes("artifact_document_key(artifact_id)") || !workspace.includes("surface: Some(PROBE_SURFACE_ID.to_string())"))
+    throw new Error("MCP probe document transport regained a forgeable local execution-target claim or lost its full-scope requested surface");
   if (!directory.includes('"/directory/socket-grants"') || !directory.includes('"/directory/socket/v1"') || !directory.includes("directory_socket_hello_v1()")) throw new Error("MCP directory binding no longer uses the v1 receipt/tag7 protocol");
   if (runner.includes('runCmd("cargo", ["run"') || !runner.includes("runCmd(buildMcpBinary")) throw new Error("MCP runner is not a direct binary supervisor");
   if (!launch.includes("os-hub:dev-secure-mcp")) throw new Error("MCP secure direct-child launch is not registered in the source seed");
@@ -974,22 +1014,14 @@ const MCP_PROBE_SCHEMA = "os.agent.probe/v1";
 const MCP_PROBE_PACK_SCHEMA_HASH = "9fab7cb8b71dabede955b4257fa06e2908642e0904f124b6230479f8a153041e";
 
 async function createMcpProbeWorkspace(run: LocalHubRun, envelope: Record<string, any>): Promise<{ readonly spaceId: string; readonly documentId: string }> {
-  const response = await fetch(`http://127.0.0.1:${run.port}/directory/commands`, {
-    method: "POST",
-    headers: { authorization: `Bearer ${envelope.capability}`, "content-type": "application/json" },
-    body: JSON.stringify({ kind: "create-space", name: "MCP Socket Grant Probe", spaceKind: "studio", visibility: "private" }),
-    signal: AbortSignal.timeout(2_000),
-  });
-  if (!response.ok) throw new Error(`MCP process probe could not create its workspace: ${response.status}`);
-  const body = (await response.json()) as Record<string, any>;
+  const created = await postLiveDirectoryCommand(run, envelope.capability, liveDirectoryCommandRequestId(), { kind: "create-space", name: "MCP Socket Grant Probe", spaceKind: "studio", visibility: "private" });
+  if (created.status !== 202) throw new Error(`MCP process probe could not create its workspace: ${created.status}`);
+  const body = JSON.parse(created.text) as Record<string, any>;
   const event = Array.isArray(body.events) ? body.events.find((candidate: any) => candidate?.body?.kind === "space.created") : undefined;
   const spaceId = event?.body?.spaceId;
   if (typeof spaceId !== "string" || spaceId.length === 0) throw new Error("MCP process probe create-space response lacked its exact identifier");
   const documentId = "mcp-socket-grant-probe";
-  const announced = await fetch(`http://127.0.0.1:${run.port}/directory/commands`, {
-    method: "POST",
-    headers: { authorization: `Bearer ${envelope.capability}`, "content-type": "application/json" },
-    body: JSON.stringify({
+  const announced = await postLiveDirectoryCommand(run, envelope.capability, liveDirectoryCommandRequestId(), {
       kind: "announce-document",
       descriptor: {
         spaceId,
@@ -1002,10 +1034,8 @@ async function createMcpProbeWorkspace(run: LocalHubRun, envelope: Record<string
         bootstrapFrontier: { headSeq: 0, commitSeq: 0, epoch: 0 },
         bootstrapSnapshotHash: "33".repeat(32),
       },
-    }),
-    signal: AbortSignal.timeout(2_000),
   });
-  if (!announced.ok) throw new Error(`MCP process probe could not announce its document: ${announced.status}`);
+  if (announced.status !== 202) throw new Error(`MCP process probe could not announce its document: ${announced.status}`);
   return { spaceId, documentId };
 }
 
@@ -1705,7 +1735,7 @@ async function proveBrowserBrokerRelay(): Promise<void> {
 type BrowserDocumentOpenFixture = {
   readonly nowMs: number;
   readonly intent: Record<string, any>;
-  readonly installedTarget: { readonly package: Record<string, any>; readonly artifact: Record<string, any>; readonly parentDialect: Record<string, any>; readonly surface: Record<string, any> };
+  readonly installedTarget: Record<string, any>;
   readonly plan: Record<string, any>;
   readonly socketGrant: Record<string, any>;
   readonly expected: { readonly httpPaths: readonly [string, string]; readonly webSocketPath: string; readonly protocol: string; readonly helloSchema: string; readonly helloPackSchemaHashByte: number; readonly responseMaxBytes: number; readonly rustWorkerBypassDenied: true; readonly scopeIsolation: { readonly left: { readonly spaceId: string; readonly documentId: string }; readonly right: { readonly spaceId: string; readonly documentId: string }; readonly leftKey: string; readonly rightKey: string; readonly localKey: string }; readonly forbiddenSocketFragments: readonly string[] };
@@ -1729,31 +1759,39 @@ async function browserDocumentOpenFixture(repoRoot: string): Promise<BrowserDocu
   return fixture;
 }
 
+/** ⚖️ Independent full-field lease relation. It is hand-written here (no production import) and
+ * compares every plan-projected lease field to the installed execution target, including both
+ * component digests, byte lengths, catalog generation, checkpoint and revalidation. The renderer
+ * target is whatever the installation declares: a non-`react` target is a lease-path decision, not
+ * a fixture constant. */
 function browserDocumentOpenAuthority(plan: Record<string, any>, fixture: BrowserDocumentOpenFixture): boolean {
   const intent = fixture.intent;
   const installed = fixture.installedTarget;
-  return plan.scope?.spaceId === intent.scope?.spaceId
+  const sameJson = (left: unknown, right: unknown): boolean => JSON.stringify(left) === JSON.stringify(right);
+  return installed.schema === "semio.os.document-execution-target-lease/v1"
+    && installed.version === 1
+    && plan.scope?.spaceId === intent.scope?.spaceId
     && plan.scope?.documentId === intent.scope?.documentId
-    && plan.package?.pluginId === installed.package.pluginId
-    && plan.package?.packageId === installed.package.packageId
-    && plan.package?.version === installed.package.version
-    && plan.package?.componentSha256 === installed.package.componentSha256
-    && plan.package?.componentBlake3 === installed.package.componentBlake3
-    && plan.package?.descriptorByteSha256 === installed.package.descriptorByteSha256
-    && plan.artifact?.kind === installed.artifact.kind
-    && plan.artifact?.schema === installed.artifact.schema
+    && sameJson(plan.scope, installed.scope)
+    && plan.descriptorDigestV1 === installed.descriptorDigestV1
+    && sameJson(plan.catalog, installed.catalog)
+    && sameJson(plan.package, installed.package)
+    && installed.component?.sha256 === installed.package?.componentSha256
+    && installed.component?.blake3 === installed.package?.componentBlake3
+    && installed.descriptor?.sha256 === installed.package?.descriptorByteSha256
+    && Number.isSafeInteger(installed.component?.byteLength) && installed.component.byteLength >= 1 && installed.component.byteLength <= 64 * 1024 * 1024
+    && Number.isSafeInteger(installed.descriptor?.byteLength) && installed.descriptor.byteLength >= 1 && installed.descriptor.byteLength <= 4 * 1024 * 1024
+    && sameJson(plan.artifact, installed.artifact)
     && plan.artifact?.schema === fixture.expected.helloSchema
-    && plan.artifact?.packSchemaHash === installed.artifact.packSchemaHash
     && plan.artifact?.packSchemaHash === fixture.expected.helloPackSchemaHashByte.toString(16).padStart(2, "0").repeat(32)
-    && JSON.stringify(plan.parentDialect) === JSON.stringify(installed.parentDialect)
+    && sameJson(plan.parentDialect, installed.parentDialect)
     && plan.parentDialect?.artifactKind === plan.artifact?.kind
-    && plan.surface?.surfaceId === installed.surface.surfaceId
+    && sameJson(plan.surface, installed.surface)
     && plan.surface?.surfaceId === intent.requestedSurfaceId
-    && plan.surface?.appId === installed.surface.appId
-    && plan.surface?.windowKindId === installed.surface.windowKindId
-    && plan.surface?.role === installed.surface.role
-    && plan.surface?.rendererTarget === installed.surface.rendererTarget
-    && plan.surface?.rendererTarget === "react"
+    && sameJson(plan.grant, installed.grant)
+    && plan.grant?.write === (plan.surface?.role === "editor")
+    && sameJson(plan.checkpoint, installed.checkpoint)
+    && sameJson(plan.revalidation, installed.revalidation)
     && plan.expiresAtUnixMs > fixture.nowMs
     && plan.expiresAtUnixMs - fixture.nowMs <= 30_000;
 }
@@ -1858,7 +1896,7 @@ async function proveBrowserDocumentOpenRuntime(repoRoot: string, fixture: Browse
     kind: "open",
     documentId: current.intent.scope.documentId,
     schema: current.expected.helloSchema,
-    bindings: [{ kind: "hub", baseUrl: hubOrigin, spaceId: current.intent.scope.spaceId, installedTarget: current.installedTarget }],
+    bindings: [{ kind: "hub", baseUrl: hubOrigin, spaceId: current.intent.scope.spaceId, installedTarget: current.installedTarget as unknown as import("@semio-tech/framework-os").DocumentExecutionTargetLeaseFieldsV1 }],
     actor: "browser-untrusted-actor",
     packSchemaHash: new Array(32).fill(current.expected.helloPackSchemaHashByte),
   }));
@@ -2519,6 +2557,199 @@ class ScopedDirectorySocketCheckScript extends BundleScript {
   }
 }
 
+type ExecutionTargetRelayFixture = {
+  readonly intent: Record<string, unknown>;
+  readonly limits: { readonly requestBytes: number; readonly manifestBytes: number; readonly componentBytes: number; readonly descriptorBytes: number; readonly inFlight: number; readonly hubDeadlineMs: number; readonly relayDeadlineMs: number };
+  readonly routes: readonly { readonly id: string; readonly method: string; readonly path: string; readonly admitted: boolean }[];
+  readonly responses: readonly { readonly id: string; readonly asset: string; readonly bytes: number; readonly delayMs: number; readonly status: number }[];
+  readonly fences: readonly { readonly mutation: string; readonly expected: string }[];
+};
+
+type NativeArtifactProviderFrontierFixture = {
+  readonly schema: "semio.hub.native-artifact-provider-frontier/v1";
+  readonly headless: { readonly defaultFeatures: false; readonly features: readonly ["sqlite"]; readonly directPluginDependencies: readonly [] };
+  readonly production: {
+    readonly feature: "native-artifact-execution";
+    readonly providerId: "stdio+gis/native-codecs/v1";
+    readonly receiptCount: 28;
+    readonly pluginDependencies: readonly ["stdio/full-artifact-catalog", "gis"];
+  };
+  readonly configuredWithoutProvider: "reject";
+};
+
+async function proveNativeArtifactProviderFrontier(repoRoot: string): Promise<number> {
+  const fixtureRoot = join(repoRoot, "🌎️hub/🧪️fixtures/🧭️native-artifact-provider-frontier-v1");
+  const schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as NativeArtifactProviderFrontierFixture;
+  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+  const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+  if (!validate(fixture)) throw new Error("native artifact provider frontier fixture: " + JSON.stringify(validate.errors));
+  const manifest = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/Cargo.toml"), "utf8");
+  const feature = fixture.production.feature.replace(/[.*+?^$()|[\]\\]/gu, "\\$&");
+  if (!new RegExp("^default\\s*=\\s*\\[\"sqlite\",\\s*\"" + feature + "\"\\]$", "mu").test(manifest)) throw new Error("production Hub default does not retain native artifact execution");
+  const featureRow = manifest.match(new RegExp("^" + feature + "\\s*=\\s*\\[([^\\n]+)\\]$", "mu"))?.[1] ?? "";
+  for (const dependency of ['"dep:semio-s-plugin-stdio"', '"semio-s-plugin-stdio/full-artifact-catalog"', '"dep:semio-s-plugin-gis"']) {
+    if (!featureRow.includes(dependency)) throw new Error("native artifact execution feature omitted " + dependency);
+  }
+  for (const dependency of ["semio-s-plugin-stdio", "semio-s-plugin-gis"]) {
+    const row = manifest.match(new RegExp("^" + dependency + "\\s*=\\s*\\{([^\\n]+)\\}$", "mu"))?.[1] ?? "";
+    if (!row.includes("optional = true") || !row.includes("default-features = false")) throw new Error(dependency + " is not an optional no-default dependency");
+  }
+  const authorityRoot = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/🦀️.rs"), "utf8");
+  if (!/#\[cfg\(feature = "native-artifact-execution"\)\]\s+#\[path = "📇️native-openable-provider\/🦀️\.rs"\]\s+pub mod native_openable_provider;/u.test(authorityRoot)) throw new Error("native provider module escaped its production feature");
+  const trusted = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs"), "utf8");
+  if (!trusted.includes("pub trait NativeCodecProviderSourceV1: Sync") || trusted.includes("use super::native_openable_provider::NativeCodecProviderSetV1;")) throw new Error("trusted catalog core still owns a concrete native plugin provider");
+  const provider = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs"), "utf8");
+  if (!provider.includes('pub const NATIVE_OPENABLE_PROVIDER_SET_V1_ID: &str = "' + fixture.production.providerId + '";') || !provider.includes("pub const NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS: usize = " + fixture.production.receiptCount + ";")) throw new Error("production provider identity or receipt closure drifted");
+  const startup = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  if (!startup.includes("providers: Option<&dyn NativeCodecProviderSourceV1>") || !startup.includes("configured trusted catalog requires the native-artifact-execution provider") || !startup.includes("configured_catalog_without_a_native_provider_fails_closed")) throw new Error("headless configured-catalog startup no longer fails closed");
+  console.log("hub-native-artifact-provider-frontier-oracle: AJV=1 headless=" + fixture.headless.features.join("+") + " plugin-deps=" + fixture.headless.directPluginDependencies.length + " production-receipts=" + fixture.production.receiptCount + " configured-no-provider=" + fixture.configuredWithoutProvider);
+  return 12;
+}
+
+async function proveExecutionTargetRelay(repoRoot: string): Promise<number> {
+  const root = join(repoRoot, "🌎️hub/🧪️fixtures/🪪️execution-target-relay-v1");
+  const schema = JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as ExecutionTargetRelayFixture;
+  const ajv = new Ajv({ allErrors: true, strict: true });
+  const validate = ajv.compile(schema);
+  if (!validate(fixture)) throw new Error(`execution-target relay fixture: ${JSON.stringify(validate.errors)}`);
+  const limits = fixture.limits;
+  if (limits.requestBytes !== EXECUTION_TARGET_RELAY_REQUEST_MAX_BYTES || limits.manifestBytes !== EXECUTION_TARGET_RELAY_MANIFEST_MAX_BYTES || limits.componentBytes !== DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES || limits.descriptorBytes !== DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES || limits.inFlight !== EXECUTION_TARGET_RELAY_MAX_IN_FLIGHT || limits.relayDeadlineMs !== EXECUTION_TARGET_RELAY_DEADLINE_MS) throw new Error("execution-target relay bound drift");
+  const hub = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  const selection = hub.slice(hub.indexOf("async fn document_execution_target_selection("), hub.indexOf("async fn issue_document_execution_target("));
+  const finalFence = selection.slice(selection.indexOf("fields.validate()"));
+  if (!hub.includes(`const DOCUMENT_EXECUTION_TARGET_DEADLINE_MS: u64 = ${limits.hubDeadlineMs.toLocaleString("en-US").replaceAll(",", "_")};`) || !finalFence.includes("subject.revalidate(") || !finalFence.includes("state.directory.head_seq().await") || !finalFence.includes("DocumentOpenPlanErrorCodeV1::Stale") || !hub.includes('fixture["fences"]')) throw new Error("execution-target final authorization/revision fence or native corpus missing");
+  const admittedRoute = ajv.getSchema(`${schema.$id}#/definitions/admittedRoute`)!;
+  for (const row of fixture.routes) {
+    if (admittedRoute(row) !== row.admitted) throw new Error(`execution-target independent schema route mismatch: ${row.id}`);
+    if ((localRelayUpstreamPath(row.method, new URL(row.path, "http://127.0.0.1")) !== undefined) !== row.admitted) throw new Error(`execution-target production route mismatch: ${row.id}`);
+  }
+  const slowAbort = new AbortController();
+  const slowBody = new Request("http://127.0.0.1", { method: "POST", body: new ReadableStream<Uint8Array>() });
+  const slowRead = readLocalRelayBody(slowBody, limits.requestBytes, slowAbort.signal).then(() => false, () => true);
+  slowAbort.abort();
+  if (!(await Promise.race([slowRead, Bun.sleep(100).then(() => false)]))) throw new Error("execution-target slow upload did not release on cancellation");
+  const uiOrigin = "http://127.0.0.1:6066";
+  const intentBody = JSON.stringify(fixture.intent);
+  parseDocumentOpenIntentV1(fixture.intent);
+  let effects = 0;
+  let responseBytes = 1;
+  let delayMs = 0;
+  let release: Promise<void> | undefined;
+  const upstream = Bun.serve({
+    hostname: "127.0.0.1", port: 0,
+    async fetch(request): Promise<Response> {
+      effects += 1;
+      if (request.headers.get("authorization") !== `Bearer ${browserBrokerOracleEnvelope().capability}`) throw new Error("execution-target upstream credential mismatch");
+      const body = await request.text();
+      if (body !== intentBody) throw new Error("execution-target intent body changed in transit");
+      if (release) await release;
+      if (delayMs) await Bun.sleep(delayMs);
+      return new Response(new Uint8Array(responseBytes).fill(73), { headers: { "content-type": "application/octet-stream", "cache-control": "no-store" } });
+    },
+  });
+  let proof = randomBytes(32);
+  const relay = startLocalBrowserRelay(`http://127.0.0.1:${upstream.port}`, uiOrigin, browserBrokerOracleEnvelope(), Buffer.from(proof));
+  const request = async (path: string, method = "POST", body = intentBody, signal?: AbortSignal): Promise<Response> => {
+    const current = proof;
+    proof = randomBytes(32);
+    const response = await fetch(`${relay.url}${path}`, {
+      method, body: method === "GET" ? undefined : body, signal, redirect: "error",
+      headers: { host: new URL(uiOrigin).host, origin: uiOrigin, referer: `${uiOrigin}/`, "sec-fetch-site": "same-origin", "x-semio-local-relay": relay.secret.toString("hex"), "x-semio-browser-broker": current.toString("hex"), "x-semio-browser-broker-next": browserBrokerProofDigest(proof).toString("hex"), "content-type": "application/json" },
+    });
+    if (response.headers.get("x-semio-browser-broker-advanced") !== "1") proof = current;
+    return response;
+  };
+  const path = (asset: string): string => `/_semio/hub/spaces/studio/documents/map/execution-target/${asset}`;
+  try {
+    for (const row of fixture.routes) {
+      const before = effects;
+      const response = await request(row.path, row.method);
+      if (response.status !== (row.admitted ? 200 : 404) || effects !== before + Number(row.admitted)) throw new Error(`execution-target live route mismatch: ${row.id}`);
+      await response.arrayBuffer();
+    }
+    for (const row of fixture.responses) {
+      responseBytes = row.bytes;
+      delayMs = row.delayMs;
+      const response = await request(path(row.asset));
+      if (response.status !== row.status) throw new Error(`execution-target live response mismatch: ${row.id}: ${response.status}`);
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      if (row.status === 200 && (response.headers.get("content-length") !== String(row.bytes) || response.headers.get("cache-control") !== "no-store" || bytes.length !== row.bytes || bytes.some((value) => value !== 73))) throw new Error(`execution-target live bytes mismatch: ${row.id}`);
+    }
+    const before = effects;
+    const oversized = await request(path("manifest"), "POST", "x".repeat(fixture.limits.requestBytes + 1));
+    if (oversized.status !== 413 || effects !== before || oversized.headers.has("x-semio-browser-broker-advanced")) throw new Error("execution-target request overflow crossed ratchet or upstream");
+    delayMs = 0;
+    responseBytes = 1024 * 1024 + 17;
+    let resolveRelease!: () => void;
+    release = new Promise<void>((resolve) => { resolveRelease = resolve; });
+    const pending: Promise<Response>[] = [];
+    try {
+      for (let index = 0; index < fixture.limits.inFlight; index += 1) {
+        pending.push(request(path("component")));
+        const deadline = Date.now() + 2_000;
+        while (effects < before + index + 1 && Date.now() < deadline) await Bun.sleep(5);
+        if (effects !== before + index + 1) throw new Error("execution-target concurrent admission did not reach upstream");
+      }
+      const saturated = await request(path("component"));
+      if (saturated.status !== 503 || saturated.headers.has("x-semio-browser-broker-advanced") || effects !== before + fixture.limits.inFlight) throw new Error("execution-target saturation consumed authority or exceeded capacity");
+    } finally {
+      resolveRelease();
+      await Promise.all(pending.map(async (response) => { if (!(await response).ok) throw new Error("execution-target admitted concurrent request failed"); }));
+      release = undefined;
+    }
+    const recovered = await request(path("descriptor"));
+    if (!recovered.ok) throw new Error("execution-target capacity did not recover");
+    await recovered.arrayBuffer();
+    const cancelBefore = effects;
+    let resolveCancelled!: () => void;
+    release = new Promise<void>((resolve) => { resolveCancelled = resolve; });
+    const abort = new AbortController();
+    const cancelled = request(path("component"), "POST", intentBody, abort.signal).then(() => { throw new Error("execution-target cancelled request returned bytes"); }, () => undefined);
+    try {
+      const deadline = Date.now() + 2_000;
+      while (effects < cancelBefore + 1 && Date.now() < deadline) await Bun.sleep(5);
+      if (effects !== cancelBefore + 1) throw new Error("execution-target cancellation did not reach upstream");
+      abort.abort();
+      await cancelled;
+    } finally {
+      resolveCancelled();
+      release = undefined;
+    }
+    responseBytes = 19;
+    const afterCancel = await request(path("component"));
+    if (!afterCancel.ok || (await afterCancel.arrayBuffer()).byteLength !== 19) throw new Error("execution-target cancellation did not release capacity and ratchet");
+    console.log(`execution-target relay runtime routes=${fixture.routes.length} responses=${fixture.responses.length} bounded-capacity=${fixture.limits.inFlight} exact-bytes=true`);
+    return fixture.routes.length + fixture.responses.length + fixture.fences.length + 5;
+  } finally {
+    proof.fill(0);
+    await relay.stop();
+    await upstream.stop(true);
+  }
+}
+
+class ExecutionTargetRelayCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("execution-target-relay-check accepts only --native");
+    console.log("execution-target-provider-frontier: checks=" + await proveNativeArtifactProviderFrontier(this.repoRoot));
+    console.log(`execution-target-relay-check: checks=${await proveExecutionTargetRelay(this.repoRoot)}`);
+    await proveBrowserBrokerRelay();
+    console.log("execution-target-relay-check: existing browser proof-ratchet runtime regression clean");
+    if (segments[0] === "--native") {
+      const receipts = await runExactCargoLaws({
+        cwd: this.repoRoot,
+        env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite"], laws: ["configured_catalog_without_a_native_provider_fails_closed", "execution_target_asset_routes_revalidate_scope_role_descriptor_and_catalog_before_each_body", "execution_target_selection_final_fence_matches_neutral_races"] }],
+        artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+        buildBudgetMs: buildBudgetMs(),
+        progress(event) { console.log(`execution-target-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+      });
+      console.log(`execution-target-native-receipts: ${JSON.stringify(receipts)}`);
+    }
+  }
+}
+
 class BrowserBrokerCheckScript extends BundleScript {
   async run(): Promise<void> {
     await proveBrowserBrokerRelay();
@@ -3160,13 +3391,13 @@ class NativeOpenableCatalogProviderCheckScript extends BundleScript {
           "native_composition_and_validation_claims_are_disjoint_but_each_exclusive",
           "artifact_owned_native_codec_receipts_form_one_complete_static_bijection",
         ] },
-        { package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, laws: [
+        { package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, cargoArgs: ["--features", "native-artifact-execution"], laws: [
           "native_openable_provider_consumes_exact_complete_stdio_factory_closure",
           "native_openable_provider_rejects_missing_extra_and_duplicate_receipts_without_publication",
           "native_openable_provider_rejects_identity_hash_schema_and_factory_substitution",
           "descriptor_owned_surface_is_required_before_any_catalog_or_codec_publication",
         ] },
-        { package: "semio-hub", target: { kind: "bin", name: "os-hub" }, laws: ["native_openable_stdio_provider_is_the_only_atomic_readiness_transition"] },
+        { package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--features", "native-artifact-execution"], laws: ["native_openable_stdio_provider_is_the_only_atomic_readiness_transition"] },
       ],
       progress(event) { console.log(`native-openable-provider ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`); },
     });
@@ -3273,6 +3504,276 @@ class OpenPlanServerCheckScript extends BundleScript {
     console.log(`document-open-plan-server-laws: qualification=default-feature-subset exact=${laws.length} laws=${laws.map((law) => law.name).join(",")}`);
     for (const law of laws) runCargo(["test", "--manifest-path", "Cargo.toml", ...law.target, law.name, "--", "--exact", "--test-threads=1"], this.root, env);
     console.log("document-open-plan-server-check: default-feature subset passed; kernel all-features schema qualification remains separate");
+  }
+}
+
+type ExecutionTargetLeaseFixture = {
+  readonly schema: string;
+  readonly version: 1;
+  readonly nowMs: number;
+  readonly hubOrigin: string;
+  readonly intent: Record<string, any>;
+  readonly plan: Record<string, any>;
+  readonly manifest: Record<string, any>;
+  readonly socketGrant: Record<string, any>;
+  readonly componentHex: string;
+  readonly descriptorHex: string;
+  readonly expected: Record<string, any>;
+  readonly hostile: readonly { readonly name: string; readonly stage: string; readonly kind: string; readonly path?: string; readonly value?: unknown; readonly expected: "unpublished" }[];
+};
+
+/** 🪪️ Independent hand-written full-field lease relation. It imports no production comparison and is
+ * the corpus oracle's only admission decision. */
+function executionTargetLeaseFieldsEqual(left: Record<string, any>, right: Record<string, any>): boolean {
+  const scalarPaths = [
+    "schema", "version", "scope.spaceId", "scope.documentId", "descriptorDigestV1", "catalog.generationId",
+    "package.pluginId", "package.packageId", "package.version", "package.componentSha256", "package.componentBlake3", "package.descriptorByteSha256",
+    "component.sha256", "component.blake3", "component.byteLength", "descriptor.sha256", "descriptor.byteLength",
+    "artifact.kind", "artifact.schema", "artifact.packSchemaHash",
+    "parentDialect.artifactKind", "parentDialect.standard", "parentDialect.subset",
+    "surface.surfaceId", "surface.appId", "surface.windowKindId", "surface.role", "surface.rendererTarget",
+    "grant.read", "grant.write", "grant.observe",
+    "checkpoint.checkpointId", "checkpoint.descriptorDigestV1", "checkpoint.aggregateSha256",
+    "checkpoint.baselineFrontier.documentId", "checkpoint.baselineFrontier.headEditOrdinal", "checkpoint.baselineFrontier.headEditId", "checkpoint.baselineFrontier.lastCommitSeq",
+    "revalidation.directoryRevision", "revalidation.membershipGeneration", "revalidation.sessionGeneration", "revalidation.shareGeneration",
+  ];
+  const read = (source: Record<string, any>, path: string): unknown => path.split(".").reduce<any>((cursor, segment) => (cursor === undefined || cursor === null ? undefined : cursor[segment]), source);
+  return scalarPaths.every((path) => read(left, path) === read(right, path))
+    && JSON.stringify(read(left, "checkpoint.baselineFrontier.chainHash")) === JSON.stringify(read(right, "checkpoint.baselineFrontier.chainHash"));
+}
+
+/** 🪪️ Independent structural admission of one lease-fields value: every identity, byte bound and
+ * grant/role invariant, decided without importing the production parser. */
+function executionTargetLeaseFieldsAdmissible(candidate: Record<string, any>, expected: Record<string, any>): boolean {
+  const hash = (value: unknown): boolean => typeof value === "string" && /^[0-9a-f]{64}$/u.test(value) && !/^0{64}$/u.test(value);
+  const text = (value: unknown): boolean => typeof value === "string" && value.length > 0 && Buffer.byteLength(value, "utf8") <= 256 && ![...value].some((character) => character.codePointAt(0)! < 0x20 || character.codePointAt(0)! === 0x7f);
+  const length = (value: unknown, maximum: number): boolean => typeof value === "number" && Number.isSafeInteger(value) && value >= 1 && value <= maximum;
+  const generation = (value: unknown): boolean => typeof value === "number" && Number.isSafeInteger(value) && value >= 1 && value <= 9_007_199_254_740_991;
+  return candidate.schema === "semio.os.document-execution-target-lease/v1"
+    && candidate.version === 1
+    && [candidate.scope?.spaceId, candidate.scope?.documentId, candidate.package?.pluginId, candidate.package?.packageId, candidate.package?.version, candidate.artifact?.kind, candidate.artifact?.schema, candidate.surface?.surfaceId, candidate.surface?.appId, candidate.surface?.windowKindId].every(text)
+    && [candidate.descriptorDigestV1, candidate.catalog?.generationId, candidate.package?.componentSha256, candidate.package?.componentBlake3, candidate.package?.descriptorByteSha256, candidate.artifact?.packSchemaHash, candidate.component?.sha256, candidate.component?.blake3, candidate.descriptor?.sha256].every(hash)
+    && candidate.component.sha256 === candidate.package.componentSha256
+    && candidate.component.blake3 === candidate.package.componentBlake3
+    && candidate.descriptor.sha256 === candidate.package.descriptorByteSha256
+    && length(candidate.component?.byteLength, expected.componentMaxBytes)
+    && length(candidate.descriptor?.byteLength, expected.descriptorMaxBytes)
+    && candidate.parentDialect?.artifactKind === candidate.artifact?.kind
+    && [candidate.parentDialect?.artifactKind, candidate.parentDialect?.standard, candidate.parentDialect?.subset].every((value) => text(value) && String(value).trim() === value)
+    && candidate.grant?.read === true
+    && candidate.grant?.observe === true
+    && typeof candidate.grant?.write === "boolean"
+    && ["viewer", "editor"].includes(candidate.surface?.role)
+    && ["react", "wgpu", "wasm"].includes(candidate.surface?.rendererTarget)
+    && candidate.grant.write === (candidate.surface.role === "editor")
+    && (candidate.checkpoint === undefined || (hash(candidate.checkpoint.checkpointId) && candidate.checkpoint.descriptorDigestV1 === candidate.descriptorDigestV1 && hash(candidate.checkpoint.aggregateSha256)))
+    && generation(candidate.revalidation?.directoryRevision)
+    && generation(candidate.revalidation?.membershipGeneration)
+    && (candidate.revalidation?.sessionGeneration === undefined) !== (candidate.revalidation?.shareGeneration === undefined);
+}
+
+function executionTargetLeaseMutate(source: Record<string, any>, path: string, value: unknown): Record<string, any> {
+  const candidate = structuredClone(source);
+  const segments = path.split(".");
+  let cursor: any = candidate;
+  for (const segment of segments.slice(0, -1)) cursor = cursor[segment];
+  cursor[segments.at(-1)!] = value;
+  return candidate;
+}
+
+/** 🤖️ Independent Node state machine for one browser install: it walks manifest → component →
+ * descriptor → verify → exchange with its own byte reader and hashers, and answers `published` only
+ * when every field and byte agrees. It never imports the browser worker. */
+function executionTargetLeaseInstall(
+  fixture: ExecutionTargetLeaseFixture,
+  input: { manifest: Record<string, any>; component: Buffer; declaredComponentLength: number; descriptor: Buffer; declaredDescriptorLength: number; planGeneration: string; cancelAt?: string; missing?: string },
+  blake3Hex: (bytes: Uint8Array) => string,
+): { readonly outcome: "published" | "unpublished"; readonly stage: string } {
+  const stages = ["manifest", "component", "descriptor", "verify", "exchange"] as const;
+  const cancel = input.cancelAt;
+  for (const stage of stages) {
+    if (cancel === stage) return { outcome: "unpublished", stage };
+    if (input.missing === stage) return { outcome: "unpublished", stage };
+    if (stage === "manifest") {
+      if (!executionTargetLeaseFieldsAdmissible(input.manifest, fixture.expected)) return { outcome: "unpublished", stage };
+      const projection = { ...structuredClone(fixture.plan), catalog: { generationId: input.planGeneration } } as Record<string, any>;
+      const planFields = {
+        schema: "semio.os.document-execution-target-lease/v1",
+        version: 1,
+        scope: projection.scope,
+        descriptorDigestV1: projection.descriptorDigestV1,
+        catalog: projection.catalog,
+        package: projection.package,
+        component: { sha256: projection.package.componentSha256, blake3: projection.package.componentBlake3, byteLength: input.manifest.component?.byteLength },
+        descriptor: { sha256: projection.package.descriptorByteSha256, byteLength: input.manifest.descriptor?.byteLength },
+        artifact: projection.artifact,
+        parentDialect: projection.parentDialect,
+        surface: projection.surface,
+        grant: projection.grant,
+        checkpoint: projection.checkpoint,
+        revalidation: projection.revalidation,
+      };
+      if (!executionTargetLeaseFieldsEqual(planFields, input.manifest)) return { outcome: "unpublished", stage };
+      continue;
+    }
+    if (stage === "component") {
+      if (input.declaredComponentLength !== input.manifest.component.byteLength || input.declaredComponentLength > fixture.expected.componentMaxBytes || input.component.length !== input.declaredComponentLength) return { outcome: "unpublished", stage };
+      continue;
+    }
+    if (stage === "descriptor") {
+      if (input.declaredDescriptorLength !== input.manifest.descriptor.byteLength || input.declaredDescriptorLength > fixture.expected.descriptorMaxBytes || input.descriptor.length !== input.declaredDescriptorLength) return { outcome: "unpublished", stage };
+      continue;
+    }
+    if (stage === "verify") {
+      const componentSha256 = createHash("sha256").update(input.component).digest("hex");
+      const descriptorSha256 = createHash("sha256").update(input.descriptor).digest("hex");
+      if (componentSha256 !== input.manifest.component.sha256 || blake3Hex(input.component) !== input.manifest.component.blake3 || descriptorSha256 !== input.manifest.descriptor.sha256) return { outcome: "unpublished", stage };
+      continue;
+    }
+    if (input.planGeneration !== input.manifest.catalog.generationId) return { outcome: "unpublished", stage };
+  }
+  return { outcome: "published", stage: "exchange" };
+}
+
+async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> {
+  const root = join(repoRoot, "🌎️hub/🧪️fixtures/📇️directory/🔏️document-execution-target-lease-v1");
+  const schema = JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as ExecutionTargetLeaseFixture;
+  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
+  const ajv = new Ajv2020({ allErrors: true, strict: true });
+  ajv.addSchema(schema);
+  const validate = ajv.getSchema(schema.$id)!;
+  if (!validate(fixture)) throw new Error(`execution target lease corpus invalid: ${JSON.stringify(validate.errors)}`);
+  const validateFields = ajv.getSchema(`${schema.$id}#/$defs/leaseFields`)!;
+  const { blake3Hex } = await import(join(repoRoot, "🧰️framework/🔨️modules/🔏️hash/🟦️.ts"));
+  const component = Buffer.from(fixture.componentHex, "hex");
+  const descriptor = Buffer.from(fixture.descriptorHex, "hex");
+  if (component.length === 0 || descriptor.length === 0) throw new Error("execution target lease corpus must pin non-empty component and descriptor bytes");
+  const componentSha256 = createHash("sha256").update(component).digest("hex");
+  const descriptorSha256 = createHash("sha256").update(descriptor).digest("hex");
+  const componentBlake3 = blake3Hex(component);
+  const webComponentSha256 = Buffer.from(await webcrypto.subtle.digest("SHA-256", component)).toString("hex");
+  if (componentSha256 !== webComponentSha256) throw new Error("execution target lease corpus Node and WebCrypto SHA-256 disagree");
+  if (blake3Hex(Buffer.from("abc", "utf8")) !== "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85") throw new Error("first-party BLAKE3 known-answer vector regressed");
+  if (componentSha256 !== fixture.manifest.component.sha256 || componentBlake3 !== fixture.manifest.component.blake3 || descriptorSha256 !== fixture.manifest.descriptor.sha256) throw new Error("execution target lease corpus digests do not match its exact bytes");
+  if (component.length !== fixture.manifest.component.byteLength || descriptor.length !== fixture.manifest.descriptor.byteLength) throw new Error("execution target lease corpus byte lengths drifted");
+  if (fixture.plan.surface.rendererTarget !== "wasm" || fixture.manifest.surface.role !== "viewer" || fixture.manifest.grant.write !== false) throw new Error("execution target lease corpus lost its read-only GIS Map wasm viewer positive");
+
+  const generationA = fixture.expected.rotation.generationA;
+  const baseline = { manifest: fixture.manifest as Record<string, any>, component, declaredComponentLength: component.length, descriptor, declaredDescriptorLength: descriptor.length, planGeneration: generationA };
+  const positive = executionTargetLeaseInstall(fixture, baseline, blake3Hex);
+  if (positive.outcome !== "published") throw new Error(`execution target lease corpus positive vector was denied at ${positive.stage}`);
+
+  let manifestFields = 0;
+  let byteVectors = 0;
+  let lifecycleVectors = 0;
+  for (const vector of fixture.hostile) {
+    if (vector.expected !== "unpublished") throw new Error(`execution target lease corpus hostile ${vector.name} is not an unpublished expectation`);
+    if (vector.kind === "manifest-field") {
+      const mutated = executionTargetLeaseMutate(fixture.manifest, vector.path!, vector.value);
+      const admitted = validateFields(mutated) && executionTargetLeaseInstall(fixture, { ...baseline, manifest: mutated }, blake3Hex).outcome === "published";
+      if (admitted) throw new Error(`execution target lease corpus admitted single-field substitution ${vector.name}`);
+      manifestFields += 1;
+      continue;
+    }
+    if (vector.kind === "cancel" || vector.kind === "deadline" || vector.kind === "reconnect-after-invalidation" || vector.kind === "viewer-write" || vector.kind === "caller-url" || vector.kind === "caller-path" || vector.kind === "caller-module" || vector.kind === "stale-plan") {
+      if (vector.kind === "cancel" || vector.kind === "deadline") {
+        const stage = vector.kind === "deadline" ? "component" : vector.stage;
+        if (executionTargetLeaseInstall(fixture, { ...baseline, cancelAt: stage }, blake3Hex).outcome === "published") throw new Error(`execution target lease corpus published through ${vector.name}`);
+      }
+      if (vector.kind === "stale-plan" && executionTargetLeaseInstall(fixture, { ...baseline, planGeneration: fixture.expected.rotation.generationB }, blake3Hex).outcome === "published") throw new Error("execution target lease corpus exchanged a stale rotated plan");
+      if (vector.kind === "viewer-write" && fixture.expected.viewerWriteRejectedLocally !== true) throw new Error("execution target lease corpus lost its local viewer write rejection");
+      if ((vector.kind === "caller-url" || vector.kind === "caller-path" || vector.kind === "caller-module") && fixture.expected.assetPaths.includes(String(vector.value))) throw new Error(`execution target lease corpus accepted caller substitution ${vector.name}`);
+      lifecycleVectors += 1;
+      continue;
+    }
+    const mutated = { ...baseline };
+    if (vector.kind === "component-bytes" || vector.kind === "mixed-generation") mutated.component = Buffer.concat([Buffer.from([component[0]! ^ 0xff]), component.subarray(1)]);
+    else if (vector.kind === "component-truncated") mutated.component = component.subarray(0, component.length - 1);
+    else if (vector.kind === "component-extra-byte") mutated.component = Buffer.concat([component, Buffer.from([7])]);
+    else if (vector.kind === "component-max-plus-one") mutated.declaredComponentLength = Number(vector.value);
+    else if (vector.kind === "descriptor-bytes" || vector.kind === "descriptor-self-hash" || vector.kind === "descriptor-noncanonical") mutated.descriptor = Buffer.concat([descriptor.subarray(0, descriptor.length - 1), Buffer.from([descriptor.at(-1)! ^ 0xff])]);
+    else if (vector.kind === "descriptor-trailing-byte") mutated.descriptor = Buffer.concat([descriptor, Buffer.from([0])]);
+    else if (vector.kind === "descriptor-max-plus-one") mutated.declaredDescriptorLength = Number(vector.value);
+    else if (vector.kind === "missing-body") mutated.missing = vector.stage;
+    else throw new Error(`execution target lease corpus unknown hostile kind ${vector.kind}`);
+    if (executionTargetLeaseInstall(fixture, mutated, blake3Hex).outcome === "published") throw new Error(`execution target lease corpus published through ${vector.name}`);
+    byteVectors += 1;
+  }
+  if (manifestFields < 30) throw new Error(`execution target lease corpus lost single-field substitutions: ${manifestFields}`);
+  const statusCodes = Object.keys(fixture.expected.status).sort();
+  if (JSON.stringify(statusCodes) !== JSON.stringify(["cancelled", "integrity-failed", "renderer-unavailable", "stale", "verifying"])) throw new Error("execution target lease corpus status vocabulary drifted");
+  for (const [code, text] of Object.entries<{ en: string; de: string }>(fixture.expected.status)) {
+    if (!text.en || !text.de || text.en === text.de) throw new Error(`execution target lease corpus status ${code} is not explicitly bilingual`);
+    for (const fragment of fixture.expected.forbiddenStatusFragments) if (text.en.includes(fragment) || text.de.includes(fragment)) throw new Error(`execution target lease corpus status ${code} leaked ${fragment}`);
+    const role = fixture.expected.statusRoles[code];
+    if (role !== (code === "verifying" ? "status" : "alert")) throw new Error(`execution target lease corpus status ${code} has the wrong live-region role`);
+  }
+  if (Object.values(fixture.expected.rendererClaims).some((claim) => claim !== false)) throw new Error("execution target lease corpus claims a renderer it does not have");
+  console.log(`execution-target-lease-oracle: ajv=1 positive=1 manifest-fields=${manifestFields} byte-vectors=${byteVectors} lifecycle=${lifecycleVectors} hostile=${fixture.hostile.length} component-bytes=${component.length} descriptor-bytes=${descriptor.length} node+webcrypto-sha256=agree first-party-blake3=known-answer status=${statusCodes.length} passed`);
+}
+
+function proveExecutionTargetLeaseSource(repoRoot: string): void {
+  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "utf8");
+  const region = worker.slice(worker.indexOf("//#region 🪪️ExecutionTargetLease"), worker.indexOf("//#endregion 🪪️ExecutionTargetLease"));
+  if (region.length === 0) throw new Error("browser execution-target lease region is absent");
+  for (const forbidden of ["loadPluginModule", "ActivationRegistry", "load_wasm_plugins", "attach_backbone"]) {
+    if (region.includes(forbidden)) throw new Error(`browser execution-target lease region reached ${forbidden}`);
+  }
+  if (!region.includes("crypto.subtle.digest(\"SHA-256\"") || !region.includes("blake3Hex(")) throw new Error("browser execution-target lease lost its Web Crypto SHA-256 or first-party BLAKE3 verification");
+  if (!region.includes("state.docAbort.signal")) throw new Error("browser execution-target lease no longer shares the document cancellation scope");
+  if (!worker.includes("plan.surface.rendererTarget !== \"react\" && (leaseFields === undefined")) throw new Error("browser plan authority no longer gates a non-react renderer on a live lease");
+  const bin = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  for (const asset of ["manifest", "component", "descriptor"]) {
+    if (!bin.includes(`/spaces/{space_id}/documents/{id}/execution-target/${asset}`)) throw new Error(`hub execution-target ${asset} route is not mounted`);
+  }
+  if (!bin.includes("assets_for_current_selection(&descriptor, intent.requested_surface_id.as_deref(), writable, &generation_id)")) throw new Error("hub execution-target routes no longer resolve through the exact-selection accessor");
+  const catalog = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs"), "utf8");
+  if (!catalog.includes("pub fn assets_for_current_selection(") || !catalog.includes("if current_generation != self.generation_id")) throw new Error("trusted catalog exact-selection accessor is absent or not generation-bound");
+  const client = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), "utf8");
+  if (client.includes("matches_surface") || client.includes("DocumentSocketSurfaceExpectationV1")) throw new Error("native directory client kept a partial surface predicate");
+  const sync = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs"), "utf8");
+  if (!sync.includes("authority.matches_lease_fields(lease)")) throw new Error("native reconnect no longer compares the complete lease fields");
+  console.log("execution-target-lease-source: browser lease region=renderer-free hub routes=3 accessor=generation-bound native=full-field passed");
+}
+
+class ExecutionTargetLeaseCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.some((segment) => segment !== "--native")) throw new Error("unsupported execution-target-lease argument");
+    await proveExecutionTargetLeaseCorpus(this.repoRoot);
+    proveExecutionTargetLeaseSource(this.repoRoot);
+    if (!segments.includes("--native")) return;
+    const env = { ...process.env, RUST_MIN_STACK: "268435456" };
+    const exactLaw = (target: string[], suffix: string): string => {
+      const listed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", ...target, suffix, "--", "--list"], { cwd: this.root, env, ...orchestratorBudgetOpts() });
+      const matches = listed.stdout
+        .split("\n")
+        .filter((line) => line.endsWith(": test"))
+        .map((line) => line.slice(0, -": test".length))
+        .filter((name) => name.endsWith(suffix));
+      if (listed.status !== 0 || matches.length !== 1) {
+        const diagnostic = listed.stderr.trim().slice(-4_000);
+        throw new Error(`execution-target-lease-check expected exactly one ${suffix} law, selected ${matches.length}; status=${listed.status}; diagnostic=${diagnostic || "<none>"}`);
+      }
+      return matches[0]!;
+    };
+    const laws = [
+      { target: ["--lib"], suffix: "selected_execution_target_assets_are_generation_and_digest_bound" },
+      { target: ["--bin", "os-hub"], suffix: "execution_target_asset_routes_revalidate_scope_role_descriptor_and_catalog_before_each_body" },
+      { target: ["-p", "semio-framework-os-kernel", "--lib"], suffix: "execution_target_lease_compares_every_plan_and_verified_byte_field" },
+    ].map((law) => ({ ...law, name: exactLaw(law.target, law.suffix) }));
+    console.log(`execution-target-lease-laws: qualification=default-feature-subset exact=${laws.length} laws=${laws.map((law) => law.name).join(",")}`);
+    for (const law of laws) runCargo(["test", "--manifest-path", "Cargo.toml", ...law.target, law.name, "--", "--exact", "--test-threads=1"], this.root, env);
+    console.log("execution-target-lease-check: neutral corpus, source boundary and current native laws passed");
+  }
+}
+
+class ExecutionTargetLeaseBrowserCheckScript extends BundleScript {
+  async run(): Promise<void> {
+    await proveExecutionTargetLeaseCorpus(this.repoRoot);
+    proveExecutionTargetLeaseSource(this.repoRoot);
+    runCmd("bun", ["nx", "run", "@semio-tech/framework-os:test-long", "--skip-nx-cache", "--", "--run", "-t", "browser execution target lease|browser GIS viewer exposes localized renderer-unavailable"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    console.log("execution-target-lease-browser-check: neutral corpus, source boundary and browser Worker verify/reject/renderer-unavailable runtime passed");
   }
 }
 
@@ -3555,7 +4056,7 @@ async function proveInferenceWalChainFixture(repoRoot: string): Promise<void> {
 }
 
 async function proveInferenceCatalogSelectionFixture(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "🪪️inference-catalog-selection-v1");
+  const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "🎯️inference-catalog-selection-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const Ajv2020 = (await import("ajv/dist/2020.js")).default;
   const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
@@ -3582,19 +4083,113 @@ async function proveInferenceCatalogSelectionFixture(repoRoot: string): Promise<
   console.log(`inference-catalog-projection-oracle: exact=${fixture.cases.length}; no native provider or route authority`);
 }
 
+/** 🗺️ Independently pins the whole GIS Map proposal/approval contract without any Rust codec. */
+async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<number> {
+  const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "🗳️gis-map-proposal-approval-v1");
+  const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
+  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
+  const ajv = new Ajv2020({ strict: true, allErrors: true });
+  ajv.addSchema(JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "💡️inference", "🧬️schema", "🔣️.json"), "utf8")));
+  const validate = ajv.compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
+  if (!validate(fixture)) throw new Error(`invalid GIS Map proposal fixture: ${JSON.stringify(validate.errors)}`);
+  const hostile = [
+    { ...fixture, limits: { ...fixture.limits, proposalMaxBytes: 4097 } },
+    { ...fixture, binding: { ...fixture.binding, grantedMode: "read-observe" } },
+    { ...fixture, binding: { ...fixture.binding, surfaceId: "s.gis.gismap@1/*#viewer" } },
+    { ...fixture, binding: { ...fixture.binding, parentDialect: { ...fixture.binding.parentDialect, subset: "lite" } } },
+    { ...fixture, lifecycle: fixture.lifecycle.slice(1) },
+    { ...fixture, visibility: fixture.visibility.slice(1) },
+    { ...fixture, nonclaims: ["no-external-model-provider", "no-external-model-provider", "no-wgpu-rendering", "no-auto-apply"] },
+  ];
+  for (const [index, candidate] of hostile.entries()) if (validate(candidate)) throw new Error(`GIS Map proposal fixture accepted hostile mutation ${index}`);
+  const hash = (value: string): string => createHash("sha256").update(value, "utf8").digest("hex");
+  if (hash(fixture.proposalCanonical) !== fixture.proposalHash || hash(fixture.inverseCanonical) !== fixture.inverseHash) throw new Error("independent proposal/inverse canonical hashes differ");
+  const proposal = JSON.parse(fixture.proposalCanonical);
+  const inverse = JSON.parse(fixture.inverseCanonical);
+  const region = proposal.CreateRegion;
+  const regionId = `inference-${fixture.sampleJobId}`;
+  if (Object.keys(proposal).length !== 1 || !region || region.index !== fixture.base.snapshot.regions.length || region.item.id !== regionId || region.item.data.id !== regionId || region.item.data.kind !== "inference-bounds") {
+    throw new Error("proposal is not exactly one server-stamped CreateRegion for this job");
+  }
+  if (!Array.isArray(inverse) || inverse.length !== 1 || Object.keys(inverse[0]).length !== 1 || inverse[0].DeleteRegion?.id !== regionId) throw new Error("inverse is not exactly one DeleteRegion for the created id");
+  const points: number[][] = [];
+  const scan = (value: unknown): void => {
+    if (Array.isArray(value)) {
+      if (value.length === 2 && value.every((part) => typeof part === "number" && Number.isFinite(part))) points.push(value as number[]);
+      else value.forEach(scan);
+    } else if (typeof value === "object" && value !== null) {
+      const row = value as Record<string, unknown>;
+      if (typeof row.lon === "number" && Number.isFinite(row.lon) && typeof row.lat === "number" && Number.isFinite(row.lat)) points.push([row.lon, row.lat]);
+      Object.values(row).forEach(scan);
+    }
+  };
+  for (const item of [...fixture.base.snapshot.positions, ...fixture.base.snapshot.routes, ...fixture.base.snapshot.regions]) scan(item.data);
+  const fold = points.reduce((box, [lon, lat]) => [Math.min(box[0]!, lon!), Math.max(box[1]!, lon!), Math.min(box[2]!, lat!), Math.max(box[3]!, lat!)], [Infinity, -Infinity, Infinity, -Infinity]);
+  const sorted = { lon: [...points.map((point) => point[0]!)].sort((a, b) => a - b), lat: [...points.map((point) => point[1]!)].sort((a, b) => a - b) };
+  const bounds = { lonMin: sorted.lon[0]!, lonMax: sorted.lon[sorted.lon.length - 1]!, latMin: sorted.lat[0]!, latMax: sorted.lat[sorted.lat.length - 1]! };
+  if (fold[0] !== bounds.lonMin || fold[1] !== bounds.lonMax || fold[2] !== bounds.latMin || fold[3] !== bounds.latMax) throw new Error("two independent bound folds disagree");
+  const expected = fixture.base.expectedInference;
+  if (JSON.stringify({ positionCount: fixture.base.snapshot.positions.length, routeCount: fixture.base.snapshot.routes.length, regionCount: fixture.base.snapshot.regions.length, bounds }) !== JSON.stringify(expected)) throw new Error("independent counts/bounds differ from the fixture");
+  const ring: number[][] = region.item.data.ring;
+  const corners = [[bounds.lonMin, bounds.latMin], [bounds.lonMax, bounds.latMin], [bounds.lonMax, bounds.latMax], [bounds.lonMin, bounds.latMax], [bounds.lonMin, bounds.latMin]];
+  if (ring.length !== 5 || JSON.stringify(ring) !== JSON.stringify(corners)) throw new Error("proposal ring is not the closed bounds rectangle of the base snapshot");
+  if (fixture.preview.schema !== "semio.hub.gis-map-inference-preview/v1"
+    || fixture.preview.jobId !== fixture.sampleJobId
+    || fixture.preview.proposalHash !== fixture.proposalHash
+    || fixture.preview.regionId !== regionId
+    || JSON.stringify(fixture.preview.ring) !== JSON.stringify(corners)) {
+    throw new Error("owner preview is not the exact bounded projection of the canonical proposal");
+  }
+  const transitions: Record<string, readonly string[]> = {
+    accepted: ["running", "cancel-requested", "cancelled", "failed"],
+    running: ["succeeded", "cancel-requested", "cancelled", "failed"],
+    succeeded: ["approval-prepared", "cancel-requested", "proposal-cancelled", "proposal-stale"],
+    "cancel-requested": ["cancelled", "proposal-cancelled"],
+    "approval-prepared": ["approved"],
+  };
+  for (const trace of [fixture.lifecycle, fixture.cancelLifecycle]) {
+    if (trace[0].kind !== "accepted" || trace[0].ordinal !== 1) throw new Error("every private job stream starts at accepted");
+    for (let index = 1; index < trace.length; index++) {
+      if (trace[index].ordinal !== index + 1) throw new Error("private job event ordinals are not dense");
+      if (!(transitions[trace[index - 1].kind] ?? []).includes(trace[index].kind)) throw new Error(`illegal private job transition ${trace[index - 1].kind} -> ${trace[index].kind}`);
+    }
+    if (trace.length > 6) throw new Error("private job stream exceeds its bounded event ordinal");
+  }
+  const owners = fixture.visibility.filter((row: { readProposal: boolean }) => row.readProposal);
+  if (owners.length !== 1 || owners[0].role !== "author-owner" || !owners[0].approve || owners[0].expectedCode !== null) throw new Error("exactly one original Author owner may read and approve");
+  for (const row of fixture.visibility) if (row.role !== "author-owner" && (row.readEvents || row.readProposal || row.approve || row.expectedCode !== "inference.denied")) throw new Error(`non-owner ${row.role} was granted private job access`);
+  const statuses = new Map<string, number>();
+  for (const row of fixture.errors) {
+    if (statuses.has(row.code) && statuses.get(row.code) !== row.status) throw new Error(`error code ${row.code} maps to two statuses`);
+    statuses.set(row.code, row.status);
+  }
+  if (statuses.get("approval.commit-unavailable") !== 503) throw new Error("a missing composition transaction must fail closed with 503");
+  for (const rejection of fixture.approvalRejections) if (!statuses.has(rejection.code)) throw new Error(`approval rejection ${rejection.name} uses an unpublished code`);
+  const frozen = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧪️fixtures", "🧊️gis-map-frozen-binding-v1", "🔣️.json"), "utf8"));
+  const ledger = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧪️fixtures", "🗺️gis-inference-job-v1", "🔣️.json"), "utf8"));
+  if (fixture.binding.digest !== frozen.expectedDigest || fixture.binding.componentBlake3 !== frozen.binding.package.componentBlake3 || fixture.binding.packageVersion !== frozen.binding.package.version
+    || JSON.stringify(fixture.binding) !== JSON.stringify(ledger.identity.binding)) throw new Error("proposal, frozen-binding and ledger corpora disagree on the frozen executable identity");
+  console.log(`gis-map-proposal-oracle: ajv=1 hostile=${hostile.length} node-sha256=2 independent-bounds=2 preview=1 lifecycle=${fixture.lifecycle.length + fixture.cancelLifecycle.length} visibility=${fixture.visibility.length} errors=${fixture.errors.length} approval-rejections=${fixture.approvalRejections.length} cross-fixture=1; no external model provider, no WGPU rendering`);
+  return hostile.length;
+}
+
 /** 🧊️ Independently pins every retained GIS Map catalog and executable binding fact. */
 async function proveGisMapFrozenBindingFixture(repoRoot: string): Promise<number> {
-  const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "🗺️gis-map-frozen-binding-v1");
+  const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "🧊️gis-map-frozen-binding-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const Ajv2020 = (await import("ajv/dist/2020.js")).default;
   const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
   if (!validate(fixture)) throw new Error(`invalid frozen GIS Map binding fixture: ${JSON.stringify(validate.errors)}`);
   const digest = (binding: unknown): string => createHash("sha256").update(Buffer.concat([Buffer.from("semio.hub.gis-map-frozen-binding/v1", "utf8"), Buffer.from([0])])).update(JSON.stringify(binding)).digest("hex");
   if (digest(fixture.binding) !== fixture.expectedDigest) throw new Error("frozen GIS Map binding digest differs from the neutral fixture");
+  const leafPaths = (value: unknown, path: string[] = []): string[] => value !== null && typeof value === "object" && !Array.isArray(value)
+    ? Object.entries(value).flatMap(([key, child]) => leafPaths(child, [...path, key])) : [JSON.stringify(path)];
+  const remainingPaths = new Set(leafPaths(fixture.binding));
   const seen = new Set<string>();
   for (const hostile of fixture.hostile) {
     if (seen.has(hostile.name)) throw new Error(`duplicate frozen binding hostile ${hostile.name}`);
     seen.add(hostile.name);
+    if (!remainingPaths.delete(JSON.stringify(hostile.path))) throw new Error(`duplicate or unknown frozen binding field: ${hostile.name}`);
     const candidate = structuredClone(fixture.binding);
     let at = candidate;
     for (const key of hostile.path.slice(0, -1)) at = at[key];
@@ -3603,6 +4198,7 @@ async function proveGisMapFrozenBindingFixture(repoRoot: string): Promise<number
     const admitted = validate(row) && digest(candidate) === fixture.expectedDigest;
     if (admitted !== hostile.accepted) throw new Error(`frozen GIS Map binding substitution accepted: ${hostile.name}`);
   }
+  if (remainingPaths.size !== 0) throw new Error(`frozen binding fields lack substitution coverage: ${[...remainingPaths].join(", ")}`);
   const catalog = readFileSync(join(repoRoot, "🌎️hub", "💡️inference", "📇️catalog", "🦀️.rs"), "utf8");
   const trusted = readFileSync(join(repoRoot, "🌎️hub", "🗿️artifact-authority", "🔏️trusted-catalog", "🦀️.rs"), "utf8");
   const startup = readFileSync(join(repoRoot, "🌎️hub", "📦️packages", "🦀️rust", "🚀️bin.rs"), "utf8");
@@ -4227,13 +4823,10 @@ async function proveTrustedStdioGisCandidatePlan(run: LocalHubRun, receipt: Trus
   const target = profile?.openTarget?.target;
   if (!profile || !selected || !target) throw new Error("trusted stdio+GIS candidate bundle lost its exact GIS target");
   const headers = { authorization: `Bearer ${envelope.capability}`, "content-type": "application/json" };
-  const created = await fetch(`http://127.0.0.1:${run.port}/directory/commands`, {
-    method: "POST", headers, signal: AbortSignal.timeout(2_000),
-    body: JSON.stringify({ kind: "create-space", name: "Trusted GIS Bootstrap Probe", spaceKind: "studio", visibility: "private" }),
-  });
-  const createdBody = await created.json().catch(() => undefined) as Record<string, any> | undefined;
+  const created = await postLiveDirectoryCommand(run, envelope.capability, liveDirectoryCommandRequestId(), { kind: "create-space", name: "Trusted GIS Bootstrap Probe", spaceKind: "studio", visibility: "private" });
+  const createdBody = created.status === 202 ? JSON.parse(created.text) as Record<string, any> : undefined;
   const spaceId = createdBody?.events?.find((candidate: any) => candidate?.body?.kind === "space.created")?.body?.spaceId;
-  if (!created.ok || typeof spaceId !== "string" || spaceId.length === 0) throw new Error("trusted stdio+GIS candidate could not create its private probe space");
+  if (typeof spaceId !== "string" || spaceId.length === 0) throw new Error("trusted stdio+GIS candidate could not create its private probe space");
   const documentId = `trusted-gis-map-${randomBytes(8).toString("hex")}`;
   const descriptor = {
     spaceId, documentId, artifactKind: target.artifactKind, artifactSchema: target.artifactSchema,
@@ -4241,10 +4834,8 @@ async function proveTrustedStdioGisCandidatePlan(run: LocalHubRun, receipt: Trus
     packSchemaHash: target.packSchemaHash, bootstrapVersion: 1,
     bootstrapFrontier: { headSeq: 0, commitSeq: 0, epoch: 0 }, bootstrapSnapshotHash: "11".repeat(32),
   };
-  const announced = await fetch(`http://127.0.0.1:${run.port}/directory/commands`, {
-    method: "POST", headers, signal: AbortSignal.timeout(2_000), body: JSON.stringify({ kind: "announce-document", descriptor }),
-  });
-  if (!announced.ok) throw new Error(`trusted stdio+GIS candidate could not announce its GIS Map probe: ${announced.status}`);
+  const announced = await postLiveDirectoryCommand(run, envelope.capability, liveDirectoryCommandRequestId(), { kind: "announce-document", descriptor });
+  if (announced.status !== 202) throw new Error(`trusted stdio+GIS candidate could not announce its GIS Map probe: ${announced.status}`);
   const response = await fetch(`http://127.0.0.1:${run.port}/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}/open-plan`, {
     method: "POST", headers, signal: AbortSignal.timeout(2_000),
     body: JSON.stringify({ schema: "semio.hub.document-open-intent/v1", version: 1, scope: { spaceId, documentId }, requestedSurfaceId: target.surfaceId, clientInstanceId: "trusted-bootstrap-candidate" }),
@@ -4499,7 +5090,7 @@ class GisMapFrozenBindingCheckScript extends BundleScript {
       const receipts = await runExactCargoLaws({
         cwd: this.repoRoot,
         env: { ...process.env, RUST_MIN_STACK: "268435456" },
-        groups: [{ package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, laws: ["gis_map_verified_binding_freezes_catalog_selection_and_native_executable"] }],
+        groups: [{ package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, laws: ["gis_map_verified_binding_freezes_catalog_selection_and_native_executable", "gis_map_binding_constructs_from_loaded_catalog_and_retains_verified_bytes"] }],
         artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
         buildBudgetMs: buildBudgetMs(),
         listBudgetMs: 60_000,
@@ -4508,6 +5099,44 @@ class GisMapFrozenBindingCheckScript extends BundleScript {
       });
       for (const receipt of receipts) console.log(`gis-map-frozen-binding-receipt: ${JSON.stringify(receipt)}`);
     }
+  }
+}
+
+/** 🗺️ The exact GIS Map proposal/approval gate: neutral oracle, native hub laws, honest nonclaims. */
+class GisMapProposalCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const mode = segments[0] ?? "--source";
+    if (segments.length > 1 || !["--source", "--native", "--process"].includes(mode)) throw new Error("usage: gis-map-proposal-check [--source|--native|--process]");
+    const hostile = await proveGisMapProposalApprovalFixture(this.repoRoot);
+    if (mode === "--native" || mode === "--process") {
+      const libraryLaws = [
+        "gis_map_proposal_owner_claims_streams_and_boundedly_retires_on_cancellation",
+        "gis_map_proposal_is_private_to_its_original_author_owner",
+        "gis_map_approval_fails_closed_without_a_composition_transaction_and_never_auto_applies",
+        "gis_map_proposal_fixture_pins_the_exact_frozen_comparison_limits_and_error_vocabulary",
+      ];
+      const routeLaws = ["gis_map_proposal_routes_fail_closed_without_a_trusted_map_binding"];
+      const laws = [...libraryLaws, ...routeLaws];
+      const receipts = await runExactCargoLaws({
+        cwd: this.root,
+        env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        groups: [
+          { package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, cargoArgs: ["--features", "sqlite"], laws: libraryLaws },
+          { package: "semio-hub", target: { kind: "bin", name: "os-hub" }, laws: routeLaws },
+        ],
+        artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+        buildBudgetMs: buildBudgetMs(),
+        listBudgetMs: 60_000,
+        lawBudgetMs: 120_000,
+        progress(event) { console.log(`gis-map-proposal ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+      });
+      for (const receipt of receipts) console.log(`gis-map-proposal-receipt: ${JSON.stringify(receipt)}`);
+      console.log(`gis-map-proposal-check: neutral hostile=${hostile} exact-native=${laws.length}; no external model provider, no WGPU rendering`);
+    }
+    if (mode === "--process") {
+      console.log("gis-map-proposal-check --process: the two-user authenticated journey needs the trusted profile and the atomic composition transaction; it is NOT run or claimed here. No external model provider, no WGPU rendering.");
+    }
+    if (mode === "--source") console.log(`gis-map-proposal-check: neutral source oracle passed with hostile=${hostile}; native laws and the two-user process journey remain unclaimed. No external model provider, no WGPU rendering.`);
   }
 }
 
@@ -4712,8 +5341,9 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
     const providerSource = readFileSync(resolve(this.repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs"), "utf8");
     const runtimeSource = readFileSync(resolve(this.repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8").split("\nmod tests {")[0]!;
     const registrySource = readFileSync(resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts"), "utf8");
-    const receiptResolution = runtimeSource.indexOf(".authority_for_authenticated_exchange(&intent.plan_receipt");
-    const targetResolution = runtimeSource.indexOf("catalog.resolve_document_open(&authority.descriptor", receiptResolution);
+    const runtimeCompact = runtimeSource.replace(/\s+/g, "");
+    const receiptResolution = runtimeCompact.indexOf(".authority_for_authenticated_exchange(&intent.plan_receipt");
+    const targetResolution = runtimeCompact.indexOf("catalog.resolve_document_open(&authority.descriptor", receiptResolution);
     if (!catalogSource.includes("bundle.schema_version != 2") || !catalogSource.includes("trusted_profile_generation(&bundle, &profile)") || !catalogSource.includes("selected profile must resolve exactly one document-open target") || !providerSource.includes("NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS: usize = 28") || !providerSource.includes("receipt.package_version != version") || !registrySource.includes("CATALOG_DESCRIPTOR_MAX_BYTES = 4 * 1024 * 1024") || runtimeSource.split("catalog.generation_id() != authority.catalog.generation_id").length - 1 !== 2 || receiptResolution < 0 || targetResolution < receiptResolution) throw new Error("trusted stdio+GIS runtime/source boundary is incomplete");
     const scriptSource = readFileSync(import.meta.path, "utf8");
     const body = (start: string, end: string): string => {
@@ -4919,7 +5549,7 @@ type DirectoryEventPageRouteFixture = {
 };
 
 async function proveDirectoryEventPageRouteV1(repoRoot: string): Promise<number> {
-  const root = join(repoRoot, "🌎️hub/🧪️fixtures/📇️directory/event-page-route-v1");
+  const root = join(repoRoot, "🌎️hub/🧪️fixtures/📇️directory/📅️event-page-route-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as DirectoryEventPageRouteFixture;
   const schema = JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8"));
   const Ajv2020 = (await import("ajv/dist/2020.js")).default;
@@ -5142,7 +5772,7 @@ async function liveDirectoryEventPageUser(run: LocalHubRun, envelope: Record<str
     signal: AbortSignal.timeout(2_000),
   });
   const user = await response.json().catch(() => undefined) as Record<string, any> | undefined;
-  if (!response.ok || !user || typeof user.userId !== "string" || user.userId.length === 0 || user.expiresAt !== envelope.expiresAt || user.authorizationGeneration !== envelope.authorizationGeneration) {
+  if (!response.ok || !user || typeof user.userId !== "string" || user.userId.length === 0 || typeof user.displayName !== "string" || user.displayName.length === 0 || user.expiresAt !== envelope.expiresAt || user.authorizationGeneration !== envelope.authorizationGeneration) {
     throw new Error("directory event page process session identity did not match its inherited envelope");
   }
   return user;
@@ -5177,16 +5807,31 @@ async function fetchLiveDirectoryEventPage(run: LocalHubRun, envelope: Record<st
   return page;
 }
 
-async function submitLiveDirectoryCommand(run: LocalHubRun, envelope: Record<string, any>, command: Record<string, unknown>): Promise<readonly Record<string, any>[]> {
+/** 🆔️ Mints one fresh 32-hex nonzero idempotency correlation for a live process command. */
+function liveDirectoryCommandRequestId(): string {
+  return randomBytes(16).toString("hex");
+}
+
+/** 🧾️ Posts one sealed `DirectoryCommandRequestV1` and returns the raw status plus response text —
+ * the caller decides whether a non-2xx or a redacted receipt is the expected law. */
+async function postLiveDirectoryCommand(run: LocalHubRun, capability: string, requestId: string, command: Record<string, unknown>, body?: string): Promise<{ readonly status: number; readonly text: string }> {
   const response = await fetch(`http://127.0.0.1:${run.port}/directory/commands`, {
     method: "POST",
-    headers: { authorization: `Bearer ${envelope.capability}`, "content-type": "application/json" },
-    body: JSON.stringify(command),
-    signal: AbortSignal.timeout(2_000),
+    headers: { authorization: `Bearer ${capability}`, "content-type": "application/json" },
+    body: body ?? JSON.stringify({ schema: "semio.directory.command-request.v1", requestId, command }),
+    signal: AbortSignal.timeout(5_000),
   });
-  const result = await response.json().catch(() => undefined) as Record<string, any> | undefined;
-  if (response.status !== 202 || !Array.isArray(result?.events) || result.events.length === 0) throw new Error(`directory event page process command failed: ${response.status}`);
-  return result.events;
+  return { status: response.status, text: await response.text() };
+}
+
+async function submitLiveDirectoryCommand(run: LocalHubRun, envelope: Record<string, any>, command: Record<string, unknown>): Promise<readonly Record<string, any>[]> {
+  const requestId = liveDirectoryCommandRequestId();
+  const { status, text } = await postLiveDirectoryCommand(run, envelope.capability, requestId, command);
+  const receipt = status === 202 ? JSON.parse(text) as Record<string, any> : undefined;
+  if (!receipt || receipt.schema !== "semio.directory.command-receipt.v1" || receipt.requestId !== requestId || receipt.outcome !== "accepted" || !Array.isArray(receipt.events) || receipt.events.length === 0) {
+    throw new Error(`directory process command failed: ${status}`);
+  }
+  return receipt.events;
 }
 
 function createdLiveDirectorySpace(events: readonly Record<string, any>[]): string {
@@ -5198,8 +5843,9 @@ function createdLiveDirectorySpace(events: readonly Record<string, any>[]): stri
 type DirectoryHomeBrowserProcessFixture = {
   readonly schema: "semio.hub.directory-home-browser-process-fixture/v1";
   readonly limits: { readonly journeyMs: number; readonly stepMs: number; readonly responseBytes: 65536; readonly appliedEvents: number };
+  readonly spaceGuest: { readonly target: "wasm32-wasip2"; readonly package: "semio-s-plugin-space"; readonly nativeFeature: "os-host-full"; readonly forbiddenPackages: readonly ["ring", "cc", "tokio"] };
   readonly profiles: Readonly<Record<"a" | "b", { readonly profileId: string; readonly subject: string; readonly displayName: string }>>;
-  readonly home: { readonly pluginId: "s"; readonly appId: "s.home@1/*#editor"; readonly actionId: "applyDirectoryEventPage"; readonly moduleDirectory: "🪐️s" };
+  readonly home: { readonly pluginId: "s"; readonly appId: "s.space.home@1/*#editor"; readonly actionId: "applyDirectoryEventPage"; readonly moduleDirectory: "🪐️s" };
   readonly pages: Readonly<Record<string, { readonly epoch: number; readonly binding: string; readonly generation: number; readonly after: number; readonly through: number; readonly hasMore: boolean; readonly receipt: string; readonly eventIds: readonly string[] }>>;
   readonly traces: readonly { readonly name: string; readonly steps: readonly Record<string, any>[]; readonly expected: Record<string, any> }[];
   readonly hostile: readonly { readonly name: string; readonly mutation: string }[];
@@ -5310,99 +5956,157 @@ async function proveDirectoryHomeBrowserProcessSource(repoRoot: string): Promise
   const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
   if (!validate(fixture)) throw new Error(`directory Home browser process fixture invalid: ${JSON.stringify(validate.errors)}`);
   const modelChecks = directoryHomeBrowserProcessModel(fixture);
+  const guestTree = runProbe("cargo", ["tree", "-e", "features", "-p", fixture.spaceGuest.package, "--target", fixture.spaceGuest.target], { cwd: repoRoot, budgetMs: fixture.limits.stepMs });
+  if (guestTree.status !== 0) throw new Error(`directory Home Space guest graph oracle failed: ${guestTree.stderr}`);
+  for (const forbidden of fixture.spaceGuest.forbiddenPackages) {
+    if (new RegExp(`(?:^|\\s)${forbidden} v`, "mu").test(guestTree.stdout)) throw new Error(`directory Home Space guest graph retained forbidden package ${forbidden}`);
+  }
+  if (guestTree.stdout.includes(`semio-framework-os feature "${fixture.spaceGuest.nativeFeature}"`)) throw new Error(`directory Home Space guest graph retained native feature ${fixture.spaceGuest.nativeFeature}`);
+  const rustc = runProbe("rustc", ["-vV"], { cwd: repoRoot, budgetMs: fixture.limits.stepMs });
+  const hostTarget = rustc.status === 0 ? rustc.stdout.match(/^host: (.+)$/mu)?.[1] : undefined;
+  if (!hostTarget) throw new Error(`directory Home Space native target oracle failed: ${rustc.stderr}`);
+  const nativeTree = runProbe("cargo", ["tree", "-e", "features", "-p", fixture.spaceGuest.package, "--target", hostTarget, "-i", "semio-framework-os"], { cwd: repoRoot, budgetMs: fixture.limits.stepMs });
+  if (nativeTree.status !== 0 || !nativeTree.stdout.includes(`semio-framework-os feature "${fixture.spaceGuest.nativeFeature}"`)) throw new Error("directory Home Space native graph lost os-host-full");
   const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "utf8");
-  const owner = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨️engine/🧱️elements/🏛️ShellHost/🧬️contracts/📇️directory-bootstrap/🟦️.tsx"), "utf8");
-  const shell = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨️engine/🧱️elements/🏛️ShellHost/🟦️.tsx"), "utf8");
-  const workerExact = worker.includes("class DirectoryEventPageBootstrapV1")
-    && worker.includes("streamAcknowledged(since")
-    && worker.indexOf("owner.machine.acknowledge(ack)") < worker.indexOf("openDirectoryBootstrapLive(owner, transition.since)")
-    && worker.includes("if (directoryBootstrap !== owner || owner.abort.signal.aborted) return")
-    && worker.includes("owner.machine.wake(rebootstrap)");
-  const ownerExact = owner.includes("await owner.plugin.handleAction")
-    && owner.indexOf("parseDirectoryProjectionReceiptV1(response.output)") < owner.indexOf('kind: "directory-bootstrap-ack"')
-    && owner.includes("owner.abort.signal.aborted")
-    && owner.includes('kind: "directory-bootstrap-reject"');
-  const shellExact = shell.includes("openDirectoryHomeOwnerV1")
-    && shell.includes("applyDirectoryEventPageBootstrapV1")
-    && shell.includes("closeDirectoryHomeOwnerV1")
-    && !shell.includes('kind: "directory-open", baseUrl: resolved.hubBaseUrl');
-  if (!workerExact || !ownerExact || !shellExact) throw new Error("directory Home browser process source lost ACK-owned frontier/cancellation wiring");
+  const owner = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/📇️directory-bootstrap/🟦️.tsx"), "utf8");
+  const shell = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"), "utf8");
+  const sourceClosed = (workerSource: string, ownerSource: string, shellSource: string): boolean => {
+    const acknowledge = workerSource.indexOf("owner.machine.acknowledge(ack)");
+    const openLive = workerSource.indexOf("openDirectoryBootstrapLive(owner, transition.since)");
+    const identity = ownerSource.indexOf('directoryActionInvocation(owner, "setClient"');
+    const opened = ownerSource.indexOf('kind: "directory-bootstrap-open"');
+    const receipt = ownerSource.indexOf("parseDirectoryProjectionReceiptV1(response.output)");
+    const ack = ownerSource.indexOf('kind: "directory-bootstrap-ack"');
+    return workerSource.includes("class DirectoryEventPageBootstrapV1")
+      && workerSource.includes("streamAcknowledged(since")
+      && acknowledge >= 0 && openLive > acknowledge
+      && workerSource.includes("if (directoryBootstrap !== owner || owner.abort.signal.aborted) return")
+      && workerSource.includes("owner.machine.wake(rebootstrap)")
+      && ownerSource.includes("await owner.plugin.handleAction")
+      && identity >= 0 && opened > identity
+      && ownerSource.includes("invocationTerminal(response)")
+      && ownerSource.includes("if (owner.ownsInstance)")
+      && ownerSource.includes("await beforeAcknowledge?.(owner)")
+      && receipt >= 0 && ack > receipt
+      && ownerSource.includes("owner.abort.signal.aborted")
+      && ownerSource.includes('kind: "directory-bootstrap-reject"')
+      && shellSource.includes("openDirectoryHomeOwnerV1")
+      && shellSource.includes("instance: { instanceId: visibleSession.instanceId, viewState: visibleSession.viewState }")
+      && shellSource.includes("identity: { userId: identity.userId, displayName: identity.displayName }")
+      && shellSource.includes("directoryHomeOpeningRef.current.catch")
+      && shellSource.includes("await refreshDirectoryHomeRef.current(active)")
+      && shellSource.includes("applyDirectoryEventPageBootstrapV1")
+      && shellSource.includes("closeDirectoryHomeOwnerV1")
+      && !shellSource.includes('kind: "directory-open", baseUrl: resolved.hubBaseUrl');
+  };
+  if (!sourceClosed(worker, owner, shell)) throw new Error("directory Home browser process source lost ACK-owned frontier/cancellation wiring");
   const hostiles = [
-    worker.replace("owner.machine.acknowledge(ack)", "owner.machine.wake(false)"),
-    worker.replace("if (directoryBootstrap !== owner || owner.abort.signal.aborted) return", "if (false) return"),
-    owner.replace("parseDirectoryProjectionReceiptV1(response.output)", "page as any"),
-    owner.replace("owner.abort.signal.aborted", "false"),
+    [worker.replace("owner.machine.acknowledge(ack)", "owner.machine.wake(false)"), owner, shell],
+    [worker.replaceAll("if (directoryBootstrap !== owner || owner.abort.signal.aborted) return", "if (false) return"), owner, shell],
+    [worker, owner.replace("parseDirectoryProjectionReceiptV1(response.output)", "page as any"), shell],
+    [worker, owner.replaceAll("owner.abort.signal.aborted", "false"), shell],
+    [worker, owner.replace('directoryActionInvocation(owner, "setClient"', 'directoryActionInvocation(owner, "applyDirectoryEventPage"'), shell],
+    [worker, owner, shell.replace("instance: { instanceId: visibleSession.instanceId, viewState: visibleSession.viewState }", "instance: undefined")],
   ];
-  if (hostiles[0]!.includes("owner.machine.acknowledge(ack)") || hostiles[1]!.includes("if (directoryBootstrap !== owner || owner.abort.signal.aborted) return") || hostiles[2]!.includes("parseDirectoryProjectionReceiptV1(response.output)") || hostiles[3]!.includes("owner.abort.signal.aborted")) throw new Error("directory Home browser process source-hostile mutation failed");
-  console.log(`directory-home-browser-process-oracle: ajv=1 model=${modelChecks} source=3 hostile-source=${hostiles.length} passed`);
+  hostiles.forEach((candidate, index) => { if (sourceClosed(candidate[0]!, candidate[1]!, candidate[2]!)) throw new Error(`directory Home browser process source oracle admitted removed fence ${index}`); });
+  console.log(`directory-home-browser-process-oracle: ajv=1 model=${modelChecks} source=5 hostile-source=${hostiles.length} guest-graph=${fixture.spaceGuest.forbiddenPackages.length} native-feature=1 passed`);
   return fixture;
 }
 
 async function proveDirectoryHomeBrowserControllerRuntime(repoRoot: string, fixture: DirectoryHomeBrowserProcessFixture): Promise<void> {
-  const priorPort = process.env.S_OS_PORT;
-  const priorPlugin = process.env.SEMIO_PLUGIN;
-  const priorRenderer = process.env.SEMIO_RENDERER;
-  let viteServer: { close(): Promise<void> } | undefined;
+  let runtimeServer: { stop(closeActiveConnections?: boolean): void | Promise<void> } | undefined;
   let browser: Awaited<ReturnType<(typeof import("playwright"))["chromium"]["launch"]>> | undefined;
+  const browserDiagnostics: string[] = [];
   const abort = AbortSignal.timeout(fixture.limits.journeyMs);
   try {
+    process.env.PLAYWRIGHT_BROWSERS_PATH ??= join(repoRoot, "node_modules", ".cache", "ms-playwright");
+    const controllerPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/📇️directory-bootstrap/🟦️.tsx");
+    const bundle = await Bun.build({ entrypoints: [controllerPath], target: "browser", format: "esm", sourcemap: "none" });
+    if (!bundle.success || bundle.outputs.length !== 1) throw new Error(`directory Home browser controller bundle failed: ${bundle.logs.map(String).join("; ") || "unexpected output closure"}`);
+    const controller = await bundle.outputs[0]!.text();
     const port = await freeLoopbackPort();
-    process.env.S_OS_PORT = String(port);
-    process.env.SEMIO_PLUGIN = fixture.home.pluginId;
-    process.env.SEMIO_RENDERER = "react";
-    const { createServer: createViteServer } = await import("vite");
-    viteServer = await createViteServer({ configFile: join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts"), server: { host: "127.0.0.1", port, strictPort: true }, clearScreen: false });
-    await (viteServer as { listen(): Promise<void> }).listen();
+    runtimeServer = Bun.serve({
+      hostname: "127.0.0.1",
+      port,
+      fetch(request): Response {
+        const path = new URL(request.url).pathname;
+        if (path === "/controller.js") return new Response(controller, { headers: { "content-type": "text/javascript; charset=utf-8", "cache-control": "no-store" } });
+        if (path === "/__directory-home-controller") return new Response("<!doctype html><meta charset=utf-8><title>Directory Home Controller</title>", { headers: { "content-type": "text/html; charset=utf-8" } });
+        return new Response("not found", { status: 404 });
+      },
+    });
     const { chromium } = await import("playwright");
     browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
-    await page.goto(`http://127.0.0.1:${port}`, { waitUntil: "domcontentloaded", timeout: fixture.limits.stepMs });
-    const moduleUrl = `/@fs${join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨️engine/🧱️elements/🏛️ShellHost/🧬️contracts/📇️directory-bootstrap/🟦️.tsx")}`;
+    page.on("console", (message) => browserDiagnostics.push(`console:${message.type()}:${message.text()}`));
+    page.on("pageerror", (error) => browserDiagnostics.push(`pageerror:${error.message}`));
+    page.on("requestfailed", (request) => browserDiagnostics.push(`requestfailed:${request.url()}:${request.failure()?.errorText ?? "unknown"}`));
+    const probeUrl = `http://127.0.0.1:${port}/__directory-home-controller`;
+    await page.goto(probeUrl, { waitUntil: "domcontentloaded", timeout: fixture.limits.stepMs });
+    const moduleUrl = "/controller.js";
+    const deadline = new Promise<never>((_, reject) => {
+      const fail = () => reject(new Error("directory Home browser controller deadline exceeded"));
+      if (abort.aborted) fail(); else abort.addEventListener("abort", fail, { once: true });
+    });
     const result = await Promise.race([
       page.evaluate(async ({ moduleUrl, home, sourcePage }) => {
         const api = await import(moduleUrl);
         const records: string[] = [];
         const receipt = { schema: "semio.space.home.directory-projection-receipt.v1", sessionBindingSha256: sourcePage.binding, authorizationGeneration: sourcePage.generation, throughSeqInclusive: sourcePage.through, receiptSha256: sourcePage.receipt };
+        const terminal = (output: unknown) => ({ output, mutations: [], inverseGroup: { invocationId: "browser", mutations: [], inverseMutations: [] } });
         let release: (() => void) | undefined;
         const delayed = new Promise<void>((resolve) => { release = resolve; });
         const plugin = {
           pluginId: home.pluginId,
           createApp: async () => { records.push("create"); return 41; },
           destroyApp: async () => { records.push("destroy"); },
-          handleAction: async () => { records.push("action"); return { output: receipt }; },
+          handleAction: async (_instanceId: number, invocation: string) => {
+            const parsed = JSON.parse(invocation);
+            if (parsed.address.actionId === "setClient") {
+              records.push(`identity:${parsed.arguments.clientId}:${parsed.arguments.clientName}`);
+              return terminal(null);
+            }
+            records.push("page");
+            return terminal(receipt);
+          },
         };
-        const app = { id: home.appId, modes: [{ id: "explore" }], defaultModeId: "explore", windowKinds: [{ id: "main", actions: [{ id: home.actionId }] }] };
+        const app = { id: home.appId, controllerId: home.appId, modes: [{ id: "explore" }], defaultModeId: "explore", windowKinds: [{ id: "main", actions: [{ id: home.actionId }, { id: "setClient" }] }] };
         const posts: any[] = [];
-        const owner = await api.openDirectoryHomeOwnerV1({ plugin, app, baseUrl: "http://127.0.0.1:6070", bootstrapEpoch: 1, locale: "en", terminology: "native", post: (message: any) => posts.push(message) });
+        const owner = await api.openDirectoryHomeOwnerV1({ plugin, app, identity: { userId: "user-a", displayName: "Directory Browser A" }, instance: { instanceId: 41, viewState: { activeModeId: "explore" } }, baseUrl: "http://127.0.0.1:6070", bootstrapEpoch: 1, locale: "en", terminology: "native", beforeBootstrap: async () => { records.push("refresh-open"); }, post: (message: any) => posts.push(message) });
         const page = { kind: "directory-event-page", bootstrapEpoch: 1, canonicalJson: JSON.stringify({ schema: "semio.directory.event-page.v1", events: sourcePage.eventIds }), sessionBindingSha256: sourcePage.binding, authorizationGeneration: sourcePage.generation, afterSeqExclusive: sourcePage.after, throughSeqInclusive: sourcePage.through, hasMore: sourcePage.hasMore, receiptSha256: sourcePage.receipt };
-        const applied = await api.applyDirectoryEventPageBootstrapV1(owner, page, (message: any) => posts.push(message));
+        const applied = await api.applyDirectoryEventPageBootstrapV1(owner, page, (message: any) => posts.push(message), async () => { records.push("refresh-ack"); });
         await api.closeDirectoryHomeOwnerV1(owner, (message: any) => posts.push(message));
         const latePosts: any[] = [];
-        const latePlugin = { ...plugin, createApp: async () => 42, handleAction: async () => { await delayed; return { output: receipt }; } };
-        const lateOwner = await api.openDirectoryHomeOwnerV1({ plugin: latePlugin, app, baseUrl: "http://127.0.0.1:6070", bootstrapEpoch: 2, locale: "de", terminology: "native", post: (message: any) => latePosts.push(message) });
+        const latePlugin = { ...plugin, handleAction: async (_instanceId: number, invocation: string) => {
+          const parsed = JSON.parse(invocation);
+          if (parsed.address.actionId === "setClient") return terminal(null);
+          await delayed;
+          return terminal(receipt);
+        } };
+        const lateOwner = await api.openDirectoryHomeOwnerV1({ plugin: latePlugin, app, identity: { userId: "user-b", displayName: "Directory Browser B" }, instance: { instanceId: 42, viewState: { activeModeId: "explore" } }, baseUrl: "http://127.0.0.1:6070", bootstrapEpoch: 2, locale: "de", terminology: "native", post: (message: any) => latePosts.push(message) });
         const late = api.applyDirectoryEventPageBootstrapV1(lateOwner, { ...page, bootstrapEpoch: 2 }, (message: any) => latePosts.push(message));
         await api.closeDirectoryHomeOwnerV1(lateOwner, (message: any) => latePosts.push(message));
         release!();
         const cancelled = await late;
         return { records, posts, applied, latePosts, cancelled };
       }, { moduleUrl, home: fixture.home, sourcePage: fixture.pages.initial! }),
-      new Promise<never>((_, reject) => abort.addEventListener("abort", () => reject(new Error("directory Home browser controller deadline exceeded")), { once: true })),
+      deadline,
     ]);
     const ack = result.posts.find((message: Record<string, any>) => message.kind === "directory-bootstrap-ack");
-    if (JSON.stringify(result.records) !== JSON.stringify(["create", "action", "destroy", "destroy"]) || !ack || ack.receiptSha256 !== fixture.pages.initial!.receipt || ack.throughSeqInclusive !== fixture.pages.initial!.through || result.applied.state.kind !== "idle") throw new Error(`directory Home browser controller positive journey differed: ${JSON.stringify(result)}`);
+    if (JSON.stringify(result.records) !== JSON.stringify(["identity:user-a:Directory Browser A", "refresh-open", "page", "refresh-ack"]) || !ack || ack.receiptSha256 !== fixture.pages.initial!.receipt || ack.throughSeqInclusive !== fixture.pages.initial!.through || result.applied.state.kind !== "idle") throw new Error(`directory Home browser controller positive journey differed: ${JSON.stringify(result)}`);
     if (result.latePosts.some((message: Record<string, any>) => message.kind === "directory-bootstrap-ack") || result.cancelled.state.code !== "directory-bootstrap.cancelled") throw new Error("directory Home browser controller accepted a late terminal after close");
-    console.log("directory-home-browser-runtime: Chromium actual retained Home controller ACK and late-cancel laws passed");
+    console.log("directory-home-browser-runtime: Chromium actual same-visible-instance Hub identity, pre-open/pre-ACK refresh, ACK and late-cancel laws passed");
+  } catch (error) {
+    const diagnostics = browserDiagnostics.slice(-16).join("\n");
+    throw new Error(`${error instanceof Error ? error.message : "directory Home browser controller failed"}${diagnostics ? `\nbrowser diagnostics:\n${diagnostics}` : ""}`);
   } finally {
     await browser?.close().catch(() => {});
-    await viteServer?.close().catch(() => {});
-    if (priorPort === undefined) delete process.env.S_OS_PORT; else process.env.S_OS_PORT = priorPort;
-    if (priorPlugin === undefined) delete process.env.SEMIO_PLUGIN; else process.env.SEMIO_PLUGIN = priorPlugin;
-    if (priorRenderer === undefined) delete process.env.SEMIO_RENDERER; else process.env.SEMIO_RENDERER = priorRenderer;
+    await runtimeServer?.stop(true);
   }
 }
 
 function assertDirectoryHomeBrowserComponentAttestation(repoRoot: string, fixture: DirectoryHomeBrowserProcessFixture): void {
-  const moduleRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻️dev/🔌️plugin-modules", fixture.home.moduleDirectory);
+  const moduleRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules", fixture.home.moduleDirectory);
   const manifest = JSON.parse(readFileSync(join(moduleRoot, "🔣️.json"), "utf8")) as Record<string, any>;
   const wasmPath = join(moduleRoot, "semio_s_plugin_space_component.core.wasm");
   const actual = createHash("sha256").update(readFileSync(wasmPath)).digest("hex");
@@ -5410,17 +6114,354 @@ function assertDirectoryHomeBrowserComponentAttestation(repoRoot: string, fixtur
   const app = manifest.manifest?.apps?.find((candidate: Record<string, any>) => candidate.id === fixture.home.appId);
   const failures = [];
   if (!app) failures.push(`missing-app=${fixture.home.appId}`);
-  else if (!app.windowKinds?.some((window: Record<string, any>) => window.actions?.some((action: Record<string, any>) => action.id === fixture.home.actionId))) failures.push(`missing-action=${fixture.home.actionId}`);
+  else {
+    for (const actionId of ["setClient", fixture.home.actionId]) {
+      if (!app.windowKinds?.some((window: Record<string, any>) => window.actions?.some((action: Record<string, any>) => action.id === actionId))) failures.push(`missing-action=${actionId}`);
+    }
+  }
   if (!/^[0-9a-f]{64}$/u.test(expected ?? "") || expected !== actual) failures.push(`core-wasm-sha256 expected=${expected ?? "<missing>"} actual=${actual}`);
   if (failures.length > 0) throw new Error(`directory Home browser process blocked before discovery: Space component attestation rejected: ${failures.join("; ")}`);
 }
 
+async function proveDirectoryHomeBrowserStaticWasmProcessRuntime(
+  repoRoot: string,
+  fixture: DirectoryHomeBrowserProcessFixture,
+  source: Readonly<{ page: LiveDirectoryEventPageV1; userId: string; displayName: string; baseUrl: string }>,
+): Promise<void> {
+  const bundleModule = async (entrypoint: string): Promise<string> => {
+    const bundle = await Bun.build({ entrypoints: [entrypoint], target: "browser", format: "esm", sourcemap: "none", define: { "import.meta.vitest": "undefined" } });
+    if (!bundle.success || bundle.outputs.length !== 1) throw new Error(`directory Home real browser bundle failed: ${bundle.logs.map(String).join("; ") || "unexpected output closure"}`);
+    return bundle.outputs[0]!.text();
+  };
+  const [controller, runtime] = await Promise.all([
+    bundleModule(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/📇️directory-bootstrap/🟦️.tsx")),
+    bundleModule(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx")),
+  ]);
+  const pluginRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules");
+  const mime = (path: string): string => path.endsWith(".wasm") ? "application/wasm" : path.endsWith(".json") ? "application/json; charset=utf-8" : "text/javascript; charset=utf-8";
+  const physicalPluginPath = (urlPath: string): string | undefined => {
+    const prefix = "/🔌️plugin-modules/";
+    const shardPrefix = "/plugin-modules/_shard/";
+    const relativePath = urlPath.startsWith(prefix) ? urlPath.slice(prefix.length) : urlPath.startsWith(shardPrefix) ? join("🧵️shard", urlPath.slice(shardPrefix.length)) : undefined;
+    if (!relativePath || relativePath.split("/").includes("..")) return undefined;
+    const candidate = join(pluginRoot, relativePath);
+    const escaped = relative(pluginRoot, candidate);
+    return escaped.startsWith("..") || isAbsolute(escaped) || !existsSync(candidate) || !statSync(candidate).isFile() ? undefined : candidate;
+  };
+  const port = await freeLoopbackPort();
+  const server = Bun.serve({
+    hostname: "127.0.0.1",
+    port,
+    fetch(request): Response {
+      const path = decodeURIComponent(new URL(request.url).pathname);
+      if (path === "/controller.js") return new Response(controller, { headers: { "content-type": "text/javascript; charset=utf-8", "cache-control": "no-store" } });
+      if (path === "/plugin-runtime.js") return new Response(runtime, { headers: { "content-type": "text/javascript; charset=utf-8", "cache-control": "no-store" } });
+      if (path === "/__directory-home-process") return new Response("<!doctype html><meta charset=utf-8><title>Directory Home Process</title>", { headers: { "content-type": "text/html; charset=utf-8" } });
+      const physical = physicalPluginPath(path);
+      return physical ? new Response(readFileSync(physical), { headers: { "content-type": mime(physical), "cache-control": "no-store" } }) : new Response("not found", { status: 404 });
+    },
+  });
+  let browser: Awaited<ReturnType<(typeof import("playwright"))["chromium"]["launch"]>> | undefined;
+  const diagnostics: string[] = [];
+  try {
+    process.env.PLAYWRIGHT_BROWSERS_PATH ??= join(repoRoot, "node_modules", ".cache", "ms-playwright");
+    const { chromium } = await import("playwright");
+    browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage();
+    page.on("console", (message) => diagnostics.push(`console:${message.type()}:${message.text()}`));
+    page.on("pageerror", (error) => diagnostics.push(`pageerror:${error.message}`));
+    page.on("requestfailed", (request) => diagnostics.push(`requestfailed:${request.url()}:${request.failure()?.errorText ?? "unknown"}`));
+    await page.goto(`http://127.0.0.1:${port}/__directory-home-process`, { waitUntil: "domcontentloaded", timeout: fixture.limits.stepMs });
+    const abort = AbortSignal.timeout(fixture.limits.journeyMs);
+    const deadline = new Promise<never>((_, reject) => {
+      const fail = () => reject(new Error("directory Home real browser process deadline exceeded"));
+      if (abort.aborted) fail(); else abort.addEventListener("abort", fail, { once: true });
+    });
+    const result = await Promise.race([
+      page.evaluate(async ({ home, source }) => {
+        const controller = await import("/controller.js");
+        const runtime = await import("/plugin-runtime.js");
+        runtime.setPluginRuntimeActor(`user:${source.userId}#directory-home-process`);
+        const plugin = await runtime.loadPluginModule(home.pluginId, `/🔌️plugin-modules/${home.moduleDirectory}/🌉️bridge.js`, AbortSignal.timeout(10_000));
+        const app = plugin.manifest.apps.find((candidate: any) => candidate.id === home.appId);
+        if (!app) throw new Error("directory Home real browser app unavailable after discovery");
+        const posts: any[] = [];
+        let owner: any;
+        try {
+          owner = await controller.openDirectoryHomeOwnerV1({ plugin, app, identity: { userId: source.userId, displayName: source.displayName }, baseUrl: source.baseUrl, bootstrapEpoch: 1, locale: "en", terminology: "native", post: (message: any) => posts.push(message) });
+          const canonicalJson = JSON.stringify(source.page);
+          const applied = await controller.applyDirectoryEventPageBootstrapV1(owner, {
+            kind: "directory-event-page",
+            bootstrapEpoch: 1,
+            canonicalJson,
+            sessionBindingSha256: source.page.sessionBindingSha256,
+            authorizationGeneration: source.page.authorizationGeneration,
+            afterSeqExclusive: source.page.afterSeqExclusive,
+            throughSeqInclusive: source.page.throughSeqInclusive,
+            hasMore: source.page.hasMore,
+            receiptSha256: source.page.receiptSha256,
+          }, (message: any) => posts.push(message));
+          return { pluginId: plugin.manifest.pluginId, appId: app.id, action: app.windowKinds.some((window: any) => window.actions?.some((action: any) => action.id === home.actionId)), posts, applied };
+        } finally {
+          if (owner) await controller.closeDirectoryHomeOwnerV1(owner, (message: any) => posts.push(message));
+          plugin.dispose();
+        }
+      }, { home: fixture.home, source }),
+      deadline,
+    ]);
+    const ack = result.posts.find((message: Record<string, any>) => message.kind === "directory-bootstrap-ack");
+    const expected = source.page;
+    if (result.pluginId !== fixture.home.pluginId || result.appId !== fixture.home.appId || !result.action || result.applied.state.kind !== "idle" || !ack
+      || ack.sessionBindingSha256 !== expected.sessionBindingSha256 || ack.authorizationGeneration !== expected.authorizationGeneration || ack.throughSeqInclusive !== expected.throughSeqInclusive || ack.receiptSha256 !== expected.receiptSha256) {
+      throw new Error(`directory Home real browser terminal differed: ${JSON.stringify(result)}`);
+    }
+    console.log(`directory-home-browser-process-runtime: real-hub-page=1 static-dev-space-wasm=1 verified-activation=0 Chromium=1 through=${expected.throughSeqInclusive} receipt=${expected.receiptSha256}`);
+  } catch (error) {
+    const detail = diagnostics.slice(-24).join("\n");
+    throw new Error(`${error instanceof Error ? error.message : "directory Home real browser process failed"}${detail ? `\nbrowser diagnostics:\n${detail}` : ""}`);
+  } finally {
+    await browser?.close().catch(() => {});
+    await server.stop(true);
+  }
+}
+
 async function proveDirectoryHomeBrowserProcessJourney(repoRoot: string, root: string, fixture: DirectoryHomeBrowserProcessFixture): Promise<void> {
-  assertDirectoryHomeBrowserComponentAttestation(repoRoot, fixture);
   const binary = hubBinaryPath(repoRoot);
   if (!existsSync(binary)) throw new Error(`directory Home browser process blocked before discovery: os-hub binary absent at ${binary}`);
-  await proveDirectoryEventPageV1Process(repoRoot, root);
-  throw new Error("directory Home browser process actual ShellHost journey has no accepted terminal receipt");
+  const source = await proveDirectoryEventPageV1Process(repoRoot, root);
+  assertDirectoryHomeBrowserComponentAttestation(repoRoot, fixture);
+  await proveDirectoryHomeBrowserStaticWasmProcessRuntime(repoRoot, fixture, source);
+}
+
+type ScopedPresenceBrowserAuthorityCase = Readonly<{
+  id: "a" | "b";
+  scope: { readonly spaceId: string; readonly documentId: string };
+  surfaceId: string;
+  plan: Record<string, any>;
+  installedTarget: Record<string, any>;
+  socketGrant: Record<string, any>;
+  openPath: string;
+  grantPath: string;
+  socketPath: string;
+}>;
+
+function scopedPresenceBrowserCases(fixture: BrowserDocumentOpenFixture): readonly [ScopedPresenceBrowserAuthorityCase, ScopedPresenceBrowserAuthorityCase] {
+  const make = (id: "a" | "b", spaceId: string, surfaceId: string, actorByte: string): ScopedPresenceBrowserAuthorityCase => {
+    const scope = { spaceId, documentId: fixture.intent.scope.documentId };
+    const plan = structuredClone(fixture.plan) as Record<string, any>;
+    const installedTarget = structuredClone(fixture.installedTarget) as Record<string, any>;
+    const socketGrant = structuredClone(fixture.socketGrant) as Record<string, any>;
+    plan.scope = scope;
+    plan.surface.surfaceId = surfaceId;
+    plan.surface.role = id === "a" ? "editor" : "viewer";
+    plan.grant.write = id === "a";
+    plan.expiresAtUnixMs = Date.now() + 30_000;
+    installedTarget.scope = scope;
+    installedTarget.surface.surfaceId = surfaceId;
+    installedTarget.surface.role = id === "a" ? "editor" : "viewer";
+    installedTarget.grant.write = id === "a";
+    socketGrant.actorId = `hub.v1.${actorByte.repeat(64)}`;
+    socketGrant.grant = `socket.v1.${actorByte.repeat(32)}.${actorByte.repeat(64)}`;
+    socketGrant.expiresAtMs = Date.now() + 25_000;
+    const root = `/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(scope.documentId)}`;
+    return {
+      id,
+      scope,
+      surfaceId,
+      plan,
+      installedTarget,
+      socketGrant,
+      openPath: `${root}/open-plan`,
+      grantPath: `${root}/socket-grants`,
+      socketPath: `${root}/socket/v1?surface=${encodeURIComponent(surfaceId)}`,
+    };
+  };
+  return [
+    make("a", fixture.expected.scopeIsolation.left.spaceId, "surface.gis.editor", "3"),
+    make("b", fixture.expected.scopeIsolation.right.spaceId, "surface.gis.viewer", "4"),
+  ];
+}
+
+/** 👥️ Runs the real browser Worker behind a mounted React Shell probe for interactive Chromium acceptance. */
+async function serveScopedPresenceBrowserRuntime(repoRoot: string): Promise<void> {
+  const fixture = await browserDocumentOpenFixture(repoRoot);
+  const cases = scopedPresenceBrowserCases(fixture);
+  const capability = `session.v1.${"a".repeat(32)}.${"b".repeat(64)}`;
+  const effects = {
+    a: { open: 0, exchange: 0, socket: 0, hello: 0, heartbeats: 0, closes: 0 },
+    b: { open: 0, exchange: 0, socket: 0, hello: 0, heartbeats: 0, closes: 0 },
+  };
+  const authority = Bun.serve<{ id: "a" | "b" }>({
+    hostname: "127.0.0.1",
+    port: 0,
+    async fetch(request, server): Promise<Response | undefined> {
+      const url = new URL(request.url);
+      const scopeCase = cases.find((row) => url.pathname === row.openPath || url.pathname === row.grantPath || `${url.pathname}${url.search}` === row.socketPath);
+      if (!scopeCase) return new Response("", { status: 404 });
+      if (`${url.pathname}${url.search}` === scopeCase.socketPath && request.method === "GET") {
+        const protocols = (request.headers.get("sec-websocket-protocol") ?? "").split(",").map((value) => value.trim());
+        if (protocols[0] !== "semio.socket.v1" || protocols[1] !== scopeCase.socketGrant.grant || request.headers.has("authorization")) return new Response("", { status: 401 });
+        effects[scopeCase.id].socket += 1;
+        return server.upgrade(request, { data: { id: scopeCase.id }, headers: { "Sec-WebSocket-Protocol": "semio.socket.v1" } }) ? undefined : new Response("", { status: 500 });
+      }
+      if (request.method !== "POST" || request.headers.get("authorization") !== `Bearer ${capability}`) return new Response("", { status: 401 });
+      const raw = new Uint8Array(await request.arrayBuffer());
+      try {
+        if (raw.byteLength === 0 || raw.byteLength > 8 * 1024) return new Response("", { status: 413 });
+        const input = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(raw)) as Record<string, any>;
+        if (url.pathname === scopeCase.openPath) {
+          if (input.schema !== fixture.intent.schema || input.version !== 1 || JSON.stringify(input.scope) !== JSON.stringify(scopeCase.scope) || input.requestedSurfaceId !== scopeCase.surfaceId) return new Response("", { status: 400 });
+          effects[scopeCase.id].open += 1;
+          return Response.json(scopeCase.plan, { headers: { "cache-control": "no-store" } });
+        }
+        if (url.pathname === scopeCase.grantPath) {
+          if (input.schema !== "semio.hub.document-plan-socket-grant-intent/v1" || input.version !== 1 || input.planReceipt !== scopeCase.plan.receipt) return new Response("", { status: 400 });
+          effects[scopeCase.id].exchange += 1;
+          return Response.json(scopeCase.socketGrant, { headers: { "cache-control": "no-store" } });
+        }
+        return new Response("", { status: 404 });
+      } finally {
+        raw.fill(0);
+      }
+    },
+    websocket: {
+      message(socket, message): void {
+        const scopeCase = cases.find((row) => row.id === socket.data.id)!;
+        const decoded = decodeClientFrame(typeof message === "string" ? new TextEncoder().encode(message) : new Uint8Array(message));
+        if (typeof decoded.frame === "string") return;
+        if ("SocketHelloV1" in decoded.frame) {
+          effects[scopeCase.id].hello += 1;
+          const frontier = { document_id: scopeCase.scope.documentId, head_edit_ordinal: 0, head_edit_id: "", last_commit_seq: 0, chain_hash: new Array(32).fill(0) };
+          socket.send(encodeServerFrame({ Welcome: { session_id: `presence-${scopeCase.id}`, resume_token: `presence-${scopeCase.id}-resume`, server_frontier: frontier, bootstrap: "None" } }, "command"));
+          socket.send(encodeServerFrame({ Session: { actor: scopeCase.socketGrant.actorId, color: scopeCase.id === "a" ? 2 : 5 } }, "command"));
+          return;
+        }
+        if (!("Presence" in decoded.frame)) return;
+        effects[scopeCase.id].heartbeats += 1;
+        const incoming = decodePresencePeer(new Uint8Array(decoded.frame.Presence.peer), [0]);
+        const correct: ArtifactPresencePeer = {
+          ...incoming,
+          actor: scopeCase.socketGrant.actorId,
+          userId: scopeCase.id === "a" ? "user-a" : "user-b",
+          label: scopeCase.id === "a" ? "Ada" : "Berta",
+          role: scopeCase.id === "a" ? "owner" : "viewer",
+          connectedAtMs: scopeCase.id === "a" ? 101 : 202,
+          color: scopeCase.id === "a" ? 2 : 5,
+          surface: scopeCase.surfaceId,
+          views: [],
+        };
+        const hostile: ArtifactPresencePeer = {
+          ...correct,
+          actor: `intruder-${scopeCase.id}`,
+          userId: `intruder-${scopeCase.id}`,
+          label: "Wrong Surface",
+          surface: scopeCase.id === "a" ? cases[1].surfaceId : cases[0].surfaceId,
+        };
+        socket.send(encodeServerFrame({ Presence: { peers: [Array.from(encodePresencePeer(correct)), Array.from(encodePresencePeer(hostile))] } }, "preview"));
+      },
+      close(socket): void {
+        effects[socket.data.id].closes += 1;
+      },
+    },
+  });
+  const hubOrigin = `http://127.0.0.1:${authority.port}`;
+  const proof = randomBytes(32);
+  const prior = {
+    S_OS_PORT: process.env.S_OS_PORT,
+    S_HUB_URL: process.env.S_HUB_URL,
+    S_LOCAL_RELAY_URL: process.env.S_LOCAL_RELAY_URL,
+    S_LOCAL_RELAY_SECRET: process.env.S_LOCAL_RELAY_SECRET,
+    SEMIO_PLUGIN: process.env.SEMIO_PLUGIN,
+    SEMIO_RENDERER: process.env.SEMIO_RENDERER,
+  };
+  let relay: LocalBrowserRelay | undefined;
+  let vite: { close(): Promise<void>; listen(): Promise<void>; transformRequest(url: string): Promise<unknown> } | undefined;
+  try {
+    const uiPort = await freeLoopbackPort();
+    const uiOrigin = `http://127.0.0.1:${uiPort}`;
+    relay = startLocalBrowserRelay(hubOrigin, uiOrigin, { schema: "semio.hub.local-credential-envelope/v1", clientClass: "react-relay", capability }, proof);
+    process.env.S_OS_PORT = String(uiPort);
+    process.env.S_HUB_URL = hubOrigin;
+    process.env.S_LOCAL_RELAY_URL = relay.url;
+    process.env.S_LOCAL_RELAY_SECRET = relay.secret.toString("hex");
+    process.env.SEMIO_PLUGIN = "s";
+    process.env.SEMIO_RENDERER = "react";
+    const componentPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/👥️presence-scope/🌐️browser/🟦️.tsx");
+    const workerPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts");
+    const shellEntryPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🟦️.ts");
+    const browserConfig = {
+      hubOrigin,
+      workerUrl: `/@fs${workerPath}`,
+      cases: cases.map((row) => ({ id: row.id, scope: row.scope, schema: fixture.expected.helloSchema, surfaceId: row.surfaceId, installedTarget: row.installedTarget })),
+    };
+    const refreshBrowserConfig = async (): Promise<Record<string, unknown>> => {
+      if (!relay) throw new Error("scoped presence relay is unavailable");
+      const now = Date.now();
+      for (const row of cases) {
+        row.plan.expiresAtUnixMs = now + 30_000;
+        row.socketGrant.expiresAtMs = now + 25_000;
+      }
+      const binding = { port: Number(new URL(relay.url).port), secret: Buffer.from(relay.secret) };
+      await relay.stop();
+      const currentProof = randomBytes(32);
+      const proofHex = currentProof.toString("hex");
+      relay = startLocalBrowserRelay(hubOrigin, uiOrigin, { schema: "semio.hub.local-credential-envelope/v1", clientClass: "react-relay", capability }, currentProof, BROWSER_BROKER_PROOF_TTL_MS, binding);
+      return { proof: proofHex, ...browserConfig };
+    };
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Scoped presence browser shell</title><script type="module">import { injectIntoGlobalHook } from "/@react-refresh"; injectIntoGlobalHook(window); window.$RefreshReg$ = () => {}; window.$RefreshSig$ = () => (type) => type;</script><script type="module" src="/@vite/client"></script></head><body><div id="root"></div><script type="module">const root = document.querySelector("#root"); try { const module = await import(${JSON.stringify(`/@fs${componentPath}`)}); const response = await fetch("/__scoped-presence/config"); if (!response.ok) throw new Error(\`config status \${response.status}\`); module.mountScopedPresenceBrowserShellV1(root, await response.json()); } catch (error) { root.textContent = \`[DEBUG] scoped-presence mount failed: \${error instanceof Error ? error.message : String(error)}\`; console.error(root.textContent); }</script></body></html>`;
+    const { createServer: createViteServer } = await import("vite");
+    vite = await createViteServer({
+      configFile: join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts"),
+      server: { host: "127.0.0.1", port: uiPort, strictPort: true },
+      clearScreen: false,
+      plugins: [{
+        name: "semio-scoped-presence-browser-runtime",
+        configureServer(server) {
+          server.middlewares.use(async (request, response, next) => {
+            if (request.url === "/__scoped-presence/config") {
+              response.setHeader("content-type", "application/json; charset=utf-8");
+              response.end(JSON.stringify(await refreshBrowserConfig()));
+              return;
+            }
+            if (request.url === "/__scoped-presence/effects") {
+              response.setHeader("content-type", "application/json; charset=utf-8");
+              response.end(JSON.stringify(effects));
+              return;
+            }
+            if (request.url === "/__scoped-presence") {
+              response.setHeader("content-type", "text/html; charset=utf-8");
+              response.end(html);
+              return;
+            }
+            next();
+          });
+        },
+      }],
+    });
+    await vite.listen();
+    if (await vite.transformRequest(`/@fs${componentPath}`) === null || await vite.transformRequest(`/@fs${workerPath}`) === null || await vite.transformRequest(`/@fs${shellEntryPath}`) === null) throw new Error("scoped presence browser or production shell module did not transform");
+    console.log(`scoped-presence-browser-serve: url=${uiOrigin}/__scoped-presence effects=${uiOrigin}/__scoped-presence/effects shell=${uiOrigin}/`);
+    await new Promise<void>((resolveStop) => {
+      const stop = (): void => resolveStop();
+      process.once("SIGINT", stop);
+      process.once("SIGTERM", stop);
+    });
+  } finally {
+    await vite?.close().catch(() => {});
+    await relay?.stop().catch(() => {});
+    await authority.stop(true);
+    for (const [key, value] of Object.entries(prior)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+}
+
+class ScopedPresenceBrowserServeScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length !== 0) throw new Error("scoped-presence-browser-serve accepts no arguments");
+    await serveScopedPresenceBrowserRuntime(this.repoRoot);
+  }
 }
 
 class DirectoryHomeBrowserProcessCheckScript extends BundleScript {
@@ -5429,13 +6470,16 @@ class DirectoryHomeBrowserProcessCheckScript extends BundleScript {
     if (segments.length > 1 || !["source", "runtime", "process"].includes(phase)) throw new Error("directory-home-browser-process-check accepts source, runtime, or process");
     const fixture = await proveDirectoryHomeBrowserProcessSource(this.repoRoot);
     if (phase === "runtime" || phase === "process") await proveDirectoryHomeBrowserControllerRuntime(this.repoRoot, fixture);
-    if (phase === "process") await proveDirectoryHomeBrowserProcessJourney(this.repoRoot, this.root, fixture);
+    if (phase === "process") {
+      runCmd("cargo", ["build", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub"], { cwd: this.root, budgetMs: buildBudgetMs() });
+      await proveDirectoryHomeBrowserProcessJourney(this.repoRoot, this.root, fixture);
+    }
     console.log(`directory-home-browser-process-check: phase=${phase} traces=${fixture.traces.length} hostile=${fixture.hostile.length}`);
   }
 }
 
 /** 🌎️ Proves the receipt producer against a restarted real SQLite hub and two independent local identities. */
-async function proveDirectoryEventPageV1Process(repoRoot: string, root: string): Promise<void> {
+async function proveDirectoryEventPageV1Process(repoRoot: string, root: string): Promise<Readonly<{ page: LiveDirectoryEventPageV1; userId: string; displayName: string; baseUrl: string }>> {
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifactRoot || !isAbsolute(artifactRoot)) throw new Error("directory event page process requires an absolute ticket-local SEMIO_TEST_ARTIFACT_DIR");
   const dataRoot = join(artifactRoot, `sqlite-process-${randomBytes(8).toString("hex")}`);
@@ -5518,6 +6562,7 @@ async function proveDirectoryEventPageV1Process(repoRoot: string, root: string):
       throw new Error("directory event page process restart lost durable visible/raw frontier or retained a stale session binding");
     }
     console.log("directory-event-page-v1-process: real SQLite two-user holes, prefix, stale bearer, and restart receipt passed");
+    return { page: persisted, userId: restartedUser.userId, displayName: restartedUser.displayName, baseUrl: `http://127.0.0.1:${second.port}` };
   } catch (error) {
     const diagnostics = `${first?.output() ?? ""}\n${second?.output() ?? ""}`.slice(-4_096);
     throw new Error(`${error instanceof Error ? error.message : "directory event page process failed"}${diagnostics ? `\nhub diagnostics:\n${diagnostics}` : ""}`);
@@ -5527,6 +6572,251 @@ async function proveDirectoryEventPageV1Process(repoRoot: string, root: string):
     if (restartedA) restartedA.capability = "";
     if (first) await finishLocalHub(first);
     if (second) await finishLocalHub(second);
+  }
+}
+
+/** 🔎️ Finds the one invite roster anywhere in a directory administration projection, accepting both
+ * a bare `invites` array and the current bounded `invites.rows` window shape. */
+function liveDirectoryInviteRows(value: unknown): readonly Record<string, any>[] | undefined {
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      const found = liveDirectoryInviteRows(entry);
+      if (found) return found;
+    }
+    return undefined;
+  }
+  if (value === null || typeof value !== "object") return undefined;
+  for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    if (key === "invites") {
+      if (Array.isArray(child)) return child as readonly Record<string, any>[];
+      const rows = child !== null && typeof child === "object" ? (child as Record<string, unknown>).rows : undefined;
+      if (Array.isArray(rows)) return rows as readonly Record<string, any>[];
+    }
+    const found = liveDirectoryInviteRows(child);
+    if (found) return found;
+  }
+  return undefined;
+}
+
+/** 🧾️ Two real authenticated sessions against a real SQLite hub: the author issues an invite through
+ * the V1 endpoint, exactly one response carries the capability, a disconnect-then-resolve of the same
+ * id is redacted and mints nothing, a spectator is generically forbidden, and a revoked author cannot
+ * retrieve a previous receipt. Hub process evidence only — it claims no rendered administration UI. */
+async function proveDirectoryCommandReceiptV1Process(repoRoot: string, root: string): Promise<void> {
+  const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  if (!artifactRoot || !isAbsolute(artifactRoot)) throw new Error("directory command receipt process requires an absolute ticket-local SEMIO_TEST_ARTIFACT_DIR");
+  const dataRoot = join(artifactRoot, `command-receipt-${randomBytes(8).toString("hex")}`);
+  mkdirSync(dataRoot, { recursive: true });
+  const profiles: readonly LocalProfile[] = [
+    { profileId: "command-receipt-author", subject: "command-receipt-process-author", displayName: "Command Receipt Author", allowedClientClasses: ["native"] },
+    { profileId: "command-receipt-spectator", subject: "command-receipt-process-spectator", displayName: "Command Receipt Spectator", allowedClientClasses: ["native"] },
+  ];
+  let run: LocalHubRun | undefined;
+  let author: Record<string, any> | undefined;
+  let spectator: Record<string, any> | undefined;
+  try {
+    run = await startLocalHub(repoRoot, root, profiles, { capture: true, isolatedSecuritySmoke: true, dataDir: dataRoot });
+    await waitForReadiness(run, true);
+    author = await issueLocalCredential(run, profiles[0]!.profileId, "native", 2);
+    spectator = await issueLocalCredential(run, profiles[1]!.profileId, "native", 3);
+    const spectatorUser = await liveDirectoryEventPageUser(run, spectator);
+    const spaceId = createdLiveDirectorySpace(await submitLiveDirectoryCommand(run, author, { kind: "create-space", name: "Command Receipt Space", spaceKind: "studio", visibility: "private" }));
+    await submitLiveDirectoryCommand(run, author, { kind: "upsert-member", spaceId, email: spectatorUser.email, role: "spectator" });
+
+    const inviteCommand = { kind: "create-invite", spaceId, role: "spectator", ttlSecs: 3600 };
+    const requestId = liveDirectoryCommandRequestId();
+    const first = await postLiveDirectoryCommand(run, author.capability, requestId, inviteCommand);
+    const firstReceipt = first.status === 202 ? JSON.parse(first.text) as Record<string, any> : undefined;
+    const token = firstReceipt?.result?.inviteToken;
+    if (!firstReceipt || firstReceipt.outcome !== "accepted" || firstReceipt.requestId !== requestId || typeof token !== "string" || token.length === 0) {
+      throw new Error(`directory command receipt process first invite did not carry exactly one capability: ${first.status}`);
+    }
+
+    const retry = await postLiveDirectoryCommand(run, author.capability, requestId, inviteCommand);
+    const retryReceipt = retry.status === 202 ? JSON.parse(retry.text) as Record<string, any> : undefined;
+    if (!retryReceipt || retryReceipt.outcome !== "secret-undeliverable" || retryReceipt.result?.kind !== "none" || retry.text.includes(token) || (retryReceipt.events ?? []).length !== 0) {
+      throw new Error(`directory command receipt process same-id resolution was not redacted: ${retry.status}`);
+    }
+
+    const detail = await fetch(`http://127.0.0.1:${run.port}/directory/spaces/${spaceId}`, { headers: { authorization: `Bearer ${author.capability}` }, signal: AbortSignal.timeout(5_000) });
+    const detailText = await detail.text();
+    const invites = liveDirectoryInviteRows(JSON.parse(detailText));
+    if (!invites || invites.length !== 1 || detailText.includes(token)) throw new Error("directory command receipt process retry minted a duplicate invitation or persisted its plaintext");
+
+    const conflict = await postLiveDirectoryCommand(run, author.capability, requestId, { kind: "rename-space", spaceId, name: "Substituted" });
+    if (conflict.status !== 409) throw new Error(`directory command receipt process equal id with a different command was not a conflict: ${conflict.status}`);
+
+    const forbidden = await postLiveDirectoryCommand(run, spectator.capability, liveDirectoryCommandRequestId(), inviteCommand);
+    if (forbidden.status !== 403 || forbidden.text.includes(token) || forbidden.text.includes(spaceId)) throw new Error(`directory command receipt process spectator denial was not generic: ${forbidden.status}`);
+
+    const oversize = await postLiveDirectoryCommand(run, author.capability, liveDirectoryCommandRequestId(), inviteCommand, JSON.stringify({ schema: "semio.directory.command-request.v1", requestId: liveDirectoryCommandRequestId(), command: { kind: "rename-space", spaceId, name: "x".repeat(9 * 1024) } }));
+    if (oversize.status !== 413 && oversize.status !== 400) throw new Error(`directory command receipt process did not bound an oversize request: ${oversize.status}`);
+
+    await fetch(`http://127.0.0.1:${run.port}/auth/sessions/me`, { method: "DELETE", headers: { authorization: `Bearer ${author.capability}` }, signal: AbortSignal.timeout(5_000) });
+    const revoked = await postLiveDirectoryCommand(run, author.capability, requestId, inviteCommand);
+    if (revoked.status !== 401 || revoked.text.includes(token)) throw new Error(`directory command receipt process revoked author retrieved a stored completion: ${revoked.status}`);
+    console.log("directory-command-receipt-process: one-shot capability, redacted same-id resolution, conflict, spectator denial, byte ceiling, and revoked-author denial passed");
+  } catch (error) {
+    const diagnostics = `${run?.output() ?? ""}`.slice(-4_096);
+    throw new Error(`${error instanceof Error ? error.message : "directory command receipt process failed"}${diagnostics ? `\nhub diagnostics:\n${diagnostics}` : ""}`);
+  } finally {
+    if (author) author.capability = "";
+    if (spectator) spectator.capability = "";
+    if (run) await finishLocalHub(run);
+  }
+}
+
+/** 🧾️ Language-agnostic vectors for the closed directory command request/receipt wire. */
+type DirectoryCommandReceiptFixture = {
+  readonly schema: "semio.hub.directory-command-receipt/v1";
+  readonly limits: { readonly requestBytes: 8192; readonly receiptBytes: 65536; readonly maxEvents: 4; readonly inviteTokenBytes: 256; readonly requestIdLen: 32 };
+  readonly requests: readonly { readonly name: string; readonly requestId: string; readonly command: DirectoryCommand; readonly canonical: string; readonly canonicalBytes: number; readonly commandSha256: string }[];
+  readonly receipts: readonly { readonly name: string; readonly requestName: string; readonly outcome: DirectoryCommandOutcomeV1; readonly canonical: string; readonly canonicalBytes: number; readonly receiptSha256: string; readonly receipt: DirectoryCommandReceiptV1 }[];
+  readonly rejectedRequests: readonly { readonly name: string; readonly source: string; readonly code: "invalid" | "too-large" }[];
+  readonly rejectedReceipts: readonly { readonly name: string; readonly requestName: string; readonly source: string; readonly code: "invalid" | "too-large" }[];
+  readonly transport: {
+    readonly capacity: 64;
+    readonly statusCodes: readonly { readonly status: number; readonly code: DirectoryCommandErrorCodeV1 }[];
+    readonly transientCodes: readonly DirectoryCommandErrorCodeV1[];
+    readonly terminalCodes: readonly DirectoryCommandErrorCodeV1[];
+    readonly traces: readonly { readonly name: string; readonly expected: Record<string, unknown> }[];
+  };
+};
+
+/** 🧾️ Proves the closed command wire from neutral vectors with two independent oracles: AJV over
+ * the published fixture schema, and a Node `createHash` recomputation of every canonical digest.
+ * The repository's own TypeScript parser is exercised as a third implementation, never as the
+ * oracle, and the hub/os fixture copies must stay byte-identical. */
+async function proveDirectoryCommandReceiptV1(repoRoot: string): Promise<number> {
+  const root = join(repoRoot, "🌎️hub/🧪️fixtures/📇️directory/🧾️command-receipt-v1");
+  const source = readFileSync(join(root, "🔣️.json"), "utf8");
+  const mirror = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧾️command-receipt-v1.json"), "utf8");
+  if (source !== mirror) throw new Error("directory command receipt fixture drifted between the hub and os trees");
+  const fixture = JSON.parse(source) as DirectoryCommandReceiptFixture;
+  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
+  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
+  if (!validate(fixture)) throw new Error(`directory command receipt fixture: ${JSON.stringify(validate.errors)}`);
+  const digest = (text: string): string => createHash("sha256").update(Buffer.from(text, "utf8")).digest("hex");
+  const bytes = (text: string): number => Buffer.byteLength(text, "utf8");
+  let checks = 1;
+
+  const parsedRequests = new Map<string, DirectoryCommandRequestV1>();
+  for (const request of fixture.requests) {
+    const canonical = JSON.stringify({ schema: "semio.directory.command-request.v1", requestId: request.requestId, command: request.command });
+    if (canonical !== request.canonical || bytes(canonical) !== request.canonicalBytes || request.canonicalBytes > fixture.limits.requestBytes) throw new Error(`directory command request '${request.name}' is not canonical within the request ceiling`);
+    if (digest(JSON.stringify(request.command)) !== request.commandSha256) throw new Error(`directory command request '${request.name}' digest is not byte-exact`);
+    const parsed = parseDirectoryCommandRequestV1(request.canonical);
+    if (directoryCommandRequestJson(parsed) !== request.canonical || (await directoryCommandSha256(parsed.command)) !== request.commandSha256) throw new Error(`directory command request '${request.name}' does not round-trip`);
+    if (directoryCommandRequestJson(sealDirectoryCommandRequestV1(request.requestId, request.command)) !== request.canonical) throw new Error(`directory command request '${request.name}' seal is not byte-identical`);
+    parsedRequests.set(request.name, parsed);
+    checks += 4;
+  }
+  const substituted = fixture.requests.find((request) => request.name === "substituted-command");
+  const original = fixture.requests.find((request) => request.name === "create-invite");
+  if (!substituted || !original || substituted.requestId !== original.requestId || substituted.commandSha256 === original.commandSha256) throw new Error("directory command fixture lacks an equal-id/different-digest conflict vector");
+  checks += 1;
+
+  const inviteTokens = new Set<string>();
+  for (const receipt of fixture.receipts) {
+    const request = parsedRequests.get(receipt.requestName);
+    if (!request) throw new Error(`directory command receipt '${receipt.name}' names no request vector`);
+    const { receiptSha256, ...unsigned } = receipt.receipt;
+    if (digest(JSON.stringify(unsigned)) !== receipt.receiptSha256 || receiptSha256 !== receipt.receiptSha256) throw new Error(`directory command receipt '${receipt.name}' digest is not byte-exact`);
+    if (JSON.stringify(receipt.receipt) !== receipt.canonical || bytes(receipt.canonical) !== receipt.canonicalBytes || receipt.canonicalBytes > fixture.limits.receiptBytes) throw new Error(`directory command receipt '${receipt.name}' is not canonical within the receipt ceiling`);
+    if (receipt.receipt.events.length > fixture.limits.maxEvents) throw new Error(`directory command receipt '${receipt.name}' exceeds the durable event ceiling`);
+    let previous = 0;
+    for (const event of receipt.receipt.events) {
+      if (event.seq <= previous) throw new Error(`directory command receipt '${receipt.name}' repeats or reorders a durable sequence`);
+      previous = event.seq;
+    }
+    if (receipt.outcome !== "accepted" && (receipt.receipt.events.length > 0 || receipt.receipt.result.kind !== "none")) throw new Error(`directory command receipt '${receipt.name}' leaks a result through a redacted outcome`);
+    if (receipt.receipt.result.kind === "invite") {
+      if (receipt.outcome !== "accepted" || bytes(receipt.receipt.result.inviteToken) > fixture.limits.inviteTokenBytes) throw new Error(`directory command receipt '${receipt.name}' carries an inadmissible capability`);
+      inviteTokens.add(receipt.receipt.result.inviteToken);
+    }
+    const parsed = await parseDirectoryCommandReceiptV1(receipt.canonical, request);
+    if (parsed.receiptSha256 !== receipt.receiptSha256 || parsed.commandSha256 !== fixture.requests.find((entry) => entry.name === receipt.requestName)?.commandSha256) throw new Error(`directory command receipt '${receipt.name}' does not round-trip`);
+    checks += 6;
+  }
+  if (inviteTokens.size === 0) throw new Error("directory command fixture proves no live invite delivery");
+  for (const receipt of fixture.receipts.filter((entry) => entry.outcome !== "accepted")) {
+    for (const token of inviteTokens) {
+      if (receipt.canonical.includes(token)) throw new Error(`directory command receipt '${receipt.name}' replays a one-shot capability`);
+      checks += 1;
+    }
+  }
+
+  for (const rejected of fixture.rejectedRequests) {
+    let admitted = true;
+    try {
+      parseDirectoryCommandRequestV1(rejected.source);
+    } catch {
+      admitted = false;
+    }
+    if (admitted) throw new Error(`directory command request '${rejected.name}' was admitted`);
+    if (rejected.code === "too-large" && bytes(rejected.source) <= fixture.limits.requestBytes) throw new Error(`directory command request '${rejected.name}' is not actually over the request ceiling`);
+    checks += 1;
+  }
+  for (const rejected of fixture.rejectedReceipts) {
+    const request = parsedRequests.get(rejected.requestName);
+    if (!request) throw new Error(`directory command receipt '${rejected.name}' names no request vector`);
+    let admitted = true;
+    try {
+      await parseDirectoryCommandReceiptV1(rejected.source, request);
+    } catch {
+      admitted = false;
+    }
+    if (admitted) throw new Error(`directory command receipt '${rejected.name}' was admitted`);
+    if (rejected.code === "too-large" && bytes(rejected.source) <= fixture.limits.receiptBytes) throw new Error(`directory command receipt '${rejected.name}' is not actually over the receipt ceiling`);
+    checks += 1;
+  }
+
+  for (const mapping of fixture.transport.statusCodes) {
+    if (directoryCommandErrorFromStatus(mapping.status) !== mapping.code) throw new Error(`directory command status ${mapping.status} does not map to '${mapping.code}'`);
+    checks += 1;
+  }
+  for (const code of fixture.transport.transientCodes) {
+    if (!directoryCommandErrorIsTransient(code)) throw new Error(`directory command code '${code}' is not transient`);
+    checks += 1;
+  }
+  for (const code of fixture.transport.terminalCodes) {
+    if (directoryCommandErrorIsTransient(code)) throw new Error(`directory command code '${code}' must be terminal`);
+    checks += 1;
+  }
+  if (fixture.transport.capacity !== 64 || fixture.transport.traces.length < 6) throw new Error("directory command transport traces are incomplete");
+  checks += 1;
+  return checks;
+}
+
+class DirectoryCommandReceiptCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const phase = segments[0] ?? "source";
+    if (segments.length > 1 || !["source", "native", "process"].includes(phase)) throw new Error("directory-command-receipt-check accepts source, native, or process");
+    const checks = await proveDirectoryCommandReceiptV1(this.repoRoot);
+    if (phase === "native" || phase === "process") {
+      const laws = [
+        "directory_command_receipt_v1_route_is_request_idempotent_for_concurrent_identical_ids",
+        "directory_command_receipt_v1_route_denies_cross_user_spectator_and_digest_substitution",
+        "directory_command_receipt_v1_route_bounds_request_and_receipt_bytes",
+        "directory_command_receipt_v1_store_resolves_a_lost_reply_and_survives_restart",
+      ];
+      const receipts = await runExactCargoLaws({
+        cwd: this.root,
+        env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--all-features"], laws }],
+        artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+        buildBudgetMs: buildBudgetMs(),
+        listBudgetMs: 60_000,
+        lawBudgetMs: 120_000,
+        progress(event) { console.log(`directory-command-receipt-${phase} ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+      });
+      for (const receipt of receipts) console.log(`directory-command-receipt-${phase}-receipt: ${JSON.stringify(receipt)}`);
+      if (phase === "process") {
+        runCmd("cargo", ["build", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub"], { cwd: this.root, budgetMs: buildBudgetMs() });
+        await proveDirectoryCommandReceiptV1Process(this.repoRoot, this.root);
+      }
+    }
+    console.log(`directory-command-receipt-check: checks=${checks} phase=${phase}`);
   }
 }
 
@@ -5573,6 +6863,284 @@ class DirectoryEventPageV1CheckScript extends BundleScript {
       }
     }
     console.log(`directory-event-page-v1-check: checks=${checks} phase=${phase}`);
+  }
+}
+
+
+/** 🧯️ Structural fence: the worker's one terminal transition must erase EVERY retained
+ * administration field — the page bytes, the receipt, and the invite capability — before it settles
+ * a phase. Written against the extracted function body rather than a contiguous literal so a sibling
+ * lane may add retained fields (the invite transfer epoch did) without silently disarming the law. */
+function directoryAdministrationTerminateErases(browser: string): boolean {
+  const start = browser.indexOf("function terminateDirectoryAdministration(");
+  if (start < 0) return false;
+  const body = browser.slice(start, browser.indexOf("\n}", start));
+  const erased = ["canonicalJson", "receiptSha256", "outcome", "inviteToken", "requestId"];
+  return erased.every((field) => body.includes(`operation.${field} = null;`))
+    && body.includes("operation.phase = phase;")
+    && body.includes("operation.abort.abort(")
+    && body.indexOf("operation.phase = phase;") > body.indexOf("operation.inviteToken = null;");
+}
+
+/** 🏛️ Replays the bounded space-administration page contract without using the Rust implementation. */
+type DirectorySpaceAdministrationFixture = {
+  readonly schema: "semio.hub.directory-space-administration-page/v1";
+  readonly limits: { readonly windowRows: 64; readonly pageBytes: 49152; readonly cursorBytes: 1024; readonly safeInteger: 9007199254740991 };
+  readonly session: { readonly sessionId: string; readonly userId: string; readonly authorizationGeneration: number; readonly expiresAt: number; readonly spaceId: string; readonly bindingSha256: string };
+  readonly space: Record<string, unknown>;
+  readonly members: readonly { readonly userId: string; readonly email: string; readonly displayName: string; readonly role: string; readonly owner: boolean }[];
+  readonly invites: readonly { readonly inviteId: string; readonly role: string; readonly createdAtMs: number; readonly expiresAtMs: number; readonly revoked: boolean; readonly accepted: boolean }[];
+  readonly vectors: readonly { readonly name: string; readonly access: "author" | "member" | "public"; readonly expected: { readonly hasMembers: boolean; readonly hasInvites: boolean; readonly hasCapabilities: boolean; readonly memberRows: number; readonly inviteRows: number } }[];
+  readonly cursorCases: readonly { readonly query: string; readonly status: number; readonly reads: number }[];
+  readonly hostiles: readonly string[];
+};
+
+async function proveDirectorySpaceAdministrationPageV1(repoRoot: string): Promise<number> {
+  const root = join(repoRoot, "🌎️hub/🧪️fixtures/📇️directory/🏘️space-administration-page-v1");
+  const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as DirectorySpaceAdministrationFixture;
+  const schema = JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8"));
+  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
+  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+  if (!validate(fixture)) throw new Error(`space administration fixture: ${JSON.stringify(validate.errors)}`);
+  const u32be = (value: number): Buffer => { const bytes = Buffer.alloc(4); bytes.writeUInt32BE(value); return bytes; };
+  const u64be = (value: number): Buffer => { const bytes = Buffer.alloc(8); bytes.writeBigUInt64BE(BigInt(value)); return bytes; };
+  const i64be = (value: number): Buffer => { const bytes = Buffer.alloc(8); bytes.writeBigInt64BE(BigInt(value)); return bytes; };
+  const sessionId = Buffer.from(fixture.session.sessionId, "utf8");
+  const userId = Buffer.from(fixture.session.userId, "utf8");
+  const spaceId = Buffer.from(fixture.session.spaceId, "utf8");
+  const binding = createHash("sha256")
+    .update(Buffer.concat([
+      Buffer.from("semio/hub/directory-space-administration/session-binding/v1\0"),
+      u32be(sessionId.length), sessionId,
+      u32be(userId.length), userId,
+      u64be(fixture.session.authorizationGeneration),
+      i64be(fixture.session.expiresAt),
+      u32be(spaceId.length), spaceId,
+    ]))
+    .digest("hex");
+  if (binding !== fixture.session.bindingSha256) throw new Error("space administration session binding is not byte-exact");
+  const alternateSession = Buffer.from("session-admin-0", "utf8");
+  const alternateUser = Buffer.from("1user-admin-01", "utf8");
+  if (Buffer.concat([sessionId, userId]).compare(Buffer.concat([alternateSession, alternateUser])) !== 0) throw new Error("binding ambiguity fixture drifted");
+  const alternateBinding = createHash("sha256")
+    .update(Buffer.concat([Buffer.from("semio/hub/directory-space-administration/session-binding/v1\0"), u32be(alternateSession.length), alternateSession, u32be(alternateUser.length), alternateUser, u64be(fixture.session.authorizationGeneration), i64be(fixture.session.expiresAt), u32be(spaceId.length), spaceId]))
+    .digest("hex");
+  if (alternateBinding === binding) throw new Error("length-prefixed session binding aliased concatenated identities");
+
+  const capabilities = { renameSpace: true, setVisibility: true, deleteSpace: true, upsertMember: true, removeMember: true, createInvite: true, revokeInvite: true };
+  const memberRow = (index: number) => (index < fixture.members.length ? fixture.members[index]! : { userId: `user-${String(index).padStart(4, "0")}`, email: `u${index}@example.invalid`, displayName: `U${index}`, role: "spectator" as const, owner: false });
+  const inviteRow = (index: number) => (index < fixture.invites.length ? fixture.invites[index]! : { inviteId: `invite-${String(1000 - index).padStart(4, "0")}`, role: "spectator" as const, createdAtMs: 1000 - index, expiresAtMs: 900000, revoked: false, accepted: false });
+  const memberRows = (count: number) => Array.from({ length: count }, (_, index) => memberRow(index)).sort((left, right) => (left.userId < right.userId ? -1 : left.userId > right.userId ? 1 : 0));
+  const inviteRows = (count: number) => Array.from({ length: count }, (_, index) => inviteRow(index)).sort((left, right) => (right.createdAtMs - left.createdAtMs) || (left.inviteId < right.inviteId ? 1 : -1));
+
+  const seal = (access: "author" | "member" | "public", members: number, invites: number): { canonical: string; page: Record<string, unknown> } => {
+    const publicSpace = { id: fixture.space.id, name: fixture.space.name, kind: fixture.space.kind, visibility: fixture.space.visibility, memberCount: fixture.space.memberCount, documentCount: fixture.space.documentCount, createdAtMs: fixture.space.createdAtMs, updatedAtMs: fixture.space.updatedAtMs };
+    const memberSpace = { ...fixture.space, role: access === "author" ? "author" : "spectator" };
+    const base = {
+      access,
+      schema: "semio.directory.space-administration-page.v1" as const,
+      sessionBindingSha256: access === "public" ? "0".repeat(64) : binding,
+      authorizationGeneration: access === "public" ? 0 : fixture.session.authorizationGeneration,
+      spaceId: fixture.session.spaceId,
+      space: access === "public" ? publicSpace : memberSpace,
+    };
+    const unsigned = access === "public"
+      ? { ...base, documents: { rows: [] } }
+      : access === "member"
+        ? { ...base, members: { rows: memberRows(members) }, documents: { rows: [] } }
+        : { ...base, members: { rows: memberRows(members) }, documents: { rows: [] }, invites: { rows: inviteRows(invites) }, capabilities };
+    const receiptSha256 = createHash("sha256").update(JSON.stringify(unsigned)).digest("hex");
+    const page = { ...unsigned, receiptSha256 } as Record<string, unknown>;
+    return { canonical: JSON.stringify(page), page };
+  };
+
+  for (const vector of fixture.vectors) {
+    const { canonical, page } = seal(vector.access, vector.expected.memberRows, vector.expected.inviteRows);
+    if (("members" in page) !== vector.expected.hasMembers || ("invites" in page) !== vector.expected.hasInvites || ("capabilities" in page) !== vector.expected.hasCapabilities) {
+      throw new Error(`space administration shape differs for ${vector.name}`);
+    }
+    const rows = (page.members as { rows: unknown[] } | undefined)?.rows.length ?? 0;
+    const invited = (page.invites as { rows: unknown[] } | undefined)?.rows.length ?? 0;
+    if (rows !== vector.expected.memberRows || invited !== vector.expected.inviteRows) throw new Error(`space administration window differs for ${vector.name}`);
+    if (rows > fixture.limits.windowRows || invited > fixture.limits.windowRows) throw new Error(`space administration window exceeded ${fixture.limits.windowRows} rows`);
+    if (Buffer.byteLength(canonical, "utf8") > fixture.limits.pageBytes) throw new Error(`space administration page exceeded ${fixture.limits.pageBytes} bytes for ${vector.name}`);
+    const { receiptSha256, ...unsigned } = page as Record<string, unknown> & { receiptSha256: string };
+    if (createHash("sha256").update(JSON.stringify(unsigned)).digest("hex") !== receiptSha256) throw new Error(`space administration receipt differs for ${vector.name}`);
+    for (const secret of ["selector", "secretDigest", "inviteToken", "passwordHash", "ssoSubject", "ssoProvider", "sessionId"]) {
+      if (canonical.includes(secret)) throw new Error(`space administration page leaked ${secret} in ${vector.name}`);
+    }
+    if (vector.access !== "author" && (canonical.includes("\"invites\"") || canonical.includes("\"capabilities\""))) throw new Error(`non-author page carried an author-only window in ${vector.name}`);
+  }
+
+  const author = seal("author", 2, 2);
+  const memberOrder = (page: string): boolean => {
+    const parsed = JSON.parse(page) as { members?: { rows: { userId: string }[] } };
+    const rows = parsed.members?.rows ?? [];
+    return rows.every((row, index) => index === 0 || rows[index - 1]!.userId < row.userId);
+  };
+  const inviteOrder = (page: string): boolean => {
+    const parsed = JSON.parse(page) as { invites?: { rows: { createdAtMs: number; inviteId: string }[] } };
+    const rows = parsed.invites?.rows ?? [];
+    return rows.every((row, index) => index === 0 || rows[index - 1]!.createdAtMs > row.createdAtMs || (rows[index - 1]!.createdAtMs === row.createdAtMs && rows[index - 1]!.inviteId > row.inviteId));
+  };
+  if (!memberOrder(author.canonical) || !inviteOrder(author.canonical)) throw new Error("sealed author page is not keyset-ordered");
+
+  const canonicalRejects = (candidate: string): boolean => {
+    if (Buffer.byteLength(candidate, "utf8") > fixture.limits.pageBytes) return true;
+    let parsed: Record<string, unknown>;
+    try { parsed = JSON.parse(candidate) as Record<string, unknown>; } catch { return true; }
+    if (JSON.stringify(parsed) !== candidate) return true;
+    if (parsed.spaceId !== (parsed.space as { id?: unknown } | undefined)?.id) return true;
+    if (!memberOrder(candidate) || !inviteOrder(candidate)) return true;
+    const known = new Set(["access", "schema", "sessionBindingSha256", "authorizationGeneration", "spaceId", "space", "members", "documents", "invites", "capabilities", "receiptSha256"]);
+    if (Object.keys(parsed).some((key) => !known.has(key))) return true;
+    const { receiptSha256, ...unsigned } = parsed as Record<string, unknown> & { receiptSha256: string };
+    return createHash("sha256").update(JSON.stringify(unsigned)).digest("hex") !== receiptSha256;
+  };
+  const hostile = (name: string): string => {
+    switch (name) {
+      case "receipt-substituted": return author.canonical.replace(/"receiptSha256":"[0-9a-f]{64}"/u, `"receiptSha256":"${"b".repeat(64)}"`);
+      case "trailing-whitespace": return `${author.canonical} `;
+      case "unknown-field": return author.canonical.replace('{"access":"author"', '{"actor":"user:secret","access":"author"');
+      case "space-mismatch": return author.canonical.replace('"spaceId":"space-admin-01"', '"spaceId":"space-admin-02"');
+      case "member-order-reversed": return JSON.stringify({ ...JSON.parse(author.canonical), members: { rows: [...memberRows(2)].reverse() } });
+      case "invite-order-reversed": return JSON.stringify({ ...JSON.parse(author.canonical), invites: { rows: [...inviteRows(2)].reverse() } });
+      case "window-row-max-plus-one": return JSON.stringify({ ...JSON.parse(author.canonical), members: { rows: memberRows(fixture.limits.windowRows + 1) } });
+      case "page-byte-max-plus-one": return JSON.stringify({ ...JSON.parse(author.canonical), space: { ...(JSON.parse(author.canonical) as { space: Record<string, unknown> }).space, name: "x".repeat(fixture.limits.pageBytes) } });
+      default: return JSON.stringify({ ...JSON.parse(author.canonical), invites: { rows: [{ ...inviteRows(1)[0], secretDigest: "ff".repeat(32) }] } });
+    }
+  };
+  for (const name of fixture.hostiles) {
+    const candidate = hostile(name);
+    if (name === "window-row-max-plus-one") {
+      const rows = (JSON.parse(candidate) as { members: { rows: unknown[] } }).members.rows.length;
+      if (rows <= fixture.limits.windowRows) throw new Error("window max+1 hostile did not exceed the ceiling");
+      continue;
+    }
+    if (name === "invite-secret-field" && !candidate.includes("secretDigest")) throw new Error("secret-shaped hostile lost its field");
+    if (!canonicalRejects(candidate)) throw new Error(`space administration parser admitted hostile ${name}`);
+  }
+
+  const admitCursor = (query: string): string | null => {
+    if (query.length === 0) return "";
+    if (query.includes("&") || query.includes("%") || query.includes("+")) return null;
+    const separator = query.indexOf("=");
+    if (separator < 0) return null;
+    const name = query.slice(0, separator);
+    const value = query.slice(separator + 1);
+    if (name !== "cursor" || value.length === 0 || value.length > fixture.limits.cursorBytes || !/^[A-Za-z0-9._-]+$/u.test(value)) return null;
+    return value;
+  };
+  for (const cursorCase of fixture.cursorCases) {
+    const admitted = admitCursor(cursorCase.query) !== null;
+    const status = admitted ? 200 : 400;
+    const reads = admitted ? 1 : 0;
+    if (status !== cursorCase.status || reads !== cursorCase.reads) throw new Error(`space administration cursor admission differs for "${cursorCase.query}"`);
+  }
+
+  const unknownFixture = { ...fixture, unknown: true };
+  if (validate(unknownFixture)) throw new Error("space administration fixture schema admitted an unknown field");
+
+  // 🧬️ Schema-first parity: the SHARED component JSON schema (the one the Rust and TypeScript twins are
+  // both derived from) must itself admit every sealed vector and reject every structural hostile. Without
+  // this the component `$defs` could drift away from both implementations unnoticed.
+  const componentSchema = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json"), "utf8")) as { $defs: Record<string, unknown> };
+  const validatePage = new Ajv2020({ strict: false, allErrors: true }).compile({ $ref: "#/$defs/DirectorySpaceAdministrationPageV1", ...componentSchema });
+  for (const vector of fixture.vectors) {
+    const { page } = seal(vector.access, vector.expected.memberRows, vector.expected.inviteRows);
+    if (!validatePage(page)) throw new Error(`component schema rejected the sealed ${vector.name} page: ${JSON.stringify(validatePage.errors)}`);
+  }
+  for (const name of ["unknown-field", "window-row-max-plus-one", "invite-secret-field"]) {
+    if (validatePage(JSON.parse(hostile(name)))) throw new Error(`component schema admitted hostile ${name}`);
+  }
+  const memberShaped = JSON.parse(seal("member", 1, 0).canonical) as Record<string, unknown>;
+  if (validatePage({ ...memberShaped, invites: { rows: [] } })) throw new Error("component schema admitted an invite window on a member page");
+  if (validatePage({ ...memberShaped, capabilities: { renameSpace: true, setVisibility: true, deleteSpace: true, upsertMember: true, removeMember: true, createInvite: true, revokeInvite: true } })) throw new Error("component schema admitted capability flags on a member page");
+
+  const contract = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs"), "utf8");
+  const typescript = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts"), "utf8");
+  const hub = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  const sqlite = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🪶️sqlite/🦀️.rs"), "utf8");
+  const postgres = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🐘️postgres/🦀️.rs"), "utf8");
+  const neo4j = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🌐️neo4j/🦀️.rs"), "utf8");
+  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "utf8");
+  const space = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🔎️explore/🪟️windows/🏠️main/🦀️.rs"), "utf8");
+  const sourceClosed = (rust: string, ts: string, route: string, sq: string, pg: string, neo: string, browser: string, home: string): boolean => {
+    const read = route.indexOf("list_space_administration_members_page(space_id, member_after.as_deref(), SPACE_ADMINISTRATION_PAGE_FETCH_MAX)");
+    const revalidate = route.indexOf("revalidate_space_administration_caller(state, caller.as_ref(), space_id, binding, &space, access)", read);
+    return rust.includes("pub const DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS: usize = 64")
+      && rust.includes("pub const DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES: usize = 48 * 1024")
+      && rust.includes("pub enum DirectorySpaceAdministrationPageV1")
+      && !rust.includes("pub enum DirectorySpaceDetailV1")
+      && ts.includes("export async function parseDirectorySpaceAdministrationPageV1")
+      && ts.includes("space-administration-page.noncanonical")
+      && route.includes("fn space_administration_request_admission")
+      && route.includes("semio/hub/directory-space-administration/session-binding/v1\\0")
+      && route.includes("name != \"cursor\" || value.is_empty() || value.len() > DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES")
+      && read >= 0 && revalidate > read
+      && route.includes("StatusCode::FORBIDDEN")
+      && !route.includes("DirectorySpaceDetailV1")
+      && sq.includes("SELECT u.id, u.email, u.display_name, m.role")
+      && !sq.includes("SELECT id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at, accepted_event_id FROM hub_space_invite WHERE space_id = ?1 AND")
+      && pg.includes("async fn list_space_administration_members_page")
+      && pg.includes("async fn list_space_administration_invites_page")
+      && neo.includes("async fn list_space_administration_members_page")
+      && neo.includes("async fn list_space_administration_invites_page")
+      && browser.includes("function terminateDirectoryAdministration")
+      && browser.includes("const DIRECTORY_ADMINISTRATION_CAPACITY = 1")
+      && directoryAdministrationTerminateErases(browser)
+      && browser.includes("revokeDirectoryAdministrationForScope(scope.spaceId);")
+      && home.includes("row.role == Some(crate::DirectorySpaceRole::Author)");
+  };
+  if (!sourceClosed(contract, typescript, hub, sqlite, postgres, neo4j, worker, space)) throw new Error("space administration source boundary is incomplete");
+  const sourceHostiles: readonly [string, string, string, string, string, string, string, string][] = [
+    [contract.replace("pub const DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS: usize = 64", "pub const DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS: usize = 4096"), typescript, hub, sqlite, postgres, neo4j, worker, space],
+    [contract, typescript.replace("export async function parseDirectorySpaceAdministrationPageV1", "async function parseDirectorySpaceAdministrationPageV1"), hub, sqlite, postgres, neo4j, worker, space],
+    [contract, typescript, hub.replace("revalidate_space_administration_caller(state, caller.as_ref(), space_id, binding, &space, access)", "Ok(access)"), sqlite, postgres, neo4j, worker, space],
+    [contract, typescript, hub.replace("name != \"cursor\" || value.is_empty() || value.len() > DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES", "false"), sqlite, postgres, neo4j, worker, space],
+    [contract, typescript, hub, sqlite, postgres.replace("async fn list_space_administration_invites_page", "async fn unused_invites_page"), neo4j, worker, space],
+    [contract, typescript, hub, sqlite, postgres, neo4j.replace("async fn list_space_administration_members_page", "async fn unused_members_page"), worker, space],
+    [contract, typescript, hub, sqlite, postgres, neo4j, worker.replace("  operation.inviteToken = null;\n", ""), space],
+    [contract, typescript, hub, sqlite, postgres, neo4j, worker.replace("revokeDirectoryAdministrationForScope(scope.spaceId);", ""), space],
+    [contract, typescript, hub, sqlite, postgres, neo4j, worker, space.replace("row.role == Some(crate::DirectorySpaceRole::Author)", "true")],
+  ];
+  sourceHostiles.forEach((candidate, index) => { if (sourceClosed(...candidate)) throw new Error(`space administration source oracle admitted removed fence ${index}`); });
+  const checks = fixture.vectors.length * 2 + fixture.cursorCases.length + fixture.hostiles.length + sourceHostiles.length + 7;
+  console.log(`space-administration-oracle: AJV=2 vectors=${fixture.vectors.length} cursors=${fixture.cursorCases.length} hostiles=${fixture.hostiles.length} source-hostiles=${sourceHostiles.length} component-schema=${fixture.vectors.length + 5} sha256=1 binding=1`);
+  return checks;
+}
+
+class SpaceAdministrationCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const phase = segments[0] ?? "source";
+    if (segments.length > 1 || !["source", "native"].includes(phase)) throw new Error("space-administration-check accepts source or native");
+    const checks = await proveDirectorySpaceAdministrationPageV1(this.repoRoot);
+    if (phase === "native") {
+      const receipts = await runExactCargoLaws({
+        cwd: this.root,
+        env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        groups: [
+          {
+            package: "semio-hub",
+            target: { kind: "bin", name: "os-hub" },
+            cargoArgs: [],
+            laws: [
+              "space_administration_page_v1_route_returns_the_author_windows_with_a_canonical_receipt",
+              "space_administration_page_v1_route_denies_a_spectator_the_author_windows",
+              "space_administration_page_v1_route_denies_a_removed_member_and_leaks_no_rows",
+              "space_administration_page_v1_route_rejects_a_noncanonical_query_and_a_foreign_cursor",
+            ],
+          },
+        ],
+        artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+        buildBudgetMs: buildBudgetMs(),
+        listBudgetMs: 60_000,
+        lawBudgetMs: 120_000,
+        progress(event) { console.log(`space-administration-${phase} ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+      });
+      for (const receipt of receipts) console.log(`space-administration-${phase}-receipt: ${JSON.stringify(receipt)}`);
+    }
+    console.log(`space-administration-check: checks=${checks} phase=${phase}`);
   }
 }
 
@@ -5695,6 +7263,137 @@ async function provePresenceLeaseFixture(repoRoot: string): Promise<number> {
   const checks = fixture.vectors.length + schemaHostiles.length + sourceHostiles.length + 1;
   console.log(`presence-lease-oracle: AJV=1 vectors=${fixture.vectors.length} schema-hostiles=${schemaHostiles.length} source-hostiles=${sourceHostiles.length} browser-schedule=1`);
   return checks;
+}
+
+/** 🪪️ Pins canonical admitted presence bytes independently with AJV and third-party LEB128. */
+async function provePresenceNormalizationFixture(repoRoot: string): Promise<number> {
+  const root = join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🧪️fixtures/🪪️presence-normalization-v1");
+  const fixture = JSON.parse(readFileSync(join(root, "🧪️fixture/🔣️.json"), "utf8"));
+  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
+  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8")));
+  if (!validate(fixture)) throw new Error(`presence normalization schema: ${JSON.stringify(validate.errors)}`);
+  const { default: leb } = await import("@webassemblyjs/leb128/lib/leb.js");
+  const integer = (value: number): number[] => {
+    if (!Number.isSafeInteger(value) || value < 0) throw new Error("neutral oracle integer outside the exact safe range");
+    return Array.from(leb.encodeUInt64(value));
+  };
+  const text = (value: string): number[] => { const bytes = Buffer.from(value); return [...integer(bytes.length), ...bytes]; };
+  const float = (value: number): number[] => { const bytes = Buffer.alloc(8); bytes.writeDoubleLE(value); return Array.from(bytes); };
+  const independentEncode = (peer: ArtifactPresencePeer): Buffer => {
+    const fields = [peer.label, peer.presencePack, peer.userId, peer.role, peer.dragGhostJson, peer.interaction, peer.color, peer.surface, peer.views.length ? peer.views : undefined, peer.ui];
+    const flags = fields.reduce<number>((mask, value, index) => value === undefined ? mask : mask | (1 << index), 0);
+    const out = [...text(peer.actor), ...integer(flags), ...integer(peer.connectedAtMs)];
+    for (const [index, value] of fields.entries()) {
+      if (value === undefined) continue;
+      if ([0, 2, 3, 4, 7].includes(index)) out.push(...text(value as string));
+      else if (index === 1) { const bytes = value as readonly number[]; out.push(...integer(bytes.length), ...bytes); }
+      else if (index === 5) {
+        const interaction = peer.interaction!;
+        out.push(...text(interaction.app_id), ...integer(interaction.domains.length));
+        for (const domain of interaction.domains) {
+          out.push(...text(domain.domain), ...text(domain.granularity));
+          for (const ids of [domain.selected, domain.hovered]) { out.push(...integer(ids.length)); for (const id of ids) out.push(...text(id)); }
+        }
+      } else if (index === 6) out.push(value as number);
+      else if (index === 8) {
+        out.push(...integer(peer.views.length));
+        for (const view of peer.views) {
+          out.push(...text(view.windowId), ...text(view.space));
+          const kind = view.kind;
+          const values = kind.kind === "canvas" ? [0, kind.x, kind.y, kind.zoom] : kind.kind === "orbit" ? [1, ...kind.position, ...kind.target, ...kind.up, kind.fov] : [2, kind.lng, kind.lat, kind.zoom, kind.bearing, kind.pitch];
+          out.push(values[0]!); for (const number of values.slice(1)) out.push(...float(number));
+          out.push(...float(view.size[0]), ...float(view.size[1]), view.pointer ? 1 : 0);
+          if (view.pointer) for (const number of view.pointer) out.push(...float(number));
+        }
+      } else if (index === 9) {
+        for (const path of [peer.ui!.hoveredPath, peer.ui!.focusedPath, peer.ui!.pressedPath]) { out.push(path === undefined ? 0 : 1); if (path !== undefined) out.push(...text(path)); }
+      }
+    }
+    return Buffer.from(out);
+  };
+  for (const vector of fixture.vectors) {
+    const raw = Buffer.from(vector.rawPeerHex, "hex");
+    let normalized: Buffer | undefined;
+    try {
+      const input = decodePresencePeer(raw, [0]);
+      if (!independentEncode(input).equals(raw)) throw new Error("raw canonical oracle mismatch");
+      const admitted = vector.admission;
+      const output: ArtifactPresencePeer = {
+        actor: admitted.actor, connectedAtMs: admitted.connectedAtMs, label: admitted.label ?? undefined, userId: admitted.userId ?? undefined,
+        role: admitted.role ?? undefined, color: admitted.color, surface: admitted.surface ?? undefined,
+        presencePack: input.presencePack, dragGhostJson: input.dragGhostJson, interaction: input.interaction, views: input.views, ui: input.ui,
+      };
+      normalized = independentEncode(output);
+      if (!normalized.equals(Buffer.from(encodePresencePeer(output)))) throw new Error("output canonical oracle mismatch");
+      decodePresencePeer(normalized, [0]);
+    } catch { normalized = undefined; }
+    if ((normalized !== undefined) !== vector.expected.accepted || (normalized?.toString("hex") ?? null) !== vector.expected.normalizedPeerHex) throw new Error(`presence normalization vector failed: ${vector.name}`);
+  }
+  console.log(`presence-normalization-independent-oracle: AJV=1 LEB128=1 exact-vectors=${fixture.vectors.length}`);
+  const hub = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  const start = hub.indexOf("async fn refresh_document_presence(");
+  const end = hub.indexOf("async fn refresh_presence(", start);
+  const ingress = hub.slice(start, end);
+  if (start < 0 || !ingress.includes("protocol::decode_presence_peer(&peer).await") || !ingress.includes("protocol::PresencePeer {") || !ingress.includes("protocol::encode_presence_peer(&normalized).await") || !ingress.includes("self.refresh_presence(")) throw new Error("Hub lacks canonical admitted presence reconstruction");
+  for (const field of ["connected_at_ms: slot.connected_at_ms", "label: slot.label.clone()", "user_id: slot.user_id.clone()", "role: slot.role.clone()", "color: Some(slot.color)", "surface: slot.document_surface.clone()"])
+    if (!ingress.includes(field)) throw new Error(`Hub presence authority missing: ${field}`);
+  if (!hub.includes("state.refresh_document_presence(") || !hub.includes("socket_grant.document_plan.as_ref().map(|plan| plan.surface.surface_id.clone())")) throw new Error("presence ingress must use the admitted plan surface");
+  return fixture.vectors.length;
+}
+
+class PresenceNormalizationCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const phase = segments[0] ?? "source";
+    if (segments.length > 1 || !["source", "native"].includes(phase)) throw new Error("presence-normalization-check accepts source or native");
+    const checks = await provePresenceNormalizationFixture(this.repoRoot);
+    if (phase === "native") {
+      const receipts = await runExactCargoLaws({
+        cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--features", "sqlite"], laws: [
+          "presence_normalization_matches_neutral_authority_and_no_effect_rejections",
+          "presence_normalization_socket_overwrites_identity_and_rejects_without_refresh",
+          "presence_lease_reconnect_rejects_old_live_refresh_and_close",
+          "presence_lease_expires_server_clocked_visibility_without_socket_close",
+          "presence_lease_enforces_shared_roster_bounds_and_actor_order",
+          "presence_lease_restart_is_empty_and_directory_presence_is_member_only",
+        ] }],
+        artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, buildBudgetMs: buildBudgetMs(), listBudgetMs: 60_000, lawBudgetMs: 60_000,
+        progress(event) { console.log(`presence-normalization-native ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+      });
+      for (const receipt of receipts) console.log(`presence-normalization-native-receipt: ${JSON.stringify(receipt)}`);
+    }
+    console.log(`presence-normalization-check: checks=${checks} phase=${phase}`);
+  }
+}
+
+/** 🛂️ Qualifies durable membership removal across live presence and selected target admission. */
+class AdminPresenceTargetRecoveryCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const phase = segments[0] ?? "source";
+    if (segments.length > 1 || !["source", "native"].includes(phase)) throw new Error("admin-presence-target-recovery-check accepts source or native");
+    const root = join(this.repoRoot, "🌎️hub/📦️packages/🦀️rust");
+    const fixtureRoot = join(root, "🧪️fixtures/🛂️admin-presence-target-recovery-v1");
+    const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
+    if (!validate(fixture)) throw new Error(JSON.stringify(validate.errors));
+    const members = fixture.members.map((member: { id: string }) => member.id).filter((id: string) => id !== fixture.remove);
+    if (JSON.stringify(members) !== JSON.stringify(fixture.expected.members) || new Set(fixture.members.map((member: { id: string }) => member.id)).size !== 2) throw new Error("membership recovery oracle differs");
+    console.log("admin-presence-target-recovery-independent-oracle: AJV=1 scoped-removal=1");
+    const law = "admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen";
+    const hub = readFileSync(join(root, "🚀️bin.rs"), "utf8");
+    if (!hub.includes(`fn ${law}(`) || !hub.includes("with_graceful_shutdown") || !hub.includes("test_state_with_directory")) throw new Error("missing composed SQLite shutdown/reopen acceptance journey");
+    if (hub.match(/const STUDIO: &str = "([^"]+)";/)?.[1] !== fixture.scope.spaceId) throw new Error("recovery fixture differs from seeded test space");
+    if (phase === "native") {
+      const receipts = await runExactCargoLaws({
+        cwd: this.repoRoot, env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--features", "sqlite"], laws: [law] }],
+        artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, buildBudgetMs: buildBudgetMs(), listBudgetMs: 60_000, lawBudgetMs: 120_000,
+        progress(event) { console.log(`admin-presence-target-recovery-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+      });
+      for (const receipt of receipts) console.log(`admin-presence-target-recovery-native-receipt: ${JSON.stringify(receipt)}`);
+    }
+    console.log(`admin-presence-target-recovery-check: phase=${phase}`);
+  }
 }
 
 class PresenceLeaseCheckScript extends BundleScript {
@@ -5949,12 +7648,19 @@ const router = new ScriptRouter(import.meta.dir)
   .register("socket-grant-check", SocketGrantCheckScript)
   .register("scoped-directory-socket-check", ScopedDirectorySocketCheckScript)
   .register("browser-broker-check", BrowserBrokerCheckScript)
+  .register("execution-target-relay-check", ExecutionTargetRelayCheckScript)
   .register("admin-relay-check", AdminRelayCheckScript)
   .register("admin-backend-check", AdminBackendCheckScript)
   .register("admin-live-journey-check", AdminLiveJourneyCheckScript)
   .register("invite-redemption-transaction-check", InviteRedemptionTransactionCheckScript)
   .register("presence-lease-check", PresenceLeaseCheckScript)
+  .register("presence-normalization-check", PresenceNormalizationCheckScript)
+  .register("admin-presence-target-recovery-check", AdminPresenceTargetRecoveryCheckScript)
   .register("directory-event-page-v1-check", DirectoryEventPageV1CheckScript)
+  .register("space-administration-check", SpaceAdministrationCheckScript)
+  .register("directory-command-receipt-check", DirectoryCommandReceiptCheckScript)
+  .register("directory-home-browser-process-check", DirectoryHomeBrowserProcessCheckScript)
+  .register("scoped-presence-browser-serve", ScopedPresenceBrowserServeScript)
   .register("directory-ordered-publication-check", DirectoryOrderedPublicationCheckScript)
   .register("canonical-pair-check", CanonicalPairCheckScript)
   .register("native-openable-catalog-provider-check", NativeOpenableCatalogProviderCheckScript)
@@ -5962,8 +7668,11 @@ const router = new ScriptRouter(import.meta.dir)
   .register("open-plan-check", OpenPlanCheckScript)
   .register("open-plan-server-check", OpenPlanServerCheckScript)
   .register("browser-document-open-check", BrowserDocumentOpenCheckScript)
+  .register("execution-target-lease-check", ExecutionTargetLeaseCheckScript)
+  .register("execution-target-lease-browser-check", ExecutionTargetLeaseBrowserCheckScript)
   .register("space-public-boundary-check", SpacePublicBoundaryCheckScript)
   .register("trusted-stdio-gis-bootstrap", TrustedStdioGisBootstrapScript)
+  .register("gis-map-proposal-check", GisMapProposalCheckScript)
   .register("trusted-stdio-gis-bundle-check", TrustedStdioGisBundleCheckScript)
   .register("gis-inference-ledger-oracle", GisInferenceLedgerOracleScript)
   .register("gis-inference-ledger-check", GisInferenceLedgerCheckScript)

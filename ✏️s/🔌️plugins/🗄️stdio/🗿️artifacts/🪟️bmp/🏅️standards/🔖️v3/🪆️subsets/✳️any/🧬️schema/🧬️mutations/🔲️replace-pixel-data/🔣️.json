@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲️replace-pixel-data",
+  "semanticKind": "replace-pixel-data",
+  "displayName": "Replace Pixel Data",
+  "emoji": "🟪️",
+  "aggregateVariant": "ReplacePixelData",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "replace-pixel-data",
+  "binaryTag": 6,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

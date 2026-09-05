@@ -92,17 +92,17 @@
 }
 
 %region Emphasis Mechanism
-% 🎨️ Foreground-color emphasis, ported from the UI's text-element/text-emphasized
-% pair: https://github.com/usalu/semio ui/styling/js/🎨️ui.css. Emphasis is a color
-% swap, never italics — the print font stack (🖋️semio-fonts.sty) has no italic face.
+% 🎨 Foreground-color emphasis, ported from the UI's text-element/text-emphasized
+% pair: https://github.com/usalu/semio ui/styling/js/ui.css. Emphasis is a color
+% swap, never italics — the print font stack (semio-fonts.sty) has no italic face.
 \newcommand{\semio@text@element}[1]{\textcolor{semio-chrome-text-normal}{#1}}
 \newcommand{\semio@text@emphasized}[1]{\textcolor{semio-chrome-foreground}{#1}}
 \renewcommand{\emph}[1]{\semio@text@emphasized{#1}}
 
-% 🎨️ Active state, ported from the UI's active-base/active-foreground pair.
+% 🎨 Active state, ported from the UI's active-base/active-foreground pair.
 \newcommand{\semio@active}[1]{\colorbox{semio-chrome-active-base}{\textcolor{semio-chrome-active-foreground}{#1}}}
 
-% 🎨️ Highlight, ported from the UI's hover-interactive-fill + emphasized content
+% 🎨 Highlight, ported from the UI's hover-interactive-fill + emphasized content
 % pair; print has no hover state, so the panel tint stands in as the static fill.
 \newcommand{\semio@highlighted}[1]{\colorbox{semio-chrome-panel}{\semio@text@emphasized{#1}}}
 %endregion Emphasis Mechanism
@@ -125,7 +125,7 @@
   \use:c { semio@chrome@heading@set } { \SemioFrontmatterTitle }
 }
 
-% 📎️ Appendices default to the structural level matching the document's kind of
+% 📎 Appendices default to the structural level matching the document's kind of
 % sectioning (chapter for type=report, section otherwise); zukunftbau's
 % zwischenbericht overrides this to part via \SemioSetup{appendix-level=part}.
 % Chapters *within* an appendix (\appendixsection) sit one level below —
@@ -468,6 +468,39 @@
   \fi
 }
 
+%region TocLineLinks
+% 🔗 Back-link from a hierarchy key chip to its own line in the
+% Inhaltsverzeichnis — the mirror image of \semio@toc@link (semio-table.sty),
+% which links a TOC line forward to its section anchor.
+%
+% The two halves are keyed by the hierarchy number itself ("1.2.3", "BB.M") and
+% nothing else: a heading chip is typeset long before (or long after) the TOC
+% body exists, so it cannot know the TOC's own \label names — but it always
+% knows its number. \semio@tocline@anchor drops the destination on the TOC row;
+% \semio@tocline@link resolves it from the .aux on the next pass. Both spell the
+% `semio-tocline-` prefix literally, exactly like the `semio-toc-` /
+% `semio-register-` label prefixes elsewhere.
+\newcommand{\semio@tocline@anchor}[1]{%
+  \ifcsname semio@tocline@seen@#1\endcsname\else
+    \expandafter\gdef\csname semio@tocline@seen@#1\endcsname{}%
+    \phantomsection\label{semio-tocline-#1}%
+  \fi
+}
+% 🔗 Wraps chip content #2 in a jump to the TOC line for number #1 when that
+% line exists. Numbers with no TOC row at all (window slots like "1.2.a", and
+% every number on the first compile pass) fall through to plain content, so the
+% chip never emits a dangling destination. Robust on purpose: project cards
+% stash their key chip in a macro through \protected@edef and hand it on
+% through a further \edef before it is ever typeset.
+\NewDocumentCommand \semio@tocline@link { m m } {%
+  \ifcsname r@semio-tocline-#1\endcsname
+    \hyperref[semio-tocline-#1]{#2}%
+  \else
+    #2%
+  \fi
+}
+%endregion TocLineLinks
+
 \ExplSyntaxOn
 \cs_new_protected:Npn \semio_kind_label_resolved:n #1 {
   \tl_if_eq:NnTF \l_semio_language_tl { de }
@@ -486,7 +519,7 @@
 \cs_new_protected:Npn \semio_kind_chip_bare:n #1 {
   \tl_if_blank:nTF {#1} { } { \semio_hierarchy_chip_number:n {#1} }
 }
-% 🪆️ Composed identifiers nest one separator only — "." between every level,
+% 🪆 Composed identifiers nest one separator only — "." between every level,
 % whether appendix→chapter (BB.M), heading→window slot (H.a), or
 % chapter→subsection (SB.B.1) — and every level but the last renders muted.
 % \l_tmpa_int is set to the character count of everything up to & including
@@ -498,12 +531,19 @@
   \seq_pop_right:NN \l_tmpb_seq \l_tmpb_tl
   \int_set:Nn \l_tmpa_int { \tl_count:N \l_tmpa_tl - \tl_count:N \l_tmpb_tl }
 }
+% 🔗 Single choke point for every hierarchy key chip (heading pairs, window and
+% table headers, nested paragraphs), hence the single place that turns the key
+% into a jump to its Inhaltsverzeichnis line — see the TocLineLinks region.
+% #1 always arrives fully expanded (\exp_args:Ne at both call sites), so the
+% number doubles as the anchor key.
 \cs_new_protected:Npn \semio_hierarchy_chip_number:n #1 {
-  \semio_identifier_split_point:n {#1}
-  \int_compare:nNnF \l_tmpa_int = \c_zero_int {
-    \textcolor { semio-chrome-text-normal } { \tl_range:Nnn \l_tmpa_tl { 1 } { \l_tmpa_int } }
+  \semio@tocline@link {#1} {
+    \semio_identifier_split_point:n {#1}
+    \int_compare:nNnF \l_tmpa_int = \c_zero_int {
+      \textcolor { semio-chrome-text-normal } { \tl_range:Nnn \l_tmpa_tl { 1 } { \l_tmpa_int } }
+    }
+    \textcolor { semio-chrome-foreground } { \tl_range:Nnn \l_tmpa_tl { \l_tmpa_int + 1 } { -1 } }
   }
-  \textcolor { semio-chrome-foreground } { \tl_range:Nnn \l_tmpa_tl { \l_tmpa_int + 1 } { -1 } }
 }
 \cs_new_protected:Npn \semio_toc_number:n #1 {
   \semio_identifier_split_point:n {#1}
@@ -543,13 +583,17 @@
 \ExplSyntaxOff
 
 %region Hyphenation Safety
-% 🪢️ TeX only hyphenates a run of letters that is itself preceded by glue;
+% 🪢 TeX only hyphenates a run of letters that is itself preceded by glue;
 % a slash-joined compound like "Wand-/Scheibenelement" breaks cleanly at the
 % literal hyphen but leaves "/Scheibenelement" with no glue in front of it,
 % so pattern hyphenation never resumes and the remainder overflows narrow
 % table columns. \SemioSlash inserts the missing zero-width glue right after
 % the slash so the following word hyphenates normally again.
 \newcommand{\SemioSlash}{/\hspace{0pt}}
+% 🪢 Same hazard for a hyphen-joined compound ("Plattenbau-Massenwohnbau"): TeX
+% breaks at the literal hyphen but never hyphenates the tail, which then runs out
+% of a narrow column. \SemioDash restores the glue after the hyphen.
+\newcommand{\SemioDash}{-\hspace{0pt}}
 %endregion Hyphenation Safety
 
 \makeatletter
@@ -590,7 +634,7 @@
 
 \newskip\semio@block@sep@skip
 \setlength{\semio@block@sep@skip}{0.2em}
-% 🧱️ Single choke point for inter-element gaps: every block emits exactly one
+% 🧱 Single choke point for inter-element gaps: every block emits exactly one
 % max-merging \addvspace{unit} before itself and nothing after; \parskip
 % (set to the same unit in \AfterEndPreamble) supplies the gap wherever a
 % paragraph is the next element, so paragraph<->paragraph, paragraph<->block,
@@ -602,7 +646,10 @@
   \ifnum\lastnodetype=-1 \else\addvspace{\semio@block@sep@skip}\fi
 }
 \newcommand{\semio@block@after}{\ifhmode\par\fi\nobreak}
-\newcommand{\semio@noindent@noparskip}{\begingroup\parskip\z@\noindent\endgroup}
+% \noindent must precede the following material in the same paragraph. A
+% grouped \noindent ends before the chip/header row and leaves \parindent in
+% effect (measured: title-chip L inset from the table outer L).
+\newcommand{\semio@noindent@noparskip}{\parskip\z@\noindent}
 \newcommand{\SemioSpacingUnit}{\semio@spacing@single}
 \newcommand{\SemioSpacingDouble}{\semio@spacing@double}
 \makeatother

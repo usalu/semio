@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "limits", "schemas", "anchor", "members", "carrier", "publication", "expected", "cases"],
+  "properties": {
+    "version": { "const": 1 },
+    "limits": {
+      "type": "object", "additionalProperties": false,
+      "required": ["participants", "eventBytes", "recoveryPackBytes", "structuralIdentityBytes", "identityBytes", "walSegmentBytes", "walFramingReserveBytes"],
+      "properties": {
+        "participants": { "const": 3 },
+        "eventBytes": { "const": 491520 },
+        "recoveryPackBytes": { "const": 162000 },
+        "structuralIdentityBytes": { "const": 4096 },
+        "identityBytes": { "const": 256 },
+        "walSegmentBytes": { "const": 507904 },
+        "walFramingReserveBytes": { "const": 16384 }
+      }
+    },
+    "schemas": {
+      "type": "object", "additionalProperties": false,
+      "required": ["decision", "anchor", "parent", "drawing", "value"],
+      "properties": {
+        "decision": { "const": "semio.store.durable-owned-three-member-decision.v1" },
+        "anchor": { "const": "semio.store.owned-three-member-anchor.v1" },
+        "parent": { "const": "semio.store.one-item-outcome.gis-gismap-v1" },
+        "drawing": { "const": "semio.store.one-item-outcome.stdio-drawing-v1" },
+        "value": { "const": "semio.store.one-item-outcome.stdio-value-v1" }
+      }
+    },
+    "anchor": { "$ref": "#/$defs/anchor" },
+    "members": {
+      "type": "object", "additionalProperties": false,
+      "required": ["parent", "drawing", "value"],
+      "properties": {
+        "parent": { "$ref": "#/$defs/member" },
+        "drawing": { "$ref": "#/$defs/member" },
+        "value": { "$ref": "#/$defs/member" }
+      }
+    },
+    "carrier": {
+      "type": "object", "additionalProperties": false,
+      "required": ["maxJsonDepth", "maxJsonItems", "numericCases", "escapedControlIdentity", "escapedControlExpected"],
+      "properties": {
+        "maxJsonDepth": { "const": 32 },
+        "maxJsonItems": { "const": 65536 },
+        "numericCases": {
+          "type": "array", "minItems": 3, "maxItems": 3,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["id", "canonical", "kind", "expected"],
+            "properties": {
+              "id": { "enum": ["u64-max", "i64-min", "finite-float"] },
+              "canonical": { "type": "string", "minLength": 1 },
+              "kind": { "enum": ["uint", "int", "float"] },
+              "expected": { "const": "admit" }
+            }
+          }
+        },
+        "escapedControlIdentity": { "type": "string", "minLength": 1 },
+        "escapedControlExpected": { "const": "reject" }
+      }
+    },
+    "publication": {
+      "type": "object", "additionalProperties": false,
+      "required": ["commitPhases", "pendingRoots", "committedRoots", "cancellationResolution", "ambiguousJournalError", "acknowledgement"],
+      "properties": {
+        "commitPhases": { "type": "array", "minItems": 17, "maxItems": 17, "items": { "type": "string", "minLength": 1 } },
+        "pendingRoots": { "const": [0, 0, 0] },
+        "committedRoots": { "const": [7, 11, 13] },
+        "cancellationResolution": { "const": "absent" },
+        "ambiguousJournalError": { "const": "retry" },
+        "acknowledgement": { "const": "required" }
+      }
+    },
+    "expected": {
+      "type": "object", "additionalProperties": false,
+      "required": ["anchorSha256", "decisionSha256", "unsignedJson"],
+      "properties": {
+        "anchorSha256": { "$ref": "#/$defs/hash" },
+        "decisionSha256": { "$ref": "#/$defs/hash" },
+        "unsignedJson": { "type": "string", "minLength": 1 }
+      }
+    },
+    "cases": {
+      "type": "array", "minItems": 8, "maxItems": 8,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "variants", "codecExpected", "expected"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "variants": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+          "codecExpected": { "enum": ["admit", "reject"] },
+          "expected": { "enum": ["admit", "reject", "recover", "corrupt"] }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "hex": { "type": "string", "pattern": "^(?:[0-9a-f]{2})+$" },
+    "revision": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "dialect": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifactKind", "standard", "subset"],
+      "properties": {
+        "artifactKind": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "standard": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "subset": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "reference": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifactId", "dialect"],
+      "properties": {
+        "artifactId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "dialect": { "$ref": "#/$defs/dialect" }
+      }
+    },
+    "owner": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["parent", "slot", "childId"],
+      "properties": {
+        "parent": { "$ref": "#/$defs/reference" },
+        "slot": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "childId": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "anchor": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema", "parent", "shape"],
+      "properties": {
+        "schema": { "const": "semio.store.owned-three-member-anchor.v1" },
+        "parent": { "$ref": "#/$defs/reference" },
+        "shape": { "const": "parent-drawing-value" }
+      }
+    },
+    "member": {
+      "type": "object", "additionalProperties": false,
+      "required": ["role", "reference", "owner", "expectedGeneration", "expectedRevisionHex", "recoverySchema", "callerRecoveryPackHex", "callerRecoveryPackSha256", "callerRecoveryExpected", "unboundOutcomePackHex", "unboundOutcomeSha256", "postGeneration", "postRevisionHex"],
+      "properties": {
+        "role": { "enum": ["parent", "drawing", "value"] },
+        "reference": { "$ref": "#/$defs/reference" },
+        "owner": { "$ref": "#/$defs/owner" },
+        "expectedGeneration": { "type": "integer", "minimum": 0 },
+        "expectedRevisionHex": { "$ref": "#/$defs/revision" },
+        "recoverySchema": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "callerRecoveryPackHex": { "$ref": "#/$defs/hex" },
+        "callerRecoveryPackSha256": { "$ref": "#/$defs/hash" },
+        "callerRecoveryExpected": { "const": "reject" },
+        "unboundOutcomePackHex": { "$ref": "#/$defs/hex" },
+        "unboundOutcomeSha256": { "$ref": "#/$defs/hash" },
+        "postGeneration": { "type": "integer", "minimum": 1 },
+        "postRevisionHex": { "$ref": "#/$defs/revision" }
+      }
+    }
+  }
+}

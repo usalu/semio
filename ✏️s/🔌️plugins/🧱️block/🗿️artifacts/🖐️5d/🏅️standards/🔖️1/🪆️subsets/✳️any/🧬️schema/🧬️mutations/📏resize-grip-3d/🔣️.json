@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏resize-grip-3d",
-  "semanticKind": "resize-grip-3d",
+  "semanticKind": "resize-grip3d",
   "displayName": "Resize Grip 3d",
   "emoji": "📏",
   "aggregateVariant": "ResizeGrip3d",

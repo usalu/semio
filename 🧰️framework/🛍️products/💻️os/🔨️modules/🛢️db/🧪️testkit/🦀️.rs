@@ -1,7 +1,7 @@
 //! 🗄️ `db_testkit` — shared test infrastructure for the whole `db_*` crate family: a seeded
 //! deterministic `SimRuntime`/`SimClock` (bounded interleaving explorer for model checks),
-//! `FaultStorage` (a scriptable-fault `db_storage::DbStorage` wrapper: fail-nth-write, torn write,
-//! fsync-lie, CAS-conflict injection), `CrashHarness` (`run_crash_after_every_write`), splitmix64
+//! `FaultStorage` (a scriptable-fault `db_storage::DbStorage` wrapper: fail-nth-write/sync, torn
+//! write, fsync-lie, CAS-conflict injection), `CrashHarness` (`run_crash_after_every_write`), splitmix64
 //! generators (`CommandGen`/`WorkloadGen` — NOT `proptest`/`quickcheck`, matching `pack_testkit`'s
 //! precedent), and the family's cross-crate law assertions (`assert_replay_deterministic`,
 //! `assert_snapshot_plus_suffix_equals_replay`, `assert_projection_rebuild_equals_incremental`,
@@ -33,7 +33,7 @@ use std::sync::{Arc, Mutex};
 use crate::db_durability::Frontier;
 use crate::db_ids::DbError;
 use crate::*;
-use db_storage::{db_io_copy_pages, CatalogStorage, DbBackend, DbIoPages, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
+use db_storage::{db_io_copy_pages, CatalogStorage, DbBackend, DbIoPages, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalSegmentState, WalStorage};
 
 //#region 🔖️Prng
 /// @emoji 🎲️ splitmix64 — see <https://prng.di.unimi.it/splitmix64.c>. Small, dependency-free,
@@ -267,6 +267,9 @@ pub struct FaultScript {
     /// length) — models a crash mid-`write(2)`, the "torn write" fault `db_wal`'s own recovery
     /// (`WalRecoveryReport.torn_tail_bytes`) exists to detect and truncate.
     pub torn_write_at: Option<(u64, u64)>,
+    /// @emoji 🚫️ The Nth call to `WalStorage::sync` (1-indexed) fails before reaching the
+    /// inner backend, after any preceding append has already completed.
+    pub fail_nth_sync: Option<u64>,
     /// @emoji 🤥️ `WalStorage::sync` returns `Ok(())` without ever forwarding to the inner backend —
     /// models a storage device that acknowledges `fsync` without actually forcing data to physical
     /// storage (a caller relying on `DurabilityClass::Fsync` alone, without independently verifying
@@ -283,18 +286,19 @@ pub struct FaultScript {
 /// only at the WAL append/sync and catalog-CAS boundaries (see `FaultScript`'s fields) — every
 /// other operation (segment lifecycle, snapshot/payload/index/lease storage) passes straight
 /// through to `inner` untouched, since those are outside this testkit's stated crash-simulation
-/// scope (fail-nth-write / torn write / fsync-lie / CAS-conflict injection).
+/// scope (fail-nth-write/sync / torn write / fsync-lie / CAS-conflict injection).
 pub struct FaultStorage {
     inner: Arc<DbBackend>,
     script: Mutex<FaultScript>,
     append_calls: AtomicU64,
+    sync_calls: AtomicU64,
     sync_delegated_calls: AtomicU64,
     cas_calls: AtomicU64,
 }
 
 impl FaultStorage {
     pub async fn new(inner: Arc<DbBackend>) -> FaultStorage {
-        FaultStorage { inner, script: Mutex::new(FaultScript::default()), append_calls: AtomicU64::new(0), sync_delegated_calls: AtomicU64::new(0), cas_calls: AtomicU64::new(0) }
+        FaultStorage { inner, script: Mutex::new(FaultScript::default()), append_calls: AtomicU64::new(0), sync_calls: AtomicU64::new(0), sync_delegated_calls: AtomicU64::new(0), cas_calls: AtomicU64::new(0) }
     }
 
     pub async fn set_script(&self, script: FaultScript) {
@@ -309,6 +313,11 @@ impl FaultStorage {
     /// `CrashHarness` uses this to discover exactly how many write boundaries a workload has.
     pub async fn append_calls(&self) -> u64 {
         self.append_calls.load(Ordering::SeqCst)
+    }
+
+    /// @emoji 🔢️ Every `WalStorage::sync` call this storage has seen, faulted or not.
+    pub async fn sync_calls(&self) -> u64 {
+        self.sync_calls.load(Ordering::SeqCst)
     }
 
     /// @emoji 🔢️ How many `WalStorage::sync` calls actually reached the inner backend (as opposed
@@ -355,7 +364,12 @@ impl WalStorage for FaultStorage {
     }
 
     async fn sync(&self, document: &ArtifactId, index: u64, class: DurabilityClass) -> Result<(), DbError> {
-        if self.script().await.fsync_lies {
+        let call = self.sync_calls.fetch_add(1, Ordering::SeqCst) + 1;
+        let script = self.script().await;
+        if script.fail_nth_sync == Some(call) {
+            return Err(DbError::Io(format!("fault_storage: injected failure on wal sync #{call}")));
+        }
+        if script.fsync_lies {
             return { Ok(()) };
         }
         self.sync_delegated_calls.fetch_add(1, Ordering::SeqCst);
@@ -372,6 +386,10 @@ impl WalStorage for FaultStorage {
 
     async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
         self.inner.wal().await.segment_len(document, index).await
+    }
+
+    async fn segment_state(&self, document: &ArtifactId, index: u64) -> Result<WalSegmentState, DbError> {
+        self.inner.wal().await.segment_state(document, index).await
     }
 
     async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
@@ -1156,6 +1174,35 @@ mod tests {
         faulted.set_script(FaultScript { fsync_lies: true, ..FaultScript::default() }).await;
         assert!(db_actor::block_on(faulted.sync(&document, 0, DurabilityClass::Fsync)).is_ok(), "a lying fsync must still report success");
         assert_eq!(faulted.sync_delegated_calls().await, 1, "a lying fsync must never actually delegate");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn fault_storage_fail_nth_sync_fails_once_after_the_preceding_append() {
+        let faulted = FaultStorage::new(Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()))).await;
+        let document = ArtifactId("doc-sync-fault".to_string());
+        db_actor::block_on(faulted.create_segment(&document, 0)).unwrap();
+        assert_eq!(db_actor::block_on(faulted.append(&document, 0, pages(b"committed-before-sync"))).unwrap(), 21);
+        faulted.set_script(FaultScript { fail_nth_sync: Some(1), ..FaultScript::default() }).await;
+        assert!(db_actor::block_on(faulted.sync(&document, 0, DurabilityClass::Fsync)).is_err());
+        assert_eq!(faulted.sync_calls().await, 1);
+        assert_eq!(faulted.sync_delegated_calls().await, 0);
+        assert!(db_actor::block_on(faulted.sync(&document, 0, DurabilityClass::Fsync)).is_ok());
+        assert_eq!(faulted.sync_calls().await, 2);
+        assert_eq!(faulted.sync_delegated_calls().await, 1);
+        assert_eq!(db_actor::block_on(faulted.segment_len(&document, 0)).unwrap(), 21);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn fault_storage_segment_state_is_observational_and_counter_neutral() {
+        let faulted = FaultStorage::new(Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()))).await;
+        let document = ArtifactId("doc-state".to_string());
+        db_actor::block_on(faulted.create_segment(&document, 0)).unwrap();
+        assert_eq!(db_actor::block_on(faulted.segment_state(&document, 0)).unwrap(), WalSegmentState::Active);
+        db_actor::block_on(faulted.seal(&document, 0)).unwrap();
+        assert_eq!(db_actor::block_on(faulted.segment_state(&document, 0)).unwrap(), WalSegmentState::Sealed);
+        assert_eq!(faulted.append_calls().await, 0);
+        assert_eq!(faulted.sync_delegated_calls().await, 0);
+        assert_eq!(faulted.cas_calls().await, 0);
     }
 
     #[semio_framework_async_macros::async_test]

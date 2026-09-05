@@ -65,7 +65,7 @@
           "scenarios": [
             {
               "id": "reseeds-the-solve-from-7-to-99",
-              "directoryName": "🧪️reseeds-the-solve-from-7-to-99"
+              "directoryName": "🎲️reseeds-the-solve-from-7-to-99"
             }
           ]
         },
@@ -76,7 +76,7 @@
           "scenarios": [
             {
               "id": "raises-the-wall-module-selection-bias",
-              "directoryName": "🧪️raises-the-wall-module-selection-bias"
+              "directoryName": "⚖️raises-the-wall-module-selection-bias"
             }
           ]
         },
@@ -87,18 +87,18 @@
           "scenarios": [
             {
               "id": "joins-slot-b-to-slot-c-at-index-1",
-              "directoryName": "🧪️joins-slot-b-to-slot-c-at-index-1"
+              "directoryName": "🔗️joins-slot-b-to-slot-c-at-index-1"
             }
           ]
         },
         {
           "mutationId": "create-rule",
-          "sourceMutationDirectoryName": "📏️create-rule",
-          "mutationDirectoryName": "📏️create-rule",
+          "sourceMutationDirectoryName": "🚦️create-rule",
+          "mutationDirectoryName": "🚦️create-rule",
           "scenarios": [
             {
               "id": "appends-a-rule-forbidding-roof-over-wall",
-              "directoryName": "🧪️appends-a-rule-forbidding-roof-over-wall"
+              "directoryName": "⛔️appends-a-rule-forbidding-roof-over-wall"
             }
           ]
         },
@@ -109,7 +109,7 @@
           "scenarios": [
             {
               "id": "appends-slot-c-at-index-2",
-              "directoryName": "🧪️appends-slot-c-at-index-2"
+              "directoryName": "🧩️appends-slot-c-at-index-2"
             }
           ]
         },
@@ -120,7 +120,7 @@
           "scenarios": [
             {
               "id": "removes-the-wall-roof-rule",
-              "directoryName": "🧪️removes-the-wall-roof-rule"
+              "directoryName": "🚫️removes-the-wall-roof-rule"
             }
           ]
         },
@@ -131,7 +131,7 @@
           "scenarios": [
             {
               "id": "removes-slot-a-and-cascades-edge-ab",
-              "directoryName": "🧪️removes-slot-a-and-cascades-edge-ab"
+              "directoryName": "🚫️removes-slot-a-and-cascades-edge-ab"
             }
           ]
         },
@@ -142,7 +142,7 @@
           "scenarios": [
             {
               "id": "severs-edge-ab-leaving-both-slots",
-              "directoryName": "🧪️severs-edge-ab-leaving-both-slots"
+              "directoryName": "✂️severs-edge-ab-leaving-both-slots"
             }
           ]
         },
@@ -153,7 +153,7 @@
           "scenarios": [
             {
               "id": "drops-the-wall-module-weight-override",
-              "directoryName": "🧪️drops-the-wall-module-weight-override"
+              "directoryName": "🪶️drops-the-wall-module-weight-override"
             }
           ]
         }

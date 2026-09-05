@@ -16,7 +16,7 @@
           "scenarios": [
             {
               "id": "no-ops-when-the-step-is-already-collapsed",
-              "directoryName": "📖️no-ops-when-the-step-is-already-collapsed"
+              "directoryName": "🟰️no-ops-when-the-step-is-already-collapsed"
             }
           ]
         },
@@ -60,7 +60,7 @@
           "scenarios": [
             {
               "id": "no-ops-when-the-params-are-already-identical",
-              "directoryName": "📖️no-ops-when-the-params-are-already-identical"
+              "directoryName": "🟰️no-ops-when-the-params-are-already-identical"
             }
           ]
         },
@@ -71,7 +71,7 @@
           "scenarios": [
             {
               "id": "no-ops-when-the-step-is-already-at-that-position",
-              "directoryName": "📖️no-ops-when-the-step-is-already-at-that-position"
+              "directoryName": "🟰️no-ops-when-the-step-is-already-at-that-position"
             }
           ]
         }

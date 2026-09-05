@@ -107,8 +107,8 @@
     },
     "inbound": {
       "type": "array",
-      "minItems": 5,
-      "maxItems": 5,
+      "minItems": 6,
+      "maxItems": 6,
       "items": {
         "$ref": "#/definitions/shape"
       }
@@ -121,8 +121,8 @@
       "items": {
         "type": "string"
       },
-      "minItems": 4,
-      "maxItems": 4
+      "minItems": 5,
+      "maxItems": 5
     },
     "hostFramePayloadKinds": {
       "const": [
@@ -131,7 +131,12 @@
         "ui-patch-emit"
       ]
     },
-    "hostReplyKinds": { "const": ["effect-complete", "effect-error"] },
+    "hostReplyKinds": {
+      "const": [
+        "effect-complete",
+        "effect-error"
+      ]
+    },
     "hostEffectKinds": {
       "$ref": "#/definitions/names"
     },
@@ -146,7 +151,21 @@
         "result:r1:success"
       ]
     },
-    "currentFaultTraces": { "const": { "postThenThrow": ["heartbeat", "result-success", "result-fault"], "errorNormalizationThrows": ["heartbeat"], "semanticallyAccepted": false } },
+    "currentFaultTraces": {
+      "const": {
+        "postThenThrow": [
+          "heartbeat",
+          "result-success",
+          "worker-fault",
+          "result-fault"
+        ],
+        "errorNormalizationThrows": [
+          "heartbeat",
+          "worker-fault"
+        ],
+        "semanticallyAccepted": false
+      }
+    },
     "excluded": {
       "const": [
         "collection backings and entries",

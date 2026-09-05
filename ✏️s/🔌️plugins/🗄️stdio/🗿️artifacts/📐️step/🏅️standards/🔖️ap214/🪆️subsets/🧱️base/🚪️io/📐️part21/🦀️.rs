@@ -465,7 +465,7 @@ impl Lexer {
     /// * `\\` — one literal REVERSE SOLIDUS. The string production escapes it by doubling exactly
     ///   as it escapes the apostrophe by doubling, and real exporters emit it: IfcOpenShell writes
     ///   `'\\'` for a one-character backslash name at byte 138718 of the committed
-    ///   `🏗️nakagin-capsule-tower.ifc`. Rejecting it failed EVERY `🦋️mutate-ifc-4` subject scenario
+    ///   `🏗️nakagin-capsule-tower.ifc`. Rejecting it failed EVERY `🏗️mutate-ifc-4` subject scenario
     ///   (22 of 22 executable rows) until this wave, while `ruststep` — the registered independent
     ///   reader for that same case — read the file without complaint.
     /// * `\X\HH` — `arbitrary`: EXACTLY two hex digits and no terminator (`arbitrary = "\X\"
@@ -1099,7 +1099,7 @@ mod tests {
     /// 🧪️ ISO 10303-21 §6.4.2's remaining control directives, each read back from a literal
     /// spelled the way the standard spells it. The `\\` row is the one the real committed
     /// IfcOpenShell export carries (`'\\'` at byte 138718 of `🏗️nakagin-capsule-tower.ifc`) and the
-    /// one this lexer used to reject outright, failing all 22 executable `🦋️mutate-ifc-4` subject
+    /// one this lexer used to reject outright, failing all 22 executable `🏗️mutate-ifc-4` subject
     /// scenarios while `ruststep` read the same file without complaint. `\X\` carries NO
     /// terminator per the grammar's own `arbitrary = "\X\" hex_one`, which is why the `\X\41\S\A`
     /// row matters: demanding one would swallow the next directive's opener.

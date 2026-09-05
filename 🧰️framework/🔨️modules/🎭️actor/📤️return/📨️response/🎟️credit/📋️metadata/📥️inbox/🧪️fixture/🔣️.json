@@ -71,6 +71,7 @@
       "fields": [
         "lastHeartbeatAtMs",
         "lastHeartbeatTurnSeq",
+        "lastLivenessAtMs",
         "oldestPendingStartedAtMs",
         "missedCount",
         "lastMissCountedAtMs"
@@ -147,7 +148,7 @@
       "owners": 1
     },
     "worker": {
-      "bytes": 304,
+      "bytes": 320,
       "slots": 2,
       "owners": 2
     },
@@ -312,7 +313,8 @@
       "ok": null,
       "fields": [
         "kind",
-        "turnSeq"
+        "turnSeq",
+        "phase"
       ]
     },
     {
@@ -323,6 +325,21 @@
         "actorId",
         "activationGeneration",
         "message"
+      ]
+    },
+    {
+      "kind": "worker-fault",
+      "ok": null,
+      "fields": [
+        "kind",
+        "source",
+        "phase",
+        "actorId",
+        "moduleUrl",
+        "message",
+        "stack",
+        "filename",
+        "lineno"
       ]
     },
     {
@@ -351,6 +368,7 @@
   ],
   "workerReplyKinds": [
     "trap",
+    "worker-fault",
     "heartbeat",
     "result",
     "result"
@@ -403,10 +421,12 @@
     "postThenThrow": [
       "heartbeat",
       "result-success",
+      "worker-fault",
       "result-fault"
     ],
     "errorNormalizationThrows": [
-      "heartbeat"
+      "heartbeat",
+      "worker-fault"
     ],
     "semanticallyAccepted": false
   },

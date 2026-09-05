@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/presence-peer-codec-v1.json",
+  "title": "Presence Peer Codec V1 Neutral Corpus",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "limits", "cases"],
+  "properties": {
+    "version": { "const": 1 },
+    "limits": { "$ref": "#/$defs/limits" },
+    "cases": {
+      "type": "array",
+      "minItems": 16,
+      "items": { "$ref": "#/$defs/case" }
+    }
+  },
+  "$defs": {
+    "hex": { "type": "string", "pattern": "^(?:[0-9a-f]{2})*$" },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximumEntryBytes", "maximumTextBytes", "maximumPresencePackBytes", "maximumViews", "maximumInteractionDomains", "maximumDomainIds", "maximumConnectedAtMs"],
+      "properties": {
+        "maximumEntryBytes": { "const": 4096 },
+        "maximumTextBytes": { "const": 1024 },
+        "maximumPresencePackBytes": { "const": 2048 },
+        "maximumViews": { "const": 16 },
+        "maximumInteractionDomains": { "const": 16 },
+        "maximumDomainIds": { "const": 64 },
+        "maximumConnectedAtMs": { "const": 9007199254740991 }
+      }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "prefixHex", "repeatHex", "repeatCount", "suffixHex", "accepted"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "prefixHex": { "$ref": "#/$defs/hex" },
+        "repeatHex": { "type": "string", "pattern": "^[0-9a-f]{2}$" },
+        "repeatCount": { "type": "integer", "minimum": 0, "maximum": 4097 },
+        "suffixHex": { "$ref": "#/$defs/hex" },
+        "accepted": { "type": "boolean" },
+        "canonicalHex": { "$ref": "#/$defs/hex" },
+        "expected": { "$ref": "#/$defs/peer" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "accepted": { "const": true } }, "required": ["accepted"] },
+          "then": { "properties": { "canonicalHex": true, "expected": true }, "required": ["canonicalHex", "expected"] }
+        }
+      ]
+    },
+    "peer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor", "connectedAtMs", "views"],
+      "properties": {
+        "actor": { "type": "string" },
+        "connectedAtMs": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "label": { "type": "string" },
+        "presencePack": { "type": "string", "contentEncoding": "base64" },
+        "userId": { "type": "string" },
+        "role": { "type": "string" },
+        "dragGhostJson": { "type": "string" },
+        "interaction": { "$ref": "#/$defs/interaction" },
+        "color": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "surface": { "type": "string" },
+        "views": { "type": "array", "items": { "$ref": "#/$defs/view" } },
+        "ui": { "$ref": "#/$defs/ui" }
+      }
+    },
+    "interaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["appId", "domains"],
+      "properties": {
+        "appId": { "type": "string" },
+        "domains": { "type": "array", "items": { "$ref": "#/$defs/domain" } }
+      }
+    },
+    "domain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["domain", "granularity", "selected", "hovered"],
+      "properties": {
+        "domain": { "type": "string" },
+        "granularity": { "type": "string" },
+        "selected": { "type": "array", "items": { "type": "string" } },
+        "hovered": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "view": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["windowId", "space", "kind", "size"],
+      "properties": {
+        "windowId": { "type": "string" },
+        "space": { "type": "string" },
+        "kind": { "$ref": "#/$defs/viewKind" },
+        "size": { "$ref": "#/$defs/pair" },
+        "pointer": { "$ref": "#/$defs/triple" }
+      }
+    },
+    "viewKind": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "x", "y", "zoom"],
+          "properties": { "kind": { "const": "canvas" }, "x": { "type": "number" }, "y": { "type": "number" }, "zoom": { "type": "number" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "position", "target", "up", "fov"],
+          "properties": { "kind": { "const": "orbit" }, "position": { "$ref": "#/$defs/triple" }, "target": { "$ref": "#/$defs/triple" }, "up": { "$ref": "#/$defs/triple" }, "fov": { "type": "number" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "lng", "lat", "zoom", "bearing", "pitch"],
+          "properties": { "kind": { "const": "geo" }, "lng": { "type": "number" }, "lat": { "type": "number" }, "zoom": { "type": "number" }, "bearing": { "type": "number" }, "pitch": { "type": "number" } }
+        }
+      ]
+    },
+    "pair": { "type": "array", "prefixItems": [{ "type": "number" }, { "type": "number" }], "items": false, "minItems": 2, "maxItems": 2 },
+    "triple": { "type": "array", "prefixItems": [{ "type": "number" }, { "type": "number" }, { "type": "number" }], "items": false, "minItems": 3, "maxItems": 3 },
+    "ui": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "hoveredPath": { "type": "string" }, "focusedPath": { "type": "string" }, "pressedPath": { "type": "string" } }
+    }
+  }
+}

@@ -1,5 +1,5 @@
 //! 🦀️ BMP v3/any exhaustive mutation case — Rust adapter, structured like
-//! `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🧪️tests/✏️edit-existing-pdf/🦀️.rs`: oracle
+//! `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🧪️tests/✏️edit-existing-pdf/🦀️.rs`: oracle
 //! handlers at top level, subject handlers inside `#[cfg(feature = "sut")] mod subject`, both
 //! projected through the same INDEPENDENT `image` reader (`project_bmp_mutation`) before comparison.
 //!

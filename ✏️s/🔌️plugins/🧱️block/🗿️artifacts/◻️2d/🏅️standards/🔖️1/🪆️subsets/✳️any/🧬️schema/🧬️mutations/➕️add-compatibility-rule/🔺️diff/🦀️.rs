@@ -4,7 +4,7 @@ use crate::artifacts::block2d::Block2dSnapshot;
 use crate::artifacts::block2d::diff::{Block2dCompatibilityDelta, Block2dDiff};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::AddCompatibilityRule, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
+pub fn diff(payload: &super::AddCompatibilityRule, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
     if base.compatibility.iter().any(|item| item.id == payload.rule.id) {
         return protocol::MutationOutcome::new(Block2dDiff::default())
             .absorb_messages([protocol::MutationMessage::warn("mutation.no-op", format!("{} \"{}\" already present", "compatibility-rule", payload.rule.id)).at(vec![payload.rule.id.clone()])]);

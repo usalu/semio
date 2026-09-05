@@ -66,7 +66,7 @@ static BLOCKING_QUEUE: semio_framework_trace::QueueCounter = semio_framework_tra
 /// invariant. This crate's own choice (the contract doesn't fix a number): generous enough for a
 /// snapshot generation or a large payload, small enough to refuse an obviously-corrupt on-disk
 /// length before trying to allocate it.
-const MAX_READ_BYTES: u64 = 496 * 1024;
+pub const DB_IO_MAX_READ_BYTES: u64 = 496 * 1024;
 
 pub const DB_IO_PAGE_BYTES: usize = 16 * 1024;
 pub const DB_IO_OPERATION_PAGES: usize = 64;
@@ -1217,7 +1217,7 @@ impl Future for DbIoPageHash<'_> {
 
 const DB_IO_PLATFORM_BUFFERS: usize = 16;
 const DB_IO_PLATFORM_RETIREMENT_SLOTS: usize = DB_IO_PLATFORM_BUFFERS * 2;
-const DB_IO_PLATFORM_BUFFER_BYTES: usize = MAX_READ_BYTES as usize;
+const DB_IO_PLATFORM_BUFFER_BYTES: usize = DB_IO_MAX_READ_BYTES as usize;
 
 struct DbIoPlatformBacking(std::cell::UnsafeCell<[u8; DB_IO_PLATFORM_BUFFER_BYTES]>);
 
@@ -1846,6 +1846,10 @@ pub struct DbIoU64List {
 }
 
 impl DbIoU64List {
+    pub(crate) fn retained_bytes(&self) -> u64 {
+        (std::mem::size_of::<Self>() + self.values.as_ref().map_or(0, |values| std::mem::size_of_val(values.as_ref()))) as u64
+    }
+
     pub fn new() -> Self {
         Self { values: None, len: 0, result_handback: None }
     }
@@ -2006,6 +2010,13 @@ pub enum DbIoBackendKind {
     Neo4j,
 }
 
+/// @emoji 🚦️ Persisted lifecycle state of one WAL segment.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WalSegmentState {
+    Active,
+    Sealed,
+}
+
 /// @emoji 🗂️ Schema-first database I/O task owner.
 pub enum DbIoTask {
     BackendOpen { backend: DbIoBackendControl, path: DbIoText },
@@ -2015,6 +2026,7 @@ pub enum DbIoTask {
     WalSeal { backend: DbIoBackendControl, document: DbIoText, index: u64 },
     WalRead { backend: DbIoBackendControl, document: DbIoText, index: u64, range: ByteRange, output: DbIoPageWriter },
     WalLength { backend: DbIoBackendControl, document: DbIoText, index: u64 },
+    WalState { backend: DbIoBackendControl, document: DbIoText, index: u64 },
     WalList { backend: DbIoBackendControl, document: DbIoText, output: DbIoU64List },
     WalTruncate { backend: DbIoBackendControl, document: DbIoText, index: u64, new_len: u64 },
     WalDelete { backend: DbIoBackendControl, document: DbIoText, index: u64 },
@@ -2045,6 +2057,7 @@ pub enum DbIoTask {
 pub enum DbIoResult {
     Unit,
     Length(u64),
+    WalSegmentState(WalSegmentState),
     OptionalLength(Option<u64>),
     Exists(bool),
     Hash(ContentHash),
@@ -2137,6 +2150,7 @@ impl DbIoTask {
             | Self::WalSeal { backend, .. }
             | Self::WalRead { backend, .. }
             | Self::WalLength { backend, .. }
+            | Self::WalState { backend, .. }
             | Self::WalList { backend, .. }
             | Self::WalTruncate { backend, .. }
             | Self::WalDelete { backend, .. }
@@ -2257,6 +2271,7 @@ impl DbIoTask {
             | Self::WalSync { document, .. }
             | Self::WalSeal { document, .. }
             | Self::WalLength { document, .. }
+            | Self::WalState { document, .. }
             | Self::WalTruncate { document, .. }
             | Self::WalDelete { document, .. }
             | Self::SnapshotDelete { document, .. }
@@ -2292,6 +2307,7 @@ impl DbIoTask {
             | Self::WalSync { document, .. }
             | Self::WalSeal { document, .. }
             | Self::WalLength { document, .. }
+            | Self::WalState { document, .. }
             | Self::WalTruncate { document, .. }
             | Self::WalDelete { document, .. }
             | Self::SnapshotDelete { document, .. }
@@ -2315,7 +2331,7 @@ impl DbIoResult {
                 }
                 Ok(None)
             }
-            Self::Unit | Self::Length(_) | Self::OptionalLength(_) | Self::Exists(_) | Self::Hash(_) | Self::Fence(_) | Self::OptionalCatalog(None) | Self::OptionalLease(None) => Ok(None),
+            Self::Unit | Self::Length(_) | Self::WalSegmentState(_) | Self::OptionalLength(_) | Self::Exists(_) | Self::Hash(_) | Self::Fence(_) | Self::OptionalCatalog(None) | Self::OptionalLease(None) => Ok(None),
         }
     }
 
@@ -2325,7 +2341,7 @@ impl DbIoResult {
             Self::OptionalCatalog(Some((pages, _))) => pages.terminal_is_empty(),
             Self::List(list) => list.terminal_is_empty(),
             Self::Lease(lease) | Self::OptionalLease(Some(lease)) => lease.terminal_is_empty(),
-            Self::Unit | Self::Length(_) | Self::OptionalLength(_) | Self::Exists(_) | Self::Hash(_) | Self::Fence(_) | Self::OptionalCatalog(None) | Self::OptionalLease(None) => true,
+            Self::Unit | Self::Length(_) | Self::WalSegmentState(_) | Self::OptionalLength(_) | Self::Exists(_) | Self::Hash(_) | Self::Fence(_) | Self::OptionalCatalog(None) | Self::OptionalLease(None) => true,
         }
     }
 
@@ -2347,7 +2363,7 @@ impl DbIoResult {
                 lease.result_handback = Some(handle);
                 true
             }
-            Self::Unit | Self::Length(_) | Self::OptionalLength(_) | Self::Exists(_) | Self::Hash(_) | Self::Fence(_) | Self::OptionalCatalog(None) | Self::OptionalLease(None) => false,
+            Self::Unit | Self::Length(_) | Self::WalSegmentState(_) | Self::OptionalLength(_) | Self::Exists(_) | Self::Hash(_) | Self::Fence(_) | Self::OptionalCatalog(None) | Self::OptionalLease(None) => false,
         }
     }
 }
@@ -3881,17 +3897,17 @@ fn db_io_lost_owner_close_opportunity(owner: &mut DbIoLostOwner) -> Result<bool,
                     *owner = Some(backend);
                     *pool = Some(worker_pool);
                     DB_IO_RETIREMENT_PRESSURE_FAULT.store(true, std::sync::atomic::Ordering::Release);
-                    return Ok(true);
+                    return Ok(false);
                 }
             }
         }
         DbIoLostOwner::ResultLease { handle, result } => {
             if let Some(owner) = result.as_mut() {
                 if owner.close_step()?.is_some() {
-                    return Ok(true);
+                    return Ok(false);
                 }
                 *result = None;
-                return Ok(true);
+                return Ok(false);
             }
             db_io_result_handback(*handle)?;
             true
@@ -4298,27 +4314,27 @@ async fn db_io_wait_task_retirement(handle: DbIoTaskHandle, result_retained: boo
     }).await
 }
 
+const DB_IO_MAINTENANCE_CLASSES: usize = 7;
+static DB_IO_MAINTENANCE_CURSOR: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+fn db_io_maintenance_turn(cursor: &std::sync::atomic::AtomicUsize, mut opportunity: impl FnMut(usize) -> Result<bool, DbError>) -> Result<bool, DbError> {
+    let start = cursor.fetch_add(1, std::sync::atomic::Ordering::Relaxed) % DB_IO_MAINTENANCE_CLASSES;
+    for offset in 0..DB_IO_MAINTENANCE_CLASSES { if opportunity((start + offset) % DB_IO_MAINTENANCE_CLASSES)? { return Ok(true); } }
+    Ok(false)
+}
+
 /// @emoji 🧹 One fixed mounted DB I/O retry, page, platform or terminal-close opportunity.
 pub fn db_io_maintenance_step() -> Result<bool, DbError> {
-    if db_io_lost_owner_close_step()? {
-        return Ok(true);
-    }
-    if db_io_page_maintenance_step()?.is_some() {
-        return Ok(true);
-    }
-    if db_io_platform_maintenance_step()? {
-        return Ok(true);
-    }
-    if db_io_retry_maintenance_step() {
-        return Ok(true);
-    }
-    if db_io_rejected_backend_maintenance_step()? {
-        return Ok(true);
-    }
-    if db_io_backend_maintenance_step()? {
-        return Ok(true);
-    }
-    Ok(db_io_task_close_step()?.is_some())
+    db_io_maintenance_turn(&DB_IO_MAINTENANCE_CURSOR, |class| match class {
+        0 => db_io_lost_owner_close_step(),
+        1 => Ok(db_io_page_maintenance_step()?.is_some()),
+        2 => db_io_platform_maintenance_step(),
+        3 => Ok(db_io_retry_maintenance_step()),
+        4 => db_io_rejected_backend_maintenance_step(),
+        5 => db_io_backend_maintenance_step(),
+        6 => Ok(db_io_task_close_step()?.is_some()),
+        _ => unreachable!(),
+    })
 }
 
 impl Drop for DbIoTaskOperation {
@@ -4559,10 +4575,14 @@ pub struct StorageCapabilities {
 //#endregion 🔖️Capabilities
 
 //#region 🔖️WalStorage
+#[path = "🔐️writer/🦀️.rs"]
+pub(crate) mod writer;
+
 /// @emoji 📜️ Raw, per-document, per-segment append-only byte storage — `db_wal` frames its own
 /// `.spr` records on top of what this trait stores; this trait never interprets a byte written
-/// through it. A document's WAL is a sequence of segments identified by a dense `u64` index;
-/// exactly one segment (the highest-index one not yet `seal`ed) is ever "active" at a time.
+/// through it. A document's WAL is a sequence of segments identified by a dense `u64` index.
+/// At most one segment is active; a transient all-sealed sequence is valid while its owner is
+/// rotating to a new segment.
 pub trait WalStorage: Send + Sync {
     /// @emoji 🆕️ Creates a new, empty, unsealed segment `index` for `document`. Errors
     /// `AlreadyExists` if `index` already exists for `document`.
@@ -4588,6 +4608,9 @@ pub trait WalStorage: Send + Sync {
 
     /// @emoji 📏️ The current length in bytes of segment `index`.
     async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError>;
+
+    /// @emoji 🚦️ Observes whether segment `index` accepts writes, without mutating storage.
+    async fn segment_state(&self, document: &ArtifactId, index: u64) -> Result<WalSegmentState, DbError>;
 
     /// @emoji 📋️ Every segment index that exists for `document`, ascending. Empty (not an error)
     /// if `document` has no WAL yet.
@@ -4972,6 +4995,21 @@ impl<'a> WalStorage for WalRef<'a> {
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.segment_len(document, index).await,
             Self::Fault(s) => Box::pin(s.segment_len(document, index)).await,
+        }
+    }
+
+    async fn segment_state(&self, document: &ArtifactId, index: u64) -> Result<WalSegmentState, DbError> {
+        match self {
+            Self::Memory(s) => s.segment_state(document, index).await,
+            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            Self::Fs(s) => s.segment_state(document, index).await,
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(s) => s.segment_state(document, index).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(s) => s.segment_state(document, index).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(s) => s.segment_state(document, index).await,
+            Self::Fault(s) => Box::pin(s.segment_state(document, index)).await,
         }
     }
 
@@ -5853,7 +5891,7 @@ impl DbIoTaskExecutor for MemoryDbIoExecutor {
                     return Err(DbError::InvalidArgument(format!("cannot append to sealed wal segment {index}")));
                 }
                 let next_len = segment.len.checked_add(input.len() as u64).ok_or(DbError::LimitExceeded("memory WAL retained length"))?;
-                check_len(next_len, MAX_READ_BYTES, "memory WAL retained length")?;
+                check_len(next_len, DB_IO_MAX_READ_BYTES, "memory WAL retained length")?;
                 if !input.is_empty() {
                     let slot = segment.chunks.iter_mut().find(|chunk| chunk.is_none()).ok_or(DbError::LimitExceeded("memory WAL retained chunk items"))?;
                     *slot = Some(self.retain_pages(input)?);
@@ -5918,6 +5956,11 @@ impl DbIoTaskExecutor for MemoryDbIoExecutor {
                 let wal = lock(&self.wal);
                 let length = wal.iter().flatten().find(|owner| owner.document == *document && owner.index == *index).map(|owner| owner.segment.len).ok_or_else(|| DbError::NotFound("memory WAL segment not found".to_string()))?;
                 complete(DbIoResult::Length(length))
+            }
+            DbIoTask::WalState { document, index, .. } => {
+                let wal = lock(&self.wal);
+                let sealed = wal.iter().flatten().find(|owner| owner.document == *document && owner.index == *index).map(|owner| owner.segment.sealed).ok_or_else(|| DbError::NotFound("memory WAL segment not found".to_string()))?;
+                complete(DbIoResult::WalSegmentState(if sealed { WalSegmentState::Sealed } else { WalSegmentState::Active }))
             }
             DbIoTask::WalList { document, output, .. } => {
                 let mut cursors = lock(&self.operations);
@@ -6371,6 +6414,12 @@ impl WalStorage for MemoryStorage {
             _ => Err(DbError::Internal("memory WAL length result taxonomy".to_string())),
         }
     }
+    async fn segment_state(&self, document: &ArtifactId, index: u64) -> Result<WalSegmentState, DbError> {
+        match memory_execute(self.pool.as_ref(), DbIoTask::WalState { backend: self.control, document: memory_document(document)?, index }).await? {
+            DbIoResult::WalSegmentState(value) => Ok(value),
+            _ => Err(DbError::Internal("memory WAL state result taxonomy".to_string())),
+        }
+    }
     async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         match memory_execute(self.pool.as_ref(), DbIoTask::WalList { backend: self.control, document: memory_document(document)?, output: DbIoU64List::new() }).await? {
             DbIoResult::List(value) => Ok(value),
@@ -6399,7 +6448,7 @@ impl SnapshotStorage for MemoryStorage {
         }
     }
     async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<DbIoPages, DbError> {
-        match memory_execute(self.pool.as_ref(), DbIoTask::SnapshotRead { backend: self.control, document: memory_document(document)?, generation, output: memory_output(MAX_READ_BYTES)? }).await? {
+        match memory_execute(self.pool.as_ref(), DbIoTask::SnapshotRead { backend: self.control, document: memory_document(document)?, generation, output: memory_output(DB_IO_MAX_READ_BYTES)? }).await? {
             DbIoResult::Pages(value) => Ok(value),
             _ => Err(DbError::Internal("memory snapshot read result taxonomy".to_string())),
         }
@@ -6432,7 +6481,7 @@ impl PayloadStorage for MemoryStorage {
         }
     }
     async fn get(&self, hash: &ContentHash) -> Result<DbIoPages, DbError> {
-        match memory_execute(self.pool.as_ref(), DbIoTask::PayloadGet { backend: self.control, hash: *hash, output: memory_output(MAX_READ_BYTES)? }).await? {
+        match memory_execute(self.pool.as_ref(), DbIoTask::PayloadGet { backend: self.control, hash: *hash, output: memory_output(DB_IO_MAX_READ_BYTES)? }).await? {
             DbIoResult::Pages(value) => Ok(value),
             _ => Err(DbError::Internal("memory payload get result taxonomy".to_string())),
         }
@@ -6459,7 +6508,7 @@ impl PayloadStorage for MemoryStorage {
 
 impl CatalogStorage for MemoryStorage {
     async fn read_root(&self) -> Result<Option<(DbIoPages, EpochFence)>, DbError> {
-        match memory_execute(self.pool.as_ref(), DbIoTask::CatalogRead { backend: self.control, output: memory_output(MAX_READ_BYTES)? }).await? {
+        match memory_execute(self.pool.as_ref(), DbIoTask::CatalogRead { backend: self.control, output: memory_output(DB_IO_MAX_READ_BYTES)? }).await? {
             DbIoResult::OptionalCatalog(value) => Ok(value),
             _ => Err(DbError::Internal("memory catalog read result taxonomy".to_string())),
         }
@@ -6480,7 +6529,7 @@ impl IndexStorage for MemoryStorage {
         }
     }
     async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<DbIoPages, DbError> {
-        match memory_execute(self.pool.as_ref(), DbIoTask::IndexRead { backend: self.control, document: memory_document(document)?, run_id, output: memory_output(MAX_READ_BYTES)? }).await? {
+        match memory_execute(self.pool.as_ref(), DbIoTask::IndexRead { backend: self.control, document: memory_document(document)?, run_id, output: memory_output(DB_IO_MAX_READ_BYTES)? }).await? {
             DbIoResult::Pages(value) => Ok(value),
             _ => Err(DbError::Internal("memory index read result taxonomy".to_string())),
         }
@@ -6541,9 +6590,9 @@ mod fs_storage {
     use super::check_len;
     use super::{
         close_db_io_backend, register_db_io_backend, retire_db_io_backend, submit_db_io_task, ArtifactId, ByteRange, ContentHash, DbError, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoExecutionStep, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages,
-        DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, DurabilityClass, EpochFence, LeaseInfo, MAX_READ_BYTES,
+        DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, DurabilityClass, EpochFence, LeaseInfo, DB_IO_MAX_READ_BYTES,
     };
-    use super::{CatalogStorage, IndexStorage, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
+    use super::{CatalogStorage, IndexStorage, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalSegmentState, WalStorage};
     use semio_framework_async::WorkerPool;
     use std::io::{Read, Seek, SeekFrom, Write};
     use std::path::{Path, PathBuf};
@@ -6708,7 +6757,7 @@ mod fs_storage {
                 let mut file = std::fs::File::open(path).map_err(|error| open_err(error, || format!("database I/O object {} not found", path.display())))?;
                 let available = file.metadata().map_err(io_err)?.len().checked_sub(offset).ok_or_else(|| DbError::InvalidArgument("DB I/O read offset exceeds object length".to_string()))?;
                 let total = exact_len.unwrap_or(available);
-                check_len(total, MAX_READ_BYTES, "db_io typed filesystem read")?;
+                check_len(total, DB_IO_MAX_READ_BYTES, "db_io typed filesystem read")?;
                 if total > available {
                     return Err(DbError::InvalidArgument("DB I/O read range exceeds object length".to_string()));
                 }
@@ -6892,6 +6941,16 @@ mod fs_storage {
                     let path = segment_path(&self.document_dir("wal", document)?, *index);
                     let len = std::fs::metadata(path).map_err(|error| open_err(error, || format!("wal segment {index} not found")))?.len();
                     Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Length(len))))
+                }
+                DbIoTask::WalState { document, index, .. } => {
+                    let dir = self.document_dir("wal", document)?;
+                    std::fs::metadata(segment_path(&dir, *index)).map_err(|error| open_err(error, || format!("wal segment {index} not found")))?;
+                    let state = match std::fs::metadata(sealed_marker_path(&dir, *index)) {
+                        Ok(_) => WalSegmentState::Sealed,
+                        Err(error) if error.kind() == std::io::ErrorKind::NotFound => WalSegmentState::Active,
+                        Err(error) => return Err(io_err(error)),
+                    };
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::WalSegmentState(state))))
                 }
                 DbIoTask::WalList { document, output, .. } => {
                     if self.list_step(&self.document_dir("wal", document)?, "segment-", ".bin", output)? {
@@ -7245,7 +7304,7 @@ mod fs_storage {
         }
 
         async fn append(&self, document: &ArtifactId, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
-            check_len(bytes.len() as u64, MAX_READ_BYTES, "wal_storage::append")?;
+            check_len(bytes.len() as u64, DB_IO_MAX_READ_BYTES, "wal_storage::append")?;
             length(execute(self.pool.as_ref(), DbIoTask::WalAppend { backend: self.control, document: document_text(document)?, index, input: bytes }).await?)
         }
 
@@ -7258,7 +7317,7 @@ mod fs_storage {
         }
 
         async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<DbIoPages, DbError> {
-            if let Err(err) = check_len(range.len, MAX_READ_BYTES, "wal_storage::read") {
+            if let Err(err) = check_len(range.len, DB_IO_MAX_READ_BYTES, "wal_storage::read") {
                 return { Err(err) };
             }
             let output = output_writer(range.len)?;
@@ -7267,6 +7326,13 @@ mod fs_storage {
 
         async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
             length(execute(self.pool.as_ref(), DbIoTask::WalLength { backend: self.control, document: document_text(document)?, index }).await?)
+        }
+
+        async fn segment_state(&self, document: &ArtifactId, index: u64) -> Result<WalSegmentState, DbError> {
+            match execute(self.pool.as_ref(), DbIoTask::WalState { backend: self.control, document: document_text(document)?, index }).await? {
+                DbIoResult::WalSegmentState(state) => Ok(state),
+                _ => Err(DbError::Internal("filesystem WAL state result taxonomy".to_string())),
+            }
         }
 
         async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
@@ -7284,12 +7350,12 @@ mod fs_storage {
 
     impl SnapshotStorage for FsStorage {
         async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError> {
-            check_len(bytes.len() as u64, MAX_READ_BYTES, "snapshot_storage::write_generation")?;
+            check_len(bytes.len() as u64, DB_IO_MAX_READ_BYTES, "snapshot_storage::write_generation")?;
             unit(execute(self.pool.as_ref(), DbIoTask::SnapshotWrite { backend: self.control, document: document_text(document)?, generation, input: bytes }).await?)
         }
 
         async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<DbIoPages, DbError> {
-            pages(execute(self.pool.as_ref(), DbIoTask::SnapshotRead { backend: self.control, document: document_text(document)?, generation, output: output_writer(MAX_READ_BYTES)? }).await?)
+            pages(execute(self.pool.as_ref(), DbIoTask::SnapshotRead { backend: self.control, document: document_text(document)?, generation, output: output_writer(DB_IO_MAX_READ_BYTES)? }).await?)
         }
 
         async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
@@ -7307,7 +7373,7 @@ mod fs_storage {
 
     impl PayloadStorage for FsStorage {
         async fn put(&self, bytes: DbIoPages) -> Result<ContentHash, DbError> {
-            if let Err(err) = check_len(bytes.len() as u64, MAX_READ_BYTES, "payload_storage::put") {
+            if let Err(err) = check_len(bytes.len() as u64, DB_IO_MAX_READ_BYTES, "payload_storage::put") {
                 return { Err(err) };
             }
             match execute(self.pool.as_ref(), DbIoTask::PayloadPut { backend: self.control, input: bytes }).await? {
@@ -7317,7 +7383,7 @@ mod fs_storage {
         }
 
         async fn get(&self, hash: &ContentHash) -> Result<DbIoPages, DbError> {
-            pages(execute(self.pool.as_ref(), DbIoTask::PayloadGet { backend: self.control, hash: *hash, output: output_writer(MAX_READ_BYTES)? }).await?)
+            pages(execute(self.pool.as_ref(), DbIoTask::PayloadGet { backend: self.control, hash: *hash, output: output_writer(DB_IO_MAX_READ_BYTES)? }).await?)
         }
 
         async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
@@ -7338,14 +7404,14 @@ mod fs_storage {
 
     impl CatalogStorage for FsStorage {
         async fn read_root(&self) -> Result<Option<(DbIoPages, EpochFence)>, DbError> {
-            match execute(self.pool.as_ref(), DbIoTask::CatalogRead { backend: self.control, output: output_writer(MAX_READ_BYTES)? }).await? {
+            match execute(self.pool.as_ref(), DbIoTask::CatalogRead { backend: self.control, output: output_writer(DB_IO_MAX_READ_BYTES)? }).await? {
                 DbIoResult::OptionalCatalog(root) => Ok(root),
                 _ => Err(typed_result_fault("optional catalog root")),
             }
         }
 
         async fn cas_root(&self, expected: EpochFence, new_bytes: DbIoPages) -> Result<EpochFence, DbError> {
-            if let Err(err) = check_len(new_bytes.len() as u64, MAX_READ_BYTES, "catalog_storage::cas_root") {
+            if let Err(err) = check_len(new_bytes.len() as u64, DB_IO_MAX_READ_BYTES, "catalog_storage::cas_root") {
                 return { Err(err) };
             }
             match execute(self.pool.as_ref(), DbIoTask::CatalogCas { backend: self.control, expected, input: new_bytes }).await? {
@@ -7374,12 +7440,12 @@ mod fs_storage {
 
     impl IndexStorage for FsStorage {
         async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: DbIoPages) -> Result<(), DbError> {
-            check_len(bytes.len() as u64, MAX_READ_BYTES, "index_storage::write_run")?;
+            check_len(bytes.len() as u64, DB_IO_MAX_READ_BYTES, "index_storage::write_run")?;
             unit(execute(self.pool.as_ref(), DbIoTask::IndexWrite { backend: self.control, document: document_text(document)?, run_id, input: bytes }).await?)
         }
 
         async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<DbIoPages, DbError> {
-            pages(execute(self.pool.as_ref(), DbIoTask::IndexRead { backend: self.control, document: document_text(document)?, run_id, output: output_writer(MAX_READ_BYTES)? }).await?)
+            pages(execute(self.pool.as_ref(), DbIoTask::IndexRead { backend: self.control, document: document_text(document)?, run_id, output: output_writer(DB_IO_MAX_READ_BYTES)? }).await?)
         }
 
         async fn list_runs(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
@@ -8777,6 +8843,121 @@ mod db_io_retained_fixtures {
         assert_eq!(ledger_witness(), before);
     }
 
+    #[semio_framework_async_macros::async_test]
+    async fn db_io_lost_result_lease_retains_every_page_and_final_handback() {
+        let _serial = fixture_serial();
+        let before = ledger_witness();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🔐️writer/🧪️fixtures/🔣️.json")).unwrap();
+        let pool = db_io_test_pool();
+        let counter = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let control = register_db_io_backend(DbIoBackendKind::Memory, Box::new(BlockingOutputLifecycleLawExecutor { terminal: false, success_steps: counter.clone(), cancel_steps: counter.clone(), abandon_steps: counter }), pool.clone()).unwrap();
+        let output = DbIoPageWriter::try_reserve(fixture["resultRetirement"]["pages"].as_u64().unwrap() as usize).unwrap();
+        let task = DbIoTask::PayloadGet { backend: control, hash: ContentHash([0x71; 32]), output };
+        let operation = submit_db_io_task(pool.as_ref(), task).unwrap_or_else(|(error, _)| panic!("{error}"));
+        let mut lease = operation.await.unwrap();
+        let handle = lease.handle;
+        db_io_wait_task_retirement(handle, true).await.unwrap();
+        let mut owner = DbIoLostOwner::ResultLease { handle, result: lease.result.take() };
+        lease.transferred = true;
+        drop(lease);
+        let mut trace = Vec::new();
+        for _ in fixture["resultRetirement"]["terminal"].as_array().unwrap() { trace.push(db_io_lost_owner_close_opportunity(&mut owner).unwrap()); }
+        assert!(matches!(owner, DbIoLostOwner::ResultLease { result: None, .. }));
+        drain_control_tasks(control).await;
+        retire_db_io_backend(control).unwrap();
+        close_db_io_backend(control).await.unwrap();
+        assert_eq!(ledger_witness(), before);
+        assert_eq!(serde_json::to_value(trace).unwrap(), fixture["resultRetirement"]["terminal"]);
+        eprintln!("[DEBUG] lost DB result retained both pages, shell, terminal result, and final lease handback across separate close opportunities");
+    }
+
+    #[test]
+    fn db_io_maintenance_rotates_ready_and_faulted_classes_without_starvation() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🔐️writer/🧪️fixtures/🔣️.json")).unwrap();
+        let row = &fixture["maintenanceFairness"];
+        assert_eq!(DB_IO_MAINTENANCE_CLASSES, row["classes"].as_array().unwrap().len());
+        for (name, faults) in [("continuouslyReady", false), ("firstClassFaults", true)] {
+            let cursor = std::sync::atomic::AtomicUsize::new(0);
+            let mut trace = Vec::new();
+            for _ in row[name].as_array().unwrap() {
+                let mut attempted = 0;
+                let result = db_io_maintenance_turn(&cursor, |class| {
+                    attempted += 1;
+                    trace.push(class);
+                    if faults && class == 0 { return Err(DbError::Unavailable("retained maintenance fixture fault".to_string())); }
+                    Ok(true)
+                });
+                assert_eq!(attempted, 1);
+                assert_eq!(result.is_err(), faults && trace.last() == Some(&0));
+            }
+            assert_eq!(serde_json::to_value(trace).unwrap(), row[name]);
+        }
+        let cursor = std::sync::atomic::AtomicUsize::new(0);
+        let mut attempted = 0;
+        assert!(!db_io_maintenance_turn(&cursor, |_| { attempted += 1; Ok(false) }).unwrap());
+        assert_eq!(attempted, DB_IO_MAINTENANCE_CLASSES);
+        eprintln!("[DEBUG] mounted DB maintenance rotates every continuously-ready or faulted class and bounds a fully idle scan to one round");
+    }
+
+    struct RejectedBackendPressureLawSlots;
+
+    impl RejectedBackendPressureLawSlots {
+        fn reserve() -> Self {
+            let mut registry = db_io_rejected_backends().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            assert!(registry.slots.iter().all(|slot| slot.generation == 0));
+            assert_ne!(registry.next_generation, u64::MAX);
+            for slot in &mut registry.slots { slot.generation = u64::MAX; }
+            Self
+        }
+    }
+
+    impl Drop for RejectedBackendPressureLawSlots {
+        fn drop(&mut self) {
+            let mut registry = db_io_rejected_backends().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            for slot in &mut registry.slots {
+                if slot.generation == u64::MAX && slot.executor.is_none() && slot.pool.is_none() { *slot = DbIoRejectedBackendSlot::empty(); }
+            }
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn db_io_lost_backend_retains_exact_owner_under_rejected_registry_pressure() {
+        let _serial = fixture_serial();
+        while db_io_lost_owner_close_step().unwrap() {}
+        let before = ledger_witness();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🔐️writer/🧪️fixtures/🔣️.json")).unwrap();
+        let row = &fixture["backendPressure"];
+        assert_eq!(DB_IO_BACKEND_CONTROLS, row["capacity"].as_u64().unwrap() as usize);
+        let pressure = DB_IO_RETIREMENT_PRESSURE_FAULT.swap(false, std::sync::atomic::Ordering::AcqRel);
+        let sentinels = RejectedBackendPressureLawSlots::reserve();
+        let credit = DbIoCredit { pages: 0, bytes: std::mem::size_of::<BlockingCompleteLawExecutor>() as u64, items: 1, controls: 1 };
+        let operation = db_io_backend_owner_reserve(credit).unwrap();
+        let pool = db_io_test_pool();
+        assert!(db_io_try_park_lost_owner(DbIoLostOwner::Backend { owner: Some(Box::new(BlockingCompleteLawExecutor { terminal: false })), operation, credit, pool: Some(pool.clone()) }).is_ok());
+        assert!(db_io_lost_owner_close_step().unwrap());
+        assert!(DB_IO_RETIREMENT_PRESSURE_FAULT.load(std::sync::atomic::Ordering::Acquire));
+        let retained = {
+            let owners = DB_IO_LOST_OWNERS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            matches!(&owners[0], Some(DbIoLostOwner::Backend { owner: Some(owner), operation: actual_operation, credit: actual_credit, pool: Some(actual_pool) }) if !owner.backend_terminal_is_empty() && *actual_operation == operation && *actual_credit == credit && Arc::ptr_eq(actual_pool, &pool))
+        };
+        assert_eq!(retained, row["retainedWhenFull"].as_bool().unwrap());
+        assert_eq!(ledger_witness().0, before.0.checked_add(credit).unwrap());
+        drop(sentinels);
+        assert!(db_io_lost_owner_close_step().unwrap());
+        assert!(!db_io_lost_owner_close_step().unwrap());
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        loop {
+            let terminal = db_io_rejected_backends().lock().unwrap_or_else(std::sync::PoisonError::into_inner).slots.iter().all(|slot| slot.generation == 0);
+            if terminal { assert_eq!(terminal, row["terminalAfterCapacityReturns"].as_bool().unwrap()); break; }
+            assert!(std::time::Instant::now() < deadline, "retained rejected backend did not finish after capacity returned");
+            db_io_rejected_backend_maintenance_step().unwrap();
+            semio_framework_async::yield_once().await;
+        }
+        assert_eq!(ledger_witness(), before);
+        DB_IO_RETIREMENT_PRESSURE_FAULT.store(pressure, std::sync::atomic::Ordering::Release);
+        eprintln!("[DEBUG] full rejected-backend registry preserved the exact lost executor, pool, operation, and credit until normal lane retirement returned every owner");
+    }
+
     #[test]
     fn db_io_lost_page_handle_resumes_the_same_retirement_cursor() {
         let _serial = fixture_serial();
@@ -9017,6 +9198,10 @@ mod tests {
         let len_after_second = block_on_ready(storage.append(&document, 0, pages(b"world"))).await.unwrap();
         assert_eq!(len_after_second, 11);
         assert_eq!(block_on_ready(storage.segment_len(&document, 0)).await.unwrap(), 11);
+        assert_eq!(block_on_ready(storage.segment_state(&document, 0)).await.unwrap(), WalSegmentState::Active);
+        assert_eq!(block_on_ready(storage.segment_len(&document, 0)).await.unwrap(), 11);
+        assert_eq!(block_on_ready(storage.read(&document, 0, ByteRange { offset: 0, len: 11 })).await.unwrap(), b"hello world");
+        assert!(matches!(block_on_ready(storage.segment_state(&document, 99)).await, Err(DbError::NotFound(_))));
 
         let read_back = block_on_ready(storage.read(&document, 0, ByteRange { offset: 6, len: 5 })).await.unwrap();
         assert_eq!(read_back, b"world");
@@ -9032,6 +9217,9 @@ mod tests {
         assert_eq!(block_on_ready(storage.list_segments(&document)).await.unwrap(), vec![0, 1]);
 
         block_on_ready(storage.seal(&document, 0)).await.unwrap();
+        assert_eq!(block_on_ready(storage.segment_state(&document, 0)).await.unwrap(), WalSegmentState::Sealed);
+        assert_eq!(block_on_ready(storage.segment_len(&document, 0)).await.unwrap(), 6);
+        assert_eq!(block_on_ready(storage.read(&document, 0, ByteRange { offset: 0, len: 6 })).await.unwrap(), b"hello ");
         assert!(matches!(block_on_ready(storage.append(&document, 0, pages(b"!"))).await, Err(DbError::InvalidArgument(_))));
         assert!(matches!(block_on_ready(storage.truncate_tail(&document, 0, 0)).await, Err(DbError::InvalidArgument(_))));
 
@@ -9225,6 +9413,9 @@ mod tests {
         let storage: DbBackend = DbBackend::Memory(MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap());
         let document: ArtifactId = "doc-umbrella".into();
         block_on_ready(poll_once(storage.wal()).await.create_segment(&document, 0)).await.unwrap();
+        assert_eq!(block_on_ready(poll_once(storage.wal()).await.segment_state(&document, 0)).await.unwrap(), WalSegmentState::Active);
+        block_on_ready(poll_once(storage.wal()).await.seal(&document, 0)).await.unwrap();
+        assert_eq!(block_on_ready(poll_once(storage.wal()).await.segment_state(&document, 0)).await.unwrap(), WalSegmentState::Sealed);
         block_on_ready(poll_once(storage.catalog()).await.cas_root(EpochFence::INITIAL, pages(b"root"))).await.unwrap();
 
         let capabilities = poll_once(storage.capabilities()).await;
@@ -9257,10 +9448,26 @@ mod tests {
     /// test helper convention. The test-owned process pool drives the same retained operation path.
     #[cfg(feature = "fs")]
     async fn fs_scratch(name: &str) -> FsStorage {
+        fs_scratch_at(name).await.0
+    }
+
+    #[cfg(feature = "fs")]
+    async fn fs_scratch_at(name: &str) -> (FsStorage, std::path::PathBuf) {
         let pid = std::process::id();
         let counter = SCRATCH_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let dir = std::env::temp_dir().join(format!("db_storage_test_{name}_{pid}_{counter}"));
-        poll_once(FsStorage::open(db_io_test_pool(), &dir)).await.unwrap()
+        (poll_once(FsStorage::open(db_io_test_pool(), &dir)).await.unwrap(), dir)
+    }
+
+    #[cfg(feature = "fs")]
+    #[semio_framework_async_macros::async_test]
+    async fn fs_storage_stale_seal_marker_does_not_resurrect_missing_segment() {
+        let (storage, root) = fs_scratch_at("stale_wal_marker").await;
+        let document: ArtifactId = "stale-marker".into();
+        block_on_ready(storage.create_segment(&document, 0)).await.unwrap();
+        block_on_ready(storage.seal(&document, 0)).await.unwrap();
+        std::fs::remove_file(root.join("wal/stale-marker/segment-00000000000000000000.bin")).unwrap();
+        assert!(matches!(block_on_ready(storage.segment_state(&document, 0)).await, Err(DbError::NotFound(_))));
     }
 
     #[cfg(feature = "fs")]

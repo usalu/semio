@@ -281,6 +281,51 @@ mod tests {
         scan.finish()
     }
 
+    #[semio_framework_async_macros::async_test]
+    async fn retained_spr_resume_preserves_exact_prefix_and_commit_chain() {
+        let fixture = fixture();
+        let bytes = actual_bytes(&fixture).await;
+        let resume = &fixture["resume"];
+        let record = &resume["record"];
+        for cut in resume["cuts"].as_array().unwrap() {
+            let cut = cut.as_u64().unwrap() as usize;
+            let span = scan(&bytes[..cut], 7, RetainedSprLimits::default()).unwrap();
+            let end = span.end() as usize;
+            let sequence = span.sequence();
+            let frames = span.frames();
+            let previous_offset = span.commit_offset();
+            let previous_chain = *span.chain();
+            let mut writer = super::super::SprWriter::resume_verified(bytes[..end].to_vec(), span).await.unwrap();
+            assert_eq!(writer.position().await, end as u64);
+            writer.write_record(record["kind"].as_u64().unwrap() as u8, true, &hex(record["payloadHex"].as_str().unwrap()), crate::codec::ids::CodecId(0)).await.unwrap();
+            let offset = writer.commit().await.unwrap() as usize;
+            let resumed = writer.into_sink().await;
+            assert_eq!(&resumed[..end], &bytes[..end]);
+            assert_eq!(resumed.len() - end, resume["addedBytes"].as_u64().unwrap() as usize);
+            let next = scan(&resumed, 1, RetainedSprLimits::default()).unwrap();
+            assert_eq!(next.sequence(), sequence + 1);
+            assert_eq!(next.frames(), frames + 2);
+            assert_eq!(next.end(), resumed.len() as u64);
+            assert_eq!(next.tail(), 0);
+            assert_eq!(u64::from_le_bytes(resumed[offset + 11..offset + 19].try_into().unwrap()), previous_offset);
+            let mut independent = blake3::Hasher::new();
+            independent.update(&previous_chain);
+            independent.update(blake3::hash(&resumed[end..offset]).as_bytes());
+            assert_eq!(&resumed[offset + 35..offset + 67], independent.finalize().as_bytes());
+            for delta in resume["wrongSinkOffsets"].as_array().unwrap() {
+                let span = scan(&bytes[..cut], 7, RetainedSprLimits::default()).unwrap();
+                let wrong_len = (span.end() as i64 + delta.as_i64().unwrap()) as usize;
+                assert!(super::super::SprWriter::resume_verified(vec![0; wrong_len], span).await.is_err());
+            }
+        }
+        let span = scan(&bytes, 7, RetainedSprLimits::default()).unwrap();
+        let mut writer = super::super::SprWriter::resume_verified(bytes.clone(), span).await.unwrap();
+        writer.next_commit_seq = resume["exhaustedSequence"].as_str().unwrap().parse().unwrap();
+        assert!(writer.commit().await.is_err());
+        assert_eq!(writer.into_sink().await, bytes);
+        eprintln!("[DEBUG] SPR resume: 6 verified prefixes survive byte-exactly; chain/sequence/offset continue; 12 wrong sink lengths and exhausted sequence denied");
+    }
+
     async fn verify_compressed_fixture(fixture: &serde_json::Value) {
         let header = hex(fixture["headerHex"].as_str().unwrap());
         let frame = |kind, flags, payload: &[u8]| {

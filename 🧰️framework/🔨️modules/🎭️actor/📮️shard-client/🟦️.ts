@@ -377,8 +377,18 @@ type OutboundMessage =
 type InboundMessage =
   | { readonly kind: "result"; readonly requestId: string; readonly ok: true; readonly value: unknown }
   | { readonly kind: "result"; readonly requestId: string; readonly ok: false; readonly error: string; readonly stack?: string; readonly type?: string; readonly framesBytes?: number }
-  | { readonly kind: "heartbeat"; readonly turnSeq: number }
+  /** 🫀️ `phase` names the generated worker's await boundary this beat was emitted at
+   * (`module-fetch`/`module-ready`/`actor-ready`, or `progress` from its while-busy ticker); absent on
+   * the unconditional start-of-request beat. Diagnostic only — {@link evaluateShardLiveness} treats
+   * every beat identically, so a future phase needs no host change to keep a shard alive. */
+  | { readonly kind: "heartbeat"; readonly turnSeq: number; readonly phase?: string }
   | { readonly kind: "trap"; readonly actorId: string; readonly activationGeneration: bigint | null; readonly message: string }
+  /** 🩺️ The worker's own account of a fault the host would otherwise see as an anonymous `ErrorEvent`
+   * (or not at all): an exception escaping a message handler, an unhandled rejection, or a caught
+   * handler error, tagged with the boundary it happened on (`load-bridge`/`instantiate`/`first-step`/
+   * the request kind), the actor and the module URL. Carries no `requestId` — it is never an answer to
+   * anything, so it is dispatched before the generic pending lookup, exactly like `"trap"`. */
+  | { readonly kind: "worker-fault"; readonly source: string; readonly phase: string; readonly actorId: string | null; readonly moduleUrl: string | null; readonly message: string; readonly stack?: string; readonly filename?: string; readonly lineno?: number }
   /** 📨️ terra-shard-effect-bridge: the worker→kernel direction of `🟨️.js`'s `effectRequest`
    * (🧪️ terra-web-bridges) — an async host import the guest `.await`ed. Reuses `ShardFrame`'s own
    * `Envelope` shape verbatim (`frame.envelope.payload` is `{kind:"effect-request", payload:{effect,
@@ -388,8 +398,21 @@ type InboundMessage =
 //#endregion 📨️WireMessages
 
 //#region ⏱️Heartbeat
-const DEFAULT_HEARTBEAT_TIMEOUT_MS = 5000;
-const HEARTBEAT_MISSED_LIMIT = 3;
+/** 🫀️ THE shard liveness policy — one record every liveness clock in the system reads, so a value can
+ * never drift between the host watchdog here, the generated `🟨️shard-worker.js` progress ticker
+ * (`🔌️plugin/📦️packages/🟦️typescript/🟦️.ts`'s `shardWorkerSource`, which interpolates
+ * `progressIntervalMs` straight out of the fixture below) and the shell's per-plugin load deadline
+ * (`🛠️ShellHelpers/🟦️.tsx`'s `loadPluginModuleResilient`). Language-agnostic owner:
+ * `🧬️schema.json` (`semio.actor.shard-liveness.v1`) + `🧪️fixture/🔣️.json`'s `policy` block; this
+ * mirror is asserted field-for-field equal to that fixture by this file's own in-source suite, so a
+ * literal edited here alone fails closed rather than silently diverging. */
+export const SHARD_LIVENESS_POLICY = Object.freeze({
+  heartbeatTimeoutMs: 5000,
+  missedLimit: 3,
+  progressIntervalMs: 1000,
+  pluginLoadIdleTimeoutMs: 30_000,
+  pluginLoadCeilingMs: 300_000,
+});
 /** 🚦️ terra-shard-effect-bridge: default cap on CONCURRENT unresolved `effect-request`s per actor —
  * see {@link ShardClientOptions.maxOutstandingEffectsPerActor}'s own doc for why this mirrors
  * `QuotaSchema.outstanding_requests` without being it. */
@@ -398,6 +421,7 @@ const DEFAULT_MAX_OUTSTANDING_EFFECTS_PER_ACTOR = 64;
 type ShardHeartbeatState = {
   lastHeartbeatAtMs: number;
   lastHeartbeatTurnSeq: number;
+  lastLivenessAtMs: number;
   oldestPendingStartedAtMs: number | null;
   missedCount: number;
   lastMissCountedAtMs: number;
@@ -407,7 +431,124 @@ type ShardHeartbeatState = {
  * that starts in the very same tick as `spawnShard` doesn't spuriously count spawn-time as proof of
  * life for that turn's whole timeout window. */
 function freshHeartbeatState(nowMs: number): ShardHeartbeatState {
-  return { lastHeartbeatAtMs: Number.NEGATIVE_INFINITY, lastHeartbeatTurnSeq: 0, oldestPendingStartedAtMs: null, missedCount: 0, lastMissCountedAtMs: nowMs };
+  return { lastHeartbeatAtMs: Number.NEGATIVE_INFINITY, lastHeartbeatTurnSeq: 0, lastLivenessAtMs: Number.NEGATIVE_INFINITY, oldestPendingStartedAtMs: null, missedCount: 0, lastMissCountedAtMs: nowMs };
+}
+
+/** 🫀️ One watchdog window's worth of input — every field the rule below reads, and nothing else, so
+ * the same decision can be replayed from a JSON timeline with no `ShardClient` in the picture. */
+export type ShardLivenessWindow = {
+  readonly nowMs: number;
+  readonly oldestPendingStartedAtMs: number | null;
+  readonly lastLivenessAtMs: number;
+  readonly missedCount: number;
+  readonly lastMissCountedAtMs: number;
+  readonly heartbeatTimeoutMs: number;
+};
+
+export type ShardLivenessDecision = {
+  readonly missedCount: number;
+  readonly lastMissCountedAtMs: number;
+  readonly terminate: boolean;
+};
+
+/** 🚑️ design-runtime.md §1 `FailurePolicy`, restated so BUSY and DEAD stop being the same thing.
+ *
+ * A shard is only a candidate while it has an in-flight request — an idle shard can never be flagged.
+ * The clock that matters is `lastLivenessAtMs`: the last moment ANY message arrived from that worker
+ * (a start-of-request heartbeat, one of the generated worker's boundary/progress heartbeats, a
+ * `result`, a `trap`, an effect `frame`). `max(lastLivenessAtMs, oldestPendingStartedAtMs)` is the
+ * newest instant this shard is PROVEN to have been alive with work outstanding; anything older than
+ * `heartbeatTimeoutMs` is real silence and costs one miss per window, `missedLimit` of them in a row
+ * terminating the worker.
+ *
+ * The pre-fix rule compared `lastHeartbeatAtMs >= oldestPendingStartedAtMs` — an absolute timestamp
+ * against a DIFFERENT request's start — so a worker that heartbeated once and then wedged forever
+ * looked healthy, while a worker legitimately busy inside one multi-second `await import()` of a
+ * multi-MB wasm component (nothing to heartbeat about mid-turn) was killed the moment an unrelated
+ * newer request became the oldest pending. That is the `shard 0 terminated` boot fault this rule
+ * replaces: liveness is now proven CONTINUOUSLY by the worker's progress ticker (which can only fire
+ * while its event loop is actually running), so "busy" keeps proving itself and "dead" — no messages
+ * at all — still dies after exactly the same `missedLimit` windows. */
+export function evaluateShardLiveness(window: ShardLivenessWindow): ShardLivenessDecision {
+  const unchanged = { missedCount: window.missedCount, lastMissCountedAtMs: window.lastMissCountedAtMs, terminate: false };
+  if (window.oldestPendingStartedAtMs === null) return unchanged;
+  const provenAliveAtMs = Math.max(window.lastLivenessAtMs, window.oldestPendingStartedAtMs);
+  if (window.nowMs - provenAliveAtMs <= window.heartbeatTimeoutMs) return unchanged;
+  if (window.nowMs - window.lastMissCountedAtMs < window.heartbeatTimeoutMs) return unchanged;
+  const missedCount = window.missedCount + 1;
+  return { missedCount, lastMissCountedAtMs: window.nowMs, terminate: missedCount >= SHARD_LIVENESS_POLICY.missedLimit };
+}
+
+/** 🩺️ Names the one failure the shell's boot path may retry rather than surface: the watchdog above
+ * (or a `worker.onerror` crash) took this shard down under load, `rebuild()` already replaced it, and
+ * every request in flight was rejected with this message. */
+export function isShardLostError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : typeof error === "string" ? error : "";
+  return /shard \d+ (?:terminated|worker crashed)/.test(message);
+}
+
+/** 🩺️ A `Worker`'s `onerror` hands the main thread an `ErrorEvent`, and `console.error`-ing that
+ * object prints `Event` and nothing else — which is all the boot log said while four shards died on a
+ * top-of-file `throw` inside the worker script. Reads the three fields that actually name the cause
+ * (`message`/`filename`/`lineno`) and degrades explicitly when the event is the redacted, message-less
+ * kind a cross-origin or failed-to-load worker script produces. */
+export function describeShardWorkerError(event: unknown): string {
+  const record = (event ?? {}) as { readonly message?: unknown; readonly filename?: unknown; readonly lineno?: unknown; readonly colno?: unknown; readonly type?: unknown; readonly error?: { readonly message?: unknown } };
+  const message =
+    typeof record.message === "string" && record.message.length > 0
+      ? record.message
+      : typeof record.error?.message === "string" && record.error.message.length > 0
+        ? record.error.message
+        : typeof record.type === "string"
+          ? `redacted "${record.type}" event with no message — the worker script threw before it could report, or failed to load`
+          : String(event);
+  if (typeof record.filename !== "string" || record.filename.length === 0) return message;
+  return `${message} at ${record.filename}:${typeof record.lineno === "number" ? record.lineno : "?"}:${typeof record.colno === "number" ? record.colno : "?"}`;
+}
+
+/** 🩺️ One readable line out of a `worker-fault` payload — phase, actor, module URL and location, in
+ * that order, so a boot log names WHERE inside the worker it died rather than only THAT it did. */
+export function formatShardWorkerFault(shardIndex: number, fault: { readonly source: string; readonly phase: string; readonly actorId: string | null; readonly moduleUrl: string | null; readonly message: string; readonly filename?: string; readonly lineno?: number }): string {
+  const where = fault.filename ? ` at ${fault.filename}:${fault.lineno ?? "?"}` : "";
+  const actor = fault.actorId ? ` actor=${fault.actorId}` : "";
+  const module = fault.moduleUrl ? ` module=${fault.moduleUrl}` : "";
+  return `shard ${shardIndex} worker fault [${fault.source}/${fault.phase}]${actor}${module}: ${fault.message}${where}`;
+}
+
+/** 🧪️ The one capability every shard worker needs before it can host anything: jco's glue for the
+ * fully async-lifted `world actor` unconditionally constructs `WebAssembly.Suspending` /
+ * `WebAssembly.promising`, so without JSPI the worker script throws at MODULE TOP LEVEL — every shard
+ * in the pool dies at spawn and the boot degrades into dozens of unrelated-looking load timeouts.
+ * Probed on the main thread, BEFORE any worker exists, so that failure is reported once, by name,
+ * instead of `missedLimit` windows later as four anonymous `Event`s. */
+export const SHARD_JSPI_FAULT_CODE = "plugin.runtime.jspi-unavailable";
+
+/** 🌐️ English first, German second, no default language (this is net-new operator vocabulary and the
+ * shell's own chrome dictionary is not this module's to extend). */
+export const SHARD_JSPI_FAULT_TEXT = Object.freeze({
+  en: "This browser cannot run semio plugins: WebAssembly JavaScript Promise Integration (WebAssembly.Suspending / WebAssembly.promising) is unavailable. Chromium-based browsers ship it on by default; Firefox needs javascript.options.wasm_js_promise_integration in about:config, Node.js needs --experimental-wasm-jspi, and headless Chromium needs --enable-features=WebAssemblyJavaScriptPromiseIntegration.",
+  de: "Dieser Browser kann semio-Plugins nicht ausführen: WebAssembly JavaScript Promise Integration (WebAssembly.Suspending / WebAssembly.promising) ist nicht verfügbar. Chromium-basierte Browser liefern sie standardmäßig aus; Firefox benötigt javascript.options.wasm_js_promise_integration in about:config, Node.js --experimental-wasm-jspi und headless Chromium --enable-features=WebAssemblyJavaScriptPromiseIntegration.",
+});
+
+export type ShardJspiScope = { readonly WebAssembly?: { readonly Suspending?: unknown; readonly promising?: unknown } };
+
+export function shardJspiAvailable(scope: ShardJspiScope = globalThis as ShardJspiScope): boolean {
+  const runtime = scope.WebAssembly;
+  return typeof runtime === "object" && runtime !== null && typeof runtime.Suspending === "function" && typeof runtime.promising === "function";
+}
+
+/** 🩺️ Typed, bilingual, fail-fast form of the probe above — `code` is what `windowFaultFromError`
+ * reads off the shell's error surface, `text` is what a human reads. */
+export class ShardJspiUnavailableError extends Error {
+  readonly code = SHARD_JSPI_FAULT_CODE;
+  readonly text = SHARD_JSPI_FAULT_TEXT;
+  constructor() {
+    super(`${SHARD_JSPI_FAULT_CODE}: ${SHARD_JSPI_FAULT_TEXT.en} — ${SHARD_JSPI_FAULT_TEXT.de}`);
+  }
+}
+
+export function assertShardJspiAvailable(scope: ShardJspiScope = globalThis as ShardJspiScope): void {
+  if (!shardJspiAvailable(scope)) throw new ShardJspiUnavailableError();
 }
 //#endregion ⏱️Heartbeat
 
@@ -736,7 +877,7 @@ export class ShardClient {
     if (options.shardCount < 1) throw new Error("[DEBUG] ShardClient requires shardCount >= 1");
     this.createWorker = options.createWorker;
     this.now = options.now ?? (() => Date.now());
-    this.heartbeatTimeoutMs = options.heartbeatTimeoutMs ?? DEFAULT_HEARTBEAT_TIMEOUT_MS;
+    this.heartbeatTimeoutMs = options.heartbeatTimeoutMs ?? SHARD_LIVENESS_POLICY.heartbeatTimeoutMs;
     this.watchdogIntervalMs = options.watchdogIntervalMs ?? this.heartbeatTimeoutMs;
     this.heartbeatSabView = options.heartbeatSab ? new Int32Array(options.heartbeatSab) : null;
     this.onShardLost = options.onShardLost;
@@ -1109,8 +1250,9 @@ export class ShardClient {
     worker.onmessage = (event) => this.handleMessage(slot, event.data as InboundMessage);
     worker.onerror = (error) => {
       if (this.shards[index] !== slot) return;
-      console.error(`[DEBUG] shard ${index} worker error`, error);
-      this.failShard(slot, new Error(`shard ${index} worker crashed`));
+      const detail = describeShardWorkerError(error);
+      console.error(`[DEBUG] shard ${index} worker error: ${detail}`, error);
+      this.failShard(slot, new Error(`shard ${index} worker crashed: ${detail}`));
     };
     if (this.heartbeatSabView) worker.postMessage({ kind: "attachHeartbeatSab", shardIndex: index, sab: this.heartbeatSabView.buffer });
     return slot;
@@ -1123,8 +1265,15 @@ export class ShardClient {
    * `requestId` nothing ever registered and silently no-op, masking a real effect-request. */
   private handleMessage(slot: ShardSlot, message: InboundMessage): void {
     if (!slot.available || this.shards[slot.index] !== slot) return;
+    this.noteLiveness(slot, this.now());
     if (message.kind === "heartbeat") {
       this.recordHeartbeat(slot, message.turnSeq, this.now());
+      return;
+    }
+    if (message.kind === "worker-fault") {
+      const detail = formatShardWorkerFault(slot.index, message);
+      console.error(`[DEBUG] ${detail}`, message.stack ?? "");
+      this.onActorTrap?.(message.actorId ?? "*", detail);
       return;
     }
     if (message.kind === "trap") {
@@ -1946,11 +2095,20 @@ export class ShardClient {
   //#endregion 🌉️HostEffectBridge
 
   //#region ⏱️HeartbeatWatchdog
+  /** 🫀️ Every inbound message is proof this worker's event loop is running — a start-of-request
+   * heartbeat, one of the generated worker's `module-fetch`/`module-ready`/`actor-ready`/`progress`
+   * heartbeats, a `result`, a `trap`, an effect `frame`. {@link evaluateShardLiveness} reads exactly
+   * this clock, so a long turn that keeps ticking is never mistaken for a wedged one. */
+  private noteLiveness(slot: ShardSlot, atMs: number): void {
+    slot.heartbeat.lastLivenessAtMs = atMs;
+    slot.heartbeat.missedCount = 0;
+    slot.heartbeat.lastMissCountedAtMs = atMs;
+  }
+
   private recordHeartbeat(slot: ShardSlot, turnSeq: number, atMs: number): void {
     slot.heartbeat.lastHeartbeatAtMs = atMs;
     slot.heartbeat.lastHeartbeatTurnSeq = turnSeq;
-    slot.heartbeat.missedCount = 0;
-    slot.heartbeat.lastMissCountedAtMs = atMs;
+    this.noteLiveness(slot, atMs);
   }
 
   /** 🔭️ SAB path: polls every shard's `Atomics.load` slot and folds any advance into the SAME state
@@ -1961,32 +2119,37 @@ export class ShardClient {
     if (!this.heartbeatSabView) return;
     for (const slot of this.shards) {
       const seq = Atomics.load(this.heartbeatSabView, slot.index);
-      if (seq !== slot.heartbeat.lastHeartbeatTurnSeq || slot.heartbeat.oldestPendingStartedAtMs === null) {
+      /** 🫀️ Only a MONOTONIC ADVANCE is proof of life. `!==` used to accept a REGRESSION too, which a
+       * worker that never processed `attachHeartbeatSab` produces on every tick (its slot stays `0`
+       * while `postMessage` beats advance `lastHeartbeatTurnSeq`) — under the liveness rule that would
+       * refresh a dead shard's clock forever and disarm the watchdog entirely. */
+      if (seq > slot.heartbeat.lastHeartbeatTurnSeq || slot.heartbeat.oldestPendingStartedAtMs === null) {
         this.recordHeartbeat(slot, seq, nowMs);
       }
     }
   }
 
-  /** 🚑️ design-runtime.md §1 `FailurePolicy` watchdog: a shard only "misses" a heartbeat while it has
-   * an in-flight turn/job older than `heartbeatTimeoutMs` with no fresher heartbeat since — an idle
-   * shard with nothing pending can never be flagged. Three consecutive timeout windows of continued
-   * silence (not three calls to this method) trigger `terminate()` + `rebuild()` and `onShardLost`. */
+  /** 🚑️ Applies {@link evaluateShardLiveness} — the whole decision, including what "silence" means —
+   * to every shard and executes the one side effect it can ask for. `SHARD_LIVENESS_POLICY.missedLimit`
+   * consecutive timeout windows of real silence (not that many calls to this method) trigger
+   * `terminate()` + `rebuild()` and `onShardLost`. */
   checkHeartbeats(nowMs: number = this.now()): void {
     for (const slot of this.shards) {
-      const pendingSince = slot.heartbeat.oldestPendingStartedAtMs;
-      if (pendingSince === null) continue;
-      if (slot.heartbeat.lastHeartbeatAtMs >= pendingSince) continue;
-      const silentForMs = nowMs - pendingSince;
-      if (silentForMs <= this.heartbeatTimeoutMs) continue;
-      if (nowMs - slot.heartbeat.lastMissCountedAtMs < this.heartbeatTimeoutMs) continue;
-      slot.heartbeat.missedCount += 1;
-      slot.heartbeat.lastMissCountedAtMs = nowMs;
-      if (slot.heartbeat.missedCount >= HEARTBEAT_MISSED_LIMIT) {
-        const actorIds = [...slot.actorIds];
-        this.terminate(slot.index);
-        this.rebuild(slot.index);
-        this.onShardLost?.(slot.index, actorIds);
-      }
+      const decision = evaluateShardLiveness({
+        nowMs,
+        oldestPendingStartedAtMs: slot.heartbeat.oldestPendingStartedAtMs,
+        lastLivenessAtMs: slot.heartbeat.lastLivenessAtMs,
+        missedCount: slot.heartbeat.missedCount,
+        lastMissCountedAtMs: slot.heartbeat.lastMissCountedAtMs,
+        heartbeatTimeoutMs: this.heartbeatTimeoutMs,
+      });
+      slot.heartbeat.missedCount = decision.missedCount;
+      slot.heartbeat.lastMissCountedAtMs = decision.lastMissCountedAtMs;
+      if (!decision.terminate) continue;
+      const actorIds = [...slot.actorIds];
+      this.terminate(slot.index);
+      this.rebuild(slot.index);
+      this.onShardLost?.(slot.index, actorIds);
     }
   }
 
@@ -4480,6 +4643,228 @@ if (import.meta.vitest) {
       advance(1001);
       client.checkHeartbeats();
       expect(workers[0]!.terminated).toBe(false);
+    });
+  });
+
+  describe("ShardClient liveness watchdog (schema-owned timelines)", () => {
+    type LivenessScenario = {
+      readonly id: string;
+      readonly heartbeatTimeoutMs: number;
+      readonly timeline: readonly { readonly atMs: number; readonly event: string }[];
+      readonly expected: { readonly missesAtCheck: readonly number[]; readonly terminatedAtMs: number | null };
+    };
+    type LivenessFixture = {
+      readonly policy: Readonly<Record<string, number>>;
+      readonly worker: { readonly activationPhases: readonly string[]; readonly progressPhase: string };
+      readonly jspi: { readonly faultCode: string; readonly vectors: readonly { readonly id: string; readonly webAssembly: boolean; readonly suspending: boolean; readonly promising: boolean; readonly available: boolean }[] };
+      readonly scenarios: readonly LivenessScenario[];
+    };
+
+    async function livenessFixture(): Promise<LivenessFixture> {
+      const { default: fixture } = await import("./🧪️fixture/🔣️.json");
+      const { default: schema } = await import("./🧬️schema.json");
+      const { default: Ajv } = await import("ajv");
+      const validate = new Ajv({ strict: true }).compile(schema);
+      expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+      return fixture as unknown as LivenessFixture;
+    }
+
+    /** 🔮️ Independent oracle — the watchdog rule re-derived from its prose statement ("a busy shard is
+     * one that has said SOMETHING since `heartbeatTimeoutMs` ago; every further silent window costs one
+     * miss; `missedLimit` in a row kills it") as a flat simulation over the timeline, sharing no code
+     * with {@link evaluateShardLiveness} or `ShardClient`. Agreement between this, the fixture's own
+     * recorded expectations and the real client is what makes the rule trustworthy. */
+    function simulateLiveness(scenario: LivenessScenario, missedLimit: number): { readonly missesAtCheck: number[]; readonly terminatedAtMs: number | null } {
+      let pendingSince: number | null = null;
+      let livenessAtMs = 0;
+      let missed = 0;
+      let lastMissAtMs = 0;
+      const missesAtCheck: number[] = [];
+      let terminatedAtMs: number | null = null;
+      for (const step of scenario.timeline) {
+        if (terminatedAtMs !== null) break;
+        if (step.event === "pending") { pendingSince ??= step.atMs; continue; }
+        if (step.event === "idle" || step.event === "liveness") {
+          if (step.event === "idle") pendingSince = null;
+          livenessAtMs = step.atMs;
+          missed = 0;
+          lastMissAtMs = step.atMs;
+          continue;
+        }
+        const silent = pendingSince !== null && step.atMs - Math.max(livenessAtMs, pendingSince) > scenario.heartbeatTimeoutMs && step.atMs - lastMissAtMs >= scenario.heartbeatTimeoutMs;
+        if (silent) { missed += 1; lastMissAtMs = step.atMs; }
+        missesAtCheck.push(missed);
+        if (missed >= missedLimit) terminatedAtMs = step.atMs;
+      }
+      return { missesAtCheck, terminatedAtMs };
+    }
+
+    it("mirrors the schema-owned policy record in every consumer of it", async () => {
+      const fixture = await livenessFixture();
+      expect({ ...SHARD_LIVENESS_POLICY }).toEqual(fixture.policy);
+      const { SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS } = await import("../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts");
+      expect(SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS).toBe(fixture.policy.progressIntervalMs);
+    });
+
+    it("serves the shard worker from the schema-owned distribution route, not a transliteration of it", async () => {
+      const { SHARD_WORKER_URL } = await import("../🧵️shard-runtime/🟦️.ts");
+      const { MODULE_PLUGIN_ROUTE, MODULE_SHARD_DIRECTORY } = await import("../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts");
+      const { SHARD_WORKER_FILE } = await import("../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts");
+      expect(SHARD_WORKER_URL).toBe(`${MODULE_PLUGIN_ROUTE}/${MODULE_SHARD_DIRECTORY}/${SHARD_WORKER_FILE}`);
+      // 🩺️ Every browser-side spawner must use THAT url. A private ASCII transliteration
+      // (`/plugin-modules/_shard/…`) is answered by Vite's SPA fallback with `text/html`, which a
+      // module Worker rejects as a message-less `error` event — the 2026-09-05 four-dead-shard boot.
+      const { readFileSync } = await import("node:fs");
+      for (const spawner of ["../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx", "../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts"]) {
+        const source = readFileSync(new URL(spawner, import.meta.url), "utf8");
+        expect(source, spawner).not.toContain("/plugin-modules/_shard/");
+        if (source.includes("new Worker(")) expect(source, spawner).toContain("SHARD_WORKER_URL");
+      }
+    });
+
+    it("classifies JSPI availability exactly as the fixture's vectors say", async () => {
+      const fixture = await livenessFixture();
+      expect(SHARD_JSPI_FAULT_CODE).toBe(fixture.jspi.faultCode);
+      const observed = fixture.jspi.vectors.map((vector) => {
+        const scope: ShardJspiScope = vector.webAssembly ? { WebAssembly: { Suspending: vector.suspending ? class {} : undefined, promising: vector.promising ? () => undefined : undefined } } : {};
+        const available = shardJspiAvailable(scope);
+        // 🔮️ Independent oracle: "JSPI is present when BOTH lifting primitives are callable", stated
+        // directly against the vector rather than through the implementation under test.
+        expect(available, vector.id).toBe(vector.webAssembly && vector.suspending && vector.promising);
+        let thrown: unknown = null;
+        try { assertShardJspiAvailable(scope); } catch (error) { thrown = error; }
+        expect(thrown === null, vector.id).toBe(vector.available);
+        if (thrown) {
+          expect(thrown).toBeInstanceOf(ShardJspiUnavailableError);
+          expect((thrown as ShardJspiUnavailableError).code).toBe(fixture.jspi.faultCode);
+          expect(Object.keys((thrown as ShardJspiUnavailableError).text)).toEqual(["en", "de"]);
+        }
+        return { id: vector.id, available };
+      });
+      expect(observed).toEqual(fixture.jspi.vectors.map((vector) => ({ id: vector.id, available: vector.available })));
+      console.log(`[DEBUG] ShardClient JSPI vectors=${observed.map((row) => `${row.id}:${row.available}`).join(",")}`);
+    });
+
+    it("names a worker onerror instead of logging a bare Event", async () => {
+      expect(describeShardWorkerError({ type: "error", message: "Uncaught TypeError: WebAssembly.Suspending is not a constructor", filename: "http://localhost:6076/plugin-modules/_shard/🟨️shard-worker.js", lineno: 18, colno: 9 })).toBe(
+        "Uncaught TypeError: WebAssembly.Suspending is not a constructor at http://localhost:6076/plugin-modules/_shard/🟨️shard-worker.js:18:9",
+      );
+      expect(describeShardWorkerError({ type: "error", message: "" })).toContain('redacted "error" event');
+      expect(describeShardWorkerError({ error: { message: "boom" } })).toBe("boom");
+      const { client, workers } = harness(1);
+      void client.activate("crashy", "https://x/c.js", [], BUDGET).catch(() => {});
+      workers[0]!.onerror?.({ type: "error", message: "top-level throw", filename: "worker.js", lineno: 18, colno: 9 });
+      expect(isShardLostError(new Error("shard 0 worker crashed: top-level throw at worker.js:18:9"))).toBe(true);
+      client.disposeAll();
+    });
+
+    it("agrees with the independent oracle and the fixture on every watchdog timeline", async () => {
+      const fixture = await livenessFixture();
+      const observed: string[] = [];
+      for (const scenario of fixture.scenarios) {
+        const lost: number[] = [];
+        const { client, workers, setNow } = harness(1, { heartbeatTimeoutMs: scenario.heartbeatTimeoutMs, onShardLost: (index) => lost.push(index) });
+        setNow(0);
+        const activatePromise = client.activate("live", "https://x/live.js", [], BUDGET);
+        const activateId = (workers[0]!.sent.find((message) => (message as { kind: string }).kind === "activate") as { requestId: string }).requestId;
+        workers[0]!.deliver({ kind: "result", requestId: activateId, ok: true, value: undefined });
+        await activatePromise;
+        const missesAtCheck: number[] = [];
+        const outstanding: string[] = [];
+        let terminatedAtMs: number | null = null;
+        let beat = 0;
+        for (const step of scenario.timeline) {
+          if (terminatedAtMs !== null) break;
+          setNow(step.atMs);
+          if (step.event === "pending") {
+            void client.checkpoint("live").catch(() => {});
+            outstanding.push((workers[0]!.sent.at(-1) as { requestId: string }).requestId);
+            continue;
+          }
+          if (step.event === "idle") {
+            for (const requestId of outstanding.splice(0)) workers[0]!.deliver({ kind: "result", requestId, ok: true, value: new Uint8Array() });
+            continue;
+          }
+          if (step.event === "liveness") {
+            beat += 1;
+            workers[0]!.deliver({ kind: "heartbeat", turnSeq: beat, phase: fixture.worker.progressPhase });
+            continue;
+          }
+          // 🔎️ Captured BEFORE the tick: a terminating check replaces `shards[0]` with a rebuilt slot
+          // whose count is legitimately zero, and the count under test is the retired slot's.
+          const slot = (Reflect.get(client, "shards") as readonly { readonly heartbeat: { readonly missedCount: number } }[])[0]!;
+          client.checkHeartbeats();
+          missesAtCheck.push(slot.heartbeat.missedCount);
+          if (lost.length > 0) terminatedAtMs = step.atMs;
+        }
+        expect({ id: scenario.id, missesAtCheck, terminatedAtMs }).toEqual({ id: scenario.id, ...simulateLiveness(scenario, fixture.policy.missedLimit!) });
+        expect(missesAtCheck, scenario.id).toEqual(scenario.expected.missesAtCheck);
+        expect(terminatedAtMs, scenario.id).toBe(scenario.expected.terminatedAtMs);
+        client.disposeAll();
+        observed.push(scenario.id);
+      }
+      expect(observed).toEqual(fixture.scenarios.map((scenario) => scenario.id));
+      console.log(`[DEBUG] ShardClient liveness timelines replayed against client+oracle=${observed.length}`);
+    });
+
+    it("beats at every generated-worker activation boundary and tickers on through a stalled import", async () => {
+      const fixture = await livenessFixture();
+      const { default: ts } = await import("typescript");
+      const { readFileSync } = await import("node:fs");
+      const vm = await import("node:vm");
+      const path = new URL("../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts", import.meta.url);
+      const parsed = ts.createSourceFile(path.pathname, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
+      const declaration = parsed.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "shardWorkerSource");
+      const returned = declaration && ts.isFunctionDeclaration(declaration) ? declaration.body?.statements.find(ts.isReturnStatement)?.expression : null;
+      if (!returned || !ts.isTemplateExpression(returned)) throw new Error("Changed generated shard worker source");
+      const { shardWorkerSource } = await import("../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts");
+      // 🧪️ `await import(url)` has no meaning inside a bare `vm` context; the ONE call is redirected to
+      // an injected loader so the same generated bytes can be driven with that boundary held open.
+      const source = shardWorkerSource().replace("await import(/* @vite-ignore */ moduleUrl)", "await __import(moduleUrl)");
+      expect(source).not.toContain("@vite-ignore");
+      const beats: (string | undefined)[] = [];
+      const results: string[] = [];
+      const intervals: { readonly delayMs: number; readonly tick: () => void }[] = [];
+      const cleared: number[] = [];
+      let bridge: (value: { createActorApi: (actorId: string, generation: bigint) => Promise<unknown> }) => void = () => {};
+      let api: (value: unknown) => void = () => {};
+      const bridgeReady = new Promise<{ createActorApi: (actorId: string, generation: bigint) => Promise<unknown> }>((resolve) => { bridge = resolve; });
+      const apiReady = new Promise<unknown>((resolve) => { api = resolve; });
+      let dispatch: ((event: { data: Record<string, unknown> }) => Promise<void>) | null = null;
+      const context = vm.createContext({
+        WebAssembly: { Suspending: class {}, promising: (value: unknown) => value },
+        __import: () => bridgeReady,
+        setInterval: (tick: () => void, delayMs: number) => intervals.push({ delayMs, tick }),
+        clearInterval: (handle: number) => cleared.push(handle),
+        self: {
+          postMessage: (message: { kind: string; phase?: string; requestId?: string }) => {
+            if (message.kind === "heartbeat") beats.push(message.phase);
+            if (message.kind === "result") results.push(message.requestId ?? "");
+          },
+          addEventListener: (_kind: string, handler: typeof dispatch) => { dispatch = handler; },
+        },
+      });
+      new vm.Script(source).runInContext(context);
+      if (!dispatch) throw new Error("Missing generated worker dispatcher");
+      const send = dispatch as (event: { data: Record<string, unknown> }) => Promise<void>;
+      const activating = send({ data: { kind: "activate", requestId: "a1", actorId: "a", activationGeneration: 1n, moduleUrl: "https://fixture.invalid/a.js", assets: [] } });
+      await Promise.resolve();
+      expect(beats).toEqual([undefined, fixture.worker.activationPhases[0]]);
+      expect(intervals).toHaveLength(1);
+      expect(intervals[0]!.delayMs).toBe(fixture.policy.progressIntervalMs);
+      intervals[0]!.tick();
+      intervals[0]!.tick();
+      expect(results).toEqual([]);
+      bridge({ createActorApi: () => apiReady as Promise<unknown> });
+      await Promise.resolve();
+      await Promise.resolve();
+      api({ poll: async () => undefined });
+      await activating;
+      expect(beats).toEqual([undefined, "module-fetch", fixture.worker.progressPhase, fixture.worker.progressPhase, "module-ready", "actor-ready"]);
+      expect(beats.slice(4)).toEqual(fixture.worker.activationPhases.slice(1));
+      expect(results).toEqual(["a1"]);
+      expect(cleared).toHaveLength(1);
+      console.log(`[DEBUG] ShardWorkerLiveness activation beats=${beats.map((phase) => phase ?? "request").join(",")}`);
     });
   });
 

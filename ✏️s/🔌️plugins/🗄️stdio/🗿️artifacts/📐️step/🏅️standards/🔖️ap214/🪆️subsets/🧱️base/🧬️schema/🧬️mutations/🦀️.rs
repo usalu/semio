@@ -15,7 +15,7 @@ use protocol::{Mutation, MutationDiff, OpText};
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.step`.
 //#region 🔖️Leaves
-#[path = "🟤️set-snapshot/🦀️.rs"]
+#[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "📋️set-file-description/🦀️.rs"]
 pub mod set_file_description;
@@ -597,7 +597,7 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "🟤️set-snapshot/🧪️tests/🏔️restamps-the-product-long-name/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/🏷️restamps-the-product-long-name/🦀️.rs"]
     mod tests_set_snapshot_restamps_the_product_long_name;
 }
 //#endregion 🧪️FixtureTests

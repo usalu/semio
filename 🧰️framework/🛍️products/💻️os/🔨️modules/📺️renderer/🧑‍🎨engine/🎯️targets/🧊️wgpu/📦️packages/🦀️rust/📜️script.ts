@@ -372,8 +372,8 @@ class NativeTestScript extends BundleScript {
 
 /** 🏠️ Independently executes the neutral retained-Home bootstrap trace and audits the native mount. */
 function directoryRetainedHomeBootstrapOracle(): number {
-  const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️event-page-bootstrap-v1.json");
-  const schemaPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧬️event-page-bootstrap-v1.schema.json");
+  const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🚀️event-page-bootstrap-v1.json");
+  const schemaPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🔗️event-page-bootstrap-v1.schema.json");
   const fixture = JSON.parse(readFileSync(fixturePath, "utf8"));
   const schema = JSON.parse(readFileSync(schemaPath, "utf8"));
   const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
@@ -412,6 +412,8 @@ function directoryRetainedHomeBootstrapOracle(): number {
   };
   const first = present(fixture.pages[0]);
   check(after === fixture.initialAfter && acknowledgements === 0, "presentation advanced before terminal Home publication");
+  assert.throws(() => present(fixture.pages[1]));
+  check(after === fixture.initialAfter && acknowledgements === 0, "page two was admitted before page one's terminal Home publication");
   for (const field of fixture.forgedAckFields) {
     const forged = { ...first, [field]: typeof first[field] === "number" ? first[field] + 1 : "d".repeat(64) };
     assert.throws(() => acknowledge(forged));
@@ -420,10 +422,14 @@ function directoryRetainedHomeBootstrapOracle(): number {
   check(acknowledge(first) === "fetch" && after === fixture.pages[0].throughSeqInclusive, "first terminal receipt did not request the next page");
   const second = present(fixture.pages[1]);
   check(acknowledge(second) === "live" && after === fixture.expectedSocketSince, "final receipt did not establish the exact socket cursor");
+  let dirtyRefetches = 0;
   for (const _wakeup of fixture.wakeups) {
-    live = false;
+    if (live) {
+      live = false;
+      dirtyRefetches += 1;
+    }
   }
-  check(after === fixture.expectedSocketSince, "wakeup advanced the durable cursor without another ACK");
+  check(dirtyRefetches === 1 && after === fixture.expectedSocketSince, "live wakeups did not coalesce at the durable cursor");
   pending = structuredClone(fixture.pages[0]);
   after = fixture.retry.expectedAfter;
   pending = null;
@@ -438,13 +444,14 @@ function directoryRetainedHomeBootstrapOracle(): number {
   closed = false;
   check(epoch > fixture.bootstrapEpoch && after === 0, "rebootstrap did not fence the prior epoch at zero");
   let terminalReconnects = 0;
+  const beforeTerminalEpoch = epoch;
   if (fixture.terminalClose.code === 4401) {
-    epoch = fixture.terminalClose.expectedBootstrapEpoch;
+    epoch += 1;
     after = fixture.terminalClose.expectedAfter;
   } else {
     terminalReconnects += 1;
   }
-  check(epoch === fixture.terminalClose.expectedBootstrapEpoch && after === 0 && terminalReconnects === fixture.terminalClose.expectedReconnects, "terminal authenticated close did not produce one fenced identity rebootstrap");
+  check(epoch === fixture.terminalClose.expectedBootstrapEpoch && epoch > beforeTerminalEpoch && after === 0 && terminalReconnects === fixture.terminalClose.expectedReconnects, "terminal authenticated close did not produce one newer fenced identity rebootstrap");
   check(fixture.retainedHome.instanceId !== fixture.retainedHome.switchedVisibleInstanceId && fixture.retainedHome.expectedDestroyCount === 1, "retained Home fixture does not distinguish visible-session ownership");
 
   const shellPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs");
@@ -460,6 +467,12 @@ function directoryRetainedHomeBootstrapOracle(): number {
     "home.wake(rebootstrap)",
     "runner.take_terminal()",
     "take_destroy_authority",
+    "page two cannot be requested before terminal Home publication",
+    "duplicate live wake coalesces while the page refetch is already pending",
+    "late Home publication has no surviving receiver or ACK path",
+    "authenticated terminal close cannot reconnect",
+    "terminal stream remains closed after every reconnect deadline",
+    "terminal identity close restarts from raw cursor zero",
   ]) check(shell.includes(marker), `native retained-Home bootstrap lacks ${marker}`);
   check(!shell.includes("client.stream(0)"), "native global directory lane still opens an observed-frontier stream");
   check(!shell.includes("dispatch_directory_event_batch") && !shell.includes("fold_directory_events_action"), "native global directory lane still folds raw events");
@@ -500,6 +513,47 @@ class DirectoryRetainedHomeBootstrapNativeCheckScript extends BundleScript {
     });
     console.log(`directory-retained-home-bootstrap-native-receipts: ${JSON.stringify(receipts)}`);
     console.log(`directory-retained-home-bootstrap-native-check: sourceChecks=${checks} nativeLaws=3 clean`);
+  }
+}
+
+function normalizedPresenceRowsOracle(): number {
+  const shell = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs"), "utf8");
+  const markers = [
+    '.filter(|peer| peer.surface.as_deref() == Some(target_surface))',
+    "color: peer.color",
+    "fn presence_rows_require_each_normalized_surface_and_preserve_hub_color(",
+    "peer(\"c\", None, 9)",
+    "vec![(\"b\", Some(8))]",
+  ];
+  for (const marker of markers) assert(shell.includes(marker), `normalized WGPU presence rows lack ${marker}`);
+  assert(!shell.includes("PresencePeer` itself\n/// carries no `surface` field"), "obsolete no-surface authority claim remains");
+  return markers.length + 1;
+}
+
+/** @emoji 👥️ Checks normalized WGPU surface/color projection without invoking Cargo. */
+class NormalizedPresenceRowsSourceCheckScript extends BundleScript {
+  run(segments: string[]): void {
+    if (segments.length) throw new Error("normalized-presence-rows-source-check accepts no arguments");
+    console.log(`normalized-presence-rows-source-check: checks=${normalizedPresenceRowsOracle()} clean`);
+  }
+}
+
+/** @emoji 🎨️ Runs the exact normalized WGPU surface/color row law. */
+class NormalizedPresenceRowsNativeCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("normalized-presence-rows-native-check accepts no arguments");
+    const artifactDir = process.env.SEMIO_TEST_ARTIFACT_DIR;
+    const ticketRoot = resolve(repoRoot, ".🧬semio/🦑️repo/🎫️tickets");
+    if (!artifactDir || !isAbsolute(artifactDir) || !resolve(artifactDir).startsWith(`${ticketRoot}${sep}`)) throw new Error("SEMIO_TEST_ARTIFACT_DIR must be an absolute ticket-local directory");
+    const checks = normalizedPresenceRowsOracle();
+    const receipts = await runExactCargoLaws({
+      cwd: repoRoot,
+      artifactDir: resolve(artifactDir),
+      env: { ...process.env, CARGO_BUILD_JOBS: "1", RUSTC_WRAPPER: "" },
+      groups: [{ package: crateName, target: { kind: "lib" }, laws: ["shell::command_registry_tests::presence_rows_require_each_normalized_surface_and_preserve_hub_color"] }],
+    });
+    assert.equal(receipts[0]!.assertions, 1);
+    console.log(`normalized-presence-rows-native-check: sourceChecks=${checks} nativeLaws=1 clean`);
   }
 }
 
@@ -601,6 +655,8 @@ const router = new ScriptRouter(import.meta.dir)
   .register("test-native", NativeTestScript)
   .register("directory-retained-home-bootstrap-source-check", DirectoryRetainedHomeBootstrapSourceCheckScript)
   .register("directory-retained-home-bootstrap-native-check", DirectoryRetainedHomeBootstrapNativeCheckScript)
+  .register("normalized-presence-rows-source-check", NormalizedPresenceRowsSourceCheckScript)
+  .register("normalized-presence-rows-native-check", NormalizedPresenceRowsNativeCheckScript)
   .register("test-browser-worker", BrowserWorkerTestScript)
   .register("test-preview-generated", PreviewGeneratedTestScript)
   .register("check-browser-worker", BrowserWorkerCheckScript)

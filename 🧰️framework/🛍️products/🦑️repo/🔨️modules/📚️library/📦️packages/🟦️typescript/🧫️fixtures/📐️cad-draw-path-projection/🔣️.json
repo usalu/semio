@@ -177,115 +177,115 @@
       },
       "mappings": [
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🎬️actions/📍️constructOneWayReinforcedConcreteSlabFrom2PointsAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructOneWayReinforcedConcreteSlabFrom2PointsAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructOneWayReinforcedConcreteSlabFrom2PointsAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🎬️actions/〰️constructOneWayReinforcedConcreteSlabFromCurveAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructOneWayReinforcedConcreteSlabFromCurveAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructOneWayReinforcedConcreteSlabFromCurveAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🎬️actions/🗺️constructOneWayReinforcedConcreteSlabFromSurface.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructOneWayReinforcedConcreteSlabFromSurface.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructOneWayReinforcedConcreteSlabFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🎬️actions/🏛️constructReinforcedConcreteColumnFrom2PointsAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteColumnFrom2PointsAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteColumnFrom2PointsAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🎬️actions/🌀️constructReinforcedConcreteColumnFromCurveAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteColumnFromCurveAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteColumnFromCurveAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🎬️actions/🗼️constructReinforcedConcreteColumnFromSurface.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteColumnFromSurface.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteColumnFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🎬️actions/🛡️constructReinforcedConcreteExternalWallFrom2PointsAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteExternalWallFrom2PointsAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteExternalWallFrom2PointsAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🎬️actions/🌊️constructReinforcedConcreteExternalWallFromCurveAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteExternalWallFromCurveAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteExternalWallFromCurveAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🎬️actions/🌐️constructReinforcedConcreteExternalWallFromSurface.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteExternalWallFromSurface.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteExternalWallFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🎬️actions/🚧️constructReinforcedConcreteInternalWallFrom2PointsAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteInternalWallFrom2PointsAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteInternalWallFrom2PointsAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🎬️actions/🪢️constructReinforcedConcreteInternalWallFromCurveAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteInternalWallFromCurveAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteInternalWallFromCurveAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🎬️actions/🏠️constructReinforcedConcreteInternalWallFromSurface.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteInternalWallFromSurface.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteInternalWallFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🕹️interactions/🧱️constructOneWayReinforcedConcreteSlab.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructOneWayReinforcedConcreteSlab.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️interactions/🎬️constructOneWayReinforcedConcreteSlab/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🕹️interactions/🏛️constructReinforcedConcreteColumn.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructReinforcedConcreteColumn.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️interactions/🎬️constructReinforcedConcreteColumn/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🕹️interactions/🛡️constructReinforcedConcreteExternalWall.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructReinforcedConcreteExternalWall.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️interactions/🎬️constructReinforcedConcreteExternalWall/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🕹️interactions/🚧️constructReinforcedConcreteInternalWall.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructReinforcedConcreteInternalWall.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️interactions/🎬️constructReinforcedConcreteInternalWall/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🔀️transformations/🔀️from_aec.building.structure/🔣️transformation.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🔀️transformations/🔀️from_aec.building.structure/🔣️transformation.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🔀️transformations/🔀️from_aec.building.structure/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🔣️modelDefinition.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🔣️modelDefinition.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🗂️typologies/🏛️ReinforcedConcreteColumn/🔣️typology.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🗂️typologies/🏛️ReinforcedConcreteColumn/🔣️typology.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🗂️typologies/🏛️ReinforcedConcreteColumn/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🗂️typologies/🧱️OneWayReinforcedConcreteSlab/🔣️typology.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🗂️typologies/🧱️OneWayReinforcedConcreteSlab/🔣️typology.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🗂️typologies/🧱️OneWayReinforcedConcreteSlab/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🗂️typologies/🛡️ReinforcedConcreteExternalWall/🔣️typology.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🗂️typologies/🧱️ReinforcedConcreteExternalWall/🔣️typology.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🗂️typologies/🧱️ReinforcedConcreteExternalWall/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🗂️typologies/🚧️ReinforcedConcreteInternalWall/🔣️typology.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🗂️typologies/🧱️ReinforcedConcreteInternalWall/🔣️typology.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🗂️typologies/🧱️ReinforcedConcreteInternalWall/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure/🏷️attributeDefinitions/🔗️bondable.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure/🏷️attributeDefinitions/🔣️bondable.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure/🏷️attributeDefinitions/🏷️bondable/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure/🏷️attributeDefinitions/🌦️exposure.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure/🏷️attributeDefinitions/🔣️exposure.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure/🏷️attributeDefinitions/🏷️exposure/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure/🏷️attributeDefinitions/🔆️gvalue.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure/🏷️attributeDefinitions/🔣️gvalue.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure/🏷️attributeDefinitions/🏷️gvalue/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure/🏷️attributeDefinitions/🪨️material.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure/🏷️attributeDefinitions/🔣️material.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure/🏷️attributeDefinitions/🏷️material/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure/🏷️attributeDefinitions/🚪️opening.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure/🏷️attributeDefinitions/🔣️opening.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure/🏷️attributeDefinitions/🏷️opening/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure/🏷️attributeDefinitions/🌡️uvalue.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure/🏷️attributeDefinitions/🔣️uvalue.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure/🏷️attributeDefinitions/🏷️uvalue/🔣️.json"
         },
         {
@@ -317,11 +317,11 @@
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🏷️attributeDefinitions/🪨️material.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🏷️attributeDefinitions/🔣️material.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🏷️attributeDefinitions/🏷️material/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🏷️attributeDefinitions/🚪️opening.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🏷️attributeDefinitions/🔣️opening.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🏷️attributeDefinitions/🏷️opening/🔣️.json"
         },
         {
@@ -353,7 +353,7 @@
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🗂️typologies/🧱️Slab/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/🛡️Wall/🔣️typology.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/🧱️Wall/🔣️typology.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🗂️typologies/🧱️Wall/🔣️.json"
         },
         {
@@ -373,19 +373,19 @@
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🗂️typologies/🪵️Beam/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🎬️actions/📍️constructLineElementFrom2PointsAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🎬️actions/🔣️constructLineElementFrom2PointsAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📏️aec.building.structure.fem.line/🎬️actions/🎬️constructLineElementFrom2PointsAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🎬️actions/〰️constructLineElementFromCurveAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🎬️actions/🔣️constructLineElementFromCurveAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📏️aec.building.structure.fem.line/🎬️actions/🎬️constructLineElementFromCurveAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🎬️actions/🗺️constructLineElementFromSurface.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🎬️actions/🔣️constructLineElementFromSurface.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📏️aec.building.structure.fem.line/🎬️actions/🎬️constructLineElementFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🕹️interactions/🔣️constructLineElement.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🎬️interactions/🔣️constructLineElement.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📏️aec.building.structure.fem.line/🎬️interactions/🎬️constructLineElement/🔣️.json"
         },
         {
@@ -401,335 +401,335 @@
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📏️aec.building.structure.fem.line/🗂️typologies/📏️LineElement/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🧊️aabbFromDiagonalCorners.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️aabbFromDiagonalCorners.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️aabbFromDiagonalCorners/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/📍️addPoint.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️addPoint.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️addPoint/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/➕️addSelection.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️addSelection.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️addSelection/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/✅️apply.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️apply.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️apply/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🧲️constrainMoveCursor.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️constrainMoveCursor.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️constrainMoveCursor/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/📋️copy.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️copy.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️copy/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/📐️cornerFromLengthWidth.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️cornerFromLengthWidth.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️cornerFromLengthWidth/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/⚓️createAnchor.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️createAnchor.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️createAnchor/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🎲️createBoxFrom3Points.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️createBoxFrom3Points.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️createBoxFrom3Points/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/📦️createBoxFromCorners.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️createBoxFromCorners.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️createBoxFromCorners/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🚫️deselectAll.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️deselectAll.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️deselectAll/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🧱️extrudeWireToSolid.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️extrudeWireToSolid.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️extrudeWireToSolid/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🟨️faceArea.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️faceArea.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️faceArea/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🏁️finish.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️finish.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️finish/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/⛰️initPeakAboveOrigin.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️initPeakAboveOrigin.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️initPeakAboveOrigin/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔄️invert.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️invert.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️invert/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/📏️line.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️line.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️line/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🪞️mirror.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️mirror.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️mirror/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🚚️move.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️move.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️move/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/↔️offsetFaces.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️offsetFaces.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️offsetFaces/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🗻️peakFromOriginZ.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️peakFromOriginZ.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️peakFromOriginZ/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/📈️polyline.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️polyline.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️polyline/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔃️rotate.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️rotate.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️rotate/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🟣️rubberCornerFromCenter.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️rubberCornerFromCenter.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️rubberCornerFromCenter/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🟥️rubberSquareFromCenter.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️rubberSquareFromCenter.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️rubberSquareFromCenter/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/↕️scale1d.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️scale1d.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️scale1d/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🪗️scale3d.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️scale3d.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️scale3d/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/☑️selectAll.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️selectAll.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️selectAll/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🧷️selectAnchors.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️selectAnchors.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️selectAnchors/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/📎️selectEdges.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️selectEdges.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️selectEdges/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔲️selectFaces.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️selectFaces.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️selectFaces/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🧮️selectGeometries.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️selectGeometries.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️selectGeometries/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🎯️selectObjects.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️selectObjects.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️selectObjects/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🐚️selectShells.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️selectShells.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️selectShells/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🪨️selectSolids.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️selectSolids.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️selectSolids/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔺️selectVertices.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️selectVertices.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️selectVertices/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🪢️selectWires.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️selectWires.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️selectWires/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/⏺️selectionBboxCenter.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️selectionBboxCenter.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️selectionBboxCenter/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🏢️setCubeHeightFromFootprint.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️setCubeHeightFromFootprint.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️setCubeHeightFromFootprint/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/⬜️snapSquareFootprint.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️snapSquareFootprint.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️snapSquareFootprint/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🧴️solidVolume.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️solidVolume.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️solidVolume/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔱️tripletCommit.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️tripletCommit.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️tripletCommit/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🎛️tripletRubber.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️tripletRubber.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️tripletRubber/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/↩️undoPick.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️undoPick.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️undoPick/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🏗️verticalFinalizeFootprint.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️verticalFinalizeFootprint.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️verticalFinalizeFootprint/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🏔️verticalRubberCorner.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️actions/🔣️verticalRubberCorner.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️verticalRubberCorner/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌙️arc.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️arc.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️arc/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🟨️area.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️area.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️area/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/➖️booleanDifference.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️booleanDifference.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️booleanDifference/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/✖️booleanIntersection.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️booleanIntersection.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️booleanIntersection/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/➕️booleanUnion.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️booleanUnion.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️booleanUnion/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/📦️box.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️box.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️box/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🪓️chamfer.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️chamfer.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️chamfer/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/⭕️circle.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️circle.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️circle/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/〰️constructCurve.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️constructCurve.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️constructCurve/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🗺️constructSurface.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️constructSurface.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️constructSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🎛️controlPointCurve.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️controlPointCurve.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️controlPointCurve/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/📋️copy.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️copy.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️copy/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/⚓️createAnchor.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️createAnchor.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️createAnchor/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🥫️cylinder.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️cylinder.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️cylinder/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/💥️explode.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️explode.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️explode/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🚀️extrudeCrv.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️extrudeCrv.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️extrudeCrv/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🧱️extrudeWire.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️extrudeWire.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️extrudeWire/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🍥️fillet.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️fillet.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️fillet/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌊️interpolateCurve.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️interpolateCurve.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️interpolateCurve/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔗️join.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️join.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️join/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/📏️length.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️length.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️length/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🖊️line.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️line.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️line/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🎢️loft.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️loft.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️loft/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🪞️mirror.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️mirror.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️mirror/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🚚️move.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️move.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️move/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🕸️networkSrf.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️networkSrf.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️networkSrf/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🧭️offsetSurface.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️offsetSurface.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️offsetSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/✈️plane.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️plane.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️plane/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/📈️polyline.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️polyline.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️polyline/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔃️rotate.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️rotate.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️rotate/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/↕️scale1d.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️scale1d.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️scale1d/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🪗️scale3d.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️scale3d.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️scale3d/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌐️sphere.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️sphere.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️sphere/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/✂️split.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️split.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️split/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌀️sweep1.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️sweep1.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️sweep1/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌪️sweep2.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️sweep2.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️sweep2/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/✏️trim.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️trim.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️trim/🔣️.json"
         },
         {
@@ -761,7 +761,7 @@
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🗂️typologies/🌀️Sweep1/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/🌪️Sweep2/🔣️typology.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/🌀️Sweep2/🔣️typology.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🗂️typologies/🌀️Sweep2/🔣️.json"
         },
         {
@@ -805,83 +805,83 @@
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🗂️typologies/🥫️Cylinder/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/🧱️constructBasePlateFromSurface.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/🔣️constructBasePlateFromSurface.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️actions/🎬️constructBasePlateFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/📍️constructExternalWallFrom2PointsAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/🔣️constructExternalWallFrom2PointsAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️actions/🎬️constructExternalWallFrom2PointsAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/〰️constructExternalWallFromCurveAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/🔣️constructExternalWallFromCurveAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️actions/🎬️constructExternalWallFromCurveAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/🗺️constructExternalWallFromSurface.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/🔣️constructExternalWallFromSurface.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️actions/🎬️constructExternalWallFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/⚓️constructHullFrom2PointsAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/🔣️constructHullFrom2PointsAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️actions/🎬️constructHullFrom2PointsAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/⛵️constructHullFromCurveAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/🔣️constructHullFromCurveAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️actions/🎬️constructHullFromCurveAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/🚢️constructHullFromSurface.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/🔣️constructHullFromSurface.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️actions/🎬️constructHullFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/🏠️constructRoofFrom2PointsAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/🔣️constructRoofFrom2PointsAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️actions/🎬️constructRoofFrom2PointsAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/☂️constructRoofFromCurveAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/🔣️constructRoofFromCurveAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️actions/🎬️constructRoofFromCurveAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/🛖️constructRoofFromSurface.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/🔣️constructRoofFromSurface.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️actions/🎬️constructRoofFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/🪟️constructWindowsFrom2PointsAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/🔣️constructWindowsFrom2PointsAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️actions/🎬️constructWindowsFrom2PointsAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/🌈️constructWindowsFromCurveAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/🔣️constructWindowsFromCurveAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️actions/🎬️constructWindowsFromCurveAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/🖼️constructWindowsFromSurface.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️actions/🔣️constructWindowsFromSurface.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️actions/🎬️constructWindowsFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🧱️constructBasePlate.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructBasePlate.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️interactions/🎬️constructBasePlate/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🚧️constructExternalWall.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructExternalWall.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️interactions/🎬️constructExternalWall/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🚢️constructHull.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructHull.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️interactions/🎬️constructHull/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🏠️constructRoof.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructRoof.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️interactions/🎬️constructRoof/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🪟️constructWindows.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructWindows.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️interactions/🎬️constructWindows/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🏷️attributeDefinitions/🔆️gvalue.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🏷️attributeDefinitions/🔣️gvalue.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🏷️attributeDefinitions/🏷️gvalue/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🏷️attributeDefinitions/🌡️uvalue.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🏷️attributeDefinitions/🔣️uvalue.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🏷️attributeDefinitions/🏷️uvalue/🔣️.json"
         },
         {
@@ -921,19 +921,19 @@
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🗂️typologies/🪟️Windows/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🎬️actions/📍️constructSurfaceElementFrom2PointsAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🎬️actions/🔣️constructSurfaceElementFrom2PointsAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🗺️aec.building.structure.fem.surface/🎬️actions/🎬️constructSurfaceElementFrom2PointsAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🎬️actions/〰️constructSurfaceElementFromCurveAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🎬️actions/🔣️constructSurfaceElementFromCurveAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🗺️aec.building.structure.fem.surface/🎬️actions/🎬️constructSurfaceElementFromCurveAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🎬️actions/🗺️constructSurfaceElementFromSurface.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🎬️actions/🔣️constructSurfaceElementFromSurface.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🗺️aec.building.structure.fem.surface/🎬️actions/🎬️constructSurfaceElementFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🕹️interactions/🔣️constructSurfaceElement.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🎬️interactions/🔣️constructSurfaceElement.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🗺️aec.building.structure.fem.surface/🎬️interactions/🎬️constructSurfaceElement/🔣️.json"
         },
         {
@@ -949,19 +949,19 @@
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🗺️aec.building.structure.fem.surface/🗂️typologies/🗺️SurfaceElement/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🎬️actions/📍️constructSolidElementFrom2PointsAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🎬️actions/🔣️constructSolidElementFrom2PointsAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧊️aec.building.structure.fem.solid/🎬️actions/🎬️constructSolidElementFrom2PointsAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🎬️actions/〰️constructSolidElementFromCurveAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🎬️actions/🔣️constructSolidElementFromCurveAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧊️aec.building.structure.fem.solid/🎬️actions/🎬️constructSolidElementFromCurveAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🎬️actions/🗺️constructSolidElementFromSurface.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🎬️actions/🔣️constructSolidElementFromSurface.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧊️aec.building.structure.fem.solid/🎬️actions/🎬️constructSolidElementFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🕹️interactions/🔣️constructSolidElement.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🎬️interactions/🔣️constructSolidElement.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧊️aec.building.structure.fem.solid/🎬️interactions/🎬️constructSolidElement/🔣️.json"
         },
         {
@@ -977,35 +977,35 @@
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧊️aec.building.structure.fem.solid/🗂️typologies/🧊️SolidElement/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧱️aec.building.concrete/🎬️actions/↕️constructConcreteWallFromBottomAndTop.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧱️aec.building.concrete/🎬️actions/🔣️constructConcreteWallFromBottomAndTop.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧱️aec.building.concrete/🎬️actions/🎬️constructConcreteWallFromBottomAndTop/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧱️aec.building.concrete/🎬️actions/🍄️constructExtrudedMushroomColumn.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧱️aec.building.concrete/🎬️actions/🔣️constructExtrudedMushroomColumn.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧱️aec.building.concrete/🎬️actions/🎬️constructExtrudedMushroomColumn/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧱️aec.building.concrete/🎬️actions/🟪️constructFullyQuadraticMushroomColumn.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧱️aec.building.concrete/🎬️actions/🔣️constructFullyQuadraticMushroomColumn.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧱️aec.building.concrete/🎬️actions/🎬️constructFullyQuadraticMushroomColumn/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧱️aec.building.concrete/🎬️actions/🏛️constructMushroomColumn.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧱️aec.building.concrete/🎬️actions/🔣️constructMushroomColumn.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧱️aec.building.concrete/🎬️actions/🎬️constructMushroomColumn/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧱️aec.building.concrete/🎬️actions/🟫️constructRectangularMushroomColumnWithQuadraticSlab.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧱️aec.building.concrete/🎬️actions/🔣️constructRectangularMushroomColumnWithQuadraticSlab.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧱️aec.building.concrete/🎬️actions/🎬️constructRectangularMushroomColumnWithQuadraticSlab/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧱️aec.building.concrete/🎬️actions/⬆️constructVerticalConcreteWall.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧱️aec.building.concrete/🎬️actions/🔣️constructVerticalConcreteWall.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧱️aec.building.concrete/🎬️actions/🎬️constructVerticalConcreteWall/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧱️aec.building.concrete/🎬️actions/📏️constructWallFromHorizontalPathAndProfile.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧱️aec.building.concrete/🎬️actions/🔣️constructWallFromHorizontalPathAndProfile.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧱️aec.building.concrete/🎬️actions/🎬️constructWallFromHorizontalPathAndProfile/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧱️aec.building.concrete/🎬️actions/🪗️constructWallFromHorizontalPathAndProfiles.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧱️aec.building.concrete/🎬️actions/🔣️constructWallFromHorizontalPathAndProfiles.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧱️aec.building.concrete/🎬️actions/🎬️constructWallFromHorizontalPathAndProfiles/🔣️.json"
         },
         {

@@ -16,7 +16,7 @@ pub fn label() -> LocalizedLabel {
 pub const ICON: &str = "building";
 
 /// 🗣️ DSL fixture text.
-pub const DSL_TEXT: &str = include_str!("🖼️assets/🧪️tower/🗣️.dsl.semio");
+pub const DSL_TEXT: &str = include_str!("🖼️assets/🏢️tower/🗣️.dsl.semio");
 
 /// 🔧️ Op fixture text.
 pub const OP_TEXT: &str = include_str!("🖼️assets/🔧️tower.op.semio");

@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "manifests": [
+    {
+      "pluginId": "cad",
+      "artifactKinds": [{ "id": "s.cad.cad" }],
+      "apps": [
+        { "id": "s.cad.cad@1/*#editor", "role": "editor", "dialect": { "artifactKind": "s.cad.cad", "standard": "1", "subset": "*" } },
+        { "id": "s.cad.cad@1/*#viewer", "role": "viewer", "dialect": { "artifactKind": "s.cad.cad", "standard": "1", "subset": "*" } }
+      ]
+    },
+    {
+      "pluginId": "demonstrator",
+      "artifactKinds": [{ "id": "s.demonstrator.playground" }],
+      "apps": [
+        { "id": "s.demonstrator.playground@1/*#editor", "role": "editor", "dialect": { "artifactKind": "s.demonstrator.playground", "standard": "1", "subset": "*" } },
+        { "id": "s.cad.cad@1/*#editor", "role": "editor", "dialect": { "artifactKind": "s.cad.cad", "standard": "1", "subset": "*" } }
+      ]
+    },
+    {
+      "pluginId": "aec-building",
+      "dependencies": [{ "pluginId": "cad", "version": "*" }],
+      "apps": [{ "id": "s.cad.cad@1/1#viewer", "role": "viewer", "dialect": { "artifactKind": "s.cad.cad", "standard": "1", "subset": "1" } }]
+    },
+    {
+      "pluginId": "twin",
+      "artifactKinds": [{ "id": "s.twin.twin" }],
+      "apps": [
+        { "id": "s.twin.twin@1/*#editor", "role": "editor", "dialect": { "artifactKind": "s.twin.twin", "standard": "1", "subset": "*" } },
+        { "id": "s.twin.twin@1/*#editor", "role": "editor", "dialect": { "artifactKind": "s.twin.twin", "standard": "1", "subset": "*" } }
+      ]
+    }
+  ],
+  "expectedOwners": [
+    { "artifactKind": "s.cad.cad", "pluginId": "cad" },
+    { "artifactKind": "s.demonstrator.playground", "pluginId": "demonstrator" },
+    { "artifactKind": "s.twin.twin", "pluginId": "twin" }
+  ],
+  "expectedRoutes": [
+    { "dialect": { "artifactKind": "s.cad.cad", "standard": "1", "subset": "*" }, "role": "editor", "entries": [{ "pluginId": "cad", "appId": "s.cad.cad@1/*#editor" }] },
+    { "dialect": { "artifactKind": "s.cad.cad", "standard": "1", "subset": "*" }, "role": "viewer", "entries": [{ "pluginId": "cad", "appId": "s.cad.cad@1/*#viewer" }] },
+    { "dialect": { "artifactKind": "s.cad.cad", "standard": "1", "subset": "1" }, "role": "viewer", "entries": [{ "pluginId": "aec-building", "appId": "s.cad.cad@1/1#viewer" }] },
+    { "dialect": { "artifactKind": "s.cad.cad", "standard": "1", "subset": "1" }, "role": "editor", "entries": [] },
+    { "dialect": { "artifactKind": "s.demonstrator.playground", "standard": "1", "subset": "*" }, "role": "editor", "entries": [] },
+    { "dialect": { "artifactKind": "s.twin.twin", "standard": "1", "subset": "*" }, "role": "editor", "entries": [] }
+  ],
+  "expectedFaults": [
+    { "pluginId": "demonstrator", "code": "surface.contribution-not-permitted", "origin": "framework", "severity": "error" },
+    { "pluginId": "twin", "code": "surface.conflict", "origin": "framework", "severity": "error" }
+  ]
+}

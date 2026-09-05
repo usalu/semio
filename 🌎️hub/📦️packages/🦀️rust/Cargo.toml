@@ -19,7 +19,7 @@ name = "os-hub"
 path = "🚀️bin.rs"
 
 [features]
-default = ["sqlite"]
+default = ["sqlite", "native-artifact-execution"]
 # 🔌️ Each backend feature both pulls in its own driver dep and forwards to `db`'s same-named
 # storage feature (`db::storage_sqlite`/`storage_postgres`/`storage_neo4j`) — one feature name
 # controls both the directory backend AND the document/blob storage substrate together, so there
@@ -27,6 +27,7 @@ default = ["sqlite"]
 sqlite = ["dep:rusqlite", "db/sqlite"]
 postgres = ["dep:sqlx_core", "dep:sqlx_postgres", "db/postgres"]
 neo4j = ["dep:neo4rs", "db/neo4j"]
+native-artifact-execution = ["dep:semio-s-plugin-stdio", "semio-s-plugin-stdio/full-artifact-catalog", "dep:semio-s-plugin-gis"]
 
 [dependencies]
 axum = { version = "0.8", features = ["ws"] }
@@ -36,8 +37,8 @@ tokio = { workspace = true, features = ["full"] }
 futures = "0.3"
 semio-framework-async = { workspace = true }
 semio-framework-hash = { path = "../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
-semio-s-plugin-stdio = { path = "../../../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", default-features = false }
-semio-s-plugin-gis = { path = "../../../✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-stdio = { path = "../../../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", default-features = false, optional = true }
+semio-s-plugin-gis = { path = "../../../✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust", default-features = false, optional = true }
 semio-framework-plugin-host = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../🧰️framework/📦️packages/🦀️rust" }
 semio-framework-plugin.workspace = true

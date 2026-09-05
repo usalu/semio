@@ -482,6 +482,21 @@ pub struct HomeSpaceRow {
     pub members: String,
     pub updated: String,
     pub origin: &'static str,
+    /// 🛂️ The CALLING client's current membership role in this space, as folded from hub-confirmed
+    /// directory events — `None` for a space the caller is not a member of (a public row) and for
+    /// every local-only catalog row. The Home renderer hides author-only affordances on this and
+    /// never on `origin`; the authoritative capability still comes from the administration page.
+    pub role: Option<DirectorySpaceRole>,
+}
+
+/// 🛂️ The caller's role in one folded space, or `None` when they are not a current member.
+pub use store::os_directory::DirectorySpaceRole;
+
+fn caller_role(space: &store::os_directory::DirectorySpace, client_id: &str) -> Option<DirectorySpaceRole> {
+    if client_id.is_empty() {
+        return None;
+    }
+    space.members.iter().find(|member| member.user_id == client_id).map(|member| member.role)
 }
 
 async fn directory_kind_str(kind: store::os_directory::DirectorySpaceKind) -> &'static str {
@@ -518,7 +533,7 @@ async fn local_visibility_str(visibility: &SpaceVisibility) -> &'static str {
 /// (`origin: "local"`) — a hub row wins on an id collision (a space promoted from local to hub keeps
 /// its hub-confirmed data, never a stale local shadow). Contract §C0 row-id grammar for the e2e is
 /// `space:<id>`; callers building the table's `data-row-id` prepend that prefix to `HomeSpaceRow.id`.
-pub async fn home_space_rows(directory: &store::os_directory::DirectoryReadModel) -> Vec<HomeSpaceRow> {
+pub async fn home_space_rows(directory: &store::os_directory::DirectoryReadModel, client_id: &str) -> Vec<HomeSpaceRow> {
     let mut seen = HashSet::new();
     let mut rows = Vec::new();
     for (id, space) in &directory.spaces {
@@ -531,6 +546,7 @@ pub async fn home_space_rows(directory: &store::os_directory::DirectoryReadModel
             members: space.view.member_count.to_string(),
             updated: space.view.updated_at_ms.to_string(),
             origin: "hub",
+            role: caller_role(space, client_id),
         });
     }
     for entry in list_all_space_catalog_entries().await {
@@ -547,6 +563,9 @@ pub async fn home_space_rows(directory: &store::os_directory::DirectoryReadModel
             members: "1".into(),
             updated: entry.updated_at.clone(),
             origin: "local",
+            // 🏠️ The local-only catalog is single-user by construction and carries no directory
+            // membership; a local row therefore never offers a directory-owned affordance.
+            role: None,
         });
     }
     rows

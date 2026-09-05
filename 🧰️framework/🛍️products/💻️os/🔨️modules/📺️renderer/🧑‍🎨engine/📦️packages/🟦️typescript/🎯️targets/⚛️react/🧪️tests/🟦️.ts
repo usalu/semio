@@ -7,6 +7,8 @@ const repoRoot = resolve(root, "../../../../../../../../../..");
 
 const wasmEngineStub = resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts");
 const testLevel = process.env.SEMIO_TEST_LEVEL ?? "fundamental";
+const includeBackboneWorker = process.env.SEMIO_INCLUDE_BACKBONE_WORKER === "1";
+const backboneWorkerSuite = resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts");
 const longInSourceSuites = [
   resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts"),
   resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx"),
@@ -46,6 +48,6 @@ export default defineConfig({
     // and quick deliberately select the bounded resident-composition file; long restores the default
     // package corpus plus moderate in-source suites; exhaustive adds the expensive incremental ownership
     // matrices. A file must never appear in both `include` and `includeSource`, which would double-count it.
-    includeSource: testLevel === "exhaustive" ? exhaustiveInSourceSuites : testLevel === "long" ? longInSourceSuites : [],
+    includeSource: includeBackboneWorker ? [backboneWorkerSuite] : testLevel === "exhaustive" ? [...exhaustiveInSourceSuites] : testLevel === "long" ? [...longInSourceSuites] : [],
   },
 });

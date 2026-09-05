@@ -1,0 +1,96 @@
+@capability-fem2d-1-mutate
+@oracle-fem2d-python-independent
+@comparison-ordered-json-v1
+@mutations-fem2d-1-any-mesh
+Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in Python — and require the same answer
+  🧩️ Duplicated (relative paths adjusted, the extra spec-vector-replay Outline dropped — its committed-fixture references only resolve from the real owning subset, which the escape guard blocks a ✳️any-owned case from reaching sideways into) from `../../../🕸️mesh/🧪️tests/🕸️mutate-fem2d-1-mesh/` by shard F4 (this ticket) to close `unregistered-mutation-vocabulary` at the `✳️any/🧬️schema/🧬️mutations` owner — same mechanism E3 already proved on `sequence`: reuse the already-manifested `fem2d-1-mutate` capability, no new v2 manifest entry or runtime-inventory coordinate. The dropped Outline's own replay evidence stays intact, undiminished, at the original subset-owned case above — this duplicate only needs to satisfy the coverage gate's mutate-<kind>/inverse-<kind> requirement.
+
+
+  This case is a CROSS-LANGUAGE DIFFERENTIAL, relocated out of the artifact-level `mutate-fem2d-1`
+  case in ticket `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION`
+  so this subset's own kinds (`create-node`, `delete-node`, `create-element`, `delete-element`, `replace-element`, `create-section`, `delete-section`, `replace-section`, `create-region`, `delete-region`, `replace-region`) have a subset-owned test. The reference is
+  `🐍️.py` in this directory: a second implementation of the `s.fem.fem2d` structural model and
+  this subset's typed mutations, written in Python from
+  `../../../🌐️any/🧬️schema/📸️snapshot/🔣️.json` (the nine members, `additionalProperties: false`),
+  from `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` and from the committed specification
+  vectors. It imports nothing from this repository's Rust.
+
+  Why a second implementation rather than a third-party library. What this vocabulary edits is the
+  MODEL, not the analysis. `code_aster`, `OpenSees`, `anastruct` and `PyNite` compute displacements
+  and forces FROM a model; none of them reads `.dsl.semio`, none defines this document. What a
+  reference can genuinely adjudicate is the model algebra, and that is what this one does.
+
+  A DEFECT IN THE SPECIFICATION, found while writing the reference and reported rather than worked
+  around. Two of the three schema files here do not say what they claim.
+  `…/🧬️schema/🧬️mutations/🔣️.json` is a verbatim copy of the SNAPSHOT schema with `title`
+  changed to `Fem2dMutation`. And in the snapshot schema itself, every one of the nine record types
+  is an EMPTY `{"title": …, "type": "object"}` with no properties at all. The record shapes the
+  reference implements were read off the committed vectors instead, which agree with one another on
+  every field.
+
+  The artifact is real. `local://🏗️timber-portal-frame.snapshot.json` is the SAME derived timber-portal-frame model every
+  fem2d mutation subset case shares — a twelve-node timber-and-steel portal frame with a ridge at
+  7.6 m, derived ONCE by
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w16-cross-language/🐍️derive-fem2d-frame.py`
+  from the artifact's own committed demo model, with seven unreferenced spares appended so every
+  `delete-` and `replace-` verb this vocabulary declares has an unambiguous trailing target — see
+  `../../../🌐️any/🧪️tests/🔄️round-trips-the-committed-document/🥒️.feature` for the full derivation
+  provenance. No `create-` verb in this vocabulary carries an index, so the inverse of a delete is
+  exact only for a trailing record; that limit is a property of the closed schema, not of an
+  implementation, and both implementations share it.
+
+  The committed specification vectors were KEPT, not replaced: `spec-vector-<kind>` replays each
+  handcrafted `(before, mutation, after)` triple through both implementations.
+
+  Both implementations additionally assert, in role, that each verb writes exactly ONE of the nine
+  members. That is the check an after-snapshot comparison cannot make on its own: an implementation
+  that re-derived a sibling collection on every edit — renumbering ids, re-sorting sections — would
+  still land on the right value for the member it meant to write.
+
+  @id-mutate
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Apply <id> to the real derived timber portal frame
+    Given the real derived model local://🏗️timber-portal-frame.snapshot.json
+    When the <id> mutation is applied with the parameters the feature states
+      """
+      <mutation>
+      """
+    Then both implementations produce the same model, and only the member this verb writes moved
+    Examples:
+    | id              | mutation                                                                                                                                                                                                                                                                                   |
+    | create-node     | {"mutation":"createNode","node":{"id":"eave_mid","x":4.0,"y":5.6}}                                                                                                                                                                                                                         |
+    | delete-node     | {"mutation":"deleteNode","id":"n3"}                                                                                                                                                                                                                                                        |
+    | create-element  | {"mutation":"createElement","element":{"kind":"bar","id":"e12","start":"rc0","end":"rc1","materialId":"steel","sectionId":"ipe300"}}                                                                                                                                                       |
+    | delete-element  | {"mutation":"deleteElement","id":"e11"}                                                                                                                                                                                                                                                    |
+    | replace-element | {"mutation":"replaceElement","id":"e3","newElement":{"kind":"bar","id":"e3","start":"n1","end":"n2","materialId":"steel","sectionId":"ipe300"}}                                                                                                                                            |
+    | create-section  | {"mutation":"createSection","section":{"id":"chs114","name":"CHS 114 Column","area":0.0016,"iy":2.4e-06}}                                                                                                                                                                                  |
+    | delete-section  | {"mutation":"deleteSection","id":"ipe300"}                                                                                                                                                                                                                                                 |
+    | replace-section | {"mutation":"replaceSection","id":"chs76","newSection":{"id":"chs76","name":"CHS 76 Foundation Column reinforced","area":0.0014,"iy":1.8e-06}}                                                                                                                                             |
+    | create-region   | {"mutation":"createRegion","region":{"id":"roof_slab","name":"Roof Slab","outline":[[0.0,5.6],[8.0,5.6],[8.0,5.7],[0.0,5.7]],"holes":[],"thickness":0.14,"materialId":"concrete","meshSize":0.5}}                                                                                          |
+    | delete-region   | {"mutation":"deleteRegion","id":"slab_spare"}                                                                                                                                                                                                                                              |
+    | replace-region  | {"mutation":"replaceRegion","id":"r1","newRegion":{"id":"r1","name":"First Floor Slab with stair opening","outline":[[10.0,2.75],[12.0,2.75],[12.0,2.85],[10.0,2.85]],"holes":[[[10.6,2.78],[11.4,2.78],[11.4,2.82],[10.6,2.82]]],"thickness":0.2,"materialId":"concrete","meshSize":1.0}} |
+
+  @id-inverse
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Undo <id> on the real derived frame and land back on it
+    Given the real derived model local://🏗️timber-portal-frame.snapshot.json
+    When the <id> mutation is applied and then its own computed inverse is applied
+      """
+      <mutation>
+      """
+    Then both implementations agree on the mutated model AND on the restored one, member for member and index for index
+    Examples:
+    | id              | mutation                                                                                                                                                                                                                                                                                   |
+    | create-node     | {"mutation":"createNode","node":{"id":"eave_mid","x":4.0,"y":5.6}}                                                                                                                                                                                                                         |
+    | delete-node     | {"mutation":"deleteNode","id":"n3"}                                                                                                                                                                                                                                                        |
+    | create-element  | {"mutation":"createElement","element":{"kind":"bar","id":"e12","start":"rc0","end":"rc1","materialId":"steel","sectionId":"ipe300"}}                                                                                                                                                       |
+    | delete-element  | {"mutation":"deleteElement","id":"e11"}                                                                                                                                                                                                                                                    |
+    | replace-element | {"mutation":"replaceElement","id":"e3","newElement":{"kind":"bar","id":"e3","start":"n1","end":"n2","materialId":"steel","sectionId":"ipe300"}}                                                                                                                                            |
+    | create-section  | {"mutation":"createSection","section":{"id":"chs114","name":"CHS 114 Column","area":0.0016,"iy":2.4e-06}}                                                                                                                                                                                  |
+    | delete-section  | {"mutation":"deleteSection","id":"ipe300"}                                                                                                                                                                                                                                                 |
+    | replace-section | {"mutation":"replaceSection","id":"chs76","newSection":{"id":"chs76","name":"CHS 76 Foundation Column reinforced","area":0.0014,"iy":1.8e-06}}                                                                                                                                             |
+    | create-region   | {"mutation":"createRegion","region":{"id":"roof_slab","name":"Roof Slab","outline":[[0.0,5.6],[8.0,5.6],[8.0,5.7],[0.0,5.7]],"holes":[],"thickness":0.14,"materialId":"concrete","meshSize":0.5}}                                                                                          |
+    | delete-region   | {"mutation":"deleteRegion","id":"slab_spare"}                                                                                                                                                                                                                                              |
+    | replace-region  | {"mutation":"replaceRegion","id":"r1","newRegion":{"id":"r1","name":"First Floor Slab with stair opening","outline":[[10.0,2.75],[12.0,2.75],[12.0,2.85],[10.0,2.85]],"holes":[[[10.6,2.78],[11.4,2.78],[11.4,2.82],[10.6,2.82]]],"thickness":0.2,"materialId":"concrete","meshSize":1.0}} |

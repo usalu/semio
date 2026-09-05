@@ -3,7 +3,44 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
-import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCargo, runCargoTestBudgeted, runCmdStatus, resolveTestLevel } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import assert from "node:assert/strict";
+import Ajv2020 from "ajv/dist/2020.js";
+import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCargo, runCargoTestBudgeted, runCmdStatus, resolveTestLevel, runExactCargoLaws } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+
+/** 🔔️ Neutral lifecycle and actual native/cooperative idle wake acceptance. */
+class WorkerMaintenanceCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("worker-maintenance-check accepts only --native");
+    const owner = join(this.root, "../../🔔️maintenance");
+    const fixture = JSON.parse(readFileSync(join(owner, "🧪️fixtures/🔣️.json"), "utf8"));
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(owner, "🧪️fixtures/🧬️.schema.json"), "utf8")));
+    assert(validate(fixture), JSON.stringify(validate.errors));
+    const owners = new Map<string, { requested: boolean; running: boolean; closing: boolean }>();
+    for (const step of fixture.lifecycle) {
+      const entry = owners.get(step.owner);
+      let actual: string;
+      if (step.action === "install") { owners.set(step.owner, { requested: false, running: false, closing: false }); actual = "installed"; }
+      else if (!entry) actual = "stale";
+      else if (step.action === "request") { actual = entry.closing ? "closed" : entry.requested ? "coalesced" : "requested"; if (!entry.closing) entry.requested = true; }
+      else if (step.action === "take") { assert(entry.requested && !entry.running); entry.requested = false; entry.running = true; actual = "running"; }
+      else if (step.action === "remove") { entry.closing = true; entry.requested = false; if (entry.running) actual = "pending"; else { owners.delete(step.owner); actual = "removed"; } }
+      else { assert(entry.running); entry.running = false; if (entry.closing) entry.requested = false; else if (step.action === "finish-more") entry.requested = true; actual = entry.requested ? "requested" : "idle"; }
+      assert.equal(actual, step.expected, JSON.stringify(step));
+    }
+    assert.equal(owners.size, 0);
+    assert.deepEqual(fixture.competingWork.order, fixture.competingWork.jobs.flatMap((job: number, index: number) => [job, fixture.competingWork.hooks[index]]));
+    console.log(`worker-maintenance-independent-oracle: AJV=1 lifecycle=${fixture.lifecycle.length} capacity=${fixture.capacity} native=1 cooperative=1`);
+    assert(existsSync(join(owner, "🦀️.rs")), "missing fixed maintenance-hook implementation");
+    const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
+    for (const marker of ["struct WorkerMaintenanceTicket", "struct WorkerMaintenanceRegistry", "enum PoolWork", "closed: bool", "entry.running", "entry.closing", "checked_add(1)", "fn shutdown(", "fn finish("]) assert(source.includes(marker), `missing maintenance owner primitive: ${marker}`);
+    const pool = readFileSync(join(owner, "../🦀️.rs"), "utf8");
+    for (const api of ["install_maintenance_hook", "request_maintenance", "remove_maintenance_hook"]) assert.equal(pool.match(new RegExp(`pub fn ${api}\\(`, "g"))?.length, 2, `native/cooperative API mismatch: ${api}`);
+    assert(pool.includes("job.run(&inner.maintenance)") && pool.includes("job.run(&self.inner.maintenance)"), "both pool schedulers must run fixed work under their existing permits");
+    if (segments[0] !== "--native") return;
+    const receipts = await runExactCargoLaws({ cwd: this.repoRoot, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{ package: "semio-framework-async", target: { kind: "lib", name: "semio_framework_async" }, laws: ["worker_maintenance_matches_neutral_retention_and_aba_lifecycle", "worker_maintenance_capacity_and_pool_identity_are_exact", "worker_maintenance_native_idle_wake_uses_no_queued_job", "worker_maintenance_cooperative_wake_obeys_pump_and_drr", "worker_maintenance_native_running_close_and_shutdown_keep_exact_invocation", "worker_maintenance_native_interleaves_io_jobs_and_rotating_hooks", "worker_maintenance_cooperative_interleaves_io_jobs_and_rotating_hooks", "native_drr_finishes_eligible_deficit_frontier_before_idle", "cooperative_maintenance_retains_deficit_until_later_host_turn", "cooperative_maintenance_snapshot_contention_preserves_queued_job", "cooperative_maintenance_live_host_revisits_queued_owner"] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listBudgetMs: 60_000, lawBudgetMs: 120_000, progress(event) { console.log(`worker-maintenance-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
+    for (const receipt of receipts) console.log(`worker-maintenance-native-receipt: ${JSON.stringify(receipt)}`);
+  }
+}
 
 //#region 🦀️Checks
 class CheckScript extends BundleScript {
@@ -73,6 +110,6 @@ class PreviewGeneratedScript extends BundleScript {
 }
 //#endregion 🔖️Typegen
 
-const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript);
+const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("worker-maintenance-check", WorkerMaintenanceCheckScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

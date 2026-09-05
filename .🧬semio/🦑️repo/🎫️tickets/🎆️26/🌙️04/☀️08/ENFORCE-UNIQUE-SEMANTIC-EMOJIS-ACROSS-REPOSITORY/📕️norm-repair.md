@@ -617,3 +617,108 @@ All 35 descriptors and payload schemas were read together with their committed m
 | change-liquid-rho-p-eff | 🧷️ | Effective bonded reinforcement ratio |
 | change-liquid-es-mpa | 🌀️ | Elastic reinforcement stiffness |
 | change-liquid-sr-max-mm | 🕳️ | Maximum crack spacing |
+
+All 35 listed EN 1992 operations and 34 case names are now physically current, with exact descriptor, Rust mount, Python vector, feature table, oracle-manifest and central-member references. The suitable bridge-compression case is retained. The liquid-retaining example and primary asset now share the domain identity `🛢️liquid-retaining-fem-anchor`. Current verification parses 256 JSON files, checks all 35 descriptor owner/emoji/schema agreements, and resolves 148 Rust/TypeScript mounts with zero issues. Canonical generation and the 392-payload Ajv/hostile freshness check pass. Fixture discovery remains running at this point; no runtime fixture pass is claimed yet.
+
+## EN 1995 timber review
+
+The root schema explicitly identifies timber. Its family is now `🪵️en1995`, aggregate tests `🪵️mutate-en1995-1`, and glulam footbridge example/primary-asset owner `🌉️glulam-footbridge`; exact authored references, live artifact policy coordinates and the owner-specific oracle override follow these physical moves. The twenty descriptors, schemas and applied mutation vectors were inspected. The following operation choices express distinct timber inputs; every renamed case uses its operation icon except the already suitable bridge-fatigue case, which retains its bridge.
+
+| Semantic kind | Chosen emoji | Meaning |
+| --- | --- | --- |
+| change-b-mm | ↔️ | Beam width |
+| change-a-mm2 | 📐️ | Gross section area |
+| change-load-duration | ⏳️ | Load-duration class |
+| change-a-vert-ms2 | 🦶️ | Footfall acceleration |
+| change-annex | 🌍️ | National design jurisdiction |
+| change-section-depth-mm | 📏️ | Size-effect depth |
+| change-w-mm3 | 📊️ | Section modulus |
+| change-service-class | 🌧️ | Environmental moisture exposure |
+| change-n-cycles-bridge | 🔁️ | Repeated fatigue cycles |
+| change-a-ef-mm2 | 🧩️ | Effective connection area |
+| change-h-mm | ↕️ | Beam height |
+| change-fvk | ✂️ | Shear resistance |
+| change-m-crit-knm | ⚠️ | Critical buckling threshold |
+| change-m-ed-knm | ⤴️ | Applied bending moment |
+| change-fc0-k | 🗜️ | Parallel compressive strength |
+| change-fmk | 🛡️ | Bending strength |
+| change-n-ed-kn | 🏋️ | Axial design force |
+| change-v-ed-kn | 🪚️ | Applied shear force |
+| change-fire-duration-min | 🔥️ | Fire exposure |
+| change-f-ed-kn | 🔩️ | Fastener design force |
+
+All twenty timber operations and nineteen unsuitable scenarios are physically current. The already suitable bridge-fatigue scenario keeps its bridge. Inspection of executable fixture declarations exposed additional stale coordinates: Python vector tuples and both Gherkin tables used unprefixed case names, while the oracle manifest invented test-tube-prefixed case names. Those exact fields now name the actual handpicked cases; semantic scenario IDs were preserved. Both EN 1992 and EN 1995 adapters now explicitly bind their existing `vector_root` parameter to the `asset://🧬️schema/🧬️mutations` namespace already declared by their Gherkin features.
+
+The generic manifest fixture verifier completed with zero fixtures, so it is explicitly not evidence for these mutation vectors. Instead, the repository's actual feature parser and declared-fixture resolver produced plans for **141 EN 1992 assets and 81 EN 1995 assets**, with zero parse errors or missing assets. The actual Python test host `Context` then ran the registered independent adapter handlers: **71/71 EN 1992 scenarios and 41/41 EN 1995 scenarios passed**, including all mutation, inverse and identity-round-trip cases. These were real committed fixture reads and independent computations, not permissive filename matching or expected-value replay.
+
+## EN 1996 masonry review
+
+All 22 payload schemas and applied mutation vectors were read. Masonry now has the material identity `🪨️en1996`, distinct from the existing `🧱️din4108` building-envelope sibling; the earlier provisional brick proposal would have collided with that current sibling. The aggregate test collection is `🪨️mutate-en1996-1`; the loadbearing-wall example and primary-asset owner are `🧱️loadbearing-wall`.
+
+The handpicked operations distinguish shear resistance `✂️change-f-vk-mpa`, effective shear section `🧩️change-shear-area-mm2`, gross section `📐️change-area-mm2`, bending `⤴️change-m-ed-knm`, mortar `🪣️change-mortar`, effective height `↕️change-h-ef-mm`, modulus `📊️change-z-mm3`, storeys `🏢️change-storeys`, shear force `🪚️change-v-ed-kn`, wall thickness `🧱️change-wall-thickness-mm`, bed joint `🥪️change-bed-joint-thickness-mm`, fire `🔥️change-fire-resistance-min`, jurisdiction `🌍️change-annex`, sliding force `↔️change-h-ed-kn`, manufacturing control `🏭️change-masonry-class`, design situation `🎭️change-design-situation`, masonry units `🧊️change-unit`, friction `🧲️change-mu`, exposure `💧️change-exposure`, compression `🗜️change-fk-mpa`, axial load `🏋️change-n-ed-kn`, and effective thickness `📏️change-t-ef-mm`. Cases take the operation's subject icon except the seismic-situation case, whose actual payload warrants `🌋️`.
+
+All 22 masonry operation/case pairs, descriptor fields, package/aggregate mounts, Python and feature vectors, oracle-manifest directory fields and taxonomy names are now coherent. Current inspection accounts for **398 files, 165 parsed JSON files, 22 descriptor owner/emoji/schema agreements and 109 resolving package mounts**, with zero issues. The actual feature parser resolves **89 assets**; the actual Python host and independent adapter pass **45/45 scenarios**, including all mutation, inverse and identity-round-trip handlers. Central taxonomy validation returns `[]`.
+
+A catalogue freshness run launched after timber overlapped the subsequent masonry source edits and correctly failed as stale. This was caused by this repair sequence, not an external pre-existing failure. A new generator/freshness pair is being run at the now-coherent masonry boundary; no next-family source edit occurs until that pair finishes.
+
+That coherent-boundary retry completed successfully: **392 payloads generated, then the Ajv/hostile freshness check passed** before EN 1997's physical cutover began.
+
+## EN 1997 geotechnical review
+
+All 22 descriptors, schemas and applied mutation vectors were inspected, plus the demo's actual foundation/pile input document. The reviewed family identity is `🌍️en1997`, describing ground engineering; its aggregate case collection will be `🌍️mutate-en1997-1`. The demonstration owner retains `🎬️demo`, matching its explicit Demo registration rather than assigning a new public example identity.
+
+The selected operation subjects are cohesion `🧲️change-c-kpa`, pile-shaft resistance `🪵️change-qs-kpa`, soil weight `⚖️change-gamma-kn-m3`, pile diameter `⭕️change-pile-dm`, pile-base area `🔘️change-pile-base-area-m2`, investigated depth `🔎️change-z-investigated-m`, pile-base resistance `🛡️change-qb-kpa`, footing footprint `🦶️change-footing-area-m2`, jurisdiction `🌍️change-annex`, pile length `📏️change-pile-lm`, shaft-resistance factor `🎚️change-alpha-s`, soil elastic modulus `🌀️change-es-mpa`, horizontal load `➡️change-h-ed-kn`, design approach `🧭️change-design-approach`, settlement threshold `🚦️change-settlement-limit-mm`, footing width `↔️change-bm`, pile axial load `🏗️change-n-pile-ed-kn`, Poisson ratio `🧮️change-nu`, founding depth `⬇️change-dfm`, friction angle `📐️change-phi-deg`, vertical load `🏋️change-v-ed-kn`, and ground-profile count `🗺️change-pile-n-profiles`. Each case takes its operation's subject icon.
+
+All 22 geotechnical operations and cases are now current. Exact authored references, descriptors, oracle source/scenario declarations, Python vectors and Gherkin tables follow the physical names. The actual feature parser resolves **89 assets**, and the actual Python host passes **45/45 independent mutation, inverse and identity-round-trip scenarios**. Canonical generation/freshness passes **392 payloads** after this coherent cutover.
+
+## Strict registry correction and four-family closure
+
+A stricter parent run exposed a duplicate normalized `🌍️change-annex` registry row. Inspection also found that older physical operation names omitted VS16 while their central registry entries contained it, so earlier physical-token substitutions missed those central entries. The exact reviewed normalized entries were corrected, and shared current names were registered only once. Missing case and aggregate-test memberships were then added explicitly. The earlier argument-free `validateTaxonomy()` result did not prove loaded runtime-catalog validity; subsequent claims use `validateTaxonomy(loadCatalogTaxonomy())`.
+
+The loaded runtime catalog now validates with `[]`. All **99 operations** across EN 1992/1995/1996/1997 have exact registered schema-member identities. Recursive semantic directory resolution now covers **468 + 303 + 325 + 324 descendant directories** across those four families with zero unresolved nodes. This check is additional to physical emoji cardinality/uniqueness and the actual independent fixture computations.
+
+The full current Norm structural audit covers **6,747 files, 5,616 directories and 12,356 governed entries**, with zero findings in all eight categories. This does not close the semantic task: EN 1999, ISO 16757 and VDI 3805 still had unrelated palette names when that audit passed.
+
+## EN 1999 aluminium review
+
+All 26 descriptors, schemas and applied mutation payloads were read. The family is now `🪶️en1999`, identifying lightweight aluminium structures; its aggregate tests are `🪶️mutate-en1999-1`. The example and its primary-asset owner are `🏠️aluminium-roof-purlin`, identifying the actual roof member. These exact physical roots and their source/descriptor/policy/oracle coordinates are coherent.
+
+The selected operation identities express shell thickness `🐚️change-shell-t-mm`, weld throat `🔥️change-weld-throat-mm`, temperature `🌡️change-theta-c`, buckling length `📏️change-l-cr-mm`, shell compressive stress `🗜️change-sigma-ed-shell-mpa`, weld shear `✂️change-v-weld-ed-kn`, fatigue cycles `🔁️change-n-cycles`, fatigue stress range `↕️change-delta-sigma-ed`, detail category `🏷️change-delta-sigma-c`, plate-buckling factor `🎚️change-sheet-k-sigma`, weld seam length `🧵️change-weld-length-mm`, sheet section modulus `📊️change-sheet-w-el-mm3`, fatigue slope `📉️change-fatigue-m`, weld correlation `🧮️change-beta-w`, shell radius `⭕️change-shell-r-mm`, sheet width `↔️change-sheet-b-mm`, member bending `⤴️change-m-ed-knm`, axial load `🏋️change-n-ed-kn`, sheet bending `🌊️change-sheet-m-ed-knm`, jurisdiction `🌍️change-annex`, buckling reduction `⬇️change-chi`, section area `📐️change-a-mm2`, torsion `🌀️change-it-mm4`, member section modulus `🧊️change-w-el-mm3`, sheet thickness `📑️change-sheet-t-mm`, and alloy composition `⚗️change-alloy`.
+
+The three existing shell-case seashells are meaningful and retained. The temperature fixture's old name incorrectly called theta a fatigue detail in MPa; the actual schema's fire-protection implementation explicitly wraps `theta_c` as `QuantityKind::Temperature`, and the fixture changes 180 to 225. Its corrected physical case is therefore `🌡️raises-temperature-to-225-c`; the stable mutation/scenario identity is not changed. All other unsuitable case icons take their operation's subject icon.
+
+All 26 operation/case pairs, descriptors and executable fixture declarations are now current. The loaded catalog validates with `[]`, and recursive semantic lookup resolves all **369 descendant directories**. The actual feature parser resolves **105 assets**, and the real Python host and independent adapter pass **53/53 mutation, inverse and identity-round-trip scenarios** with zero failures. Shared catalogue freshness is deferred until the concurrently reviewed ISO 16757 and VDI 3805 sources are coherent.
+
+## ISO 16757 product-catalogue review
+
+All 21 payload schemas, descriptors and applied mutation payloads were read. The family identity is `📇️iso16757`, expressing the product catalogue and dictionary rather than another indistinguishable book. Aggregate tests are `📇️mutate-iso16757-1`; the explicitly registered Demo and Demo Session owners remain unchanged.
+
+The handpicked operation subjects are product creation `📦️create-product`, property shape `📐️create-property-definition`, product label `🏷️rename-product`, part-number computation `🧮️replace-part-number-rule`, constraint release `🔓️remove-selection-constraint`, subject hierarchy `🌳️create-subject`, manufacturer `🏭️rename-manufacturer`, product removal `🚫️delete-product`, subject pruning `✂️delete-subject`, product collection `🧺️create-product-group`, series `🧵️change-selection-series`, disconnected input `🔌️remove-part-number-input`, erased property `🧽️delete-property-definition`, exchange stages `🔄️change-exchange-process`, configurable input `🎛️change-part-number-input`, cleared collection `🧹️delete-product-group`, selection target `🎯️change-selection-class`, catalogue identity `📇️rename-catalogue`, group identity `🗂️rename-product-group`, execution budget `🚦️update-script-limits`, and binding constraint `🔒️add-selection-constraint`. The 21 sibling identities are distinct from each other and the language/encoding surface siblings.
+
+Nine case icons already fit their actual input or action and are retained: the two pencil renames, four explicit removal cases, two numeric part-number inputs and catalogue restamping. Twelve unrelated palette cases take their operation subject, except the selection-length-property case, whose explicit length dimension warrants `📏️`.
+
+The source cutover now resolves **334 semantic descendant directories**, validates the loaded catalog with `[]`, parses **158 JSON files**, and verifies all **21 descriptor owner/emoji/schema agreements**. The feature parser resolves **85 declared assets**. The actual independent Python host passes **42/42 mutation and inverse scenarios**. Its additional identity-round-trip scenario fails explicitly on the existing undocumented nested DSL carrier; this failure is retained, not bypassed. No claim is made that the complete 43-scenario suite passes.
+
+The first ISO declaration substitution omitted Unicode source decoding and inserted mojibake into its Python/feature fixture-name fields. The real fixture resolver caught this immediately; those exact introduced strings were repaired and the subsequent 85-asset resolution and 42 independent computations succeeded. An additional ISO editor source scan found older corrupted comments/localized strings; their exact UTF-8 text is now restored. No fixture payload data was edited.
+
+A final Rust literal-path inspection also exposed the repeated `standards/subsets` prefix in four previously reviewed aggregate test files. Those exact prefixes were removed in timber, masonry, geotechnics and aluminium. All embedded byte/string paths now resolve across the six owned families: **354 EN 1992, 219 EN 1995, 237 EN 1996, 237 EN 1997, 273 EN 1999 and 228 ISO 16757**. These literal checks supplement, rather than replace, native compilation.
+
+At the final coherent Norm boundary, canonical generation produced **392 payloads** and the subsequent Ajv/hostile freshness check passed. The full Norm audit again covered **6,747 files, 5,616 directories and 12,356 governed entries**, with zero findings in all eight categories. The VDI 3805 branch was repaired and independently verified by the parent agent; its evidence is separate. Native compilation is not claimed by this follow-up.
+
+## Final existing example and reference follow-up
+
+The parent agent's final missing-import scan prompted a fresh read-only inventory of all existing Norm demo tests. There are 30 current tests across 15 families, not the earlier bounded search's 28. Executing those exact files reproduced 30 missing `🧪️artifact.ts` errors. Every exact removed-helper import now uses `bun:test`; nine primary-asset coordinates now point into their already-existing named DSL asset folders. No DSL bytes or example assertions were replaced.
+
+Two remaining book-labelled subjects were handpicked from their actual DSL: `🔥️retail-hydrocarbon-fire` explicitly sets the hydrocarbon fire curve, and `🔩️high-strength-connection` specifies the bolted/welded high-strength steel connection. Their example directories and corresponding generic test-labelled asset directories were moved explicitly, four physical moves. Exact owned references and the central example/asset memberships were updated.
+
+The existing Norm JS test router retains the concurrent retained-command authority implementation and additionally executes all 30 reviewed demos. The uncached `@semio-tech/norm-js:test` run passes 30/30 tests and 30 assertions. Its existing authority check reports 15 editors × three migrated routes; its pre-existing warning that the committed descriptor contains zero interactiveJob classifications is preserved and not hidden. The existing Norm JS launch target was already present and was not duplicated.
+
+A whole-Norm Rust literal-path audit then found 868 stale repeated standards/subset prefixes across seven other family aggregate suites: DIN 4108 (88), EN 1998 (196), EN 1991 (128), EN 1994 (88), DIN 16798 (248), DIN 18599 (52), EN 1993 (68). Every proposed shorter literal was first resolved read-only against the current filesystem, then each exact repeated prefix was removed in those seven files. Three remaining unrelated aggregate labels became `⚡️mutate-din18599-1`, `🧩️mutate-en1994-1` and `🔩️mutate-en1993-1`, with exact references and central memberships reconciled. No native build or canonical generator was rerun for these fixture-location-only changes.
+
+The production fixture resolver subsequently identified 816 bare-case URI failures across DIN 4108, EN 1998, EN 1991, EN 1994, DIN 16798 and EN 1993. All 204 existing physical case identities were inspected; those exact already-reviewed names were copied into the Gherkin outline fixture columns and corresponding Python vector-coordinate fields. This was reference reconciliation, not automatic emoji selection or filesystem renaming. The shared Norm Python engine's default URI base also still repeated the standards/subset prefix; its exact default string now matches the actual subset-relative URI base. Existing explicit per-subset overrides were preserved.
+
+Final full-Norm validation resolves all **6,971 Rust literal path/include mounts** and all **1,583 declared fixture URIs** across **15 features and 800 expanded scenarios**. Running the actual repository Python host with the declared Norm oracle package on its import path passes **796/800** scenarios: EN 1995 41, EN 1999 53, DIN 4108 45, EN 1998 99, EN 1991 65, EN 1990 19, EN 1996 45, EN 1994 45, EN 1992 71, DIN 16798 126, DIN 18599 27, EN 1993 35, ISO 16757 42, and VDI 3805 38, EN 1997 45. This is one independent Python engine with 15 subset data contributions, not 15 independent algorithms.
+
+Four documented refusals remain: EN 1990's two insert-variable-action scenarios lack the specified content-address rule for the composed `qK` child; ISO 16757 and VDI 3805 each retain the nested-carrier identity refusal. No refusal was bypassed or reported as passing. The final scoped naming audit again reports zero in every category over **12,356 governed entries**; strict loaded taxonomy validation returns `[]`. The nine corrected example asset coordinates all resolve, the 30 tests pass through Nx, and no old removed-helper import remains under Norm.
+
+At the parent agent's request, the already-repaired Energy and Demonstrator JS targets were also added once each to both live launch configuration and its source seed, using the requested display names. TypeScript JSONC parsing accepts both files and verifies both exact commands occur once. This does not add or modify either plugin's executable target.

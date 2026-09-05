@@ -1,6 +1,6 @@
 //! 🪢 Hub-private static native openable catalog provider.
 
-use super::trusted_catalog::NativeCodecBinding;
+use super::trusted_catalog::{NativeCodecBinding, NativeCodecProviderPackageV1, NativeCodecProviderSourceV1};
 use super::{AuthorityError, OperationContext};
 use semio_s_plugin_stdio::registry::NativeCodecFactoryReceipt;
 use std::collections::BTreeSet;
@@ -25,12 +25,7 @@ pub struct NativeCodecProviderSetV1 {
 impl NativeCodecProviderSetV1 {
     /// 🧷️ Selects only compiled-in providers; VCS remains absent until its private receipt is verified.
     pub const fn linked() -> Self {
-        Self {
-            entries: &[
-                NativeCodecProviderEntryV1 { plugin_id: "stdio", package_id: "semio:stdio", preview: preview_stdio_bindings },
-                NativeCodecProviderEntryV1 { plugin_id: "gis", package_id: "semio:gis", preview: preview_gis_bindings },
-            ],
-        }
+        Self { entries: &[NativeCodecProviderEntryV1 { plugin_id: "stdio", package_id: "semio:stdio", preview: preview_stdio_bindings }, NativeCodecProviderEntryV1 { plugin_id: "gis", package_id: "semio:gis", preview: preview_gis_bindings }] }
     }
 
     pub(crate) fn preview(&self, plugin_id: &str, package_id: &str, version: &str, context: &OperationContext<'_>) -> Result<Vec<NativeCodecBinding>, AuthorityError> {
@@ -43,6 +38,12 @@ impl NativeCodecProviderSetV1 {
         let bindings = (selected.preview)(version, context)?;
         context.checkpoint()?;
         Ok(bindings)
+    }
+}
+
+impl NativeCodecProviderSourceV1 for NativeCodecProviderSetV1 {
+    fn preview(&self, package: NativeCodecProviderPackageV1<'_>, _descriptor: &semio_framework::PackageDescriptor, context: &OperationContext<'_>) -> Result<Vec<NativeCodecBinding>, AuthorityError> {
+        self.preview(package.plugin_id, package.package_id, package.version, context)
     }
 }
 
@@ -60,8 +61,13 @@ fn preview_gis_bindings(version: &str, context: &OperationContext<'_>) -> Result
     for receipt in receipts {
         context.checkpoint()?;
         let identity = receipt.identity();
-        if identity.plugin_id != "gis" || identity.package_id != "semio:gis" || identity.package_version != version
-            || identity.pack_schema_hash == [0; 32] || !factories.insert(identity.factory_id) || !artifacts.insert((identity.artifact_kind, identity.schema)) {
+        if identity.plugin_id != "gis"
+            || identity.package_id != "semio:gis"
+            || identity.package_version != version
+            || identity.pack_schema_hash == [0; 32]
+            || !factories.insert(identity.factory_id)
+            || !artifacts.insert((identity.artifact_kind, identity.schema))
+        {
             return Err(rejected());
         }
         let codec = receipt.into_codec().map_err(|_| rejected())?;
@@ -115,10 +121,7 @@ impl NativeOpenableCatalogProviderV1 {
             }
             bindings.push(NativeCodecBinding::new(receipt.plugin_id, receipt.package_id, receipt.artifact_kind, codec));
         }
-        if factories.len() != NATIVE_STDIO_PROVIDER_RECEIPTS
-            || descriptor_codecs.len() != NATIVE_STDIO_PROVIDER_RECEIPTS
-            || artifact_schemas.len() != NATIVE_STDIO_PROVIDER_RECEIPTS
-        {
+        if factories.len() != NATIVE_STDIO_PROVIDER_RECEIPTS || descriptor_codecs.len() != NATIVE_STDIO_PROVIDER_RECEIPTS || artifact_schemas.len() != NATIVE_STDIO_PROVIDER_RECEIPTS {
             return Err(provider_error("provider receipt closure is incomplete"));
         }
         Ok(Self { bindings })

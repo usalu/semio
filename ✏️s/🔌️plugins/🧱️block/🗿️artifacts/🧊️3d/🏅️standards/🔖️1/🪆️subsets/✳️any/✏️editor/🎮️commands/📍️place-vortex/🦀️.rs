@@ -17,7 +17,7 @@ pub struct PlaceVortex {
     pub normal: [f64; 3],
 }
 
-pub async fn handle(payload: &PlaceVortex, doc: &ArtifactView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+pub fn handle(payload: &PlaceVortex, doc: &ArtifactView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
     let view = block3d_window_view(cfg.snapshot, &payload.window_id);
     let offset = instance_offset_for_representation(doc.snapshot, &view, &payload.object_id);
     let local_position = [payload.position[0] - offset[0], payload.position[1] - offset[1], payload.position[2] - offset[2]];

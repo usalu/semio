@@ -16,7 +16,7 @@
           "scenarios": [
             {
               "id": "inserts-an-empty-clip-ahead-of-the-spin-clip",
-              "directoryName": "🧪️inserts-an-empty-clip-ahead-of-the-spin-clip"
+              "directoryName": "🎞️inserts-an-empty-clip-ahead-of-the-spin-clip"
             }
           ]
         },
@@ -27,7 +27,7 @@
           "scenarios": [
             {
               "id": "removes-the-bob-clip-and-leaves-spin-in-place",
-              "directoryName": "🧪️removes-the-bob-clip-and-leaves-spin-in-place"
+              "directoryName": "🚫️removes-the-bob-clip-and-leaves-spin-in-place"
             }
           ]
         },
@@ -38,7 +38,7 @@
           "scenarios": [
             {
               "id": "promotes-the-bob-clip-ahead-of-the-spin-clip",
-              "directoryName": "🧪️promotes-the-bob-clip-ahead-of-the-spin-clip"
+              "directoryName": "⏫️promotes-the-bob-clip-ahead-of-the-spin-clip"
             }
           ]
         },
@@ -49,7 +49,7 @@
           "scenarios": [
             {
               "id": "flips-the-spin-and-bob-clips",
-              "directoryName": "🧪️flips-the-spin-and-bob-clips"
+              "directoryName": "🔀️flips-the-spin-and-bob-clips"
             }
           ]
         }

@@ -78,8 +78,8 @@ export function mutationEnvelopeFromWire(envelope: WireMutationEnvelope, codec: 
 /** 📡️ Wire-protocol presence identity v3 — distinct from the UI-rendering {@link PresencePeer} scene
  * prop. `cursor`/`viewport` are DELETED (ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-
  * UNIVERSAL-ARTIFACT-CREATION C7.1) — replaced by `views` (artifact scope, one entry per open
- * window/surface) and `ui` (app scope, `data-ui-path` hover/focus/press). `color`/`surface` are
- * stamped by the client actor (`🧵️backbone-worker.ts`'s `stampSession`) — shells never fill them. */
+ * window/surface) and `ui` (app scope, `data-ui-path` hover/focus/press). Client stamping is only
+ * a local hint; the Hub replaces `color` and `surface` at authenticated presence ingress. */
 export type ArtifactPresencePeer = {
   readonly actor: string;
   readonly connectedAtMs: number;
@@ -91,9 +91,9 @@ export type ArtifactPresencePeer = {
   /** 🕹️ Twin of Rust `PresenceInteraction` (presence bit 5) — the peer's live hover/selection per
    * interaction domain. Optional because a peer that has never interacted encodes no bit-5 section. */
   readonly interaction?: ArtifactPresenceInteraction;
-  /** 🎨️ Hub-assigned palette index (bit 6), stamped by the client actor. */
+  /** 🎨️ Hub-assigned palette index (bit 6), normalized at authenticated ingress. */
   readonly color?: number;
-  /** 🪟️ Canonical surface id (bit 7), stamped by the client actor. */
+  /** 🪟️ Canonical plan-bound surface id (bit 7), normalized by the Hub. */
   readonly surface?: string;
   /** 🪟️ Every open window/surface's live camera + in-view pointer (bit 8, ARTIFACT scope), matched
    * by `space`. Empty when the peer has no open windows for this document. */
@@ -413,24 +413,171 @@ export function encodePresencePeer(peer: ArtifactPresencePeer): number[] {
   return out;
 }
 
-/** 🎯️ The inverse of {@link encodePresencePeer} — the TS twin of Rust `decode_presence_peer`. Any
- * flag bit ≥ 10 set throws — no silent forward compatibility, matching the Rust decoder's
- * `ProtocolError::Malformed { what: "presence peer flags", .. }`. */
+/** 🛡️ Fixed hostile-input ceilings shared byte-for-byte with Rust. */
+export const PRESENCE_PEER_WIRE_LIMITS_V1 = Object.freeze({
+  maximumEntryBytes: 4_096,
+  maximumTextBytes: 1_024,
+  maximumPresencePackBytes: 2_048,
+  maximumViews: 16,
+  maximumInteractionDomains: 16,
+  maximumDomainIds: 64,
+  maximumConnectedAtMs: Number.MAX_SAFE_INTEGER,
+});
+
+class PresencePeerReader {
+  readonly bytes: Uint8Array;
+  position: number;
+
+  constructor(bytes: Uint8Array, position: number) {
+    this.bytes = bytes;
+    this.position = position;
+  }
+
+  fail(what: string, detail: string): never {
+    throw new Error(`${what} at ${this.position}: ${detail}`);
+  }
+
+  varint(what: string): number {
+    const start = this.position;
+    let value = 0n;
+    for (let index = 0; index < 10; index += 1) {
+      const byte = this.bytes[this.position];
+      if (byte === undefined) this.fail(what, "truncated varint");
+      this.position += 1;
+      if (index === 9 && byte > 1) this.fail(what, "varint exceeds u64");
+      value |= BigInt(byte & 0x7f) << BigInt(index * 7);
+      if ((byte & 0x80) === 0) {
+        if (this.position - start > 1 && byte === 0) this.fail(what, "noncanonical varint");
+        if (value > BigInt(Number.MAX_SAFE_INTEGER)) this.fail(what, "integer exceeds exact TypeScript range");
+        return Number(value);
+      }
+    }
+    return this.fail(what, "overlong varint");
+  }
+
+  length(maximum: number, what: string): number {
+    const length = this.varint(what);
+    if (length > maximum) this.fail(what, "limit exceeded");
+    if (length > this.bytes.length - this.position) this.fail(what, "truncated field");
+    return length;
+  }
+
+  count(maximum: number, what: string): number {
+    return this.length(maximum, what);
+  }
+
+  text(what: string): string {
+    const length = this.length(PRESENCE_PEER_WIRE_LIMITS_V1.maximumTextBytes, what);
+    const end = this.position + length;
+    let value: string;
+    try { value = new TextDecoder("utf-8", { fatal: true }).decode(this.bytes.subarray(this.position, end)); }
+    catch { return this.fail(what, "invalid utf8"); }
+    this.position = end;
+    return value;
+  }
+
+  blob(what: string): number[] {
+    const length = this.length(PRESENCE_PEER_WIRE_LIMITS_V1.maximumPresencePackBytes, what);
+    const end = this.position + length;
+    const value = Array.from(this.bytes.subarray(this.position, end));
+    this.position = end;
+    return value;
+  }
+
+  byte(what: string): number {
+    const value = this.bytes[this.position];
+    if (value === undefined) this.fail(what, "truncated byte");
+    this.position += 1;
+    return value;
+  }
+
+  boolean(what: string): boolean {
+    const value = this.byte(what);
+    if (value !== 0 && value !== 1) this.fail(what, "boolean must be zero or one");
+    return value === 1;
+  }
+
+  number(what: string): number {
+    const end = this.position + 8;
+    if (end > this.bytes.length) this.fail(what, "truncated f64");
+    const value = new DataView(this.bytes.buffer, this.bytes.byteOffset + this.position, 8).getFloat64(0, true);
+    if (!Number.isFinite(value)) this.fail(what, "non-finite f64");
+    this.position = end;
+    return value;
+  }
+
+  triple(what: string): readonly [number, number, number] {
+    return [this.number(what), this.number(what), this.number(what)];
+  }
+
+  strings(what: string): string[] {
+    const count = this.count(PRESENCE_PEER_WIRE_LIMITS_V1.maximumDomainIds, what);
+    const values: string[] = [];
+    for (let index = 0; index < count; index += 1) values.push(this.text(what));
+    return values;
+  }
+
+  interaction(): ArtifactPresenceInteraction {
+    const app_id = this.text("presence interaction app id");
+    const count = this.count(PRESENCE_PEER_WIRE_LIMITS_V1.maximumInteractionDomains, "presence interaction domains");
+    const domains: ArtifactPresenceDomain[] = [];
+    for (let index = 0; index < count; index += 1) domains.push({ domain: this.text("presence interaction domain"), granularity: this.text("presence interaction granularity"), selected: this.strings("presence interaction selected"), hovered: this.strings("presence interaction hovered") });
+    return { app_id, domains };
+  }
+
+  viewKind(): ArtifactPresenceViewKind {
+    const tag = this.byte("presence view kind");
+    if (tag === 0) return { kind: "canvas", x: this.number("presence canvas x"), y: this.number("presence canvas y"), zoom: this.number("presence canvas zoom") };
+    if (tag === 1) return { kind: "orbit", position: this.triple("presence orbit position"), target: this.triple("presence orbit target"), up: this.triple("presence orbit up"), fov: this.number("presence orbit fov") };
+    if (tag === 2) return { kind: "geo", lng: this.number("presence geo longitude"), lat: this.number("presence geo latitude"), zoom: this.number("presence geo zoom"), bearing: this.number("presence geo bearing"), pitch: this.number("presence geo pitch") };
+    return this.fail("presence view kind", `unknown tag ${tag}`);
+  }
+
+  views(): ArtifactPresenceWindowView[] {
+    const count = this.count(PRESENCE_PEER_WIRE_LIMITS_V1.maximumViews, "presence views");
+    const views: ArtifactPresenceWindowView[] = [];
+    for (let index = 0; index < count; index += 1) {
+      const windowId = this.text("presence view window id");
+      const space = this.text("presence view space");
+      const kind = this.viewKind();
+      const size: readonly [number, number] = [this.number("presence view width"), this.number("presence view height")];
+      const pointer = this.boolean("presence view pointer") ? this.triple("presence view pointer") : undefined;
+      views.push({ windowId, space, kind, size, pointer });
+    }
+    return views;
+  }
+
+  optionalText(what: string): string | undefined {
+    return this.boolean(what) ? this.text(what) : undefined;
+  }
+
+  ui(): ArtifactPresenceUi {
+    return { hoveredPath: this.optionalText("presence ui hovered path"), focusedPath: this.optionalText("presence ui focused path"), pressedPath: this.optionalText("presence ui pressed path") };
+  }
+}
+
+/** 🎯️ Exact, allocation-bounded inverse of {@link encodePresencePeer}. */
 export function decodePresencePeer(bytes: Uint8Array, pos: [number]): ArtifactPresencePeer {
-  const actor = readStr(bytes, pos);
-  const flags = readVarintU64(bytes, pos);
-  if (flags >> 10 !== 0) throw new Error(`presence peer flags: unknown flag bits set: ${flags.toString(16)}`);
-  const connectedAtMs = readVarintU64(bytes, pos);
-  const label = flags & (1 << 0) ? readStr(bytes, pos) : undefined;
-  const presencePack = flags & (1 << 1) ? readBytes(bytes, pos) : undefined;
-  const userId = flags & (1 << 2) ? readStr(bytes, pos) : undefined;
-  const role = flags & (1 << 3) ? readStr(bytes, pos) : undefined;
-  const dragGhostJson = flags & (1 << 4) ? readStr(bytes, pos) : undefined;
-  const interaction = flags & (1 << 5) ? readPresenceInteraction(bytes, pos) : undefined;
-  const color = flags & (1 << 6) ? readU8(bytes, pos) : undefined;
-  const surface = flags & (1 << 7) ? readStr(bytes, pos) : undefined;
-  const views = flags & (1 << 8) ? readVecPresenceWindowView(bytes, pos) : [];
-  const ui = flags & (1 << 9) ? readPresenceUi(bytes, pos) : undefined;
+  if (!Number.isSafeInteger(pos[0]) || pos[0] < 0 || pos[0] > bytes.length) throw new Error("presence peer position: invalid");
+  if (bytes.length - pos[0] > PRESENCE_PEER_WIRE_LIMITS_V1.maximumEntryBytes) throw new Error("presence peer entry bytes: limit exceeded");
+  const reader = new PresencePeerReader(bytes, pos[0]);
+  const actor = reader.text("presence peer actor");
+  const flags = reader.varint("presence peer flags");
+  if (flags > 0x3ff) reader.fail("presence peer flags", `unknown flag bits set: ${flags.toString(16)}`);
+  const connectedAtMs = reader.varint("presence peer connected at");
+  if (connectedAtMs > PRESENCE_PEER_WIRE_LIMITS_V1.maximumConnectedAtMs) reader.fail("presence peer connected at", "limit exceeded");
+  const label = flags & (1 << 0) ? reader.text("presence peer label") : undefined;
+  const presencePack = flags & (1 << 1) ? reader.blob("presence peer pack") : undefined;
+  const userId = flags & (1 << 2) ? reader.text("presence peer user id") : undefined;
+  const role = flags & (1 << 3) ? reader.text("presence peer role") : undefined;
+  const dragGhostJson = flags & (1 << 4) ? reader.text("presence peer drag ghost") : undefined;
+  const interaction = flags & (1 << 5) ? reader.interaction() : undefined;
+  const color = flags & (1 << 6) ? reader.byte("presence peer color") : undefined;
+  const surface = flags & (1 << 7) ? reader.text("presence peer surface") : undefined;
+  const views = flags & (1 << 8) ? reader.views() : [];
+  const ui = flags & (1 << 9) ? reader.ui() : undefined;
+  if (reader.position !== bytes.length) reader.fail("presence peer", "trailing bytes");
+  pos[0] = reader.position;
   return { actor, connectedAtMs, label, presencePack, userId, role, dragGhostJson, interaction, color, surface, views, ui };
 }
 
@@ -501,22 +648,6 @@ function writePresenceViewKind(out: number[], kind: ArtifactPresenceViewKind): v
   }
 }
 
-function readPresenceViewKind(bytes: Uint8Array, pos: [number]): ArtifactPresenceViewKind {
-  const tag = bytes[pos[0]];
-  if (tag === undefined) throw new Error("presence view kind tag: truncated");
-  pos[0] += 1;
-  if (tag === 0) return { kind: "canvas", x: readF64(bytes, pos), y: readF64(bytes, pos), zoom: readF64(bytes, pos) };
-  if (tag === 1) {
-    const read3 = (): readonly [number, number, number] => [readF64(bytes, pos), readF64(bytes, pos), readF64(bytes, pos)];
-    const position = read3();
-    const target = read3();
-    const up = read3();
-    return { kind: "orbit", position, target, up, fov: readF64(bytes, pos) };
-  }
-  if (tag === 2) return { kind: "geo", lng: readF64(bytes, pos), lat: readF64(bytes, pos), zoom: readF64(bytes, pos), bearing: readF64(bytes, pos), pitch: readF64(bytes, pos) };
-  throw new Error(`presence view kind tag: unknown tag ${tag}`);
-}
-
 function writePresenceWindowView(out: number[], view: ArtifactPresenceWindowView): void {
   writeStr(out, view.windowId);
   writeStr(out, view.space);
@@ -527,25 +658,9 @@ function writePresenceWindowView(out: number[], view: ArtifactPresenceWindowView
   if (presencePresent(view.pointer)) for (const value of view.pointer) writeF64(out, value);
 }
 
-function readPresenceWindowView(bytes: Uint8Array, pos: [number]): ArtifactPresenceWindowView {
-  const windowId = readStr(bytes, pos);
-  const space = readStr(bytes, pos);
-  const kind = readPresenceViewKind(bytes, pos);
-  const size: readonly [number, number] = [readF64(bytes, pos), readF64(bytes, pos)];
-  const pointer: readonly [number, number, number] | undefined = readBool(bytes, pos) ? [readF64(bytes, pos), readF64(bytes, pos), readF64(bytes, pos)] : undefined;
-  return { windowId, space, kind, size, pointer };
-}
-
 function writeVecPresenceWindowView(out: number[], values: readonly ArtifactPresenceWindowView[]): void {
   writeVarintU64(out, values.length);
   for (const value of values) writePresenceWindowView(out, value);
-}
-
-function readVecPresenceWindowView(bytes: Uint8Array, pos: [number]): ArtifactPresenceWindowView[] {
-  const count = readVarintU64(bytes, pos);
-  const result: ArtifactPresenceWindowView[] = [];
-  for (let i = 0; i < count; i++) result.push(readPresenceWindowView(bytes, pos));
-  return result;
 }
 
 function writePresenceUi(out: number[], ui: ArtifactPresenceUi): void {
@@ -554,12 +669,6 @@ function writePresenceUi(out: number[], ui: ArtifactPresenceUi): void {
   writeOptStr(out, ui.pressedPath ?? null);
 }
 
-function readPresenceUi(bytes: Uint8Array, pos: [number]): ArtifactPresenceUi {
-  const hoveredPath = readOptStr(bytes, pos) ?? undefined;
-  const focusedPath = readOptStr(bytes, pos) ?? undefined;
-  const pressedPath = readOptStr(bytes, pos) ?? undefined;
-  return { hoveredPath, focusedPath, pressedPath };
-}
 //#endregion 🔖️PresenceView
 
 //#region 🔖️Combinators

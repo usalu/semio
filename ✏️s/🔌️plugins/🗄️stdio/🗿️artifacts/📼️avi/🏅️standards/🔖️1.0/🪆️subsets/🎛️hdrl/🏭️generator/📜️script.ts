@@ -21,7 +21,7 @@
 //   bun 📜️script.ts generate  [--only <fixture-id>]     # writes each declared emoji directory and leaf
 //   bun 📜️script.ts manifests [--only <fixture-id>]     # prints the fixtureManifests block (JSON)
 //
-// @see ../../../../💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️markup/🏭️generator/📜️script.ts — the sibling
+// @see ../../../../💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts — the sibling
 //      generator this file's CLI/recipe shape is mirrored from (both hand-author before/after
 //      states directly rather than executing mutation dispatch).
 // @see ./🦀️riff-avi-codec/src/main.rs — the actual codec; `build <recipe-id> <out-dir>` and

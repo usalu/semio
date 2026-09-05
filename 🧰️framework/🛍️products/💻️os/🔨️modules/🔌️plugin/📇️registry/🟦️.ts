@@ -40,3 +40,26 @@ export function buildPluginCatalog(): PluginCatalog {
 /** 🗂️ Ready-built singleton — every caller in this product shares the same generated catalog rows. */
 export const PLUGIN_CATALOG: PluginCatalog = buildPluginCatalog();
 // #endregion 🗂️PluginCatalog
+
+// #region 🏠️HostPlaygroundFilter
+/**
+ * 🏠️ Whether a raw playground filter (a variant, one of its aliases, or a bare crate pluginId)
+ * resolves to a plugin crate declaring `[package.metadata.semio].host` — the studio-hub case every
+ * consumer treats as "unfiltered". Pure lookup over the two generated registry modules, with the
+ * identical resolution order as `projectedHostPluginFilter` in `📇️registry/📜️script.ts` (variant or
+ * alias first, else the filter read as a bare plugin id) and the identical host predicate
+ * (`host !== undefined` on the plugin row); `🧫️fixtures/🏠️host-filter.json` is the shared vector
+ * pinning the two together. `⚙️vite.config.ts` mounts this one because it costs two array scans over
+ * already-generated rows, where the script twin costs the repository walk behind `getWorkspaceRoot`.
+ */
+export function isHostPlaygroundFilter(
+  pluginFilter?: string,
+  playgrounds: readonly { readonly variant: string; readonly pluginId: string; readonly aliases: readonly string[] }[] = PLAYGROUND_BUILD_TARGETS,
+  targets: readonly { readonly pluginId: string; readonly host?: unknown }[] = [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS],
+): boolean {
+  if (!pluginFilter) return true;
+  const variantRow = playgrounds.find((row) => row.variant === pluginFilter || row.aliases.includes(pluginFilter));
+  const pluginId = variantRow?.pluginId ?? pluginFilter;
+  return targets.some((target) => target.pluginId === pluginId && target.host !== undefined);
+}
+// #endregion 🏠️HostPlaygroundFilter

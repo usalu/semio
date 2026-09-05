@@ -2639,6 +2639,11 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect, Plu
         E::ReleaseCapability(inner) => Effect::ReleaseCapability { id: CapabilityId(inner.id) },
         E::Subscribe(inner) => Effect::Subscribe { topic: inner.topic },
         E::Unsubscribe(inner) => Effect::Unsubscribe { topic: inner.topic },
+        E::RequestInferenceProposal(inner) => Effect::RequestInferenceProposal {
+            kind: match inner.kind {
+                wit_effects::InferenceProposalKind::GisMapBoundsRegion => semio_framework::kernel::InferenceProposalKind::GisMapBoundsRegion,
+            },
+        },
     })
 }
 
@@ -8649,6 +8654,10 @@ struct AppRouterState {
     surfaces: HashMap<(semio_framework::ArtifactDialect, semio_framework::AppRole), Vec<semio_framework::AppRef>>,
     /// 🚧️ Every `(plugin_id, app_id)` seen so far, for O(1) `surface.conflict` detection.
     registered_refs: std::collections::HashSet<(String, String)>,
+    /// 🧯️ `plugin_id -> the fault that excluded it` (ticket 26/09/05/S-END-TO-END lane H). A
+    /// breaching manifest registers NO surface at all — never a partial prefix of its apps — and is
+    /// remembered here so a shell can show the plugin as excluded instead of silently unroutable.
+    plugin_faults: BTreeMap<String, semio_framework::Fault>,
 }
 
 impl AppRouter {
@@ -8664,6 +8673,12 @@ impl AppRouter {
 
     /// 🧪️ `register_plugin` split out for direct manifest-driven testing (no wasmtime component
     /// needed to exercise the two frozen conflict/gate faults) — pure aside from the `Mutex` lock.
+    /// All-or-nothing per plugin: a breaching manifest leaves no surface behind and its fault is
+    /// remembered under its plugin id (`plugin_faults`), so one bad manifest costs exactly that
+    /// plugin's surfaces. Its `artifact_kinds` ownership claims survive for the same reason
+    /// `unregister_plugin` keeps them — a later contributor must never inherit an excluded plugin's
+    /// kind. TS twin: `AppRouter.build` (`🎠️kernel/🟦️.ts`), shared vectors
+    /// `🎠️kernel/🧫️fixtures/🧫️app-router-plugin-faults/🔣️.json`.
     pub async fn register_manifest(&self, plugin_id: &str, manifest: &PluginManifest) -> Result<(), semio_framework::Fault> {
         let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let dependencies: BTreeSet<String> = manifest.dependencies.iter().map(|dependency| dependency.plugin_id.clone()).collect();
@@ -8671,25 +8686,62 @@ impl AppRouter {
         for spec in &manifest.artifact_kinds {
             state.owners.entry(spec.id.clone()).or_insert_with(|| plugin_id.to_string());
         }
+        let mut staged: Vec<((semio_framework::ArtifactDialect, semio_framework::AppRole), semio_framework::AppRef)> = Vec::with_capacity(manifest.apps.len());
+        let mut staged_refs: BTreeSet<String> = BTreeSet::new();
+        let mut breach: Option<semio_framework::Fault> = None;
         for app in &manifest.apps {
             let owner = state.owners.entry(app.dialect.artifact_kind.clone()).or_insert_with(|| plugin_id.to_string()).clone();
-            if owner != plugin_id {
-                let permitted = state.dependencies.get(plugin_id).map(|deps| deps.contains(&owner)).unwrap_or(false);
-                if !permitted {
-                    return Err(semio_framework::Fault::new(
+            if owner != plugin_id && !state.dependencies.get(plugin_id).map(|deps| deps.contains(&owner)).unwrap_or(false) {
+                breach = Some(
+                    semio_framework::Fault::new(
                         semio_framework::FaultOrigin::Framework,
                         semio_framework::FaultCode::new("surface.contribution-not-permitted"),
                         format!("plugin `{plugin_id}` declares a surface for `{}` (owned by `{owner}`) without listing `{owner}` in its dependencies", app.dialect.to_coordinate()),
-                    ));
-                }
+                    )
+                    .with_scope(semio_framework::FaultScope { plugin_id: Some(plugin_id.to_string()), app_id: Some(app.id.clone()), ..Default::default() }),
+                );
+                break;
             }
             let app_ref = semio_framework::AppRef { plugin_id: plugin_id.to_string(), app_id: app.id.clone() };
-            if !state.registered_refs.insert((app_ref.plugin_id.clone(), app_ref.app_id.clone())) {
-                return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("surface.conflict"), format!("surface `{}` is already registered for plugin `{}`", app_ref.app_id, app_ref.plugin_id)));
+            if state.registered_refs.contains(&(app_ref.plugin_id.clone(), app_ref.app_id.clone())) || !staged_refs.insert(app_ref.app_id.clone()) {
+                breach = Some(
+                    semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("surface.conflict"), format!("surface `{}` is already registered for plugin `{}`", app_ref.app_id, app_ref.plugin_id))
+                        .with_scope(semio_framework::FaultScope { plugin_id: Some(app_ref.plugin_id.clone()), app_id: Some(app_ref.app_id.clone()), ..Default::default() }),
+                );
+                break;
             }
-            state.surfaces.entry((app.dialect.clone(), app.role)).or_default().push(app_ref);
+            staged.push(((app.dialect.clone(), app.role), app_ref));
+        }
+        if let Some(fault) = breach {
+            state.plugin_faults.insert(plugin_id.to_string(), fault.clone());
+            return Err(fault);
+        }
+        state.plugin_faults.remove(plugin_id);
+        for (key, app_ref) in staged {
+            state.registered_refs.insert((app_ref.plugin_id.clone(), app_ref.app_id.clone()));
+            state.surfaces.entry(key).or_default().push(app_ref);
         }
         Ok(())
+    }
+
+    /// 🏗️ Registers a whole catalogue in load order and returns every excluded plugin's fault,
+    /// sorted by plugin id — the total twin of TS `AppRouter.build`. Never aborts on the first
+    /// breach: the plugins that pass still route.
+    pub async fn register_manifests(&self, manifests: &[(String, PluginManifest)]) -> Vec<semio_framework::Fault> {
+        for (plugin_id, manifest) in manifests {
+            let _ = self.register_manifest(plugin_id, manifest).await;
+        }
+        self.plugin_faults().await
+    }
+
+    /// 🧯️ Every excluded plugin's fault, sorted by plugin id — mirrors TS `AppRouter.pluginFaults`.
+    pub async fn plugin_faults(&self) -> Vec<semio_framework::Fault> {
+        self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).plugin_faults.values().cloned().collect()
+    }
+
+    /// 🧯️ The fault that excluded `plugin_id`, or `None` when its surfaces route.
+    pub async fn fault_for(&self, plugin_id: &str) -> Option<semio_framework::Fault> {
+        self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).plugin_faults.get(plugin_id).cloned()
     }
 
     /// 📚️ Every `AppRef` serving `(dialect, role)`, deterministically ordered: the dialect's owner
@@ -8727,6 +8779,7 @@ impl AppRouter {
     pub async fn unregister_plugin(&self, plugin_id: &str) {
         let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         state.dependencies.remove(plugin_id);
+        state.plugin_faults.remove(plugin_id);
         for refs in state.surfaces.values_mut() {
             refs.retain(|app_ref| app_ref.plugin_id != plugin_id);
         }
@@ -8943,6 +8996,49 @@ mod app_router_tests {
             .await
             .expect("re-registering after unregister succeeds (no stale conflict)");
         assert_eq!(router.surfaces_for(&editor_dialect, semio_framework::AppRole::Editor).await, vec![semio_framework::AppRef { plugin_id: "cad".into(), app_id: "s.cad.cad@1/*#editor".into() }]);
+    }
+
+    /// 🧯️ Ticket 26/09/05/S-END-TO-END lane H: the SAME language-neutral vectors the TS twin
+    /// (`🎠️kernel/🟦️.ts`, `AppRouter.build`) consumes — a breaching plugin is excluded whole, every
+    /// other plugin still routes, and the fault is retrievable per plugin id. Both sides read
+    /// `🎠️kernel/🧫️fixtures/🧫️app-router-plugin-faults/🔣️.json`; only codes, owners and route
+    /// orders are compared (the two messages are written in each language's own voice).
+    #[semio_framework_async_macros::async_test]
+    async fn plugin_fault_isolation_matches_the_shared_fixture() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🔨️modules/🎠️kernel/🧫️fixtures/🧫️app-router-plugin-faults/🔣️.json")).expect("app router plugin fault fixture");
+        let text = |value: &serde_json::Value, key: &str| value[key].as_str().expect("fixture string").to_string();
+        let fixture_dialect = |value: &serde_json::Value| semio_framework::ArtifactDialect { artifact_kind: text(value, "artifactKind"), standard: text(value, "standard"), subset: text(value, "subset") };
+        let router = AppRouter::new();
+        let mut manifests = Vec::new();
+        for row in fixture["manifests"].as_array().expect("fixture manifests") {
+            let plugin_id = text(row, "pluginId");
+            let dependencies: Vec<&str> = row["dependencies"].as_array().map(|rows| rows.iter().map(|entry| entry["pluginId"].as_str().expect("fixture dependency id")).collect()).unwrap_or_default();
+            let mut artifact_kinds = Vec::new();
+            for kind in row["artifactKinds"].as_array().map(Vec::as_slice).unwrap_or_default() {
+                artifact_kinds.push(fixture_artifact_kind(kind["id"].as_str().expect("fixture kind id")).await);
+            }
+            let mut apps = Vec::new();
+            for app in row["apps"].as_array().expect("fixture apps") {
+                let role = if text(app, "role") == "viewer" { semio_framework::AppRole::Viewer } else { semio_framework::AppRole::Editor };
+                apps.push(fixture_app(&text(app, "id"), fixture_dialect(&app["dialect"]), role).await);
+            }
+            manifests.push((plugin_id.clone(), fixture_manifest(&plugin_id, dependencies, artifact_kinds, apps).await));
+        }
+        let faults = router.register_manifests(&manifests).await;
+        let expected_faults: Vec<(String, String)> = fixture["expectedFaults"].as_array().expect("fixture faults").iter().map(|row| (text(row, "pluginId"), text(row, "code"))).collect();
+        assert_eq!(faults.iter().map(|fault| (fault.scope.plugin_id.clone().unwrap_or_default(), fault.code.0.clone())).collect::<Vec<_>>(), expected_faults);
+        for (plugin_id, code) in &expected_faults {
+            assert_eq!(router.fault_for(plugin_id).await.map(|fault| fault.code.0), Some(code.clone()), "{plugin_id}");
+        }
+        for row in fixture["expectedOwners"].as_array().expect("fixture owners") {
+            assert_eq!(router.owner_of(&text(row, "artifactKind")).await, Some(text(row, "pluginId")), "{}", text(row, "artifactKind"));
+        }
+        for row in fixture["expectedRoutes"].as_array().expect("fixture routes") {
+            let role = if text(row, "role") == "viewer" { semio_framework::AppRole::Viewer } else { semio_framework::AppRole::Editor };
+            let expected: Vec<semio_framework::AppRef> = row["entries"].as_array().expect("fixture entries").iter().map(|entry| semio_framework::AppRef { plugin_id: text(entry, "pluginId"), app_id: text(entry, "appId") }).collect();
+            assert_eq!(router.surfaces_for(&fixture_dialect(&row["dialect"]), role).await, expected, "{}#{}", fixture_dialect(&row["dialect"]).to_coordinate(), text(row, "role"));
+        }
+        assert!(router.fault_for("cad").await.is_none(), "a clean plugin carries no fault");
     }
 
     /// 🔗️ Lane 1-D parity reconciliation (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET,

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schemas/hub-native-artifact-provider-frontier-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "headless", "production", "configuredWithoutProvider"],
+  "properties": {
+    "schema": { "const": "semio.hub.native-artifact-provider-frontier/v1" },
+    "headless": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["defaultFeatures", "features", "directPluginDependencies"],
+      "properties": {
+        "defaultFeatures": { "const": false },
+        "features": { "const": ["sqlite"] },
+        "directPluginDependencies": { "const": [] }
+      }
+    },
+    "production": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["feature", "providerId", "receiptCount", "pluginDependencies"],
+      "properties": {
+        "feature": { "const": "native-artifact-execution" },
+        "providerId": { "const": "stdio+gis/native-codecs/v1" },
+        "receiptCount": { "const": 28 },
+        "pluginDependencies": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "prefixItems": [{ "const": "stdio/full-artifact-catalog" }, { "const": "gis" }],
+          "items": false
+        }
+      }
+    },
+    "configuredWithoutProvider": { "const": "reject" }
+  }
+}

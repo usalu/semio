@@ -16,19 +16,22 @@ extern crate directory as semio_framework_os_kernel;
 
 use axum::body::Bytes;
 use axum::extract::ws::{CloseFrame, Message, WebSocket, WebSocketUpgrade};
-use axum::extract::{DefaultBodyLimit, OriginalUri, Path, State};
+use axum::extract::{DefaultBodyLimit, OriginalUri, Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use db::db_storage::PayloadStorage as _;
 use directory::os_directory::{
-    self, directory_command_sha256, validate_directory_event_page_event, AdminConnectionSnapshotV1, AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1, AdminOperationAuditPhaseV1, AdminOperationAuditV1,
-    AdminOperationProgressV1, AdminOperationStatusV1, AdminPageV1, AdminRecordedConnectionV1, ConnectionView, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryConnectionPhase, DirectoryEvent, DirectoryEventPageErrorV1,
-    DirectoryEventPageV1, DirectoryPresenceActor, DirectoryReadModel, DirectorySpaceDetailV1, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, DocumentOpenArtifactV1,
-    DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1, DocumentOpenPlanErrorV1, DocumentOpenPlanV1, DocumentOpenRevalidationV1,
-    DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, DocumentView, InviteView, MemberSpaceViewV1, MemberView, PublicDocumentCatalogEntryV1, PublicSpaceViewV1, SpaceView, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS,
-    DOCUMENT_OPEN_MAX_SAFE_INTEGER, DOCUMENT_OPEN_PLAN_MAX_TTL_MS,
+    self, directory_command_sha256, same_lease_fields_v1, validate_directory_event_page_event, AdminConnectionSnapshotV1, AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1, AdminOperationAuditPhaseV1,
+    AdminOperationAuditV1, AdminOperationProgressV1, AdminOperationStatusV1, AdminPageV1, AdminRecordedConnectionV1, ConnectionView, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandReceiptV1, DirectoryCommandRequestV1,
+    DirectoryConnectionPhase, DirectoryEvent, DirectoryEventPageErrorV1, DirectoryEventPageV1, DirectoryPresenceActor, DirectoryReadModel, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1,
+    DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageV1,
+    DirectorySpaceAdministrationPublicDocumentWindowV1, DirectorySpaceAdministrationSectionV1, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, DocumentExecutionTargetComponentV1,
+    DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1,
+    DocumentOpenPlanErrorCodeV1, DocumentOpenPlanErrorV1, DocumentOpenPlanV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, DocumentView, MemberSpaceViewV1, MemberView, PublicDocumentCatalogEntryV1,
+    PublicSpaceViewV1, SpaceView, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES,
+    DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, DOCUMENT_OPEN_PLAN_MAX_TTL_MS,
 };
 use directory::os_spr::channel::{PRESENCE_ROSTER_MAXIMUM_BYTES, PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES, PRESENCE_ROSTER_MAXIMUM_ITEMS};
 use directory::{DslValue, FromValue, ToValue};
@@ -46,23 +49,32 @@ use semio_hub::artifact_authority::chunk_cas::SqliteArtifactChunkCasStorage;
 #[cfg(test)]
 use semio_hub::artifact_authority::chunk_cas::{artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1, MemoryArtifactChunkCasStorage};
 use semio_hub::artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStorage, ArtifactChunkCasStores, FsArtifactChunkCasStorage};
+#[cfg(feature = "native-artifact-execution")]
 use semio_hub::artifact_authority::native_openable_provider::NativeCodecProviderSetV1;
-use semio_hub::artifact_authority::trusted_catalog::{TrustedCatalogLoader, VerifiedDocumentOpenSelectionV1, VerifiedTrustedCatalog};
+use semio_hub::artifact_authority::trusted_catalog::{NativeCodecProviderSourceV1, TrustedCatalogLoader, VerifiedDocumentOpenSelectionV1, VerifiedExecutionTargetAssets, VerifiedTrustedCatalog};
 #[cfg(test)]
 use semio_hub::artifact_authority::{ArtifactBlobIntegrity, ArtifactPair, ImmutableArtifactBlobStore};
 use semio_hub::artifact_authority::{AuthorityError, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, CheckpointPublicationOrchestrator, OperationContext, ValidatingCanonicalArtifactAuthority};
 use semio_hub::directory::error::DirectoryError;
 #[cfg(test)]
 use semio_hub::directory::model::AuthSessionIssue;
-use semio_hub::directory::model::{AdminOperationAuditRecord, AuthSessionKind, DocumentScope, InviteRecord, NewAdminOperationAuditRecord, NewDirectoryCommandReceipt, SocketSessionBindingStatus, SocketShareBindingStatus, SpaceRole, SyncSessionRecord};
+use semio_hub::directory::model::{
+    AdminOperationAuditRecord, AuthSessionKind, DirectoryCommandClaimV1, DirectoryCommandDispositionV1, DirectoryCommandReceiptCompletion, DirectoryCommandReceiptRecord, DirectoryCommandResultKindV1, DocumentScope, NewAdminOperationAuditRecord,
+    NewDirectoryCommandReceipt, SocketSessionBindingStatus, SocketShareBindingStatus, SpaceRole, SyncSessionRecord,
+};
 #[cfg(feature = "sqlite")]
 use semio_hub::directory::sqlite::SqliteDirectory;
-use semio_hub::directory::{identity_subject_digest, HubCapability, IdentityAssertionVerifier, IdentityVerificationControl, InviteCapability, LocalBootstrapTransport, SessionCapability, SocketGrantCapability, AUTH_TEXT_MAX_BYTES};
 use semio_hub::directory::{
-    directory_command_result_kind, ArtifactCasSweepContinuation, ArtifactCasSweepRequest, ArtifactCasSweepResult, CommandResult, DirectoryCommandExecutionV1, DirectoryService, HubDirectories, HubDirectory, HubVerifiedCheckpointPublisher,
-    ProjectionRebuildControl, ProjectionRebuildProgress,
-    ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_INTENT_REQUEST_MAX_BYTES, ADMIN_PAGE_MAX, ADMIN_RESPONSE_MAX_BYTES, CAPABILITY_MAX_TTL_SECS, DIRECTORY_EVENT_READ_MAX, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS,
+    directory_command_result_kind, replay_directory_command_receipt, ArtifactCasSweepContinuation, ArtifactCasSweepRequest, ArtifactCasSweepResult, CommandResult, DirectoryCommandExecutionV1, DirectoryService, HubDirectories, HubDirectory,
+    HubVerifiedCheckpointPublisher, ProjectionRebuildControl, ProjectionRebuildProgress, ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_INTENT_REQUEST_MAX_BYTES, ADMIN_PAGE_MAX, ADMIN_RESPONSE_MAX_BYTES, CAPABILITY_MAX_TTL_SECS, DIRECTORY_EVENT_READ_MAX,
+    DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS, SPACE_ADMINISTRATION_PAGE_FETCH_MAX, SPACE_ADMINISTRATION_PAGE_MAX,
 };
+use semio_hub::directory::{identity_subject_digest, HubCapability, IdentityAssertionVerifier, IdentityVerificationControl, InviteCapability, LocalBootstrapTransport, SessionCapability, SocketGrantCapability, AUTH_TEXT_MAX_BYTES};
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+use semio_hub::inference::runtime::{HubInferenceRuntimeV1, UnavailableGisMapApprovalCommitterV1};
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+use semio_hub::inference::sqlite::InferenceJobLedgerV1;
+#[cfg(feature = "native-artifact-execution")]
 use semio_hub::inference::{verified_gis_map_binding, VerifiedGisMapArtifactBindingV1};
 #[cfg(test)]
 use semio_hub::lag_rebootstrap::decode_canonical_checkpoint_pair;
@@ -369,6 +381,9 @@ struct ConfiguredArtifactAuthority {
 trait DocumentOpenCatalogAuthorityV1: Send + Sync {
     fn generation_id(&self) -> &str;
     fn resolve_document_open(&self, descriptor: &DocumentDescriptor, requested_surface_id: Option<&str>, writable: bool) -> Option<VerifiedDocumentOpenSelectionV1>;
+    /// 🧱 Exact-selection asset accessor. It never accepts a package, digest, path or receipt
+    /// selector, and answers only while `current_generation` is still the catalog's own.
+    fn assets_for_current_selection(&self, descriptor: &DocumentDescriptor, requested_surface_id: Option<&str>, writable: bool, current_generation: &str) -> Option<VerifiedExecutionTargetAssets>;
 }
 
 impl DocumentOpenCatalogAuthorityV1 for VerifiedTrustedCatalog {
@@ -379,14 +394,19 @@ impl DocumentOpenCatalogAuthorityV1 for VerifiedTrustedCatalog {
     fn resolve_document_open(&self, descriptor: &DocumentDescriptor, requested_surface_id: Option<&str>, writable: bool) -> Option<VerifiedDocumentOpenSelectionV1> {
         self.resolve_document_open(descriptor, requested_surface_id, writable)
     }
+
+    fn assets_for_current_selection(&self, descriptor: &DocumentDescriptor, requested_surface_id: Option<&str>, writable: bool, current_generation: &str) -> Option<VerifiedExecutionTargetAssets> {
+        self.assets_for_current_selection(descriptor, requested_surface_id, writable, current_generation)
+    }
 }
 
-async fn configured_artifact_authority(bundle_path: Option<std::path::PathBuf>, profile: Option<String>, providers: &NativeCodecProviderSetV1) -> Result<Option<ConfiguredArtifactAuthority>, AuthorityError> {
+async fn configured_artifact_authority(bundle_path: Option<std::path::PathBuf>, profile: Option<String>, providers: Option<&dyn NativeCodecProviderSourceV1>) -> Result<Option<ConfiguredArtifactAuthority>, AuthorityError> {
     let (bundle_path, profile) = match (bundle_path, profile) {
         (None, None) => return Ok(None),
         (Some(bundle_path), Some(profile)) => (bundle_path, profile),
         _ => return Err(AuthorityError::Catalog("OS_HUB_TRUSTED_CATALOG_BUNDLE and OS_HUB_TRUSTED_CATALOG_PROFILE must be configured together".to_string())),
     };
+    let providers = providers.ok_or_else(|| AuthorityError::Catalog("configured trusted catalog requires the native-artifact-execution provider".into()))?;
     let control = StartupCatalogControl;
     let started = control.now_ms();
     let context = OperationContext::new(started.saturating_add(30_000), AuthorityLimits::maximum(), &control);
@@ -415,8 +435,11 @@ fn db_core_document_id(id: &ProtocolArtifactId) -> db::ArtifactId {
 struct PresenceLeaseSlot {
     socket_live_id: String,
     expires_at: tokio::time::Instant,
-    surface: String,
     user_id: Option<String>,
+    connected_at_ms: i64,
+    label: Option<String>,
+    role: Option<String>,
+    document_surface: Option<String>,
     color: u8,
     peer: Option<Vec<u8>>,
 }
@@ -438,12 +461,23 @@ struct PresenceSnapshot {
 struct TestPresenceClock {
     origin: tokio::time::Instant,
     now_ms: std::sync::atomic::AtomicU64,
+    gate_ticks: std::sync::atomic::AtomicBool,
+    tick_admitted: tokio::sync::Semaphore,
+    tick_release: tokio::sync::Semaphore,
+    tick_evaluated: tokio::sync::Semaphore,
 }
 
 #[cfg(test)]
 impl TestPresenceClock {
     fn new() -> Self {
-        Self { origin: tokio::time::Instant::now(), now_ms: std::sync::atomic::AtomicU64::new(0) }
+        Self {
+            origin: tokio::time::Instant::now(),
+            now_ms: std::sync::atomic::AtomicU64::new(0),
+            gate_ticks: std::sync::atomic::AtomicBool::new(false),
+            tick_admitted: tokio::sync::Semaphore::new(0),
+            tick_release: tokio::sync::Semaphore::new(0),
+            tick_evaluated: tokio::sync::Semaphore::new(0),
+        }
     }
 
     fn now(&self) -> tokio::time::Instant {
@@ -452,6 +486,15 @@ impl TestPresenceClock {
 
     fn advance_to(&self, now_ms: u64) {
         self.now_ms.store(now_ms, std::sync::atomic::Ordering::SeqCst);
+    }
+
+    async fn evaluate_tick(&self, ungate: bool) {
+        tokio::time::timeout(std::time::Duration::from_secs(5), self.tick_admitted.acquire()).await.expect("presence tick admission deadline").expect("presence tick admission").forget();
+        if ungate {
+            self.gate_ticks.store(false, std::sync::atomic::Ordering::Release);
+        }
+        self.tick_release.add_permits(1);
+        tokio::time::timeout(std::time::Duration::from_secs(5), self.tick_evaluated.acquire()).await.expect("presence tick evaluation deadline").expect("presence tick evaluation").forget();
     }
 }
 
@@ -557,12 +600,22 @@ impl Default for TestDocumentOpenPlanIssueGate {
 struct TestDocumentOpenCatalog {
     generation_id: String,
     open_targets: Box<[VerifiedDocumentOpenSelectionV1]>,
+    component: std::sync::Arc<[u8]>,
+    descriptor: std::sync::Arc<[u8]>,
 }
 
 #[cfg(test)]
 impl DocumentOpenCatalogAuthorityV1 for TestDocumentOpenCatalog {
     fn generation_id(&self) -> &str {
         &self.generation_id
+    }
+
+    fn assets_for_current_selection(&self, descriptor: &DocumentDescriptor, requested_surface_id: Option<&str>, writable: bool, current_generation: &str) -> Option<VerifiedExecutionTargetAssets> {
+        if current_generation != self.generation_id || self.component.is_empty() || self.descriptor.is_empty() {
+            return None;
+        }
+        let selection = DocumentOpenCatalogAuthorityV1::resolve_document_open(self, descriptor, requested_surface_id, writable)?;
+        Some(VerifiedExecutionTargetAssets { selection, component: std::sync::Arc::clone(&self.component), descriptor: std::sync::Arc::clone(&self.descriptor) })
     }
 
     fn resolve_document_open(&self, descriptor: &DocumentDescriptor, requested_surface_id: Option<&str>, writable: bool) -> Option<VerifiedDocumentOpenSelectionV1> {
@@ -1421,7 +1474,13 @@ struct HubState {
     rebootstrap: Arc<VerifiedRebootstrapSource>,
     _artifact_authority: Option<Arc<HubArtifactAuthority>>,
     verified_catalog: Option<Arc<VerifiedTrustedCatalog>>,
+    #[cfg(feature = "native-artifact-execution")]
     gis_map_binding: Option<Arc<VerifiedGisMapArtifactBindingV1>>,
+    /// @emoji 💡️ The sole GIS Map proposal authority — present only when a verified trusted profile
+    /// froze a writable Map editor selection; otherwise every inference route fails closed with
+    /// `inference.unavailable` and readiness publishes `inference: false`.
+    #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+    inference_runtime: Option<Arc<HubInferenceRuntimeV1>>,
     openable_catalog: Option<Arc<dyn DocumentOpenCatalogAuthorityV1>>,
     _artifact_publication: Arc<HubArtifactPublication>,
     artifact_maintenance: Arc<ArtifactCasMaintenanceSupervisor>,
@@ -1432,6 +1491,8 @@ struct HubState {
     directory_service: Arc<DirectoryService>,
     admin_subjects: Arc<[AdminSubject]>,
     admin_cursor_key: [u8; 32],
+    /// 🏛️ Process-local MAC key authenticating one space-administration keyset cursor.
+    space_administration_cursor_key: [u8; 32],
     admin_operations: Arc<ShardedMap<String, Arc<AdminOperationRuntime>>>,
     admin_operation_slots: Arc<tokio::sync::Semaphore>,
     readiness: Arc<HubReadinessV1>,
@@ -1466,8 +1527,8 @@ struct HubState {
     /// @emoji 👥️ `(document_scope_key_v1, actor)` -> that actor's presence session (contract §C7.3) — ephemeral,
     /// never durable (mirrors the preview lane's own law), rebuilt from nothing on hub restart. The
     /// roster is document-wide now (contract §C7.0): `ServerFrame::Presence` fans out on `fanout`, not
-    /// a surface-scoped channel; a peer's `surface` travels INSIDE its `PresencePeer` bytes, stamped
-    /// by the client actor, never decoded by this hub.
+    /// a surface-scoped channel; identity and the plan-bound surface are reconstructed by Hub
+    /// before canonical peer bytes are stored or published.
     presence: Arc<ShardedMap<(String, String), PresenceLeaseSlot>>,
     presence_publication_gate: Arc<tokio::sync::Mutex<()>>,
     #[cfg(test)]
@@ -1514,7 +1575,8 @@ impl HubState {
         self.presence.for_each(|(scope, actor), slot| {
             if scope == key {
                 if let Some(peer) = &slot.peer {
-                    rows.push((actor.clone(), peer.clone(), DirectoryPresenceActor { actor: actor.clone(), user_id: slot.user_id.clone(), surface: slot.surface.clone(), color: slot.color }));
+                    let directory_actor = slot.document_surface.as_ref().map(|surface| DirectoryPresenceActor { actor: actor.clone(), user_id: slot.user_id.clone(), surface: surface.clone(), color: slot.color });
+                    rows.push((actor.clone(), peer.clone(), directory_actor));
                 }
             }
         });
@@ -1528,7 +1590,9 @@ impl HubState {
             }
             bytes += peer.len();
             peers.push(peer);
-            actors.push(actor);
+            if let Some(actor) = actor {
+                actors.push(actor);
+            }
         }
         PresenceSnapshot { peers, actors }
     }
@@ -1540,20 +1604,44 @@ impl HubState {
     }
 
     /// 🆕️ Selects one live socket as the actor's current owner without making it visible.
-    async fn install_presence_slot(&self, key: &str, space_id: &str, document_id: &str, actor: &str, socket_live_id: &str, surface: &str, user_id: Option<&str>, color: u8, now: tokio::time::Instant) -> PresenceLeaseTransition {
+    async fn install_presence_slot(&self, key: &str, space_id: &str, document_id: &str, actor: &str, slot: PresenceLeaseSlot) -> PresenceLeaseTransition {
         let Ok(_publication) = tokio::time::timeout(std::time::Duration::from_secs(2), self.presence_publication_gate.lock()).await else { return PresenceLeaseTransition::Unavailable };
         let map_key = (key.to_string(), actor.to_string());
         let replaced_visible = self.presence.with(&map_key, |slot| slot.is_some_and(|slot| slot.peer.is_some()));
-        self.presence.insert(
-            map_key,
-            PresenceLeaseSlot { socket_live_id: socket_live_id.to_string(), expires_at: now + std::time::Duration::from_millis(PRESENCE_LEASE_TTL_MS), surface: surface.to_string(), user_id: user_id.map(str::to_string), color, peer: None },
-        );
+        self.presence.insert(map_key, slot);
         if replaced_visible {
             self.publish_presence_delta(key, space_id, document_id, self.presence_snapshot(key));
             PresenceLeaseTransition::Published
         } else {
             PresenceLeaseTransition::NoChange
         }
+    }
+
+    /// 🪪️ Retains only canonical ephemerals under the matching socket's admitted identity.
+    async fn refresh_document_presence(&self, key: &str, space_id: &str, document_id: &str, actor: &str, socket_live_id: &str, peer: Vec<u8>, now: tokio::time::Instant) -> PresenceLeaseTransition {
+        let Ok(input) = protocol::decode_presence_peer(&peer).await else { return PresenceLeaseTransition::Rejected };
+        let normalized = self.presence.with(&(key.to_string(), actor.to_string()), |slot| {
+            slot.filter(|slot| slot.socket_live_id == socket_live_id).map(|slot| protocol::PresencePeer {
+                actor: actor.to_string(),
+                connected_at_ms: slot.connected_at_ms,
+                label: slot.label.clone(),
+                user_id: slot.user_id.clone(),
+                role: slot.role.clone(),
+                color: Some(slot.color),
+                surface: slot.document_surface.clone(),
+                presence_pack: input.presence_pack,
+                drag_ghost_json: input.drag_ghost_json,
+                interaction: input.interaction,
+                views: input.views,
+                ui: input.ui,
+            })
+        });
+        let Some(normalized) = normalized else { return PresenceLeaseTransition::NoChange };
+        let peer = protocol::encode_presence_peer(&normalized).await;
+        if peer.len() > PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES || protocol::decode_presence_peer(&peer).await.is_err() {
+            return PresenceLeaseTransition::Rejected;
+        }
+        self.refresh_presence(key, space_id, document_id, actor, socket_live_id, peer, now).await
     }
 
     /// 💓️ Refreshes only the matching live owner and admits only a bounded visible roster.
@@ -1884,6 +1972,7 @@ fn hub_readiness(
     admin_assets_ready: bool,
     artifact_cas_barrier_ready: bool,
     artifact_cas_sweep_execute: bool,
+    inference_ready: bool,
 ) -> HubReadinessV1 {
     let authentication_kind = match mode {
         HubMode::Development => "local-bootstrap-pipe-v1",
@@ -1907,7 +1996,7 @@ fn hub_readiness(
         artifact_cas_sweeper: HubArtifactCasSweeperReadinessV1 { ready: artifact_cas_barrier_ready, execute: artifact_cas_sweep_execute, default_mode: "dry-run" },
         artifact_authority: HubComponentReadinessV1 { ready: artifact_authority_ready },
         admin_assets: HubComponentReadinessV1 { ready: admin_assets_ready },
-        features: HubFeatureReadinessV1 { open_plan: open_plan_ready, open_plan_exchange: open_plan_ready, rebootstrap: true, mcp_workspace: false, inference: false },
+        features: HubFeatureReadinessV1 { open_plan: open_plan_ready, open_plan_exchange: open_plan_ready, rebootstrap: true, mcp_workspace: false, inference: inference_ready },
     }
 }
 
@@ -2324,6 +2413,164 @@ async fn issue_document_plan_socket_grant_inner(space_id: String, document_id: S
     }
     state.document_open_plans.exchange_to_socket_grant(&intent.plan_receipt, &authority, exchange_at_ms, state.socket_grants.as_ref()).map(Json).map_err(document_open_plan_exchange_error)
 }
+
+//#region 🪪️ExecutionTargetLease
+const DOCUMENT_EXECUTION_TARGET_REQUEST_MAX_BYTES: usize = 8 * 1024;
+const DOCUMENT_EXECUTION_TARGET_DEADLINE_MS: u64 = 8_000;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum DocumentExecutionTargetAssetV1 {
+    Manifest,
+    Component,
+    Descriptor,
+}
+
+/// 🛡️ One protected document-scoped execution-target read. Every call re-authenticates the exact
+/// session or share binding, reloads the durable descriptor, and resolves the current trusted
+/// selection through the catalog's own exact-selection accessor. It accepts only the bounded
+/// `DocumentOpenIntentV1`; a package id, digest, catalog generation, local path or plan receipt is
+/// never a selector. The private browser verifier rejects independently selected reads that differ
+/// from its open plan; this route rejects authorization or directory changes during one selection.
+async fn document_execution_target_selection(space_id: String, document_id: String, headers: HeaderMap, state: HubState, body: Bytes) -> Result<(DocumentExecutionTargetLeaseFieldsV1, VerifiedExecutionTargetAssets), DocumentOpenPlanRouteError> {
+    let content_types = headers.get_all(axum::http::header::CONTENT_TYPE);
+    if !socket_text_bounded(&space_id)
+        || !socket_text_bounded(&document_id)
+        || body.is_empty()
+        || body.len() > DOCUMENT_EXECUTION_TARGET_REQUEST_MAX_BYTES
+        || content_types.iter().count() != 1
+        || content_types.iter().next().and_then(|value| value.to_str().ok()) != Some("application/json")
+    {
+        return Err(document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied));
+    }
+    let encoded = std::str::from_utf8(&body).map_err(|_| document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied))?;
+    let intent: DocumentOpenIntentV1 = directory::os_pack::json::from_json_str(encoded).map_err(|_| document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied))?;
+    intent.validate().map_err(|_| document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied))?;
+    let scope = DocumentScope::new(space_id, document_id);
+    if intent.scope != scope {
+        return Err(document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied));
+    }
+    if !state.readiness.features.open_plan {
+        return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::CatalogUnavailable));
+    }
+    let (subject, _) = authenticate_document_socket_subject(&state, &scope, &headers).await.map_err(document_open_plan_exchange_error)?;
+    let audience = SocketAudienceV1::Document(scope.clone());
+    let _admission = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_record(&subject, &audience)).await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?;
+    match subject.revalidate(state.directory.as_ref(), &audience, now_ms()).await {
+        SocketBindingValidityV1::Active => {}
+        SocketBindingValidityV1::Unauthorized => return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Denied)),
+        SocketBindingValidityV1::Unavailable => return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded)),
+    }
+    let directory_revision = state.directory.head_seq().await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?;
+    if directory_revision == 0 || directory_revision > os_directory::DOCUMENT_OPEN_MAX_SAFE_INTEGER {
+        return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded));
+    }
+    let descriptor =
+        state.directory.get_document_descriptor(&scope).await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?.ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::NotFound))?;
+    let catalog = state.openable_catalog.as_ref().ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::CatalogUnavailable))?;
+    let writable = matches!(subject, SocketSubjectV1::Session { role: Some(SpaceRole::Author), .. });
+    let generation_id = catalog.generation_id().to_string();
+    let assets = catalog.assets_for_current_selection(&descriptor, intent.requested_surface_id.as_deref(), writable, &generation_id).ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::ComponentUnavailable))?;
+    let descriptor_digest_v1 = os_directory::hex_lower(&os_directory::descriptor_digest_v1(&descriptor).map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale))?.0);
+    let checkpoint = state.directory.get_active_artifact_checkpoint(&scope).await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?.map(document_open_checkpoint);
+    let (session_generation, share_generation) = match &subject {
+        SocketSubjectV1::Session { authorization_generation, .. } => (Some(*authorization_generation), None),
+        SocketSubjectV1::Share { .. } => (None, Some(1)),
+    };
+    let component_byte_length = u64::try_from(assets.component.len()).map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::ComponentUnavailable))?;
+    let descriptor_byte_length = u64::try_from(assets.descriptor.len()).map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::ComponentUnavailable))?;
+    if component_byte_length == 0 || component_byte_length > DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES || descriptor_byte_length == 0 || descriptor_byte_length > DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES {
+        return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::ComponentUnavailable));
+    }
+    let fields = DocumentExecutionTargetLeaseFieldsV1 {
+        schema: "semio.os.document-execution-target-lease/v1".into(),
+        version: 1,
+        scope,
+        descriptor_digest_v1,
+        catalog: DocumentOpenCatalogV1 { generation_id: generation_id.clone() },
+        package: assets.selection.package.clone(),
+        component: DocumentExecutionTargetComponentV1 { sha256: assets.selection.package.component_sha256.clone(), blake3: assets.selection.package.component_blake3.clone(), byte_length: component_byte_length },
+        descriptor: DocumentExecutionTargetDescriptorV1 { sha256: assets.selection.package.descriptor_byte_sha256.clone(), byte_length: descriptor_byte_length },
+        artifact: assets.selection.artifact.clone(),
+        parent_dialect: DocumentOpenParentDialectV1 { artifact_kind: assets.selection.parent_dialect.artifact_kind.clone(), standard: assets.selection.parent_dialect.standard.clone(), subset: assets.selection.parent_dialect.subset.clone() },
+        surface: assets.selection.surface.clone(),
+        grant: assets.selection.grant,
+        checkpoint,
+        revalidation: DocumentOpenRevalidationV1 { directory_revision, membership_generation: directory_revision, session_generation, share_generation },
+    };
+    fields.validate().map_err(document_open_plan_exchange_error)?;
+    #[cfg(test)]
+    if let Some(gate) = &state.document_open_plan_issue_gate {
+        gate.admitted.add_permits(1);
+        gate.release.acquire().await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Cancelled))?.forget();
+    }
+    match subject.revalidate(state.directory.as_ref(), &audience, now_ms()).await {
+        SocketBindingValidityV1::Active => {}
+        SocketBindingValidityV1::Unauthorized => return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Denied)),
+        SocketBindingValidityV1::Unavailable => return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded)),
+    }
+    if state.directory.head_seq().await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))? != directory_revision {
+        return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale));
+    }
+    Ok((fields, assets))
+}
+
+async fn issue_document_execution_target(
+    asset: DocumentExecutionTargetAssetV1,
+    uri: axum::http::Uri,
+    space_id: String,
+    document_id: String,
+    state: HubState,
+    request: axum::extract::Request,
+) -> Result<axum::response::Response, DocumentOpenPlanRouteError> {
+    if uri.query().is_some() {
+        return Err(document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied));
+    }
+    tokio::time::timeout(std::time::Duration::from_millis(DOCUMENT_EXECUTION_TARGET_DEADLINE_MS), async move {
+        let (parts, body) = request.into_parts();
+        let body = axum::body::to_bytes(body, DOCUMENT_EXECUTION_TARGET_REQUEST_MAX_BYTES).await.map_err(|_| document_open_plan_route_error(StatusCode::PAYLOAD_TOO_LARGE, DocumentOpenPlanErrorCodeV1::Denied))?;
+        let (fields, assets) = document_execution_target_selection(space_id, document_id, parts.headers, state, body).await?;
+        Ok(match asset {
+            DocumentExecutionTargetAssetV1::Manifest => DirectoryJson(fields).into_response(),
+            DocumentExecutionTargetAssetV1::Component => document_execution_target_bytes(&assets.component),
+            DocumentExecutionTargetAssetV1::Descriptor => document_execution_target_bytes(&assets.descriptor),
+        })
+    })
+    .await
+    .unwrap_or_else(|_| Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded)))
+}
+
+fn document_execution_target_bytes(bytes: &[u8]) -> axum::response::Response {
+    (StatusCode::OK, [(axum::http::header::CONTENT_TYPE, "application/octet-stream".to_string()), (axum::http::header::CONTENT_LENGTH, bytes.len().to_string()), (axum::http::header::CACHE_CONTROL, "no-store".to_string())], bytes.to_vec())
+        .into_response()
+}
+
+async fn issue_document_execution_target_manifest(
+    OriginalUri(uri): OriginalUri,
+    Path((space_id, document_id)): Path<(String, String)>,
+    State(state): State<HubState>,
+    request: axum::extract::Request,
+) -> Result<axum::response::Response, DocumentOpenPlanRouteError> {
+    issue_document_execution_target(DocumentExecutionTargetAssetV1::Manifest, uri, space_id, document_id, state, request).await
+}
+
+async fn issue_document_execution_target_component(
+    OriginalUri(uri): OriginalUri,
+    Path((space_id, document_id)): Path<(String, String)>,
+    State(state): State<HubState>,
+    request: axum::extract::Request,
+) -> Result<axum::response::Response, DocumentOpenPlanRouteError> {
+    issue_document_execution_target(DocumentExecutionTargetAssetV1::Component, uri, space_id, document_id, state, request).await
+}
+
+async fn issue_document_execution_target_descriptor(
+    OriginalUri(uri): OriginalUri,
+    Path((space_id, document_id)): Path<(String, String)>,
+    State(state): State<HubState>,
+    request: axum::extract::Request,
+) -> Result<axum::response::Response, DocumentOpenPlanRouteError> {
+    issue_document_execution_target(DocumentExecutionTargetAssetV1::Descriptor, uri, space_id, document_id, state, request).await
+}
+//#endregion 🪪️ExecutionTargetLease
 
 async fn issue_document_plan_socket_grant(
     OriginalUri(uri): OriginalUri,
@@ -3061,7 +3308,7 @@ async fn handle_client_frame(
             true
         }
         ClientFrame::Presence { peer } => {
-            let _ = state.refresh_presence(key, space_id, document_id, &actor.0, socket_live_id, peer, state.presence_now()).await;
+            let _ = state.refresh_document_presence(key, space_id, document_id, &actor.0, socket_live_id, peer, state.presence_now()).await;
             true
         }
         // 🪙️ Command-lane credit-based flow control: no server-side congestion control implemented
@@ -3108,6 +3355,11 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
             let _ = sender.send(error_frame("unauthorized", "unauthorized").await).await;
             return;
         }
+    };
+    let connected_at_ms = now_ms();
+    let authenticated_user = match user_id.as_deref() {
+        Some(user_id) => tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.get_user(user_id)).await.ok().and_then(Result::ok).flatten(),
+        None => None,
     };
     let scope = DocumentScope::new(&space_id, &document_id);
     let descriptor = match state.directory.get_document_descriptor(&scope).await {
@@ -3302,7 +3554,22 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         state.release_color(&space_id, &actor.0);
         return;
     }
-    let _ = state.install_presence_slot(&key, &space_id, &document_id, &actor.0, &socket_live.id, &surface, user_id.as_deref(), color, state.presence_now()).await;
+    let slot = PresenceLeaseSlot {
+        socket_live_id: socket_live.id.clone(),
+        expires_at: state.presence_now() + std::time::Duration::from_millis(PRESENCE_LEASE_TTL_MS),
+        user_id: user_id.clone(),
+        connected_at_ms,
+        label: authenticated_user.as_ref().map(|user| user.display_name.clone()),
+        role: role.map(|role| role.as_str().to_string()),
+        document_surface: socket_grant.document_plan.as_ref().map(|plan| plan.surface.surface_id.clone()),
+        color,
+        peer: None,
+    };
+    if matches!(state.install_presence_slot(&key, &space_id, &document_id, &actor.0, slot).await, PresenceLeaseTransition::Unavailable | PresenceLeaseTransition::Rejected) {
+        let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "presence-unavailable".into() }))).await;
+        state.release_color(&space_id, &actor.0);
+        return;
+    }
     drop(_session_authority);
 
     let fanout = state.fanout_for(&key);
@@ -3313,11 +3580,8 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         let _ = gate.document_release.acquire().await;
     }
 
-    let authenticated_email = match user_id.as_deref() {
-        Some(user_id) => state.directory.get_user(user_id).await.ok().flatten().map(|user| user.email),
-        None => None,
-    };
-    let sync_session = state.directory.record_sync_session_open(auth_session_id, authorization_generation, &actor.0, &space_id, &document_id, &surface, user_id.as_deref(), authenticated_email.as_deref(), role, &actor.0).await.ok();
+    let authenticated_email = authenticated_user.as_ref().map(|user| user.email.as_str());
+    let sync_session = state.directory.record_sync_session_open(auth_session_id, authorization_generation, &actor.0, &space_id, &document_id, &surface, user_id.as_deref(), authenticated_email, role, &actor.0).await.ok();
     if let Some(session) = &sync_session {
         let view = connection_view(&state, session).await;
         state.directory_service.publish(DirectoryStreamMessage::Connection { phase: DirectoryConnectionPhase::Opened, connection: view });
@@ -3342,7 +3606,16 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
             _ = authorization_tick.tick() => {
                 match socket_live_authority(&state, &socket_grant, &socket_live.id).await {
                     Ok(_) => {
+                        #[cfg(test)]
+                        let gated_clock = state.presence_clock.as_ref().filter(|clock| clock.gate_ticks.load(std::sync::atomic::Ordering::Acquire));
+                        #[cfg(test)]
+                        if let Some(clock) = gated_clock {
+                            clock.tick_admitted.add_permits(1);
+                            clock.tick_release.acquire().await.expect("presence tick release").forget();
+                        }
                         let _ = state.expire_presence_for_live(&key, &space_id, &document_id, &actor.0, &socket_live.id, state.presence_now()).await;
+                        #[cfg(test)]
+                        if let Some(clock) = gated_clock { clock.tick_evaluated.add_permits(1); }
                     }
                     Err(SocketBindingValidityV1::Unauthorized) => {
                         let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
@@ -3560,10 +3833,6 @@ fn role_wire(role: SpaceRole) -> DirectorySpaceRole {
         SpaceRole::Author => DirectorySpaceRole::Author,
         SpaceRole::Spectator => DirectorySpaceRole::Spectator,
     }
-}
-
-fn invite_view(record: InviteRecord) -> InviteView {
-    InviteView { id: record.id, space_id: record.space_id, role: role_wire(record.role), created_at_ms: record.created_at, expires_at_ms: record.expires_at, revoked: record.revoked_at.is_some() }
 }
 
 /// @emoji 🔴️ `ConnectionView` for one live `SyncSessionRecord` — `presenceKnown` cross-references
@@ -3793,12 +4062,7 @@ async fn execute_directory_command_receipt_fenced(state: &HubState, actor: Direc
 /// id never resurrects a result for an expired, revoked, or differently-scoped session. The one-shot
 /// invite capability is returned to this live call alone; every later resolution of the same id is
 /// redacted, proving no duplicate invitation was minted.
-async fn post_directory_commands(
-    headers: HeaderMap,
-    axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>,
-    State(state): State<HubState>,
-    body: Bytes,
-) -> Result<(StatusCode, DirectoryJson<DirectoryCommandReceiptV1>), StatusCode> {
+async fn post_directory_commands(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>, body: Bytes) -> Result<(StatusCode, DirectoryJson<DirectoryCommandReceiptV1>), StatusCode> {
     if body.len() > DIRECTORY_COMMAND_REQUEST_MAX_BYTES {
         return Err(StatusCode::PAYLOAD_TOO_LARGE);
     }
@@ -3862,28 +4126,360 @@ async fn get_directory_spaces(headers: HeaderMap, State(state): State<HubState>)
     Ok(DirectoryJson(views))
 }
 
-async fn get_directory_space(Path(space_id): Path<String>, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<DirectorySpaceDetailV1>, StatusCode> {
-    let caller = resolve_bearer_user(&state, bearer(&headers).as_deref()).await;
-    let model = load_read_model(&state).await?;
-    let space = model.spaces.get(&space_id).ok_or(StatusCode::NOT_FOUND)?;
-    let role = caller.as_ref().and_then(|user| space.members.iter().find(|member| member.user_id == user.user_id).map(|member| member.role));
-    let detail = match directory_space_access_decision(space.view.visibility == DirectorySpaceVisibility::Public, role) {
-        DirectorySpaceAccessDecisionV1::Hidden => return Err(StatusCode::NOT_FOUND),
-        DirectorySpaceAccessDecisionV1::Public => {
-            let documents = public_documents_for_space(&state, &space_id).await?;
-            DirectorySpaceDetailV1::Public { space: public_space_view(space, documents.len()), documents }
-        }
-        DirectorySpaceAccessDecisionV1::Member => {
-            DirectorySpaceDetailV1::Member { space: member_space_view(&state, space, DirectorySpaceRole::Spectator).await, members: space.members.clone(), documents: documents_for_space(&state, &space_id).await }
-        }
-        DirectorySpaceAccessDecisionV1::Author => DirectorySpaceDetailV1::Author {
-            space: member_space_view(&state, space, DirectorySpaceRole::Author).await,
-            members: space.members.clone(),
-            documents: documents_for_space(&state, &space_id).await,
-            invites: state.directory.list_invites(&space_id).await.map_err(directory_error_status)?.into_iter().map(invite_view).collect(),
-        },
+const DIRECTORY_SPACE_ADMINISTRATION_DEADLINE_MS: u64 = 5_000;
+
+/// 🛂️ Strict query admission: nothing, or exactly one opaque `cursor` token.
+fn space_administration_request_admission(uri: &axum::http::Uri) -> Result<Option<String>, StatusCode> {
+    let Some(query) = uri.query() else { return Ok(None) };
+    if query.is_empty() {
+        return Ok(None);
+    }
+    if query.contains('&') || query.contains('%') || query.contains('+') {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+    let (name, value) = query.split_once('=').ok_or(StatusCode::BAD_REQUEST)?;
+    if name != "cursor" || value.is_empty() || value.len() > DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES || !value.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_')) {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+    Ok(Some(value.to_owned()))
+}
+
+/// 🔐️ Session binding of one administration page — the client only ever receives this digest.
+fn space_administration_session_binding_v1(caller: Option<&AuthedUser>, space_id: &str) -> Result<[u8; 32], StatusCode> {
+    let Some(caller) = caller else { return Ok([0u8; 32]) };
+    let mut hash = Sha256::new();
+    hash.update(b"semio/hub/directory-space-administration/session-binding/v1\0");
+    hash.update(&u32::try_from(caller.session_id.len()).map_err(|_| StatusCode::UNAUTHORIZED)?.to_be_bytes());
+    hash.update(caller.session_id.as_bytes());
+    hash.update(&u32::try_from(caller.user_id.len()).map_err(|_| StatusCode::UNAUTHORIZED)?.to_be_bytes());
+    hash.update(caller.user_id.as_bytes());
+    hash.update(&caller.authorization_generation.to_be_bytes());
+    hash.update(&caller.expires_at.to_be_bytes());
+    hash.update(&u32::try_from(space_id.len()).map_err(|_| StatusCode::BAD_REQUEST)?.to_be_bytes());
+    hash.update(space_id.as_bytes());
+    Ok(hash.finalize().into())
+}
+
+fn space_administration_cursor_mac(key: &[u8; 32], caller: Option<&AuthedUser>, space_id: &str, section: DirectorySpaceAdministrationSectionV1, payload: &[u8]) -> [u8; 32] {
+    let (session_id, user_id, generation) = caller.map_or(("", "", 0u64), |caller| (caller.session_id.as_str(), caller.user_id.as_str(), caller.authorization_generation));
+    let mut hash = Sha256::new();
+    hash.update(b"semio/hub/space-administration-cursor/v1\0");
+    hash.update(key);
+    hash.update(&(session_id.len() as u32).to_be_bytes());
+    hash.update(session_id.as_bytes());
+    hash.update(&(user_id.len() as u32).to_be_bytes());
+    hash.update(user_id.as_bytes());
+    hash.update(&generation.to_be_bytes());
+    hash.update(&(space_id.len() as u32).to_be_bytes());
+    hash.update(space_id.as_bytes());
+    hash.update(section.as_str().as_bytes());
+    hash.update(&(payload.len() as u32).to_be_bytes());
+    hash.update(payload);
+    hash.finalize().into()
+}
+
+fn space_administration_cursor_encode(key: &[u8; 32], caller: Option<&AuthedUser>, space_id: &str, section: DirectorySpaceAdministrationSectionV1, payload: &[u8]) -> Result<String, StatusCode> {
+    let cursor = format!("{}.{}.{}", section.as_str(), os_directory::hex_lower(payload), os_directory::hex_lower(&space_administration_cursor_mac(key, caller, space_id, section, payload)));
+    if cursor.len() > DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES {
+        return Err(StatusCode::PAYLOAD_TOO_LARGE);
+    }
+    Ok(cursor)
+}
+
+fn space_administration_cursor_decode(key: &[u8; 32], caller: Option<&AuthedUser>, space_id: &str, cursor: &str) -> Result<(DirectorySpaceAdministrationSectionV1, Vec<u8>), StatusCode> {
+    let mut parts = cursor.split('.');
+    let (Some(section), Some(payload), Some(mac), None) = (parts.next(), parts.next(), parts.next(), parts.next()) else {
+        return Err(StatusCode::BAD_REQUEST);
     };
-    Ok(DirectoryJson(detail))
+    let section = DirectorySpaceAdministrationSectionV1::parse(section).ok_or(StatusCode::BAD_REQUEST)?;
+    let payload = decode_lower_hex(payload).ok_or(StatusCode::BAD_REQUEST)?;
+    let mac = decode_lower_hex(mac).ok_or(StatusCode::BAD_REQUEST)?;
+    if mac.len() != 32 || !semio_hub::directory::constant_time_digest_eq(&space_administration_cursor_mac(key, caller, space_id, section, &payload), &mac) {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+    Ok((section, payload))
+}
+
+fn decode_lower_hex(value: &str) -> Option<Vec<u8>> {
+    if value.len() % 2 != 0 || !value.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f')) {
+        return None;
+    }
+    (0..value.len() / 2).map(|index| u8::from_str_radix(&value[index * 2..index * 2 + 2], 16).ok()).collect()
+}
+
+fn space_administration_member_key(payload: &[u8]) -> Result<String, StatusCode> {
+    String::from_utf8(payload.to_vec()).map_err(|_| StatusCode::BAD_REQUEST)
+}
+
+fn space_administration_invite_key(payload: &[u8]) -> Result<(i64, String), StatusCode> {
+    if payload.len() < 8 {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+    let created_at = i64::from_be_bytes(payload[..8].try_into().map_err(|_| StatusCode::BAD_REQUEST)?);
+    Ok((created_at, String::from_utf8(payload[8..].to_vec()).map_err(|_| StatusCode::BAD_REQUEST)?))
+}
+
+fn space_administration_document_key(payload: &[u8]) -> Result<usize, StatusCode> {
+    let bytes: [u8; 8] = payload.try_into().map_err(|_| StatusCode::BAD_REQUEST)?;
+    usize::try_from(u64::from_be_bytes(bytes)).map_err(|_| StatusCode::BAD_REQUEST)
+}
+
+fn space_administration_invite_payload(row: &DirectorySpaceAdministrationInviteRowV1) -> Vec<u8> {
+    let mut payload = row.created_at_ms.to_be_bytes().to_vec();
+    payload.extend_from_slice(row.invite_id.as_bytes());
+    payload
+}
+
+struct SpaceAdministrationWindows {
+    members: Vec<DirectorySpaceAdministrationMemberRowV1>,
+    member_storage_more: bool,
+    invites: Vec<DirectorySpaceAdministrationInviteRowV1>,
+    invite_storage_more: bool,
+    documents: Vec<DocumentView>,
+    public_documents: Vec<PublicDocumentCatalogEntryV1>,
+    document_storage_more: bool,
+    document_offset: usize,
+}
+
+/// 🧾️ Seals one candidate page over the retained window prefixes and stamps its canonical receipt.
+fn seal_space_administration_page_v1(
+    state: &HubState,
+    caller: Option<&AuthedUser>,
+    space_id: &str,
+    binding: [u8; 32],
+    generation: u64,
+    access: DirectorySpaceAccessDecisionV1,
+    space: &SpaceView,
+    windows: &SpaceAdministrationWindows,
+    members: usize,
+    invites: usize,
+    documents: usize,
+) -> Result<DirectorySpaceAdministrationPageV1, StatusCode> {
+    let key = &state.space_administration_cursor_key;
+    let member_rows = windows.members[..members].to_vec();
+    let member_more = windows.member_storage_more || members < windows.members.len();
+    let member_window = DirectorySpaceAdministrationMemberWindowV1 {
+        next_cursor: match (member_more, member_rows.last()) {
+            (true, Some(last)) => Some(space_administration_cursor_encode(key, caller, space_id, DirectorySpaceAdministrationSectionV1::Members, last.user_id.as_bytes())?),
+            (true, None) => return Err(StatusCode::PAYLOAD_TOO_LARGE),
+            (false, _) => None,
+        },
+        rows: member_rows,
+    };
+    let invite_rows = windows.invites[..invites].to_vec();
+    let invite_more = windows.invite_storage_more || invites < windows.invites.len();
+    let invite_window = DirectorySpaceAdministrationInviteWindowV1 {
+        next_cursor: match (invite_more, invite_rows.last()) {
+            (true, Some(last)) => Some(space_administration_cursor_encode(key, caller, space_id, DirectorySpaceAdministrationSectionV1::Invites, &space_administration_invite_payload(last))?),
+            (true, None) => return Err(StatusCode::PAYLOAD_TOO_LARGE),
+            (false, _) => None,
+        },
+        rows: invite_rows,
+    };
+    let document_more = windows.document_storage_more || documents < windows.documents.len().max(windows.public_documents.len());
+    let document_cursor = if document_more {
+        if documents == 0 {
+            return Err(StatusCode::PAYLOAD_TOO_LARGE);
+        }
+        Some(space_administration_cursor_encode(key, caller, space_id, DirectorySpaceAdministrationSectionV1::Documents, &u64::try_from(windows.document_offset + documents).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?.to_be_bytes())?)
+    } else {
+        None
+    };
+    let binding_hex = os_directory::hex_lower(&binding);
+    let mut page = match access {
+        DirectorySpaceAccessDecisionV1::Hidden => return Err(StatusCode::NOT_FOUND),
+        DirectorySpaceAccessDecisionV1::Public => DirectorySpaceAdministrationPageV1::Public {
+            schema: DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA.into(),
+            session_binding_sha256: binding_hex,
+            authorization_generation: generation,
+            space_id: space_id.to_owned(),
+            space: PublicSpaceViewV1 {
+                id: space.id.clone(),
+                name: space.name.clone(),
+                kind: space.kind,
+                visibility: space.visibility,
+                member_count: space.member_count,
+                document_count: space.document_count,
+                created_at_ms: space.created_at_ms,
+                updated_at_ms: space.updated_at_ms,
+            },
+            documents: DirectorySpaceAdministrationPublicDocumentWindowV1 { rows: windows.public_documents[..documents].to_vec(), next_cursor: document_cursor },
+            receipt_sha256: String::new(),
+        },
+        DirectorySpaceAccessDecisionV1::Member | DirectorySpaceAccessDecisionV1::Author => {
+            let role = if matches!(access, DirectorySpaceAccessDecisionV1::Author) { DirectorySpaceRole::Author } else { DirectorySpaceRole::Spectator };
+            let member_space = MemberSpaceViewV1 {
+                id: space.id.clone(),
+                name: space.name.clone(),
+                kind: space.kind,
+                visibility: space.visibility,
+                owner_user_id: space.owner_user_id.clone(),
+                role,
+                member_count: space.member_count,
+                document_count: space.document_count,
+                active_connections: space.active_connections,
+                created_at_ms: space.created_at_ms,
+                updated_at_ms: space.updated_at_ms,
+            };
+            let document_window = DirectorySpaceAdministrationDocumentWindowV1 { rows: windows.documents[..documents].to_vec(), next_cursor: document_cursor };
+            if matches!(access, DirectorySpaceAccessDecisionV1::Author) {
+                DirectorySpaceAdministrationPageV1::Author {
+                    schema: DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA.into(),
+                    session_binding_sha256: binding_hex,
+                    authorization_generation: generation,
+                    space_id: space_id.to_owned(),
+                    space: member_space,
+                    members: member_window,
+                    documents: document_window,
+                    invites: invite_window,
+                    capabilities: DirectorySpaceAdministrationCapabilitiesV1 {
+                        rename_space: true,
+                        set_visibility: true,
+                        delete_space: caller.is_some_and(|caller| caller.user_id == space.owner_user_id),
+                        upsert_member: true,
+                        remove_member: true,
+                        create_invite: true,
+                        revoke_invite: true,
+                    },
+                    receipt_sha256: String::new(),
+                }
+            } else {
+                DirectorySpaceAdministrationPageV1::Member {
+                    schema: DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA.into(),
+                    session_binding_sha256: binding_hex,
+                    authorization_generation: generation,
+                    space_id: space_id.to_owned(),
+                    space: member_space,
+                    members: member_window,
+                    documents: document_window,
+                    receipt_sha256: String::new(),
+                }
+            }
+        }
+    };
+    let receipt = os_directory::hex_lower(&Sha256::digest(page.canonical_unsigned_json().as_bytes()));
+    match &mut page {
+        DirectorySpaceAdministrationPageV1::Public { receipt_sha256, .. } | DirectorySpaceAdministrationPageV1::Member { receipt_sha256, .. } | DirectorySpaceAdministrationPageV1::Author { receipt_sha256, .. } => *receipt_sha256 = receipt,
+    }
+    Ok(page)
+}
+
+/// 🏛️ One bounded, receipt-bound administration projection of exactly one space. Every row is read
+/// through a safe backend projection; the caller's role is re-read after the page reads and before
+/// the response is handed out, so a revocation or downgrade answers 401/403 instead of a stale page.
+async fn get_directory_space(Path(space_id): Path<String>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<DirectorySpaceAdministrationPageV1>, StatusCode> {
+    let cursor = space_administration_request_admission(&uri)?;
+    let operation = build_directory_space_administration_page_v1(&state, &space_id, cursor.as_deref(), &headers);
+    match tokio::time::timeout(std::time::Duration::from_millis(DIRECTORY_SPACE_ADMINISTRATION_DEADLINE_MS), operation).await {
+        Ok(result) => result.map(DirectoryJson),
+        Err(_) => Err(StatusCode::GATEWAY_TIMEOUT),
+    }
+}
+
+async fn build_directory_space_administration_page_v1(state: &HubState, space_id: &str, cursor: Option<&str>, headers: &HeaderMap) -> Result<DirectorySpaceAdministrationPageV1, StatusCode> {
+    let caller = resolve_bearer_user(state, bearer(headers).as_deref()).await;
+    let binding = space_administration_session_binding_v1(caller.as_ref(), space_id)?;
+    let generation = caller.as_ref().map_or(0, |caller| caller.authorization_generation);
+    let section = match cursor {
+        Some(cursor) => Some(space_administration_cursor_decode(&state.space_administration_cursor_key, caller.as_ref(), space_id, cursor)?),
+        None => None,
+    };
+    let summary = state.directory.list_admin_space_summaries_page(Some(space_id), 0, 1).await.map_err(directory_error_status)?.into_iter().next().ok_or(StatusCode::NOT_FOUND)?;
+    let space = admin_space_summary_view(summary)?;
+    let role = match caller.as_ref() {
+        Some(caller) => state.directory.get_role(space_id, &caller.user_id).await.map_err(directory_error_status)?.map(role_wire),
+        None => None,
+    };
+    let access = directory_space_access_decision(space.visibility == DirectorySpaceVisibility::Public, role);
+    if matches!(access, DirectorySpaceAccessDecisionV1::Hidden) {
+        return Err(StatusCode::NOT_FOUND);
+    }
+    let member_after = match section {
+        Some((DirectorySpaceAdministrationSectionV1::Members, ref payload)) => Some(space_administration_member_key(payload)?),
+        _ => None,
+    };
+    let invite_after = match section {
+        Some((DirectorySpaceAdministrationSectionV1::Invites, ref payload)) => Some(space_administration_invite_key(payload)?),
+        _ => None,
+    };
+    let document_offset = match section {
+        Some((DirectorySpaceAdministrationSectionV1::Documents, ref payload)) => space_administration_document_key(payload)?,
+        _ => 0,
+    };
+    let mut windows = SpaceAdministrationWindows { members: Vec::new(), member_storage_more: false, invites: Vec::new(), invite_storage_more: false, documents: Vec::new(), public_documents: Vec::new(), document_storage_more: false, document_offset };
+    if access.is_member() {
+        let mut rows = state.directory.list_space_administration_members_page(space_id, member_after.as_deref(), SPACE_ADMINISTRATION_PAGE_FETCH_MAX).await.map_err(directory_error_status)?;
+        windows.member_storage_more = rows.len() > SPACE_ADMINISTRATION_PAGE_MAX;
+        rows.truncate(SPACE_ADMINISTRATION_PAGE_MAX);
+        windows.members = rows.into_iter().map(|row| DirectorySpaceAdministrationMemberRowV1 { owner: row.user_id == space.owner_user_id, user_id: row.user_id, email: row.email, display_name: row.display_name, role: role_wire(row.role) }).collect();
+    }
+    if matches!(access, DirectorySpaceAccessDecisionV1::Author) {
+        let mut rows =
+            state.directory.list_space_administration_invites_page(space_id, invite_after.as_ref().map(|(created_at, invite_id)| (*created_at, invite_id.as_str())), SPACE_ADMINISTRATION_PAGE_FETCH_MAX).await.map_err(directory_error_status)?;
+        windows.invite_storage_more = rows.len() > SPACE_ADMINISTRATION_PAGE_MAX;
+        rows.truncate(SPACE_ADMINISTRATION_PAGE_MAX);
+        windows.invites = rows
+            .into_iter()
+            .map(|row| DirectorySpaceAdministrationInviteRowV1 { invite_id: row.invite_id, role: role_wire(row.role), created_at_ms: row.created_at_ms, expires_at_ms: row.expires_at_ms, revoked: row.revoked, accepted: row.accepted })
+            .collect();
+    }
+    let mut descriptors = state.directory.list_document_descriptors_page(Some(space_id), document_offset, SPACE_ADMINISTRATION_PAGE_FETCH_MAX).await.map_err(directory_error_status)?;
+    windows.document_storage_more = descriptors.len() > SPACE_ADMINISTRATION_PAGE_MAX;
+    descriptors.truncate(SPACE_ADMINISTRATION_PAGE_MAX);
+    if access.is_member() {
+        for descriptor in descriptors {
+            windows.documents.push(document_view(state, descriptor).await);
+        }
+    } else {
+        windows.public_documents = descriptors
+            .into_iter()
+            .map(|descriptor| PublicDocumentCatalogEntryV1 {
+                document_id: descriptor.document_id,
+                artifact_kind: descriptor.artifact_kind,
+                artifact_schema: descriptor.artifact_schema,
+                owner: descriptor.owner,
+                pack_schema_hash: descriptor.pack_schema_hash,
+            })
+            .collect();
+    }
+    let access = revalidate_space_administration_caller(state, caller.as_ref(), space_id, binding, &space, access).await?;
+    let mut members = windows.members.len();
+    let mut invites = windows.invites.len();
+    let mut documents = windows.documents.len().max(windows.public_documents.len());
+    loop {
+        let page = seal_space_administration_page_v1(state, caller.as_ref(), space_id, binding, generation, access, &space, &windows, members, invites, documents)?;
+        if directory::os_pack::json::to_json_string(&page).len() <= DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES {
+            page.validate().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+            return Ok(page);
+        }
+        if documents >= members && documents >= invites && documents > 1 {
+            documents -= 1;
+        } else if members >= invites && members > 1 {
+            members -= 1;
+        } else if invites > 1 {
+            invites -= 1;
+        } else {
+            return Err(StatusCode::PAYLOAD_TOO_LARGE);
+        }
+    }
+}
+
+/// 🛡️ Re-reads the exact session and current membership after the page reads: a revoked session
+/// answers 401 and a role downgrade or removal answers 403/404 instead of a stale administration page.
+async fn revalidate_space_administration_caller(state: &HubState, caller: Option<&AuthedUser>, space_id: &str, binding: [u8; 32], space: &SpaceView, observed: DirectorySpaceAccessDecisionV1) -> Result<DirectorySpaceAccessDecisionV1, StatusCode> {
+    let Some(caller) = caller else { return Ok(observed) };
+    let session = state.directory.authenticate_session(&caller.capability).await.map_err(|_| StatusCode::UNAUTHORIZED)?.ok_or(StatusCode::UNAUTHORIZED)?;
+    let current = AuthedUser { user_id: session.user_id, session_id: session.id, expires_at: session.expires_at, authorization_generation: session.authorization_generation, capability: caller.capability.clone() };
+    if current.session_id != caller.session_id || current.user_id != caller.user_id || current.authorization_generation != caller.authorization_generation || space_administration_session_binding_v1(Some(&current), space_id)? != binding {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    let role = state.directory.get_role(space_id, &current.user_id).await.map_err(directory_error_status)?.map(role_wire);
+    let access = directory_space_access_decision(space.visibility == DirectorySpaceVisibility::Public, role);
+    match (observed, access) {
+        (DirectorySpaceAccessDecisionV1::Hidden, _) | (_, DirectorySpaceAccessDecisionV1::Hidden) => Err(StatusCode::NOT_FOUND),
+        (observed, current) if observed == current => Ok(current),
+        _ => Err(StatusCode::FORBIDDEN),
+    }
 }
 
 async fn post_redeem_invite(Path(token): Path<String>, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<Vec<DirectoryEvent>>, StatusCode> {
@@ -5640,9 +6236,116 @@ async fn get_readyz(State(state): State<HubState>) -> impl IntoResponse {
 }
 //#endregion 🔖️AdminPage
 
+//#region 💡️Inference
+/// 🧾️ The one closed error body every inference route publishes; it never names a private object.
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct InferenceErrorBodyV1 {
+    schema: &'static str,
+    code: &'static str,
+}
+
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+fn inference_error_response(error: semio_hub::inference::runtime::InferenceRouteErrorV1) -> Response {
+    let status = StatusCode::from_u16(error.status()).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+    (status, Json(InferenceErrorBodyV1 { schema: "semio.hub.inference-error/v1", code: error.code() })).into_response()
+}
+
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+fn inference_context<'a>(state: &'a HubState, space_id: &str, document_id: &str, token: &'a Option<String>) -> Result<semio_hub::inference::runtime::InferenceRouteContextV1<'a>, Response> {
+    let runtime = state.inference_runtime.as_ref().ok_or_else(|| inference_error_response(semio_hub::inference::runtime::InferenceRouteErrorV1::Unavailable))?;
+    Ok(semio_hub::inference::runtime::InferenceRouteContextV1 {
+        runtime,
+        directory: &state.directory,
+        rebootstrap: &state.rebootstrap,
+        scope: DocumentScope::new(space_id, document_id),
+        token: token.as_deref(),
+        now_ms: u64::try_from(now_ms()).unwrap_or(0),
+    })
+}
+
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+async fn post_inference_gis_map_job(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
+    let token = bearer(&headers);
+    let context = match inference_context(&state, &space_id, &document_id, &token) {
+        Ok(context) => context,
+        Err(response) => return response,
+    };
+    match semio_hub::inference::runtime::submit_gis_map_job(context, &body).await {
+        Ok(receipt) => Json(receipt).into_response(),
+        Err(error) => inference_error_response(error),
+    }
+}
+
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+async fn get_inference_gis_map_job_events(Path((space_id, document_id, job_id)): Path<(String, String, String)>, Query(query): Query<InferenceEventQueryV1>, headers: HeaderMap, State(state): State<HubState>) -> Response {
+    let token = bearer(&headers);
+    let context = match inference_context(&state, &space_id, &document_id, &token) {
+        Ok(context) => context,
+        Err(response) => return response,
+    };
+    match semio_hub::inference::runtime::read_gis_map_job_events(context, &job_id, query.after.unwrap_or(0)).await {
+        Ok(page) => Json(page).into_response(),
+        Err(error) => inference_error_response(error),
+    }
+}
+
+/// 🔖️ The only inference query parameter: an exact bounded progress cursor.
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct InferenceEventQueryV1 {
+    after: Option<u64>,
+}
+
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+async fn post_inference_gis_map_job_cancel(Path((space_id, document_id, job_id)): Path<(String, String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Response {
+    let token = bearer(&headers);
+    let context = match inference_context(&state, &space_id, &document_id, &token) {
+        Ok(context) => context,
+        Err(response) => return response,
+    };
+    match semio_hub::inference::runtime::cancel_gis_map_job(context, &job_id).await {
+        Ok(page) => Json(page).into_response(),
+        Err(error) => inference_error_response(error),
+    }
+}
+
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+async fn post_inference_gis_map_job_approval(Path((space_id, document_id, job_id)): Path<(String, String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
+    let token = bearer(&headers);
+    let context = match inference_context(&state, &space_id, &document_id, &token) {
+        Ok(context) => context,
+        Err(response) => return response,
+    };
+    match semio_hub::inference::runtime::approve_gis_map_job(context, &job_id, &body).await {
+        Ok(receipt) => Json(receipt).into_response(),
+        Err(error) => inference_error_response(error),
+    }
+}
+
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+fn inference_routes(router: Router<HubState>) -> Router<HubState> {
+    router
+        .route("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs", post(post_inference_gis_map_job).layer(DefaultBodyLimit::max(INFERENCE_REQUEST_MAX_BYTES)))
+        .route("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/{job_id}/events", get(get_inference_gis_map_job_events))
+        .route("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/{job_id}/cancel", post(post_inference_gis_map_job_cancel).layer(DefaultBodyLimit::max(INFERENCE_REQUEST_MAX_BYTES)))
+        .route("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/{job_id}/approval", post(post_inference_gis_map_job_approval).layer(DefaultBodyLimit::max(INFERENCE_REQUEST_MAX_BYTES)))
+}
+
+#[cfg(not(all(feature = "sqlite", feature = "native-artifact-execution")))]
+fn inference_routes(router: Router<HubState>) -> Router<HubState> {
+    router
+}
+
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+const INFERENCE_REQUEST_MAX_BYTES: usize = 1024;
+//#endregion 💡️Inference
+
 //#region 🔖️Main
 fn router(state: HubState) -> Router {
-    Router::new()
+    inference_routes(Router::new())
         .route("/readyz", get(get_readyz))
         .route("/auth/sessions/me", get(get_session_me).delete(delete_session_me))
         .route("/directory/commands", post(post_directory_commands).layer(DefaultBodyLimit::max(DIRECTORY_COMMAND_REQUEST_MAX_BYTES)))
@@ -5676,6 +6379,9 @@ fn router(state: HubState) -> Router {
         .route("/spaces/{space_id}/documents/{document_id}/active-checkpoint/pair", get(get_active_checkpoint_pair))
         .route("/spaces/{space_id}/documents/{id}/open-plan", post(issue_document_open_plan))
         .route("/spaces/{space_id}/documents/{id}/socket-grants", post(issue_document_plan_socket_grant))
+        .route("/spaces/{space_id}/documents/{id}/execution-target/manifest", post(issue_document_execution_target_manifest))
+        .route("/spaces/{space_id}/documents/{id}/execution-target/component", post(issue_document_execution_target_component))
+        .route("/spaces/{space_id}/documents/{id}/execution-target/descriptor", post(issue_document_execution_target_descriptor))
         .route("/spaces/{space_id}/documents/{id}/socket/v1", get(document_ws_v1))
         // 🐙️ w4-h: router-wide CORS grant — see `cors_middleware`'s doc comment (`🔖️Directory` region)
         // for why this must cover the whole router, not just `/directory/*`.
@@ -5826,11 +6532,16 @@ async fn main() -> Result<(), HubError> {
     let admin_subjects = configured_admin_subjects()?;
     validate_auth_startup(mode, bind, identity_verifier.as_ref(), local_bootstrap.as_ref(), &admin_subjects)?;
     let data_dir = std::env::var("OS_HUB_DATA").map_or_else(|_| std::path::PathBuf::from("./.🧬semio/🌐hub/"), std::path::PathBuf::from);
+    #[cfg(feature = "native-artifact-execution")]
     let native_codec_providers = NativeCodecProviderSetV1::linked();
+    #[cfg(feature = "native-artifact-execution")]
+    let native_codec_provider: Option<&dyn NativeCodecProviderSourceV1> = Some(&native_codec_providers);
+    #[cfg(not(feature = "native-artifact-execution"))]
+    let native_codec_provider: Option<&dyn NativeCodecProviderSourceV1> = None;
     let artifact_authority = configured_artifact_authority(
         std::env::var("OS_HUB_TRUSTED_CATALOG_BUNDLE").ok().filter(|value| !value.is_empty()).map(std::path::PathBuf::from),
         std::env::var("OS_HUB_TRUSTED_CATALOG_PROFILE").ok().filter(|value| !value.is_empty()),
-        &native_codec_providers,
+        native_codec_provider,
     )
     .await?;
     let db = Arc::new(connect_db(&data_dir).await?);
@@ -5861,13 +6572,29 @@ async fn main() -> Result<(), HubError> {
     let artifact_authority_ready = artifact_authority.is_some();
     let open_plan_ready = artifact_authority.as_ref().is_some_and(|configured| configured.catalog.open_target_count() > 0);
     let verified_catalog = artifact_authority.as_ref().map(|configured| configured.catalog.clone());
+    #[cfg(feature = "native-artifact-execution")]
     let gis_map_binding = match verified_catalog.as_ref() {
         Some(catalog) => verified_gis_map_binding(catalog.clone()).map_err(|error| AuthorityError::Catalog(format!("verified GIS Map inference binding rejected: {error:?}")))?,
         None => None,
     };
     let openable_catalog = artifact_authority.as_ref().map(|configured| -> Arc<dyn DocumentOpenCatalogAuthorityV1> { configured.catalog.clone() });
-    let readiness = Arc::new(hub_readiness(mode, bind_scope, run_id, bootstrap_ready, artifact_authority_ready, open_plan_ready, admin_dir.is_dir(), true, artifact_cas_sweep_execute));
+    #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+    let inference_runtime = match gis_map_binding.as_ref() {
+        Some(binding) => {
+            let root = data_dir.join("inference");
+            std::fs::create_dir_all(&root)?;
+            let ledger = InferenceJobLedgerV1::open(&root.join("gis-map-jobs.sqlite3")).map_err(|error| AuthorityError::Catalog(format!("inference job ledger unavailable: {error:?}")))?;
+            Some(Arc::new(HubInferenceRuntimeV1::new(binding.clone(), Arc::new(ledger), Arc::new(UnavailableGisMapApprovalCommitterV1))))
+        }
+        None => None,
+    };
+    #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+    let inference_ready = inference_runtime.is_some();
+    #[cfg(not(all(feature = "sqlite", feature = "native-artifact-execution")))]
+    let inference_ready = false;
+    let readiness = Arc::new(hub_readiness(mode, bind_scope, run_id, bootstrap_ready, artifact_authority_ready, open_plan_ready, admin_dir.is_dir(), true, artifact_cas_sweep_execute, inference_ready));
     let admin_cursor_key = SessionCapability::mint()?.secret_digest();
+    let space_administration_cursor_key = SessionCapability::mint()?.secret_digest();
     let state = HubState {
         db,
         artifact_cas,
@@ -5875,13 +6602,17 @@ async fn main() -> Result<(), HubError> {
         rebootstrap,
         _artifact_authority: artifact_authority.map(|configured| configured.authority),
         verified_catalog,
+        #[cfg(feature = "native-artifact-execution")]
         gis_map_binding,
+        #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+        inference_runtime,
         openable_catalog,
         _artifact_publication: artifact_publication,
         artifact_maintenance: artifact_maintenance.clone(),
         directory_service,
         admin_subjects,
         admin_cursor_key,
+        space_administration_cursor_key,
         admin_operations: Arc::new(ShardedMap::new()),
         admin_operation_slots: Arc::new(tokio::sync::Semaphore::new(64)),
         readiness,
@@ -5956,6 +6687,7 @@ async fn main() -> Result<(), HubError> {
 #[cfg(all(test, feature = "sqlite"))]
 mod tests {
     use super::*;
+    use directory::os_directory::{DirectoryCommandOutcomeV1, DirectoryCommandResultV1};
     use protocol::{ArtifactId as WireArtifactId, Bootstrap};
     use semio_framework_hash::Sha256;
     use semio_hub::artifact_authority::checkpoint_id_encoding_v1;
@@ -6027,7 +6759,7 @@ mod tests {
 
     #[test]
     fn readiness_v1_is_redacted_and_never_claims_public_session_issuance() {
-        let ready = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, false, true, true, false);
+        let ready = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, false, true, true, false, false);
         let encoded = serde_json::to_string(&ready).expect("readiness json");
         assert_eq!(ready.status, "ready");
         assert!(!ready.authentication.public_session_issuance);
@@ -6039,13 +6771,13 @@ mod tests {
         assert!(!encoded.contains("channel"));
         assert!(!encoded.contains("sessionKind"));
         assert!(!encoded.contains("authorizationGeneration"));
-        let partial = hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), true, false, false, true, true, false);
+        let partial = hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), true, false, false, true, true, false, false);
         assert_eq!(partial.status, "not-ready");
         assert!(partial.authentication.bootstrap_ready);
         assert!(!partial.artifact_authority.ready);
-        assert_eq!(hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), false, false, false, true, true, false).status, "not-ready");
-        assert_eq!(hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), true, false, false, false, true, false).status, "not-ready");
-        assert_eq!(hub_readiness(HubMode::Development, "network", ready.run_id, true, true, false, true, false, false).status, "not-ready");
+        assert_eq!(hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), false, false, false, true, true, false, false).status, "not-ready");
+        assert_eq!(hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), true, false, false, false, true, false, false).status, "not-ready");
+        assert_eq!(hub_readiness(HubMode::Development, "network", ready.run_id, true, true, false, true, false, false, false).status, "not-ready");
     }
 
     #[tokio::test]
@@ -6080,16 +6812,28 @@ mod tests {
     /// @emoji 🏛️ The seeded space id every test routes against (see `SqliteDirectory::seed`).
     const STUDIO: &str = "default";
 
+    #[cfg(feature = "native-artifact-execution")]
     #[tokio::test]
     async fn trusted_catalog_startup_is_opt_in_and_partial_configuration_fails_closed() {
-        assert!(configured_artifact_authority(None, None, &NativeCodecProviderSetV1::linked()).await.expect("unconfigured authority").is_none());
-        let error = match configured_artifact_authority(Some(std::path::PathBuf::from("bundle.json")), None, &NativeCodecProviderSetV1::linked()).await {
+        assert!(configured_artifact_authority(None, None, Some(&NativeCodecProviderSetV1::linked())).await.expect("unconfigured authority").is_none());
+        let error = match configured_artifact_authority(Some(std::path::PathBuf::from("bundle.json")), None, Some(&NativeCodecProviderSetV1::linked())).await {
             Ok(_) => panic!("partial trusted-catalog configuration unexpectedly succeeded"),
             Err(error) => error,
         };
         assert!(error.to_string().contains("must be configured together"));
     }
 
+    #[tokio::test]
+    async fn configured_catalog_without_a_native_provider_fails_closed() {
+        assert!(configured_artifact_authority(None, None, None).await.expect("unconfigured headless authority").is_none());
+        let error = match configured_artifact_authority(Some(std::path::PathBuf::from("bundle.json")), Some("fixture".into()), None).await {
+            Ok(_) => panic!("configured trusted catalog unexpectedly admitted without its native provider"),
+            Err(error) => error,
+        };
+        assert!(error.to_string().contains("requires the native-artifact-execution provider"));
+    }
+
+    #[cfg(feature = "native-artifact-execution")]
     fn native_openable_stdio_bundle() -> (std::path::PathBuf, std::path::PathBuf) {
         let root = tempdir("native-openable-stdio");
         std::fs::create_dir_all(root.join("components")).expect("stdio component directory");
@@ -6191,6 +6935,7 @@ mod tests {
         (root, bundle_path)
     }
 
+    #[cfg(feature = "native-artifact-execution")]
     #[tokio::test]
     async fn native_openable_stdio_provider_is_the_only_atomic_readiness_transition() {
         let unavailable = test_state().await;
@@ -6203,13 +6948,13 @@ mod tests {
 
         let providers = NativeCodecProviderSetV1::linked();
         let (root, bundle_path) = native_openable_stdio_bundle();
-        let configured = configured_artifact_authority(Some(bundle_path), Some("stdio-native-openable-v1".into()), &providers).await.expect("verified stdio authority").expect("configured stdio authority");
+        let configured = configured_artifact_authority(Some(bundle_path), Some("stdio-native-openable-v1".into()), Some(&providers)).await.expect("verified stdio authority").expect("configured stdio authority");
         assert_eq!(configured.catalog.codec_count(), 26);
         assert_eq!(configured.catalog.open_target_count(), 1);
         let mut ready = test_state().await;
         ready.openable_catalog = Some(configured.catalog.clone());
         ready._artifact_authority = Some(configured.authority);
-        ready.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false));
+        ready.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
         let ready_addr = spawn_server(ready).await;
         let readiness = raw_http_get(ready_addr, "/readyz", &[]).await;
         assert_eq!(readiness.status, 200);
@@ -6258,7 +7003,7 @@ mod tests {
     /// would otherwise collide on the identical `os-hub-test-db-<pid>-<ms>` path and open the SAME
     /// `db::Database` storage root, corrupting each other's catalog/WAL state.
     fn tempdir(name: &str) -> std::path::PathBuf {
-        let mut dir = std::env::temp_dir();
+        let mut dir = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
         dir.push(format!("os-hub-test-{name}-{}", directory::os_identity::time_ordered_id()));
         dir
     }
@@ -6283,8 +7028,12 @@ mod tests {
 
     async fn test_state_with_capacity(directory_capacity: usize, fanout_capacity: usize) -> HubState {
         let dir = tempdir("db");
-        let database = db::Database::open_at(hub_worker_pool(), &dir, db::Profile::Test).await.expect("open db");
         let directory = SqliteDirectory::connect(":memory:").await.expect("connect directory");
+        test_state_with_directory(dir, directory, directory_capacity, fanout_capacity).await
+    }
+
+    async fn test_state_with_directory(dir: std::path::PathBuf, directory: SqliteDirectory, directory_capacity: usize, fanout_capacity: usize) -> HubState {
+        let database = db::Database::open_at(hub_worker_pool(), &dir, db::Profile::Test).await.expect("open db");
         directory.seed().await.expect("seed");
         let directory: Arc<HubDirectories> = Arc::new(directory.into());
         let directory_service = Arc::new(DirectoryService::new(directory.clone(), directory_capacity));
@@ -6304,16 +7053,20 @@ mod tests {
             rebootstrap,
             _artifact_authority: None,
             verified_catalog: None,
+            #[cfg(feature = "native-artifact-execution")]
             gis_map_binding: None,
+            #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+            inference_runtime: None,
             openable_catalog: None,
             _artifact_publication: artifact_publication,
             artifact_maintenance: ArtifactCasMaintenanceSupervisor::disabled(),
             directory_service,
             admin_subjects: Arc::from([]),
             admin_cursor_key: [0x5a; 32],
+            space_administration_cursor_key: [0xa5; 32],
             admin_operations: Arc::new(ShardedMap::new()),
             admin_operation_slots: Arc::new(tokio::sync::Semaphore::new(64)),
-            readiness: Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, false, false, true, true, false)),
+            readiness: Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, false, false, true, true, false, false)),
             admin_dir: dir.join("admin-dist"),
             fanout: Arc::new(ShardedMap::new()),
             fanout_capacity,
@@ -6360,16 +7113,20 @@ mod tests {
             rebootstrap,
             _artifact_authority: None,
             verified_catalog: None,
+            #[cfg(feature = "native-artifact-execution")]
             gis_map_binding: None,
+            #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+            inference_runtime: None,
             openable_catalog: None,
             _artifact_publication: artifact_publication,
             artifact_maintenance: ArtifactCasMaintenanceSupervisor::disabled(),
             directory_service,
             admin_subjects: Arc::from([]),
             admin_cursor_key: [0x5a; 32],
+            space_administration_cursor_key: [0xa5; 32],
             admin_operations: Arc::new(ShardedMap::new()),
             admin_operation_slots: Arc::new(tokio::sync::Semaphore::new(64)),
-            readiness: Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, false, false, true, true, false)),
+            readiness: Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, false, false, true, true, false, false)),
             admin_dir: dir.join("admin-dist"),
             fanout: Arc::new(ShardedMap::new()),
             fanout_capacity,
@@ -6504,6 +7261,22 @@ mod tests {
         addr
     }
 
+    async fn spawn_restartable_server(state: HubState) -> (SocketAddr, tokio::sync::oneshot::Sender<()>, tokio::task::JoinHandle<()>) {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        let app = router(state).into_make_service_with_connect_info::<SocketAddr>();
+        let (shutdown, stopped) = tokio::sync::oneshot::channel();
+        let task = tokio::spawn(async move {
+            axum::serve(listener, app)
+                .with_graceful_shutdown(async {
+                    let _ = stopped.await;
+                })
+                .await
+                .unwrap();
+        });
+        (addr, shutdown, task)
+    }
+
     struct RawHttpResponse {
         status: u16,
         headers: String,
@@ -6566,6 +7339,39 @@ mod tests {
     async fn raw_http_get(addr: SocketAddr, path: &str, headers: &[(&str, &str)]) -> RawHttpResponse {
         raw_http_request(addr, "GET", path, headers, &[]).await
     }
+
+    //#region 💡️Inference
+    #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+    #[tokio::test]
+    async fn gis_map_proposal_routes_fail_closed_without_a_trusted_map_binding() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("proposal fixture");
+        let unavailable = fixture["errors"].as_array().expect("error vocabulary").iter().find(|row| row["name"] == "no-binding").expect("no-binding row");
+        let state = test_state().await;
+        assert!(state.inference_runtime.is_none(), "production today has no trusted GIS Map profile");
+        assert!(state.gis_map_binding.is_none());
+        let session = issue_test_session(&state, "inference-owner@example.test").await;
+        let addr = spawn_server(state).await;
+        let readiness: serde_json::Value = serde_json::from_slice(&raw_http_get(addr, "/readyz", &[]).await.body).expect("readiness body");
+        assert_eq!(readiness["features"]["inference"], false, "readiness publishes inference only with a frozen binding");
+        let bearer = format!("Bearer {}", session.token);
+        let base = "/spaces/space-a/documents/document-a/inference/gis-map/jobs";
+        let intent = serde_json::json!({ "schema": "semio.hub.inference-request/v1", "version": 1, "requestId": "11111111111111111111111111111111", "serviceId": "s.gis.gismap.inference", "policyVersion": 1, "lifetimeMs": 60_000 }).to_string();
+        let approval = serde_json::json!({ "schema": "semio.hub.inference-approval/v1", "version": 1, "jobId": fixture["sampleJobId"], "proposalHash": fixture["proposalHash"] }).to_string();
+        let job = fixture["sampleJobId"].as_str().expect("sample job");
+        let calls: [(&str, String, &str); 4] =
+            [("POST", base.to_string(), intent.as_str()), ("GET", format!("{base}/{job}/events?after=0"), ""), ("POST", format!("{base}/{job}/cancel"), ""), ("POST", format!("{base}/{job}/approval"), approval.as_str())];
+        for (method, path, body) in &calls {
+            for headers in [vec![("Authorization", bearer.as_str()), ("Content-Type", "application/json")], vec![("Content-Type", "application/json")]] {
+                let response = raw_http_request(addr, method, path, &headers, body.as_bytes()).await;
+                assert_eq!(u64::from(response.status), unavailable["status"].as_u64().expect("status"), "{method} {path} must fail closed");
+                let published: serde_json::Value = serde_json::from_slice(&response.body).expect("closed error body");
+                assert_eq!(published["schema"], "semio.hub.inference-error/v1");
+                assert_eq!(published["code"], unavailable["code"], "{method} {path}");
+                assert_eq!(published.as_object().expect("closed error object").len(), 2, "the closed error body never names a private object");
+            }
+        }
+    }
+    //#endregion 💡️Inference
 
     #[tokio::test]
     async fn admin_page_routes_follow_declared_html_without_alias_files() {
@@ -7064,6 +7870,9 @@ mod tests {
         }
     }
 
+    const TEST_EXECUTION_TARGET_COMPONENT_BYTES: &[u8] = b"\0asm\x01\0\0\0semio-execution-target-lease-component";
+    const TEST_EXECUTION_TARGET_DESCRIPTOR_BYTES: &[u8] = b"semio-execution-target-lease-descriptor";
+
     fn document_open_catalog_for_descriptor(descriptor: &DocumentDescriptor) -> Arc<dyn DocumentOpenCatalogAuthorityV1> {
         document_open_catalog_for_descriptor_with_generation(descriptor, "66".repeat(32))
     }
@@ -7080,6 +7889,8 @@ mod tests {
         let artifact = DocumentOpenArtifactV1 { kind: descriptor.artifact_kind.clone(), schema: descriptor.artifact_schema.clone(), pack_schema_hash: descriptor.pack_schema_hash.clone() };
         Arc::new(TestDocumentOpenCatalog {
             generation_id,
+            component: TEST_EXECUTION_TARGET_COMPONENT_BYTES.into(),
+            descriptor: TEST_EXECUTION_TARGET_DESCRIPTOR_BYTES.into(),
             open_targets: vec![
                 VerifiedDocumentOpenSelectionV1 {
                     package: package.clone(),
@@ -7382,6 +8193,144 @@ mod tests {
         assert!(capacity_plans.exchange_to_socket_grant(&capacity_plan.receipt, &authority, fixture.now_ms + 2, &capacity_sockets).is_ok());
     }
 
+    /// 🪪️ Every execution-target asset route re-authenticates the exact scope and role, reloads the
+    /// durable descriptor, and resolves the current trusted selection before any body: it accepts
+    /// only the bounded open intent, never a package/digest/generation/path/receipt selector, serves
+    /// exactly the selected bytes, and denies after a catalog rotation.
+    #[tokio::test]
+    async fn execution_target_asset_routes_revalidate_scope_role_descriptor_and_catalog_before_each_body() {
+        let mut state = test_state().await;
+        let document_id = "execution-target-assets";
+        announce_document_for_test(&state, STUDIO, document_id).await;
+        let scope = DocumentScope::new(STUDIO, document_id);
+        let descriptor = state.directory.get_document_descriptor(&scope).await.expect("descriptor lookup").expect("descriptor");
+        state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
+        state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
+        let token = seed_author_token(&state).await;
+        let authorization = format!("Bearer {token}");
+        let headers = [("Authorization", authorization.as_str()), ("Content-Type", "application/json")];
+        let root = format!("/spaces/{STUDIO}/documents/{document_id}/execution-target");
+        let intent_body = |surface: &str| {
+            directory::os_pack::json::to_json_string(&DocumentOpenIntentV1 {
+                schema: "semio.hub.document-open-intent/v1".into(),
+                version: 1,
+                scope: scope.clone(),
+                requested_surface_id: Some(surface.into()),
+                client_instance_id: "client:execution-target".into(),
+            })
+        };
+        let addr = spawn_server(state.clone()).await;
+
+        let manifest = raw_http_request(addr, "POST", &format!("{root}/manifest"), &headers, intent_body("surface.test.editor").as_bytes()).await;
+        assert_eq!(manifest.status, 200, "{}", String::from_utf8_lossy(&manifest.body));
+        let manifest_text = String::from_utf8(manifest.body).expect("manifest UTF-8");
+        assert!(!manifest_text.contains(&token) && !manifest_text.contains("client:execution-target") && !manifest_text.contains("sessionId") && !manifest_text.contains("receipt"));
+        let fields: DocumentExecutionTargetLeaseFieldsV1 = directory::os_pack::json::from_json_str(&manifest_text).expect("manifest JSON");
+        fields.validate().expect("route manifest is a valid lease projection");
+        assert_eq!(fields.scope, scope);
+        assert_eq!(fields.catalog.generation_id, state.openable_catalog.as_ref().expect("catalog").generation_id());
+        assert_eq!(fields.component.byte_length, TEST_EXECUTION_TARGET_COMPONENT_BYTES.len() as u64);
+        assert_eq!(fields.descriptor.byte_length, TEST_EXECUTION_TARGET_DESCRIPTOR_BYTES.len() as u64);
+
+        let component = raw_http_request(addr, "POST", &format!("{root}/component"), &headers, intent_body("surface.test.editor").as_bytes()).await;
+        assert_eq!(component.status, 200);
+        assert_eq!(component.body, TEST_EXECUTION_TARGET_COMPONENT_BYTES);
+        let descriptor_body = raw_http_request(addr, "POST", &format!("{root}/descriptor"), &headers, intent_body("surface.test.editor").as_bytes()).await;
+        assert_eq!(descriptor_body.status, 200);
+        assert_eq!(descriptor_body.body, TEST_EXECUTION_TARGET_DESCRIPTOR_BYTES);
+
+        // 🚫 Unauthenticated, foreign-scope, foreign-surface, query-smuggled, oversized and
+        // non-JSON requests never reach a byte.
+        for asset in ["manifest", "component", "descriptor"] {
+            let route = format!("{root}/{asset}");
+            let anonymous = raw_http_request(addr, "POST", &route, &[("Content-Type", "application/json")], intent_body("surface.test.editor").as_bytes()).await;
+            assert_eq!(anonymous.status, 401, "{asset} served an unauthenticated caller");
+            let foreign_scope = raw_http_request(addr, "POST", &format!("/spaces/{STUDIO}/documents/{document_id}-foreign/execution-target/{asset}"), &headers, intent_body("surface.test.editor").as_bytes()).await;
+            assert!(foreign_scope.status == 400 || foreign_scope.status == 404, "{asset} accepted a foreign scope with status {}", foreign_scope.status);
+            let foreign_surface = raw_http_request(addr, "POST", &route, &headers, intent_body("surface.foreign").as_bytes()).await;
+            assert_eq!(foreign_surface.status, 503, "{asset} accepted a foreign surface");
+            assert_eq!(serde_json::from_slice::<serde_json::Value>(&foreign_surface.body).expect("foreign error")["code"], "component-unavailable");
+            let smuggled = raw_http_request(addr, "POST", &format!("{route}?package=semio:fixture"), &headers, intent_body("surface.test.editor").as_bytes()).await;
+            assert_eq!(smuggled.status, 400, "{asset} accepted a query selector");
+            let unknown_field =
+                raw_http_request(addr, "POST", &route, &headers, br#"{"schema":"semio.hub.document-open-intent/v1","version":1,"scope":{"spaceId":"studio","documentId":"execution-target-assets"},"clientInstanceId":"c","componentSha256":"aa"}"#)
+                    .await;
+            assert_eq!(unknown_field.status, 400, "{asset} accepted a client-supplied digest selector");
+            let oversized = raw_http_request(addr, "POST", &route, &headers, &vec![b'x'; 9 * 1024]).await;
+            assert!(oversized.status == 400 || oversized.status == 413, "{asset} accepted an oversized body");
+        }
+
+        // 🔁 A rotation between reads denies every subsequent body rather than mixing generations.
+        let mut rotated = state.clone();
+        rotated.openable_catalog = Some(document_open_catalog_for_descriptor_with_generation(&descriptor, "77".repeat(32)));
+        let rotated_addr = spawn_server(rotated.clone()).await;
+        let rotated_manifest = raw_http_request(rotated_addr, "POST", &format!("{root}/manifest"), &headers, intent_body("surface.test.editor").as_bytes()).await;
+        assert_eq!(rotated_manifest.status, 200);
+        let rotated_fields: DocumentExecutionTargetLeaseFieldsV1 = directory::os_pack::json::from_json_str(&String::from_utf8(rotated_manifest.body).expect("rotated UTF-8")).expect("rotated manifest");
+        assert_ne!(rotated_fields.catalog.generation_id, fields.catalog.generation_id);
+        assert!(!same_lease_fields_v1(&rotated_fields, &fields));
+
+        // 🚧 An unconfigured catalog advertises nothing and serves nothing.
+        let mut unavailable = state.clone();
+        unavailable.openable_catalog = None;
+        let unavailable_addr = spawn_server(unavailable).await;
+        let denied = raw_http_request(unavailable_addr, "POST", &format!("{root}/component"), &headers, intent_body("surface.test.editor").as_bytes()).await;
+        assert_eq!(denied.status, 503);
+        assert_eq!(serde_json::from_slice::<serde_json::Value>(&denied.body).expect("catalog error")["code"], "catalog-unavailable");
+    }
+
+    #[tokio::test]
+    async fn execution_target_selection_final_fence_matches_neutral_races() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🌎️hub/🧪️fixtures/🪪️execution-target-relay-v1/🔣️.json")).expect("execution-target relay fixture");
+        for vector in fixture["fences"].as_array().expect("neutral fences") {
+            let mut state = test_state().await;
+            let scope = DocumentScope::new(STUDIO, "execution-target-fence");
+            announce_document_for_test(&state, STUDIO, &scope.document_id).await;
+            let descriptor = state.directory.get_document_descriptor(&scope).await.expect("descriptor lookup").expect("descriptor");
+            state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
+            state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
+            let token = seed_author_token(&state).await;
+            let mut headers = bearer_headers(&token);
+            headers.insert(axum::http::header::CONTENT_TYPE, "application/json".parse().expect("content type"));
+            let gate = Arc::new(TestDocumentOpenPlanIssueGate::default());
+            state.document_open_plan_issue_gate = Some(gate.clone());
+            let body = Bytes::from(directory::os_pack::json::to_json_string(&DocumentOpenIntentV1 {
+                schema: "semio.hub.document-open-intent/v1".into(),
+                version: 1,
+                scope: scope.clone(),
+                requested_surface_id: Some("surface.test.editor".into()),
+                client_instance_id: "client:fence".into(),
+            }));
+            let task = tokio::spawn(document_execution_target_selection(scope.space_id.clone(), scope.document_id.clone(), headers, state.clone(), body));
+            tokio::time::timeout(std::time::Duration::from_secs(2), gate.admitted.acquire()).await.expect("target final fence deadline").expect("target reached final fence").forget();
+            match vector["mutation"].as_str().expect("mutation") {
+                "unchanged" => {}
+                "directory-advanced" => announce_document_for_test(&state, STUDIO, "execution-target-racing-document").await,
+                "session-revoked" => {
+                    let capability = SessionCapability::parse(&token).expect("session capability");
+                    let session = state.directory.authenticate_session(&capability).await.expect("session lookup").expect("session");
+                    state.directory.revoke_auth_session(&session.id, "target-fence", None, "target-fence").await.expect("revoke session").expect("revoked row");
+                }
+                "cancelled" => task.abort(),
+                _ => panic!("unknown target fence mutation"),
+            }
+            gate.release.add_permits(1);
+            let outcome = match task.await {
+                Ok(Ok((fields, assets))) => {
+                    assert_eq!(fields.scope, scope);
+                    assert_eq!(&*assets.component, TEST_EXECUTION_TARGET_COMPONENT_BYTES);
+                    "selected"
+                }
+                Ok(Err((_, error))) if error.0.code == DocumentOpenPlanErrorCodeV1::Stale => "stale",
+                Ok(Err((_, error))) if error.0.code == DocumentOpenPlanErrorCodeV1::Denied => "denied",
+                Err(error) if error.is_cancelled() => "cancelled",
+                _ => panic!("unexpected execution-target fence outcome"),
+            };
+            assert_eq!(outcome, vector["expected"].as_str().expect("expected fence outcome"));
+            assert!(state.document_open_plans.inner.lock().expect("plan ledger").records.is_empty(), "asset reads never mint or consume plan receipts");
+        }
+    }
+
     #[tokio::test]
     async fn document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_cancel_safe_and_exchangeable() {
         let mut state = test_state().await;
@@ -7390,7 +8339,7 @@ mod tests {
         let scope = DocumentScope::new(STUDIO, document_id);
         let descriptor = state.directory.get_document_descriptor(&scope).await.expect("descriptor lookup").expect("descriptor");
         state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
-        state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false));
+        state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
         let token = seed_author_token(&state).await;
         let authorization = format!("Bearer {token}");
         let headers = [("Authorization", authorization.as_str()), ("Content-Type", "application/json")];
@@ -7463,7 +8412,7 @@ mod tests {
 
         let mut unavailable = state.clone();
         unavailable.openable_catalog = None;
-        unavailable.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, false, true, true, false));
+        unavailable.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, false, true, true, false, false));
         let unavailable_addr = spawn_server(unavailable).await;
         let unavailable_readiness = raw_http_get(unavailable_addr, "/readyz", &[]).await;
         let unavailable_readiness: serde_json::Value = serde_json::from_slice(&unavailable_readiness.body).expect("unavailable readiness JSON");
@@ -7500,7 +8449,7 @@ mod tests {
         let cancelled_scope = DocumentScope::new(STUDIO, "open-plan-cancelled");
         let cancelled_descriptor = cancelled.directory.get_document_descriptor(&cancelled_scope).await.expect("cancel descriptor").expect("cancel document");
         cancelled.openable_catalog = Some(document_open_catalog_for_descriptor(&cancelled_descriptor));
-        cancelled.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false));
+        cancelled.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
         let cancelled_token = seed_author_token(&cancelled).await;
         let mut cancelled_headers = bearer_headers(&cancelled_token);
         cancelled_headers.insert(axum::http::header::CONTENT_TYPE, "application/json".parse().expect("content type"));
@@ -7529,7 +8478,7 @@ mod tests {
         let scope = DocumentScope::new(STUDIO, document_id);
         let descriptor = state.directory.get_document_descriptor(&scope).await.expect("descriptor lookup").expect("descriptor");
         state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
-        state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false));
+        state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
         let token = seed_author_token(&state).await;
 
         let (_, surface_grant) = issue_and_exchange_document_open_plan_for_test(&state, &token, &scope, "client:surface").await;
@@ -7598,7 +8547,7 @@ mod tests {
         announce_document_for_test(&state, STUDIO, foreign_document_id).await;
         let route_descriptor = state.directory.get_document_descriptor(&DocumentScope::new(STUDIO, document_id)).await.expect("route descriptor").expect("route document");
         state.openable_catalog = Some(document_open_catalog_for_descriptor(&route_descriptor));
-        state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false));
+        state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
         let token = seed_author_token(&state).await;
         let scope = DocumentScope::new(STUDIO, document_id);
         let mut authority = document_open_plan_authority_for_session(&state, &fixture, &token, scope.clone()).await;
@@ -8153,6 +9102,167 @@ mod tests {
         });
     }
 
+    async fn stop_recovery_server(state: HubState, shutdown: tokio::sync::oneshot::Sender<()>, task: tokio::task::JoinHandle<()>) {
+        shutdown.send(()).expect("shutdown signal");
+        tokio::time::timeout(std::time::Duration::from_secs(5), task).await.expect("server shutdown deadline").expect("server shutdown join");
+        let directory = Arc::downgrade(&state.directory);
+        let database = state.db.clone();
+        drop(state);
+        tokio::time::timeout(std::time::Duration::from_secs(5), async {
+            while directory.strong_count() != 0 || Arc::strong_count(&database) != 1 {
+                tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+            }
+        })
+        .await
+        .expect("all socket and directory owners retired before reopen");
+        let database = Arc::try_unwrap(database).unwrap_or_else(|_| panic!("database owner remained shared"));
+        tokio::time::timeout(std::time::Duration::from_secs(5), database.shutdown(std::time::Duration::from_secs(5))).await.expect("database shutdown deadline").expect("database shutdown");
+    }
+
+    fn assert_recovery_denied(response: RawHttpResponse, expected: &serde_json::Value) {
+        assert_eq!(u64::from(response.status), expected["removedStatus"].as_u64().unwrap());
+        assert!(response.headers.lines().any(|line| line.eq_ignore_ascii_case("content-type: application/json")));
+        let error: DocumentOpenPlanErrorV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&response.body).unwrap()).expect("strict bounded error, not selected asset bytes");
+        assert_eq!(error.schema, "semio.hub.document-open-plan-error/v1");
+        assert_eq!(error.code, DocumentOpenPlanErrorCodeV1::Denied);
+        assert_eq!(expected["removedCode"], "denied");
+    }
+
+    #[test]
+    fn admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen() {
+        run_socket_test(|| async {
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🛂️admin-presence-target-recovery-v1/🔣️.json")).expect("admin recovery fixture");
+            let expected = &fixture["expected"];
+            let scope = DocumentScope::new(fixture["scope"]["spaceId"].as_str().unwrap(), fixture["scope"]["documentId"].as_str().unwrap());
+            let dir = tempdir("admin-presence-target-recovery");
+            std::fs::create_dir_all(&dir).expect("recovery fixture directory");
+            let path = dir.join("directory.sqlite");
+            let directory = SqliteDirectory::connect(path.to_str().unwrap()).await.expect("file directory");
+            let mut state = test_state_with_directory(dir.join("db"), directory, 1024, 256).await;
+            let admin_headers = authorize_test_admin(&mut state, "recovery-admin@example.com").await;
+            let removed = issue_test_session(&state, "recovery-removed@example.com").await;
+            let observer = issue_test_session(&state, "recovery-observer@example.com").await;
+            for member in fixture["members"].as_array().unwrap() {
+                let email = format!("recovery-{}@example.com", member["id"].as_str().unwrap());
+                assert_eq!(member["role"], "author");
+                upsert_member_for_test(&state, &scope.space_id, &email, DirectorySpaceRole::Author).await;
+            }
+            announce_document_for_test(&state, &scope.space_id, &scope.document_id).await;
+            let descriptor = state.directory.get_document_descriptor(&scope).await.unwrap().unwrap();
+            state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
+            state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
+            let (plan_b, grant_b) = issue_and_exchange_document_open_plan_for_test(&state, &removed.token, &scope, "client:removed").await;
+            let (plan_c, grant_c) = issue_and_exchange_document_open_plan_for_test(&state, &observer.token, &scope, "client:observer").await;
+            assert_eq!(plan_b.surface.surface_id, fixture["surfaceId"].as_str().unwrap());
+            assert_eq!(plan_b.surface.surface_id, plan_c.surface.surface_id);
+            let (addr, shutdown, server) = spawn_restartable_server(state.clone()).await;
+            let root = format!("/spaces/{}/documents/{}", scope.space_id, scope.document_id);
+            let url = format!("ws://{addr}{root}/socket/v1?surface={}", plan_b.surface.surface_id);
+            let (mut b, _) = connect_async(socket_request(&url, &grant_b.grant)).await.expect("member document socket");
+            let (mut c, _) = connect_async(socket_request(&url, &grant_c.grant)).await.expect("observer document socket");
+            b.send(client_binary(&socket_hello(), Lane::Command).await).await.unwrap();
+            c.send(client_binary(&socket_hello(), Lane::Command).await).await.unwrap();
+            assert!(matches!(next_server_frame(&mut b).await, ServerFrame::Welcome { .. }));
+            let ServerFrame::Session { actor: actor_b, color: color_b } = next_server_frame(&mut b).await else { panic!("member session") };
+            assert!(matches!(next_server_frame(&mut c).await, ServerFrame::Welcome { .. }));
+            let ServerFrame::Session { actor: actor_c, .. } = next_server_frame(&mut c).await else { panic!("observer session") };
+            let raw = presence_hex_bytes(presence_normalization_fixture()["vectors"][0]["rawPeerHex"].as_str().unwrap());
+            b.send(client_binary(&ClientFrame::Presence { peer: raw.clone() }, Lane::Preview).await).await.unwrap();
+            let ServerFrame::Presence { peers } = next_server_frame(&mut c).await else { panic!("observer normalized presence") };
+            assert_eq!(peers.len(), 1);
+            let peer = protocol::decode_presence_peer(&peers[0]).await.unwrap();
+            assert_eq!(peer.actor, actor_b);
+            assert_eq!(peer.user_id.as_deref(), Some(removed.user_id.as_str()));
+            assert_eq!(peer.label.as_deref(), Some("recovery-removed@example.com"));
+            assert_eq!(peer.role.as_deref(), Some("author"));
+            assert_eq!(peer.color, Some(color_b));
+            assert_eq!(peer.surface.as_deref(), Some(plan_b.surface.surface_id.as_str()));
+            assert!(matches!(next_server_frame(&mut b).await, ServerFrame::Presence { .. }));
+            let intent = directory::os_pack::json::to_json_string(&DocumentOpenIntentV1 {
+                schema: "semio.hub.document-open-intent/v1".into(),
+                version: 1,
+                scope: scope.clone(),
+                requested_surface_id: Some(plan_b.surface.surface_id.clone()),
+                client_instance_id: "client:recovery-target".into(),
+            });
+            let authorization_b = format!("Bearer {}", removed.token);
+            let authorization_c = format!("Bearer {}", observer.token);
+            let headers_b = [("Authorization", authorization_b.as_str()), ("Content-Type", "application/json")];
+            let headers_c = [("Authorization", authorization_c.as_str()), ("Content-Type", "application/json")];
+            assert_eq!(raw_http_request(addr, "POST", &format!("{root}/execution-target/manifest"), &headers_b, intent.as_bytes()).await.status, 200);
+            let (_, pending_b) = issue_and_exchange_document_open_plan_for_test(&state, &removed.token, &scope, "client:pending-removed").await;
+            let remove = directory::os_pack::json::to_json_string(&AdminIntentV1::RemoveSpaceMember { request_id: "request:admin-presence-recovery".into(), space_id: scope.space_id.clone(), user_id: removed.user_id.clone() });
+            let admin_authorization = admin_headers.get(axum::http::header::AUTHORIZATION).unwrap().to_str().unwrap();
+            let receipt = raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", admin_authorization), ("Content-Type", "application/json")], remove.as_bytes()).await;
+            assert_eq!(receipt.status, 200);
+            let receipt: AdminIntentReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&receipt.body).unwrap()).unwrap();
+            assert_eq!(receipt.state, AdminIntentStateV1::Succeeded);
+            assert_eq!(u64::from(next_close_without_authority(&mut b).await), expected["removedCloseCode"].as_u64().unwrap());
+            let ServerFrame::Presence { peers } = next_server_frame(&mut c).await else { panic!("removed member withdrawal") };
+            assert_eq!(peers.len() as u64, expected["visibleAfterRemoval"].as_u64().unwrap());
+            assert!(state.presence_snapshot(&document_scope_key_v1(&scope)).peers.is_empty());
+            let exchange = directory::os_pack::json::to_json_string(&DocumentPlanSocketGrantIntentV1 { schema: "semio.hub.document-plan-socket-grant-intent/v1".into(), version: 1, plan_receipt: plan_b.receipt.clone() });
+            let denied = raw_http_request(addr, "POST", &format!("{root}/socket-grants"), &headers_b, exchange.as_bytes()).await;
+            assert_recovery_denied(denied, expected);
+            assert!(connect_async(socket_request(&url, &grant_b.grant)).await.is_err(), "removed member cannot reuse its consumed grant");
+            assert!(connect_async(socket_request(&url, &pending_b.grant)).await.is_err(), "removal invalidates a previously unused member grant");
+            for route in ["execution-target/manifest", "execution-target/component", "execution-target/descriptor", "open-plan"] {
+                let denied = raw_http_request(addr, "POST", &format!("{root}/{route}"), &headers_b, intent.as_bytes()).await;
+                assert_recovery_denied(denied, expected);
+            }
+            c.send(client_binary(&ClientFrame::Presence { peer: raw }, Lane::Preview).await).await.unwrap();
+            let ServerFrame::Presence { peers } = next_server_frame(&mut c).await else { panic!("observer remains live") };
+            assert_eq!(peers.len(), 1);
+            let observer_peer = protocol::decode_presence_peer(&peers[0]).await.unwrap();
+            assert_eq!(observer_peer.actor, actor_c);
+            assert_eq!(observer_peer.user_id.as_deref(), Some(observer.user_id.as_str()));
+            assert_eq!(observer_peer.role.as_deref(), Some("author"));
+            assert_eq!(observer_peer.surface.as_deref(), Some(plan_c.surface.surface_id.as_str()));
+            assert_eq!(u64::from(raw_http_request(addr, "POST", &format!("{root}/execution-target/manifest"), &headers_c, intent.as_bytes()).await.status), expected["observerStatus"].as_u64().unwrap());
+            c.close(None).await.unwrap();
+            drop(c);
+            drop(b);
+            stop_recovery_server(state, shutdown, server).await;
+            assert_eq!(expected["sqliteReopen"], true);
+            let directory = SqliteDirectory::connect(path.to_str().unwrap()).await.expect("reopen exact file directory");
+            let mut state = test_state_with_directory(dir.join("db"), directory, 1024, 256).await;
+            state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
+            state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
+            assert!(state.presence_snapshot(&document_scope_key_v1(&scope)).peers.is_empty());
+            assert!(state.socket_grants.inner.lock().unwrap().records.is_empty());
+            assert!(state.document_open_plans.inner.lock().unwrap().records.is_empty());
+            for session in [&removed, &observer] {
+                assert!(state.directory.authenticate_session(&SessionCapability::parse(&session.token).unwrap()).await.unwrap().is_some(), "membership removal must not be mistaken for session loss");
+            }
+            assert_eq!(state.directory.get_role(&scope.space_id, &removed.user_id).await.unwrap(), None);
+            assert_eq!(state.directory.get_role(&scope.space_id, &observer.user_id).await.unwrap(), Some(SpaceRole::Author));
+            let (addr, shutdown, server) = spawn_restartable_server(state.clone()).await;
+            for route in ["execution-target/manifest", "execution-target/component", "execution-target/descriptor", "open-plan"] {
+                let denied = raw_http_request(addr, "POST", &format!("{root}/{route}"), &headers_b, intent.as_bytes()).await;
+                assert_recovery_denied(denied, expected);
+                let admitted = raw_http_request(addr, "POST", &format!("{root}/{route}"), &headers_c, intent.as_bytes()).await;
+                assert_eq!(u64::from(admitted.status), expected["observerStatus"].as_u64().unwrap(), "reopened observer {route}");
+                match route {
+                    "execution-target/component" => assert_eq!(admitted.body, TEST_EXECUTION_TARGET_COMPONENT_BYTES),
+                    "execution-target/descriptor" => assert_eq!(admitted.body, TEST_EXECUTION_TARGET_DESCRIPTOR_BYTES),
+                    "execution-target/manifest" => {
+                        let manifest: DocumentExecutionTargetLeaseFieldsV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&admitted.body).unwrap()).unwrap();
+                        manifest.validate().unwrap();
+                        assert_eq!(manifest.scope, scope);
+                    }
+                    "open-plan" => {
+                        let plan: DocumentOpenPlanV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&admitted.body).unwrap()).unwrap();
+                        plan.validate(now_ms() as u64).unwrap();
+                        assert_eq!(plan.scope, scope);
+                    }
+                    _ => unreachable!(),
+                }
+            }
+            stop_recovery_server(state, shutdown, server).await;
+            eprintln!("[DEBUG] admin removal withdrew plan-bound presence, closed only the removed member, and survived exact file-SQLite Hub reopen for all selected target routes");
+        });
+    }
+
     #[test]
     fn scoped_directory_socket_removal_and_delivery_have_one_total_membership_order() {
         run_socket_test(|| async {
@@ -8340,6 +9450,114 @@ mod tests {
         }
     }
 
+    //#region 🏛️SpaceAdministration
+    /// 🏛️ An author receives both bounded windows, a canonical receipt over the exact response
+    /// bytes, and the server's own capability flags — and no credential column anywhere.
+    #[tokio::test]
+    async fn space_administration_page_v1_route_returns_the_author_windows_with_a_canonical_receipt() {
+        let state = test_state().await;
+        let author = issue_test_session(&state, "administration-author@example.invalid").await;
+        let space = create_space_for_test(&state, &author.user_id, "Administered", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        upsert_member_for_test(&state, &space, "administration-guest@example.invalid", DirectorySpaceRole::Spectator).await;
+        state
+            .directory_service
+            .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#administration-law", author.user_id) }, DirectoryCommand::CreateInvite { space_id: space.clone(), role: DirectorySpaceRole::Spectator, ttl_secs: 600 })
+            .await
+            .expect("author invite fixture");
+        let addr = spawn_server(state).await;
+        let authorization = format!("Bearer {}", author.token);
+        let response = raw_http_get(addr, &format!("/directory/spaces/{space}"), &[("Authorization", authorization.as_str())]).await;
+        assert_eq!(response.status, 200);
+        let canonical = std::str::from_utf8(&response.body).expect("administration page UTF-8").to_string();
+        assert!(canonical.len() <= DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES);
+        let page = DirectorySpaceAdministrationPageV1::parse_canonical_json(&canonical).expect("canonical author page");
+        assert_eq!(page.space_id(), space);
+        let DirectorySpaceAdministrationPageV1::Author { members, invites, capabilities, .. } = &page else { panic!("author projection") };
+        assert_eq!(members.rows.len(), 2);
+        assert!(members.rows.windows(2).all(|pair| pair[0].user_id < pair[1].user_id), "member rows are keyset-ordered");
+        assert!(members.rows.iter().any(|row| row.owner), "the owner row is marked so removal can be disabled before dispatch");
+        assert_eq!(invites.rows.len(), 1);
+        assert!(capabilities.remove_member && capabilities.create_invite);
+        for secret in ["selector", "secretDigest", "passwordHash", "ssoSubject", "ssoProvider", "inviteToken"] {
+            assert!(!canonical.contains(secret), "administration page leaked {secret}");
+        }
+    }
+
+    /// 🛂️ A spectator receives the member shape only: invites and capability flags are structurally
+    /// absent, so no renderer can mis-gate them into existence.
+    #[tokio::test]
+    async fn space_administration_page_v1_route_denies_a_spectator_the_author_windows() {
+        let state = test_state().await;
+        let author = issue_test_session(&state, "administration-owner@example.invalid").await;
+        let spectator = issue_test_session(&state, "administration-spectator@example.invalid").await;
+        let outsider = issue_test_session(&state, "administration-outsider@example.invalid").await;
+        let space = create_space_for_test(&state, &author.user_id, "Spectated", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        upsert_member_for_test(&state, &space, "administration-spectator@example.invalid", DirectorySpaceRole::Spectator).await;
+        state
+            .directory_service
+            .execute(
+                DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#administration-spectator-law", author.user_id) },
+                DirectoryCommand::CreateInvite { space_id: space.clone(), role: DirectorySpaceRole::Spectator, ttl_secs: 600 },
+            )
+            .await
+            .expect("author invite fixture");
+        let addr = spawn_server(state).await;
+        let spectator_authorization = format!("Bearer {}", spectator.token);
+        let response = raw_http_get(addr, &format!("/directory/spaces/{space}"), &[("Authorization", spectator_authorization.as_str())]).await;
+        assert_eq!(response.status, 200);
+        let canonical = std::str::from_utf8(&response.body).expect("spectator page UTF-8").to_string();
+        let page = DirectorySpaceAdministrationPageV1::parse_canonical_json(&canonical).expect("canonical member page");
+        assert!(matches!(page, DirectorySpaceAdministrationPageV1::Member { .. }));
+        assert!(page.capabilities().is_none());
+        assert!(!canonical.contains("\"invites\"") && !canonical.contains("\"capabilities\""));
+        let outsider_authorization = format!("Bearer {}", outsider.token);
+        assert_eq!(raw_http_get(addr, &format!("/directory/spaces/{space}"), &[("Authorization", outsider_authorization.as_str())]).await.status, 404);
+        assert_eq!(raw_http_get(addr, &format!("/directory/spaces/{space}"), &[]).await.status, 404);
+    }
+
+    /// 🧯️ A membership removal takes effect on the very next page read: the response is a denial with
+    /// no page bytes at all, so no member or invite row can leak past the revocation.
+    #[tokio::test]
+    async fn space_administration_page_v1_route_denies_a_removed_member_and_leaks_no_rows() {
+        let state = test_state().await;
+        let author = issue_test_session(&state, "administration-remover@example.invalid").await;
+        let removed = issue_test_session(&state, "administration-removed@example.invalid").await;
+        let space = create_space_for_test(&state, &author.user_id, "Revoked", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        upsert_member_for_test(&state, &space, "administration-removed@example.invalid", DirectorySpaceRole::Spectator).await;
+        let service = state.directory_service.clone();
+        let addr = spawn_server(state).await;
+        let authorization = format!("Bearer {}", removed.token);
+        assert_eq!(raw_http_get(addr, &format!("/directory/spaces/{space}"), &[("Authorization", authorization.as_str())]).await.status, 200);
+        service
+            .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#administration-remove-law", author.user_id) }, DirectoryCommand::RemoveMember { space_id: space.clone(), user_id: removed.user_id.clone() })
+            .await
+            .expect("member removal");
+        let denied = raw_http_get(addr, &format!("/directory/spaces/{space}"), &[("Authorization", authorization.as_str())]).await;
+        assert_eq!(denied.status, 404, "a removed member cannot even enumerate the private space");
+        assert!(!String::from_utf8_lossy(&denied.body).contains("administration-remover@example.invalid"));
+    }
+
+    /// 🛡️ The query grammar is exact and every cursor is MAC-bound: a foreign, tampered, or
+    /// differently shaped cursor is a 400 with no page bytes, never a page for another identity.
+    #[tokio::test]
+    async fn space_administration_page_v1_route_rejects_a_noncanonical_query_and_a_foreign_cursor() {
+        let state = test_state().await;
+        let author = issue_test_session(&state, "administration-cursor@example.invalid").await;
+        let space = create_space_for_test(&state, &author.user_id, "Cursored", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        let addr = spawn_server(state).await;
+        let authorization = format!("Bearer {}", author.token);
+        for query in ["?cursor=", "?cursor=a&cursor=b", "?cursor=%6d", "?cursor=m+1", "?section=members", "?cursor=m.7573.zz"] {
+            let response = raw_http_get(addr, &format!("/directory/spaces/{space}{query}"), &[("Authorization", authorization.as_str())]).await;
+            assert_eq!(response.status, 400, "query {query} must be refused before any read");
+            assert!(response.body.is_empty() || !String::from_utf8_lossy(&response.body).contains("receiptSha256"));
+        }
+        let forged = format!("m.{}.{}", os_directory::hex_lower(b"user-forged"), "ab".repeat(32));
+        let response = raw_http_get(addr, &format!("/directory/spaces/{space}?cursor={forged}"), &[("Authorization", authorization.as_str())]).await;
+        assert_eq!(response.status, 400, "a cursor with a forged MAC is refused");
+        assert_eq!(raw_http_get(addr, &format!("/directory/spaces/{space}"), &[("Authorization", authorization.as_str())]).await.status, 200);
+    }
+    //#endregion 🏛️SpaceAdministration
+
     #[test]
     fn space_public_boundary_real_routes_emit_discriminated_public_member_author_and_private_404() {
         run_socket_test(|| async {
@@ -8362,9 +9580,10 @@ mod tests {
             assert_eq!(anonymous.status, 200);
             let anonymous: serde_json::Value = serde_json::from_slice(&anonymous.body).expect("anonymous public detail JSON");
             assert_eq!(anonymous["access"], "public");
+            assert_eq!(anonymous["schema"], DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA);
             assert_eq!(anonymous["space"]["visibility"], "public");
-            assert_eq!(anonymous["documents"][0]["documentId"], "catalog-document");
-            assert!(anonymous["documents"][0].get("descriptor").is_none());
+            assert_eq!(anonymous["documents"]["rows"][0]["documentId"], "catalog-document");
+            assert!(anonymous["documents"]["rows"][0].get("descriptor").is_none());
             assert_public_projection_has_no_private_keys(&anonymous);
 
             let outsider_authorization = format!("Bearer {}", outsider.token);
@@ -8391,8 +9610,9 @@ mod tests {
             let member: serde_json::Value = serde_json::from_slice(&member.body).expect("member detail");
             assert_eq!(member["access"], "member");
             assert!(member.get("members").is_some());
-            assert!(member.get("invites").is_none());
-            assert_eq!(member["documents"][0]["headSeq"], 0);
+            assert!(member.get("invites").is_none(), "a member page structurally omits invites");
+            assert!(member.get("capabilities").is_none(), "a member page structurally omits capability flags");
+            assert_eq!(member["documents"]["rows"][0]["headSeq"], 0);
 
             let author_authorization = format!("Bearer {}", author.token);
             let authored = raw_http_get(addr, &format!("/directory/spaces/{public_space}"), &[("Authorization", author_authorization.as_str())]).await;
@@ -8400,7 +9620,11 @@ mod tests {
             let authored: serde_json::Value = serde_json::from_slice(&authored.body).expect("author detail");
             assert_eq!(authored["access"], "author");
             assert_eq!(authored["space"]["role"], "author");
-            assert_eq!(authored["invites"].as_array().map(Vec::len), Some(1));
+            assert_eq!(authored["invites"]["rows"].as_array().map(Vec::len), Some(1));
+            assert_eq!(authored["capabilities"]["removeMember"], true);
+            let authored_bytes = std::str::from_utf8(&raw_http_get(addr, &format!("/directory/spaces/{public_space}"), &[("Authorization", author_authorization.as_str())]).await.body).expect("author page UTF-8").to_string();
+            assert!(!authored_bytes.contains("selector") && !authored_bytes.contains("secretDigest") && !authored_bytes.contains("passwordHash"));
+            assert_eq!(DirectorySpaceAdministrationPageV1::parse_canonical_json(&authored_bytes).map(|page| page.space_id().to_string()), Ok(public_space.clone()));
 
             let list = raw_http_get(addr, "/directory/spaces", &[]).await;
             assert_eq!(list.status, 200);
@@ -8664,6 +9888,164 @@ mod tests {
         assert_eq!(directory.append_admin_operation_audit(&interrupted).await.expect("idempotent interrupted terminal").fact.phase, "cancelled", "the first terminal reason wins");
     }
 
+    fn presence_hex_bytes(hex: &str) -> Vec<u8> {
+        assert_eq!(hex.len() % 2, 0);
+        (0..hex.len()).step_by(2).map(|offset| u8::from_str_radix(&hex[offset..offset + 2], 16).expect("presence fixture byte")).collect()
+    }
+
+    fn presence_normalization_fixture() -> serde_json::Value {
+        serde_json::from_str(include_str!("🧪️fixtures/🪪️presence-normalization-v1/🧪️fixture/🔣️.json")).expect("presence normalization fixture")
+    }
+
+    fn test_presence_slot(live: &str, user_id: Option<&str>, now: tokio::time::Instant) -> PresenceLeaseSlot {
+        PresenceLeaseSlot {
+            socket_live_id: live.into(),
+            expires_at: now + std::time::Duration::from_millis(PRESENCE_LEASE_TTL_MS),
+            user_id: user_id.map(str::to_string),
+            connected_at_ms: 1000,
+            label: None,
+            role: None,
+            document_surface: Some("surface".into()),
+            color: 0,
+            peer: None,
+        }
+    }
+
+    async fn presence_test_peer(pack: &[u8]) -> Vec<u8> {
+        let fixture = presence_normalization_fixture();
+        let mut peer = protocol::decode_presence_peer(&presence_hex_bytes(fixture["vectors"][0]["rawPeerHex"].as_str().expect("raw peer"))).await.expect("fixture peer");
+        peer.presence_pack = Some(pack.to_vec());
+        protocol::encode_presence_peer(&peer).await
+    }
+
+    async fn presence_frame_has_pack(frame: ServerFrame, pack: &[u8]) -> bool {
+        let ServerFrame::Presence { peers } = frame else { return false };
+        peers.len() == 1 && protocol::decode_presence_peer(&peers[0]).await.is_ok_and(|peer| peer.presence_pack.as_deref() == Some(pack))
+    }
+
+    #[tokio::test]
+    async fn presence_normalization_matches_neutral_authority_and_no_effect_rejections() {
+        let state = lag_test_state(1024, 256).await;
+        let fixture = presence_normalization_fixture();
+        let head = state.directory.head_seq().await.expect("directory head");
+        let now = tokio::time::Instant::now();
+        for vector in fixture["vectors"].as_array().expect("vectors") {
+            let document_id = vector["name"].as_str().expect("vector name");
+            let key = document_scope_key_v1(&DocumentScope::new(STUDIO, document_id));
+            let admitted = &vector["admission"];
+            let actor = admitted["actor"].as_str().expect("admitted actor");
+            let mut slot = test_presence_slot("live", admitted["userId"].as_str(), now);
+            slot.connected_at_ms = admitted["connectedAtMs"].as_i64().expect("admitted time");
+            slot.label = admitted["label"].as_str().map(str::to_string);
+            slot.role = admitted["role"].as_str().map(str::to_string);
+            slot.color = u8::try_from(admitted["color"].as_u64().expect("admitted color")).expect("palette index");
+            slot.document_surface = admitted["surface"].as_str().map(str::to_string);
+            let deadline = slot.expires_at;
+            let mut receiver = state.fanout_for(&key).subscribe();
+            assert_eq!(state.install_presence_slot(&key, STUDIO, document_id, actor, slot).await, PresenceLeaseTransition::NoChange);
+            let raw = presence_hex_bytes(vector["rawPeerHex"].as_str().expect("raw peer"));
+            let transition = state.refresh_document_presence(&key, STUDIO, document_id, actor, "live", raw.clone(), now + std::time::Duration::from_secs(1)).await;
+            let map_key = (key.clone(), actor.to_string());
+            if vector["expected"]["accepted"] == true {
+                let expected = presence_hex_bytes(vector["expected"]["normalizedPeerHex"].as_str().expect("normalized peer"));
+                assert_eq!(transition, PresenceLeaseTransition::Published, "{document_id}");
+                assert_eq!(state.presence_snapshot(&key).peers, vec![expected.clone()], "{document_id}");
+                assert_eq!(state.presence_snapshot(&key).actors.len(), usize::from(admitted["surface"].is_string()), "non-plan rows cannot mint a directory surface: {document_id}");
+                assert!(matches!(receiver.try_recv(), Ok(ServerFrame::Presence { peers }) if peers == vec![expected]));
+                assert_eq!(state.refresh_document_presence(&key, STUDIO, document_id, actor, "live", raw, now + std::time::Duration::from_secs(2)).await, PresenceLeaseTransition::NoChange);
+                assert_eq!(state.presence.with(&map_key, |slot| slot.expect("slot").expires_at), deadline + std::time::Duration::from_secs(2));
+            } else {
+                assert_eq!(transition, PresenceLeaseTransition::Rejected, "{document_id}");
+                assert!(state.presence_snapshot(&key).peers.is_empty(), "{document_id}");
+                assert_eq!(state.presence.with(&map_key, |slot| slot.expect("slot").expires_at), deadline, "{document_id}");
+            }
+            assert!(matches!(receiver.try_recv(), Err(broadcast::error::TryRecvError::Empty)), "no duplicate or rejected publication: {document_id}");
+            assert_eq!(vector["expected"]["durableWrites"], 0);
+        }
+        assert_eq!(state.directory.head_seq().await.expect("directory head"), head);
+        eprintln!("[DEBUG] presence normalization: 17 exact neutral admission vectors, unchanged rejected TTL, duplicate suppression, zero directory writes");
+    }
+
+    #[test]
+    fn presence_normalization_socket_overwrites_identity_and_rejects_without_refresh() {
+        run_socket_test(|| async {
+            let mut state = lag_test_state(1024, 256).await;
+            let clock = Arc::new(TestPresenceClock::new());
+            state.presence_clock = Some(clock.clone());
+            let token = seed_author_token(&state).await;
+            let document_id = "presence-normalized-socket";
+            announce_document_for_test(&state, STUDIO, document_id).await;
+            let scope = DocumentScope::new(STUDIO, document_id);
+            let descriptor = state.directory.get_document_descriptor(&scope).await.expect("descriptor lookup").expect("descriptor");
+            state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
+            let (plan, receipt) = issue_and_exchange_document_open_plan_for_test(&state, &token, &scope, "client:presence-normalization").await;
+            let session = state.directory.authenticate_session(&SessionCapability::parse(&token).expect("session capability")).await.expect("session lookup").expect("session");
+            let user = state.directory.get_user(&session.user_id).await.expect("user lookup").expect("user");
+            let started = now_ms();
+            let addr = spawn_server(state.clone()).await;
+            let url = format!("ws://{addr}/spaces/{STUDIO}/documents/{document_id}/socket/v1?surface={}", plan.surface.surface_id);
+            let (mut socket, _) = connect_async(socket_request(&url, &receipt.grant)).await.expect("admitted socket");
+            socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("hello");
+            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Welcome { .. }));
+            let ServerFrame::Session { actor, color } = next_server_frame(&mut socket).await else { panic!("session frame") };
+            assert_eq!(actor, receipt.actor_id);
+            let fixture = presence_normalization_fixture();
+            let raw = presence_hex_bytes(fixture["vectors"][0]["rawPeerHex"].as_str().expect("raw peer"));
+            let input = protocol::decode_presence_peer(&raw).await.expect("raw peer decode");
+            socket.send(client_binary(&ClientFrame::Presence { peer: raw.clone() }, Lane::Preview).await).await.expect("forged peer send");
+            let ServerFrame::Presence { peers } = next_server_frame(&mut socket).await else { panic!("presence frame") };
+            assert_eq!(peers.len(), 1);
+            let normalized = protocol::decode_presence_peer(&peers[0]).await.expect("normalized peer");
+            assert_eq!(normalized.actor, actor);
+            assert_eq!(normalized.user_id, Some(session.user_id));
+            assert_eq!(normalized.label, Some(user.display_name));
+            assert_eq!(normalized.role.as_deref(), Some("author"));
+            assert_eq!(normalized.color, Some(color));
+            assert_eq!(normalized.surface, Some(plan.surface.surface_id));
+            assert!(normalized.connected_at_ms >= started && normalized.connected_at_ms <= now_ms());
+            assert_eq!(normalized.presence_pack, input.presence_pack);
+            assert_eq!(normalized.drag_ghost_json, input.drag_ghost_json);
+            assert_eq!(normalized.interaction, input.interaction);
+            assert_eq!(normalized.views, input.views);
+            assert_eq!(normalized.ui, input.ui);
+            assert_eq!(protocol::encode_presence_peer(&normalized).await, peers[0]);
+            let key = document_scope_key_v1(&scope);
+            assert_eq!(state.presence_snapshot(&key).actors[0].surface, normalized.surface.as_deref().expect("plan surface"));
+            let deadline = state.presence.with(&(key.clone(), actor.clone()), |slot| slot.expect("visible slot").expires_at);
+            let head = state.directory.head_seq().await.expect("head before rejected input");
+            clock.advance_to(5_000);
+            for vector in fixture["vectors"]
+                .as_array()
+                .expect("vectors")
+                .iter()
+                .filter(|vector| !vector["expected"]["accepted"].as_bool().expect("accepted") && !vector["name"].as_str().expect("name").starts_with("authoritative-") && !vector["name"].as_str().expect("name").starts_with("normalized-"))
+            {
+                socket.send(client_binary(&ClientFrame::Presence { peer: presence_hex_bytes(vector["rawPeerHex"].as_str().expect("hostile peer")) }, Lane::Preview).await).await.expect("hostile send");
+            }
+            socket.send(client_binary(&ClientFrame::PreviewPublish { key: "presence-fifo".into(), seq: 1, payload: vec![] }, Lane::Preview).await).await.expect("rejection fence");
+            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Preview { key, seq: 1, .. } if key == "presence-fifo"), "every rejected frame precedes the FIFO marker without an interim roster");
+            assert_eq!(state.presence.with(&(key.clone(), actor.clone()), |slot| slot.expect("visible slot").expires_at), deadline);
+            assert_eq!(state.presence_snapshot(&key).peers, peers);
+            assert_eq!(state.directory.head_seq().await.expect("head after rejected input"), head);
+            for (sequence, name, label_bytes) in [(2, "authoritative-field-over-limit", 1025), (3, "normalized-entry-over-limit", 1024)] {
+                let vector = fixture["vectors"].as_array().expect("vectors").iter().find(|vector| vector["name"] == name).expect("authority expansion vector");
+                let saved_label = state.presence.with_mut(&(key.clone(), actor.clone()), |slot| std::mem::replace(&mut slot.expect("visible slot").label, Some("l".repeat(label_bytes))));
+                socket.send(client_binary(&ClientFrame::Presence { peer: presence_hex_bytes(vector["rawPeerHex"].as_str().expect("expansion raw peer")) }, Lane::Preview).await).await.expect("authority-expanded input");
+                socket.send(client_binary(&ClientFrame::PreviewPublish { key: "presence-fifo".into(), seq: sequence, payload: vec![] }, Lane::Preview).await).await.expect("expansion fence");
+                assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Preview { key, seq, .. } if key == "presence-fifo" && seq == sequence), "authority-expanded output is rejected before publication: {name}");
+                assert_eq!(state.presence.with(&(key.clone(), actor.clone()), |slot| slot.expect("visible slot").expires_at), deadline);
+                assert_eq!(state.presence_snapshot(&key).peers, peers);
+                state.presence.with_mut(&(key.clone(), actor.clone()), |slot| slot.expect("visible slot").label = saved_label);
+            }
+            socket.send(client_binary(&ClientFrame::Presence { peer: raw }, Lane::Preview).await).await.expect("identical refresh");
+            socket.send(client_binary(&ClientFrame::PreviewPublish { key: "presence-fifo".into(), seq: 4, payload: vec![] }, Lane::Preview).await).await.expect("duplicate fence");
+            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Preview { key, seq: 4, .. } if key == "presence-fifo"), "identical normalized peer does not republish");
+            assert_eq!(state.presence.with(&(key, actor), |slot| slot.expect("visible slot").expires_at), deadline + std::time::Duration::from_secs(5));
+            socket.close(None).await.expect("close socket");
+            eprintln!("[DEBUG] admitted plan-backed socket overwrote all identity fields, preserved five ephemerals, and rejected malformed input without visibility, TTL or directory changes");
+        });
+    }
+
     #[test]
     fn presence_lease_reconnect_rejects_old_live_refresh_and_close() {
         run_socket_test(|| async {
@@ -8672,31 +10054,64 @@ mod tests {
             let token = seed_author_token(&state).await;
             let document_id = "presence-reconnect";
             announce_document_for_test(&state, STUDIO, document_id).await;
-            let first = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), document_id.to_string())), bearer_headers(&token), State(state.clone())).await.expect("first socket grant").0;
-            let second = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), document_id.to_string())), bearer_headers(&token), State(state.clone())).await.expect("second socket grant").0;
+            let scope = DocumentScope::new(STUDIO, document_id);
+            let descriptor = state.directory.get_document_descriptor(&scope).await.expect("descriptor lookup").expect("descriptor");
+            state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
+            let observer_token = seed_author_token(&state).await;
+            let (plan, first) = issue_and_exchange_document_open_plan_for_test(&state, &token, &scope, "client:presence-first").await;
+            let (_, second) = issue_and_exchange_document_open_plan_for_test(&state, &token, &scope, "client:presence-second").await;
+            let (_, observer_grant) = issue_and_exchange_document_open_plan_for_test(&state, &observer_token, &scope, "client:presence-observer").await;
+            let first_record = state.socket_grants.pending(&SocketGrantCapability::parse(&first.grant).expect("first capability"), &SocketAudienceV1::Document(scope.clone()), now_ms()).expect("first pending record");
             assert_eq!(first.actor_id, second.actor_id);
+            assert_ne!(first.actor_id, observer_grant.actor_id);
             let addr = spawn_server(state.clone()).await;
-            let url = format!("ws://{addr}/spaces/{STUDIO}/documents/{document_id}/socket/v1");
+            let url = format!("ws://{addr}/spaces/{STUDIO}/documents/{document_id}/socket/v1?surface={}", plan.surface.surface_id);
+            let (mut observer, _) = connect_async(socket_request(&url, &observer_grant.grant)).await.expect("observer socket");
+            observer.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("observer hello");
+            assert!(matches!(next_server_frame(&mut observer).await, ServerFrame::Welcome { .. }));
+            assert!(matches!(next_server_frame(&mut observer).await, ServerFrame::Session { .. }));
             let (mut socket_a, _) = connect_async(socket_request(&url, &first.grant)).await.expect("first socket");
             socket_a.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("first hello");
             assert!(matches!(next_server_frame(&mut socket_a).await, ServerFrame::Welcome { .. }));
             assert!(matches!(next_server_frame(&mut socket_a).await, ServerFrame::Session { actor, .. } if actor == first.actor_id));
-            socket_a.send(client_binary(&ClientFrame::Presence { peer: b"old-live".to_vec() }, Lane::Preview).await).await.expect("first presence");
-            assert!(matches!(next_server_frame(&mut socket_a).await, ServerFrame::Presence { peers } if peers == vec![b"old-live".to_vec()]));
+            socket_a.send(client_binary(&ClientFrame::Presence { peer: presence_test_peer(b"old-live").await }, Lane::Preview).await).await.expect("first presence");
+            assert!(presence_frame_has_pack(next_server_frame(&mut socket_a).await, b"old-live").await);
+            assert!(presence_frame_has_pack(next_server_frame(&mut observer).await, b"old-live").await);
+            let key = document_scope_key_v1(&scope);
+            let first_live = state.presence.with(&(key.clone(), first.actor_id.clone()), |slot| slot.expect("first slot").socket_live_id.clone());
 
             let (mut socket_b, _) = connect_async(socket_request(&url, &second.grant)).await.expect("replacement socket");
             socket_b.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("replacement hello");
             assert!(matches!(next_server_frame(&mut socket_b).await, ServerFrame::Welcome { .. }));
             assert!(matches!(next_server_frame(&mut socket_b).await, ServerFrame::Session { actor, .. } if actor == second.actor_id));
             assert!(matches!(next_server_frame(&mut socket_a).await, ServerFrame::Presence { peers } if peers.is_empty()), "replacement removes the old visible row");
-            socket_a.send(client_binary(&ClientFrame::Presence { peer: b"stale-refresh".to_vec() }, Lane::Preview).await).await.expect("stale refresh");
-            assert!(tokio::time::timeout(std::time::Duration::from_millis(100), socket_b.next()).await.is_err(), "stale refresh produces no fanout");
-            socket_b.send(client_binary(&ClientFrame::Presence { peer: b"current-live".to_vec() }, Lane::Preview).await).await.expect("current refresh");
-            assert!(matches!(next_server_frame(&mut socket_b).await, ServerFrame::Presence { peers } if peers == vec![b"current-live".to_vec()]));
+            assert!(matches!(next_server_frame(&mut observer).await, ServerFrame::Presence { peers } if peers.is_empty()));
+            socket_a.send(client_binary(&ClientFrame::Presence { peer: presence_test_peer(b"stale-refresh").await }, Lane::Preview).await).await.expect("stale refresh");
+            socket_a.send(client_binary(&ClientFrame::PreviewPublish { key: "presence-stale-fifo".into(), seq: 1, payload: vec![] }, Lane::Preview).await).await.expect("stale owner fence");
+            assert!(matches!(next_server_frame(&mut socket_a).await, ServerFrame::Preview { seq: 1, .. }));
+            assert!(matches!(next_server_frame(&mut socket_b).await, ServerFrame::Preview { seq: 1, .. }));
+            assert!(matches!(next_server_frame(&mut observer).await, ServerFrame::Preview { seq: 1, .. }));
+            socket_b.send(client_binary(&ClientFrame::Presence { peer: presence_test_peer(b"current-live").await }, Lane::Preview).await).await.expect("current refresh");
+            assert!(presence_frame_has_pack(next_server_frame(&mut socket_b).await, b"current-live").await);
+            assert!(presence_frame_has_pack(next_server_frame(&mut observer).await, b"current-live").await);
             socket_a.close(None).await.expect("stale socket close");
-            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-            socket_b.send(client_binary(&ClientFrame::Presence { peer: b"current-live-2".to_vec() }, Lane::Preview).await).await.expect("current refresh after stale close");
-            assert!(matches!(next_server_frame(&mut socket_b).await, ServerFrame::Presence { peers } if peers == vec![b"current-live-2".to_vec()]));
+            tokio::time::timeout(std::time::Duration::from_secs(2), async {
+                while state.socket_grants.is_live(&first_record, &first_live) {
+                    tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+                }
+            })
+            .await
+            .expect("old socket cleanup completed");
+            socket_b.send(client_binary(&ClientFrame::Presence { peer: presence_test_peer(b"current-live-2").await }, Lane::Preview).await).await.expect("current refresh after stale close");
+            assert!(presence_frame_has_pack(next_server_frame(&mut socket_b).await, b"current-live-2").await);
+            assert!(presence_frame_has_pack(next_server_frame(&mut observer).await, b"current-live-2").await);
+            let snapshot = state.presence_snapshot(&key);
+            assert_eq!(snapshot.actors.len(), 1);
+            assert_eq!(snapshot.actors[0].surface, plan.surface.surface_id);
+            assert_eq!(snapshot.actors[0].actor, second.actor_id);
+            observer.close(None).await.expect("observer close");
+            socket_b.close(None).await.expect("current socket close");
+            eprintln!("[DEBUG] plan-backed reconnect retained only the new live owner across stale refresh and close, observed by an independent admitted socket");
         });
     }
 
@@ -8716,15 +10131,24 @@ mod tests {
             socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("socket hello");
             assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Welcome { .. }));
             assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Session { .. }));
-            socket.send(client_binary(&ClientFrame::Presence { peer: b"visible".to_vec() }, Lane::Preview).await).await.expect("visible presence");
-            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Presence { peers } if peers == vec![b"visible".to_vec()]));
+            socket.send(client_binary(&ClientFrame::Presence { peer: presence_test_peer(b"visible").await }, Lane::Preview).await).await.expect("visible presence");
+            assert!(presence_frame_has_pack(next_server_frame(&mut socket).await, b"visible").await);
+            let key = document_scope_key_v1(&DocumentScope::new(STUDIO, document_id));
+            let mut observed = state.fanout_for(&key).subscribe();
+            clock.gate_ticks.store(true, std::sync::atomic::Ordering::Release);
             clock.advance_to(PRESENCE_LEASE_TTL_MS - 1);
-            tokio::time::sleep(std::time::Duration::from_millis(1_100)).await;
-            assert!(tokio::time::timeout(std::time::Duration::from_millis(100), socket.next()).await.is_err(), "the lease remains visible before its exact server deadline");
+            clock.evaluate_tick(false).await;
+            assert_eq!(state.presence_snapshot(&key).peers.len(), 1, "an evaluated server tick preserves the lease immediately before its deadline");
+            assert!(matches!(observed.try_recv(), Err(broadcast::error::TryRecvError::Empty)), "the evaluated early tick publishes no expiry");
             clock.advance_to(PRESENCE_LEASE_TTL_MS);
+            clock.evaluate_tick(true).await;
+            assert_eq!(clock.tick_release.available_permits(), 0, "ungating leaves no stale release permit");
+            assert!(state.presence_snapshot(&key).peers.is_empty());
+            assert!(matches!(observed.try_recv(), Ok(ServerFrame::Presence { peers }) if peers.is_empty()));
             assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Presence { peers } if peers.is_empty()), "the server tick publishes exact-deadline expiry");
-            socket.send(client_binary(&ClientFrame::Presence { peer: b"revived".to_vec() }, Lane::Preview).await).await.expect("live socket refresh after visibility expiry");
-            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Presence { peers } if peers == vec![b"revived".to_vec()]), "expiry does not close or unregister the authenticated socket");
+            socket.send(client_binary(&ClientFrame::Presence { peer: presence_test_peer(b"revived").await }, Lane::Preview).await).await.expect("live socket refresh after visibility expiry");
+            assert!(presence_frame_has_pack(next_server_frame(&mut socket).await, b"revived").await, "expiry does not close or unregister the authenticated socket");
+            eprintln!("[DEBUG] server tick barriers preserved visibility at TTL-1, published expiry at TTL, and kept the live socket refreshable");
         });
     }
 
@@ -8740,7 +10164,7 @@ mod tests {
         let ordered_key = document_scope_key_v1(&ordered_scope);
         let now = tokio::time::Instant::now();
         for (actor, live, peer) in [("actor-z", "live-z", b"aaa".to_vec()), ("actor-a", "live-a", b"zzz".to_vec())] {
-            assert_eq!(state.install_presence_slot(&ordered_key, STUDIO, &ordered_scope.document_id, actor, live, "surface", None, 0, now).await, PresenceLeaseTransition::NoChange);
+            assert_eq!(state.install_presence_slot(&ordered_key, STUDIO, &ordered_scope.document_id, actor, test_presence_slot(live, None, now)).await, PresenceLeaseTransition::NoChange);
             assert_eq!(state.refresh_presence(&ordered_key, STUDIO, &ordered_scope.document_id, actor, live, peer, now).await, PresenceLeaseTransition::Published);
         }
         let ordered = state.presence_snapshot(&ordered_key);
@@ -8752,11 +10176,11 @@ mod tests {
         for index in 0..PRESENCE_ROSTER_MAXIMUM_ITEMS {
             let actor = format!("actor-{index:03}");
             let live = format!("live-{index:03}");
-            assert_eq!(state.install_presence_slot(&full_key, STUDIO, &full_scope.document_id, &actor, &live, "surface", None, 0, now).await, PresenceLeaseTransition::NoChange);
+            assert_eq!(state.install_presence_slot(&full_key, STUDIO, &full_scope.document_id, &actor, test_presence_slot(&live, None, now)).await, PresenceLeaseTransition::NoChange);
             assert_eq!(state.refresh_presence(&full_key, STUDIO, &full_scope.document_id, &actor, &live, vec![0; PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES], now).await, PresenceLeaseTransition::Published);
         }
         assert_eq!(state.presence_snapshot(&full_key).peers.len(), PRESENCE_ROSTER_MAXIMUM_ITEMS);
-        assert_eq!(state.install_presence_slot(&full_key, STUDIO, &full_scope.document_id, "actor-overflow", "live-overflow", "surface", None, 0, now).await, PresenceLeaseTransition::NoChange);
+        assert_eq!(state.install_presence_slot(&full_key, STUDIO, &full_scope.document_id, "actor-overflow", test_presence_slot("live-overflow", None, now)).await, PresenceLeaseTransition::NoChange);
         let deadline = state.presence.with(&(full_key.clone(), "actor-overflow".to_string()), |slot| slot.expect("overflow slot").expires_at);
         assert_eq!(state.refresh_presence(&full_key, STUDIO, &full_scope.document_id, "actor-overflow", "live-overflow", vec![1], now + std::time::Duration::from_secs(1)).await, PresenceLeaseTransition::Rejected);
         assert_eq!(
@@ -8764,6 +10188,34 @@ mod tests {
             PresenceLeaseTransition::Rejected
         );
         assert_eq!(state.presence.with(&(full_key, "actor-overflow".to_string()), |slot| slot.expect("overflow slot").expires_at), deadline, "rejection cannot refresh the lease deadline");
+
+        let normalized_document = "presence-normalized-capacity";
+        let normalized_key = document_scope_key_v1(&DocumentScope::new(STUDIO, normalized_document));
+        let raw = presence_test_peer(b"canonical-capacity").await;
+        let mut observed = state.fanout_for(&normalized_key).subscribe();
+        for index in 0..=PRESENCE_ROSTER_MAXIMUM_ITEMS {
+            let actor = format!("normalized-{index:03}");
+            let live = format!("normalized-live-{index:03}");
+            let slot = test_presence_slot(&live, Some("normalized-user"), now);
+            let deadline = slot.expires_at;
+            assert_eq!(state.install_presence_slot(&normalized_key, STUDIO, normalized_document, &actor, slot).await, PresenceLeaseTransition::NoChange);
+            let before = state.presence_snapshot(&normalized_key).peers;
+            let result = state.refresh_document_presence(&normalized_key, STUDIO, normalized_document, &actor, &live, raw.clone(), now + std::time::Duration::from_secs(1)).await;
+            if index < PRESENCE_ROSTER_MAXIMUM_ITEMS {
+                assert_eq!(result, PresenceLeaseTransition::Published);
+                let ServerFrame::Presence { peers } = observed.try_recv().expect("normalized publication") else { panic!("normalized roster frame") };
+                assert_eq!(peers.len(), index + 1);
+                let peer = protocol::decode_presence_peer(peers.last().unwrap()).await.expect("canonical admitted row");
+                assert_eq!(peer.actor, actor);
+                assert_eq!(peer.user_id.as_deref(), Some("normalized-user"));
+            } else {
+                assert_eq!(result, PresenceLeaseTransition::Rejected);
+                assert_eq!(state.presence_snapshot(&normalized_key).peers, before);
+                assert_eq!(state.presence.with(&(normalized_key.clone(), actor), |slot| slot.expect("rejected normalized slot").expires_at), deadline);
+                assert!(matches!(observed.try_recv(), Err(broadcast::error::TryRecvError::Empty)));
+            }
+        }
+        eprintln!("[DEBUG] canonical presence ingress admitted 64 bounded actors and rejected the 65th without TTL, roster or fanout effects");
     }
 
     #[tokio::test]
@@ -8772,7 +10224,7 @@ mod tests {
         let key = document_scope_key_v1(&DocumentScope::new(STUDIO, "presence-restart"));
         let before = state.directory.head_seq().await.expect("directory head");
         let now = tokio::time::Instant::now();
-        assert_eq!(state.install_presence_slot(&key, STUDIO, "presence-restart", "actor-a", "live-a", "surface", Some("seed"), 0, now).await, PresenceLeaseTransition::NoChange);
+        assert_eq!(state.install_presence_slot(&key, STUDIO, "presence-restart", "actor-a", test_presence_slot("live-a", Some("seed"), now)).await, PresenceLeaseTransition::NoChange);
         assert_eq!(state.refresh_presence(&key, STUDIO, "presence-restart", "actor-a", "live-a", b"opaque".to_vec(), now).await, PresenceLeaseTransition::Published);
         assert_eq!(state.directory.head_seq().await.expect("directory head"), before, "presence never appends a durable directory event");
         let member_token = seed_author_token(&state).await;
@@ -8791,7 +10243,7 @@ mod tests {
     async fn append_directory_page_test_events(state: &HubState, rows: &[(String, String)]) -> Vec<DirectoryEvent> {
         let events = rows
             .iter()
-            .map(|(space_id, name)| semio_hub::directory::model::NewDirectoryEvent {
+            .map(|(space_id, name)| semio_hub::directory::NewDirectoryEvent {
                 hlc: os_directory::Hlc { physical_ms: now_ms(), logical: 0 },
                 actor: DirectoryActor { kind: DirectoryActorKind::System, id: format!("system:event-page:{space_id}") },
                 space_id: Some(space_id.clone()),
@@ -8804,6 +10256,236 @@ mod tests {
 
     fn event_page_authorization(token: &str) -> String {
         format!("Bearer {token}")
+    }
+
+    fn directory_command_body(request_id: &str, command: DirectoryCommand) -> Vec<u8> {
+        DirectoryCommandRequestV1::new(request_id, command).canonical_json().into_bytes()
+    }
+
+    async fn post_directory_command_for_test(addr: SocketAddr, token: &str, request_id: &str, command: DirectoryCommand) -> RawHttpResponse {
+        let authorization = format!("Bearer {token}");
+        raw_http_request(addr, "POST", "/directory/commands", &[("Authorization", &authorization), ("Content-Type", "application/json")], &directory_command_body(request_id, command)).await
+    }
+
+    fn parse_directory_command_receipt_for_test(response: &RawHttpResponse, request_id: &str, command: &DirectoryCommand) -> DirectoryCommandReceiptV1 {
+        let canonical = std::str::from_utf8(&response.body).expect("receipt UTF-8");
+        DirectoryCommandReceiptV1::parse_canonical_json(canonical, &DirectoryCommandRequestV1::new(request_id, command.clone())).expect("canonical receipt")
+    }
+
+    #[tokio::test]
+    async fn directory_command_receipt_v1_route_is_request_idempotent_for_concurrent_identical_ids() {
+        let state = test_state().await;
+        let author = issue_test_session(&state, "command-receipt-author@example.com").await;
+        let space_id = create_space_for_test(&state, &author.user_id, "Receipt Space", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        let addr = spawn_server(state.clone()).await;
+        let mut live = state.directory_service.subscribe();
+        let command = DirectoryCommand::CreateInvite { space_id: space_id.clone(), role: DirectorySpaceRole::Spectator, ttl_secs: 3_600 };
+        let request_id = "1f2e3d4c5b6a7988a1b2c3d4e5f60718";
+        let (first, second) = tokio::join!(post_directory_command_for_test(addr, &author.token, request_id, command.clone()), post_directory_command_for_test(addr, &author.token, request_id, command.clone()),);
+        assert_eq!((first.status, second.status), (202, 202), "an idempotent duplicate is answered, never failed");
+        let receipts = [parse_directory_command_receipt_for_test(&first, request_id, &command), parse_directory_command_receipt_for_test(&second, request_id, &command)];
+        let tokens: Vec<String> = receipts
+            .iter()
+            .filter_map(|receipt| match &receipt.result {
+                os_directory::DirectoryCommandResultV1::Invite { invite_token } => Some(invite_token.clone()),
+                os_directory::DirectoryCommandResultV1::None => None,
+            })
+            .collect();
+        assert_eq!(tokens.len(), 1, "exactly one response carries the one-shot capability");
+        assert_eq!(receipts.iter().filter(|receipt| receipt.outcome == DirectoryCommandOutcomeV1::Accepted).count(), 1);
+        assert!(receipts.iter().any(|receipt| receipt.outcome == DirectoryCommandOutcomeV1::SecretUndeliverable && receipt.result == os_directory::DirectoryCommandResultV1::None));
+        let token = tokens.into_iter().next().expect("issued capability");
+
+        let invites = state.directory.list_invites(&space_id).await.expect("invite rows");
+        assert_eq!(invites.len(), 1, "two concurrent identical request ids mint exactly one invitation");
+        assert!(!format!("{invites:?}").contains(&token), "no invite row retains the capability plaintext");
+
+        let retry = post_directory_command_for_test(addr, &author.token, request_id, command.clone()).await;
+        let replayed = parse_directory_command_receipt_for_test(&retry, request_id, &command);
+        assert_eq!(replayed.outcome, DirectoryCommandOutcomeV1::SecretUndeliverable);
+        assert!(!std::str::from_utf8(&retry.body).expect("retry UTF-8").contains(&token), "a later resolution of the same id is redacted");
+        assert_eq!(state.directory.list_invites(&space_id).await.expect("invite rows after retry").len(), 1);
+
+        let events = state.directory.events_since(0, 1_000).await.expect("durable log");
+        assert!(!format!("{events:?}").contains(&token), "the capability never enters the durable event log");
+        let mut broadcast = Vec::new();
+        while let Ok(message) = live.try_recv() {
+            broadcast.push(format!("{message:?}"));
+        }
+        assert!(!broadcast.join("\n").contains(&token), "the capability never enters the live broadcast");
+    }
+
+    #[tokio::test]
+    async fn directory_command_receipt_v1_route_denies_cross_user_spectator_and_digest_substitution() {
+        let state = test_state().await;
+        let author = issue_test_session(&state, "command-receipt-owner@example.com").await;
+        let spectator = issue_test_session(&state, "command-receipt-spectator@example.com").await;
+        let space_id = create_space_for_test(&state, &author.user_id, "Denial Space", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        upsert_member_for_test(&state, &space_id, "command-receipt-spectator@example.com", DirectorySpaceRole::Spectator).await;
+        let addr = spawn_server(state.clone()).await;
+        let invite = DirectoryCommand::CreateInvite { space_id: space_id.clone(), role: DirectorySpaceRole::Spectator, ttl_secs: 3_600 };
+        let request_id = "0a1b2c3d4e5f60718293a4b5c6d7e8f9";
+
+        let accepted = post_directory_command_for_test(addr, &author.token, request_id, invite.clone()).await;
+        assert_eq!(accepted.status, 202);
+        let token = match parse_directory_command_receipt_for_test(&accepted, request_id, &invite).result {
+            DirectoryCommandResultV1::Invite { invite_token } => invite_token,
+            DirectoryCommandResultV1::None => panic!("the first accepted create-invite carries its capability"),
+        };
+
+        let denied = post_directory_command_for_test(addr, &spectator.token, request_id, invite.clone()).await;
+        assert_eq!(denied.status, 403, "a spectator is denied before any stored completion is consulted");
+        assert!(denied.body.is_empty(), "a denial carries no body, so no receipt or capability leaks");
+
+        let cross_user =
+            post_directory_command_for_test(addr, &spectator.token, request_id, DirectoryCommand::CreateSpace { name: "Spectator Space".into(), space_kind: os_directory::DirectorySpaceKind::Studio, visibility: DirectorySpaceVisibility::Private })
+                .await;
+        assert_eq!(cross_user.status, 202, "the idempotency key is scoped to the authenticated user");
+        assert!(!std::str::from_utf8(&cross_user.body).expect("cross-user UTF-8").contains(&token), "another user's equal request id never discovers a stored capability");
+
+        let substituted = post_directory_command_for_test(addr, &author.token, request_id, DirectoryCommand::RenameSpace { space_id: space_id.clone(), name: "Substituted".into() }).await;
+        assert_eq!(substituted.status, 409, "an equal key with an unequal command digest is a generic conflict");
+        assert!(substituted.body.is_empty());
+        assert_eq!(state.directory.list_invites(&space_id).await.expect("invite rows").len(), 1, "no denial or conflict executed a second time");
+
+        let capability = SessionCapability::parse(&author.token).expect("author capability");
+        let record = state.directory.authenticate_session(&capability).await.expect("session lookup").expect("active session");
+        state.directory.revoke_auth_session(&record.id, "command-receipt-test", None, "command-receipt-test").await.expect("revoke session").expect("revoked row");
+        let revoked = post_directory_command_for_test(addr, &author.token, request_id, invite.clone()).await;
+        assert_eq!(revoked.status, 401, "authentication re-runs before any stored completion is returned");
+        assert!(revoked.body.is_empty());
+    }
+
+    #[tokio::test]
+    async fn directory_command_receipt_v1_route_bounds_request_and_receipt_bytes() {
+        let state = test_state().await;
+        let author = issue_test_session(&state, "command-receipt-bounds@example.com").await;
+        let space_id = create_space_for_test(&state, &author.user_id, "Bounds Space", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        let addr = spawn_server(state.clone()).await;
+        let authorization = format!("Bearer {}", author.token);
+
+        let fitting = DirectoryCommand::RenameSpace { space_id: space_id.clone(), name: "n".repeat(64) };
+        let request = DirectoryCommandRequestV1::new("9f8e7d6c5b4a39281706f5e4d3c2b1a0", fitting.clone());
+        assert!(request.canonical_json().len() <= DIRECTORY_COMMAND_REQUEST_MAX_BYTES);
+        let accepted = raw_http_request(addr, "POST", "/directory/commands", &[("Authorization", &authorization), ("Content-Type", "application/json")], request.canonical_json().as_bytes()).await;
+        assert_eq!(accepted.status, 202);
+        assert!(accepted.body.len() <= os_directory::DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, "an admitted request can never produce an over-ceiling receipt");
+
+        let padding = DIRECTORY_COMMAND_REQUEST_MAX_BYTES + 1 - DirectoryCommandRequestV1::new("9f8e7d6c5b4a39281706f5e4d3c2b1a1", DirectoryCommand::RenameSpace { space_id: space_id.clone(), name: String::new() }).canonical_json().len();
+        let oversize = DirectoryCommandRequestV1::new("9f8e7d6c5b4a39281706f5e4d3c2b1a1", DirectoryCommand::RenameSpace { space_id: space_id.clone(), name: "x".repeat(padding) });
+        assert_eq!(oversize.canonical_json().len(), DIRECTORY_COMMAND_REQUEST_MAX_BYTES + 1);
+        let rejected = raw_http_request(addr, "POST", "/directory/commands", &[("Authorization", &authorization), ("Content-Type", "application/json")], oversize.canonical_json().as_bytes()).await;
+        assert!(matches!(rejected.status, 400 | 413), "one byte past the request ceiling is refused, got {}", rejected.status);
+
+        for hostile in [
+            "{\"requestId\":\"9f8e7d6c5b4a39281706f5e4d3c2b1a2\",\"schema\":\"semio.directory.command-request.v1\",\"command\":{\"kind\":\"archive-space\",\"spaceId\":\"x\"}}",
+            "{\"schema\":\"semio.directory.command-request.v1\",\"requestId\":\"9F8E7D6C5B4A39281706F5E4D3C2B1A2\",\"command\":{\"kind\":\"archive-space\",\"spaceId\":\"x\"}}",
+            "{\"schema\":\"semio.directory.command-request.v1\",\"requestId\":\"00000000000000000000000000000000\",\"command\":{\"kind\":\"archive-space\",\"spaceId\":\"x\"}}",
+            "{\"schema\":\"semio.directory.command-request.v1\",\"requestId\":\"9f8e7d6c5b4a39281706f5e4d3c2b1a2\",\"command\":{\"kind\":\"archive-space\",\"spaceId\":\"x\"},\"extra\":1}",
+            "{\"kind\":\"archive-space\",\"spaceId\":\"x\"}",
+        ] {
+            let response = raw_http_request(addr, "POST", "/directory/commands", &[("Authorization", &authorization), ("Content-Type", "application/json")], hostile.as_bytes()).await;
+            assert_eq!(response.status, 400, "a noncanonical, mis-cased, zero-id, unknown-field, or bare-command body is refused: {hostile}");
+            assert!(response.body.is_empty());
+        }
+    }
+
+    #[tokio::test]
+    async fn directory_command_receipt_v1_store_resolves_a_lost_reply_and_survives_restart() {
+        let path = tempdir("command-receipt-store");
+        std::fs::create_dir_all(&path).expect("receipt store dir");
+        let database = path.join("directory.sqlite");
+        let database_path = database.to_str().expect("receipt store path").to_string();
+        let claim = |request_id: &str, digest: &str, kind: DirectoryCommandResultKindV1, actor: &str| NewDirectoryCommandReceipt {
+            actor_user_id: actor.to_string(),
+            request_id: request_id.to_string(),
+            command_sha256: digest.to_string(),
+            result_kind: kind,
+            claimed_at: 1_700_000_000_000,
+        };
+        let invite_digest = directory_command_sha256(&DirectoryCommand::CreateInvite { space_id: "space".into(), role: DirectorySpaceRole::Spectator, ttl_secs: 3_600 });
+        let rename_digest = directory_command_sha256(&DirectoryCommand::RenameSpace { space_id: "space".into(), name: "Renamed".into() });
+        let request_id = "1f2e3d4c5b6a7988a1b2c3d4e5f60718";
+
+        let directory = SqliteDirectory::connect(&database_path).await.expect("connect receipt store");
+        directory.seed().await.expect("seed receipt store");
+        let pending_claim = claim(request_id, &invite_digest, DirectoryCommandResultKindV1::Invite, "user-a");
+        assert!(matches!(directory.claim_or_read_directory_command_receipt(&pending_claim).await.expect("first claim"), DirectoryCommandClaimV1::Claimed(_)));
+        let lost = match directory.claim_or_read_directory_command_receipt(&pending_claim).await.expect("lost-reply resolution") {
+            DirectoryCommandClaimV1::Existing(record) => record,
+            other => panic!("a claimed key never re-executes: {other:?}"),
+        };
+        assert_eq!(lost.disposition, DirectoryCommandDispositionV1::Pending);
+        assert_eq!(replay_directory_command_receipt(&lost).outcome, DirectoryCommandOutcomeV1::SecretUndeliverable, "a reply lost between durable command and response is honestly undeliverable");
+        assert!(matches!(directory.claim_or_read_directory_command_receipt(&claim(request_id, &rename_digest, DirectoryCommandResultKindV1::None, "user-a")).await.expect("digest substitution"), DirectoryCommandClaimV1::Conflict));
+        assert!(
+            matches!(directory.claim_or_read_directory_command_receipt(&claim(request_id, &invite_digest, DirectoryCommandResultKindV1::Invite, "user-b")).await.expect("cross-user claim"), DirectoryCommandClaimV1::Claimed(_)),
+            "the key is scoped to the authenticated user"
+        );
+
+        let replay_digest = replay_directory_command_receipt(&DirectoryCommandReceiptRecord { disposition: DirectoryCommandDispositionV1::Completed, ..lost.clone() }).receipt_sha256;
+        let completed = directory
+            .complete_directory_command_receipt(&DirectoryCommandReceiptCompletion {
+                actor_user_id: "user-a".into(),
+                request_id: request_id.into(),
+                event_seq_first: None,
+                event_seq_last: None,
+                receipt_sha256: replay_digest.clone(),
+                completed_at: 1_700_000_000_001,
+            })
+            .await
+            .expect("durable completion");
+        assert_eq!(completed.disposition, DirectoryCommandDispositionV1::Completed);
+        assert!(
+            directory
+                .complete_directory_command_receipt(&DirectoryCommandReceiptCompletion {
+                    actor_user_id: "user-a".into(),
+                    request_id: request_id.into(),
+                    event_seq_first: None,
+                    event_seq_last: None,
+                    receipt_sha256: replay_digest.clone(),
+                    completed_at: 1_700_000_000_002
+                })
+                .await
+                .is_err(),
+            "one claim completes exactly once"
+        );
+        drop(directory);
+
+        let restarted = SqliteDirectory::connect(&database_path).await.expect("reconnect receipt store");
+        restarted.seed().await.expect("reseed receipt store");
+        let resolved = match restarted.claim_or_read_directory_command_receipt(&pending_claim).await.expect("restart resolution") {
+            DirectoryCommandClaimV1::Existing(record) => record,
+            other => panic!("a completed key survives restart: {other:?}"),
+        };
+        assert_eq!(resolved.disposition, DirectoryCommandDispositionV1::Completed);
+        assert_eq!(resolved.receipt_sha256.as_deref(), Some(replay_digest.as_str()), "the durable row carries the canonical redacted receipt digest");
+        let replayed = replay_directory_command_receipt(&resolved);
+        assert_eq!(replayed.outcome, DirectoryCommandOutcomeV1::SecretUndeliverable);
+        assert_eq!(replayed.receipt_sha256, replay_digest);
+        assert!(replayed.validate().is_ok() && replayed.events.is_empty() && replayed.result == DirectoryCommandResultV1::None);
+
+        let plain = NewDirectoryCommandReceipt { result_kind: DirectoryCommandResultKindV1::None, command_sha256: rename_digest.clone(), request_id: "9f8e7d6c5b4a39281706f5e4d3c2b1a0".into(), ..pending_claim.clone() };
+        assert!(matches!(restarted.claim_or_read_directory_command_receipt(&plain).await.expect("plain claim"), DirectoryCommandClaimV1::Claimed(_)));
+        restarted
+            .complete_directory_command_receipt(&DirectoryCommandReceiptCompletion {
+                actor_user_id: plain.actor_user_id.clone(),
+                request_id: plain.request_id.clone(),
+                event_seq_first: Some(7),
+                event_seq_last: Some(8),
+                receipt_sha256: "0".repeat(64),
+                completed_at: 1_700_000_000_003,
+            })
+            .await
+            .expect("plain completion");
+        let plain_record = match restarted.claim_or_read_directory_command_receipt(&plain).await.expect("plain resolution") {
+            DirectoryCommandClaimV1::Existing(record) => record,
+            other => panic!("a completed plain key replays: {other:?}"),
+        };
+        assert_eq!((plain_record.event_seq_first, plain_record.event_seq_last), (Some(7), Some(8)));
+        assert_eq!(replay_directory_command_receipt(&plain_record).outcome, DirectoryCommandOutcomeV1::PreviouslyAccepted, "a completed secret-free command resolves as previously accepted");
+        drop(restarted);
+        let _ = std::fs::remove_dir_all(&path);
     }
 
     #[tokio::test]
@@ -8925,7 +10607,7 @@ mod tests {
         assert_eq!(validate_directory_event_page_event(&exact), Err(DirectoryEventPageErrorV1::Invalid));
 
         let head = state.directory.head_seq().await.expect("head before rejected append");
-        let rejected = semio_hub::directory::model::NewDirectoryEvent {
+        let rejected = semio_hub::directory::NewDirectoryEvent {
             hlc: os_directory::Hlc { physical_ms: 1, logical: 0 },
             actor: DirectoryActor { kind: DirectoryActorKind::System, id: "system:event-page-reject".into() },
             space_id: Some(STUDIO.into()),

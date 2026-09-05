@@ -1,0 +1,45 @@
+# Terra GIS Map Typed Create-Region Group Native API Review
+
+## Outcome
+
+The typed group is structurally sound for its stated, narrow scope: it derives one append-only parent `CreateRegion`, one public drawing `CreateNode`, and one value `InsertListItem` decoded through the public aggregate API. The direct `pub(crate)` fields on value's `InsertListItem` are **not** used across crates, so they are not a source-level compiler blocker.
+
+There is one concrete API-contract defect: the generic derived-children helper documents and is relied on as keeping `image` absent, but it does not clear a supplied image handle. The group correctly refuses such a snapshot, so this is not an image mutation or publication bug; it is an inconsistent construction invariant that unnecessarily rejects a snapshot produced through the advertised helper.
+
+No native compile, component launch, executor activation, artifact installation, or publication was run for this audit. The existing captured GIS native attempt failed in the stdio dependency before it reported a diagnostic naming this group; it is not evidence that this GIS source compiles.
+
+## Source Review Matrix
+
+| Concern | Current source evidence | Result |
+| --- | --- | --- |
+| Parent proposal | `bounds_proposal` validates identity, staleness, bounds and appends `CreateRegion`; group calculates its inverse against the original snapshot. [inferences `:58-105`](../../../../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs) | Static pass |
+| Stable child identity | Drawing/value handles are fixed to `gismap-drawing` / `gismap-value`, independent of `content_key`; parent apply re-derives those handles. [owner `:81-95,150-160`](../../../../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️.rs), [parent apply `:189-197`](../../../../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs) | Static pass |
+| Drawing cross-crate construction | `NodePath`, its fields, and `CreateNode` and its fields are public. The stdio runtime exports both `diff` and `mutations::create_node` publicly. [NodePath `:754-764`](../../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🔺️diff/🦀️.rs), [CreateNode `:11-18`](../../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/➕create-node/🦀️.rs), [mount `:6921-26,6947-63`](../../../../../../../../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/🦀️.rs) | No visibility blocker found |
+| Value cross-crate construction | `InsertListItem.{path,index,value}` are `pub(crate)`. The GIS group does **not** construct that leaf; it calls public `SemioValueMutation::from_value` with the aggregate's `mutation: insertListItem` tagged form. [private leaf `:9-15`](../../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🧬️schema/🧬️mutations/➕insert-list-item/🦀️.rs), [aggregate `:86-109`](../../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🧬️schema/🧬️mutations/🦀️.rs), [GIS decode `:139-153`](../../../../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs) | No direct `pub(crate)` blocker; native build still required to prove generated decoder linkage |
+| Projection and inverse | The group accepts only exactly-one appended drawing node, projects it and the value mutation into clones, and rejects a non-exact projection. Both library inverses target the actual clamped append index; the group supplies an exact pre-length index, so no clamping ambiguity applies. [group `:112-164`](../../../../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs), [drawing inverse `:9-18`](../../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/➕create-node/↩️inverse/🦀️.rs), [value apply/inverse `:193-201,269-272`](../../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🧬️schema/🧬️mutations/🦀️.rs) | Static pass |
+| Native group law | The compiled-law candidate applies every lane and its inverse to local clones; it checks the parent child handles and a forged drawing id. [law `:229-278`](../../../../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs) | Good law shape; unrun |
+| Image slot | The snapshot allows an optional typed image child and default sets it to `None`; the group refuses `Some`. [snapshot `:25-65`](../../../../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs), [group guard `:100-110`](../../../../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs) | Defect below |
+| Durable group execution | Factory returns data only. It uses only local snapshots (`after`, `projected_*`) and has no store/executor/publish call. The neutral proof explicitly says durable atomic publication is not claimed. [factory `:93-165`](../../../../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs), [neutral check `:157`](../../../../../../../../✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📜️script.ts) | Correct zero-publication claim; no atomic executor exists here |
+
+## Concrete Defect: Image Invariant Is Not Enforced
+
+The ownership documentation says GIS image is “honestly always absent” and the constructor funnel says image “stays `None`.” [owner `:65-76,150-154`](../../../../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️.rs) Yet `gis_map_snapshot_with_derived_children` overwrites only `drawing` and `value`, returning the caller-provided `document.image` unchanged. [owner `:155-160`](../../../../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️.rs)
+
+Consequently a caller can pass `GisMapSnapshot { image: Some(..), .. }` through the advertised funnel, receive a “derived” snapshot still containing an image, and receive `Composition` from `create_region_group_work`. The standard law only covers the default image-free case and one forged drawing id; it does not exercise a real image handle or forged value handle. [law `:236-278`](../../../../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs)
+
+Bounded resolution: until GIS explicitly supports a raster child, the helper should set `document.image = None` and the native law should construct a real typed image handle before the funnel, then prove that the resulting snapshot is image-free and that group creation succeeds without touching an image lane. That matches the declared invariant. If the intended policy is instead to preserve a future image child, change the documentation and make the group’s `Some(image)` rejection an explicit scope boundary; do not claim the helper enforces absence.
+
+## Fixture and Receipt Limits
+
+The neutral fixture declares the correct clean IDs, append indexes, absence of image touch, and eight hostile labels. [fixture `:1-43`](../../../../../../../../✏️s/🔌️plugins/🌍️gis/🧪️fixtures/🧩️map-create-region-group/🔣️.json) Its proof checks string presence and mutates fixture expectations only. In particular, the `image-touch` hostile changes `expected.imageTouched`, rather than providing `GisMapSnapshot.image = Some(..)` to Rust. [script `:110-157`](../../../../../../../../✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📜️script.ts) It therefore validates the neutral contract but cannot establish the actual image guard, `FromValue` decoder, or stdio mutation behavior.
+
+The intended native command is registered as `map-create-region-group-native-check`; it runs that neutral check then the exact GIS law under `--no-default-features`. [script `:166-179,198`](../../../../../../../../✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📜️script.ts) It was deliberately not run here. The pre-existing cargo capture contains no diagnostic naming `GisMapCreateRegionGroupWorkV1`, `create_region_group_work`, `CreateNode`, or `InsertListItem`; stdio’s wider compilation failure prevents treating the group as compile-verified.
+
+## Native Acceptance After the Dependency Compile Slice Is Green
+
+Run the registered exact native group law and retain its receipt. Acceptance is:
+
+1. GIS compiles with `--no-default-features` against the repaired stdio crate.
+2. The group law confirms parent, drawing, and value forward and inverse equality.
+3. Add and pass actual-Rust hostile cases for forged drawing id, forged value id, and a supplied typed image handle through the derived-children helper.
+4. Keep the result scoped as prepared work: no assertion of catalog activation, component installation, executor execution, atomic durable commit, or rendering follows from this law.

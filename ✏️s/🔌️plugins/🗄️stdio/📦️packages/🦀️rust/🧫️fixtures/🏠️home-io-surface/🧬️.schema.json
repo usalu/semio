@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schemas/stdio-home-io-surface-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "features", "directArtifacts", "sharedCodecs", "fullArtifactCount"],
+  "properties": {
+    "schema": { "const": "semio.stdio.home-io-surface/v1" },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["homeIo", "fullArtifactCatalog", "spaceGuest"],
+      "properties": {
+        "homeIo": { "const": "home-io" },
+        "fullArtifactCatalog": { "const": "full-artifact-catalog" },
+        "spaceGuest": { "const": "space-guest" }
+      }
+    },
+    "directArtifacts": {
+      "type": "array",
+      "prefixItems": [
+        { "const": "csv" },
+        { "const": "json" },
+        { "const": "xlsx" },
+        { "const": "zip" }
+      ],
+      "items": false,
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "sharedCodecs": {
+      "type": "array",
+      "prefixItems": [
+        { "const": "binary" },
+        { "const": "deflate" },
+        { "const": "txt" },
+        { "const": "xml" }
+      ],
+      "items": false,
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "fullArtifactCount": { "const": 36 }
+  }
+}

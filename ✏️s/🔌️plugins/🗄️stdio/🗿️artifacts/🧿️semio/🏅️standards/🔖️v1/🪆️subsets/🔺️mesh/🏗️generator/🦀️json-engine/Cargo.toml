@@ -6,7 +6,7 @@
 # so `create-material` — a caller-supplied full `SemioMaterial` appended with no computed field, a
 # duplicate `id` already present in `base` being the ONLY guarded case (`create-material/🦀️.rs`'s own
 # doc comment) — is a carrier-level fact a third-party JSON implementation can witness in full, the
-# identical discriminator `✳️document/🏭️generator/🦀️json-engine` already establishes for
+# identical discriminator `📑️document/🏗️generator/🦀️json-engine` already establishes for
 # `insert-image`.
 [workspace]
 

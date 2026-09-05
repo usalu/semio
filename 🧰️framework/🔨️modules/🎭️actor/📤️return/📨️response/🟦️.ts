@@ -241,11 +241,16 @@ if (import.meta.vitest) {
     expect(variants("OutboundMessage")).toEqual(fixture.outbound); expect(variants("InboundMessage")).toEqual(fixture.inbound);
     const producerPath = new URL("../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts", import.meta.url);
     const producer = ts.createSourceFile(producerPath.pathname, readFileSync(producerPath, "utf8"), ts.ScriptTarget.Latest, true);
-    const generated = (name: string) => {
+    const producers = await import("../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts");
+    // 🫀️ Inventoried from the EMITTED bytes, not the template's raw text: `shardWorkerSource` now
+    // interpolates the schema-owned liveness policy, so its return is a template EXPRESSION and its
+    // literal text no longer is the worker. The AST check still fences the shape (one returned
+    // template, nothing else), the inventory reads what the browser actually gets.
+    const generated = (name: "shardWorkerSource" | "hostShimSource") => {
       const declaration = producer.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === name);
       const returned = declaration && ts.isFunctionDeclaration(declaration) ? declaration.body?.statements.find(ts.isReturnStatement)?.expression : null;
-      if (!returned || !ts.isNoSubstitutionTemplateLiteral(returned)) throw new Error("Changed generated inbox source " + name);
-      return ts.createSourceFile(name + ".js", returned.text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+      if (!returned || !(ts.isNoSubstitutionTemplateLiteral(returned) || ts.isTemplateExpression(returned))) throw new Error("Changed generated inbox source " + name);
+      return ts.createSourceFile(name + ".js", producers[name](), ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
     };
     const worker = generated("shardWorkerSource"); const shim = generated("hostShimSource"); const requests: string[] = []; const replies: string[] = []; const effects: string[] = []; const effectReplies: string[] = [];
     const visitWorker = (node: import("typescript").Node): void => {
@@ -275,10 +280,11 @@ if (import.meta.vitest) {
     const { default: fixture } = await import("./🎟️credit/📋️metadata/📥️inbox/🧪️fixture/🔣️.json"); const { default: ts } = await import("typescript"); const { readFileSync } = await import("node:fs"); const vm = await import("node:vm");
     const path = new URL("../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts", import.meta.url);
     const source = ts.createSourceFile(path.pathname, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
-    const generated = (name: string) => {
+    const producers = await import("../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts");
+    const generated = (name: "shardWorkerSource" | "hostShimSource") => {
       const declaration = source.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === name);
       const returned = declaration && ts.isFunctionDeclaration(declaration) ? declaration.body?.statements.find(ts.isReturnStatement)?.expression : null;
-      if (!returned || !ts.isNoSubstitutionTemplateLiteral(returned)) throw new Error("Changed generated inbox source " + name); return returned.text;
+      if (!returned || !(ts.isNoSubstitutionTemplateLiteral(returned) || ts.isTemplateExpression(returned))) throw new Error("Changed generated inbox source " + name); return producers[name]();
     };
     const messages: any[] = []; const receive = (message: unknown) => messages.push(message);
     const shim = vm.createContext({ exports: {}, URL, self: { postMessage: receive } });
@@ -286,7 +292,7 @@ if (import.meta.vitest) {
     new vm.Script(ts.transpileModule(shimCode, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText).runInContext(shim);
     let dispatch: ((event: { data: Record<string, unknown> }) => Promise<void>) | null = null;
     const checkpoint = Object.freeze({ ordinary: "checkpoint" }); const effectResult = Object.freeze({ effect: "completed" });
-    const context = vm.createContext({ WebAssembly: { Suspending: class {}, promising: (value: unknown) => value }, self: { postMessage: receive, addEventListener: (kind: string, callback: typeof dispatch) => { expect(kind).toBe("message"); dispatch = callback; } }, apiA: { poll: () => shim.exports.storageRead({ key: "awaited" }), resolveEffect: shim.exports.__resolveEffect, rejectEffect: shim.exports.__rejectEffect }, apiB: { checkpoint: async () => checkpoint } });
+    const context = vm.createContext({ WebAssembly: { Suspending: class {}, promising: (value: unknown) => value }, self: { postMessage: receive, addEventListener: (kind: string, callback: typeof dispatch) => { if (kind === "message") dispatch = callback; } }, apiA: { poll: () => shim.exports.storageRead({ key: "awaited" }), resolveEffect: shim.exports.__resolveEffect, rejectEffect: shim.exports.__rejectEffect }, apiB: { checkpoint: async () => checkpoint } });
     new vm.Script(generated("shardWorkerSource")).runInContext(context);
     new vm.Script('actors.set("a", { api: apiA, activationGeneration: 1n, pendingAssets: [] }); actors.set("b", { api: apiB, activationGeneration: 2n, pendingAssets: [] });').runInContext(context);
     if (!dispatch) throw new Error("Missing generated worker dispatcher");
@@ -303,14 +309,14 @@ if (import.meta.vitest) {
     expect(trace).toEqual(fixture.mixedTrace); expect(messages.at(-1).value).toBe(effectResult);
     expect(messages.filter(message => message.kind === "frame").map(message => message.frame.envelope.payload.kind)).toEqual(fixture.hostFramePayloadKinds);
     await send({ data: { kind: "unrecognized", requestId: "r3", actorId: "b" } });
-    expect(messages.at(-2)).toMatchObject({ kind: "heartbeat", turnSeq: 3 }); expect(messages.at(-1)).toMatchObject({ kind: "result", requestId: "r3", ok: false });
+    expect(messages.at(-3)).toMatchObject({ kind: "heartbeat", turnSeq: 3 }); expect(messages.at(-2)).toMatchObject({ kind: "worker-fault", source: "handler", phase: "unrecognized", actorId: "b" }); expect(messages.at(-1)).toMatchObject({ kind: "result", requestId: "r3", ok: false });
     const traps: unknown[] = []; const failed = vm.createContext({ WebAssembly: {}, self: { postMessage: (message: unknown) => traps.push(message) } });
     expect(() => new vm.Script(generated("shardWorkerSource")).runInContext(failed)).toThrow(/JSPI/); expect(traps).toHaveLength(1); expect(traps[0]).toMatchObject({ kind: "trap", actorId: "*", activationGeneration: null });
     const postFault = new Error("post-after-observation"); const normalizationFault = Object.freeze({ normalization: "failed" });
     const guestFault = Object.defineProperty({}, "payload", { get() { throw normalizationFault; } });
     for (const mode of ["postThenThrow", "errorNormalizationThrows"] as const) {
       const captured: any[] = []; let callback: ((event: { data: Record<string, unknown> }) => Promise<void>) | null = null;
-      const broken = vm.createContext({ WebAssembly: { Suspending: class {}, promising: (value: unknown) => value }, api: { checkpoint: async () => { if (mode === "errorNormalizationThrows") throw guestFault; return checkpoint; } }, self: { addEventListener: (_kind: string, handler: typeof callback) => { callback = handler; }, postMessage: (message: any) => { captured.push(message); if (mode === "postThenThrow" && message.kind === "result" && message.ok) throw postFault; } } });
+      const broken = vm.createContext({ WebAssembly: { Suspending: class {}, promising: (value: unknown) => value }, api: { checkpoint: async () => { if (mode === "errorNormalizationThrows") throw guestFault; return checkpoint; } }, self: { addEventListener: (kind: string, handler: typeof callback) => { if (kind === "message") callback = handler; }, postMessage: (message: any) => { captured.push(message); if (mode === "postThenThrow" && message.kind === "result" && message.ok) throw postFault; } } });
       new vm.Script(generated("shardWorkerSource")).runInContext(broken); new vm.Script('actors.set("a", { api, activationGeneration: 1n, pendingAssets: [] });').runInContext(broken);
       if (!callback) throw new Error("Missing fault-probe dispatcher");
       const run = callback as (event: { data: Record<string, unknown> }) => Promise<void>;

@@ -10,9 +10,9 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 
 /// 📄️ The `concrete-forest` example fixture, handcrafted in the `.puzzle3d` DSL.
-pub const PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🌲️concrete-forest/🖼️assets/🧪️forest/🗣️.dsl.semio");
+pub const PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio");
 /// 📄️ The `nakagin-capsule-tower` example fixture, handcrafted in the `.puzzle3d` DSL.
-pub const PUZZLE3D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🧪️tower/🗣️.dsl.semio");
+pub const PUZZLE3D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio");
 
 /// 📖️ Parses `.puzzle3d` DSL text into a `Puzzle3dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Puzzle3dSnapshot, store::TextError> {

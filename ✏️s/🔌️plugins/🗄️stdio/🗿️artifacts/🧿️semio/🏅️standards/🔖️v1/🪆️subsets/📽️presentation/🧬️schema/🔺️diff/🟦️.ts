@@ -1,7 +1,7 @@
 /** 🔺️ SemioPresentationDiff — handcrafted sparse diff. Generic triple types are this subset's own
  * local copy (see the Rust file's module doc comment for why). */
 import type { SlideFrame, SlidePictureImage, PlaceholderKind, SlideShape, Slide, SlideMaster, SlideLayout } from "../📸️snapshot/🟦️";
-import type { DocBlock } from "../../../✳️document/🧬️schema/📸️snapshot/🟦️";
+import type { DocBlock } from "../../../📑️document/🧬️schema/📸️snapshot/🟦️";
 
 export interface IndexModified<D> { index: number; diff: D; }
 export interface IndexAdded<T> { index: number; item: T; }

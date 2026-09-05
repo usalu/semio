@@ -130,19 +130,19 @@ const RAW_INTERACTION_ASSETS: &[(&str, &str)] = &[
     ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🪟️constructWindows.json")),
     (
         "aec.building.structure.classic",
-        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🕹️interactions/🧱️constructOneWayReinforcedConcreteSlab.json"),
+        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🕹️interactions/🧱️constructOneWayReinforcedConcreteSlab.json"),
     ),
     (
         "aec.building.structure.classic",
-        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🕹️interactions/🏛️constructReinforcedConcreteColumn.json"),
+        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🕹️interactions/🏛️constructReinforcedConcreteColumn.json"),
     ),
     (
         "aec.building.structure.classic",
-        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🕹️interactions/🛡️constructReinforcedConcreteExternalWall.json"),
+        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🕹️interactions/🛡️constructReinforcedConcreteExternalWall.json"),
     ),
     (
         "aec.building.structure.classic",
-        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🕹️interactions/🚧️constructReinforcedConcreteInternalWall.json"),
+        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🕹️interactions/🚧️constructReinforcedConcreteInternalWall.json"),
     ),
     ("aec.building.structure.fem.line", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🕹️interactions/🔣️constructLineElement.json")),
     (

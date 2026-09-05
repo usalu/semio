@@ -53,7 +53,7 @@ default = ["plugin-entry"]
 plugin-entry = []
 
 [dependencies]
-semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
+semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false, features = ["full-artifact-catalog"] }
 math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 graph = { path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }

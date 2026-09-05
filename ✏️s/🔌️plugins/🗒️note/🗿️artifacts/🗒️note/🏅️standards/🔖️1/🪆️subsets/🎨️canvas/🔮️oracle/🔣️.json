@@ -27,7 +27,7 @@
           "scenarios": [
             {
               "id": "raises-grid-opacity",
-              "directoryName": "🟢️raises-grid-opacity"
+              "directoryName": "🌫️raises-grid-opacity"
             }
           ]
         },
@@ -38,7 +38,7 @@
           "scenarios": [
             {
               "id": "widens-grid-spacing",
-              "directoryName": "🔵️widens-grid-spacing"
+              "directoryName": "📏️widens-grid-spacing"
             }
           ]
         },
@@ -49,7 +49,7 @@
           "scenarios": [
             {
               "id": "doubles-grid-subdivisions",
-              "directoryName": "🐨️doubles-grid-subdivisions"
+              "directoryName": "🔢️doubles-grid-subdivisions"
             }
           ]
         },
@@ -60,7 +60,7 @@
           "scenarios": [
             {
               "id": "hides-the-grid",
-              "directoryName": "⚫️hides-the-grid"
+              "directoryName": "🙈️hides-the-grid"
             }
           ]
         },
@@ -71,7 +71,7 @@
           "scenarios": [
             {
               "id": "enables-snap",
-              "directoryName": "🛰️enables-snap"
+              "directoryName": "🧲️enables-snap"
             }
           ]
         },
@@ -82,7 +82,7 @@
           "scenarios": [
             {
               "id": "halves-snap-grid-spacing",
-              "directoryName": "🌷️halves-snap-grid-spacing"
+              "directoryName": "📐️halves-snap-grid-spacing"
             }
           ]
         }

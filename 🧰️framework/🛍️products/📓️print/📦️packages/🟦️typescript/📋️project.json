@@ -66,6 +66,42 @@
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test exhaustive"
       }
+    },
+    "build-viz": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts build viz",
+        "forwardAllArgs": true
+      }
+    },
+    "watch-viz": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts watch viz",
+        "forwardAllArgs": true
+      }
+    },
+    "test-viz": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test viz",
+        "forwardAllArgs": true
+      }
+    },
+    "test-viz-full": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test viz full",
+        "forwardAllArgs": true
+      }
     }
   }
 }

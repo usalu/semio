@@ -25,7 +25,7 @@
           "scenarios": [
             {
               "id": "appends-the-lettered-column-c",
-              "directoryName": "🦅️appends-the-lettered-column-c"
+              "directoryName": "➡️appends-the-lettered-column-c"
             }
           ]
         },
@@ -36,7 +36,7 @@
           "scenarios": [
             {
               "id": "appends-a-blank-third-row",
-              "directoryName": "🟤️appends-a-blank-third-row"
+              "directoryName": "⬇️appends-a-blank-third-row"
             }
           ]
         },
@@ -47,7 +47,7 @@
           "scenarios": [
             {
               "id": "drops-the-trailing-column-b",
-              "directoryName": "🔵️drops-the-trailing-column-b"
+              "directoryName": "⬅️drops-the-trailing-column-b"
             }
           ]
         },
@@ -58,7 +58,7 @@
           "scenarios": [
             {
               "id": "drops-the-trailing-blank-row",
-              "directoryName": "🌱️drops-the-trailing-blank-row"
+              "directoryName": "⬆️drops-the-trailing-blank-row"
             }
           ]
         }

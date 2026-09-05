@@ -3,7 +3,7 @@
 //! The oracle half of this case is `🐍️component.py`: IfcOpenShell 0.8.4.post1 applies each mutation
 //! through its own API and re-serializes the whole exchange structure with its own C++ Part-21
 //! writer. That is the second PRODUCER `ruststep` cannot be, which is why every scenario here is
-//! `@mode-differential` while the sibling `../🦋️mutate-ifc-4` — same vocabulary, same fixture, all
+//! `@mode-differential` while the sibling `../🏗️mutate-ifc-4` — same vocabulary, same fixture, all
 //! eleven kinds, `ruststep` as an independent READER — stays `@mode-property` and is left untouched.
 //!
 //! This file therefore registers NOTHING in the oracle role. The subject does exactly what the
@@ -18,7 +18,7 @@
 //! the feature file; they keep their `ruststep`-backed scenarios next door.
 //!
 //! @see component.feature — the differential claim and the four measurements that bound it.
-//! @see ../🦋️mutate-ifc-4/🦀️.rs — the exhaustive eleven-kind case this one does not replace.
+//! @see ../🏗️mutate-ifc-4/🦀️.rs — the exhaustive eleven-kind case this one does not replace.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 
@@ -162,7 +162,7 @@ mod subject {
         Ok(match kind.as_str() {
             // 🧭️ `NoMutation` was dropped from the enum (a wrapped variant is required by
             // `#[derive(dsl::Mutations)]`), but `no-mutation` stays a real, deliberately-tested
-            // scenario id at this test-harness level (see the sibling `../🦋️mutate-ifc-4` case). A
+            // scenario id at this test-harness level (see the sibling `../🏗️mutate-ifc-4` case). A
             // `SetSnapshot` carrying `base` back to itself is the same true no-op.
             "no-mutation" => IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
             "set-snapshot" => {
@@ -205,7 +205,7 @@ mod subject {
     /// re-encoding a document it already wrote reproduces it exactly, which is what a correct writer
     /// does. Asserting non-identity on the second cycle asserts something false. The property is
     /// still asserted where it is true and where it matters, against the real committed artifact.
-    /// The sibling `../🐸️mutate-ifc-2x3` never hits this because its inverse handler short-circuits
+    /// The sibling `../🧱️mutate-ifc-2x3` never hits this because its inverse handler short-circuits
     /// `no-mutation` to `input.clone()` and so does not run the codec at all for that row; this case
     /// runs both cycles for every kind, including the trivial one.
     fn apply_and_encode(input: &[u8], spec: &Json, refuse_identity: bool) -> Result<Vec<u8>, String> {

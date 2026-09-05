@@ -234,7 +234,7 @@ fn fixture_directory_name(id: &str) -> Option<&'static str> {
         "insert-palette-entry-applied" => Some("📥️insert-palette-entry-applied"),
         "remove-palette-entry-applied" => Some("📤️remove-palette-entry-applied"),
         "replace-palette-entry-applied" => Some("🎨️replace-palette-entry-applied"),
-        "replace-pixel-data-applied" => Some("🧮️replace-pixel-data-applied"),
+        "replace-pixel-data-applied" => Some("🔲️replace-pixel-data-applied"),
         _ => None,
     }
 }

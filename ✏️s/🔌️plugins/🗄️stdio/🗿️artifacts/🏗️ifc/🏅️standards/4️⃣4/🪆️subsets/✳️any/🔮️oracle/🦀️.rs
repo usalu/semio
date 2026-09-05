@@ -18,7 +18,7 @@
 //! ## §6: ruststep is the independent READER, never a second producer
 //! Because ruststep cannot write, this module cannot be a genuine differential producer of mutated
 //! bytes against a real third-party writer. Every scenario in
-//! `../../../../🧪️tests/🦋️mutate-ifc-4/🥒️.feature` is therefore typed `@mode-property`/
+//! `../../../../🧪️tests/🏗️mutate-ifc-4/🥒️.feature` is therefore typed `@mode-property`/
 //! `@mode-round-trip`, never `@mode-differential` — the fleet brief's §6 situation. `ruststep::ast::
 //! Exchange::from_str` is what actually reads both the real input and every re-serialized result —
 //! including this dispatcher's own mutation output and (once the subject phase compiles) the
@@ -386,7 +386,7 @@ mod oracles {
     /// diff_remove_entity` only removes the one keyed entity — confirmed by reading that file).
     /// `set-snapshot` is pragmatic: it overrides the one header field the wave-7 scenario actually
     /// exercises (`FILE_SCHEMA`) on the already-decoded document, the same precedent this wave's
-    /// `🌴️mutate-pdf-1-7`/`🟠️mutate-step-ap214` oracles use (patches known fields rather than requiring
+    /// `📑️mutate-pdf-1-7`/`📐️mutate-step-ap214` oracles use (patches known fields rather than requiring
     /// the full snapshot literal inline in a Gherkin cell).
     fn apply(exchange: &mut Exchange, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
@@ -630,7 +630,7 @@ mod tests {
     use super::{oracle_apply_mutation, project_ifc_4_any};
     use semio_repo_test_host::Json;
 
-    const FIXTURE: &[u8] = include_bytes!("../../../../../🧫️fixtures/🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc");
+    const FIXTURE: &[u8] = include_bytes!("../🧫️fixtures/🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc");
 
     fn obj(entries: Vec<(&str, Json)>) -> Json {
         Json::Object(entries.into_iter().map(|(k, v)| (k.to_string(), v)).collect())

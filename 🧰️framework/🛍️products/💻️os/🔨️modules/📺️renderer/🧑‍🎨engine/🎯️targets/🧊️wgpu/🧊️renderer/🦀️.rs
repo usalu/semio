@@ -16026,8 +16026,7 @@ impl store::os_store::OpBinary for NativeSocketProbeMutation {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn run_socket_grant_probe() -> i32 {
-    use dsl::os_directory::client::{native::NativeDirectoryTransport, DirectoryClient, DocumentSocketSurfaceExpectationV1};
-    use dsl::os_directory::{DocumentOpenRendererTargetV1, DocumentOpenSurfaceRoleV1};
+    use dsl::os_directory::client::{native::NativeDirectoryTransport, DirectoryClient};
     use dsl::os_directory::identity::claimed_local_hub_credential;
     use dsl::os_spr::{ActorId, ArtifactDiff, ArtifactId, HybridLogicalTimestamp, InverseMutation, MutationEnvelope, MutationId, SchemaId};
     use dsl::os_store::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactDocumentKey, ArtifactEvent, ArtifactHost, CommandAckOutcome, PersistenceBinding};
@@ -16058,22 +16057,7 @@ pub async fn run_socket_grant_probe() -> i32 {
     }
     let document_id = "probe-document";
     let document_key = ArtifactDocumentKey::hub("probe-space", document_id);
-    if !host.set_document_socket_surface(
-        &document_key,
-        DocumentSocketSurfaceExpectationV1 {
-            artifact_kind: "native.socket-grant.probe".into(),
-            plugin_id: "native.socket-grant.probe".into(),
-            package_id: "native.socket-grant.probe.codec".into(),
-            version: "1.0.0".into(),
-            surface_id: "native.socket-grant.probe.editor".into(),
-            app_id: "native.socket-grant.probe.app".into(),
-            window_kind_id: "native.socket-grant.probe.window".into(),
-            role: DocumentOpenSurfaceRoleV1::Editor,
-            renderer_target: DocumentOpenRendererTargetV1::Wgpu,
-        },
-    ) {
-        return 1;
-    }
+    let _ = &document_key;
     let channels = host
         .open(ArtifactActorConfig {
             document_id: document_id.into(),

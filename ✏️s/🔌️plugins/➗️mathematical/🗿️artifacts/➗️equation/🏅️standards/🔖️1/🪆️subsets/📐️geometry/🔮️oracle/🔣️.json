@@ -13,8 +13,8 @@
       "vectors": [
         {
           "mutationId": "replace-points",
-          "sourceMutationDirectoryName": "🌀️replace-points",
-          "mutationDirectoryName": "🌀️replace-points",
+          "sourceMutationDirectoryName": "🔄️replace-points",
+          "mutationDirectoryName": "🔄️replace-points",
           "scenarios": [
             {
               "id": "replays-the-identical-empty-point-cloud",

@@ -1,0 +1,105 @@
+{
+  "schema": "semio.hub.gis-map-proposal-approval-fixture/v1",
+  "version": 1,
+  "binding": {
+    "digest": "435e02065db2d2e0694b6b1c468ee24ae8fe8711432f112f510aaa103a546386",
+    "catalogGenerationId": "0101010101010101010101010101010101010101010101010101010101010101",
+    "packageId": "semio:gis",
+    "packageVersion": "0.1.0",
+    "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "componentBlake3": "1212121212121212121212121212121212121212121212121212121212121212",
+    "artifactKind": "s.gis.gismap",
+    "documentSchema": "gis.map",
+    "parentDialect": { "artifactKind": "s.gis.gismap", "standard": "1", "subset": "*" },
+    "surfaceId": "s.gis.gismap@1/*#editor",
+    "grantedMode": "read-write-observe",
+    "serviceId": "s.gis.gismap.inference",
+    "serviceVersion": 1,
+    "algorithmVersion": 1
+  },
+  "base": {
+    "snapshot": { "positions": [{ "id": "point-a", "data": { "lon": 7, "lat": 47 } }], "routes": [{ "id": "route-a", "data": { "points": [[8, 46], [9, 48]] } }], "regions": [] },
+    "frontier": { "headEditOrdinal": 1, "headEditId": "verified-edit-1", "lastCommitSeq": 1 },
+    "expectedInference": { "positionCount": 1, "routeCount": 1, "regionCount": 0, "bounds": { "lonMin": 7, "lonMax": 9, "latMin": 46, "latMax": 48 } }
+  },
+  "sampleJobId": "11111111111111111111111111111111",
+  "proposalCanonical": "{\"CreateRegion\":{\"index\":0,\"item\":{\"id\":\"inference-11111111111111111111111111111111\",\"data\":{\"id\":\"inference-11111111111111111111111111111111\",\"kind\":\"inference-bounds\",\"ring\":[[7.0,46.0],[9.0,46.0],[9.0,48.0],[7.0,48.0],[7.0,46.0]]}}}}",
+  "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+  "preview": {
+    "schema": "semio.hub.gis-map-inference-preview/v1",
+    "jobId": "11111111111111111111111111111111",
+    "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+    "regionId": "inference-11111111111111111111111111111111",
+    "ring": [[7, 46], [9, 46], [9, 48], [7, 48], [7, 46]]
+  },
+  "inverseCanonical": "[{\"DeleteRegion\":{\"id\":\"inference-11111111111111111111111111111111\"}}]",
+  "inverseHash": "ad964a220d81b242aad274b748af0213d60dad45117496de80991f527ff2de43",
+  "lifecycle": [
+    { "ordinal": 1, "kind": "accepted" },
+    { "ordinal": 2, "kind": "running" },
+    { "ordinal": 3, "kind": "succeeded" },
+    { "ordinal": 4, "kind": "approval-prepared" },
+    { "ordinal": 5, "kind": "approved" }
+  ],
+  "cancelLifecycle": [
+    { "ordinal": 1, "kind": "accepted" },
+    { "ordinal": 2, "kind": "running" },
+    { "ordinal": 3, "kind": "cancel-requested" },
+    { "ordinal": 4, "kind": "cancelled" }
+  ],
+  "visibility": [
+    { "role": "author-owner", "readEvents": true, "readProposal": true, "approve": true, "expectedCode": null },
+    { "role": "peer-author-same-space", "readEvents": false, "readProposal": false, "approve": false, "expectedCode": "inference.denied" },
+    { "role": "cross-space-author", "readEvents": false, "readProposal": false, "approve": false, "expectedCode": "inference.denied" },
+    { "role": "viewer", "readEvents": false, "readProposal": false, "approve": false, "expectedCode": "inference.denied" },
+    { "role": "admin-non-author", "readEvents": false, "readProposal": false, "approve": false, "expectedCode": "inference.denied" },
+    { "role": "stale-session-generation", "readEvents": false, "readProposal": false, "approve": false, "expectedCode": "inference.denied" },
+    { "role": "anonymous", "readEvents": false, "readProposal": false, "approve": false, "expectedCode": "inference.denied" }
+  ],
+  "errors": [
+    { "name": "no-binding", "code": "inference.unavailable", "status": 503 },
+    { "name": "not-author", "code": "inference.denied", "status": 403 },
+    { "name": "unknown-job", "code": "inference.not-found", "status": 404 },
+    { "name": "malformed-intent", "code": "inference.invalid", "status": 400 },
+    { "name": "oversized-intent", "code": "inference.bounds", "status": 413 },
+    { "name": "changed-frontier", "code": "inference.conflict", "status": 409 },
+    { "name": "cancelled-job", "code": "inference.cancelled", "status": 409 },
+    { "name": "job-capacity", "code": "inference.capacity", "status": 429 },
+    { "name": "expired-job", "code": "inference.expired", "status": 410 },
+    { "name": "no-composition-transaction", "code": "approval.commit-unavailable", "status": 503 },
+    { "name": "ledger-unavailable", "code": "inference.storage", "status": 503 }
+  ],
+  "approvalRejections": [
+    { "name": "changed-frontier", "code": "inference.conflict" },
+    { "name": "changed-base-pack", "code": "inference.conflict" },
+    { "name": "changed-binding-digest", "code": "inference.conflict" },
+    { "name": "changed-catalog-generation", "code": "inference.conflict" },
+    { "name": "changed-parent-dialect", "code": "inference.conflict" },
+    { "name": "changed-surface", "code": "inference.conflict" },
+    { "name": "changed-granted-mode", "code": "inference.conflict" },
+    { "name": "wrong-proposal-hash", "code": "inference.conflict" },
+    { "name": "peer-principal", "code": "inference.denied" },
+    { "name": "cross-space", "code": "inference.denied" },
+    { "name": "stale-authorization-generation", "code": "inference.denied" }
+  ],
+  "limits": {
+    "requestMaxBytes": 1024,
+    "inputMaxBytes": 65536,
+    "resultMaxBytes": 16384,
+    "proposalMaxBytes": 4096,
+    "commandMaxBytes": 8192,
+    "identityJsonMaxBytes": 8192,
+    "jobCapacity": 128,
+    "operationCapacity": 32,
+    "documentGateCapacity": 64,
+    "progressMaxCursor": 16,
+    "eventPageMaxItems": 8,
+    "claimLeaseMaxMs": 30000,
+    "jobMaxLifetimeMs": 120000,
+    "workUnitLimit": 4096,
+    "recursionDepth": 32,
+    "allocationBytes": 1048576,
+    "approvalMaxRecords": 8
+  },
+  "nonclaims": ["no-external-model-provider", "no-wgpu-rendering", "no-client-supplied-map-pack", "no-auto-apply"]
+}

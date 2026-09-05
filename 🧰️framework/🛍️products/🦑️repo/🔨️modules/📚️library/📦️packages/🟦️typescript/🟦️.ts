@@ -16,7 +16,9 @@ import { fixedContractFilename, loadTaxonomy, taxonomyRelativePathIsExcluded } f
 
 import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts";
 
-export type PlaygroundHostKind = string;
+import { PLAYGROUND_LOCKED_EXAMPLE_ENV, loadFrameworkOsPlaygroundCatalog } from "../../🎮️playground/🟦️.ts";
+import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
+import { BUILD_BUDGET_MS, CMD_BUDGET_MS, budgetTimeoutHint, buildBudgetMs, cargoProfileDir, cmdBudgetMs, defaultBudgetMs, daemonBudgetMs, daemonBudgetOpts, orchestratorBudgetMs, orchestratorBudgetOpts, resolveWorkspaceBin, runCmd, runCmdStatus, runNodeBin, runNodeBinStatus, semioBuildMode, semioShipEnv, tryRun, type RunCmdOpts, type SemioBuildMode } from "../../🏃️process/🟦️.ts";
 
 export const SEMIO_ROOT_DIR = ".🧬semio";
 export const REPO_META_DIR_NAME = "🦑️repo";
@@ -71,27 +73,6 @@ export type BreachRecord = {
 //#endregion 🔖️breach
 
 //#region 🔖️cli
-/** 🔎️Resolves monorepo root (directory containing root package.json named `workspace`). */
-export function getWorkspaceRoot(): string {
-  const fromEnv = process.env.REPO_ROOT?.trim();
-  if (fromEnv) return resolve(fromEnv);
-  let dir = process.cwd();
-  for (let i = 0; i < 30; i++) {
-    const pkg = join(dir, "package.json");
-    if (existsSync(pkg)) {
-      try {
-        const j = JSON.parse(readFileSync(pkg, "utf8")) as { name?: string };
-        if (j.name === "workspace") return dir;
-      } catch {
-        /* ignore */
-      }
-    }
-    const up = dirname(dir);
-    if (up === dir) break;
-    dir = up;
-  }
-  return process.cwd();
-}
 
 /** @emoji 📎️ Reads `{ hash, items }` collection blocks from kit snapshot JSON. */
 export function fixtureItemsOf<T = Record<string, unknown>>(node: unknown): readonly T[] {
@@ -1166,6 +1147,21 @@ export function testLevelRank(level: string | undefined = process.env.SEMIO_TEST
   return idx === -1 ? 0 : idx;
 }
 
+/** 🎚️True when the active level reaches `level` — the predicate behind level-gated test cases and level-gated `includeSource` entries. */
+export function testLevelAtLeast(level: TestLevel): boolean {
+  return testLevelRank() >= testLevelRank(level);
+}
+
+/**
+ * 🎚️Level-gates one Vitest case factory: `atTestLevel(it, "long")` runs the case from `long` upwards and
+ * reports it as skipped below that, so a case that outgrows its level's wall-clock budget moves level
+ * instead of being deleted or silently killed. Structurally typed on `runIf` so this library never
+ * depends on Vitest's own types.
+ */
+export function atTestLevel<Case extends { runIf(condition: boolean): Case }>(factory: Case, level: TestLevel): Case {
+  return factory.runIf(testLevelAtLeast(level));
+}
+
 function levelsAbove(level: TestLevel): readonly TestLevel[] {
   return TEST_LEVELS.slice(TEST_LEVELS.indexOf(level) + 1);
 }
@@ -1238,16 +1234,8 @@ function killBudgetTree(pid: number): void {
   }
 }
 
-/** ⏱️Hard ceiling (ms) for a warm-build step preceding a test run, and for any other cargo build/clippy/check/wasm invocation — compile time isn't billed against the test-level budget, but a stuck build (e.g. shared cargo target-dir lock contention) must never hang a command forever. Overridable via `SEMIO_BUILD_BUDGET_MS`. */
-export const BUILD_BUDGET_MS = 1_200_000;
 
-/** ⏱️Resolves the active build-class budget: `SEMIO_BUILD_BUDGET_MS` env override, else [[BUILD_BUDGET_MS]]. */
-export function buildBudgetMs(): number {
-  return Number(process.env.SEMIO_BUILD_BUDGET_MS ?? BUILD_BUDGET_MS);
-}
 
-/** ⏱️Default hard wall-clock budget (ms) for a generic spawned command — the [[runCmd]]/[[runCmdStatus]] default for anything that isn't a `cargo` invocation. Overridable via `SEMIO_CMD_BUDGET_MS`. */
-export const CMD_BUDGET_MS = 600_000;
 
 /** @emoji 🎭️ Playwright is TEST-ONLY and loaded lazily. The specifier is indirected so no bundler can
  * statically resolve it: this module is reachable from `⚙️vite.config.ts`, and a literal
@@ -1255,39 +1243,12 @@ export const CMD_BUDGET_MS = 600_000;
  * optional `chromium-bidi`. Runtime behaviour is identical. */
 const PLAYWRIGHT_MODULE_SPECIFIER = "playwright";
 
-/** ⏱️Resolves the active generic-command budget: `SEMIO_CMD_BUDGET_MS` env override, else [[CMD_BUDGET_MS]]. */
-export function cmdBudgetMs(): number {
-  return Number(process.env.SEMIO_CMD_BUDGET_MS ?? CMD_BUDGET_MS);
-}
 
-/** ⏱️Default hard wall-clock budget (ms) for nx/script orchestrators fanning out to individually budgeted leaves — overridable via `SEMIO_ORCHESTRATOR_BUDGET_MS`. */
-export const ORCHESTRATOR_BUDGET_MS = 4 * 60 * 60 * 1000;
 
-/** ⏱️Default hard wall-clock budget (ms) for dev servers and long-lived daemons — overridable via `SEMIO_DAEMON_BUDGET_MS`. */
-export const DAEMON_BUDGET_MS = 24 * 60 * 60 * 1000;
 
-/** ⏱️Resolves the active orchestrator budget: `SEMIO_ORCHESTRATOR_BUDGET_MS` env override, else [[ORCHESTRATOR_BUDGET_MS]]. */
-export function orchestratorBudgetMs(): number {
-  return Number(process.env.SEMIO_ORCHESTRATOR_BUDGET_MS ?? ORCHESTRATOR_BUDGET_MS);
-}
 
-/** ⏱️Resolves the active daemon budget: `SEMIO_DAEMON_BUDGET_MS` env override, else [[DAEMON_BUDGET_MS]]. */
-export function daemonBudgetMs(): number {
-  return Number(process.env.SEMIO_DAEMON_BUDGET_MS ?? DAEMON_BUDGET_MS);
-}
 
-/** ⏱️The default budget class for `cmd`: `cargo` invocations (build/clippy/check/install) default to the longer [[buildBudgetMs]] since compiles routinely exceed the generic command budget; everything else defaults to [[cmdBudgetMs]]. */
-function defaultBudgetMs(cmd: string): number {
-  return cmd === "cargo" ? buildBudgetMs() : cmdBudgetMs();
-}
 
-/** ⏱️Timeout hint for a budget-exceeded message; `cargo` commands default to the shared target-dir lock-contention hint (by far the most common real cause), everything else to a generic budget-tuning hint. An explicit `override` always wins. */
-export function budgetTimeoutHint(cmd: string, override?: string): string {
-  if (override) return override;
-  return cmd === "cargo"
-    ? "Likely shared cargo target-dir lock contention from another concurrent session — investigate before retrying."
-    : "Trim it, or raise its budget (`budgetMs`, `SEMIO_CMD_BUDGET_MS`, `SEMIO_BUILD_BUDGET_MS`).";
-}
 
 /**
  * ⏱️Runs a command under a hard wall-clock budget; SIGKILLs the whole process tree and fails loudly past it.
@@ -1707,77 +1668,12 @@ function cargoNextestAvailable(): boolean {
   return result.status === 0;
 }
 
-export interface RunCmdOpts {
-  cwd?: string;
-  env?: NodeJS.ProcessEnv;
-  /** ⏱️Wall-clock budget (ms). Default: [[defaultBudgetMs]]. Use [[orchestratorBudgetOpts]] / [[daemonBudgetOpts]] for named long-running classes. */
-  budgetMs?: number;
-  onTimeoutHint?: string;
-}
 
-/** ⏱️[[RunCmdOpts]] preset for nx/script orchestrators — [[orchestratorBudgetMs]]. */
-export function orchestratorBudgetOpts(): RunCmdOpts {
-  return { budgetMs: orchestratorBudgetMs() };
-}
 
-/** ⏱️[[RunCmdOpts]] preset for dev servers and long-lived daemons — [[daemonBudgetMs]]. */
-export function daemonBudgetOpts(): RunCmdOpts {
-  return { budgetMs: daemonBudgetMs() };
-}
 
-/** ⏱️Shared `spawnSync` core for [[runCmd]]/[[runCmdStatus]]: throws on spawn error, budget timeout, or signal kill (printing `[budget]` first on timeout); otherwise returns the exit status. */
-function runCmdInternal(cmd: string, args: string[], opts: RunCmdOpts): number {
-  const budgetMs = opts.budgetMs ?? defaultBudgetMs(cmd);
-  const formattedArgs = [...args];
-  if (cmd === "bun" || cmd === process.execPath) {
-    if (formattedArgs[0] && !formattedArgs[0].startsWith("-") && !formattedArgs[0].includes("/") && !formattedArgs[0].includes("\\")) {
-      const resolved = resolveWorkspaceBin(formattedArgs[0], opts.cwd ?? process.cwd());
-      if (resolved) {
-        formattedArgs[0] = resolved;
-      }
-    }
-  }
-  const result = spawnSync(cmd, formattedArgs, {
-    stdio: "inherit",
-    cwd: opts.cwd,
-    env: opts.env ?? process.env,
-    timeout: budgetMs,
-    killSignal: "SIGKILL",
-  });
-  if (result.error) {
-    if ((result.error as NodeJS.ErrnoException).code === "ETIMEDOUT") {
-      console.error(`[budget] ${cmd} ${args.join(" ")} exceeded ${budgetMs}ms — killed. ${budgetTimeoutHint(cmd, opts.onTimeoutHint)}`);
-    }
-    throw result.error;
-  }
-  if (result.signal) throw new Error(`${cmd} ${args.join(" ")} killed by signal ${result.signal}`);
-  return result.status ?? 1;
-}
 
-/**
- * 🏃️Runs a subprocess with inherited stdio under a hard wall-clock budget (default [[defaultBudgetMs]]);
- * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
- * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
- */
-export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
-  const status = runCmdInternal(cmd, args, opts);
-  if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
-}
 
-/** 🏃️Like [[runCmd]] but returns the exit status instead of throwing on non-zero exit — for call sites
- *  that branch on it. Budget exceed still prints `[budget]` and throws (never silently returns a status). */
-export function runCmdStatus(cmd: string, args: string[], opts: RunCmdOpts = {}): number {
-  return runCmdInternal(cmd, args, opts);
-}
 
-/** 🏃️Like [[runCmd]] but ignores failures — including a budget kill, which is the desired never-hang behavior for optional commands. */
-export function tryRun(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
-  try {
-    runCmd(cmd, args, opts);
-  } catch {
-    /* optional */
-  }
-}
 
 export interface RunProbeResult {
   status: number | null;
@@ -2413,15 +2309,6 @@ function bunArgsForVite(args: readonly string[]): string[] {
 }
 //#endregion ⚙️ViteConfigLoader
 
-/** 🔍️ Resolves a CLI executable in `cwd` or workspace root's `node_modules/.bin` to avoid `bun x` cwd resolution bugs on emoji/ZWJ paths. */
-export function resolveWorkspaceBin(binName: string, cwd: string = process.cwd()): string | null {
-  const shortName = binName.includes("/") ? binName.split("/").pop()! : binName;
-  const localBin = join(cwd, "node_modules", ".bin", shortName);
-  if (existsSync(localBin)) return localBin;
-  const rootBin = join(getWorkspaceRoot(), "node_modules", ".bin", shortName);
-  if (existsSync(rootBin)) return rootBin;
-  return null;
-}
 
 function bunxCmdArgs(args: readonly string[], cwd: string): string[] {
   const formatted = bunArgsForVite(args);
@@ -2449,24 +2336,7 @@ export function runBun(args: string[], cwd: string, env: NodeJS.ProcessEnv = pro
   runCmd(process.execPath, bunArgsForVite(args), { cwd, env });
 }
 
-/** 🟢️Runs a CLI tool using `node` synchronously in `cwd`, returning status code. */
-export function runNodeBinStatus(args: string[], cwd: string = process.cwd(), env: NodeJS.ProcessEnv = process.env): number {
-  const binName = args[0]!;
-  const resolved = resolveWorkspaceBin(binName, cwd);
-  const executable = resolved ?? binName;
-  const result = spawnSync("node", [executable, ...args.slice(1)], { cwd, env, shell: false, stdio: "inherit" });
-  if (result.error) {
-    console.error(result.error);
-    return 1;
-  }
-  return result.status ?? 1;
-}
 
-/** 🟢️Runs a CLI tool using `node` synchronously in `cwd`. */
-export function runNodeBin(args: string[], cwd: string = process.cwd(), env: NodeJS.ProcessEnv = process.env): void {
-  const status = runNodeBinStatus(args, cwd, env);
-  if (status !== 0) process.exit(status);
-}
 
 /** 🥖️Runs `bunx` synchronously in `cwd`, returning status code. */
 export function runBunxStatus(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): number {
@@ -2548,116 +2418,6 @@ export async function runVitest(bundleRoot: string, segments: string[], config =
   await runTestBudgeted(runtime, vitestRunArguments(bundleRoot, segments, config, collectingCoverage), { cwd: bundleRoot, env: devToolingEnv() });
 }
 
-//#region 🔌️PlaygroundDevPorts
-type PlaygroundPortSpec = {
-  readonly dev: number;
-  readonly test?: number;
-  readonly env: string;
-};
-
-/** @emoji 🔌️ Builds playground port table from semio.app manifests plus non-app hosts. */
-function buildPlaygroundPortsFromManifests(): Record<string, PlaygroundPortSpec> {
-  const ports: Record<string, PlaygroundPortSpec> = {
-    storybook: { dev: 6010, env: "STORYBOOK_PORT" },
-  };
-  for (const row of loadFrameworkOsPlaygroundCatalog()) ports[row.variant] = { dev: row.ports.react, test: row.ports.wgpu, env: "S_OS_PORT" };
-  const walk = (directory: string): void => {
-    for (const entry of readdirSync(directory, { withFileTypes: true })) {
-      if (entry.name === "node_modules" || entry.name === "target" || entry.name === "🎫️tickets" || entry.name.startsWith(".")) continue;
-      const path = join(directory, entry.name);
-      if (entry.isDirectory()) {
-        walk(path);
-        continue;
-      }
-      if (entry.name !== "package.json") continue;
-      try {
-        const manifest = JSON.parse(readFileSync(path, "utf8")) as { semio?: { app?: { hostKind?: string; port?: { dev?: number; test?: number; env?: string } } } };
-        const app = manifest.semio?.app;
-        if (app?.hostKind && Number.isSafeInteger(app.port?.dev) && app.port?.env) ports[app.hostKind] = { dev: app.port.dev!, test: app.port.test, env: app.port.env };
-      } catch {}
-    }
-  };
-  walk(getWorkspaceRoot());
-  return ports;
-}
-
-const playgroundPortsCache = ephemeralBox<Record<string, PlaygroundPortSpec> | undefined>("framework.products.repo.modules.lib.packages.typescript.index.ts.playgroundPortsCache", undefined);
-
-function resolvePlaygroundPorts(): Record<string, PlaygroundPortSpec> {
-  playgroundPortsCache.current ??= buildPlaygroundPortsFromManifests();
-  return playgroundPortsCache.current;
-}
-
-export const PLAYGROUND_PORTS: Record<string, PlaygroundPortSpec> = new Proxy({} as Record<string, PlaygroundPortSpec>, {
-  get(_target, prop: string) {
-    return resolvePlaygroundPorts()[prop];
-  },
-  ownKeys() {
-    return Reflect.ownKeys(resolvePlaygroundPorts());
-  },
-  getOwnPropertyDescriptor(_target, prop) {
-    const value = resolvePlaygroundPorts()[prop as string];
-    if (value === undefined) return undefined;
-    return { configurable: true, enumerable: true, value };
-  },
-});
-
-/** @emoji 🔌️ Local dev port for a playground host. */
-export function playgroundDevPort(kind: PlaygroundHostKind): number {
-  const spec = resolvePlaygroundPorts()[kind];
-  if (!spec) throw new Error(`unknown playground host kind: ${kind}`);
-  return spec.dev;
-}
-
-/** @emoji 🔌️ String dev port (vite `--port`, nx `env`). */
-export function playgroundDevPortString(kind: PlaygroundHostKind): string {
-  return String(playgroundDevPort(kind));
-}
-
-/** @emoji 🧪️ Vitest/playwright port when set; otherwise `undefined`. */
-export function playgroundTestPort(kind: PlaygroundHostKind): number | undefined {
-  return resolvePlaygroundPorts()[kind]?.test;
-}
-
-/** @emoji 🧪️ String test port for nx `env` / playwright. */
-export function playgroundTestPortString(kind: PlaygroundHostKind): string | undefined {
-  const port = playgroundTestPort(kind);
-  return port === undefined ? undefined : String(port);
-}
-
-/** @emoji 🔌️ Process env var holding the dev port override. */
-export function playgroundPortEnv(kind: PlaygroundHostKind): string {
-  const spec = resolvePlaygroundPorts()[kind];
-  if (!spec) throw new Error(`unknown playground host kind: ${kind}`);
-  return spec.env;
-}
-
-/** @emoji 🚧️ Every assigned playground dev + test port (for strict binding). */
-export function allPlaygroundReservedPorts(): ReadonlySet<number> {
-  const ports = new Set<number>();
-  for (const spec of Object.values(resolvePlaygroundPorts())) {
-    ports.add(spec.dev);
-    if (spec.test !== undefined) ports.add(spec.test);
-  }
-  return ports;
-}
-
-/** @emoji 🔌️ OS hub service dev port. 8787, not 6070 — 6070 is the `s` react playground's port,
- * see `✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/Cargo.toml` `[[package.metadata.semio.playground]]`. */
-export const OS_HUB_PORT = 8787;
-
-/** @emoji 🔌️ Process env var for {@link OS_HUB_PORT}. */
-export const OS_HUB_PORT_ENV = "OS_HUB_PORT";
-
-/** @emoji 🔒️ Process env var locking a playground to one example (hides navbar dropdown). */
-export const PLAYGROUND_LOCKED_EXAMPLE_ENV = "PLAYGROUND_LOCKED_EXAMPLE_ID";
-
-/** @emoji 🔒️ Locked example id from process env, if any. */
-export function playgroundLockedExampleIdFromEnv(env: NodeJS.ProcessEnv = process.env): string | undefined {
-  const raw = env[PLAYGROUND_LOCKED_EXAMPLE_ENV]?.trim();
-  return raw || undefined;
-}
-
 //#region 🔒️FrameworkOsLocks
 /** @emoji 🔒️ Process env vars locking one shell preference to a single boot-time value. */
 export const SEMIO_LOCKED_LOCALE_ENV = "SEMIO_LOCKED_LOCALE";
@@ -2696,31 +2456,7 @@ export function frameworkOsLockedPrefsEnv(env: NodeJS.ProcessEnv = process.env):
 }
 //#endregion 🔒️FrameworkOsLocks
 
-/** @emoji 🔌️ Vite `define` entries for playground play bundles. */
-export function playgroundPlayViteDefine(extra: Record<string, string> = {}): Record<string, string> {
-  return {
-    "import.meta.env.PLAYGROUND_LOCKED_EXAMPLE_ID": JSON.stringify(playgroundLockedExampleIdFromEnv() ?? ""),
-    "import.meta.vitest": "undefined",
-    ...extra,
-  };
-}
-
-//#endregion 🔌️PlaygroundDevPorts
-
 //#region 🖥️FrameworkOsPlaygroundDev
-/**
- * 📚️ Loads the generated framework OS playground catalog (variant/plugin/aliases/ports rows).
- * Reads the registry owner's `🤖️generated/🎠️playgrounds.json` directly (rather than a static
- * TS import of the gitignored generated module) so this shared kernel never fails to load on a
- * fresh clone before `bun nx run @semio-tech/plugin-registry:generate` has ever run — callers get
- * an empty catalog in that case instead of a hard module-resolution error.
- */
-export function loadFrameworkOsPlaygroundCatalog(): readonly PlaygroundVariant[] {
-  const catalogPath = join(getWorkspaceRoot(), "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎠️playgrounds.json");
-  if (!existsSync(catalogPath)) return [];
-  return JSON.parse(readFileSync(catalogPath, "utf8")) as readonly PlaygroundVariant[];
-}
-
 /** @emoji 🔌️ Local dev-time asset server port for wgpu Trunk/native playgrounds (Trunk forwards
  * route-scoped requests — e.g. `/osm`, `/vt`, `/dem` — here; driven by each playground's declared
  * `[[package.metadata.semio.assets]]` rows, not any one app's routes). */
@@ -2751,14 +2487,14 @@ export function resolveFrameworkOsPlaygroundPlugin(catalog: readonly PlaygroundV
 
 /** @emoji 🧊️ Env for `@semio-tech/framework-os-dev:dev` with wgpu renderer and plugin filter. */
 export function frameworkOsPlaygroundDevEnv(catalog: readonly PlaygroundVariant[], plugin: string, extra: NodeJS.ProcessEnv = {}, env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
-  const renderer = env.SEMIO_RENDERER ?? "wgpu";
+  const renderer = extra.SEMIO_RENDERER ?? env.SEMIO_RENDERER ?? "wgpu";
   const defaultPort = frameworkOsPlaygroundDefaultPort(catalog, plugin, renderer);
-  const portVal = env.S_OS_PORT || String(defaultPort);
+  const portVal = extra.S_OS_PORT || env.S_OS_PORT || String(defaultPort);
   return devToolingEnv({
     SEMIO_PLUGIN: plugin,
+    ...extra,
     SEMIO_RENDERER: renderer,
     S_OS_PORT: portVal,
-    ...extra,
   });
 }
 //#endregion 🖥️FrameworkOsPlaygroundDev
@@ -3095,26 +2831,6 @@ function wasmPackInputsStale(rsDir: string, wasmPath: string): boolean {
   return false;
 }
 
-//#region 🔖️SemioBuildMode
-/** @emoji 🚦️ Whether child builds should use fast dev artifacts or ship optimization. */
-export type SemioBuildMode = "dev" | "ship";
-
-/** @emoji 🚦️ `ship` only when `SEMIO_BUILD_MODE=ship`; default is dev for local/agent loops. */
-export function semioBuildMode(): SemioBuildMode {
-  return process.env.SEMIO_BUILD_MODE === "ship" ? "ship" : "dev";
-}
-
-/** @emoji 🚀️ Env for nx/build orchestrators so spawned crate `wasm` scripts inherit ship mode. */
-export function semioShipEnv(): NodeJS.ProcessEnv {
-  return { ...process.env, SEMIO_BUILD_MODE: "ship" };
-}
-
-/** @emoji 📂 Cargo output directory name for a profile (`dev` → `debug`). */
-export function cargoProfileDir(profile: string): string {
-  return profile === "dev" ? "debug" : profile;
-}
-//#endregion 🔖️SemioBuildMode
-
 /** 📦️`wasm-pack build` for `--target web`, restores `pkg/package.json`, verifies wasm output. */
 export function runWasmPackWebBuild(opts: {
   rsDir: string;
@@ -3232,7 +2948,10 @@ function parseCargoTomlStringArray(block: string, key: string): string[] {
   return [...match[1]!.matchAll(/"([^"]+)"/g)].map((row) => row[1]!);
 }
 
-function parseExtensionCargoManifest(manifestPath: string, repoRoot: string): {
+/** 🧩️ Reads one extension crate's Cargo identity — the crate name every extension route (`package`'s
+ * `.sxt` and `describe`'s owner descriptor pair alike) builds from, its component package id, and its
+ * declared `extends` host. */
+export function parseExtensionCargoManifest(manifestPath: string, repoRoot: string): {
   readonly packageName: string;
   readonly version: string;
   readonly description: string;
@@ -4699,10 +4418,23 @@ export function gitSpawnEnv(): Record<string, string> {
   return env;
 }
 
+const GIT_INDEX_LOCK_RE = /Unable to create '.*index\.lock'/;
+const GIT_INDEX_LOCK_MAX_ATTEMPTS = 20;
+const GIT_INDEX_LOCK_RETRY_DELAY_MS = 300;
+
+/** ⏳️Retries on a concurrent `index.lock` (other agent/IDE git process mid-write) instead of failing the whole commit. */
 function git(root: string, args: string[]): { ok: boolean; out: string } {
-  const r = spawnCapturedSync("git", args, { cwd: root, env: gitSpawnEnv() });
-  if (r.status !== 0) return { ok: false, out: (r.stderr.length > 0 ? r.stderr : r.stdout).toString("utf8").trim() };
-  return { ok: true, out: r.stdout.toString("utf8").trim() };
+  for (let attempt = 1; attempt <= GIT_INDEX_LOCK_MAX_ATTEMPTS; attempt++) {
+    const r = spawnCapturedSync("git", args, { cwd: root, env: gitSpawnEnv() });
+    if (r.status === 0) return { ok: true, out: r.stdout.toString("utf8").trim() };
+    const out = (r.stderr.length > 0 ? r.stderr : r.stdout).toString("utf8").trim();
+    if (attempt < GIT_INDEX_LOCK_MAX_ATTEMPTS && GIT_INDEX_LOCK_RE.test(out)) {
+      Bun.sleepSync(GIT_INDEX_LOCK_RETRY_DELAY_MS);
+      continue;
+    }
+    return { ok: false, out };
+  }
+  return { ok: false, out: "git: index.lock retry budget exhausted" };
 }
 
 function gitCachedNames(root: string, extra: string[] = []): string[] {
@@ -6690,3 +6422,15 @@ export { authorArtifactScaffold, ArtifactScaffoldError, type ArtifactScaffoldDir
  * `26/08/06/GENERATED-BUN-WORKSPACES-FROM-PACKAGE-CATALOG`. */
 export * from "../../🗂️workspaces/🟦️.ts";
 //#endregion 🗂️Workspaces
+
+//#region 🏃️Process
+/** 🏃️ Budgeted command execution, workspace bin resolution and the build-mode switch — owned by
+ * `📚️library/🏃️process/🟦️.ts` so tool spawners need no taxonomy walk. */
+export * from "../../🏃️process/🟦️.ts";
+//#endregion 🏃️Process
+
+//#region 🎮️Playground
+/** 🎮️ Generated playground catalog, dev/test port table and locked-example define — owned by
+ * `📚️library/🎮️playground/🟦️.ts` so port consumers need no taxonomy walk. */
+export * from "../../🎮️playground/🟦️.ts";
+//#endregion 🎮️Playground

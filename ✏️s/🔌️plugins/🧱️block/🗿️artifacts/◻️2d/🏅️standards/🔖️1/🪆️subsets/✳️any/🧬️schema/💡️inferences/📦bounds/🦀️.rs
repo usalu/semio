@@ -31,7 +31,7 @@ pub struct Block2dBounds {
 /// 📦️ Computes `bounds` from a block2d snapshot — each rim handle template's polar `angle`
 /// (radians) / `radius` placement is converted to cartesian `(radius·cos(angle), radius·sin(angle))`
 /// and folded into the running min/max; an empty handle catalog yields `Block2dBounds::default()`.
-pub async fn compute_block2d_bounds(snapshot: &Block2dSnapshot) -> Block2dBounds {
+pub fn compute_block2d_bounds(snapshot: &Block2dSnapshot) -> Block2dBounds {
     if snapshot.handles.is_empty() {
         return Block2dBounds::default();
     }
@@ -55,7 +55,7 @@ mod tests {
     use crate::artifacts::block2d::Block2dHandleTemplate;
     use std::f64::consts::PI;
 
-    async fn handle(id: &str, angle: f64, radius: f64) -> Block2dHandleTemplate {
+    fn handle(id: &str, angle: f64, radius: f64) -> Block2dHandleTemplate {
         Block2dHandleTemplate { id: id.into(), handle_kind: "wire".into(), angle, radius }
     }
 

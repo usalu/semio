@@ -47,6 +47,14 @@
         "command": "bun ./📜️script.ts package",
         "forwardAllArgs": true
       }
+    },
+    "describe": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts describe",
+        "forwardAllArgs": true
+      }
     }
   }
 }

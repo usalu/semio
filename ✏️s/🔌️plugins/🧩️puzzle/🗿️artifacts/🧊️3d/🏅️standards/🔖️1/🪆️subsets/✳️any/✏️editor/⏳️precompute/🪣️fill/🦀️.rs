@@ -4507,7 +4507,7 @@ mod tests {
 
     #[test]
     fn retained_preview_json_matches_language_neutral_fixture_and_test_only_serde_oracle() {
-        let schema: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️.schema.json")).expect("schema-first preview fixture");
+        let schema: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🧬️.schema.json")).expect("schema-first preview fixture");
         let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).expect("language-neutral law fixture");
         assert!(schema["$defs"]["diagnostic"]["required"].as_array().is_some_and(|fields| fields.iter().any(|field| field.as_str() == Some("statusLabel"))));
         assert_eq!(schema["properties"]["sourceVortexIndex"]["maximum"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX));

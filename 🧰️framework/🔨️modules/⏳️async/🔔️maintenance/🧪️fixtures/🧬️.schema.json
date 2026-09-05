@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "capacity", "idleWake", "lifecycle", "competingWork", "runningClose"],
+  "properties": {
+    "schema": { "const": "semio.async.worker-maintenance/v1" }, "capacity": { "const": 64 },
+    "competingWork": { "type": "object", "additionalProperties": false, "required": ["jobs", "hooks", "order"], "properties": { "jobs": { "const": [0, 1] }, "hooks": { "const": [10, 11] }, "order": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "integer" } } } },
+    "runningClose": { "type": "object", "additionalProperties": false, "required": ["firstRemoveTerminal", "secondRemoveTerminal", "shutdownRearms"], "properties": { "firstRemoveTerminal": { "const": false }, "secondRemoveTerminal": { "const": true }, "shutdownRearms": { "const": false } } },
+    "idleWake": { "type": "object", "additionalProperties": false, "required": ["nativeWithoutIngress", "cooperativePumpsAtMost", "steps", "queuedJobs"], "properties": { "nativeWithoutIngress": { "const": true }, "cooperativePumpsAtMost": { "const": 64 }, "steps": { "const": 2 }, "queuedJobs": { "const": 0 } } },
+    "lifecycle": { "type": "array", "minItems": 20, "maxItems": 20, "items": { "type": "object", "additionalProperties": false, "required": ["action", "owner", "expected"], "properties": { "action": { "enum": ["install", "request", "take", "remove", "finish-more", "finish-idle", "finish-fault"] }, "owner": { "enum": ["a", "b"] }, "expected": { "enum": ["installed", "requested", "coalesced", "running", "pending", "closed", "idle", "removed", "stale"] } } } }
+  }
+}

@@ -1,0 +1,636 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ PPTX ECMA-376/🧱️base's own contribution to the repository test platform — its mutation oracle registration and its declared mutation vocabulary (wave 7, ticket 26/08/23/END-TO-END-TESTING-REFACTOR). Discovered by convention alongside ✏️s/🔌️plugins/🗄️stdio's own top-level manifest; merged into one registry, no central edit required.",
+  "oracles": [
+    {
+      "id": "pptx-ecma-376-mutate",
+      "ecosystem": "rust",
+      "package": "zip",
+      "version": "6",
+      "capabilities": [
+        "pptx-ecma-376-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-pptx-mutate-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/zip-rs/zip2 ; https://github.com/tafia/quick-xml",
+      "rationale": "🩹️ RECLASSIFIED (ticket SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION, shard A10, 2026-09-02). This entry was registered `third-party-library` on the strength of a real crate that does genuine codec work, but the mutation's expected RESULT is computed by this owner's own `🦀️oracle.rs` -- its dispatch function's catch-all arm is `\"mutation kind {...} has no oracle implementation\"`, proof that every OTHER arm is an implementation, not a reading. Both halves of the comparison then descend from the same specification, so a shared misreading produces two agreeing wrong answers -- the one failure a differential oracle exists to catch. This is a `cross-semio-implementation`: a required SUPPLEMENT (metamorphic/inverse/round-trip evidence), never a substitute. A qualifying third-party reference for the mutation semantics is still owed. See $TICKET/📓️a10-oracle-honesty.md.\n\nA PPTX is a ZIP of XML parts (ECMA-376 Part 2 OPC). No standalone `pptx` crate is registered: the only one on crates.io is a 0.1.0 first release, and a first-release crate judging our implementation would be worse than none (fleet brief instruction). `zip` and `quick-xml` are both already linked for other subsets (🎒zip, 📰️xml, 🎨svg) and both genuinely independent of this repository's own PPTX codec — this oracle unzips with `zip`, parses/edits/re-serializes `ppt/presentation.xml` and every `ppt/slides/slideN.xml` with `quick-xml`, and rezips with `zip`. Every mutation kind is expressed as a pure operation on an independent, typed, ordered slide/shape list, then EVERY slide-related OPC part (slides, their `.rels`, `presentation.xml`'s `p:sldIdLst`, `presentation.xml.rels`'s slide relationships, `[Content_Types].xml`'s slide `Override`s) is freshly regenerated from that list — a genuine re-serialization on every call, never a byte pass-through, including `no-mutation` and `identity-round-trip`.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🔮️oracle/📦️packages/🦀️rust",
+      "packages": [
+        {
+          "package": "quick-xml",
+          "version": "0.42",
+          "license": "MIT",
+          "homepage": "https://github.com/tafia/quick-xml",
+          "role": "independent XML reader/writer for every part inside the archive"
+        }
+      ],
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "zip",
+        "implementation": "zip Rust ZIP reader/writer",
+        "version": "6"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "python-pptx-pptx-ecma-376-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "python-pptx",
+      "version": "1.0.2",
+      "engine": {
+        "family": "python-pptx",
+        "implementation": "python-pptx OPC/OOXML reader",
+        "version": "1.0.2"
+      },
+      "capabilities": [
+        "pptx-ecma-376-mutate"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://python-pptx.readthedocs.io",
+      "rationale": "📖️ A READER, registered separately from this file's existing `cross-semio-implementation` entry, which COMPUTES what a mutation should produce from this repository's own reading of the spec and therefore cannot discharge this requirement — both halves would descend from one reading of it. python-pptx 1.0.2 opens the real OPC container through its own `opc` sub-package and object model — `Presentation.slides`, `slide.shapes`, `shape.left/top/width/height`, `shape.text_frame.paragraphs[].runs[].text`, `shape.rotation` — an independent reading of the DOCUMENT vocabulary this subset owns (slide order, shape geometry in EMU, paragraph/run text) through its own OPC/relationship walk, never this repository's `zip` reimplementation. Verified against this subset's own committed `shared://📽️.pptx`: `Presentation(path).slides` reports the real 7-slide order and each slide's shapes resolve to real EMU geometry.",
+      "comparisonProfiles": [
+        "semantic-pptx-mutate-v1"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "pptx-ecma-376-base",
+      "capability": "pptx-ecma-376-mutate",
+      "standardDirectoryName": "🔖️ecma-376",
+      "subsetDirectoryName": "🧱️base",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📸️set-snapshot",
+          "mutationDirectoryName": "📸️set-snapshot",
+          "scenarios": [
+            {
+              "id": "retitles-and-lowers-the-title-placeholder",
+              "directoryName": "🏷️retitles-and-lowers-the-title-placeholder"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "set-snapshot",
+        "insert-slide",
+        "remove-slide",
+        "move-slide",
+        "insert-shape",
+        "remove-shape",
+        "set-shape-text",
+        "set-shape-position"
+      ]
+    }
+  ],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-pptx-mutate-v1",
+      "description": "PPTX presentations compared as an ORDERED list of slides (slide order is part of the model — `move-slide` is the whole point of this vocabulary), each an ORDERED list of shapes, each shape's kind/text/position. Both producers' projections are re-derived from raw OPC/XML bytes by the SAME independent `zip`+`quick-xml` reader (never trusted from either producer's own typed model), scoped to exactly what `crate::artifacts::pptx::schema::snapshot::PptxShape` itself models: shape kind (textBox/placeholder/picture/other), a placeholder's own `phKind`, a shape's text content (paragraph boundaries joined by newline — per-run bold/italic/font-size styling is writer freedom, not normative here), and its `a:xfrm` position in EMUs (a shape with no explicit `a:xfrm`, inheriting its position from the slide layout, projects as x=y=cx=cy=0 on both sides — the same default `crate::artifacts::pptx`'s own importer uses for a missing `a:xfrm`). OPC-level plumbing a rebuilt slide mints fresh on every call — slide/shape XML part paths, relationship ids, `p:sldId`'s numeric `id`, `p:cNvPr`'s shape id/name, which slideLayout a rebuilt slide targets — is deliberately absent from the projection because `PptxSnapshot`'s own typed model does not track it either; it is OPC packaging freedom, not shape content.",
+      "arrays": "ordered",
+      "ignoreKeys": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.pptx",
+      "standard": "ecma-376",
+      "subset": "base",
+      "standardDirectoryName": "🔖️ecma-376",
+      "subsetDirectoryName": "🧱️base",
+      "mutations": [
+        {
+          "id": "insert-shape",
+          "capability": "pptx-ecma-376-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-shape",
+            "bridgeVersion": 1,
+            "variant": "InsertShape"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pptx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "python-pptx-pptx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "insert-slide",
+          "capability": "pptx-ecma-376-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-slide",
+            "bridgeVersion": 1,
+            "variant": "InsertSlide"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pptx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "python-pptx-pptx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "move-slide",
+          "capability": "pptx-ecma-376-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-slide",
+            "bridgeVersion": 1,
+            "variant": "MoveSlide"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pptx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "python-pptx-pptx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-shape",
+          "capability": "pptx-ecma-376-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-shape",
+            "bridgeVersion": 1,
+            "variant": "RemoveShape"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pptx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "python-pptx-pptx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-slide",
+          "capability": "pptx-ecma-376-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-slide",
+            "bridgeVersion": 1,
+            "variant": "RemoveSlide"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pptx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "python-pptx-pptx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-shape-position",
+          "capability": "pptx-ecma-376-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-shape-position",
+            "bridgeVersion": 1,
+            "variant": "SetShapePosition"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pptx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "python-pptx-pptx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-shape-text",
+          "capability": "pptx-ecma-376-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-shape-text",
+            "bridgeVersion": 1,
+            "variant": "SetShapeText"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pptx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "python-pptx-pptx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "pptx-ecma-376-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pptx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "python-pptx-pptx-ecma-376-mutate-reader"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-slide-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "insert-slide",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/➕️insert-slide-applied/⬅️before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:d6b289a810f200b2e209dc9497364ba82c34cc03119f3e0ac932a7c4735b3ba1",
+          "bytes": 28104
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/➕️insert-slide-applied/➡️after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:4ff6c6789a32cded905ea6410dad0294981bce47cbe820ded6e19e8d27a91882",
+          "bytes": 28811
+        }
+      ],
+      "generator": {
+        "oracle": "python-pptx-pptx-ecma-376-mutate-reader",
+        "packageVersion": "1.0.2",
+        "engineFamily": "python-pptx",
+        "engineVersion": "1.0.2",
+        "command": "uv run python3 🔨️f2-gen-pptx-base-fixtures.py (python-pptx Presentation object model + .save())",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (python-pptx)",
+        "attribution": "Written by python-pptx 1.0.2's own Presentation.save()",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A second blank slide appended to the presentation."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-slide-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-slide",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/➖️remove-slide-applied/⬅️before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:4ff6c6789a32cded905ea6410dad0294981bce47cbe820ded6e19e8d27a91882",
+          "bytes": 28811
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/➖️remove-slide-applied/➡️after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:dbaef28a71bc9554b40ab1418bcb13cb50cfe78550db50835ff4f1fb46dcf7a4",
+          "bytes": 28805
+        }
+      ],
+      "generator": {
+        "oracle": "python-pptx-pptx-ecma-376-mutate-reader",
+        "packageVersion": "1.0.2",
+        "engineFamily": "python-pptx",
+        "engineVersion": "1.0.2",
+        "command": "uv run python3 🔨️f2-gen-pptx-base-fixtures.py (python-pptx Presentation object model + .save())",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (python-pptx)",
+        "attribution": "Written by python-pptx 1.0.2's own Presentation.save()",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The second slide removed from the presentation, inverse of insert-slide."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "move-slide-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "move-slide",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/🔀️move-slide-applied/⬅️before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:618350aece66a7a0d14d6def3f332c38dcf51c5ac8c19d851f3b5b8404c4f5a9",
+          "bytes": 29131
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/🔀️move-slide-applied/➡️after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:d3008f6c701c42dea6e6558acd1c99c10424c3aa84f4896ff8238153fd81e2ad",
+          "bytes": 29131
+        }
+      ],
+      "generator": {
+        "oracle": "python-pptx-pptx-ecma-376-mutate-reader",
+        "packageVersion": "1.0.2",
+        "engineFamily": "python-pptx",
+        "engineVersion": "1.0.2",
+        "command": "uv run python3 🔨️f2-gen-pptx-base-fixtures.py (python-pptx Presentation object model + .save())",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (python-pptx)",
+        "attribution": "Written by python-pptx 1.0.2's own Presentation.save()",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Slide order reversed, [A, B] -> [B, A], via the presentation's own slide-id list."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-shape-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "insert-shape",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/🔷️insert-shape-applied/⬅️before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:cfa44d14ef9cf517ef9b6606291a1b938059add2213d474633b0d4bcabe45df6",
+          "bytes": 28260
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/🔷️insert-shape-applied/➡️after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:2f8ffb19396839ddbf407f383711efd8eb3cd31aa49004dc6bad03e2f54442c9",
+          "bytes": 28291
+        }
+      ],
+      "generator": {
+        "oracle": "python-pptx-pptx-ecma-376-mutate-reader",
+        "packageVersion": "1.0.2",
+        "engineFamily": "python-pptx",
+        "engineVersion": "1.0.2",
+        "command": "uv run python3 🔨️f2-gen-pptx-base-fixtures.py (python-pptx Presentation object model + .save())",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (python-pptx)",
+        "attribution": "Written by python-pptx 1.0.2's own Presentation.save()",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A second textbox shape added to the slide."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-shape-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-shape",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/🔶️remove-shape-applied/⬅️before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:2f8ffb19396839ddbf407f383711efd8eb3cd31aa49004dc6bad03e2f54442c9",
+          "bytes": 28291
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/🔶️remove-shape-applied/➡️after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:cfa44d14ef9cf517ef9b6606291a1b938059add2213d474633b0d4bcabe45df6",
+          "bytes": 28260
+        }
+      ],
+      "generator": {
+        "oracle": "python-pptx-pptx-ecma-376-mutate-reader",
+        "packageVersion": "1.0.2",
+        "engineFamily": "python-pptx",
+        "engineVersion": "1.0.2",
+        "command": "uv run python3 🔨️f2-gen-pptx-base-fixtures.py (python-pptx Presentation object model + .save())",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (python-pptx)",
+        "attribution": "Written by python-pptx 1.0.2's own Presentation.save()",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The second textbox shape removed, inverse of insert-shape."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-shape-position-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-shape-position",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/📐️set-shape-position-applied/⬅️before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:cfa44d14ef9cf517ef9b6606291a1b938059add2213d474633b0d4bcabe45df6",
+          "bytes": 28260
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/📐️set-shape-position-applied/➡️after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:1e0752744e1717288a15ea4751533865a457e6b072132254b1e133cfa129a80c",
+          "bytes": 28260
+        }
+      ],
+      "generator": {
+        "oracle": "python-pptx-pptx-ecma-376-mutate-reader",
+        "packageVersion": "1.0.2",
+        "engineFamily": "python-pptx",
+        "engineVersion": "1.0.2",
+        "command": "uv run python3 🔨️f2-gen-pptx-base-fixtures.py (python-pptx Presentation object model + .save())",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (python-pptx)",
+        "attribution": "Written by python-pptx 1.0.2's own Presentation.save()",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The shape's left/top offset changed (1in,1in) -> (2in,2in)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-shape-text-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pptx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-shape-text",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-pptx",
+          "path": "../🧫️fixtures/✍️set-shape-text-applied/⬅️before.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:992f85e8e99adcb3efe5264be4be3d993fc5b273b71dd0c4f8117ed661614b53",
+          "bytes": 28262
+        },
+        {
+          "role": "expected-after-pptx",
+          "path": "../🧫️fixtures/✍️set-shape-text-applied/➡️after.pptx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "sha256": "sha256:7a6c6ebd7ede5db80621266d7096729af1479ebf62d4d61a9ad04a6dcd34147c",
+          "bytes": 28263
+        }
+      ],
+      "generator": {
+        "oracle": "python-pptx-pptx-ecma-376-mutate-reader",
+        "packageVersion": "1.0.2",
+        "engineFamily": "python-pptx",
+        "engineVersion": "1.0.2",
+        "command": "uv run python3 🔨️f2-gen-pptx-base-fixtures.py (python-pptx Presentation object model + .save())",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (python-pptx)",
+        "attribution": "Written by python-pptx 1.0.2's own Presentation.save()",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The shape's text-frame content replaced, Hello -> World."
+    }
+  ]
+}

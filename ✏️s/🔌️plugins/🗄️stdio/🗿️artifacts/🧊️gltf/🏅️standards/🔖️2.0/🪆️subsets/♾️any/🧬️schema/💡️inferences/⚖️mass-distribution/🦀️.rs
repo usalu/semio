@@ -1,14 +1,14 @@
 //! ⚖️ GLTF mass-distribution indicators.
 
-#[path = "🐞️centroid/🦀️.rs"]
+#[path = "🎯️centroid/🦀️.rs"]
 pub mod centroid;
-#[path = "🐧️inertia-tensor/🦀️.rs"]
+#[path = "🧮️inertia-tensor/🦀️.rs"]
 pub mod inertia_tensor;
-#[path = "🍐️moments-of-inertia/🦀️.rs"]
+#[path = "🌀️moments-of-inertia/🦀️.rs"]
 pub mod moments_of_inertia;
 #[path = "🧭️principal-axes/🦀️.rs"]
 pub mod principal_axes;
-#[path = "🟥️principal-frame/🦀️.rs"]
+#[path = "🖼️principal-frame/🦀️.rs"]
 pub mod principal_frame;
 
 use super::super::modules::measurement_contracts::*;

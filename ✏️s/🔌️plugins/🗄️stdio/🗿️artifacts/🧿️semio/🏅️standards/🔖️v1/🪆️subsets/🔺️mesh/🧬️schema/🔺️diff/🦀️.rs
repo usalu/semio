@@ -1070,7 +1070,7 @@ impl protocol::DiffCodec for SemioMeshDiff {
     /// `print_diff` already produces) — independently-delimited segments rather than one bare
     /// trailing `bytes` because there can be 0-3 of them (chaining a `Cond` per-segment hits the
     /// `protocol-cond-cannot-chain` gap: a second `if`-guard on a field that was itself only
-    /// conditionally decoded hard-errors `eval_cond` — see `✳️flow`'s pilot report).
+    /// conditionally decoded hard-errors `eval_cond` — see `🌊️flow`'s pilot report).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence = 0u8;

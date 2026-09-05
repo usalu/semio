@@ -8528,10 +8528,31 @@ export function pathIsExcluded(repoRoot: string, candidate: string, taxonomy: Ta
   });
 }
 
+/** 🔁️ Retries a filesystem syscall interrupted by `EINTR`. Signal delivery can interrupt `scandir`/`lstat` mid-flight whenever many processes run concurrently against this repo, and the raw `node:fs` sync wrappers surface that as a thrown `EINTR` rather than retrying it. Retrying is the only correct response: the call had not failed, it had not yet run. @see https://man7.org/linux/man-pages/man7/signal.7.html */
+function retryOnEintr<T>(operation: () => T): T {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return operation();
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EINTR" || attempt >= 64) throw error;
+    }
+  }
+}
+
 /** 📁️ `readdirSync(dir, { withFileTypes: true })`, defaulting to `[]` for an unreadable/missing dir — a helper (rather than an explicit `ReturnType<typeof readdirSync>` annotation) so the `Dirent<string>` element type infers unambiguously from this specific overload. */
+/** 🌪️ Enumerates a directory that a concurrent rename may remove between discovery and enumeration; a vanished directory has no children. */
+function readdirVanishing(absDir: string): string[] {
+  try {
+    return retryOnEintr(() => readdirSync(absDir));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    return [];
+  }
+}
+
 function readdirSafe(absDir: string) {
   try {
-    return readdirSync(absDir, { withFileTypes: true });
+    return retryOnEintr(() => readdirSync(absDir, { withFileTypes: true }));
   } catch {
     return [];
   }
@@ -8739,7 +8760,7 @@ export function registryCatalogInputView(repoRoot: string, taxonomy: Taxonomy = 
     }
     let value: "file" | "directory" | "symlink" | null;
     try {
-      const stat = lstatSync(absolute);
+      const stat = retryOnEintr(() => lstatSync(absolute));
       value = stat.isSymbolicLink() ? "symlink" : stat.isDirectory() ? "directory" : stat.isFile() ? "file" : null;
       if (value === null) throw new Error(`Registry catalog input is not a regular node: ${path}`);
     } catch (error) {
@@ -8757,10 +8778,9 @@ export function registryCatalogInputView(repoRoot: string, taxonomy: Taxonomy = 
       if (nodeKind === null) return [];
       if (nodeKind !== "directory") throw new Error(`Registry catalog directory is ${nodeKind}: ${path}`);
       if (gitlinkBoundaries.has(path.normalize("NFC"))) return [];
-      return readdirSync(absolute).filter((name) => !isDiscoverySkipDirectory(name) && !pathIsExcluded(repoRoot, join(absolute, name), taxonomy)).map((name) => {
+      return readdirVanishing(absolute).filter((name) => !isDiscoverySkipDirectory(name) && !pathIsExcluded(repoRoot, join(absolute, name), taxonomy)).flatMap((name) => {
         const childPath = relative(repoRoot, join(absolute, name)).replaceAll("\\", "/"), childKind = kind(childPath);
-        if (childKind === null) throw new Error(`Registry catalog enumerated input disappeared: ${childPath}`);
-        return { name, nodeKind: childKind };
+        return childKind === null ? [] : [{ name, nodeKind: childKind }];
       });
     },
     readText(path) {
@@ -8775,7 +8795,7 @@ export function discoverCatalogPackages(repoRoot: string, taxonomy: Taxonomy = l
   return [...scanRepo(repoRoot, taxonomy, { view, inputs: new Set<string>() }).packages];
 }
 
-/** 📚️ Example IDs are directory membership with one schema-owned primary Rust leaf. */
+/** 📚️ Example IDs are directory membership with one schema-owned primary Rust leaf, scanned at artifact, subset and surface level. */
 export function registryExampleCatalog(repoRoot: string, cratePath: string, taxonomy: Taxonomy = loadTaxonomy(), view: RegistryCatalogInputView = registryCatalogInputView(repoRoot, taxonomy), inputs = new Set<string>()): string[] {
   const authority = taxonomy.generatorContracts["plugin-registry"]?.inputDiscovery;
   if (!authority || authority.kind !== "registry-catalog") throw new Error("Registry catalog input discovery is not declared.");
@@ -8801,9 +8821,12 @@ export function registryExampleCatalog(repoRoot: string, cratePath: string, taxo
     const standards = `${artifactPath}/${taxonomy.standardsDirName}`;
     for (const standard of dirs(standards)) {
       const subsets = `${standards}/${standard}/${taxonomy.subsetsDirName}`;
-      for (const subset of dirs(subsets)) for (const role of taxonomy.surfaceRoles) {
-        const surface = `${subsets}/${subset}/${taxonomy.surfaceDirNames[role]}`;
-        if (exists(surface)) slugs(`${surface}/${authority.exampleDirectoryName}`);
+      for (const subset of dirs(subsets)) {
+        slugs(`${subsets}/${subset}/${authority.exampleDirectoryName}`);
+        for (const role of taxonomy.surfaceRoles) {
+          const surface = `${subsets}/${subset}/${taxonomy.surfaceDirNames[role]}`;
+          if (exists(surface)) slugs(`${surface}/${authority.exampleDirectoryName}`);
+        }
       }
     }
   }

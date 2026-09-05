@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "maxSegmentBytes", "payloadBytes", "exactPayloadBytes", "oversizedPayloadBytes", "cases"],
+  "properties": {
+    "schema": { "const": "wal-readable-segment-capacity-v1" },
+    "maxSegmentBytes": { "const": 507904 },
+    "payloadBytes": { "const": 250000 },
+    "exactPayloadBytes": { "const": 507645 },
+    "oversizedPayloadBytes": { "const": 507646 },
+    "cases": {
+      "type": "array", "minItems": 2, "maxItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["durability", "segments", "lengths"],
+        "properties": {
+          "durability": { "enum": ["fsync", "memory"] },
+          "segments": { "const": [0, 0, 1] },
+          "lengths": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "integer", "minimum": 129, "maximum": 507904 } }
+        }
+      }
+    }
+  }
+}

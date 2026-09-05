@@ -49,12 +49,12 @@
       "vectors": [
         {
           "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "🟤️set-snapshot",
-          "mutationDirectoryName": "🟤️set-snapshot",
+          "sourceMutationDirectoryName": "📸️set-snapshot",
+          "mutationDirectoryName": "📸️set-snapshot",
           "scenarios": [
             {
               "id": "lifts-the-second-point-and-stretches-the-z-bound",
-              "directoryName": "🧪️lifts-the-second-point-and-stretches-the-z-bound"
+              "directoryName": "📈️lifts-the-second-point-and-stretches-the-z-bound"
             }
           ]
         }

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "contractId": "draw-destination-observation-registration-v1",
+  "command": "draw-destination-observation",
+  "target": "test-draw-destination-observation",
+  "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📍️draw-destination-observation/🟦️.ts",
+  "runner": "runTestBudgeted",
+  "budget": "default",
+  "launchName": "🧹clean🧩️taxonomy🎯️draw-destination-observation",
+  "launchGroup": "4_gate",
+  "launchOrder": 410.211
+}

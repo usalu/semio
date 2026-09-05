@@ -22,7 +22,7 @@ committed specification:
   turned into the reader and writer below by taking the field ORDER from the DSL grammar and every
   enum ORDINAL from the order that same grammar declares its alternatives in — `S|B|T|P`,
   `WA|SL|CO|BE|DO|WI|RO|ST|FU|OT`, `N|B|M`, `T|N|B`, `AG|CI|CN|FV|VE|OT` — the same rule that turned
-  out to be right for `✳️table`'s `Z B I F S Y L M R` value tags. The committed
+  out to be right for `📊️table`'s `Z B I F S Y L M R` value tags. The committed
   `🎒️.pack.semio` pins the ordinals it happens to carry (`S`, `T`, `WA`, `B`-brep, `T`/`N`/`B`
   pset values, `CI`) and `pack_bytes` re-encodes that file byte for byte; the ordinals it does NOT
   carry — `OT`, the `M` geometry reference, an absent `spatialId` — are derived from the grammar's

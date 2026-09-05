@@ -824,7 +824,7 @@ impl store::ArtifactPack for SemioDrawingSnapshot {
 
 //#region 🌉️ExternalCodecBridge
 /// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
-/// `s.stdio.semio.drawing` — the shape `🟧️mutate-semio-drawing` compares under `ordered-json-v1`,
+/// `s.stdio.semio.drawing` — the shape `🖊️mutate-semio-drawing` compares under `ordered-json-v1`,
 /// derived from the snapshot type itself rather than hand-written a second time in the adapter. The
 /// projection is deeply discriminated: `DrawNode` and `PathSegment` are both `#[value(tag = "kind",
 /// rename_all = "camelCase")]` enums nested to arbitrary depth, so a hand-written adapter
@@ -838,7 +838,7 @@ pub fn encode_semio_drawing_snapshot_json(snapshot: &SemioDrawingSnapshot) -> St
 
 /// 📥️ The `pack::from_json_str` inverse of [`encode_semio_drawing_snapshot_json`] — decodes the
 /// committed `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
-/// specification vectors into real [`SemioDrawingSnapshot`] values, so `🟧️mutate-semio-drawing`'s
+/// specification vectors into real [`SemioDrawingSnapshot`] values, so `🖊️mutate-semio-drawing`'s
 /// adapter reads the committed fixture instead of re-declaring a recursive scene graph as a Rust
 /// literal beside it. Reaching `pack` from that adapter is impossible — the generated test host
 /// links only this crate — which is why the bridge belongs here rather than there.
@@ -851,7 +851,7 @@ pub fn decode_semio_drawing_snapshot_json(text: &str) -> Result<SemioDrawingSnap
 //#region 🔖️Wire
 /// 📝️ Parses `s.stdio.semio.drawing` DSL text into a [`SemioDrawingSnapshot`] — a named
 /// pass-through of this snapshot's own `store::ArtifactDsl` impl above, whose trait and error type
-/// are both unnameable outside this crate, so `🟧️mutate-semio-drawing`'s `identity-round-trip`
+/// are both unnameable outside this crate, so `🖊️mutate-semio-drawing`'s `identity-round-trip`
 /// scenario reaches the real committed sketch artifact through this instead.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_drawing_dsl(text: &str) -> Result<SemioDrawingSnapshot, String> {

@@ -1,0 +1,147 @@
+{
+  "input": {
+    "baseUrl": "http://127.0.0.1:6070/",
+    "shellPluginId": "s",
+    "startedAt": "2026-09-05T04:00:00.000Z",
+    "durationMs": 42000,
+    "boot": {
+      "beacon": "ready:s",
+      "failure": null,
+      "phaseMs": {
+        "commit": 180,
+        "firstModule": 240,
+        "beacon": 9200
+      },
+      "bodyExcerpt": "Home  Studios  Demo Studio",
+      "consoleErrors": []
+    },
+    "programs": [
+      {
+        "pluginId": "draw",
+        "appId": "s.draw.draw@1/2d.drawing#editor",
+        "label": "Draw",
+        "status": "pass",
+        "durationMs": 1800,
+        "windowId": "framework.window.draw1",
+        "descendants": 42,
+        "width": 820,
+        "height": 540,
+        "firstError": null
+      },
+      {
+        "pluginId": "layout",
+        "appId": "s.layout.layout@1/2d.layout#editor",
+        "label": "Layout",
+        "status": "fail",
+        "durationMs": 30000,
+        "windowId": null,
+        "descendants": 0,
+        "width": 0,
+        "height": 0,
+        "firstError": "no window element appeared after spawn"
+      },
+      {
+        "pluginId": "note",
+        "appId": "s.note.note@1/text.note#editor",
+        "label": "Note",
+        "status": "skipped",
+        "durationMs": 0,
+        "windowId": null,
+        "descendants": 0,
+        "width": 0,
+        "height": 0,
+        "firstError": null
+      }
+    ],
+    "plugins": [
+      {
+        "pluginId": "draw",
+        "status": "loaded"
+      },
+      {
+        "pluginId": "layout",
+        "status": "failed"
+      },
+      {
+        "pluginId": "note",
+        "status": "loaded"
+      },
+      {
+        "pluginId": "stdio",
+        "status": "crashed"
+      }
+    ]
+  },
+  "report": {
+    "baseUrl": "http://127.0.0.1:6070/",
+    "shellPluginId": "s",
+    "startedAt": "2026-09-05T04:00:00.000Z",
+    "durationMs": 42000,
+    "boot": {
+      "beacon": "ready:s",
+      "failure": null,
+      "phaseMs": {
+        "commit": 180,
+        "firstModule": 240,
+        "beacon": 9200
+      },
+      "bodyExcerpt": "Home  Studios  Demo Studio",
+      "consoleErrors": []
+    },
+    "programs": [
+      {
+        "pluginId": "draw",
+        "appId": "s.draw.draw@1/2d.drawing#editor",
+        "label": "Draw",
+        "status": "pass",
+        "durationMs": 1800,
+        "windowId": "framework.window.draw1",
+        "descendants": 42,
+        "width": 820,
+        "height": 540,
+        "firstError": null
+      },
+      {
+        "pluginId": "layout",
+        "appId": "s.layout.layout@1/2d.layout#editor",
+        "label": "Layout",
+        "status": "fail",
+        "durationMs": 30000,
+        "windowId": null,
+        "descendants": 0,
+        "width": 0,
+        "height": 0,
+        "firstError": "no window element appeared after spawn"
+      },
+      {
+        "pluginId": "note",
+        "appId": "s.note.note@1/text.note#editor",
+        "label": "Note",
+        "status": "skipped",
+        "durationMs": 0,
+        "windowId": null,
+        "descendants": 0,
+        "width": 0,
+        "height": 0,
+        "firstError": null
+      }
+    ],
+    "failedPlugins": [
+      {
+        "pluginId": "layout",
+        "status": "failed"
+      },
+      {
+        "pluginId": "stdio",
+        "status": "crashed"
+      }
+    ],
+    "totals": {
+      "pass": 1,
+      "fail": 1,
+      "skipped": 1
+    }
+  },
+  "exitCode": 1,
+  "markdown": "# Catalog smoke — `s` @ http://127.0.0.1:6070/\n\nStarted 2026-09-05T04:00:00.000Z · 42000 ms · 1 pass / 1 fail / 1 skipped\n\nShell boot: beacon `ready:s` — commit 180 ms, first module 240 ms, beacon 9200 ms\n\n| pluginId | appId | status | duration ms | window | nodes | first error |\n|---|---|---|---|---|---|---|\n| draw | s.draw.draw@1/2d.drawing#editor | pass | 1800 | framework.window.draw1 | 42 | - |\n| layout | s.layout.layout@1/2d.layout#editor | fail | 30000 | - | 0 | no window element appeared after spawn |\n| note | s.note.note@1/text.note#editor | skipped | 0 | - | 0 | - |\n\n## Plugins in a failed install status (2)\n\n| pluginId | status |\n|---|---|\n| layout | failed |\n| stdio | crashed |\n"
+}

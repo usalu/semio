@@ -47,7 +47,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "homepage": "https://github.com/mozman/steputils",
-      "rationale": "📖️ A READER, registered separately from this file's existing `cross-semio-implementation` entry, which COMPUTES what a mutation should produce from this repository's own reading of the spec and therefore cannot discharge this requirement — both halves would descend from one reading of it. steputils 0.1 (by mozman, the same author as the widely-used `ezdxf` DXF library) is a from-scratch pure-Python ISO 10303-21 (Part 21 / STEP physical file) reader, entirely independent of this repository's Rust `ruststep`-based reimplementation. `steputils.p21.readfile(path)` parses the real header and data section — `stepfile.header['FILE_SCHEMA']`, `FILE_DESCRIPTION`, and every data entity by its STEP instance name — directly witnessing this subset's AP214 entity/attribute vocabulary. Verified against this subset's own committed `shared://🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp`: `readfile` parsed the real file and reported its genuine `FILE_SCHEMA` entry, `('AUTOMOTIVE_DESIGN')` — AP214's own schema name.",
+      "rationale": "📖️ A READER, registered separately from this file's existing `cross-semio-implementation` entry, which COMPUTES what a mutation should produce from this repository's own reading of the spec and therefore cannot discharge this requirement — both halves would descend from one reading of it. steputils 0.1 (by mozman, the same author as the widely-used `ezdxf` DXF library) is a from-scratch pure-Python ISO 10303-21 (Part 21 / STEP physical file) reader, entirely independent of this repository's Rust `ruststep`-based reimplementation. `steputils.p21.readfile(path)` parses the real header and data section — `stepfile.header['FILE_SCHEMA']`, `FILE_DESCRIPTION`, and every data entity by its STEP instance name — directly witnessing this subset's AP214 entity/attribute vocabulary. Verified against this subset's own committed `shared://🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp`: `readfile` parsed the real file and reported its genuine `FILE_SCHEMA` entry, `('AUTOMOTIVE_DESIGN')` — AP214's own schema name.",
       "comparisonProfiles": [
         "semantic-step-v1"
       ]
@@ -63,12 +63,12 @@
       "vectors": [
         {
           "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "🟤️set-snapshot",
-          "mutationDirectoryName": "🟤️set-snapshot",
+          "sourceMutationDirectoryName": "📸️set-snapshot",
+          "mutationDirectoryName": "📸️set-snapshot",
           "scenarios": [
             {
               "id": "restamps-the-product-long-name",
-              "directoryName": "🧪️restamps-the-product-long-name"
+              "directoryName": "🏷️restamps-the-product-long-name"
             }
           ]
         }
@@ -357,7 +357,7 @@
       "provenance": {
         "source": "generated",
         "license": "MIT (steputils)",
-        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
@@ -408,7 +408,7 @@
       "provenance": {
         "source": "generated",
         "license": "MIT (steputils)",
-        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
@@ -459,7 +459,7 @@
       "provenance": {
         "source": "generated",
         "license": "MIT (steputils)",
-        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
@@ -510,7 +510,7 @@
       "provenance": {
         "source": "generated",
         "license": "MIT (steputils)",
-        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
@@ -561,7 +561,7 @@
       "provenance": {
         "source": "generated",
         "license": "MIT (steputils)",
-        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
@@ -612,7 +612,7 @@
       "provenance": {
         "source": "generated",
         "license": "MIT (steputils)",
-        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
@@ -663,7 +663,7 @@
       "provenance": {
         "source": "generated",
         "license": "MIT (steputils)",
-        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
@@ -714,7 +714,7 @@
       "provenance": {
         "source": "generated",
         "license": "MIT (steputils)",
-        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
@@ -765,7 +765,7 @@
       "provenance": {
         "source": "generated",
         "license": "MIT (steputils)",
-        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },

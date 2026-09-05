@@ -66,28 +66,28 @@ Feature: Apply every typed DIN 4108 mutation against an independent Python imple
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
       | id                                | dir                                | fixture                                              |
-      | change-category                   | 🗂️change-category                   | retypes-the-assembly-as-office                       |
-      | change-climate                    | 🌦️change-climate                   | moves-the-building-to-climate-zone-4                 |
-      | change-airtightness-n50           | 💨️change-airtightness-n50           | tightens-n50-to-1-point-5-per-hour                   |
-      | change-psi-times-l-sum            | 🌉️change-psi-times-l-sum            | raises-the-thermal-bridge-sum-to-0-point-05          |
-      | change-rh-int                     | 💧️change-rh-int                     | raises-indoor-relative-humidity-to-0-point-65        |
-      | change-catalog-id                 | 📇️change-catalog-id                 | repoints-the-catalogue-entry-to-aw-07                |
-      | change-material-id                | 🧽️change-material-id                | swaps-the-insulation-material-to-eps                 |
-      | change-airtightness-class         | 🔒️change-airtightness-class         | upgrades-the-airtightness-class-to-class1            |
-      | change-t-int-c                    | 🌡️change-t-int-c                    | raises-the-indoor-design-temperature-to-22-point-5-c |
-      | change-solar-absorptance          | ☀️change-solar-absorptance          | lightens-the-facade-to-absorptance-0-point-25        |
-      | change-irradiance-wm2             | 🔆️change-irradiance-wm2             | raises-design-irradiance-to-750-w-per-m2             |
-      | change-moisture-mu-exterior       | 🌧️change-moisture-mu-exterior       | raises-the-exterior-mu-value-to-20                   |
-      | change-moisture-mu-interior       | 💦️change-moisture-mu-interior       | raises-the-interior-mu-value-to-2-point-5            |
-      | change-envelope-area-m2           | 📐️change-envelope-area-m2           | grows-the-envelope-to-150-m2                         |
-      | change-bb2-details-conform        | ✅️change-bb2-details-conform        | declares-the-beiblatt-2-details-non-conforming       |
-      | change-application-type           | 🧩️change-application-type           | reclassifies-the-application-type-as-wab             |
-      | change-declared-application-class | 🏷️change-declared-application-class | declares-application-class-kh                        |
-      | insert-layer                      | ➕️insert-layer                      | inserts-an-interior-plaster-layer-at-index-1         |
-      | remove-layer                      | ➖️remove-layer                     | removes-the-load-bearing-masonry-layer               |
-      | reorder-layers                    | 🔀️reorder-layers                    | moves-the-insulation-in-front-of-the-masonry         |
-      | change-layer-thickness            | 📏️change-layer-thickness            | thickens-the-insulation-layer-to-0-point-2-m         |
-      | change-layer-lambda               | 🧊️change-layer-lambda               | degrades-the-masonry-lambda-to-0-point-5             |
+      | change-category                   | 🗂️change-category                   | 🏢️retypes-the-assembly-as-office                       |
+      | change-climate                    | 🌦️change-climate                   | 🗺️moves-the-building-to-climate-zone-4                 |
+      | change-airtightness-n50           | 💨️change-airtightness-n50           | 💨️tightens-n50-to-1-point-5-per-hour                   |
+      | change-psi-times-l-sum            | 🌉️change-psi-times-l-sum            | 🌉️raises-the-thermal-bridge-sum-to-0-point-05          |
+      | change-rh-int                     | 💧️change-rh-int                     | 💧️raises-indoor-relative-humidity-to-0-point-65        |
+      | change-catalog-id                 | 📇️change-catalog-id                 | 📇️repoints-the-catalogue-entry-to-aw-07                |
+      | change-material-id                | 🧽️change-material-id                | 🧽️swaps-the-insulation-material-to-eps                 |
+      | change-airtightness-class         | 🔒️change-airtightness-class         | 🔒️upgrades-the-airtightness-class-to-class1            |
+      | change-t-int-c                    | 🌡️change-t-int-c                    | 🌡️raises-the-indoor-design-temperature-to-22-point-5-c |
+      | change-solar-absorptance          | ☀️change-solar-absorptance          | ☀️lightens-the-facade-to-absorptance-0-point-25        |
+      | change-irradiance-wm2             | 🔆️change-irradiance-wm2             | 🔆️raises-design-irradiance-to-750-w-per-m2             |
+      | change-moisture-mu-exterior       | 🌧️change-moisture-mu-exterior       | 🌧️raises-the-exterior-mu-value-to-20                   |
+      | change-moisture-mu-interior       | 💦️change-moisture-mu-interior       | 💦️raises-the-interior-mu-value-to-2-point-5            |
+      | change-envelope-area-m2           | 📐️change-envelope-area-m2           | 📐️grows-the-envelope-to-150-m2                         |
+      | change-bb2-details-conform        | ✅️change-bb2-details-conform        | ❌️declares-the-beiblatt-2-details-non-conforming       |
+      | change-application-type           | 🧩️change-application-type           | 🧩️reclassifies-the-application-type-as-wab             |
+      | change-declared-application-class | 🏷️change-declared-application-class | 🏷️declares-application-class-kh                        |
+      | insert-layer                      | ➕️insert-layer                      | ➕️inserts-an-interior-plaster-layer-at-index-1         |
+      | remove-layer                      | ➖️remove-layer                     | 🚫️removes-the-load-bearing-masonry-layer               |
+      | reorder-layers                    | 🔀️reorder-layers                    | 🧭️moves-the-insulation-in-front-of-the-masonry         |
+      | change-layer-thickness            | 📏️change-layer-thickness            | 📏️thickens-the-insulation-layer-to-0-point-2-m         |
+      | change-layer-lambda               | 🧊️change-layer-lambda               | 🧊️degrades-the-masonry-lambda-to-0-point-5             |
 
   @id-inverse
   @level-exhaustive
@@ -101,28 +101,28 @@ Feature: Apply every typed DIN 4108 mutation against an independent Python imple
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
       | id                                | dir                                | fixture                                              |
-      | change-category                   | 🗂️change-category                   | retypes-the-assembly-as-office                       |
-      | change-climate                    | 🌦️change-climate                   | moves-the-building-to-climate-zone-4                 |
-      | change-airtightness-n50           | 💨️change-airtightness-n50           | tightens-n50-to-1-point-5-per-hour                   |
-      | change-psi-times-l-sum            | 🌉️change-psi-times-l-sum            | raises-the-thermal-bridge-sum-to-0-point-05          |
-      | change-rh-int                     | 💧️change-rh-int                     | raises-indoor-relative-humidity-to-0-point-65        |
-      | change-catalog-id                 | 📇️change-catalog-id                 | repoints-the-catalogue-entry-to-aw-07                |
-      | change-material-id                | 🧽️change-material-id                | swaps-the-insulation-material-to-eps                 |
-      | change-airtightness-class         | 🔒️change-airtightness-class         | upgrades-the-airtightness-class-to-class1            |
-      | change-t-int-c                    | 🌡️change-t-int-c                    | raises-the-indoor-design-temperature-to-22-point-5-c |
-      | change-solar-absorptance          | ☀️change-solar-absorptance          | lightens-the-facade-to-absorptance-0-point-25        |
-      | change-irradiance-wm2             | 🔆️change-irradiance-wm2             | raises-design-irradiance-to-750-w-per-m2             |
-      | change-moisture-mu-exterior       | 🌧️change-moisture-mu-exterior       | raises-the-exterior-mu-value-to-20                   |
-      | change-moisture-mu-interior       | 💦️change-moisture-mu-interior       | raises-the-interior-mu-value-to-2-point-5            |
-      | change-envelope-area-m2           | 📐️change-envelope-area-m2           | grows-the-envelope-to-150-m2                         |
-      | change-bb2-details-conform        | ✅️change-bb2-details-conform        | declares-the-beiblatt-2-details-non-conforming       |
-      | change-application-type           | 🧩️change-application-type           | reclassifies-the-application-type-as-wab             |
-      | change-declared-application-class | 🏷️change-declared-application-class | declares-application-class-kh                        |
-      | insert-layer                      | ➕️insert-layer                      | inserts-an-interior-plaster-layer-at-index-1         |
-      | remove-layer                      | ➖️remove-layer                     | removes-the-load-bearing-masonry-layer               |
-      | reorder-layers                    | 🔀️reorder-layers                    | moves-the-insulation-in-front-of-the-masonry         |
-      | change-layer-thickness            | 📏️change-layer-thickness            | thickens-the-insulation-layer-to-0-point-2-m         |
-      | change-layer-lambda               | 🧊️change-layer-lambda               | degrades-the-masonry-lambda-to-0-point-5             |
+      | change-category                   | 🗂️change-category                   | 🏢️retypes-the-assembly-as-office                       |
+      | change-climate                    | 🌦️change-climate                   | 🗺️moves-the-building-to-climate-zone-4                 |
+      | change-airtightness-n50           | 💨️change-airtightness-n50           | 💨️tightens-n50-to-1-point-5-per-hour                   |
+      | change-psi-times-l-sum            | 🌉️change-psi-times-l-sum            | 🌉️raises-the-thermal-bridge-sum-to-0-point-05          |
+      | change-rh-int                     | 💧️change-rh-int                     | 💧️raises-indoor-relative-humidity-to-0-point-65        |
+      | change-catalog-id                 | 📇️change-catalog-id                 | 📇️repoints-the-catalogue-entry-to-aw-07                |
+      | change-material-id                | 🧽️change-material-id                | 🧽️swaps-the-insulation-material-to-eps                 |
+      | change-airtightness-class         | 🔒️change-airtightness-class         | 🔒️upgrades-the-airtightness-class-to-class1            |
+      | change-t-int-c                    | 🌡️change-t-int-c                    | 🌡️raises-the-indoor-design-temperature-to-22-point-5-c |
+      | change-solar-absorptance          | ☀️change-solar-absorptance          | ☀️lightens-the-facade-to-absorptance-0-point-25        |
+      | change-irradiance-wm2             | 🔆️change-irradiance-wm2             | 🔆️raises-design-irradiance-to-750-w-per-m2             |
+      | change-moisture-mu-exterior       | 🌧️change-moisture-mu-exterior       | 🌧️raises-the-exterior-mu-value-to-20                   |
+      | change-moisture-mu-interior       | 💦️change-moisture-mu-interior       | 💦️raises-the-interior-mu-value-to-2-point-5            |
+      | change-envelope-area-m2           | 📐️change-envelope-area-m2           | 📐️grows-the-envelope-to-150-m2                         |
+      | change-bb2-details-conform        | ✅️change-bb2-details-conform        | ❌️declares-the-beiblatt-2-details-non-conforming       |
+      | change-application-type           | 🧩️change-application-type           | 🧩️reclassifies-the-application-type-as-wab             |
+      | change-declared-application-class | 🏷️change-declared-application-class | 🏷️declares-application-class-kh                        |
+      | insert-layer                      | ➕️insert-layer                      | ➕️inserts-an-interior-plaster-layer-at-index-1         |
+      | remove-layer                      | ➖️remove-layer                     | 🚫️removes-the-load-bearing-masonry-layer               |
+      | reorder-layers                    | 🔀️reorder-layers                    | 🧭️moves-the-insulation-in-front-of-the-masonry         |
+      | change-layer-thickness            | 📏️change-layer-thickness            | 📏️thickens-the-insulation-layer-to-0-point-2-m         |
+      | change-layer-lambda               | 🧊️change-layer-lambda               | 🧊️degrades-the-masonry-lambda-to-0-point-5             |
 
   @id-identity-round-trip
   @level-long

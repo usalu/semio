@@ -6,9 +6,13 @@ use db::storage::WalStorage;
 #[path = "⛓️chain/🦀️.rs"]
 mod chain;
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../../🧪️fixtures/🧾️inference-wal-proof-v1/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../../🧪️fixtures/🧾️inference-wal-proof-v1/🔣️.json")).unwrap()
+}
 
-fn decode_hex(value: &str) -> Vec<u8> { (0..value.len()).step_by(2).map(|index| u8::from_str_radix(&value[index..index + 2], 16).unwrap()).collect() }
+fn decode_hex(value: &str) -> Vec<u8> {
+    (0..value.len()).step_by(2).map(|index| u8::from_str_radix(&value[index..index + 2], 16).unwrap()).collect()
+}
 
 fn scope(fixture: &serde_json::Value) -> DocumentScope {
     DocumentScope::new(fixture["scope"]["spaceId"].as_str().unwrap(), fixture["scope"]["documentId"].as_str().unwrap())
@@ -17,8 +21,10 @@ fn scope(fixture: &serde_json::Value) -> DocumentScope {
 pub(in crate::inference) fn envelope(fixture: &serde_json::Value) -> protocol::MutationEnvelope {
     let source = &fixture["command"];
     protocol::MutationEnvelope {
-        mutation_id: protocol::MutationId(source["mutationId"].as_str().unwrap().into()), document_id: protocol::ArtifactId(source["documentId"].as_str().unwrap().into()),
-        actor: protocol::ActorId(source["actor"].as_str().unwrap().into()), dependencies: Vec::new(),
+        mutation_id: protocol::MutationId(source["mutationId"].as_str().unwrap().into()),
+        document_id: protocol::ArtifactId(source["documentId"].as_str().unwrap().into()),
+        actor: protocol::ActorId(source["actor"].as_str().unwrap().into()),
+        dependencies: Vec::new(),
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId(source["diff"]["schema"].as_str().unwrap().into()), payload: decode_hex(source["diff"]["payloadHex"].as_str().unwrap()) },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId(source["inverse"]["schema"].as_str().unwrap().into()), payload: decode_hex(source["inverse"]["payloadHex"].as_str().unwrap()) },
         timestamp: protocol::HybridLogicalTimestamp { actor: source["timestamp"]["actor"].as_u64().unwrap(), physical_ms: source["timestamp"]["physicalMs"].as_u64().unwrap(), logical: source["timestamp"]["logical"].as_u64().unwrap() },
@@ -27,8 +33,19 @@ pub(in crate::inference) fn envelope(fixture: &serde_json::Value) -> protocol::M
 
 fn target(fixture: &serde_json::Value, trace: &serde_json::Value) -> InferenceWalTargetV1 {
     let mut scope = scope(fixture);
-    if let Some(space_id) = trace["spaceId"].as_str() { scope.space_id = space_id.into(); }
-    InferenceWalTargetV1 { scope, generation: fixture["generation"].as_u64().unwrap(), job_id: fixture["jobId"].as_str().unwrap().into(), proposal_hash: fixture["proposalHash"].as_str().unwrap().into(), mutation_id: fixture["command"]["mutationId"].as_str().unwrap().into(), command_hash: fixture["commandHash"].as_str().unwrap().into(), actor: fixture["command"]["actor"].as_str().unwrap().into(), maximum_records: trace["maximumRecords"].as_u64().unwrap_or(fixture["maximumRecords"].as_u64().unwrap()) }
+    if let Some(space_id) = trace["spaceId"].as_str() {
+        scope.space_id = space_id.into();
+    }
+    InferenceWalTargetV1 {
+        scope,
+        generation: fixture["generation"].as_u64().unwrap(),
+        job_id: fixture["jobId"].as_str().unwrap().into(),
+        proposal_hash: fixture["proposalHash"].as_str().unwrap().into(),
+        mutation_id: fixture["command"]["mutationId"].as_str().unwrap().into(),
+        command_hash: fixture["commandHash"].as_str().unwrap().into(),
+        actor: fixture["command"]["actor"].as_str().unwrap().into(),
+        maximum_records: trace["maximumRecords"].as_u64().unwrap_or(fixture["maximumRecords"].as_u64().unwrap()),
+    }
 }
 
 async fn storage(fixture: &serde_json::Value, trace: &serde_json::Value) -> Arc<db::storage::DbBackend> {
@@ -44,7 +61,8 @@ async fn storage_with_command(fixture: &serde_json::Value, trace: &serde_json::V
     let mut writer = protocol::SprWriter::begin(Vec::<u8>::new(), &protocol::format::WriteOptions { required_flags: protocol::wire::REQUIRED_HASH_CHAIN, optional_flags: 0 }).await.unwrap();
     let mut header = Vec::new();
     protocol::write_str(&mut header, &document.0);
-    header.extend_from_slice(&0u64.to_le_bytes()); header.push(0);
+    header.extend_from_slice(&0u64.to_le_bytes());
+    header.push(0);
     writer.write_record(db::wal::WAL_SEGMENT_HEADER, true, &header, protocol::codec::ids::CodecId(0)).await.unwrap();
     writer.commit().await.unwrap();
     if trace["flushed"] != false {
@@ -59,11 +77,19 @@ async fn storage_with_command(fixture: &serde_json::Value, trace: &serde_json::V
                     (db::wal::WAL_TX_COMMIT, bytes)
                 }
                 "command" => {
-                    let mut bytes = Vec::new(); protocol::encode_envelope(&envelope(fixture), &mut bytes);
+                    let mut bytes = Vec::new();
+                    protocol::encode_envelope(&envelope(fixture), &mut bytes);
                     match record["bytes"].as_str().unwrap() {
                         "different" => bytes[1] ^= 1,
-                        "altered-target" => { let last = bytes.len() - 1; bytes[last] ^= 1; }
-                        "target" => { if let Some(replacement) = replacement { bytes = replacement.to_vec(); } }
+                        "altered-target" => {
+                            let last = bytes.len() - 1;
+                            bytes[last] ^= 1;
+                        }
+                        "target" => {
+                            if let Some(replacement) = replacement {
+                                bytes = replacement.to_vec();
+                            }
+                        }
                         _ => panic!("unrecognized literal command"),
                     }
                     (db::wal::WAL_COMMAND, bytes)
@@ -75,9 +101,13 @@ async fn storage_with_command(fixture: &serde_json::Value, trace: &serde_json::V
         writer.commit().await.unwrap();
     }
     let mut bytes = writer.into_sink().await;
-    if trace["tornTail"] == true { bytes.pop(); }
+    if trace["tornTail"] == true {
+        bytes.pop();
+    }
     let mut pages = db::storage::DbIoPageWriter::try_reserve(bytes.len().div_ceil(db::storage::DB_IO_PAGE_BYTES)).unwrap();
-    for fragment in bytes.chunks(db::storage::DB_IO_PAGE_BYTES) { assert_eq!(pages.write_fragment(fragment).unwrap(), fragment.len()); }
+    for fragment in bytes.chunks(db::storage::DB_IO_PAGE_BYTES) {
+        assert_eq!(pages.write_fragment(fragment).unwrap(), fragment.len());
+    }
     storage.append(&document, 0, pages.seal_retained().await.unwrap()).await.unwrap();
     storage.sync(&document, 0, db::DurabilityClass::Fsync).await.unwrap();
     Arc::new(db::storage::DbBackend::Memory(storage))
@@ -86,7 +116,8 @@ async fn storage_with_command(fixture: &serde_json::Value, trace: &serde_json::V
 #[tokio::test]
 async fn inference_wal_proof_executes_literal_committed_transaction_scope_and_cancellation_traces() {
     let fixture = fixture();
-    let mut bytes = Vec::new(); protocol::encode_envelope(&envelope(&fixture), &mut bytes);
+    let mut bytes = Vec::new();
+    protocol::encode_envelope(&envelope(&fixture), &mut bytes);
     assert_eq!(bytes, decode_hex(fixture["encodedHex"].as_str().unwrap()));
     assert_eq!(crate::inference::sha256(&bytes), fixture["commandHash"].as_str().unwrap());
     let identifiers: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️fixtures/🖥️inference-server-identity-v1/🔣️.json")).unwrap();
@@ -110,24 +141,55 @@ async fn inference_wal_proof_executes_literal_committed_transaction_scope_and_ca
         let verifier = InferenceWalVerifierV1::new(storage);
         let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), fixture["generation"].as_u64().unwrap()).unwrap());
         let control = Arc::new(InferenceOperationControlV1::new(2000, 64).unwrap());
-        if trace["cancelAfterRecords"] == 0 { control.cancel(); }
+        if trace["cancelAfterRecords"] == 0 {
+            control.cancel();
+        }
         let cancellation = trace["cancelAfterRecords"].as_u64().filter(|value| *value > 0);
         let invalidate = trace["observedGeneration"].as_u64().is_some();
         let watcher = if cancellation.is_some() || invalidate {
-            let control = control.clone(); let fence = fence.clone();
+            let control = control.clone();
+            let fence = fence.clone();
             Some(tokio::spawn(async move {
                 let threshold = cancellation.unwrap_or(3);
-                tokio::time::timeout(Duration::from_secs(2), async { while control.progress().0 < threshold { tokio::task::yield_now().await; } }).await.unwrap();
-                if invalidate { fence.invalidate(); } else { control.cancel(); }
+                tokio::time::timeout(Duration::from_secs(2), async {
+                    while control.progress().0 < threshold {
+                        tokio::task::yield_now().await;
+                    }
+                })
+                .await
+                .unwrap();
+                if invalidate {
+                    fence.invalidate();
+                } else {
+                    control.cancel();
+                }
             }))
-        } else { None };
+        } else {
+            None
+        };
         let result = tokio::time::timeout(Duration::from_secs(4), verifier.verify(target(&fixture, trace), fence.clone(), control)).await.unwrap_or_else(|_| panic!("WAL trace {} timed out during retained verification", trace["name"]));
-        if let Some(watcher) = watcher { watcher.await.unwrap(); }
+        if let Some(watcher) = watcher {
+            watcher.await.unwrap();
+        }
         let outcome = match &result {
             Ok(Some(witness)) => {
-                assert!(witness.matches(&scope(&fixture), fixture["generation"].as_u64().unwrap(), fixture["jobId"].as_str().unwrap(), fixture["proposalHash"].as_str().unwrap(), fixture["command"]["mutationId"].as_str().unwrap(), fixture["commandHash"].as_str().unwrap()));
+                assert!(witness.matches(
+                    &scope(&fixture),
+                    fixture["generation"].as_u64().unwrap(),
+                    fixture["jobId"].as_str().unwrap(),
+                    fixture["proposalHash"].as_str().unwrap(),
+                    fixture["command"]["mutationId"].as_str().unwrap(),
+                    fixture["commandHash"].as_str().unwrap()
+                ));
                 for mismatch in fixture["bindingMismatches"].as_array().unwrap() {
-                    assert!(!witness.matches(&scope(&fixture), fixture["generation"].as_u64().unwrap(), mismatch["jobId"].as_str().unwrap(), mismatch["proposalHash"].as_str().unwrap(), fixture["command"]["mutationId"].as_str().unwrap(), fixture["commandHash"].as_str().unwrap()));
+                    assert!(!witness.matches(
+                        &scope(&fixture),
+                        fixture["generation"].as_u64().unwrap(),
+                        mismatch["jobId"].as_str().unwrap(),
+                        mismatch["proposalHash"].as_str().unwrap(),
+                        fixture["command"]["mutationId"].as_str().unwrap(),
+                        fixture["commandHash"].as_str().unwrap()
+                    ));
                 }
                 "verified"
             }
@@ -141,11 +203,29 @@ async fn inference_wal_proof_executes_literal_committed_transaction_scope_and_ca
         assert_eq!(outcome, trace["expected"].as_str().unwrap(), "{}", trace["name"]);
         if let Some(reusable) = trace["reusableAfterInvalidation"].as_bool() {
             fence.invalidate();
-            assert_eq!(result.as_ref().unwrap().as_ref().unwrap().matches(&scope(&fixture), fixture["generation"].as_u64().unwrap(), fixture["jobId"].as_str().unwrap(), fixture["proposalHash"].as_str().unwrap(), fixture["command"]["mutationId"].as_str().unwrap(), fixture["commandHash"].as_str().unwrap()), reusable);
+            assert_eq!(
+                result.as_ref().unwrap().as_ref().unwrap().matches(
+                    &scope(&fixture),
+                    fixture["generation"].as_u64().unwrap(),
+                    fixture["jobId"].as_str().unwrap(),
+                    fixture["proposalHash"].as_str().unwrap(),
+                    fixture["command"]["mutationId"].as_str().unwrap(),
+                    fixture["commandHash"].as_str().unwrap()
+                ),
+                reusable
+            );
         }
-        tokio::time::timeout(Duration::from_secs(2), async { while verifier.active() != 0 { tokio::task::yield_now().await; } }).await.unwrap();
+        tokio::time::timeout(Duration::from_secs(2), async {
+            while verifier.active() != 0 {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
         assert_eq!(verifier.active(), 0, "retained replay closes before its slot is released");
-        if trace["spaceId"].is_null() && trace["cancelAfterRecords"] != 0 { assert!(verifier.close_steps() > 0, "{}", trace["name"]); }
+        if trace["spaceId"].is_null() && trace["cancelAfterRecords"] != 0 {
+            assert!(verifier.close_steps() > 0, "{}", trace["name"]);
+        }
     }
 }
 
@@ -167,12 +247,22 @@ async fn inference_wal_proof_rejects_hash_matched_noncanonical_or_wrong_actor_co
     let mut selected = 0;
     for vector in commands["vectors"].as_array().unwrap() {
         let change = vector["change"].as_str().unwrap();
-        if !["trailing", "overlong-varint", "different-actor"].contains(&change) { continue; }
+        if !["trailing", "overlong-varint", "different-actor"].contains(&change) {
+            continue;
+        }
         let mut command = envelope(&fixture);
-        if change == "different-actor" { command.actor.0 = command.actor.0.replacen('a', "e", 1); }
-        let mut bytes = Vec::new(); protocol::encode_envelope(&command, &mut bytes);
-        if change == "trailing" { bytes.push(0); }
-        if change == "overlong-varint" { bytes[0] |= 128; bytes.insert(1, 0); }
+        if change == "different-actor" {
+            command.actor.0 = command.actor.0.replacen('a', "e", 1);
+        }
+        let mut bytes = Vec::new();
+        protocol::encode_envelope(&command, &mut bytes);
+        if change == "trailing" {
+            bytes.push(0);
+        }
+        if change == "overlong-varint" {
+            bytes[0] |= 128;
+            bytes.insert(1, 0);
+        }
         let mut target = target(&fixture, trace);
         target.command_hash = crate::inference::sha256(&bytes);
         let backend = tokio::time::timeout(Duration::from_secs(2), storage_with_command(&fixture, trace, Some(&bytes))).await.expect("bounded committed hostile storage");
@@ -198,7 +288,13 @@ async fn inference_wal_proof_dropped_caller_cancels_and_finishes_retained_replay
         let control = Arc::new(InferenceOperationControlV1::new(2000, 64).unwrap());
         let mut future = Box::pin(verifier.verify(target(&fixture, trace), fence, control.clone()));
         assert!(futures::poll!(future.as_mut()).is_pending());
-        tokio::time::timeout(Duration::from_secs(2), async { while control.progress().0 == 0 { tokio::task::yield_now().await; } }).await.unwrap();
+        tokio::time::timeout(Duration::from_secs(2), async {
+            while control.progress().0 == 0 {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
         let expected = if owner["expected"] == "expired" { InferenceErrorV1::Expired } else { InferenceErrorV1::Cancelled };
         match owner["interrupt"].as_str().unwrap() {
             "drop" => drop(future),
@@ -215,7 +311,13 @@ async fn inference_wal_proof_dropped_caller_cancels_and_finishes_retained_replay
         assert_eq!(verifier.active() as u64, owner["heldActive"].as_u64().unwrap());
         assert_eq!(verifier.close_steps(), 0, "blocked replay still owns its admitted slot and pages");
         gate.add_permits(1);
-        tokio::time::timeout(Duration::from_secs(2), async { while verifier.active() != 0 { tokio::task::yield_now().await; } }).await.unwrap();
+        tokio::time::timeout(Duration::from_secs(2), async {
+            while verifier.active() != 0 {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
         assert_eq!(verifier.active() as u64, owner["releasedActive"].as_u64().unwrap());
         assert_eq!(control.progress().0, owner["stoppedProgress"].as_u64().unwrap());
         assert!(verifier.close_steps() > 0, "slot release follows actual replay close");

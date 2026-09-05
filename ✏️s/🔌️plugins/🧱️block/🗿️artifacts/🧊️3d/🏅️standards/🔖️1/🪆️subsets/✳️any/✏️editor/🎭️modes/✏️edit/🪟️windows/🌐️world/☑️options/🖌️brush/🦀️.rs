@@ -7,7 +7,7 @@ use crate::editor::block3d::world::resolve_brush_vortex_kind_id;
 use crate::editor::block3d::BLOCK3D_UTILITY_SURFACE_BRUSH;
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 
-pub async fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, labels: &Block3dLabels) -> WindowMeasure {
+pub fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, labels: &Block3dLabels) -> WindowMeasure {
     WindowMeasure::Group {
         id: "block3d-brush-options".into(),
         label: labels.brush.as_str().to_string(),
@@ -27,7 +27,7 @@ pub async fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, label
                 label: Some(labels.vortex_kinds.as_str().to_string()),
                 value: resolve_brush_vortex_kind_id(definition, config),
                 items: crate::artifacts::block3d::vortex_kinds_of(definition).iter().map(|kind| MeasureSelectItem { id: kind.id.clone(), value: kind.id.clone(), label: kind.label.clone() }).collect(),
-                on_change: crate::editor::block3d::block3d_action("setBrushVortexKind", None),
+                on_change: crate::editor::block3d::block3d_window_action("setBrushVortexKind", None),
             },
             WindowMeasure::Slider {
                 id: "block3d-brush-radius".into(),
@@ -41,7 +41,7 @@ pub async fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, label
                 waiting: None,
                 disabled: None,
                 reveal: None,
-                on_change: crate::editor::block3d::block3d_action("setBrushRadius", None),
+                on_change: crate::editor::block3d::block3d_window_action("setBrushRadius", None),
             },
             WindowMeasure::Toggle {
                 id: "block3d-brush-flip".into(),
@@ -49,10 +49,7 @@ pub async fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, label
                 label: Some(labels.flip_normal.as_str().to_string()),
                 pressed: config.brush_flip,
                 text: None,
-                on_change: crate::editor::block3d::block3d_action(
-                    "setBrushFlip",
-                    Some(crate::editor::block3d::ui_value_map([("flip", crate::editor::block3d::ui_value_bool(!config.brush_flip))]).expect("single-entry args fit ui map capacity")),
-                ),
+                on_change: crate::editor::block3d::block3d_window_action("setBrushFlip", Some(dsl::DslValue::object([("flip".to_string(), dsl::DslValue::Bool(!config.brush_flip))]))),
             },
         ],
     }

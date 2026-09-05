@@ -1,0 +1,38 @@
+{
+  "schema": "semio.hub.execution-target-relay/v1",
+  "intent": { "schema": "semio.hub.document-open-intent/v1", "version": 1, "scope": { "spaceId": "studio", "documentId": "map" }, "requestedSurfaceId": "surface.test.editor", "clientInstanceId": "client:relay" },
+  "limits": { "requestBytes": 8192, "manifestBytes": 8192, "componentBytes": 67108864, "descriptorBytes": 4194304, "inFlight": 2, "hubDeadlineMs": 8000, "relayDeadlineMs": 9000 },
+  "routes": [
+    { "id": "manifest", "method": "POST", "path": "/_semio/hub/spaces/studio/documents/map/execution-target/manifest", "admitted": true },
+    { "id": "component", "method": "POST", "path": "/_semio/hub/spaces/studio/documents/map/execution-target/component", "admitted": true },
+    { "id": "descriptor", "method": "POST", "path": "/_semio/hub/spaces/studio/documents/map/execution-target/descriptor", "admitted": true },
+    { "id": "colon-id", "method": "POST", "path": "/_semio/hub/spaces/space%3Astudio/documents/map/execution-target/descriptor", "admitted": true },
+    { "id": "unicode-id", "method": "POST", "path": "/_semio/hub/spaces/studio/documents/B%C3%BCro/execution-target/descriptor", "admitted": true },
+    { "id": "encoded-unreserved", "method": "POST", "path": "/_semio/hub/spaces/studi%6F/documents/map/execution-target/descriptor", "admitted": false },
+    { "id": "lowercase-escape", "method": "POST", "path": "/_semio/hub/spaces/space%3astudio/documents/map/execution-target/descriptor", "admitted": false },
+    { "id": "get", "method": "GET", "path": "/_semio/hub/spaces/studio/documents/map/execution-target/component", "admitted": false },
+    { "id": "put", "method": "PUT", "path": "/_semio/hub/spaces/studio/documents/map/execution-target/component", "admitted": false },
+    { "id": "delete", "method": "DELETE", "path": "/_semio/hub/spaces/studio/documents/map/execution-target/component", "admitted": false },
+    { "id": "query-selector", "method": "POST", "path": "/_semio/hub/spaces/studio/documents/map/execution-target/component?package=forged", "admitted": false },
+    { "id": "unknown-asset", "method": "POST", "path": "/_semio/hub/spaces/studio/documents/map/execution-target/source", "admitted": false },
+    { "id": "child-path", "method": "POST", "path": "/_semio/hub/spaces/studio/documents/map/execution-target/component/core.wasm", "admitted": false },
+    { "id": "encoded-slash", "method": "POST", "path": "/_semio/hub/spaces/studio%2fprivate/documents/map/execution-target/component", "admitted": false },
+    { "id": "encoded-backslash", "method": "POST", "path": "/_semio/hub/spaces/studio/documents/map%5cprivate/execution-target/component", "admitted": false },
+    { "id": "malformed-encoding", "method": "POST", "path": "/_semio/hub/spaces/studio/documents/map%zz/execution-target/component", "admitted": false },
+    { "id": "empty-space", "method": "POST", "path": "/_semio/hub/spaces//documents/map/execution-target/component", "admitted": false }
+  ],
+  "fences": [
+    { "mutation": "unchanged", "expected": "selected" },
+    { "mutation": "directory-advanced", "expected": "stale" },
+    { "mutation": "session-revoked", "expected": "denied" },
+    { "mutation": "cancelled", "expected": "cancelled" }
+  ],
+  "responses": [
+    { "id": "manifest-bound", "asset": "manifest", "bytes": 8192, "delayMs": 0, "status": 200 },
+    { "id": "manifest-overflow", "asset": "manifest", "bytes": 8193, "delayMs": 0, "status": 503 },
+    { "id": "component-above-general-cap", "asset": "component", "bytes": 1048593, "delayMs": 0, "status": 200 },
+    { "id": "descriptor-above-general-cap", "asset": "descriptor", "bytes": 1048581, "delayMs": 0, "status": 200 },
+    { "id": "descriptor-overflow", "asset": "descriptor", "bytes": 4194305, "delayMs": 0, "status": 503 },
+    { "id": "target-after-general-deadline", "asset": "component", "bytes": 31, "delayMs": 2100, "status": 200 }
+  ]
+}

@@ -1,0 +1,343 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz}[2026/08/18 v0.1.0 semio viz]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-core}
+\RequirePackage{semio-fonts}
+\RequirePackage{semio-window}
+\RequirePackage{semio-viz-data}
+\RequirePackage{semio-viz-scale}
+\RequirePackage{semio-viz-mark}
+\RequirePackage{semio-viz-axis}
+\RequirePackage{semio-viz-layout}
+\usetikzlibrary{calc,arrows.meta,shapes.geometric,decorations.pathreplacing}
+
+\providecommand{\semio@viz@frame@width}{80}
+\providecommand{\semio@viz@frame@height}{40}
+
+\ExplSyntaxOn
+
+%region Diagnostics
+\msg_new:nnn { semio-viz } { unknown-chart }
+  { Unknown~viz~chart~kind~'#1'. }
+\msg_new:nnn { semio-viz } { unknown-demo }
+  { Unknown~viz~demo~'#1'~(not~a~mark~or~chart~kind). }
+\msg_new:nnn { semio-viz } { unit-in-number }
+  { Viz~key~'#1'~takes~a~plain~millimetre~number,~got~'#2'. }
+%endregion Diagnostics
+
+%region StyleVocabulary
+\tikzset{
+  semio~viz~picture/.style={
+    x=1mm, y=1mm,
+    every~node/.append~style={ outer~sep=0pt, font=\SemioSans },
+  },
+}
+%endregion StyleVocabulary
+
+%region Keys
+\tl_new:N \l_semio_viz_title_tl
+\tl_new:N \l_semio_viz_window_tl
+\tl_new:N \l_semio_viz_width_tl
+\tl_new:N \l_semio_viz_height_tl
+
+\cs_new_protected:Npn \semio_viz_number_check:nn #1#2 {
+  \regex_match:nnT { [a-zA-Z] } {#2}
+    { \msg_error:nnnn { semio-viz } { unit-in-number } {#1} {#2} }
+}
+
+\keys_define:nn { semio / viz / figure } {
+  title  .tl_set:N = \l_semio_viz_title_tl,
+  window .tl_set:N = \l_semio_viz_window_tl,
+  width  .code:n = {
+    \semio_viz_number_check:nn { width } {#1}
+    \tl_set:Nn \l_semio_viz_width_tl {#1}
+  },
+  height .code:n = {
+    \semio_viz_number_check:nn { height } {#1}
+    \tl_set:Nn \l_semio_viz_height_tl {#1}
+    \bool_set_false:N \l_semio_viz_height_auto_bool
+  },
+}
+
+\bool_new:N \l_semio_viz_height_auto_bool
+\cs_new_protected:Npn \semio_viz_figure_keys_reset: {
+  \tl_clear:N \l_semio_viz_title_tl
+  \tl_clear:N \l_semio_viz_window_tl
+  \tl_set:Nn \l_semio_viz_width_tl { \semio@viz@frame@width }
+  \tl_set:Nn \l_semio_viz_height_tl { \semio@viz@frame@height }
+  \bool_set_true:N \l_semio_viz_height_auto_bool
+}
+%endregion Keys
+
+%region Figure
+\cs_new_protected:Npn \semio_viz_figure_open:n #1 {
+  \begin{Figure}[#1]
+  \begin{tikzpicture}[ semio~viz~picture ]
+  \tl_gclear:N \g_semio_viz_section_prev_tl
+  \fp_set:Nn \l_semio_viz_width_fp { \l_semio_viz_width_tl }
+  \bool_if:NTF \l_semio_viz_height_auto_bool
+    {
+      % 🪢 Height left to grow with content, per semio-tree.sty's own
+      % \path (0,0)--(width,0) idiom: a bare \path pins the horizontal
+      % extent only, and pgf computes the vertical bounding box from
+      % whatever VizSection/VizColumn calls actually draw -- what lets a
+      % section that wraps to three lines push the rest of the figure down
+      % without anyone measuring it.
+      \use:x { \exp_not:N \path (0,0) -- ( \l_semio_viz_width_tl , 0 ) ; }
+      \fp_set:Nn \l_semio_viz_height_fp { \l_semio_viz_width_fp }
+    }
+    {
+      \useasboundingbox (0,0) rectangle ( \l_semio_viz_width_tl , \l_semio_viz_height_tl ) ;
+      \fp_set:Nn \l_semio_viz_height_fp { \l_semio_viz_height_tl }
+    }
+}
+
+\cs_new_protected:Npn \semio_viz_figure_begin:n #1 {
+  \semio_viz_figure_keys_reset:
+  \keys_set:nn { semio / viz / figure } {#1}
+  \tl_set:Nx \l_tmpa_tl {
+    title = { \exp_not:V \l_semio_viz_title_tl } ,
+    break = false ,
+    \exp_not:V \l_semio_viz_window_tl
+  }
+  \exp_args:NV \semio_viz_figure_open:n \l_tmpa_tl
+  \bool_set_true:N \l_semio_viz_in_figure_bool
+  \semio_viz_data_demo:
+  \semio_viz_figure_scales:
+}
+
+\cs_new_protected:Npn \semio_viz_figure_scales: {
+  \use:x {
+    \exp_not:N \semio_viz_scale_define:nnnn { x } { band } { A, B, C, D, E }
+      { \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_width_fp - 2 } }
+    \exp_not:N \semio_viz_scale_define:nnnn { y } { linear } { 0, 10 }
+      { \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_height_fp - 2 } }
+    \exp_not:N \semio_viz_scale_define:nnnn { y-log } { log } { 1, 100 }
+      { \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_height_fp - 2 } }
+  }
+}
+
+\cs_new_protected:Npn \semio_viz_figure_end: {
+  \bool_set_false:N \l_semio_viz_in_figure_bool
+  \end{tikzpicture}
+  \end{Figure}
+}
+
+% 🖼️ Figure window wrapping a millimetre TikZ canvas for viz recipes.
+\NewDocumentEnvironment { VizFigure } { O{} }
+  { \semio_viz_figure_begin:n {#1} }
+  { \semio_viz_figure_end: }
+%endregion Figure
+
+%region Sections
+% 🪜 VizSection/VizColumn replace a stacked-panel figure's hand-placed
+% section origins (skalierung.tex's eight hardcoded Y separators) the same
+% way semio-tree.sty replaces a hand-placed hierarchy: no y-accumulator, no
+% measured line heights. Each section is a `local bounding box` scope --
+% pgf computes it from what was actually drawn inside -- shifted to sit on
+% the PREVIOUS section's own measured `.south west`. A three-line label
+% pushes every section below it down with nobody counting lines.
+\providecommand{\semio@viz@section@gap}{2.5mm}
+\providecommand{\semio@viz@section@content@gap}{4.5mm}
+\providecommand{\semio@viz@section@note@gap}{4mm}
+\providecommand{\semio@viz@column@gutter}{4mm}
+
+\tl_new:N \l_semio_viz_section_title_tl
+\tl_new:N \l_semio_viz_section_aside_tl
+\bool_new:N \l_semio_viz_section_rule_bool
+\tl_new:N \g_semio_viz_section_prev_tl
+\tl_new:N \l_semio_viz_section_name_tl
+\int_new:N \g_semio_viz_section_int
+\fp_new:N \g_semio_viz_column_cursor_fp
+\fp_new:N \l_semio_viz_saved_width_fp
+
+\keys_define:nn { semio / viz / section } {
+  title .tl_set:N = \l_semio_viz_section_title_tl,
+  aside .tl_set:N = \l_semio_viz_section_aside_tl,
+  rule  .bool_set:N = \l_semio_viz_section_rule_bool,
+}
+
+\cs_new_protected:Npn \semio_viz_section_keys_reset: {
+  \tl_clear:N \l_semio_viz_section_title_tl
+  \tl_clear:N \l_semio_viz_section_aside_tl
+  \bool_set_true:N \l_semio_viz_section_rule_bool
+}
+
+\cs_new_protected:Npn \semio_viz_section_chrome: {
+  \bool_if:NT \l_semio_viz_section_rule_bool {
+    \use:x { \exp_not:N \draw [ semio~viz~rule ] ( 0 , 0 ) -- ( \fp_eval:n { \l_semio_viz_width_fp } , 0 ) ; }
+  }
+  \tl_if_empty:NF \l_semio_viz_section_title_tl {
+    \node [ font=\semio@viz@font@title, text=semio-chrome-foreground, anchor=north~west ]
+      at ( 0 , -1.4 ) { \exp_not:V \l_semio_viz_section_title_tl } ;
+  }
+  \tl_if_empty:NF \l_semio_viz_section_aside_tl {
+    \node [ font=\semio@viz@font@label, text=semio-chrome-text-normal, anchor=north~east ]
+      at ( \fp_eval:n { \l_semio_viz_width_fp } , -1.4 ) { \exp_not:V \l_semio_viz_section_aside_tl } ;
+  }
+}
+
+\cs_new_protected:Npn \semio_viz_section_open:n #1 {
+  \semio_viz_frame_require:n { VizSection }
+  \semio_viz_section_keys_reset:
+  \keys_set:nn { semio / viz / section } {#1}
+  \int_gincr:N \g_semio_viz_section_int
+  \tl_set:Nx \l_semio_viz_section_name_tl { vizsectionbox \int_use:N \g_semio_viz_section_int }
+  \fp_gzero:N \g_semio_viz_column_cursor_fp
+  \tl_if_empty:NTF \g_semio_viz_section_prev_tl
+    { \begin{scope} }
+    {
+      \begin{scope}[
+        shift={([yshift=-\semio@viz@section@gap]\g_semio_viz_section_prev_tl)}
+      ]
+    }
+  \begin{scope}[ local~bounding~box=\l_semio_viz_section_name_tl ]
+  \semio_viz_section_chrome:
+  \begin{scope}[ yshift=-\semio@viz@section@content@gap ]
+}
+
+\cs_new_protected:Npn \semio_viz_section_close: {
+  \end{scope}
+  \end{scope}
+  \end{scope}
+  \use:x {
+    \exp_not:N \path
+      ( \exp_not:V \l_semio_viz_section_name_tl .south~west )
+      coordinate ( \exp_not:V \l_semio_viz_section_name_tl anchor ) ;
+  }
+  \tl_set:Nx \l_tmpa_tl { \l_semio_viz_section_name_tl anchor }
+  \tl_gset_eq:NN \g_semio_viz_section_prev_tl \l_tmpa_tl
+}
+
+% 📐 One horizontal band of the Systemkarte: a title/rule and everything the
+% body draws, auto-stacked below the previous VizSection.
+\NewDocumentEnvironment { VizSection } { O{} }
+  { \semio_viz_section_open:n {#1} }
+  { \semio_viz_section_close: }
+
+\fp_new:N \l_semio_viz_column_width_fp
+\tl_new:N \l_semio_viz_column_title_tl
+\tl_new:N \l_semio_viz_column_note_tl
+
+\keys_define:nn { semio / viz / column } {
+  width .fp_set:N = \l_semio_viz_column_width_fp,
+  title .tl_set:N = \l_semio_viz_column_title_tl,
+  note  .tl_set:N = \l_semio_viz_column_note_tl,
+}
+
+% 📝 A note draws below any title, in the caption weight already used
+% throughout (font@label), and reserves its own gap before content starts --
+% the mechanism-level replacement for skalierung.tex's H1/H2 caption lines,
+% which used to be a bare \node followed by a hand-tuned \begin{scope}[yshift=
+% -4mm] compensating for the caption's own height. text width is the column's
+% own real width, not a number copied from the call site.
+\cs_new_protected:Npn \semio_viz_column_note_draw: {
+  \node [ font=\semio@viz@font@label, text=semio-chrome-text-normal,
+          anchor=north~west, align=left, text~width=\fp_eval:n{\l_semio_viz_width_fp}mm ]
+    at ( 0 , 0 ) { \exp_not:V \l_semio_viz_column_note_tl } ;
+}
+
+\cs_new_protected:Npn \semio_viz_column_open:n #1 {
+  \semio_viz_frame_require:n { VizColumn }
+  \fp_set_eq:NN \l_semio_viz_column_width_fp \l_semio_viz_width_fp
+  \tl_clear:N \l_semio_viz_column_title_tl
+  \tl_clear:N \l_semio_viz_column_note_tl
+  \keys_set:nn { semio / viz / column } {#1}
+  \fp_set_eq:NN \l_semio_viz_saved_width_fp \l_semio_viz_width_fp
+  \begin{scope}[ shift={(\fp_eval:n{\g_semio_viz_column_cursor_fp},0)} ]
+  \fp_set_eq:NN \l_semio_viz_width_fp \l_semio_viz_column_width_fp
+  \tl_if_empty:NTF \l_semio_viz_column_title_tl
+    { \begin{scope} }
+    {
+      \node [ font=\semio@viz@font@title, text=semio-chrome-foreground, anchor=north~west ]
+        at ( 0 , 0 ) { \exp_not:V \l_semio_viz_column_title_tl } ;
+      \begin{scope}[ yshift=-\semio@viz@section@content@gap ]
+    }
+  \tl_if_empty:NTF \l_semio_viz_column_note_tl
+    { \begin{scope} }
+    {
+      \semio_viz_column_note_draw:
+      \begin{scope}[ yshift=-\semio@viz@section@note@gap ]
+    }
+}
+
+\cs_new_protected:Npn \semio_viz_column_close: {
+  \end{scope}
+  \end{scope}
+  \end{scope}
+  \fp_gset:Nn \g_semio_viz_column_cursor_fp
+    { \fp_eval:n { \g_semio_viz_column_cursor_fp + \l_semio_viz_column_width_fp + \semio@viz@column@gutter } }
+  \fp_set_eq:NN \l_semio_viz_width_fp \l_semio_viz_saved_width_fp
+}
+
+% 🏛️ One vertical slot of a VizSection, siblings placed left to right by
+% their own declared width -- no `x=77` literal for what sits beside what.
+\NewDocumentEnvironment { VizColumn } { O{} }
+  { \semio_viz_column_open:n {#1} }
+  { \semio_viz_column_close: }
+
+% 🪧 Caption-weight text below a captured anchor (see \SemioVizLayout's
+% anchor= key) -- the mechanism-level replacement for a hand-guessed
+% \node at (0,-N) after a variable-height layout, e.g. a note under a heat
+% matrix: the position tracks the data instead of needing manual retuning
+% whenever a row is added or removed.
+\cs_new_protected:Npn \semio_viz_note_below:nnn #1#2#3 {
+  \node [ font=\semio@viz@font@label, text=semio-chrome-text-normal,
+          anchor=north~west, align=left, text~width=\fp_eval:n{#2}mm ]
+    at ( [ yshift=-\semio@viz@section@note@gap ] #1 ) { \exp_not:n {#3} } ;
+}
+% 🪧 Places caption text below a \SemioVizLayout anchor= coordinate.
+\NewDocumentCommand \SemioVizNoteBelow { m m m } { \semio_viz_note_below:nnn {#1}{#2}{#3} }
+%endregion Sections
+
+%region ChartKinds
+\seq_new:N \g_semio_viz_chart_kinds_seq
+\prop_new:N \g_semio_viz_chart_family_prop
+\prop_new:N \g_semio_viz_chart_opts_prop
+
+\cs_new_protected:Npn \semio_viz_chart_kind_define:nnn #1#2#3 {
+  \seq_if_in:NnF \g_semio_viz_chart_kinds_seq {#1}
+    { \seq_gput_right:Nn \g_semio_viz_chart_kinds_seq {#1} }
+  \prop_gput:Nnn \g_semio_viz_chart_family_prop {#1} {#2}
+  \prop_gput:Nnn \g_semio_viz_chart_opts_prop {#1} {#3}
+}
+
+% 🏷️ Registers a chart kind as a layout family plus default keys.
+\NewDocumentCommand \SemioVizChartKind { m m m } { \semio_viz_chart_kind_define:nnn {#1} {#2} {#3} }
+
+\cs_generate_variant:Nn \semio_viz_layout:nn { VV }
+
+\cs_new_protected:Npn \semio_viz_chart:nn #1#2 {
+  \semio_viz_frame_require:n { SemioVizChart }
+  \seq_if_in:NnTF \g_semio_viz_chart_kinds_seq {#1}
+    {
+      \prop_get:NnN \g_semio_viz_chart_family_prop {#1} \l_semio_viz_family_tl
+      \prop_get:NnN \g_semio_viz_chart_opts_prop {#1} \l_tmpa_tl
+      \tl_if_empty:nF {#2} { \tl_put_right:Nn \l_tmpa_tl { , #2 } }
+      \semio_viz_layout:VV \l_semio_viz_family_tl \l_tmpa_tl
+    }
+    { \msg_error:nnn { semio-viz } { unknown-chart } {#1} }
+}
+
+\cs_new_protected:Npn \semio_viz_demo:n #1 {
+  \semio_viz_frame_require:n { SemioVizDemo }
+  \seq_if_in:NnTF \g_semio_viz_mark_kinds_seq {#1}
+    { \semio_viz_mark_demo:n {#1} }
+    {
+      \seq_if_in:NnTF \g_semio_viz_chart_kinds_seq {#1}
+        { \semio_viz_chart:nn {#1} { data=demo, x=cat, y=val } }
+        { \msg_error:nnn { semio-viz } { unknown-demo } {#1} }
+    }
+}
+
+% 📊 Draws a registered chart kind inside the current VizFigure.
+\NewDocumentCommand \SemioVizChart { m O{} } { \semio_viz_chart:nn {#1} {#2} }
+% 🧪 Gallery helper: mark primitive or chart kind on the demo table.
+\NewDocumentCommand \SemioVizDemo { m } { \semio_viz_demo:n {#1} }
+%endregion ChartKinds
+
+\ExplSyntaxOff
+
+\RequirePackage{semio-viz-charts}

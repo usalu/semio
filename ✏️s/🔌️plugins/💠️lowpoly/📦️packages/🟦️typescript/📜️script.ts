@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** lowpoly TypeScript package */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, runCmd, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import Ajv2020 from "ajv/dist/2020.js";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -60,6 +60,8 @@ const reject = (condition: boolean, message: string): void => {
 //#region 🧪️InteractiveJobSourceTest
 class TestScript extends BundleScript {
   run(): void {
+    runCmd(process.execPath, ["test", ...["✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🟦️.ts","✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🟦️.ts"].map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
+
     const root = resolve(import.meta.dir, "../..");
     const schema = JSON.parse(readFileSync(resolve(root, "🧪️interactive-job/🧬️.schema.json"), "utf8"));
     const fixture = JSON.parse(readFileSync(resolve(root, "🧪️interactive-job/🔣️.json"), "utf8")) as Fixture;

@@ -1,0 +1,1352 @@
+{
+  "schema": "semio.db.wal.committed-transactions/v1",
+  "maximumRecords": 64,
+  "historyProjection": {
+    "commands": [
+      { "id": "history-1", "path": "first", "value": "alpha" },
+      { "id": "history-2", "path": "second", "value": "beta" }
+    ],
+    "expected": { "entries": 1, "operationIds": ["history-1", "history-2"], "headSeq": 2, "commitSeq": 1 },
+    "rejections": [
+      { "name": "foreign-command-document", "records": [{ "kind": "command", "document": "foreign" }, { "kind": "frontier", "document": "current" }], "accepted": false },
+      { "name": "foreign-frontier-document", "records": [{ "kind": "command", "document": "current" }, { "kind": "frontier", "document": "foreign" }], "accepted": false },
+      { "name": "duplicate-frontier", "records": [{ "kind": "command", "document": "current" }, { "kind": "frontier", "document": "current" }, { "kind": "frontier", "document": "current" }], "accepted": false },
+      { "name": "frontier-before-command", "records": [{ "kind": "frontier", "document": "current" }, { "kind": "command", "document": "current" }], "accepted": false }
+    ]
+  },
+  "cases": [
+    {
+      "name": "gap-after-committed-transaction-rejected",
+      "segments": [{ "state": "active", "frames": [{ "kind": "header" }, { "kind": "begin", "id": "1" }, { "kind": "commit", "id": "1", "count": 0 }, { "kind": "begin", "id": "3" }, { "kind": "commit", "id": "3", "count": 0 }], "physicalCommitsAfter": [0, 2, 4] }],
+      "expected": { "accepted": false, "transactions": [], "nextTxId": null, "recoverAbort": null, "error": "corrupt" }
+    },
+    {
+      "name": "compacted-first-id-continues-contiguously",
+      "segments": [{ "state": "active", "frames": [{ "kind": "header" }, { "kind": "begin", "id": "42" }, { "kind": "commit", "id": "42", "count": 0 }, { "kind": "begin", "id": "43" }, { "kind": "commit", "id": "43", "count": 0 }], "physicalCommitsAfter": [0, 2, 4] }],
+      "expected": { "accepted": true, "transactions": [{ "id": "42", "kinds": [] }, { "id": "43", "kinds": [] }], "nextTxId": "44", "recoverAbort": null, "error": null }
+    },
+    {
+      "name": "header-only",
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            }
+          ],
+          "physicalCommitsAfter": [
+            0
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": true,
+        "transactions": [],
+        "nextTxId": "1",
+        "recoverAbort": null,
+        "error": null
+      }
+    },
+    {
+      "name": "empty-transaction",
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "1"
+            },
+            {
+              "kind": "commit",
+              "id": "1",
+              "count": 0
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            2
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": true,
+        "transactions": [
+          {
+            "id": "1",
+            "kinds": []
+          }
+        ],
+        "nextTxId": "2",
+        "recoverAbort": null,
+        "error": null
+      }
+    },
+    {
+      "name": "two-commands-only-after-logical-commit",
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "1"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "commit",
+              "id": "1",
+              "count": 2
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            1,
+            2,
+            4
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": true,
+        "transactions": [
+          {
+            "id": "1",
+            "kinds": [
+              "command",
+              "command"
+            ]
+          }
+        ],
+        "nextTxId": "2",
+        "recoverAbort": null,
+        "error": null
+      }
+    },
+    {
+      "name": "aborted-commands-snapshot-cas-have-no-effects",
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "1"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "snapshot"
+            },
+            {
+              "kind": "cas"
+            },
+            {
+              "kind": "abort",
+              "id": "1"
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            1,
+            2,
+            3,
+            5
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": true,
+        "transactions": [],
+        "nextTxId": "2",
+        "recoverAbort": null,
+        "error": null
+      }
+    },
+    {
+      "name": "abort-then-commit-consumes-both-ids",
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "1"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "abort",
+              "id": "1"
+            },
+            {
+              "kind": "begin",
+              "id": "2"
+            },
+            {
+              "kind": "frontier"
+            },
+            {
+              "kind": "commit",
+              "id": "2",
+              "count": 1
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            6
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": true,
+        "transactions": [
+          {
+            "id": "2",
+            "kinds": [
+              "frontier"
+            ]
+          }
+        ],
+        "nextTxId": "3",
+        "recoverAbort": null,
+        "error": null
+      }
+    },
+    {
+      "name": "active-incomplete-needs-durable-abort",
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "7"
+            },
+            {
+              "kind": "command"
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            2
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": true,
+        "transactions": [],
+        "nextTxId": "8",
+        "recoverAbort": "7",
+        "error": null
+      }
+    },
+    {
+      "name": "active-empty-begin-needs-durable-abort",
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "7"
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            1
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": true,
+        "transactions": [],
+        "nextTxId": "8",
+        "recoverAbort": "7",
+        "error": null
+      }
+    },
+    {
+      "name": "sealed-incomplete-is-corrupt",
+      "segments": [
+        {
+          "state": "sealed",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "7"
+            },
+            {
+              "kind": "command"
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            2
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": false,
+        "transactions": [],
+        "nextTxId": null,
+        "recoverAbort": null,
+        "error": "corrupt"
+      }
+    },
+    {
+      "name": "cross-segment-open-transaction-is-corrupt",
+      "segments": [
+        {
+          "state": "sealed",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "1"
+            },
+            {
+              "kind": "command"
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            2
+          ]
+        },
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "commit",
+              "id": "1",
+              "count": 1
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            1
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": false,
+        "transactions": [],
+        "nextTxId": null,
+        "recoverAbort": null,
+        "error": "corrupt"
+      }
+    },
+    {
+      "name": "body-outside-transaction",
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "command"
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            1
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": false,
+        "transactions": [],
+        "nextTxId": null,
+        "recoverAbort": null,
+        "error": "corrupt"
+      }
+    },
+    {
+      "name": "nested-begin",
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "1"
+            },
+            {
+              "kind": "begin",
+              "id": "2"
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            2
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": false,
+        "transactions": [],
+        "nextTxId": null,
+        "recoverAbort": null,
+        "error": "corrupt"
+      }
+    },
+    {
+      "name": "wrong-commit-id",
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "1"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "commit",
+              "id": "2",
+              "count": 1
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            3
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": false,
+        "transactions": [],
+        "nextTxId": null,
+        "recoverAbort": null,
+        "error": "corrupt"
+      }
+    },
+    {
+      "name": "wrong-commit-count",
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "1"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "commit",
+              "id": "1",
+              "count": 0
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            3
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": false,
+        "transactions": [],
+        "nextTxId": null,
+        "recoverAbort": null,
+        "error": "corrupt"
+      }
+    },
+    {
+      "name": "wrong-abort-id",
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "1"
+            },
+            {
+              "kind": "abort",
+              "id": "2"
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            2
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": false,
+        "transactions": [],
+        "nextTxId": null,
+        "recoverAbort": null,
+        "error": "corrupt"
+      }
+    },
+    {
+      "name": "commit-outside-transaction",
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "commit",
+              "id": "1",
+              "count": 0
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            1
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": false,
+        "transactions": [],
+        "nextTxId": null,
+        "recoverAbort": null,
+        "error": "corrupt"
+      }
+    },
+    {
+      "name": "abort-outside-transaction",
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "abort",
+              "id": "1"
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            1
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": false,
+        "transactions": [],
+        "nextTxId": null,
+        "recoverAbort": null,
+        "error": "corrupt"
+      }
+    },
+    {
+      "name": "repeated-header",
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "1"
+            },
+            {
+              "kind": "header"
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            2
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": false,
+        "transactions": [],
+        "nextTxId": null,
+        "recoverAbort": null,
+        "error": "corrupt"
+      }
+    },
+    {
+      "name": "zero-id",
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "0"
+            },
+            {
+              "kind": "commit",
+              "id": "0",
+              "count": 0
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            2
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": false,
+        "transactions": [],
+        "nextTxId": null,
+        "recoverAbort": null,
+        "error": "corrupt"
+      }
+    },
+    {
+      "name": "exhausted-id",
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "18446744073709551615"
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            1
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": false,
+        "transactions": [],
+        "nextTxId": null,
+        "recoverAbort": null,
+        "error": "sequence"
+      }
+    },
+    {
+      "name": "sixty-four-business-spans",
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "1"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "commit",
+              "id": "1",
+              "count": 64
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            66
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": true,
+        "transactions": [
+          {
+            "id": "1",
+            "kinds": [
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command",
+              "command"
+            ]
+          }
+        ],
+        "nextTxId": "2",
+        "recoverAbort": null,
+        "error": null
+      }
+    },
+    {
+      "name": "sixty-fifth-business-span",
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "1"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "command"
+            },
+            {
+              "kind": "commit",
+              "id": "1",
+              "count": 65
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            67
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": false,
+        "transactions": [],
+        "nextTxId": null,
+        "recoverAbort": null,
+        "error": "capacity"
+      }
+    },
+    {
+      "name": "retained-high-water-id",
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "42"
+            },
+            {
+              "kind": "commit",
+              "id": "42",
+              "count": 0
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            2
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": true,
+        "transactions": [
+          {
+            "id": "42",
+            "kinds": []
+          }
+        ],
+        "nextTxId": "43",
+        "recoverAbort": null,
+        "error": null
+      }
+    },
+    {
+      "name": "id-reuse-after-abort",
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "4"
+            },
+            {
+              "kind": "abort",
+              "id": "4"
+            },
+            {
+              "kind": "begin",
+              "id": "4"
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            3
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": false,
+        "transactions": [],
+        "nextTxId": null,
+        "recoverAbort": null,
+        "error": "corrupt"
+      }
+    },
+    {
+      "name": "high-water-across-segments",
+      "segments": [
+        {
+          "state": "sealed",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "4"
+            },
+            {
+              "kind": "commit",
+              "id": "4",
+              "count": 0
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            2
+          ]
+        },
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "5"
+            },
+            {
+              "kind": "frontier"
+            },
+            {
+              "kind": "commit",
+              "id": "5",
+              "count": 1
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            3
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": true,
+        "transactions": [
+          {
+            "id": "4",
+            "kinds": []
+          },
+          {
+            "id": "5",
+            "kinds": [
+              "frontier"
+            ]
+          }
+        ],
+        "nextTxId": "6",
+        "recoverAbort": null,
+        "error": null
+      }
+    }
+  ]
+}

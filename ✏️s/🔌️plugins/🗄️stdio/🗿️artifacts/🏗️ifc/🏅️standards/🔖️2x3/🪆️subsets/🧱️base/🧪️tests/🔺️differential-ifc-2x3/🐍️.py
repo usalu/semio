@@ -1,6 +1,6 @@
 """🐍️ IfcOpenShell differential ORACLE for stdio.ifc 2x3/🧱️base — a real SECOND PRODUCER.
 
-Ticket 26/08/23/END-TO-END-TESTING-REFACTOR. The sibling case `../🐸️mutate-ifc-2x3` registers
+Ticket 26/08/23/END-TO-END-TESTING-REFACTOR. The sibling case `../🧱️mutate-ifc-2x3` registers
 `ruststep` 0.4, which parses the ISO 10303-21 grammar and has no writer at all, so every scenario
 there is honestly typed `@mode-property`/`@mode-round-trip` — a second READER, never a second
 producer. This case closes that gap for the four mutation kinds a schema-bound implementation can
@@ -40,9 +40,9 @@ deliberately leaves dangling references — the case's own feature file records 
 integrity strategy. `#270549`, the instance the sibling case removes, is referenced by **8** other
 instances in this fixture (`get_total_inverses`), so the two verbs would visibly differ. Comparing
 two different verbs is not a differential, so it is not claimed as one; `remove-instance` keeps its
-`ruststep`-backed scenarios in `../🐸️mutate-ifc-2x3`, unchanged.
+`ruststep`-backed scenarios in `../🧱️mutate-ifc-2x3`, unchanged.
 
-@see ../🐸️mutate-ifc-2x3/component.feature — the exhaustive five-kind case this one does not replace.
+@see ../🧱️mutate-ifc-2x3/component.feature — the exhaustive five-kind case this one does not replace.
 @see ../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🔣️oracle.json — this oracle's registration.
 """
 
@@ -71,7 +71,7 @@ KINDS = ["no-mutation", "set-snapshot", "upsert-instance", "set-header"]
 #: `FILE_SCHEMA` list — legal under ISO 10303-21 §8.2.4, and IfcOpenShell WRITES it correctly — but
 #: IfcOpenShell cannot then read its own output back (see `open_model`'s guard), so it cannot be the
 #: producer of the second half of the chain. `inverse-set-snapshot` keeps its ruststep-backed
-#: scenario in `../🐸️mutate-ifc-2x3`; nothing is lost, and nothing false is claimed here.
+#: scenario in `../🧱️mutate-ifc-2x3`; nothing is lost, and nothing false is claimed here.
 INVERSE_KINDS = ["no-mutation", "upsert-instance", "set-header"]
 
 #: 📇️ This fixture's own committed header records, read from the file itself — the inverse of

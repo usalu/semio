@@ -2,7 +2,7 @@
 /** ➗️ Mathematical source, schema, and publication-authority laws. */
 import { resolve } from "node:path";
 import Ajv from "ajv";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 type Lane = "Artifact" | "Config";
 type Fixture = { schema: string; owner: "EquationPlayApp"; source: string; routes: { id: string; lane: Lane }[]; laws: Record<string, boolean>; ui: { locales: ["en", "de"]; accessibleLabels: boolean; customizableUi: boolean } };
 
@@ -40,6 +40,8 @@ class TestScript extends BundleScript {
     if (hostileSource.some((candidate) => oracle(fixture, candidate))) throw new Error("Mathematical oracle accepted a hostile source mutation");
     if (validate({ ...fixture, extra: true })) throw new Error("Mathematical strict schema accepted an extra property");
     console.error(`validated Mathematical publication authority; routes=${fixture.routes.length}; schema=Ajv; oracle=owned; hostile=3`);
+    const subset = resolve(plugin, "🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any");
+    runCmd(process.execPath, ["test", resolve(subset, "📚️examples/🎬️demo/🧪️tests/🟦️.ts"), resolve(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🟦️.ts")]);
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("publication-authority-audit", TestScript);

@@ -109,7 +109,7 @@
           "scenarios": [
             {
               "id": "turns-on-smooth-shading-for-obj-hull",
-              "directoryName": "🧪️turns-on-smooth-shading-for-obj-hull"
+              "directoryName": "🟢️turns-on-smooth-shading-for-obj-hull"
             }
           ]
         },
@@ -120,7 +120,7 @@
           "scenarios": [
             {
               "id": "switches-the-base-layer-to-multiply",
-              "directoryName": "🧪️switches-the-base-layer-to-multiply"
+              "directoryName": "✖️switches-the-base-layer-to-multiply"
             }
           ]
         },
@@ -131,7 +131,7 @@
           "scenarios": [
             {
               "id": "fades-the-base-layer-to-half",
-              "directoryName": "🧪️fades-the-base-layer-to-half"
+              "directoryName": "🌫️fades-the-base-layer-to-half"
             }
           ]
         },
@@ -142,7 +142,7 @@
           "scenarios": [
             {
               "id": "hides-the-base-layer",
-              "directoryName": "🧪️hides-the-base-layer"
+              "directoryName": "🙈️hides-the-base-layer"
             }
           ]
         },
@@ -153,7 +153,7 @@
           "scenarios": [
             {
               "id": "attaches-a-mesh-child-handle-to-obj-fin",
-              "directoryName": "🧪️attaches-a-mesh-child-handle-to-obj-fin"
+              "directoryName": "🕸️attaches-a-mesh-child-handle-to-obj-fin"
             }
           ]
         },
@@ -164,7 +164,7 @@
           "scenarios": [
             {
               "id": "inserts-obj-mast-between-hull-and-fin",
-              "directoryName": "🧪️inserts-obj-mast-between-hull-and-fin"
+              "directoryName": "⛵️inserts-obj-mast-between-hull-and-fin"
             }
           ]
         },
@@ -175,7 +175,7 @@
           "scenarios": [
             {
               "id": "detaches-the-mesh-child-handle-from-obj-hull",
-              "directoryName": "🧪️detaches-the-mesh-child-handle-from-obj-hull"
+              "directoryName": "✂️detaches-the-mesh-child-handle-from-obj-hull"
             }
           ]
         },
@@ -186,7 +186,7 @@
           "scenarios": [
             {
               "id": "removes-obj-fin-without-touching-the-order",
-              "directoryName": "🧪️removes-obj-fin-without-touching-the-order"
+              "directoryName": "🚫️removes-obj-fin-without-touching-the-order"
             }
           ]
         },
@@ -197,7 +197,7 @@
           "scenarios": [
             {
               "id": "paints-red-over-the-second-half-of-the-base-layer",
-              "directoryName": "🧪️paints-red-over-the-second-half-of-the-base-layer"
+              "directoryName": "🖌️paints-red-over-the-second-half-of-the-base-layer"
             }
           ]
         },
@@ -208,7 +208,7 @@
           "scenarios": [
             {
               "id": "stacks-a-detail-layer-above-the-base-layer",
-              "directoryName": "🧪️stacks-a-detail-layer-above-the-base-layer"
+              "directoryName": "🪜️stacks-a-detail-layer-above-the-base-layer"
             }
           ]
         },
@@ -219,7 +219,7 @@
           "scenarios": [
             {
               "id": "translates-obj-hull-along-x-and-z",
-              "directoryName": "🧪️translates-obj-hull-along-x-and-z"
+              "directoryName": "📍️translates-obj-hull-along-x-and-z"
             }
           ]
         },
@@ -230,7 +230,7 @@
           "scenarios": [
             {
               "id": "drops-the-detail-layer-at-index-1",
-              "directoryName": "🧪️drops-the-detail-layer-at-index-1"
+              "directoryName": "➖️drops-the-detail-layer-at-index-1"
             }
           ]
         },
@@ -241,7 +241,7 @@
           "scenarios": [
             {
               "id": "retitles-obj-hull",
-              "directoryName": "🧪️retitles-obj-hull"
+              "directoryName": "🏷️retitles-obj-hull"
             }
           ]
         },
@@ -252,7 +252,7 @@
           "scenarios": [
             {
               "id": "retitles-the-base-layer-to-undercoat",
-              "directoryName": "🧪️retitles-the-base-layer-to-undercoat"
+              "directoryName": "🏷️retitles-the-base-layer-to-undercoat"
             }
           ]
         },
@@ -263,7 +263,7 @@
           "scenarios": [
             {
               "id": "moves-obj-fin-in-front-of-obj-hull",
-              "directoryName": "🧪️moves-obj-fin-in-front-of-obj-hull"
+              "directoryName": "🔀️moves-obj-fin-in-front-of-obj-hull"
             }
           ]
         },
@@ -274,7 +274,7 @@
           "scenarios": [
             {
               "id": "yaws-obj-hull-about-the-y-axis",
-              "directoryName": "🧪️yaws-obj-hull-about-the-y-axis"
+              "directoryName": "🔄️yaws-obj-hull-about-the-y-axis"
             }
           ]
         },
@@ -285,7 +285,7 @@
           "scenarios": [
             {
               "id": "halves-obj-hull-uniformly",
-              "directoryName": "🧪️halves-obj-hull-uniformly"
+              "directoryName": "📐️halves-obj-hull-uniformly"
             }
           ]
         }

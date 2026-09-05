@@ -1,0 +1,718 @@
+{
+  "schema": "semio.os.document-execution-target-lease-corpus/v1",
+  "version": 1,
+  "nowMs": 2000000000000,
+  "hubOrigin": "http://hub.test",
+  "intent": {
+    "schema": "semio.hub.document-open-intent/v1",
+    "version": 1,
+    "scope": {
+      "spaceId": "raum:ä",
+      "documentId": "karte:東京"
+    },
+    "requestedSurfaceId": "s.gis.gismap@1/*#viewer",
+    "clientInstanceId": "browser-client:lease-1"
+  },
+  "plan": {
+    "schema": "semio.hub.document-open-plan/v1",
+    "version": 1,
+    "receipt": "open.v1.R0lTTWFwTGVhc2VDb3JwdXNSZWNlaXB0djEwMDAwMDA",
+    "expiresAtUnixMs": 2000000030000,
+    "scope": {
+      "spaceId": "raum:ä",
+      "documentId": "karte:東京"
+    },
+    "descriptorDigestV1": "17f283c60cdc53e3cd03a1094d4ffb93906e44beed83d5f60ee0f442e05e9e2d",
+    "catalog": {
+      "generationId": "7cf0515d5cb12f9404020fef548b46f6b0b3dca140d4e1f2b58329174a40ebef"
+    },
+    "package": {
+      "pluginId": "gis",
+      "packageId": "semio:gis",
+      "version": "0.1.0",
+      "componentSha256": "0fb19bbf5000750836d0343893c24471a0d65cbc0ef8e7a9ef9ce4208d58cb5c",
+      "componentBlake3": "96eda1f99692027627c313f59e1acc20ccf394e6f5716dbaad855aaee9a84996",
+      "descriptorByteSha256": "0aa4c78847b0ae7835bb85b8e5871d2088167bbfac622af41240ef6635aa946b"
+    },
+    "artifact": {
+      "kind": "s.gis.gismap",
+      "schema": "gis.map",
+      "packSchemaHash": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    "parentDialect": {
+      "artifactKind": "s.gis.gismap",
+      "standard": "1",
+      "subset": "*"
+    },
+    "surface": {
+      "surfaceId": "s.gis.gismap@1/*#viewer",
+      "appId": "s.gis.gismap@1/*#viewer",
+      "windowKindId": "gis2d-main",
+      "role": "viewer",
+      "rendererTarget": "wasm"
+    },
+    "grant": {
+      "read": true,
+      "write": false,
+      "observe": true
+    },
+    "checkpoint": {
+      "checkpointId": "7d5217b7e3c2ca6a5a9f76be562d78a55ea459e414598043da57927edcacac80",
+      "descriptorDigestV1": "17f283c60cdc53e3cd03a1094d4ffb93906e44beed83d5f60ee0f442e05e9e2d",
+      "baselineFrontier": {
+        "documentId": "karte:東京",
+        "headEditOrdinal": 4,
+        "headEditId": "edit:4",
+        "lastCommitSeq": 4,
+        "chainHash": [
+          3,
+          10,
+          17,
+          24,
+          31,
+          38,
+          45,
+          52,
+          59,
+          66,
+          73,
+          80,
+          87,
+          94,
+          101,
+          108,
+          115,
+          122,
+          129,
+          136,
+          143,
+          150,
+          157,
+          164,
+          171,
+          178,
+          185,
+          192,
+          199,
+          206,
+          213,
+          220
+        ]
+      },
+      "aggregateSha256": "42aaa935b1cb57d1630487e47adb79204e158de813a810262b818ae2b257ff2f"
+    },
+    "revalidation": {
+      "directoryRevision": 23,
+      "membershipGeneration": 11,
+      "sessionGeneration": 5
+    }
+  },
+  "manifest": {
+    "schema": "semio.os.document-execution-target-lease/v1",
+    "version": 1,
+    "scope": {
+      "spaceId": "raum:ä",
+      "documentId": "karte:東京"
+    },
+    "descriptorDigestV1": "17f283c60cdc53e3cd03a1094d4ffb93906e44beed83d5f60ee0f442e05e9e2d",
+    "catalog": {
+      "generationId": "7cf0515d5cb12f9404020fef548b46f6b0b3dca140d4e1f2b58329174a40ebef"
+    },
+    "package": {
+      "pluginId": "gis",
+      "packageId": "semio:gis",
+      "version": "0.1.0",
+      "componentSha256": "0fb19bbf5000750836d0343893c24471a0d65cbc0ef8e7a9ef9ce4208d58cb5c",
+      "componentBlake3": "96eda1f99692027627c313f59e1acc20ccf394e6f5716dbaad855aaee9a84996",
+      "descriptorByteSha256": "0aa4c78847b0ae7835bb85b8e5871d2088167bbfac622af41240ef6635aa946b"
+    },
+    "component": {
+      "sha256": "0fb19bbf5000750836d0343893c24471a0d65cbc0ef8e7a9ef9ce4208d58cb5c",
+      "blake3": "96eda1f99692027627c313f59e1acc20ccf394e6f5716dbaad855aaee9a84996",
+      "byteLength": 1024
+    },
+    "descriptor": {
+      "sha256": "0aa4c78847b0ae7835bb85b8e5871d2088167bbfac622af41240ef6635aa946b",
+      "byteLength": 607
+    },
+    "artifact": {
+      "kind": "s.gis.gismap",
+      "schema": "gis.map",
+      "packSchemaHash": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    "parentDialect": {
+      "artifactKind": "s.gis.gismap",
+      "standard": "1",
+      "subset": "*"
+    },
+    "surface": {
+      "surfaceId": "s.gis.gismap@1/*#viewer",
+      "appId": "s.gis.gismap@1/*#viewer",
+      "windowKindId": "gis2d-main",
+      "role": "viewer",
+      "rendererTarget": "wasm"
+    },
+    "grant": {
+      "read": true,
+      "write": false,
+      "observe": true
+    },
+    "checkpoint": {
+      "checkpointId": "7d5217b7e3c2ca6a5a9f76be562d78a55ea459e414598043da57927edcacac80",
+      "descriptorDigestV1": "17f283c60cdc53e3cd03a1094d4ffb93906e44beed83d5f60ee0f442e05e9e2d",
+      "baselineFrontier": {
+        "documentId": "karte:東京",
+        "headEditOrdinal": 4,
+        "headEditId": "edit:4",
+        "lastCommitSeq": 4,
+        "chainHash": [
+          3,
+          10,
+          17,
+          24,
+          31,
+          38,
+          45,
+          52,
+          59,
+          66,
+          73,
+          80,
+          87,
+          94,
+          101,
+          108,
+          115,
+          122,
+          129,
+          136,
+          143,
+          150,
+          157,
+          164,
+          171,
+          178,
+          185,
+          192,
+          199,
+          206,
+          213,
+          220
+        ]
+      },
+      "aggregateSha256": "42aaa935b1cb57d1630487e47adb79204e158de813a810262b818ae2b257ff2f"
+    },
+    "revalidation": {
+      "directoryRevision": 23,
+      "membershipGeneration": 11,
+      "sessionGeneration": 5
+    }
+  },
+  "socketGrant": {
+    "schema": "semio.hub.socket-grant/v1",
+    "protocol": "semio.socket.v1",
+    "grant": "socket.v1.44444444444444444444444444444444.5555555555555555555555555555555555555555555555555555555555555555",
+    "actorId": "hub.v1.6666666666666666666666666666666666666666666666666666666666666666",
+    "expiresAtMs": 2000000025000
+  },
+  "componentHex": "0061736d010000002d52779cc1e610355a7fa4c9ee183d6287acd1f620456a8fb4d903284d7297bce10b30557a9fc4e913385d82a7ccf11b40658aafd4f923486d92b7dc062b50759abfe40e33587da2c7ec163b6085aacff41e43688db2d701264b7095badf092e53789dc2e711365b80a5caef193e6388add2f721466b90b5da04294e7398bde20c31567ba0c5ea14395e83a8cdf21c41668bb0d5fa24496e93b8dd072c51769bc0e50f34597ea3c8ed173c6186abd0f51f44698eb3d802274c7196bbe00a2f54799ec3e812375c81a6cbf01a3f6489aed3f822476c91b6db052a4f7499bee30d32577ca1c6eb153a5f84a9cef31d42678cb1d600254a6f94b9de082d52779cc1e610355a7fa4c9ee183d6287acd1f620456a8fb4d903284d7297bce10b30557a9fc4e913385d82a7ccf11b40658aafd4f923486d92b7dc062b50759abfe40e33587da2c7ec163b6085aacff41e43688db2d701264b7095badf092e53789dc2e711365b80a5caef193e6388add2f721466b90b5da04294e7398bde20c31567ba0c5ea14395e83a8cdf21c41668bb0d5fa24496e93b8dd072c51769bc0e50f34597ea3c8ed173c6186abd0f51f44698eb3d802274c7196bbe00a2f54799ec3e812375c81a6cbf01a3f6489aed3f822476c91b6db052a4f7499bee30d32577ca1c6eb153a5f84a9cef31d42678cb1d600254a6f94b9de082d52779cc1e610355a7fa4c9ee183d6287acd1f620456a8fb4d903284d7297bce10b30557a9fc4e913385d82a7ccf11b40658aafd4f923486d92b7dc062b50759abfe40e33587da2c7ec163b6085aacff41e43688db2d701264b7095badf092e53789dc2e711365b80a5caef193e6388add2f721466b90b5da04294e7398bde20c31567ba0c5ea14395e83a8cdf21c41668bb0d5fa24496e93b8dd072c51769bc0e50f34597ea3c8ed173c6186abd0f51f44698eb3d802274c7196bbe00a2f54799ec3e812375c81a6cbf01a3f6489aed3f822476c91b6db052a4f7499bee30d32577ca1c6eb153a5f84a9cef31d42678cb1d600254a6f94b9de082d52779cc1e610355a7fa4c9ee183d6287acd1f620456a8fb4d903284d7297bce10b30557a9fc4e913385d82a7ccf11b40658aafd4f923486d92b7dc062b50759abfe40e33587da2c7ec163b6085aacff41e43688db2d701264b7095badf092e53789dc2e711365b80a5caef193e6388add2f721466b90b5da04294e7398bde20c31567ba0c5ea14395e83a8cdf21c41668bb0d5fa24496e93b8dd072c51769bc0e50f34597ea3c8ed173c6186abd0f51f44698eb3d802274c7196bbe00a2f54799ec3e812375c81a6cbf01a3f6489aed3f822476c91b6db052a4f7499bee30d32577ca1c6eb153a5f84a9cef31d42678cb1d600254a6f94b9de082d52779cc1e610355a7fa4c9",
+  "descriptorHex": "10012a05302e312e3040306662313962626635303030373530383336643033343338393363323434373161306436356362633065663865376139656639636534323038643538636235630131403838383838383838383838383838383838383838383838383838383838383838383838383838383838383838383838383838383838383838383838383838383840393939393939393939393939393939393939393939393939393939393939393939393939393939393939393939393939393939393939393939393939393939390347495303676973076769732e6d61700a67697332642d6d61696e0869736f6c6174656406706c7567696e0c732e6769732e6769736d617017732e6769732e6769736d617040312f2a237669657765720973656d696f3a676973067669657765720101111006071164657363726970746f7256657273696f6e05000000000000f03f0709657865637574696f6e060a07066861736865731003070e636f72655761736d5368613235360605071064657363726970746f725368613235360604070a7761736d536861323536060207086d616e696665737410050704617070730c01100407076469616c6563741003070c61727469666163744b696e64060c07087374616e6461726406030706737562736574060007026964060d0704726f6c65060f070b77696e646f774b696e64730c011001070269640609070d61727469666163744b696e64730c01100207026964060c0706736368656d61060807056c6162656c06060708706c7567696e49640607070776657273696f6e060107097061636b6167654964060e0704726f6c65060b",
+  "expected": {
+    "assetPaths": [
+      "/spaces/raum%3A%C3%A4/documents/karte%3A%E6%9D%B1%E4%BA%AC/execution-target/manifest",
+      "/spaces/raum%3A%C3%A4/documents/karte%3A%E6%9D%B1%E4%BA%AC/execution-target/component",
+      "/spaces/raum%3A%C3%A4/documents/karte%3A%E6%9D%B1%E4%BA%AC/execution-target/descriptor"
+    ],
+    "assetMethod": "POST",
+    "assetBody": "semio.hub.document-open-intent/v1",
+    "openPlanPath": "/spaces/raum%3A%C3%A4/documents/karte%3A%E6%9D%B1%E4%BA%AC/open-plan",
+    "socketGrantPath": "/spaces/raum%3A%C3%A4/documents/karte%3A%E6%9D%B1%E4%BA%AC/socket-grants",
+    "componentMaxBytes": 67108864,
+    "descriptorMaxBytes": 4194304,
+    "manifestMaxBytes": 8192,
+    "progressUnitBytes": 65536,
+    "progressStages": [
+      "manifest",
+      "component",
+      "descriptor",
+      "verify"
+    ],
+    "rendererState": "renderer-unavailable",
+    "rendererClaims": {
+      "loadPluginModule": false,
+      "activationRegistry": false,
+      "wgpuScanner": false,
+      "attachBackbone": false
+    },
+    "viewerWriteRejectedLocally": true,
+    "forbiddenStatusFragments": [
+      "open.v1.R0lTTWFwTGVhc2VDb3JwdXNSZWNlaXB0djEwMDAwMDA",
+      "socket.v1.",
+      "http://hub.test",
+      "0fb19bbf5000750836d0343893c24471a0d65cbc0ef8e7a9ef9ce4208d58cb5c",
+      "96eda1f99692027627c313f59e1acc20ccf394e6f5716dbaad855aaee9a84996",
+      "0aa4c78847b0ae7835bb85b8e5871d2088167bbfac622af41240ef6635aa946b",
+      "blob:"
+    ],
+    "status": {
+      "verifying": {
+        "en": "Verifying document component…",
+        "de": "Dokumentkomponente wird überprüft…"
+      },
+      "integrity-failed": {
+        "en": "The document component could not be verified. Reopen the document.",
+        "de": "Die Dokumentkomponente konnte nicht verifiziert werden. Öffnen Sie das Dokument erneut."
+      },
+      "stale": {
+        "en": "The document target changed. Reopen the document.",
+        "de": "Das Dokumentziel wurde geändert. Öffnen Sie das Dokument erneut."
+      },
+      "cancelled": {
+        "en": "Opening the document was cancelled.",
+        "de": "Das Öffnen des Dokuments wurde abgebrochen."
+      },
+      "renderer-unavailable": {
+        "en": "The verified document component is ready, but this renderer is unavailable.",
+        "de": "Die überprüfte Dokumentkomponente ist bereit, aber dieser Renderer ist nicht verfügbar."
+      }
+    },
+    "statusRoles": {
+      "verifying": "status",
+      "integrity-failed": "alert",
+      "stale": "alert",
+      "cancelled": "alert",
+      "renderer-unavailable": "alert"
+    },
+    "rotation": {
+      "generationA": "7cf0515d5cb12f9404020fef548b46f6b0b3dca140d4e1f2b58329174a40ebef",
+      "generationB": "73021a591414fb30135171f32473f6264a1b85677ba78feb00f7db2c94dd462b"
+    }
+  },
+  "hostile": [
+    {
+      "name": "manifest-scope.spaceId",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "scope.spaceId",
+      "value": "raum:foreign",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-scope.documentId",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "scope.documentId",
+      "value": "karte:foreign",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-descriptorDigestV1",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "descriptorDigestV1",
+      "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-catalog.generationId",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "catalog.generationId",
+      "value": "73021a591414fb30135171f32473f6264a1b85677ba78feb00f7db2c94dd462b",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-package.pluginId",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "package.pluginId",
+      "value": "gis-foreign",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-package.packageId",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "package.packageId",
+      "value": "semio:gis-foreign",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-package.version",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "package.version",
+      "value": "9.9.9",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-package.componentSha256",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "package.componentSha256",
+      "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-package.componentBlake3",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "package.componentBlake3",
+      "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-package.descriptorByteSha256",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "package.descriptorByteSha256",
+      "value": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-component.sha256",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "component.sha256",
+      "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-component.blake3",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "component.blake3",
+      "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-component.byteLength",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "component.byteLength",
+      "value": 1025,
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-descriptor.sha256",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "descriptor.sha256",
+      "value": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-descriptor.byteLength",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "descriptor.byteLength",
+      "value": 608,
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-artifact.kind",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "artifact.kind",
+      "value": "s.gis.gisterrain",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-artifact.schema",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "artifact.schema",
+      "value": "gis.terrain",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-artifact.packSchemaHash",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "artifact.packSchemaHash",
+      "value": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-parentDialect.artifactKind",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "parentDialect.artifactKind",
+      "value": "s.gis.gisterrain",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-parentDialect.standard",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "parentDialect.standard",
+      "value": "2",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-parentDialect.subset",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "parentDialect.subset",
+      "value": "preview",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-surface.surfaceId",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "surface.surfaceId",
+      "value": "s.gis.gismap@1/*#editor",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-surface.appId",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "surface.appId",
+      "value": "s.gis.gisterrain@1/*#viewer",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-surface.windowKindId",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "surface.windowKindId",
+      "value": "gis3d-main",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-surface.role",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "surface.role",
+      "value": "editor",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-surface.rendererTarget",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "surface.rendererTarget",
+      "value": "wgpu",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-grant.read",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "grant.read",
+      "value": false,
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-grant.write",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "grant.write",
+      "value": true,
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-grant.observe",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "grant.observe",
+      "value": false,
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-checkpoint.checkpointId",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "checkpoint.checkpointId",
+      "value": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-checkpoint.aggregateSha256",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "checkpoint.aggregateSha256",
+      "value": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-checkpoint.baselineFrontier.headEditOrdinal",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "checkpoint.baselineFrontier.headEditOrdinal",
+      "value": 9,
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-revalidation.directoryRevision",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "revalidation.directoryRevision",
+      "value": 24,
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-revalidation.membershipGeneration",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "revalidation.membershipGeneration",
+      "value": 12,
+      "expected": "unpublished"
+    },
+    {
+      "name": "manifest-revalidation.sessionGeneration",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "revalidation.sessionGeneration",
+      "value": 6,
+      "expected": "unpublished"
+    },
+    {
+      "name": "component-bytes-substituted",
+      "stage": "component",
+      "kind": "component-bytes",
+      "expected": "unpublished"
+    },
+    {
+      "name": "component-truncated",
+      "stage": "component",
+      "kind": "component-truncated",
+      "expected": "unpublished"
+    },
+    {
+      "name": "component-extra-byte",
+      "stage": "component",
+      "kind": "component-extra-byte",
+      "expected": "unpublished"
+    },
+    {
+      "name": "component-max-plus-one",
+      "stage": "component",
+      "kind": "component-max-plus-one",
+      "value": 67108865,
+      "expected": "unpublished"
+    },
+    {
+      "name": "component-missing-body",
+      "stage": "component",
+      "kind": "missing-body",
+      "expected": "unpublished"
+    },
+    {
+      "name": "descriptor-bytes-substituted",
+      "stage": "descriptor",
+      "kind": "descriptor-bytes",
+      "expected": "unpublished"
+    },
+    {
+      "name": "descriptor-trailing-byte",
+      "stage": "descriptor",
+      "kind": "descriptor-trailing-byte",
+      "expected": "unpublished"
+    },
+    {
+      "name": "descriptor-noncanonical",
+      "stage": "descriptor",
+      "kind": "descriptor-noncanonical",
+      "expected": "unpublished"
+    },
+    {
+      "name": "descriptor-self-hash-mismatch",
+      "stage": "descriptor",
+      "kind": "descriptor-self-hash",
+      "expected": "unpublished"
+    },
+    {
+      "name": "descriptor-max-plus-one",
+      "stage": "descriptor",
+      "kind": "descriptor-max-plus-one",
+      "value": 4194305,
+      "expected": "unpublished"
+    },
+    {
+      "name": "descriptor-missing-body",
+      "stage": "descriptor",
+      "kind": "missing-body",
+      "expected": "unpublished"
+    },
+    {
+      "name": "mixed-generation-manifest-a-component-b",
+      "stage": "component",
+      "kind": "mixed-generation",
+      "value": "73021a591414fb30135171f32473f6264a1b85677ba78feb00f7db2c94dd462b",
+      "expected": "unpublished"
+    },
+    {
+      "name": "stale-plan-after-rotation",
+      "stage": "exchange",
+      "kind": "stale-plan",
+      "value": "73021a591414fb30135171f32473f6264a1b85677ba78feb00f7db2c94dd462b",
+      "expected": "unpublished"
+    },
+    {
+      "name": "cancel-during-manifest",
+      "stage": "manifest",
+      "kind": "cancel",
+      "expected": "unpublished"
+    },
+    {
+      "name": "cancel-during-component",
+      "stage": "component",
+      "kind": "cancel",
+      "expected": "unpublished"
+    },
+    {
+      "name": "cancel-during-descriptor",
+      "stage": "descriptor",
+      "kind": "cancel",
+      "expected": "unpublished"
+    },
+    {
+      "name": "cancel-during-hash",
+      "stage": "verify",
+      "kind": "cancel",
+      "expected": "unpublished"
+    },
+    {
+      "name": "deadline-exceeded",
+      "stage": "component",
+      "kind": "deadline",
+      "expected": "unpublished"
+    },
+    {
+      "name": "reconnect-after-lease-invalidation",
+      "stage": "exchange",
+      "kind": "reconnect-after-invalidation",
+      "expected": "unpublished"
+    },
+    {
+      "name": "viewer-write-attempt",
+      "stage": "publication",
+      "kind": "viewer-write",
+      "expected": "unpublished"
+    },
+    {
+      "name": "caller-url-substitution",
+      "stage": "asset-request",
+      "kind": "caller-url",
+      "value": "https://attacker.invalid/component.wasm",
+      "expected": "unpublished"
+    },
+    {
+      "name": "caller-path-substitution",
+      "stage": "asset-request",
+      "kind": "caller-path",
+      "value": "/spaces/raum%3A%C3%A4/documents/karte%3A%E6%9D%B1%E4%BA%AC/execution-target/component?package=semio:gis",
+      "expected": "unpublished"
+    },
+    {
+      "name": "caller-module-substitution",
+      "stage": "publication",
+      "kind": "caller-module",
+      "value": "blob:https://attacker.invalid/module",
+      "expected": "unpublished"
+    }
+  ]
+}

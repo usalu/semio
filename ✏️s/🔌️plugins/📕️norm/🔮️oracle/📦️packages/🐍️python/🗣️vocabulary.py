@@ -84,7 +84,7 @@ class Subset:
 
 #: 📂 The `asset://` prefix every specification vector hangs off; identical in all fifteen subsets
 #: because the mutation triad's location is fixed by the repository taxonomy, not by the standard.
-VECTOR_ROOT = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations"
+VECTOR_ROOT = "asset://🧬️schema/🧬️mutations"
 # endregion 🔖️Subset
 
 

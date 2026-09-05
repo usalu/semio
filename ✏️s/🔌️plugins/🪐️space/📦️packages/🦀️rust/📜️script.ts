@@ -170,6 +170,61 @@ class HomeDirectoryEventPageOwnerCheckScript extends BundleScript {
   }
 }
 
+/** 🪪️ Proves only the current Hub author identity receives Home administration affordances. */
+export function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
+  const base = join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any");
+  const controller = readFileSync(join(base, "✏️editor/🦀️.rs"), "utf8");
+  const editor = readFileSync(join(base, "✏️editor/🎭️modes/🔎️explore/🪟️windows/🏠️main/🦀️.rs"), "utf8");
+  const viewer = readFileSync(join(base, "👁️viewer/🎭️modes/👁️view/🪟️windows/🏠️main/🦀️.rs"), "utf8");
+  const exact = (editorSource: string, viewerSource: string): boolean => editorSource.includes("row.role == Some(crate::DirectorySpaceRole::Author)")
+    && editorSource.includes('home_row_action(IconName::Users, labels.action_manage, "manageSpace", &row.id)')
+    && editorSource.includes('assert_eq!(buttons.len(), 5')
+    && editorSource.includes('manage_button["action"]["args"]["spaceId"]')
+    && editorSource.includes("spectator_and_unbound_hub_rows_only_carry_open")
+    && editorSource.includes("role: Some(crate::DirectorySpaceRole::Spectator)")
+    && editorSource.includes("role: None")
+    && viewerSource.includes('origin: "hub", role: None');
+  assert(controller.includes("fold_directory_events, manage_space, presence_heartbeat"), "Home controller does not import the manageSpace command module");
+  assert(exact(editor, viewer), "Home identity rows expose administration without current author authority");
+  for (const hostile of [
+    editor.replace("row.role == Some(crate::DirectorySpaceRole::Author)", 'row.origin == "hub"'),
+    editor.replace('assert_eq!(buttons.len(), 5', 'assert_eq!(buttons.len(), 4'),
+    editor.replace("role: Some(crate::DirectorySpaceRole::Spectator)", "role: Some(crate::DirectorySpaceRole::Author)"),
+  ]) assert.equal(exact(hostile, viewer), false);
+  return 8;
+}
+
+class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("home-directory-identity-rows-check accepts only --native");
+    if (segments[0] === "--native") {
+      const receipts = await runExactCargoLaws({
+        cwd: this.root,
+        env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        groups: [
+          {
+            package: "semio-framework-plugin-host",
+            target: { kind: "lib" },
+            laws: ["component::imports::effect_conversion_tests::request_inference_proposal_preserves_the_closed_kind"],
+          },
+          {
+            package: "semio-s-plugin-space",
+            target: { kind: "lib" },
+            laws: [
+              "editor::home::modes::explore::windows::main::tests::a_hub_row_stamps_the_space_row_id_and_carries_dispatchable_row_actions",
+              "editor::home::modes::explore::windows::main::tests::spectator_and_unbound_hub_rows_only_carry_open",
+              "viewer::home::modes::view::windows::main::tests::a_row_stamps_the_space_row_id",
+            ],
+          },
+        ],
+        progress(event) { console.log(`home-directory-identity-rows ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+      });
+      console.log(`home-directory-identity-rows-native-receipts: ${JSON.stringify(receipts)}`);
+    }
+    console.log(`home-directory-identity-rows-check: checks=${homeDirectoryIdentityRowsOracle(this.repoRoot)} clean`);
+  }
+}
+
 /** @emoji 🛂️ Builds this crate's `wasm32-wasip2` component and re-emits `🛂️.descriptor.semio` +
  * `🔣️.json` at this plugin's own owner root (D0-descriptor-plumbing) — the command
  * `📇️registry:check`'s own descriptor-gate warning tells a developer to run. */
@@ -179,6 +234,6 @@ class DescribeScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("describe", DescribeScript).register("home-directory-projection-persistence-check", HomeDirectoryProjectionPersistenceCheckScript).register("home-directory-event-page-owner-check", HomeDirectoryEventPageOwnerCheckScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("describe", DescribeScript).register("home-directory-projection-persistence-check", HomeDirectoryProjectionPersistenceCheckScript).register("home-directory-event-page-owner-check", HomeDirectoryEventPageOwnerCheckScript).register("home-directory-identity-rows-check", HomeDirectoryIdentityRowsCheckScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

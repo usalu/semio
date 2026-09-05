@@ -1711,29 +1711,6 @@ async fn encode_presence_view_kind(kind: &PresenceViewKind, out: &mut Vec<u8>) {
     }
 }
 
-async fn decode_presence_view_kind(bytes: &[u8], pos: &mut usize) -> Result<PresenceViewKind, crate::ProtocolError> {
-    let tag = match bytes.get(*pos) {
-        Some(b) => *b,
-        None => return Err(malformed("presence view kind tag", *pos as u64, "truncated").await),
-    };
-    *pos += 1;
-    match tag {
-        0 => Ok(PresenceViewKind::Canvas { x: crate::read_f64(bytes, pos)?, y: crate::read_f64(bytes, pos)?, zoom: crate::read_f64(bytes, pos)? }),
-        1 => {
-            async fn read3(bytes: &[u8], pos: &mut usize) -> Result<[f64; 3], crate::ProtocolError> {
-                Ok([crate::read_f64(bytes, pos)?, crate::read_f64(bytes, pos)?, crate::read_f64(bytes, pos)?])
-            }
-            let position = read3(bytes, pos).await?;
-            let target = read3(bytes, pos).await?;
-            let up = read3(bytes, pos).await?;
-            let fov = crate::read_f64(bytes, pos)?;
-            Ok(PresenceViewKind::Orbit { position, target, up, fov })
-        }
-        2 => Ok(PresenceViewKind::Geo { lng: crate::read_f64(bytes, pos)?, lat: crate::read_f64(bytes, pos)?, zoom: crate::read_f64(bytes, pos)?, bearing: crate::read_f64(bytes, pos)?, pitch: crate::read_f64(bytes, pos)? }),
-        other => Err(malformed("presence view kind tag", *pos as u64, &format!("unknown tag {other:#x}")).await),
-    }
-}
-
 async fn encode_presence_window_view(view: &PresenceWindowView, out: &mut Vec<u8>) {
     crate::write_str(out, &view.window_id);
     crate::write_str(out, &view.space);
@@ -1748,29 +1725,11 @@ async fn encode_presence_window_view(view: &PresenceWindowView, out: &mut Vec<u8
     }
 }
 
-async fn decode_presence_window_view(bytes: &[u8], pos: &mut usize) -> Result<PresenceWindowView, crate::ProtocolError> {
-    let window_id = crate::read_str(bytes, pos)?;
-    let space = crate::read_str(bytes, pos)?;
-    let kind = decode_presence_view_kind(bytes, pos).await?;
-    let size = [crate::read_f64(bytes, pos)?, crate::read_f64(bytes, pos)?];
-    let pointer = if crate::read_bool(bytes, pos)? { Some([crate::read_f64(bytes, pos)?, crate::read_f64(bytes, pos)?, crate::read_f64(bytes, pos)?]) } else { None };
-    Ok(PresenceWindowView { window_id, space, kind, size, pointer })
-}
-
 async fn write_vec_presence_window_view(out: &mut Vec<u8>, values: &[PresenceWindowView]) {
     crate::wire::write_varint_u64(out, values.len() as u64);
     for value in values {
         encode_presence_window_view(value, out).await;
     }
-}
-
-async fn read_vec_presence_window_view(bytes: &[u8], pos: &mut usize) -> Result<Vec<PresenceWindowView>, crate::ProtocolError> {
-    let count = crate::wire::read_varint_u64(bytes, pos)?;
-    let mut out = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        out.push(decode_presence_window_view(bytes, pos).await?);
-    }
-    Ok(out)
 }
 
 async fn encode_presence_ui(ui: &PresenceUi, out: &mut Vec<u8>) {
@@ -1779,9 +1738,6 @@ async fn encode_presence_ui(ui: &PresenceUi, out: &mut Vec<u8>) {
     write_opt_str(out, &ui.pressed_path).await;
 }
 
-async fn decode_presence_ui(bytes: &[u8], pos: &mut usize) -> Result<PresenceUi, crate::ProtocolError> {
-    Ok(PresenceUi { hovered_path: read_opt_str(bytes, pos).await?, focused_path: read_opt_str(bytes, pos).await?, pressed_path: read_opt_str(bytes, pos).await? })
-}
 //#endregion 🔖️PresenceViewCodec
 //#endregion 🔖️PresenceView
 
@@ -1812,9 +1768,9 @@ pub struct PresencePeer {
     /// `InteractionState` — see `assemble_presence_interaction` below. `None` for peers on apps that
     /// declare no interaction domains.
     pub interaction: Option<PresenceInteraction>,
-    /// @emoji 🎨️ Hub-assigned palette index, stamped by the client actor — never filled by a shell.
+    /// @emoji 🎨️ Hub-assigned palette index, normalized at authenticated presence ingress.
     pub color: Option<u8>,
-    /// @emoji 🪟️ Canonical surface id, stamped by the client actor — never filled by a shell.
+    /// @emoji 🪟️ Canonical plan-bound surface id, normalized by the Hub.
     pub surface: Option<String>,
     /// @emoji 🪟️ Every open window/surface's live camera + in-view pointer (ARTIFACT scope), matched
     /// by `space`. Empty when the peer has no open windows for this document.
@@ -2000,38 +1956,266 @@ pub async fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     out
 }
 
-/// @emoji 🎯️ Inverse of [`encode_presence_peer`]. Any flag bit ≥ 10 set is a drift guard failure
-/// (`ProtocolError::Malformed { what: "presence peer flags", .. }`) — no silent forward compatibility.
-pub async fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::ProtocolError> {
-    let mut pos = 0usize;
-    let actor = crate::read_str(bytes, &mut pos)?;
-    let flags = crate::wire::read_varint_u64(bytes, &mut pos)?;
-    if flags >> 10 != 0 {
-        return Err(crate::ProtocolError::Malformed { what: "presence peer flags", offset: pos as u64, detail: format!("unknown flag bits set: {flags:#x}") });
+/// @emoji 🛡️ Fixed hostile-input ceilings shared with the TypeScript presence decoder.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct PresencePeerWireLimitsV1 {
+    pub maximum_entry_bytes: usize,
+    pub maximum_text_bytes: usize,
+    pub maximum_presence_pack_bytes: usize,
+    pub maximum_views: usize,
+    pub maximum_interaction_domains: usize,
+    pub maximum_domain_ids: usize,
+    pub maximum_connected_at_ms: u64,
+}
+
+pub const PRESENCE_PEER_WIRE_LIMITS_V1: PresencePeerWireLimitsV1 = PresencePeerWireLimitsV1 {
+    maximum_entry_bytes: 4_096,
+    maximum_text_bytes: 1_024,
+    maximum_presence_pack_bytes: 2_048,
+    maximum_views: 16,
+    maximum_interaction_domains: 16,
+    maximum_domain_ids: 64,
+    maximum_connected_at_ms: 9_007_199_254_740_991,
+};
+
+struct PresencePeerReader<'a> {
+    bytes: &'a [u8],
+    position: usize,
+    limits: PresencePeerWireLimitsV1,
+}
+
+impl<'a> PresencePeerReader<'a> {
+    fn malformed(&self, what: &'static str, detail: impl Into<String>) -> crate::ProtocolError {
+        crate::ProtocolError::Malformed { what, offset: self.position as u64, detail: detail.into() }
     }
-    let connected_at_ms = crate::wire::read_varint_u64(bytes, &mut pos)? as i64;
-    let label = if flags & (1 << 0) != 0 { Some(crate::read_str(bytes, &mut pos)?) } else { None };
-    let presence_pack = if flags & (1 << 1) != 0 { Some(crate::read_bytes(bytes, &mut pos)?) } else { None };
-    let user_id = if flags & (1 << 2) != 0 { Some(crate::read_str(bytes, &mut pos)?) } else { None };
-    let role = if flags & (1 << 3) != 0 { Some(crate::read_str(bytes, &mut pos)?) } else { None };
-    let drag_ghost_json = if flags & (1 << 4) != 0 { Some(crate::read_str(bytes, &mut pos)?) } else { None };
-    let interaction = if flags & (1 << 5) != 0 { Some(decode_presence_interaction(bytes, &mut pos).await?) } else { None };
-    let color = if flags & (1 << 6) != 0 {
-        let byte = *bytes.get(pos).ok_or(crate::ProtocolError::Malformed { what: "presence peer color", offset: pos as u64, detail: "truncated".to_string() })?;
-        pos += 1;
-        Some(byte)
-    } else {
-        None
-    };
-    let surface = if flags & (1 << 7) != 0 { Some(crate::read_str(bytes, &mut pos)?) } else { None };
-    let views = if flags & (1 << 8) != 0 { read_vec_presence_window_view(bytes, &mut pos).await? } else { Vec::new() };
-    let ui = if flags & (1 << 9) != 0 { Some(decode_presence_ui(bytes, &mut pos).await?) } else { None };
+
+    fn varint(&mut self, what: &'static str) -> Result<u64, crate::ProtocolError> {
+        let start = self.position;
+        let mut value = 0u64;
+        for index in 0..10 {
+            let byte = *self.bytes.get(self.position).ok_or_else(|| self.malformed(what, "truncated varint"))?;
+            self.position += 1;
+            if index == 9 && byte > 1 { return Err(self.malformed(what, "varint exceeds u64")); }
+            value |= u64::from(byte & 0x7f) << (index * 7);
+            if byte & 0x80 == 0 {
+                if self.position - start > 1 && byte == 0 { return Err(self.malformed(what, "noncanonical varint")); }
+                return Ok(value);
+            }
+        }
+        Err(self.malformed(what, "overlong varint"))
+    }
+
+    fn length(&mut self, maximum: usize, what: &'static str) -> Result<usize, crate::ProtocolError> {
+        let value = self.varint(what)?;
+        if value > maximum as u64 { return Err(crate::ProtocolError::LimitExceeded(what)); }
+        let length = usize::try_from(value).map_err(|_| crate::ProtocolError::LimitExceeded(what))?;
+        if length > self.bytes.len().saturating_sub(self.position) { return Err(self.malformed(what, "truncated field")); }
+        Ok(length)
+    }
+
+    fn count(&mut self, maximum: usize, what: &'static str) -> Result<usize, crate::ProtocolError> {
+        let count = self.length(maximum, what)?;
+        Ok(count)
+    }
+
+    fn text(&mut self, what: &'static str) -> Result<String, crate::ProtocolError> {
+        let length = self.length(self.limits.maximum_text_bytes, what)?;
+        let end = self.position + length;
+        let value = std::str::from_utf8(&self.bytes[self.position..end]).map_err(|_| self.malformed(what, "invalid utf8"))?.to_owned();
+        self.position = end;
+        Ok(value)
+    }
+
+    fn blob(&mut self, what: &'static str) -> Result<Vec<u8>, crate::ProtocolError> {
+        let length = self.length(self.limits.maximum_presence_pack_bytes, what)?;
+        let end = self.position + length;
+        let value = self.bytes[self.position..end].to_vec();
+        self.position = end;
+        Ok(value)
+    }
+
+    fn byte(&mut self, what: &'static str) -> Result<u8, crate::ProtocolError> {
+        let value = *self.bytes.get(self.position).ok_or_else(|| self.malformed(what, "truncated byte"))?;
+        self.position += 1;
+        Ok(value)
+    }
+
+    fn boolean(&mut self, what: &'static str) -> Result<bool, crate::ProtocolError> {
+        match self.byte(what)? {
+            0 => Ok(false),
+            1 => Ok(true),
+            _ => Err(self.malformed(what, "boolean must be zero or one")),
+        }
+    }
+
+    fn number(&mut self, what: &'static str) -> Result<f64, crate::ProtocolError> {
+        let end = self.position.checked_add(8).ok_or_else(|| self.malformed(what, "length overflow"))?;
+        let slice = self.bytes.get(self.position..end).ok_or_else(|| self.malformed(what, "truncated f64"))?;
+        let value = f64::from_le_bytes(slice.try_into().map_err(|_| self.malformed(what, "invalid f64"))?);
+        if !value.is_finite() { return Err(self.malformed(what, "non-finite f64")); }
+        self.position = end;
+        Ok(value)
+    }
+
+    fn triple(&mut self, what: &'static str) -> Result<[f64; 3], crate::ProtocolError> {
+        Ok([self.number(what)?, self.number(what)?, self.number(what)?])
+    }
+
+    fn strings(&mut self, what: &'static str) -> Result<Vec<String>, crate::ProtocolError> {
+        let count = self.count(self.limits.maximum_domain_ids, what)?;
+        let mut values = Vec::with_capacity(count);
+        for _ in 0..count { values.push(self.text(what)?); }
+        Ok(values)
+    }
+
+    fn interaction(&mut self) -> Result<PresenceInteraction, crate::ProtocolError> {
+        let app_id = self.text("presence interaction app id")?;
+        let count = self.count(self.limits.maximum_interaction_domains, "presence interaction domains")?;
+        let mut domains = Vec::with_capacity(count);
+        for _ in 0..count {
+            domains.push(PresenceDomain {
+                domain: self.text("presence interaction domain")?,
+                granularity: self.text("presence interaction granularity")?,
+                selected: self.strings("presence interaction selected")?,
+                hovered: self.strings("presence interaction hovered")?,
+            });
+        }
+        Ok(PresenceInteraction { app_id, domains })
+    }
+
+    fn view_kind(&mut self) -> Result<PresenceViewKind, crate::ProtocolError> {
+        match self.byte("presence view kind")? {
+            0 => Ok(PresenceViewKind::Canvas { x: self.number("presence canvas x")?, y: self.number("presence canvas y")?, zoom: self.number("presence canvas zoom")? }),
+            1 => Ok(PresenceViewKind::Orbit { position: self.triple("presence orbit position")?, target: self.triple("presence orbit target")?, up: self.triple("presence orbit up")?, fov: self.number("presence orbit fov")? }),
+            2 => Ok(PresenceViewKind::Geo { lng: self.number("presence geo longitude")?, lat: self.number("presence geo latitude")?, zoom: self.number("presence geo zoom")?, bearing: self.number("presence geo bearing")?, pitch: self.number("presence geo pitch")? }),
+            tag => Err(self.malformed("presence view kind", format!("unknown tag {tag:#x}"))),
+        }
+    }
+
+    fn views(&mut self) -> Result<Vec<PresenceWindowView>, crate::ProtocolError> {
+        let count = self.count(self.limits.maximum_views, "presence views")?;
+        let mut views = Vec::with_capacity(count);
+        for _ in 0..count {
+            let window_id = self.text("presence view window id")?;
+            let space = self.text("presence view space")?;
+            let kind = self.view_kind()?;
+            let size = [self.number("presence view width")?, self.number("presence view height")?];
+            let pointer = if self.boolean("presence view pointer")? { Some(self.triple("presence view pointer")?) } else { None };
+            views.push(PresenceWindowView { window_id, space, kind, size, pointer });
+        }
+        Ok(views)
+    }
+
+    fn optional_text(&mut self, what: &'static str) -> Result<Option<String>, crate::ProtocolError> {
+        if self.boolean(what)? { Ok(Some(self.text(what)?)) } else { Ok(None) }
+    }
+
+    fn ui(&mut self) -> Result<PresenceUi, crate::ProtocolError> {
+        Ok(PresenceUi { hovered_path: self.optional_text("presence ui hovered path")?, focused_path: self.optional_text("presence ui focused path")?, pressed_path: self.optional_text("presence ui pressed path")? })
+    }
+}
+
+/// @emoji 🎯️ Exact, allocation-bounded inverse of [`encode_presence_peer`]. Unknown flags,
+/// noncanonical varints, non-finite view values, hostile collection counts, and trailing bytes are
+/// rejected before a peer can cross a network authority boundary.
+pub async fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::ProtocolError> {
+    let limits = PRESENCE_PEER_WIRE_LIMITS_V1;
+    if bytes.len() > limits.maximum_entry_bytes { return Err(crate::ProtocolError::LimitExceeded("presence peer entry bytes")); }
+    let mut reader = PresencePeerReader { bytes, position: 0, limits };
+    let actor = reader.text("presence peer actor")?;
+    let flags = reader.varint("presence peer flags")?;
+    if flags >> 10 != 0 { return Err(reader.malformed("presence peer flags", format!("unknown flag bits set: {flags:#x}"))); }
+    let connected_at = reader.varint("presence peer connected at")?;
+    if connected_at > limits.maximum_connected_at_ms { return Err(crate::ProtocolError::LimitExceeded("presence peer connected at")); }
+    let connected_at_ms = connected_at as i64;
+    let label = if flags & (1 << 0) != 0 { Some(reader.text("presence peer label")?) } else { None };
+    let presence_pack = if flags & (1 << 1) != 0 { Some(reader.blob("presence peer pack")?) } else { None };
+    let user_id = if flags & (1 << 2) != 0 { Some(reader.text("presence peer user id")?) } else { None };
+    let role = if flags & (1 << 3) != 0 { Some(reader.text("presence peer role")?) } else { None };
+    let drag_ghost_json = if flags & (1 << 4) != 0 { Some(reader.text("presence peer drag ghost")?) } else { None };
+    let interaction = if flags & (1 << 5) != 0 { Some(reader.interaction()?) } else { None };
+    let color = if flags & (1 << 6) != 0 { Some(reader.byte("presence peer color")?) } else { None };
+    let surface = if flags & (1 << 7) != 0 { Some(reader.text("presence peer surface")?) } else { None };
+    let views = if flags & (1 << 8) != 0 { reader.views()? } else { Vec::new() };
+    let ui = if flags & (1 << 9) != 0 { Some(reader.ui()?) } else { None };
+    if reader.position != bytes.len() { return Err(reader.malformed("presence peer", "trailing bytes")); }
     Ok(PresencePeer { actor, connected_at_ms, label, presence_pack, user_id, role, drag_ghost_json, interaction, color, surface, views, ui })
 }
 
 #[cfg(test)]
 mod presence_codec_tests {
     use super::{decode_presence_peer, encode_presence_peer, PresenceDomain, PresenceInteraction, PresencePeer, PresenceUi, PresenceViewKind, PresenceWindowView};
+
+    fn bounded_codec_fixture() -> serde_json::Value {
+        serde_json::from_str(include_str!("../🧫️fixtures/👥️presence-peer-codec-v1/🧪️fixture/🔣️.json")).expect("presence peer codec fixture")
+    }
+
+    fn fixture_hex(value: &str) -> Vec<u8> {
+        assert_eq!(value.len() % 2, 0);
+        value.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect()
+    }
+
+    fn fixture_bytes(row: &serde_json::Value) -> Vec<u8> {
+        let mut bytes = fixture_hex(row["prefixHex"].as_str().unwrap());
+        let repeated = fixture_hex(row["repeatHex"].as_str().unwrap())[0];
+        bytes.extend(std::iter::repeat_n(repeated, row["repeatCount"].as_u64().unwrap() as usize));
+        bytes.extend(fixture_hex(row["suffixHex"].as_str().unwrap()));
+        bytes
+    }
+
+    fn normalize_json_numbers(value: &mut serde_json::Value) {
+        match value {
+            serde_json::Value::Number(number) => {
+                *number = serde_json::Number::from_f64(number.as_f64().unwrap()).unwrap();
+            }
+            serde_json::Value::Array(values) => values.iter_mut().for_each(normalize_json_numbers),
+            serde_json::Value::Object(values) => values.values_mut().for_each(normalize_json_numbers),
+            _ => {}
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn presence_peer_decoder_matches_neutral_bounded_exact_corpus() {
+        let fixture = bounded_codec_fixture();
+        let limits = &fixture["limits"];
+        assert_eq!(super::PRESENCE_PEER_WIRE_LIMITS_V1.maximum_entry_bytes, limits["maximumEntryBytes"].as_u64().unwrap() as usize);
+        assert_eq!(super::PRESENCE_PEER_WIRE_LIMITS_V1.maximum_text_bytes, limits["maximumTextBytes"].as_u64().unwrap() as usize);
+        assert_eq!(super::PRESENCE_PEER_WIRE_LIMITS_V1.maximum_presence_pack_bytes, limits["maximumPresencePackBytes"].as_u64().unwrap() as usize);
+        assert_eq!(super::PRESENCE_PEER_WIRE_LIMITS_V1.maximum_views, limits["maximumViews"].as_u64().unwrap() as usize);
+        assert_eq!(super::PRESENCE_PEER_WIRE_LIMITS_V1.maximum_interaction_domains, limits["maximumInteractionDomains"].as_u64().unwrap() as usize);
+        assert_eq!(super::PRESENCE_PEER_WIRE_LIMITS_V1.maximum_domain_ids, limits["maximumDomainIds"].as_u64().unwrap() as usize);
+        assert_eq!(super::PRESENCE_PEER_WIRE_LIMITS_V1.maximum_connected_at_ms, limits["maximumConnectedAtMs"].as_u64().unwrap());
+        let mut ids = std::collections::BTreeSet::new();
+        for row in fixture["cases"].as_array().unwrap() {
+            let id = row["id"].as_str().unwrap();
+            assert!(ids.insert(id), "duplicate fixture id {id}");
+            let bytes = fixture_bytes(row);
+            let result = decode_presence_peer(&bytes).await;
+            if row["accepted"].as_bool().unwrap() {
+                let decoded = result.unwrap_or_else(|error| panic!("{id}: {error}"));
+                assert_eq!(encode_presence_peer(&decoded).await, fixture_hex(row["canonicalHex"].as_str().unwrap()), "{id}");
+                let mut semantic = serde_json::Value::from(crate::value::ToValue::to_value(&decoded));
+                semantic.as_object_mut().unwrap().entry("views").or_insert_with(|| serde_json::json!([]));
+                let mut expected = row["expected"].clone();
+                normalize_json_numbers(&mut semantic);
+                normalize_json_numbers(&mut expected);
+                assert_eq!(semantic, expected, "{id}");
+            } else {
+                assert!(result.is_err(), "{id} was accepted");
+            }
+        }
+        assert_eq!(ids.len(), fixture["cases"].as_array().unwrap().len());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn presence_peer_decoder_rejects_hostile_counts_before_allocation() {
+        let fixture = bounded_codec_fixture();
+        for row in fixture["cases"].as_array().unwrap().iter().filter(|row| row["id"].as_str().unwrap().starts_with("huge-")) {
+            let bytes = fixture_bytes(row);
+            assert!(bytes.len() < 32, "hostile count fixture must stay short");
+            assert!(matches!(decode_presence_peer(&bytes).await, Err(crate::ProtocolError::LimitExceeded(_))), "{}", row["id"].as_str().unwrap());
+        }
+    }
 
     #[semio_framework_async_macros::async_test]
     async fn presence_peer_binary_round_trips_with_every_field_absent() {

@@ -1,0 +1,891 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution. A mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the oracle registration and the catalog live here rather than in a shared manifest. `en1999-1-any` is generated from each triad leaf's own `SemanticDescriptor.kind`, in `#[derive(dsl::Mutations)]`'s declaration order, and `kinds_match_the_enum_and_the_catalog` in `../🧬️schema/🧬️mutations/🦀️.rs` fails the moment this list and the enum part company.",
+  "oracles": [
+    {
+      "id": "en1999-1-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "capabilities": [
+        "en1999-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.en1999` — checked against PyPI, which serves no `en1999`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is `../../../../../🧪️tests/mutate-en1999-1/🐍️.py`, all 26 kinds of `En1999Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `en1999-1-mutate`'s external-oracle requirement for its 26-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 26 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.norm.en1999",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "structuralcodes",
+              "reason": "implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution."
+            },
+            {
+              "package": "concreteproperties",
+              "reason": "implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution."
+            },
+            {
+              "package": "anastruct",
+              "reason": "implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": "📓️taxonomy.md; 📓️derivation-rules.md; .dsl.semio",
+        "fixtureCoverage": {
+          "vectors": 26,
+          "capabilitiesCovered": [
+            "en1999-1-mutate"
+          ]
+        }
+      }
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "en1999-1-any",
+      "capability": "en1999-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-a-mm2",
+          "sourceMutationDirectoryName": "📐️change-a-mm2",
+          "mutationDirectoryName": "📐️change-a-mm2",
+          "scenarios": [
+            {
+              "id": "enlarges-section-area-to-2250-mm2",
+              "directoryName": "📐️enlarges-section-area-to-2250-mm2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-alloy",
+          "sourceMutationDirectoryName": "⚗️change-alloy",
+          "mutationDirectoryName": "⚗️change-alloy",
+          "scenarios": [
+            {
+              "id": "switches-alloy-to-aw7020t6",
+              "directoryName": "⚗️switches-alloy-to-aw7020t6"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-annex",
+          "sourceMutationDirectoryName": "🌍️change-annex",
+          "mutationDirectoryName": "🌍️change-annex",
+          "scenarios": [
+            {
+              "id": "switches-national-annex-to-en",
+              "directoryName": "🌍️switches-national-annex-to-en"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-beta-w",
+          "sourceMutationDirectoryName": "🧮️change-beta-w",
+          "mutationDirectoryName": "🧮️change-beta-w",
+          "scenarios": [
+            {
+              "id": "raises-weld-correlation-beta-w-to-0-75",
+              "directoryName": "🧮️raises-weld-correlation-beta-w-to-0-75"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-chi",
+          "sourceMutationDirectoryName": "⬇️change-chi",
+          "mutationDirectoryName": "⬇️change-chi",
+          "scenarios": [
+            {
+              "id": "lowers-buckling-chi-to-0-5",
+              "directoryName": "⬇️lowers-buckling-chi-to-0-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-delta-sigma-c",
+          "sourceMutationDirectoryName": "🏷️change-delta-sigma-c",
+          "mutationDirectoryName": "🏷️change-delta-sigma-c",
+          "scenarios": [
+            {
+              "id": "upgrades-detail-category-to-90-mpa",
+              "directoryName": "🏷️upgrades-detail-category-to-90-mpa"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-delta-sigma-ed",
+          "sourceMutationDirectoryName": "↕️change-delta-sigma-ed",
+          "mutationDirectoryName": "↕️change-delta-sigma-ed",
+          "scenarios": [
+            {
+              "id": "raises-fatigue-stress-range-to-62-5-mpa",
+              "directoryName": "↕️raises-fatigue-stress-range-to-62-5-mpa"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fatigue-m",
+          "sourceMutationDirectoryName": "📉️change-fatigue-m",
+          "mutationDirectoryName": "📉️change-fatigue-m",
+          "scenarios": [
+            {
+              "id": "flattens-sn-slope-to-m-5",
+              "directoryName": "📉️flattens-sn-slope-to-m-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-it-mm4",
+          "sourceMutationDirectoryName": "🌀️change-it-mm4",
+          "mutationDirectoryName": "🌀️change-it-mm4",
+          "scenarios": [
+            {
+              "id": "raises-torsion-constant-to-10240-mm4",
+              "directoryName": "🌀️raises-torsion-constant-to-10240-mm4"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-l-cr-mm",
+          "sourceMutationDirectoryName": "📏️change-l-cr-mm",
+          "mutationDirectoryName": "📏️change-l-cr-mm",
+          "scenarios": [
+            {
+              "id": "lengthens-buckling-length-to-4000-mm",
+              "directoryName": "📏️lengthens-buckling-length-to-4000-mm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-m-ed-knm",
+          "sourceMutationDirectoryName": "⤴️change-m-ed-knm",
+          "mutationDirectoryName": "⤴️change-m-ed-knm",
+          "scenarios": [
+            {
+              "id": "raises-design-moment-to-9-5-knm",
+              "directoryName": "⤴️raises-design-moment-to-9-5-knm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-n-cycles",
+          "sourceMutationDirectoryName": "🔁️change-n-cycles",
+          "mutationDirectoryName": "🔁️change-n-cycles",
+          "scenarios": [
+            {
+              "id": "doubles-fatigue-cycles-to-2000000",
+              "directoryName": "🔁️doubles-fatigue-cycles-to-2000000"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-n-ed-kn",
+          "sourceMutationDirectoryName": "🏋️change-n-ed-kn",
+          "mutationDirectoryName": "🏋️change-n-ed-kn",
+          "scenarios": [
+            {
+              "id": "raises-axial-force-to-180-kn",
+              "directoryName": "🏋️raises-axial-force-to-180-kn"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-sheet-b-mm",
+          "sourceMutationDirectoryName": "↔️change-sheet-b-mm",
+          "mutationDirectoryName": "↔️change-sheet-b-mm",
+          "scenarios": [
+            {
+              "id": "widens-sheet-to-320-mm",
+              "directoryName": "↔️widens-sheet-to-320-mm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-sheet-k-sigma",
+          "sourceMutationDirectoryName": "🎚️change-sheet-k-sigma",
+          "mutationDirectoryName": "🎚️change-sheet-k-sigma",
+          "scenarios": [
+            {
+              "id": "raises-sheet-plate-buckling-k-sigma-to-6-25",
+              "directoryName": "🎚️raises-sheet-plate-buckling-k-sigma-to-6-25"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-sheet-m-ed-knm",
+          "sourceMutationDirectoryName": "🌊️change-sheet-m-ed-knm",
+          "mutationDirectoryName": "🌊️change-sheet-m-ed-knm",
+          "scenarios": [
+            {
+              "id": "raises-sheet-design-moment-to-1-25-knm",
+              "directoryName": "🌊️raises-sheet-design-moment-to-1-25-knm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-sheet-t-mm",
+          "sourceMutationDirectoryName": "📑️change-sheet-t-mm",
+          "mutationDirectoryName": "📑️change-sheet-t-mm",
+          "scenarios": [
+            {
+              "id": "thickens-sheet-to-3-5-mm",
+              "directoryName": "📑️thickens-sheet-to-3-5-mm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-sheet-w-el-mm3",
+          "sourceMutationDirectoryName": "📊️change-sheet-w-el-mm3",
+          "mutationDirectoryName": "📊️change-sheet-w-el-mm3",
+          "scenarios": [
+            {
+              "id": "raises-sheet-section-modulus-to-12800-mm3",
+              "directoryName": "📊️raises-sheet-section-modulus-to-12800-mm3"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-shell-r-mm",
+          "sourceMutationDirectoryName": "⭕️change-shell-r-mm",
+          "mutationDirectoryName": "⭕️change-shell-r-mm",
+          "scenarios": [
+            {
+              "id": "widens-shell-radius-to-750-mm",
+              "directoryName": "🐚️widens-shell-radius-to-750-mm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-shell-t-mm",
+          "sourceMutationDirectoryName": "🐚️change-shell-t-mm",
+          "mutationDirectoryName": "🐚️change-shell-t-mm",
+          "scenarios": [
+            {
+              "id": "thickens-shell-to-6-25-mm",
+              "directoryName": "🐚️thickens-shell-to-6-25-mm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-sigma-ed-shell-mpa",
+          "sourceMutationDirectoryName": "🗜️change-sigma-ed-shell-mpa",
+          "mutationDirectoryName": "🗜️change-sigma-ed-shell-mpa",
+          "scenarios": [
+            {
+              "id": "raises-shell-design-stress-to-165-mpa",
+              "directoryName": "🐚️raises-shell-design-stress-to-165-mpa"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-theta-c",
+          "sourceMutationDirectoryName": "🌡️change-theta-c",
+          "mutationDirectoryName": "🌡️change-theta-c",
+          "scenarios": [
+            {
+              "id": "raises-fatigue-detail-theta-c-to-225-mpa",
+              "directoryName": "🌡️raises-temperature-to-225-c"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-v-weld-ed-kn",
+          "sourceMutationDirectoryName": "✂️change-v-weld-ed-kn",
+          "mutationDirectoryName": "✂️change-v-weld-ed-kn",
+          "scenarios": [
+            {
+              "id": "raises-weld-shear-to-48-kn",
+              "directoryName": "✂️raises-weld-shear-to-48-kn"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-w-el-mm3",
+          "sourceMutationDirectoryName": "🧊️change-w-el-mm3",
+          "mutationDirectoryName": "🧊️change-w-el-mm3",
+          "scenarios": [
+            {
+              "id": "raises-section-modulus-to-40000-mm3",
+              "directoryName": "🧊️raises-section-modulus-to-40000-mm3"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-weld-length-mm",
+          "sourceMutationDirectoryName": "🧵️change-weld-length-mm",
+          "mutationDirectoryName": "🧵️change-weld-length-mm",
+          "scenarios": [
+            {
+              "id": "lengthens-weld-to-200-mm",
+              "directoryName": "🧵️lengthens-weld-to-200-mm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-weld-throat-mm",
+          "sourceMutationDirectoryName": "🔥️change-weld-throat-mm",
+          "mutationDirectoryName": "🔥️change-weld-throat-mm",
+          "scenarios": [
+            {
+              "id": "thickens-weld-throat-to-6-5-mm",
+              "directoryName": "🔥️thickens-weld-throat-to-6-5-mm"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "change-n-ed-kn",
+        "change-m-ed-knm",
+        "change-a-mm2",
+        "change-w-el-mm3",
+        "change-alloy",
+        "change-chi",
+        "change-it-mm4",
+        "change-l-cr-mm",
+        "change-theta-c",
+        "change-delta-sigma-ed",
+        "change-delta-sigma-c",
+        "change-fatigue-m",
+        "change-n-cycles",
+        "change-v-weld-ed-kn",
+        "change-weld-throat-mm",
+        "change-weld-length-mm",
+        "change-beta-w",
+        "change-sheet-b-mm",
+        "change-sheet-t-mm",
+        "change-sheet-k-sigma",
+        "change-sheet-w-el-mm3",
+        "change-sheet-m-ed-knm",
+        "change-shell-t-mm",
+        "change-shell-r-mm",
+        "change-sigma-ed-shell-mpa",
+        "change-annex"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.norm.en1999",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-a-mm2",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-a-mm2",
+            "bridgeVersion": 1,
+            "variant": "ChangeAMm2"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-alloy",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-alloy",
+            "bridgeVersion": 1,
+            "variant": "ChangeAlloy"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-annex",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-annex",
+            "bridgeVersion": 1,
+            "variant": "ChangeAnnex"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-beta-w",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-beta-w",
+            "bridgeVersion": 1,
+            "variant": "ChangeBetaW"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-chi",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-chi",
+            "bridgeVersion": 1,
+            "variant": "ChangeChi"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-delta-sigma-c",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-delta-sigma-c",
+            "bridgeVersion": 1,
+            "variant": "ChangeDeltaSigmaC"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-delta-sigma-ed",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-delta-sigma-ed",
+            "bridgeVersion": 1,
+            "variant": "ChangeDeltaSigmaEd"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-fatigue-m",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-fatigue-m",
+            "bridgeVersion": 1,
+            "variant": "ChangeFatigueM"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-it-mm4",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-it-mm4",
+            "bridgeVersion": 1,
+            "variant": "ChangeITMm4"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-l-cr-mm",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-l-cr-mm",
+            "bridgeVersion": 1,
+            "variant": "ChangeLCrMm"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-m-ed-knm",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-m-ed-knm",
+            "bridgeVersion": 1,
+            "variant": "ChangeMEdKnm"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-n-cycles",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-n-cycles",
+            "bridgeVersion": 1,
+            "variant": "ChangeNCycles"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-n-ed-kn",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-n-ed-kn",
+            "bridgeVersion": 1,
+            "variant": "ChangeNEdKn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-sheet-b-mm",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-sheet-b-mm",
+            "bridgeVersion": 1,
+            "variant": "ChangeSheetBMm"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-sheet-k-sigma",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-sheet-k-sigma",
+            "bridgeVersion": 1,
+            "variant": "ChangeSheetKSigma"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-sheet-m-ed-knm",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-sheet-m-ed-knm",
+            "bridgeVersion": 1,
+            "variant": "ChangeSheetMEdKnm"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-sheet-t-mm",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-sheet-t-mm",
+            "bridgeVersion": 1,
+            "variant": "ChangeSheetTMm"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-sheet-w-el-mm3",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-sheet-w-el-mm3",
+            "bridgeVersion": 1,
+            "variant": "ChangeSheetWElMm3"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-shell-r-mm",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-shell-r-mm",
+            "bridgeVersion": 1,
+            "variant": "ChangeShellRMm"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-shell-t-mm",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-shell-t-mm",
+            "bridgeVersion": 1,
+            "variant": "ChangeShellTMm"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-sigma-ed-shell-mpa",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-sigma-ed-shell-mpa",
+            "bridgeVersion": 1,
+            "variant": "ChangeSigmaEdShellMpa"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-theta-c",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-theta-c",
+            "bridgeVersion": 1,
+            "variant": "ChangeThetaC"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-v-weld-ed-kn",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-v-weld-ed-kn",
+            "bridgeVersion": 1,
+            "variant": "ChangeVWeldEdKn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-w-el-mm3",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-w-el-mm3",
+            "bridgeVersion": 1,
+            "variant": "ChangeWElMm3"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-weld-length-mm",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-weld-length-mm",
+            "bridgeVersion": 1,
+            "variant": "ChangeWeldLengthMm"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-weld-throat-mm",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-weld-throat-mm",
+            "bridgeVersion": 1,
+            "variant": "ChangeWeldThroatMm"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

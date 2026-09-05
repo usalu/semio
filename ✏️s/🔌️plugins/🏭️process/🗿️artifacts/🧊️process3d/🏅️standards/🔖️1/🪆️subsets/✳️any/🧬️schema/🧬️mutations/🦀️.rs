@@ -608,7 +608,7 @@ mod tests {
 
 //#region 🔖️Kinds
 /// 🏷️ Kebab-case spelling of every `Process3dMutation` variant, in declaration order — the vocabulary the `process3d-1-any` mutation catalog
-/// (`../../🔮️oracle/🔣️.json`) declares and the `🌷️mutate-process3d-1` exhaustive test case measures
+/// (`../../🔮️oracle/🔣️.json`) declares and the `🏭️mutate-process3d-1` exhaustive test case measures
 /// itself against. The framework never parses Rust, so `kinds_match_the_enum_and_the_catalog` below is
 /// what keeps this list honest in both directions.
 pub const KINDS: &[&str] = &[

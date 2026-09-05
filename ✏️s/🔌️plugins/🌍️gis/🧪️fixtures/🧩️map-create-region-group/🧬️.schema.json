@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "jobId", "base", "expected", "hostile"],
+  "required": ["schema", "jobId", "base", "expected", "hostile", "membershipCases"],
   "properties": {
     "schema": { "const": "semio.gis.map-create-region-group/v1" },
     "jobId": { "type": "string", "pattern": "^[a-f0-9]{32}$" },
@@ -58,6 +58,20 @@
         "maximumBytes": { "const": 65536 }
       }
     },
+    "membershipCases": {
+      "type": "array", "minItems": 4, "maxItems": 16,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "drawingChildId", "valueChildId", "imageChildId", "deriveChildren", "accepted"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "drawingChildId": { "type": "string", "minLength": 1 },
+          "valueChildId": { "type": "string", "minLength": 1 },
+          "imageChildId": { "type": ["string", "null"], "minLength": 1 },
+          "deriveChildren": { "type": "boolean" }, "accepted": { "type": "boolean" }
+        }
+      }
+    },
     "hostile": {
       "type": "array",
       "minItems": 6,
@@ -66,6 +80,15 @@
     }
   },
   "$defs": {
+    "groupMembership": {
+      "type": "object", "additionalProperties": false,
+      "required": ["drawingChildId", "valueChildId", "imageChildId"],
+      "properties": {
+        "drawingChildId": { "const": "gismap-drawing" },
+        "valueChildId": { "const": "gismap-value" },
+        "imageChildId": { "type": "null" }
+      }
+    },
     "feature": {
       "type": "object",
       "additionalProperties": false,

@@ -19,7 +19,7 @@ semio_framework_plugin::app_labels! {
 }
 
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub async fn block2d_labels(locale: &str) -> &'static Block2dLabels {
+pub fn block2d_labels(locale: &str) -> &'static Block2dLabels {
     semio_framework_plugin::resolve_labels_for_locale::<Block2dLabels>(locale)
 }
 //#endregion 🔖️Labels

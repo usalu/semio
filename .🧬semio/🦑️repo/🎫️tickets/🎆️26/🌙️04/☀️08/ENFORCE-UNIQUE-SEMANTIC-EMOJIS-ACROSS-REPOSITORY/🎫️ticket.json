@@ -2,7 +2,7 @@
   "title": "Enforce Unique Semantic Emojis Across Repository",
   "status": "open",
   "description": "Every single entity MUST have a unique emoji among the siblings inside the same parent. No white space after the emoji. Add emojis to Technologies, Bundles, Folders (AGENTS.md frontmatter), Files (header description), Sections (region names), Definitions (docstring). Adjust repo implementation, tests, and extend all entities and source code.",
-  "summary": "Defined schema-first repository path-emoji statutes, added TypeScript and Go enforcement with language-neutral tests and Unicode oracle validation, migrated 6,256 file/directory paths, repaired active references and Cargo targets, and verified zero missing, generic, presentation, spacing, or duplicate sibling emoji breaches across 77,399 governed entries.",
+  "summary": "The earlier bulk-migration completion claim was incorrect and is retracted. The repair uses individually handpicked single semantic emoji names, exact reference and proven payload repairs, literal reserved filenames, and no modifying Git operation. The final naming census has zero findings across 88,437 governed entries; shared statute, independent Unicode and focused Go regressions pass. All 625 Semio fixture URIs resolve. Per-tree runtime results, original pinned-fixture proofs, remaining native/source-contract limitations and the recoverable ticket-only diagnostic cleanup are documented in 📓️workspace-repair.md and 150 other retained root Markdown reports. All repair workers have finished. Repository ticket MCP tools remain unavailable, so this ticket remains open and external closure is not claimed.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1293"
   },

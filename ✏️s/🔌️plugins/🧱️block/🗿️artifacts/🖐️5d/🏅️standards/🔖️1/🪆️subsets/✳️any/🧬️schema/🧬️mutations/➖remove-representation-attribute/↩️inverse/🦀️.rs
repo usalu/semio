@@ -4,7 +4,7 @@ use crate::artifacts::block5d::Block5dSnapshot;
 use crate::artifacts::block5d::mutations::Block5dMutation;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::RemoveRepresentationAttribute, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
+pub fn inverse(payload: &super::RemoveRepresentationAttribute, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
     let Some(existing) = base.representations.iter().find(|item| item.id == payload.id) else {
         return Vec::new();
     };

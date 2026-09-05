@@ -6,7 +6,7 @@ use protocol::Mutation;
 
 //#region 🔖️Mutations
 //#region 🔖️Leaves
-#[path = "🟤️set-snapshot/🦀️.rs"]
+#[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🏷️set-version-info/🦀️.rs"]
 pub mod set_version_info;
@@ -162,10 +162,10 @@ mod tests {
 }
 
 //#region 🧪️FixtureCases
-/// 🧪️ Handcrafted `🟤️set-snapshot` fixture cases, wired from this tree's own mutations root so
+/// 🧪️ Handcrafted `📸️set-snapshot` fixture cases, wired from this tree's own mutations root so
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "🟤️set-snapshot/🧪️tests/✏️retitles-the-summary-and-records-the-last-editor/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/✏️retitles-the-summary-and-records-the-last-editor/🦀️.rs"]
 mod set_snapshot_retitles_the_summary_and_records_the_last_editor;
 //#endregion 🧪️FixtureCases

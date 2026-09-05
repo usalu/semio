@@ -1,0 +1,36 @@
+{
+  "schema": "semio.plugin.runtime-fault-vectors.v1",
+  "ceilingUs": 8000,
+  "scopes": ["live", "close"],
+  "messageTemplate": "runtime {scope} cleanup faulted for instance {instance}: {detail} [{variant}] (elapsed {elapsed}, ceiling {ceilingUs}us)",
+  "vectors": [
+    {"variant": "clock", "code": "plugin.internal.clock", "class": "clock", "detail": "no monotonic clock reading at turn start"},
+    {"variant": "clock-regression", "code": "plugin.internal.clock-regression", "class": "clock", "detail": "the monotonic clock ran backwards across the turn"},
+    {"variant": "interactive-ceiling", "code": "plugin.internal.interactive-ceiling", "class": "interactive-ceiling", "detail": "the turn overran the interactive step ceiling"},
+    {"variant": "zero-progress", "code": "plugin.internal.zero-progress", "class": "plugin-internal", "detail": "the cleanup pump made no progress for its whole stall credit"},
+    {"variant": "already-closing", "code": "plugin.internal.already-closing", "class": "plugin-internal", "detail": "a close is already in flight for this instance"},
+    {"variant": "admission-rejected", "code": "plugin.internal.admission-rejected", "class": "plugin-internal", "detail": "the cleanup job session was refused admission and has now drained"},
+    {"variant": "resume", "code": "plugin.internal.resume", "class": "plugin-internal", "detail": "the cleanup job session refused to resume after its outcome drained"},
+    {"variant": "prior-outcome", "code": "plugin.internal.prior-outcome", "class": "plugin-internal", "detail": "a prior step outcome faulted or was cancelled"},
+    {"variant": "missing-session", "code": "plugin.internal.missing-session", "class": "plugin-internal", "detail": "the cleanup pump lost the job session it was driving"},
+    {"variant": "abi-mismatch", "code": "plugin.internal.abi-mismatch", "class": "abi-mismatch", "detail": "the component step trapped, so its exports no longer match the host abi"},
+    {"variant": "checkout", "code": "plugin.internal.checkout", "class": "plugin-internal", "detail": "the cleanup job session produced no checkout after a step"},
+    {"variant": "checked-out-job", "code": "plugin.internal.checked-out-job", "class": "plugin-internal", "detail": "the checked out cleanup job body was unreachable"},
+    {"variant": "take-outcome", "code": "plugin.internal.take-outcome", "class": "plugin-internal", "detail": "the cleanup job session produced no step outcome"},
+    {"variant": "clock-cooperative", "code": "plugin.internal.clock-cooperative", "class": "clock", "detail": "cooperative maintenance requires an installed monotonic clock"},
+    {"variant": "owner-poisoned", "code": "plugin.internal.owner-poisoned", "class": "plugin-internal", "detail": "the instance owner lock was poisoned by a panicking turn"},
+    {"variant": "instance-poisoned", "code": "plugin.internal.instance-poisoned", "class": "plugin-internal", "detail": "the app instance lock was poisoned by a panicking turn"},
+    {"variant": "instance-not-drained", "code": "plugin.internal.instance-not-drained", "class": "plugin-internal", "detail": "the app instance still held terminal state at retirement"},
+    {"variant": "maintenance-poisoned", "code": "plugin.internal.maintenance-poisoned", "class": "plugin-internal", "detail": "the maintenance pump lock was poisoned by a panicking turn"},
+    {"variant": "maintenance-not-drained", "code": "plugin.internal.maintenance-not-drained", "class": "plugin-internal", "detail": "the maintenance pump still held terminal state at retirement"}
+  ],
+  "classifications": [
+    {"id": "supervisor-crashed-outranks-every-code", "code": "plugin.internal.abi-mismatch", "supervisor": "crashed", "class": "install-failed"},
+    {"id": "supervisor-quarantined-without-a-code", "supervisor": "quarantined", "class": "install-failed"},
+    {"id": "supervisor-running-is-never-install-failed", "code": "plugin.internal.zero-progress", "supervisor": "running", "class": "plugin-internal"},
+    {"id": "bare-plugin-internal-stays-generic", "code": "plugin.internal", "class": "plugin-internal"},
+    {"id": "dispatch-fault-is-not-a-window-fault", "code": "interactive-job.not-ui-safe", "class": "unknown"},
+    {"id": "framework-fault-is-not-a-window-fault", "code": "os.plugin.install", "class": "unknown"},
+    {"id": "absent-code-is-unknown", "class": "unknown"}
+  ]
+}

@@ -61,7 +61,7 @@ pub enum Block2dMutation {
 //#region 🏷️Kinds
 /// 🏷️ The kebab-case spelling of every [`Block2dMutation`] variant, in declaration order — the exact
 /// vocabulary the `block-2d-1-any` mutation catalog (`../../🔣️oracle.json`) declares and
-/// the `🧩️mutate-block-2d-1` exhaustive case measures itself against. The framework never parses Rust, so
+/// the `🧱️mutate-block-2d-1` exhaustive case measures itself against. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
 pub const KINDS: &[&str] = &[
     "rename-node-kind",
@@ -122,14 +122,14 @@ pub use super::scale_camera2d::{scale_camera2d, ScaleCamera2d};
 pub use super::update_presentation::{update_presentation, UpdatePresentation};
 
 /// ▶️ Applies `mutation` via its diff, mutating `projection` in place.
-pub async fn apply_block2d_mutation(projection: &mut Block2dSnapshot, mutation: &Block2dMutation) -> protocol::MutationApplyResult<()> {
+pub fn apply_block2d_mutation(projection: &mut Block2dSnapshot, mutation: &Block2dMutation) -> protocol::MutationApplyResult<()> {
     let (next, _) = vcs::apply_mutation(projection, mutation)?;
 
     *projection = next;
     Ok(())
 }
 
-pub async fn inverse_block2d_mutation(projection: &Block2dSnapshot, mutation: &Block2dMutation) -> Vec<Block2dMutation> {
+pub fn inverse_block2d_mutation(projection: &Block2dSnapshot, mutation: &Block2dMutation) -> Vec<Block2dMutation> {
     mutation.inverse(projection)
 }
 
@@ -160,7 +160,7 @@ pub fn block2d_mutation_report_json(base_json: &str, mutation_json: &str, after_
         ("expectedSnapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&expected))),
         ("snapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&applied))),
         ("diff".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(forward.diff()))),
-        ("messages".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(forward.messages()))),
+        ("messages".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&forward.messages().to_vec()))),
         ("inverseSteps".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&inverse))),
         ("inverseSnapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&undone))),
         ("inverseMessages".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&inverse_messages))),
@@ -179,7 +179,7 @@ mod tests {
     use protocol::MutationDiff;
     use protocol::SemanticMutation;
 
-    async fn round_trip(base: &Block2dSnapshot, mutation: &Block2dMutation) -> Block2dSnapshot {
+    fn round_trip(base: &Block2dSnapshot, mutation: &Block2dMutation) -> Block2dSnapshot {
         let forward = mutation.diff(base).diff().apply(base).expect("valid mutation diff");
         let mut restored = forward.clone();
         let mut backward = mutation.inverse(base);

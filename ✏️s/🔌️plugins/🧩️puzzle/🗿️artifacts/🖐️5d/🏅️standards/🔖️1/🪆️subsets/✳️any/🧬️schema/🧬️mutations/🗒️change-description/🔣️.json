@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗒️change-description",
   "semanticKind": "change-description",
   "displayName": "Change Description",
-  "emoji": "📝",
+  "emoji": "🗒️",
   "aggregateVariant": "ChangeDescription",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-description",

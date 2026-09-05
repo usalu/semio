@@ -568,6 +568,8 @@ pub mod editor {
             pub mod rename_space;
             #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪪️set-client/🦀️.rs"]
             pub mod set_client;
+            #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏛️manage-space/🦀️.rs"]
+            pub mod manage_space;
             #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔗️share-space/🦀️.rs"]
             pub mod share_space;
         }

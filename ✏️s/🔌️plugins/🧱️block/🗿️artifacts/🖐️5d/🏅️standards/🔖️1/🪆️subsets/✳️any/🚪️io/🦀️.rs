@@ -1,11 +1,34 @@
-//! 🚪️ IO s.block5d (1/✳️any) — registration now flows through 🎹️composer::register
-//! (called once from ⚙️engine::register), not per-leaf register().
-pub async fn import_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.txt", "stdio.zip"]
-}
-pub async fn export_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.txt", "stdio.zip"]
-}
+//! 🚪️ IO `s.block.block5d` (1/✳️any) — `io() -> IoDeclaration`: this subset's native codecs plus every
+//! foreign hop, aggregated from the typed `Serializer<Block5dSnapshot>`/`Deserializer<Block5dSnapshot>`
+//! leaves under `📥️import/🧩️deserializers`/`📤️export/🧵️serializers`. Foreign io goes EXCLUSIVELY
+//! through the framework's `io_mechanism` registry, reached from the sibling `🪆️subsets/✳️any/🦀️.rs`'s
+//! `io: io::io()` — the same wiring `🗒️note`/`🖍️draw` use.
+//!
+//! The OLD `ComposerEntry`/`io_registry` export channel this file used to carry is DELETED, not
+//! shimmed (ticket 26/09/05/BLOCK-PLUGIN-END-TO-END, W3): nothing in the repo ever called its
+//! `entries()`, and the `serialize_bytes` free functions it dispatched to handed back this subset's
+//! DSL text mislabelled as zip/png/stl/obj bytes. `import_stdio_kinds()`/`export_stdio_kinds()` went
+//! with it — the live lists are `artifact_kind()`'s own fields in the artifact root.
+//!
+//! `derived_composition` below STAYS and is now native-only: it is the `ArtifactComposition` facet
+//! `semio_framework_plugin::derive_artifact_facets!` requires in the sibling `🧬️schema/🦀️.rs`, and
+//! every foreign-format branch it used to carry now lives in a typed leaf instead.
+//!
+//! Format coverage — IDENTICAL in `◻️2d`, `🧊️3d` and `🖐️5d` (full decision table in the ticket's
+//! `📓️w3-io.md`):
+//!
+//! | foreign dialect | direction | fidelity | behaviour |
+//! |---|---|---|---|
+//! | `s.stdio.txt@utf-8/*` | both | `Exact` | this subset's own `.semio` DSL snapshot text — the exact bytes `📚️examples/**/🗣️.dsl.semio` carry |
+//! | `s.stdio.json@rfc8259/*` | both | `Exact` | the `dsl::ToValue` record tree as compact rfc8259 |
+//! | `s.stdio.zip@2.0/*` | both | `Exact` | a real zip 2.0 container: `snapshot.block5d.semio` + `snapshot.json` |
+//! | `s.stdio.stl@ascii/*` | both | `Lossy` | typed `Err` — the schema carries no triangle geometry |
+//! | `s.stdio.obj@3.0/*` | both | `Lossy` | typed `Err` — the schema carries no vertex/face geometry |
+//! | `s.stdio.png@1.2/*` | both | `Lossy` | typed `Err` — no raster in the schema, no rasterizer here |
+//!
+//! The three refusing hops stay registered on purpose: an unregistered hop yields a bare "no route",
+//! a registered one hands the caller the actual reason.
+
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::artifacts::block5d::standards::v1::subsets::any::schema::Block5dAnalyzer;
@@ -13,24 +36,21 @@ pub mod derived_composition {
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.block.block5d", standard: StandardId("1"), subset: SubsetId("*") };
-    const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    const DEP_OBJ: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId("*") };
-    const DEP_PNG: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
-    const DEP_STL: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
-    const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
-    const DEP_ZIP: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
 
+    /// 🎹️ The `ArtifactComposition` facet `derive_artifact_facets!` binds in `🧬️schema/🦀️.rs`.
+    /// Native-only by design: foreign dialects are the `io_mechanism` entries in `io()` below, not
+    /// composer sources.
     pub struct Block5dComposerComposition;
 
     impl ArtifactComposition for Block5dComposerComposition {
         type Snapshot = Block5dSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        async fn reads() -> &'static [Dialect] {
-            &[DIALECT, DEP_JSON, DEP_OBJ, DEP_PNG, DEP_STL, DEP_TXT, DEP_ZIP]
+        fn reads() -> &'static [Dialect] {
+            &[DIALECT]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
@@ -42,167 +62,166 @@ pub mod derived_composition {
                         return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
                     }
                 }
-                if source.dialect == DEP_JSON {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::block5d::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_OBJ {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::block5d::io::import::deserializers::artifacts::obj::v3_0::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_PNG {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::block5d::io::import::deserializers::artifacts::png::v1_2::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_STL {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::block5d::io::import::deserializers::artifacts::stl::v_ascii::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_TXT {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::block5d::io::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_ZIP {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::block5d::io::import::deserializers::artifacts::zip::v2_0::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
             }
-            Err(ComposeError { message: "Block5dComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() })
+            Err(ComposeError { message: "Block5dComposerComposition: no source in this artifact's own dialect".into(), diagnostics: Vec::new() })
         }
     }
 }
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::artifacts::block5d::standards::v1::subsets::any::schema::Block5dBuilder as Block5dAnyBuilder;
-    use crate::artifacts::block5d::standards::v1::subsets::any::schema::Block5dComposer as Block5dAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
+//#region 🔖️IoDeclaration
+/// 🚪️ This subset's complete io declaration — the native `LanguagePair`s and `ArtifactCodec` plus
+/// the twelve typed foreign entries. `pilot_languages()` indices are fixed by that function's own
+/// literal `vec![document, op, diff, pack, spr]` order, the same role→slot mapping `🗒️note`'s
+/// `io()` uses.
+pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+    use crate::artifacts::block5d::io::export::serializers::artifacts as export;
+    use crate::artifacts::block5d::io::import::deserializers::artifacts as import;
+    use crate::artifacts::block5d::{Block5dMutation, Block5dSnapshot, BLOCK5D_DIALECT, BLOCK_5D_SCHEMA};
+    use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
+    use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
 
-    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
-
-    //#region 🔖️ExportEntries
-    /// 🗄️ Ticket 26/08/10/STDIO-ARTIFACTS-AND-IO W15: the typed registry (W11-W14) only ever grew
-    /// IMPORT-direction entries (each composer's own `reads()`) -- nothing registers the REVERSE
-    /// ("this domain artifact can be exported AS format Y"), because `ArtifactComposer` only models
-    /// "produce my own snapshot." These entries wrap the artifact's EXISTING `🚪️io/📤️export/🧵️serializers`
-    /// leaves (which already convert this artifact's snapshot straight to target-format bytes/text) as
-    /// their own `ComposerEntry` rows: `writes` = the target format's dialect, `reads` = just this
-    /// artifact's own dialect. `register_composer_entries` already inserts BOTH an Import key (target
-    /// reads from us) and an Export key (we export to target) per entry, so no framework change was
-    /// needed, only populating the missing direction. Generated by generators/w15_add_export_entries.py
-    /// -- hand-validated pattern on note/json first (see that file's own tests), pilot kept as reference.
-    const BLOCK5D_DIALECT: Dialect = Dialect { artifact_kind: "s.block.block5d", standard: StandardId("1"), subset: SubsetId("*") };
-    const BLOCK5D_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-
-    async fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::block5d::Block5dSnapshot, ComposeError> {
-        if let Some(source) = sources.iter().find(|s| s.dialect == BLOCK5D_DIALECT) {
-            let builder = match &source.payload {
-                IoPayload::Text(t) => Block5dAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-                IoPayload::Binary(b) => Block5dAnyBuilder::from_binary(b).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-            };
-            return builder.build().map_err(|diagnostics| ComposeError { message: "Block5dComposer export: build() failed".into(), diagnostics });
-        }
-        if let Some(source) = sources.iter().find(|s| s.dialect == BLOCK5D_JSON_BRIDGE_DIALECT) {
-            // 🌉 The OS dispatch layer (export_os_app_instance_media_kind) deals in already-
-            // deserialized `serde_json::Value`, not this artifact's own wire text/binary -- json
-            // is the universal bridge dialect every domain artifact already imports from.
-            let bytes: Vec<u8> = match &source.payload {
-                IoPayload::Text(t) => t.as_bytes().to_vec(),
-                IoPayload::Binary(b) => b.clone(),
-            };
-            return crate::artifacts::block5d::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
-        }
-        Err(ComposeError { message: "Block5dComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
-    }
-
-    const EXPORT_ZIP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
-    async fn compose_export_zip(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::block5d::io::export::serializers::artifacts::zip::v2_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_ZIP_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
-    const EXPORT_PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
-    async fn compose_export_png(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::block5d::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_PNG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
-    const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    async fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::block5d::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
-    const EXPORT_STL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
-    async fn compose_export_stl(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::block5d::io::export::serializers::artifacts::stl::v_ascii::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_STL_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
-    const EXPORT_OBJ_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId("*") };
-    async fn compose_export_obj(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::block5d::io::export::serializers::artifacts::obj::v3_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_OBJ_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
-    //#endregion 🔖️ExportEntries
-
-    pub async fn entries() -> &'static [ComposerEntry] {
+    /// 🎹️ One vtable row per typed leaf, both directions per format — the single place this subset
+    /// advertises what it can and cannot convert.
+    fn entries() -> &'static [IoEntry] {
+        static ENTRIES: OnceLock<Vec<IoEntry>> = OnceLock::new();
         ENTRIES
             .get_or_init(|| {
                 vec![
-                    composer_entry_of::<Block5dAnyComposer>(),
-                    ComposerEntry { writes: EXPORT_ZIP_DIALECT, reads: &[BLOCK5D_DIALECT], compose: compose_export_zip },
-                    ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[BLOCK5D_DIALECT], compose: compose_export_png },
-                    ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[BLOCK5D_DIALECT], compose: compose_export_json },
-                    ComposerEntry { writes: EXPORT_STL_DIALECT, reads: &[BLOCK5D_DIALECT], compose: compose_export_stl },
-                    ComposerEntry { writes: EXPORT_OBJ_DIALECT, reads: &[BLOCK5D_DIALECT], compose: compose_export_obj },
+                    serializer_entry::<Block5dSnapshot, export::txt::v_utf_8::any::Block5dIntoTxt>(BLOCK5D_DIALECT),
+                    deserializer_entry::<Block5dSnapshot, import::txt::v_utf_8::any::TxtIntoBlock5d>(BLOCK5D_DIALECT),
+                    serializer_entry::<Block5dSnapshot, export::json::v_rfc8259::any::Block5dIntoJson>(BLOCK5D_DIALECT),
+                    deserializer_entry::<Block5dSnapshot, import::json::v_rfc8259::any::JsonIntoBlock5d>(BLOCK5D_DIALECT),
+                    serializer_entry::<Block5dSnapshot, export::zip::v2_0::any::Block5dIntoZip>(BLOCK5D_DIALECT),
+                    deserializer_entry::<Block5dSnapshot, import::zip::v2_0::any::ZipIntoBlock5d>(BLOCK5D_DIALECT),
+                    serializer_entry::<Block5dSnapshot, export::stl::v_ascii::any::Block5dIntoStl>(BLOCK5D_DIALECT),
+                    deserializer_entry::<Block5dSnapshot, import::stl::v_ascii::any::StlIntoBlock5d>(BLOCK5D_DIALECT),
+                    serializer_entry::<Block5dSnapshot, export::obj::v3_0::any::Block5dIntoObj>(BLOCK5D_DIALECT),
+                    deserializer_entry::<Block5dSnapshot, import::obj::v3_0::any::ObjIntoBlock5d>(BLOCK5D_DIALECT),
+                    serializer_entry::<Block5dSnapshot, export::png::v1_2::any::Block5dIntoPng>(BLOCK5D_DIALECT),
+                    deserializer_entry::<Block5dSnapshot, import::png::v1_2::any::PngIntoBlock5d>(BLOCK5D_DIALECT),
                 ]
             })
             .as_slice()
     }
+
+    let langs = crate::artifacts::block5d::pilot_languages();
+    IoDeclaration {
+        native: NativeCodecs {
+            snapshot: LanguagePair { text: Some(&langs[0]), binary: Some(&langs[3]) },
+            diff: LanguagePair { text: Some(&langs[2]), binary: None },
+            mutations: LanguagePair { text: Some(&langs[1]), binary: Some(&langs[4]) },
+            inferences: None,
+            codec: store::ArtifactCodec::of::<Block5dSnapshot, Block5dMutation>(BLOCK_5D_SCHEMA.to_string()),
+        },
+        entries: entries(),
+    }
 }
-//#endregion 🚪️DerivedIoRegistry
+//#endregion 🔖️IoDeclaration
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use crate::artifacts::block5d::io::export::serializers::artifacts::json::v_rfc8259::any::json_text;
+    use crate::artifacts::block5d::io::export::serializers::artifacts::obj::v3_0::any::Block5dIntoObj;
+    use crate::artifacts::block5d::io::export::serializers::artifacts::png::v1_2::any::Block5dIntoPng;
+    use crate::artifacts::block5d::io::export::serializers::artifacts::stl::v_ascii::any::Block5dIntoStl;
+    use crate::artifacts::block5d::io::export::serializers::artifacts::txt::v_utf_8::any::dsl_text;
+    use crate::artifacts::block5d::io::export::serializers::artifacts::zip::v2_0::any::Block5dIntoZip;
+    use crate::artifacts::block5d::io::import::deserializers::artifacts::json::v_rfc8259::any::from_json_text;
+    use crate::artifacts::block5d::io::import::deserializers::artifacts::obj::v3_0::any::ObjIntoBlock5d;
+    use crate::artifacts::block5d::io::import::deserializers::artifacts::png::v1_2::any::PngIntoBlock5d;
+    use crate::artifacts::block5d::io::import::deserializers::artifacts::stl::v_ascii::any::StlIntoBlock5d;
+    use crate::artifacts::block5d::io::import::deserializers::artifacts::txt::v_utf_8::any::from_dsl_text;
+    use crate::artifacts::block5d::io::import::deserializers::artifacts::zip::v2_0::any::{from_zip_bytes, ZIP_MAGIC};
+    use crate::artifacts::block5d::Block5dSnapshot;
+    use semio_framework::io::io_mechanism::{Deserializer, Serializer};
+    use semio_framework::io_schema::IoPayload;
+
+    /// 📄️ Every handcrafted `.semio` DSL example asset of this subset — the language-agnostic
+    /// fixtures the TypeScript mirror's own test reads too.
+    const EXAMPLES: &[(&str, &str)] = &[
+        ("hexagonal-cut-concrete-forest-left", include_str!("../📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🌲️hexagonal-cut-concrete-forest-left/🗣️.dsl.semio")),
+        ("nakagin-capsule", include_str!("../📚️examples/🏢️nakagin-capsule/🖼️assets/🏢️nakagin-capsule/🗣️.dsl.semio")),
+    ];
+
+    #[semio_framework_async_macros::async_test]
+    async fn txt_round_trips_every_example() {
+        for (id, text) in EXAMPLES {
+            let snapshot = from_dsl_text(text).unwrap_or_else(|error| panic!("{id}: {error:?}"));
+            let printed = dsl_text(&snapshot);
+            assert_eq!(printed.trim_end_matches('\n'), text.trim_end_matches('\n'), "{id}: txt export must reproduce the example asset");
+            assert_eq!(from_dsl_text(&printed).unwrap(), snapshot, "{id}: txt is not a fixed point");
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn json_round_trips_every_example() {
+        for (id, text) in EXAMPLES {
+            let snapshot = from_dsl_text(text).unwrap_or_else(|error| panic!("{id}: {error:?}"));
+            let json = json_text(&snapshot);
+            assert_eq!(from_json_text(&json).unwrap_or_else(|error| panic!("{id}: {error:?}")), snapshot, "{id}: json is not a lossless round trip");
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn zip_round_trips_every_example_as_a_real_archive() {
+        for (id, text) in EXAMPLES {
+            let snapshot = from_dsl_text(text).unwrap_or_else(|error| panic!("{id}: {error:?}"));
+            let IoPayload::Binary(bytes) = Block5dIntoZip::serialize(&snapshot).await.unwrap().value else {
+                panic!("{id}: zip export must be a binary payload");
+            };
+            assert!(bytes.starts_with(ZIP_MAGIC), "{id}: zip export must be a real zip 2.0 container");
+            assert_eq!(from_zip_bytes(&bytes).unwrap_or_else(|error| panic!("{id}: {error:?}")), snapshot, "{id}: zip is not a lossless round trip");
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn geometry_and_raster_hops_refuse_with_a_reason() {
+        let snapshot = Block5dSnapshot::default();
+        let empty_text = IoPayload::Text(String::new());
+        let empty_binary = IoPayload::Binary(Vec::new());
+        for message in [
+            Block5dIntoStl::serialize(&snapshot).await.expect_err("stl export must refuse").message,
+            Block5dIntoObj::serialize(&snapshot).await.expect_err("obj export must refuse").message,
+            Block5dIntoPng::serialize(&snapshot).await.expect_err("png export must refuse").message,
+            StlIntoBlock5d::deserialize(&empty_text).await.expect_err("stl import must refuse").message,
+            ObjIntoBlock5d::deserialize(&empty_text).await.expect_err("obj import must refuse").message,
+            PngIntoBlock5d::deserialize(&empty_binary).await.expect_err("png import must refuse").message,
+        ] {
+            assert!(message.contains("not supported for"), "every refusing hop must name the reason, got: {message}");
+        }
+    }
+
+    /// 🧫️ The exact json bytes the TypeScript mirror (`🚪️io/🧪️tests/🟦️.ts`) writes for the same
+    /// example assets — a disagreement fails HERE as well as in `bun test`, so neither
+    /// implementation can drift silently.
+    const JSON_PARITY_FIXTURES: &[(&str, &str)] = &[("hexagonal-cut-concrete-forest-left", include_str!("🧪️tests/🧫️fixtures/⬅️hexagonal-cut-concrete-forest-left.json")), ("nakagin-capsule", include_str!("🧪️tests/🧫️fixtures/🏢️nakagin-capsule.json"))];
+
+    #[semio_framework_async_macros::async_test]
+    async fn json_matches_the_typescript_parity_fixture() {
+        for ((id, text), (fixture_id, fixture)) in EXAMPLES.iter().zip(JSON_PARITY_FIXTURES) {
+            assert_eq!(id, fixture_id, "EXAMPLES and JSON_PARITY_FIXTURES must list the same assets in the same order");
+            let snapshot = from_dsl_text(text).unwrap_or_else(|error| panic!("{id}: {error:?}"));
+            assert_eq!(json_text(&snapshot).as_str(), *fixture, "{id}: the Rust json must match the TypeScript parity fixture byte for byte");
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn io_declaration_registers_both_directions_of_all_six_formats() {
+        let declaration = super::io();
+        assert_eq!(declaration.entries.len(), 12, "six formats x two directions");
+        let own = "s.block.block5d";
+        let mut foreign: Vec<&str> = Vec::new();
+        for entry in declaration.entries {
+            assert!(entry.from.artifact_kind == own || entry.into.artifact_kind == own, "every entry must touch this subset's own dialect");
+            foreign.push(if entry.from.artifact_kind == own { entry.into.artifact_kind } else { entry.from.artifact_kind });
+        }
+        foreign.sort_unstable();
+        foreign.dedup();
+        assert_eq!(foreign, vec!["s.stdio.json", "s.stdio.obj", "s.stdio.png", "s.stdio.stl", "s.stdio.txt", "s.stdio.zip"]);
+    }
+}
+//#endregion 🧪️Tests

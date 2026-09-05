@@ -279,15 +279,15 @@ pub mod artifacts {
                             pub mod mutations {
                                 #[path = "."]
                                 pub mod change_graph_directed {
-                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔀️change-graph-directed/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧭️change-graph-directed/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔀️change-graph-directed/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧭️change-graph-directed/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔀️change-graph-directed/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧭️change-graph-directed/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔀️change-graph-directed/🧪️tests/🌳️keeps-an-already-directed-graph-directed/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧭️change-graph-directed/🧪️tests/➡️keeps-an-already-directed-graph-directed/🦀️.rs"]
                                     mod tests_keeps_an_already_directed_graph_directed;
                                 }
                                 #[path = "."]
@@ -300,7 +300,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧮️update-graph-algorithm/🧪️tests/🟢️restates-the-unset-algorithm-and-its-absent-seed/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧮️update-graph-algorithm/🧪️tests/🧮️restates-the-unset-algorithm-and-its-absent-seed/🦀️.rs"]
                                     mod tests_restates_the_unset_algorithm_and_its_absent_seed;
                                 }
                                 #[path = "."]
@@ -313,20 +313,20 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔁️replace-graph/🧪️tests/🌳️replays-the-identical-empty-graph/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔁️replace-graph/🧪️tests/🕸️replays-the-identical-empty-graph/🦀️.rs"]
                                     mod tests_replays_the_identical_empty_graph;
                                 }
                                 #[path = "."]
                                 pub mod create_node {
-                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🟢️create-node/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➕️create-node/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🟢️create-node/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➕️create-node/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🟢️create-node/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➕️create-node/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🟢️create-node/🧪️tests/🚫️rejects-a-duplicate-node-id/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➕️create-node/🧪️tests/🚫️rejects-a-duplicate-node-id/🦀️.rs"]
                                     mod tests_rejects_a_duplicate_node_id;
                                 }
                                 #[path = "."]
@@ -418,15 +418,15 @@ pub mod artifacts {
                             pub mod mutations {
                                 #[path = "."]
                                 pub mod replace_points {
-                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🌀️replace-points/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🔄️replace-points/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🌀️replace-points/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🔄️replace-points/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🌀️replace-points/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🔄️replace-points/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🌀️replace-points/🧪️tests/🌻️replays-the-identical-empty-point-cloud/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🔄️replace-points/🧪️tests/🔄️replays-the-identical-empty-point-cloud/🦀️.rs"]
                                     mod tests_replays_the_identical_empty_point_cloud;
                                 }
                                 #[path = "."]
@@ -439,7 +439,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/➕️insert-point/🧪️tests/🌳️seeds-the-empty-cloud-with-its-first-point/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/➕️insert-point/🧪️tests/📍️seeds-the-empty-cloud-with-its-first-point/🦀️.rs"]
                                     mod tests_seeds_the_empty_cloud_with_its_first_point;
                                 }
                                 #[path = "."]
@@ -479,15 +479,15 @@ pub mod artifacts {
                             pub mod mutations {
                                 #[path = "."]
                                 pub mod change_coefficient {
-                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/➗️equation/🧬️schema/🧬️mutations/🔄️change-coefficient/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/➗️equation/🧬️schema/🧬️mutations/🎚️change-coefficient/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/➗️equation/🧬️schema/🧬️mutations/🔄️change-coefficient/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/➗️equation/🧬️schema/🧬️mutations/🎚️change-coefficient/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/➗️equation/🧬️schema/🧬️mutations/🔄️change-coefficient/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/➗️equation/🧬️schema/🧬️mutations/🎚️change-coefficient/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/➗️equation/🧬️schema/🧬️mutations/🔄️change-coefficient/🧪️tests/⛵️raises-the-leading-coefficient-to-three-halves/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/➗️equation/🧬️schema/🧬️mutations/🎚️change-coefficient/🧪️tests/➗️raises-the-leading-coefficient-to-three-halves/🦀️.rs"]
                                     mod tests_raises_the_leading_coefficient_to_three_halves;
                                 }
                             }

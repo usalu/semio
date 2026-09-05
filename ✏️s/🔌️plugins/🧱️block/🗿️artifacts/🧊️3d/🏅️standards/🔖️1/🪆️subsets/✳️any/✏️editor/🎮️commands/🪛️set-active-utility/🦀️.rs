@@ -13,6 +13,6 @@ pub struct SetActiveUtility {
     pub utility_id: String,
 }
 
-pub async fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
     Ok(Emit::config(vec![Block3dConfigMutation::SetActiveUtility { window_id: payload.window_id.clone(), utility_id: payload.utility_id.clone() }]))
 }

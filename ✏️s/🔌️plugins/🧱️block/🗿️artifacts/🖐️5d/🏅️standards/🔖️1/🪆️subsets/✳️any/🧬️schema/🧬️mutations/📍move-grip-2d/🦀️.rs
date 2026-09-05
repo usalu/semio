@@ -19,23 +19,23 @@ pub struct MoveGrip2d {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn move_grip_2d(id: String, new_angle: f64, new_radius_2d: f64) -> Block5dMutation {
+pub fn move_grip_2d(id: String, new_angle: f64, new_radius_2d: f64) -> Block5dMutation {
     Block5dMutation::MoveGrip2d(MoveGrip2d { id, new_angle, new_radius_2d })
 }
 
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for MoveGrip2d {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "grip", kind: "move-grip2d", record: "MovedGrip2d" };
 
-    async fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+    fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
+    fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Move grip \"{}\" (2D)", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

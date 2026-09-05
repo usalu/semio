@@ -29,11 +29,11 @@ semio_framework_plugin::app_labels! {
 }
 
 /// 🗣️ B1: `cfg.locale`-driven counterpart to the deleted `ViewModel`-driven resolver.
-async fn block3d_is_de_locale(cfg: &Block3dConfig) -> bool {
+fn block3d_is_de_locale(cfg: &Block3dConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-async fn block3d_locale(cfg: &Block3dConfig) -> Locale {
+fn block3d_locale(cfg: &Block3dConfig) -> Locale {
     if block3d_is_de_locale(cfg) {
         Locale::De
     } else {
@@ -43,7 +43,7 @@ async fn block3d_locale(cfg: &Block3dConfig) -> Locale {
 
 /// 🗣️ Resolves the active `Block3dLabels` cell from the config-carried locale. `Block3dConfig` carries
 /// no terminology field, so terminology is always `Native`.
-pub async fn block3d_labels(cfg: &Block3dConfig) -> &'static Block3dLabels {
+pub fn block3d_labels(cfg: &Block3dConfig) -> &'static Block3dLabels {
     Block3dLabels::labels(block3d_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Labels

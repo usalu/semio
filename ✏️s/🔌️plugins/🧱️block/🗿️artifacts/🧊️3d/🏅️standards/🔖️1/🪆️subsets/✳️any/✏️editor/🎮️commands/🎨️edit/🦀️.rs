@@ -8,7 +8,7 @@ pub const BLOCK3D_EXAMPLE_FOREST_LEFT: &str = "hexagonal-cut-concrete-forest-lef
 //#region 🔖️ReplaceDocument
 /// ✏️ Emits the minimal ordered batch of semantic mutations that carries `current` to `next` — the
 /// whole-document-load replacement for a document-wide replace mutation (banned outright).
-async fn replace_document_operations(current: &Block3dSnapshot, next: &Block3dSnapshot) -> Vec<Block3dMutation> {
+fn replace_document_operations(current: &Block3dSnapshot, next: &Block3dSnapshot) -> Vec<Block3dMutation> {
     use crate::artifacts::block3d::mutations as m;
     let mut ops = Vec::new();
 
@@ -207,7 +207,7 @@ pub struct Edit {
     pub text: String,
 }
 
-pub async fn handle(payload: &Edit, doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+pub fn handle(payload: &Edit, doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
     match dsl::json::from_json_str::<Block3dSnapshot>(&payload.text) {
         Ok(document) if &document != doc.snapshot => Ok(Emit::mutations(replace_document_operations(doc.snapshot, &document))),
         _ => Ok(Emit::default()),

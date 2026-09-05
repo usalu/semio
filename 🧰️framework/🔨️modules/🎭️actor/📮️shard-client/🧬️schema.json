@@ -1,0 +1,196 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.actor.shard-liveness.v1",
+  "title": "Shard Liveness Policy And Watchdog Timelines",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "scope",
+    "policy",
+    "worker",
+    "jspi",
+    "scenarios"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "scope": {
+      "const": "shard-liveness-watchdog-only"
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "heartbeatTimeoutMs",
+        "missedLimit",
+        "progressIntervalMs",
+        "pluginLoadIdleTimeoutMs",
+        "pluginLoadCeilingMs"
+      ],
+      "properties": {
+        "heartbeatTimeoutMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "missedLimit": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "progressIntervalMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "pluginLoadIdleTimeoutMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "pluginLoadCeilingMs": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "worker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "activationPhases",
+        "progressPhase"
+      ],
+      "properties": {
+        "activationPhases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "progressPhase": {
+          "type": "string"
+        }
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "heartbeatTimeoutMs",
+          "timeline",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "heartbeatTimeoutMs": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "timeline": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "atMs",
+                "event"
+              ],
+              "properties": {
+                "atMs": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "event": {
+                  "enum": [
+                    "pending",
+                    "idle",
+                    "liveness",
+                    "check"
+                  ]
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "missesAtCheck",
+              "terminatedAtMs"
+            ],
+            "properties": {
+              "missesAtCheck": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "terminatedAtMs": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "jspi": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "faultCode",
+        "vectors"
+      ],
+      "properties": {
+        "faultCode": {
+          "const": "plugin.runtime.jspi-unavailable"
+        },
+        "vectors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "webAssembly",
+              "suspending",
+              "promising",
+              "available"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]+$"
+              },
+              "webAssembly": {
+                "type": "boolean"
+              },
+              "suspending": {
+                "type": "boolean"
+              },
+              "promising": {
+                "type": "boolean"
+              },
+              "available": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

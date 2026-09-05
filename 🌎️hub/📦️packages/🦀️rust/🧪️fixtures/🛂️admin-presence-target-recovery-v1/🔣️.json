@@ -1,0 +1,8 @@
+{
+  "schema": "semio.hub.admin-presence-target-recovery/v1",
+  "scope": { "spaceId": "default", "documentId": "admin-presence-recovery" },
+  "surfaceId": "surface.test.editor",
+  "members": [{ "id": "removed", "role": "author" }, { "id": "observer", "role": "author" }],
+  "remove": "removed",
+  "expected": { "members": ["observer"], "removedCloseCode": 4401, "removedStatus": 401, "removedCode": "denied", "observerStatus": 200, "visibleAfterRemoval": 0, "sqliteReopen": true }
+}

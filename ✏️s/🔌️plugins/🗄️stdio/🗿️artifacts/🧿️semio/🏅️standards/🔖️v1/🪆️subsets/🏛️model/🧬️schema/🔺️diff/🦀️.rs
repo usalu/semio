@@ -63,7 +63,7 @@ where
 /// sparse triple is not a faithful description of the transition and [`between_named`] degrades to a
 /// full replacement instead, which the same [`apply_named`] reproduces exactly.
 ///
-/// 🐛️ Same defect `✳️flow`'s own `between_named` carries this guard for, measured here on the real
+/// 🐛️ Same defect `🌊️flow`'s own `between_named` carries this guard for, measured here on the real
 /// artifact: `set-snapshot` replacing the capsule tower's `[site, building, storey]` with
 /// `[storey, site]` produced `[site, storey]`, because both survivors kept the positions they held in
 /// the base while the building was dropped. `set-snapshot` means the snapshot BECOMES the named one,

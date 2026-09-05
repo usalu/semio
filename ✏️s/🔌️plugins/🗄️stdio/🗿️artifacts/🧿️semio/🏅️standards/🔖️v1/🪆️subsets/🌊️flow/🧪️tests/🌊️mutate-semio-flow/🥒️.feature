@@ -11,7 +11,7 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
   (`../../🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`,
   `…/📸️snapshot/💾️binary/📡️component.protocol.semio`, `…/🧬️mutations/📝️text/📖️component.grammar.semio`,
   the committed `(before, mutation, after)` vectors in this case's own `🧫️fixtures/`, and the semio
-  envelope region of `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`), importing nothing
+  envelope region of `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`), importing nothing
   from and transliterating nothing of the Rust it judges. It is registered as the oracle
   `semio-flow-python-independent` in `…/🌊️flow/🔮️oracle/🔣️.json`; the recorded no-oracle
   decision it replaces is gone, because there is now a reference to compare against. That decision
@@ -142,24 +142,24 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply and undo <id> on its committed specification vector over the real demo pipeline
-    Given the committed specification vector local://🧫️<id>/🦠️mutation/🔣️.json whose before-snapshot is the real pipeline artifact decoded
+    Given the committed specification vector local://<fixture>/🦠️mutation/🔣️.json whose before-snapshot is the real pipeline artifact decoded
     When both implementations apply the vector's mutation to its before-snapshot and undo it again
     Then each reaches the vector's after-snapshot, each returns to its before-snapshot, and the two agree
     Examples:
-      | id                 |
-      | no-mutation        |
-      | set-snapshot       |
-      | insert-node        |
-      | remove-node        |
-      | set-node-kind      |
-      | set-node-label     |
-      | set-node-position  |
-      | set-node-param     |
-      | remove-node-param  |
-      | insert-edge        |
-      | remove-edge        |
-      | set-edge-endpoints |
-      | set-edge-kind      |
+      | id | fixture |
+      | no-mutation | ⏸️no-mutation |
+      | set-snapshot | 📸️set-snapshot |
+      | insert-node | ➕️insert-node |
+      | remove-node | 🗑️remove-node |
+      | set-node-kind | 🏷️set-node-kind |
+      | set-node-label | 🔤️set-node-label |
+      | set-node-position | 📍️set-node-position |
+      | set-node-param | 🎛️set-node-param |
+      | remove-node-param | 🧹️remove-node-param |
+      | insert-edge | 🌉️insert-edge |
+      | remove-edge | ✂️remove-edge |
+      | set-edge-endpoints | 🔌️set-edge-endpoints |
+      | set-edge-kind | 🎨️set-edge-kind |
 
   @id-identity-round-trip
   @level-long

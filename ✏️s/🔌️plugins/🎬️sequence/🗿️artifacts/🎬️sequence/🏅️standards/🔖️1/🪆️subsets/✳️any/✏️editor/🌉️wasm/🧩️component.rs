@@ -1,6 +1,6 @@
 //! 🌉️ Sequence editor owned byte/message bridge and primitive linear-memory exports.
 
-#[path = "🦀️🟪️protocol.rs"]
+#[path = "📡️protocol.rs"]
 pub mod protocol;
 
 use crate::artifacts::sequence::{SequenceFixture, SlotRef};

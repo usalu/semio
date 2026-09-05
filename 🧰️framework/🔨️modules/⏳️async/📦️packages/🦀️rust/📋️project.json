@@ -6,6 +6,14 @@
     "default": ["{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/**/*.rs", "{projectRoot}/**/*"]
   },
   "targets": {
+    "worker-maintenance-check": {
+      "executor": "nx:run-commands",
+      "options": { "command": "bun ./📜️script.ts worker-maintenance-check", "cwd": "{projectRoot}" }
+    },
+    "worker-maintenance-native-check": {
+      "executor": "nx:run-commands",
+      "options": { "command": "bun ./📜️script.ts worker-maintenance-check --native", "cwd": "{projectRoot}" }
+    },
     "check": {
       "executor": "nx:run-commands",
       "options": { "command": "bun ./📜️script.ts check", "cwd": "{projectRoot}", "forwardAllArgs": true }

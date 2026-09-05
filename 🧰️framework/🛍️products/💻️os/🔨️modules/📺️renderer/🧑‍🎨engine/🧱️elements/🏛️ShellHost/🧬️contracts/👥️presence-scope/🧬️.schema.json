@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "documentId", "cases", "close", "routes", "rejected"],
+  "properties": {
+    "schema": { "const": "semio.shell.presence-scope-fixture.v1" },
+    "documentId": { "type": "string", "minLength": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["scope", "runtimeKey", "surface", "peer"],
+        "properties": {
+          "scope": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["spaceId", "documentId"],
+            "properties": {
+              "spaceId": { "type": "string", "minLength": 1 },
+              "documentId": { "type": "string", "minLength": 1 }
+            }
+          },
+          "runtimeKey": { "type": "string", "pattern": "^v1:[0-9]+:[0-9]+:" },
+          "surface": { "type": "string", "minLength": 1 },
+          "peer": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["actor", "userId", "label", "role", "connectedAtMs", "color", "surface", "views"],
+            "properties": {
+              "actor": { "type": "string", "minLength": 1 },
+              "userId": { "type": "string", "minLength": 1 },
+              "label": { "type": "string", "minLength": 1 },
+              "role": { "enum": ["owner", "viewer"] },
+              "connectedAtMs": { "type": "integer", "minimum": 0 },
+              "color": { "type": "integer", "minimum": 0 },
+              "surface": { "type": "string", "minLength": 1 },
+              "views": { "type": "array", "maxItems": 0 }
+            }
+          }
+        }
+      }
+    },
+    "close": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clearsRuntimeKey", "preservesRuntimeKey"],
+      "properties": {
+        "clearsRuntimeKey": { "type": "string", "minLength": 1 },
+        "preservesRuntimeKey": { "type": "string", "minLength": 1 }
+      }
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^actor://v1:" }
+    },
+    "rejected": {
+      "type": "array",
+      "const": ["missing-scope", "mismatched-scope", "missing-surface", "mismatched-surface"]
+    }
+  }
+}

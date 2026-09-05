@@ -65,7 +65,7 @@
           "scenarios": [
             {
               "id": "appends-grip-3",
-              "directoryName": "🧪️appends-grip-3"
+              "directoryName": "✊️appends-grip-3"
             }
           ]
         },
@@ -76,7 +76,7 @@
           "scenarios": [
             {
               "id": "rewrites-description",
-              "directoryName": "🧪️rewrites-description"
+              "directoryName": "📝️rewrites-description"
             }
           ]
         },
@@ -87,7 +87,7 @@
           "scenarios": [
             {
               "id": "architecture-to-engineering",
-              "directoryName": "🧪️architecture-to-engineering"
+              "directoryName": "⚙️architecture-to-engineering"
             }
           ]
         },
@@ -98,7 +98,7 @@
           "scenarios": [
             {
               "id": "rekinds-fast-1",
-              "directoryName": "🧪️rekinds-fast-1"
+              "directoryName": "🏷️rekinds-fast-1"
             }
           ]
         },
@@ -109,7 +109,7 @@
           "scenarios": [
             {
               "id": "fixed-to-derived",
-              "directoryName": "🧪️fixed-to-derived"
+              "directoryName": "⚓️fixed-to-derived"
             }
           ]
         },
@@ -120,7 +120,7 @@
           "scenarios": [
             {
               "id": "reassigns-kind",
-              "directoryName": "🧪️reassigns-kind"
+              "directoryName": "🏷️reassigns-kind"
             }
           ]
         },
@@ -131,7 +131,7 @@
           "scenarios": [
             {
               "id": "hides-part-a",
-              "directoryName": "🧪️hides-part-a"
+              "directoryName": "🙈️hides-part-a"
             }
           ]
         },
@@ -142,7 +142,7 @@
           "scenarios": [
             {
               "id": "swaps-icon",
-              "directoryName": "🧪️swaps-icon"
+              "directoryName": "🎨️swaps-icon"
             }
           ]
         },
@@ -153,7 +153,7 @@
           "scenarios": [
             {
               "id": "locks-part-a",
-              "directoryName": "🧪️locks-part-a"
+              "directoryName": "🔒️locks-part-a"
             }
           ]
         },
@@ -164,7 +164,7 @@
           "scenarios": [
             {
               "id": "repoints-mesh",
-              "directoryName": "🧪️repoints-mesh"
+              "directoryName": "🕸️repoints-mesh"
             }
           ]
         },
@@ -175,7 +175,7 @@
           "scenarios": [
             {
               "id": "adds-second-fastener",
-              "directoryName": "🧪️adds-second-fastener"
+              "directoryName": "🔩️adds-second-fastener"
             }
           ]
         },
@@ -186,7 +186,7 @@
           "scenarios": [
             {
               "id": "adds-grip-pair",
-              "directoryName": "🧪️adds-grip-pair"
+              "directoryName": "🤝️adds-grip-pair"
             }
           ]
         },
@@ -197,7 +197,7 @@
           "scenarios": [
             {
               "id": "appends-part-c",
-              "directoryName": "🧪️appends-part-c"
+              "directoryName": "🌱️appends-part-c"
             }
           ]
         },
@@ -208,7 +208,7 @@
           "scenarios": [
             {
               "id": "removes-part-a-and-severs-fastener",
-              "directoryName": "🧪️removes-part-a-and-severs-fastener"
+              "directoryName": "🚫️removes-part-a-and-severs-fastener"
             }
           ]
         },
@@ -219,7 +219,7 @@
           "scenarios": [
             {
               "id": "removes-fast-1",
-              "directoryName": "🧪️removes-fast-1"
+              "directoryName": "🚫️removes-fast-1"
             }
           ]
         },
@@ -230,7 +230,7 @@
           "scenarios": [
             {
               "id": "removes-grip-pair",
-              "directoryName": "🧪️removes-grip-pair"
+              "directoryName": "🚫️removes-grip-pair"
             }
           ]
         },
@@ -241,7 +241,7 @@
           "scenarios": [
             {
               "id": "retitles-part-a",
-              "directoryName": "🧪️retitles-part-a"
+              "directoryName": "✏️retitles-part-a"
             }
           ]
         },
@@ -252,7 +252,7 @@
           "scenarios": [
             {
               "id": "relabels-part-a",
-              "directoryName": "🧪️relabels-part-a"
+              "directoryName": "🔤️relabels-part-a"
             }
           ]
         },
@@ -263,7 +263,7 @@
           "scenarios": [
             {
               "id": "moves-part-a",
-              "directoryName": "🧪️moves-part-a"
+              "directoryName": "📍️moves-part-a"
             }
           ]
         },
@@ -274,7 +274,7 @@
           "scenarios": [
             {
               "id": "moves-part-a-in-world",
-              "directoryName": "🧪️moves-part-a-in-world"
+              "directoryName": "🗺️moves-part-a-in-world"
             }
           ]
         },
@@ -285,7 +285,7 @@
           "scenarios": [
             {
               "id": "removes-grip-1-and-severs-fastener",
-              "directoryName": "🧪️removes-grip-1-and-severs-fastener"
+              "directoryName": "🚫️removes-grip-1-and-severs-fastener"
             }
           ]
         },
@@ -296,7 +296,7 @@
           "scenarios": [
             {
               "id": "relabels-document",
-              "directoryName": "🧪️relabels-document"
+              "directoryName": "📃️relabels-document"
             }
           ]
         },
@@ -307,7 +307,7 @@
           "scenarios": [
             {
               "id": "repositions-fast-1",
-              "directoryName": "🧪️repositions-fast-1"
+              "directoryName": "📍️repositions-fast-1"
             }
           ]
         },
@@ -318,7 +318,7 @@
           "scenarios": [
             {
               "id": "null-catalogs-is-noop",
-              "directoryName": "🧪️null-catalogs-is-noop"
+              "directoryName": "📇️null-catalogs-is-noop"
             }
           ]
         },
@@ -329,7 +329,7 @@
           "scenarios": [
             {
               "id": "rekinds-grip-1",
-              "directoryName": "🧪️rekinds-grip-1"
+              "directoryName": "🏷️rekinds-grip-1"
             }
           ]
         },
@@ -340,7 +340,7 @@
           "scenarios": [
             {
               "id": "circle-to-rectangle",
-              "directoryName": "🧪️circle-to-rectangle"
+              "directoryName": "🔳️circle-to-rectangle"
             }
           ]
         },
@@ -351,7 +351,7 @@
           "scenarios": [
             {
               "id": "half-turn-about-z",
-              "directoryName": "🧪️half-turn-about-z"
+              "directoryName": "🔄️half-turn-about-z"
             }
           ]
         },
@@ -362,7 +362,7 @@
           "scenarios": [
             {
               "id": "uniform-double",
-              "directoryName": "🧪️uniform-double"
+              "directoryName": "📏️uniform-double"
             }
           ]
         }

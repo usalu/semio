@@ -68,16 +68,22 @@ fn home_row_action(icon: IconName, label: semio_framework_plugin::LabelText, act
     Ok(TableRowAction::new(fixed_text(icon.as_str(), "ui.table.action-icon")?, fixed_label(label, "ui.table.action-label")?, action))
 }
 
+/// 🛂️ `openSpace` is offered to every row; the directory-owned lifecycle affordances
+/// (rename/share/delete) and the administration pane (`manageSpace`) are offered ONLY when the
+/// caller's own current membership role is `author`. Hub origin alone is not a capability: a
+/// spectator reaching a control the server correctly rejects is exactly the role blindness this
+/// replaces. The pane it opens still renders solely from the server's own capability flags.
 fn row_actions(labels: &SHomeLabels, row: &crate::HomeSpaceRow) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<TableRowAction>> {
     let mut actions = semio_framework_plugin::UiFixedList::default();
     actions
         .try_push(home_row_action(IconName::FolderOpen, labels.action_open, "openSpace", &row.id)?)
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.row-actions", "fixed row action admission failed"))?;
-    if row.origin == "hub" {
+    if row.origin == "hub" && row.role == Some(crate::DirectorySpaceRole::Author) {
         for action in [
             home_row_action(IconName::Pencil, labels.action_rename, "renameSpace", &row.id)?,
             home_row_action(IconName::Link, labels.action_share, "shareSpace", &row.id)?,
             home_row_action(IconName::Trash2, labels.action_delete, "deleteSpace", &row.id)?,
+            home_row_action(IconName::Users, labels.action_manage, "manageSpace", &row.id)?,
         ] {
             actions.try_push(action).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.row-actions", "fixed row action admission failed"))?;
         }
@@ -162,7 +168,7 @@ pub fn render(cfg: &HomeConfig) -> semio_framework_plugin::UiAssemblyResult<semi
     let directory = cfg.directory().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("s.home.directory-projection-malformed", "Home directory projection is invalid"))?;
     // 🌉️ `crate::home_space_rows` is a plugin-root async fn (outside this lease); `render` must
     // stay sync (called synchronously by `HomeApp::render`) — bridged via `resolve_ready`.
-    let rows = semio_framework_plugin::resolve_ready(crate::home_space_rows(&directory));
+    let rows = semio_framework_plugin::resolve_ready(crate::home_space_rows(&directory, &cfg.client_id));
     let table_node = render_rows(&rows, table, actions)?;
     let mut children: semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode> = semio_framework_plugin::UiFixedList::default();
     for child in [window_content_dead_line_spacer()?, window_content_dead_line_spacer()?, create_space_button(actions)?, table_node] {
@@ -182,11 +188,19 @@ mod tests {
     use super::*;
 
     async fn one_local_row() -> crate::HomeSpaceRow {
-        crate::HomeSpaceRow { id: "sp-local".into(), name: "Fixture Studio".into(), kind: "atelier".into(), visibility: "private".into(), members: "1".into(), updated: "0".into(), origin: "local" }
+        crate::HomeSpaceRow { id: "sp-local".into(), name: "Fixture Studio".into(), kind: "atelier".into(), visibility: "private".into(), members: "1".into(), updated: "0".into(), origin: "local", role: None }
     }
 
     async fn one_hub_row() -> crate::HomeSpaceRow {
-        crate::HomeSpaceRow { id: "sp-hub".into(), name: "Fabrication".into(), kind: "studio".into(), visibility: "public".into(), members: "2".into(), updated: "1000".into(), origin: "hub" }
+        crate::HomeSpaceRow { id: "sp-hub".into(), name: "Fabrication".into(), kind: "studio".into(), visibility: "public".into(), members: "2".into(), updated: "1000".into(), origin: "hub", role: Some(crate::DirectorySpaceRole::Author) }
+    }
+
+    async fn spectator_hub_row() -> crate::HomeSpaceRow {
+        crate::HomeSpaceRow { role: Some(crate::DirectorySpaceRole::Spectator), ..one_hub_row() }
+    }
+
+    async fn unbound_hub_row() -> crate::HomeSpaceRow {
+        crate::HomeSpaceRow { role: None, ..one_hub_row() }
     }
 
     #[semio_framework_async_macros::async_test]
@@ -222,10 +236,24 @@ mod tests {
         let rows: Vec<pack::JsonValue> = pack::parse_json(&scene.rows_json).expect("rows_json parses").as_array().expect("rows_json parses").to_vec();
         assert_eq!(rows[0]["id"], pack::json!("space:sp-hub"), "row id must carry the frozen space:<id> grammar: {rows:?}");
         let buttons = rows[0]["actions"]["buttons"].as_array().expect("actions cell has buttons");
-        assert_eq!(buttons.len(), 4, "open + rename + share + delete: {buttons:?}");
+        assert_eq!(buttons.len(), 5, "open + rename + share + delete + manage: {buttons:?}");
         let delete_button = buttons.iter().find(|button| button["action"]["action"] == "deleteSpace").expect("delete button present");
         assert_eq!(delete_button["action"]["controllerId"], pack::json!(S_HOME_CONTROLLER_ID));
         assert_eq!(delete_button["action"]["args"]["spaceId"], pack::json!("sp-hub"), "the delete button's descriptor already carries the row's own space id: {delete_button:?}");
+        let manage_button = buttons.iter().find(|button| button["action"]["action"] == "manageSpace").expect("manage button present");
+        assert_eq!(manage_button["action"]["args"]["spaceId"], pack::json!("sp-hub"), "the administration descriptor carries the authoritative row id: {manage_button:?}");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn spectator_and_unbound_hub_rows_only_carry_open() {
+        for row in [spectator_hub_row(), unbound_hub_row()] {
+            let UiNode::ComponentScene(node) = render_rows(&[row], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN) else { panic!("expected ComponentScene") };
+            let scene = node.table.expect("table scene");
+            let rows: Vec<pack::JsonValue> = pack::parse_json(&scene.rows_json).expect("rows_json parses").as_array().expect("rows_json parses").to_vec();
+            let buttons = rows[0]["actions"]["buttons"].as_array().expect("actions cell has buttons");
+            assert_eq!(buttons.len(), 1, "a stale or absent author identity cannot expose lifecycle administration: {buttons:?}");
+            assert_eq!(buttons[0]["action"]["action"], pack::json!("openSpace"));
+        }
     }
 
     #[semio_framework_async_macros::async_test]

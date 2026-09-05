@@ -28,8 +28,9 @@
               "properties": {
                 "id": { "type": "string", "pattern": "^inference-[a-f0-9]{32}$" },
                 "data": {
-                  "type": "object", "additionalProperties": false, "required": ["kind", "ring"],
+                  "type": "object", "additionalProperties": false, "required": ["id", "kind", "ring"],
                   "properties": {
+                    "id": { "type": "string", "pattern": "^inference-[a-f0-9]{32}$" },
                     "kind": { "const": "inference-bounds" },
                     "ring": { "type": "array", "minItems": 5, "maxItems": 5, "items": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number", "minimum": -180, "maximum": 180 } } }
                   }

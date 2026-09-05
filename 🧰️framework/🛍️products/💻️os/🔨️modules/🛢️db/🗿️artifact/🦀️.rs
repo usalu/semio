@@ -1248,42 +1248,66 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         let wal_facet = storage.wal().await;
         let replay_cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
         let replay_control = db_wal::WalCursorControl::new(replay_cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
-        let mut records = db_wal::replay_document(&wal_facet, &core_id, replay_control).await?;
+        let mut records = db_wal::replay_committed_document(&wal_facet, &core_id, replay_control).await?;
         let mut batch_ids: HashSet<String> = HashSet::new();
         let mut seen: u64 = 0;
-        loop {
-            let mut record = match records.next_step().await? {
-                db_wal::WalReplayStep::Record(record) => record,
-                db_wal::WalReplayStep::Yield => continue,
-                db_wal::WalReplayStep::Done => break,
-            };
-            match &mut record {
-                db_wal::WalRecord::TxBegin { .. } => batch_ids.clear(),
-                db_wal::WalRecord::Command(bytes) => {
-                    let mut control = db_wal::WalCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
-                    let retained = decode_retained_envelope(bytes, &mut control).await?;
-                    let envelope = adapt_retained_envelope(retained, &mut control).await?;
-                    seen += 1;
-                    batch_ids.insert(envelope.mutation_id.0.clone());
-                    if seen <= applied_head_seq {
-                        engine.applied.insert(envelope.mutation_id.0.clone(), envelope);
-                        continue;
+        let replay = async {
+            loop {
+                let mut transaction = match records.next_transaction_step().await? {
+                    db_wal::WalCommittedStep::Transaction(transaction) => transaction,
+                    db_wal::WalCommittedStep::Yield => { semio_framework_async::yield_once().await; continue; }
+                    db_wal::WalCommittedStep::Done => break,
+                };
+                batch_ids.clear();
+                let mut frontier_seen = false;
+                loop {
+                    let record = match transaction.next_record_step()? {
+                        db_wal::WalCommittedRecordStep::Record(record) => record,
+                        db_wal::WalCommittedRecordStep::Yield => { semio_framework_async::yield_once().await; continue; }
+                        db_wal::WalCommittedRecordStep::Done => break,
+                    };
+                    if frontier_seen { return Err(DbError::Corrupt("artifact committed frontier is not terminal".to_string())); }
+                    match record {
+                        db_wal::WalRecord::Command(bytes) => {
+                            let mut control = db_wal::WalCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+                            let retained = decode_retained_envelope(bytes, &mut control).await?;
+                            let envelope = adapt_retained_envelope(retained, &mut control).await?;
+                            if envelope.document_id.0 != core_id.0 { return Err(DbError::Corrupt("artifact envelope document differs".to_string())); }
+                            seen += 1;
+                            batch_ids.insert(envelope.mutation_id.0.clone());
+                            if seen <= applied_head_seq {
+                                engine.applied.insert(envelope.mutation_id.0.clone(), envelope);
+                            } else {
+                                let (touched, _conflicts, _) = engine.apply_one(&envelope, &batch_ids).await?;
+                                let touch = command_touch(&envelope, &touched);
+                                if engine.recent_touches.len() >= MAX_RECENT_TOUCHES { engine.recent_touches.pop_front(); }
+                                engine.recent_touches.push_back(touch);
+                                report.commands_replayed += 1;
+                            }
+                        }
+                        db_wal::WalRecord::Frontier(frontier) => {
+                            if frontier.document != core_id { return Err(DbError::Corrupt("artifact frontier document differs".to_string())); }
+                            frontier_seen = true;
+                            engine.frontier = frontier.clone();
+                        }
+                        _ => {}
                     }
-                    let (touched, _conflicts, _) = engine.apply_one(&envelope, &batch_ids).await?;
-                    let touch = command_touch(&envelope, &touched);
-                    if engine.recent_touches.len() >= MAX_RECENT_TOUCHES {
-                        engine.recent_touches.pop_front();
-                    }
-                    engine.recent_touches.push_back(touch);
-                    report.commands_replayed += 1;
+                    while transaction.close_record_step()? { semio_framework_async::yield_once().await; }
                 }
-                db_wal::WalRecord::Frontier(frontier) => engine.frontier = frontier.clone(),
-                _ => {}
+                if !batch_ids.is_empty() && !frontier_seen { return Err(DbError::Corrupt("artifact committed commands have no frontier".to_string())); }
+                transaction.finish()?;
             }
-            let _ = record.close_step()?;
-            drop(record);
+            Ok::<(), DbError>(())
+        }.await;
+        let closed = async {
+            while records.close_owner_step()? { semio_framework_async::yield_once().await; }
+            Ok::<(), DbError>(())
+        }.await;
+        if let Err(error) = replay.and(closed) {
+            while engine.wal.close_step()? { semio_framework_async::yield_once().await; }
+            while engine.state.values.close_step()? { semio_framework_async::yield_once().await; }
+            return Err(error);
         }
-        let _ = records.close_step().await?;
         drop(records);
         drop(wal_facet);
         Ok((engine, report))
@@ -2683,9 +2707,21 @@ impl Drop for HistoryReplayReservationCloseCursor {
     }
 }
 
+#[derive(Default)]
 struct HistoryPageSet {
     pages: Vec<Option<Vec<u8>>>,
     len: u64,
+}
+
+impl db_wal::WalImmutableByteSource for HistoryPageSet {
+    fn byte_len(&self) -> usize { self.len as usize }
+
+    fn fragment_at(&self, offset: usize, limit: usize) -> Result<&[u8], DbError> {
+        if offset >= limit || limit as u64 > self.len { return Err(DbError::Corrupt("history immutable source range".to_string())); }
+        let bytes = self.page_slice(offset as u64, (limit - offset) as u64)?;
+        if bytes.is_empty() { return Err(DbError::Corrupt("history immutable source lost bytes".to_string())); }
+        Ok(bytes)
+    }
 }
 
 impl HistoryPageSet {
@@ -2711,19 +2747,17 @@ impl HistoryPageSet {
     }
 
     fn read_varint(&self, pos: &mut u64, end: u64) -> Result<u64, DbError> {
-        let mut value = 0u64;
-        for shift in (0..70).step_by(7) {
-            if *pos >= end {
+        let mut next = *pos;
+        let value = db_wal::wal_read_canonical_varint(|| {
+            if next >= end {
                 return Err(DbError::Corrupt("history varint exceeds its admitted range".to_string()));
             }
-            let byte = self.byte(*pos)?;
-            *pos = pos.checked_add(1).ok_or(DbError::LimitExceeded("history varint offset"))?;
-            value |= u64::from(byte & 0x7f).checked_shl(shift).ok_or(DbError::LimitExceeded("history varint"))?;
-            if byte & 0x80 == 0 {
-                return Ok(value);
-            }
-        }
-        Err(DbError::Corrupt("history varint exceeds ten bytes".to_string()))
+            let byte = self.byte(next)?;
+            next = next.checked_add(1).ok_or(DbError::LimitExceeded("history varint offset"))?;
+            Ok(byte)
+        })?;
+        *pos = next;
+        Ok(value)
     }
 
     fn read_range(&self, pos: &mut u64, end: u64, maximum: u64) -> Result<std::ops::Range<u64>, DbError> {
@@ -2770,150 +2804,6 @@ impl HistoryPageSet {
     }
 }
 
-enum HistoryFrameToken {
-    End,
-    TxBegin,
-    Command { offset: u64, len: u64 },
-    Frontier { offset: u64, len: u64 },
-    Other,
-}
-
-enum HistoryFrameStage {
-    BodyLen,
-    Kind,
-    Flags,
-    Payload,
-    StoredCrc,
-    BackLen,
-    Finish,
-}
-
-struct HistoryFrameCursor {
-    frame_start: u64,
-    pos: u64,
-    body_len: u64,
-    varint_shift: u32,
-    kind: u8,
-    payload_start: u64,
-    payload_remaining: u64,
-    crc: protocol::codec::Crc32cCursor,
-    stored_crc: [u8; 4],
-    stored_crc_pos: usize,
-    back_len: [u8; 4],
-    back_len_pos: usize,
-    stage: HistoryFrameStage,
-}
-
-impl HistoryFrameCursor {
-    fn new(offset: u64) -> Self {
-        Self {
-            frame_start: offset,
-            pos: offset,
-            body_len: 0,
-            varint_shift: 0,
-            kind: 0,
-            payload_start: 0,
-            payload_remaining: 0,
-            crc: protocol::codec::Crc32cCursor::new(),
-            stored_crc: [0; 4],
-            stored_crc_pos: 0,
-            back_len: [0; 4],
-            back_len_pos: 0,
-            stage: HistoryFrameStage::BodyLen,
-        }
-    }
-
-    fn step(&mut self, pages: &HistoryPageSet) -> Result<Option<HistoryFrameToken>, DbError> {
-        if self.frame_start == pages.len {
-            return Ok(Some(HistoryFrameToken::End));
-        }
-        match self.stage {
-            HistoryFrameStage::BodyLen => {
-                let byte = pages.byte(self.pos)?;
-                self.pos = self.pos.checked_add(1).ok_or(DbError::LimitExceeded("history frame offset"))?;
-                self.body_len |= u64::from(byte & 0x7f).checked_shl(self.varint_shift).ok_or(DbError::LimitExceeded("history frame body length"))?;
-                if byte & 0x80 == 0 {
-                    if self.body_len < 2 || self.body_len > HISTORY_REPLAY_MAX_FRAME_BYTES {
-                        return Err(DbError::LimitExceeded("history frame body bytes"));
-                    }
-                    self.stage = HistoryFrameStage::Kind;
-                } else {
-                    self.varint_shift = self.varint_shift.checked_add(7).ok_or(DbError::LimitExceeded("history frame body varint"))?;
-                    if self.varint_shift >= 70 {
-                        return Err(DbError::Corrupt("history frame body varint exceeds ten bytes".to_string()));
-                    }
-                }
-            }
-            HistoryFrameStage::Kind => {
-                self.kind = pages.byte(self.pos)?;
-                self.crc.update_page(&[self.kind]);
-                self.pos = self.pos.checked_add(1).ok_or(DbError::LimitExceeded("history frame offset"))?;
-                self.stage = HistoryFrameStage::Flags;
-            }
-            HistoryFrameStage::Flags => {
-                let flags = pages.byte(self.pos)?;
-                if flags & protocol::wire::FRAME_FLAG_COMPRESSED != 0 {
-                    return Err(DbError::Corrupt("compressed WAL history frame is unsupported".to_string()));
-                }
-                self.crc.update_page(&[flags]);
-                self.pos = self.pos.checked_add(1).ok_or(DbError::LimitExceeded("history frame offset"))?;
-                self.payload_start = self.pos;
-                self.payload_remaining = self.body_len - 2;
-                self.stage = if self.payload_remaining == 0 { HistoryFrameStage::StoredCrc } else { HistoryFrameStage::Payload };
-            }
-            HistoryFrameStage::Payload => {
-                let maximum = self.payload_remaining.min(HISTORY_REPLAY_PAGE_BYTES);
-                let page = pages.page_slice(self.pos, maximum)?;
-                if page.is_empty() {
-                    return Err(DbError::Corrupt("history frame payload is truncated".to_string()));
-                }
-                self.crc.update_page(page);
-                self.pos = self.pos.checked_add(page.len() as u64).ok_or(DbError::LimitExceeded("history frame payload offset"))?;
-                self.payload_remaining = self.payload_remaining.checked_sub(page.len() as u64).ok_or(DbError::LimitExceeded("history frame payload bytes"))?;
-                if self.payload_remaining == 0 {
-                    self.stage = HistoryFrameStage::StoredCrc;
-                }
-            }
-            HistoryFrameStage::StoredCrc => {
-                self.stored_crc[self.stored_crc_pos] = pages.byte(self.pos)?;
-                self.pos = self.pos.checked_add(1).ok_or(DbError::LimitExceeded("history frame CRC offset"))?;
-                self.stored_crc_pos += 1;
-                if self.stored_crc_pos == self.stored_crc.len() {
-                    self.stage = HistoryFrameStage::BackLen;
-                }
-            }
-            HistoryFrameStage::BackLen => {
-                self.back_len[self.back_len_pos] = pages.byte(self.pos)?;
-                self.pos = self.pos.checked_add(1).ok_or(DbError::LimitExceeded("history frame trailer offset"))?;
-                self.back_len_pos += 1;
-                if self.back_len_pos == self.back_len.len() {
-                    self.stage = HistoryFrameStage::Finish;
-                }
-            }
-            HistoryFrameStage::Finish => {
-                let stored_crc = u32::from_le_bytes(self.stored_crc);
-                if stored_crc != self.crc.finish() {
-                    return Err(DbError::Corrupt("history frame CRC mismatch".to_string()));
-                }
-                let frame_len = self.pos.checked_sub(self.frame_start).ok_or(DbError::LimitExceeded("history frame length"))?;
-                if u64::from(u32::from_le_bytes(self.back_len)) != frame_len {
-                    return Err(DbError::Corrupt("history frame back length mismatch".to_string()));
-                }
-                let payload_len = self.body_len - 2;
-                let token = match self.kind {
-                    db_wal::WAL_TX_BEGIN => HistoryFrameToken::TxBegin,
-                    db_wal::WAL_COMMAND => HistoryFrameToken::Command { offset: self.payload_start, len: payload_len },
-                    db_wal::WAL_FRONTIER => HistoryFrameToken::Frontier { offset: self.payload_start, len: payload_len },
-                    kind if (db_wal::WAL_SEGMENT_HEADER..=db_wal::WAL_MIGRATION).contains(&kind) || kind == protocol::wire::REC_COMMIT => HistoryFrameToken::Other,
-                    kind => return Err(DbError::Corrupt(format!("unexpected frame kind {kind:#x} in history replay"))),
-                };
-                return Ok(Some(token));
-            }
-        }
-        Ok(None)
-    }
-}
-
 enum HistoryEnvelopeField {
     MutationId,
     Document,
@@ -2954,7 +2844,7 @@ impl HistoryEnvelopeCursor {
         Ok(())
     }
 
-    fn step(&mut self, pages: &HistoryPageSet, scratch: &mut [u8]) -> Result<Option<std::ops::Range<u64>>, DbError> {
+    fn step(&mut self, pages: &HistoryPageSet, scratch: &mut [u8], document: &ArtifactId) -> Result<Option<std::ops::Range<u64>>, DbError> {
         match self.field {
             HistoryEnvelopeField::MutationId => {
                 let range = pages.read_range(&mut self.pos, self.end, HISTORY_REPLAY_MAX_FIELD_BYTES as u64)?;
@@ -2964,7 +2854,8 @@ impl HistoryEnvelopeCursor {
                 self.field = HistoryEnvelopeField::Document;
             }
             HistoryEnvelopeField::Document => {
-                self.skip_text(pages, scratch)?;
+                let range = pages.read_range(&mut self.pos, self.end, HISTORY_REPLAY_MAX_FIELD_BYTES as u64)?;
+                if pages.copy_small(range, scratch)? != document.0.as_bytes() { return Err(DbError::Corrupt("history envelope document differs".to_string())); }
                 self.field = HistoryEnvelopeField::Actor;
             }
             HistoryEnvelopeField::Actor => {
@@ -3048,12 +2939,11 @@ impl HistoryFrontierCursor {
         Ok(Self { pos: offset, end, field: HistoryFrontierField::Document, head_seq: 0, commit_seq: 0, chain_hash: [0; 32] })
     }
 
-    fn step(&mut self, pages: &HistoryPageSet, scratch: &mut [u8]) -> Result<Option<(u64, u64, [u8; 32], u64)>, DbError> {
+    fn step(&mut self, pages: &HistoryPageSet, scratch: &mut [u8], document: &ArtifactId) -> Result<Option<(u64, u64, [u8; 32], u64)>, DbError> {
         match self.field {
             HistoryFrontierField::Document => {
                 let range = pages.read_range(&mut self.pos, self.end, HISTORY_REPLAY_MAX_FIELD_BYTES as u64)?;
-                let scratch = pages.copy_small(range, scratch)?;
-                std::str::from_utf8(&scratch).map_err(|_| DbError::Corrupt("history frontier document is not valid utf-8".to_string()))?;
+                if pages.copy_small(range, scratch)? != document.0.as_bytes() { return Err(DbError::Corrupt("history frontier document differs".to_string())); }
                 self.field = HistoryFrontierField::Head;
             }
             HistoryFrontierField::Head => {
@@ -3082,19 +2972,23 @@ impl HistoryFrontierCursor {
 
 type HistorySegmentLenFuture = Pin<Box<dyn Future<Output = Result<u64, DbError>> + Send + 'static>>;
 type HistoryPageReadFuture = Pin<Box<dyn Future<Output = Result<Vec<u8>, DbError>> + Send + 'static>>;
+type HistorySegmentListFuture = Pin<Box<dyn Future<Output = Result<db_storage::DbIoU64List, DbError>> + Send + 'static>>;
 
 enum HistoryReplayPhase {
-    Probe { index: u64 },
+    Inventory { future: HistorySegmentListFuture },
+    Probe,
     SegmentLen { index: u64, future: HistorySegmentLenFuture },
     PageStart { index: u64, len: u64, offset: u64 },
     PageRead { index: u64, len: u64, offset: u64, requested: u64, future: HistoryPageReadFuture },
-    Frame { index: u64, cursor: HistoryFrameCursor },
-    Envelope { index: u64, next_offset: u64, cursor: HistoryEnvelopeCursor },
-    CopyMutation { index: u64, next_offset: u64, range: std::ops::Range<u64>, copied: u64, result_start: u64 },
-    Frontier { index: u64, next_offset: u64, cursor: HistoryFrontierCursor },
-    ClearPending { index: u64, next_offset: u64 },
-    Publish { index: u64, next_offset: u64, head_seq: u64, commit_seq: u64, chain_hash: [u8; 32], epoch: u64 },
-    Retire { next_index: u64 },
+    Verify { index: u64 },
+    Frame { index: u64 },
+    CommittedBody { index: u64 },
+    Envelope { index: u64, cursor: HistoryEnvelopeCursor },
+    CopyMutation { index: u64, range: std::ops::Range<u64>, copied: u64, result_start: u64 },
+    Frontier { index: u64, cursor: HistoryFrontierCursor },
+    Publish { index: u64, head_seq: u64, commit_seq: u64, chain_hash: [u8; 32], epoch: u64 },
+    Retire,
+    InventoryClose,
     FinalizeSuccess,
 }
 
@@ -3110,6 +3004,13 @@ pub struct HistoryReplayFuture {
     phase: Option<HistoryReplayPhase>,
     transition: HistoryReplayTransition,
     pages: HistoryPageSet,
+    authenticated: Option<db_wal::WalAuthenticatedSource<HistoryPageSet>>,
+    gate: Option<db_wal::WalTransactionGate>,
+    previous_tip: db_wal::WalPriorChainTip,
+    segments: Option<db_storage::DbIoU64List>,
+    segment_ordinal: usize,
+    body_index: usize,
+    pending_frontier: Option<(u64, u64, [u8; 32], u64)>,
     page_count: usize,
     reservation: Option<HistoryReplayReservation>,
     reservation_close: Option<HistoryReplayReservationCloseCursor>,
@@ -3126,12 +3027,21 @@ impl HistoryReplayFuture {
     fn new(storage: Arc<db_storage::DbBackend>, document: ArtifactId, operation_generation: u64, cancelled: Arc<std::sync::atomic::AtomicBool>, mut reservation: HistoryReplayReservation) -> Self {
         let source_pages = std::mem::take(&mut reservation.source_pages);
         reservation.source_page_count = 0;
+        let inventory_storage = storage.clone();
+        let inventory_document = document.clone();
         Self {
             storage,
             document: Arc::new(document),
-            phase: Some(HistoryReplayPhase::Probe { index: 0 }),
+            phase: Some(HistoryReplayPhase::Inventory { future: Box::pin(async move { inventory_storage.wal().await.list_segments(&inventory_document).await }) }),
             transition: HistoryReplayTransition::InProgress,
             pages: HistoryPageSet { pages: source_pages, len: 0 },
+            authenticated: None,
+            gate: Some(db_wal::WalTransactionGate::new()),
+            previous_tip: db_wal::WalPriorChainTip::Genesis,
+            segments: None,
+            segment_ordinal: 0,
+            body_index: 0,
+            pending_frontier: None,
             page_count: 0,
             reservation: Some(reservation),
             reservation_close: None,
@@ -3155,6 +3065,10 @@ impl HistoryReplayFuture {
     }
 
     pub fn close_step(&mut self) -> bool {
+        if let Some(source) = self.authenticated.take() {
+            self.pages = source.abort_into_source();
+            return true;
+        }
         if self.terminal_page.take().is_some() {
             return true;
         }
@@ -3165,6 +3079,12 @@ impl HistoryReplayFuture {
         }
         if !self.pages.pages.is_empty() {
             drop(std::mem::take(&mut self.pages.pages));
+            return true;
+        }
+        if let Some(segments) = self.segments.as_mut() {
+            if segments.close_step() { return true; }
+            if !segments.terminal_is_empty() { return true; }
+            self.segments = None;
             return true;
         }
         if self.reservation_close.is_none() {
@@ -3184,7 +3104,7 @@ impl HistoryReplayFuture {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.terminal_page.is_none() && self.page_count == 0 && self.pages.pages.is_empty() && self.reservation.is_none() && self.reservation_close.is_none() && self.phase.is_none() && matches!(self.transition, HistoryReplayTransition::Complete)
+        self.authenticated.is_none() && self.segments.is_none() && self.terminal_page.is_none() && self.page_count == 0 && self.pages.pages.is_empty() && self.reservation.is_none() && self.reservation_close.is_none() && self.phase.is_none() && matches!(self.transition, HistoryReplayTransition::Complete)
     }
 
     fn begin_fault(&mut self, error: DbError) {
@@ -3270,31 +3190,42 @@ impl HistoryReplayFuture {
             return std::task::Poll::Pending;
         };
         match active {
-            HistoryReplayPhase::Probe { index } => {
+            HistoryReplayPhase::Inventory { future } => match future.as_mut().poll(context) {
+                std::task::Poll::Pending => {}
+                std::task::Poll::Ready(Err(error)) => fault = Some(error),
+                std::task::Poll::Ready(Ok(segments)) => {
+                    this.segments = Some(segments);
+                    next = Some(HistoryReplayPhase::Probe);
+                }
+            },
+            HistoryReplayPhase::Probe => {
                 if let Some(error) = this.terminal_error.take() {
                     fault = Some(error);
                 } else {
-                    let index = *index;
-                    let storage = this.storage.clone();
-                    let document = this.document.clone();
-                    next = Some(HistoryReplayPhase::SegmentLen { index, future: Box::pin(async move { storage.wal().await.segment_len(&document, index).await }) });
+                    let segments = this.segments.as_ref().map(db_storage::DbIoU64List::as_slice).unwrap_or(&[]);
+                    match segments.get(this.segment_ordinal).copied() {
+                        None => next = Some(HistoryReplayPhase::InventoryClose),
+                        Some(segment) if segments.first().and_then(|first| first.checked_add(this.segment_ordinal as u64)) != Some(segment) => fault = Some(DbError::Corrupt("history WAL inventory is not a dense retained suffix".to_string())),
+                        Some(segment) => {
+                            if this.segment_ordinal == 0 && segment != 0 { this.previous_tip = db_wal::WalPriorChainTip::RetainedBoundary; }
+                            let storage = this.storage.clone();
+                            let document = this.document.clone();
+                            next = Some(HistoryReplayPhase::SegmentLen { index: segment, future: Box::pin(async move { storage.wal().await.segment_len(&document, segment).await }) });
+                        }
+                    }
                 }
             }
             HistoryReplayPhase::SegmentLen { index, future } => match future.as_mut().poll(context) {
                 std::task::Poll::Pending => {}
-                std::task::Poll::Ready(Err(DbError::NotFound(_))) => {
-                    if let Some(error) = this.terminal_error.take() {
-                        fault = Some(error);
-                    } else {
-                        next = Some(HistoryReplayPhase::FinalizeSuccess);
-                    }
-                }
                 std::task::Poll::Ready(Err(error)) => fault = Some(this.terminal_error.take().unwrap_or(error)),
                 std::task::Poll::Ready(Ok(len)) => {
                     if let Some(error) = this.terminal_error.take() {
                         fault = Some(error);
                     } else if let Some(page_count) = len.checked_add(HISTORY_REPLAY_PAGE_BYTES - 1).map(|bytes| bytes / HISTORY_REPLAY_PAGE_BYTES) {
-                        let simultaneous = this.reservation.as_ref().and_then(HistoryReplayReservation::retained_bytes).and_then(|bytes| bytes.checked_add(len));
+                        let inventory_bytes = this.segments.as_ref().map_or(0, db_storage::DbIoU64List::retained_bytes);
+                        let simultaneous = this.reservation.as_ref().and_then(HistoryReplayReservation::retained_bytes)
+                            .and_then(|bytes| bytes.checked_add(len)).and_then(|bytes| bytes.checked_add(inventory_bytes))
+                            .and_then(|bytes| bytes.checked_add(std::mem::size_of::<Self>() as u64));
                         if len < protocol::format::HEADER_SIZE as u64 || page_count > HISTORY_REPLAY_SEGMENT_PAGES || simultaneous.is_none_or(|bytes| bytes > HISTORY_REPLAY_OPERATION_BYTES) {
                             fault = Some(DbError::LimitExceeded("history replay page/source byte credit"));
                         } else {
@@ -3308,7 +3239,10 @@ impl HistoryReplayFuture {
             },
             HistoryReplayPhase::PageStart { index, len, offset } => {
                 if offset == len {
-                    next = Some(HistoryReplayPhase::Frame { index: *index, cursor: HistoryFrameCursor::new(protocol::format::HEADER_SIZE as u64) });
+                    if let Some(gate) = this.gate.take() {
+                        this.authenticated = Some(db_wal::WalAuthenticatedSource::new(std::mem::take(&mut this.pages), gate, *index, this.previous_tip));
+                        next = Some(HistoryReplayPhase::Verify { index: *index });
+                    } else { fault = Some(DbError::Closed); }
                 } else {
                     match len.checked_sub(*offset) {
                         Some(remaining) => {
@@ -3358,27 +3292,75 @@ impl HistoryReplayFuture {
                     }
                 }
             },
-            HistoryReplayPhase::Frame { index, cursor } => match cursor.step(&this.pages) {
-                Err(error) => fault = Some(error),
-                Ok(None) => {}
-                Ok(Some(HistoryFrameToken::End)) => match index.checked_add(1) {
-                    Some(next_index) => next = Some(HistoryReplayPhase::Retire { next_index }),
-                    None => fault = Some(DbError::LimitExceeded("history segment index")),
-                },
-                Ok(Some(HistoryFrameToken::TxBegin)) => next = Some(HistoryReplayPhase::ClearPending { index: *index, next_offset: cursor.pos }),
-                Ok(Some(HistoryFrameToken::Command { offset, len })) => match HistoryEnvelopeCursor::new(&this.pages, offset, len) {
-                    Ok(envelope) => next = Some(HistoryReplayPhase::Envelope { index: *index, next_offset: cursor.pos, cursor: envelope }),
+            HistoryReplayPhase::Verify { index } => {
+                let result = db_wal::WalCursorControl::new(this.cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_millis(8), 1)
+                    .and_then(|mut control| this.authenticated.as_mut().ok_or(DbError::Closed)?.verify_step(&this.document, &mut control));
+                match result {
+                    Ok(true) => next = Some(HistoryReplayPhase::Frame { index: *index }),
+                    Ok(false) => {}
+                    Err(DbError::Unavailable(message)) if message == "wal cursor deadline reached" => {}
                     Err(error) => fault = Some(error),
-                },
-                Ok(Some(HistoryFrameToken::Frontier { offset, len })) => match HistoryFrontierCursor::new(&this.pages, offset, len) {
-                    Ok(frontier) => next = Some(HistoryReplayPhase::Frontier { index: *index, next_offset: cursor.pos, cursor: frontier }),
+                }
+            }
+            HistoryReplayPhase::Frame { index } => {
+                let result = db_wal::WalCursorControl::new(this.cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_millis(8), 1)
+                    .and_then(|mut control| this.authenticated.as_mut().ok_or(DbError::Closed)?.next_step(&mut control));
+                match result {
+                    Ok(db_wal::WalAuthenticatedStep::Yield) => {}
+                    Ok(db_wal::WalAuthenticatedStep::Committed) => {
+                        this.body_index = 0;
+                        this.pending_frontier = None;
+                        next = Some(HistoryReplayPhase::CommittedBody { index: *index });
+                    }
+                    Ok(db_wal::WalAuthenticatedStep::Done) => {
+                        if let Some(source) = this.authenticated.take() {
+                            match source.finish() {
+                                Ok((pages, gate, tip)) => {
+                                    this.pages = pages;
+                                    this.gate = Some(gate);
+                                    this.previous_tip = db_wal::WalPriorChainTip::Verified(tip);
+                                    next = Some(HistoryReplayPhase::Retire);
+                                }
+                                Err(source) => { this.authenticated = Some(source); fault = Some(DbError::Corrupt("history source finished without authentication".to_string())); }
+                            }
+                        } else { fault = Some(DbError::Closed); }
+                    }
+                    Err(DbError::Unavailable(message)) if message == "wal cursor deadline reached" => {}
                     Err(error) => fault = Some(error),
-                },
-                Ok(Some(HistoryFrameToken::Other)) => next = Some(HistoryReplayPhase::Frame { index: *index, cursor: HistoryFrameCursor::new(cursor.pos) }),
-            },
-            HistoryReplayPhase::Envelope { index, next_offset, cursor } => {
+                }
+            }
+            HistoryReplayPhase::CommittedBody { index } => {
+                if let Some(source) = this.authenticated.as_ref() {
+                    if let Some(frame) = source.committed_frame(this.body_index) {
+                        this.body_index += 1;
+                        let (offset, len) = (frame.payload_start as u64, (frame.payload_end - frame.payload_start) as u64);
+                        match frame.kind {
+                            _ if this.pending_frontier.is_some() => fault = Some(DbError::Corrupt("history committed frontier is not terminal".to_string())),
+                            db_wal::WAL_COMMAND => match HistoryEnvelopeCursor::new(source.source(), offset, len) {
+                                Ok(cursor) => next = Some(HistoryReplayPhase::Envelope { index: *index, cursor }),
+                                Err(error) => fault = Some(error),
+                            },
+                            db_wal::WAL_FRONTIER => match HistoryFrontierCursor::new(source.source(), offset, len) {
+                                Ok(cursor) => next = Some(HistoryReplayPhase::Frontier { index: *index, cursor }),
+                                Err(error) => fault = Some(error),
+                            },
+                            _ => {}
+                        }
+                    } else if let Some((head_seq, commit_seq, chain_hash, epoch)) = this.pending_frontier.take() {
+                        next = Some(HistoryReplayPhase::Publish { index: *index, head_seq, commit_seq, chain_hash, epoch });
+                    } else if this.reservation.as_ref().is_some_and(|owner| owner.operation_ids.len() != this.pending_start) {
+                        fault = Some(DbError::Corrupt("history committed commands have no frontier".to_string()));
+                    } else {
+                        match this.authenticated.as_mut().ok_or(DbError::Closed).and_then(|source| source.finish_transaction()) {
+                            Ok(()) => next = Some(HistoryReplayPhase::Frame { index: *index }),
+                            Err(error) => fault = Some(error),
+                        }
+                    }
+                } else { fault = Some(DbError::Closed); }
+            }
+            HistoryReplayPhase::Envelope { index, cursor } => {
                 let step = match this.reservation.as_mut().and_then(|owner| owner.scratch.as_mut()) {
-                    Some(scratch) => cursor.step(&this.pages, scratch),
+                    Some(scratch) => this.authenticated.as_ref().ok_or(DbError::Closed).and_then(|source| cursor.step(source.source(), scratch, &this.document)),
                     None => Err(DbError::Closed),
                 };
                 match step {
@@ -3386,21 +3368,21 @@ impl HistoryReplayFuture {
                     Ok(Some(range)) => {
                         let len = range.end.saturating_sub(range.start);
                         match this.reservation.as_ref().map_or(Err(DbError::Closed), |owner| owner.preflight_result_range(this.result_len, len)) {
-                            Ok(_) => next = Some(HistoryReplayPhase::CopyMutation { index: *index, next_offset: *next_offset, range, copied: 0, result_start: this.result_len }),
+                            Ok(_) => next = Some(HistoryReplayPhase::CopyMutation { index: *index, range, copied: 0, result_start: this.result_len }),
                             Err(error) => fault = Some(error),
                         }
                     }
                     Ok(None) => {}
                 }
             }
-            HistoryReplayPhase::CopyMutation { index, next_offset, range, copied, result_start } => match Self::copy_mutation_fragment(&this.pages, &mut this.reservation, range, *copied, *result_start) {
+            HistoryReplayPhase::CopyMutation { index, range, copied, result_start } => match this.authenticated.as_ref().ok_or(DbError::Closed).and_then(|source| Self::copy_mutation_fragment(source.source(), &mut this.reservation, range, *copied, *result_start)) {
                 Err(error) => fault = Some(error),
                 Ok(0) => {
                     if let Some(len) = range.end.checked_sub(range.start).and_then(|value| u16::try_from(value).ok()) {
                         if let Some(reservation) = this.reservation.as_mut() {
                             reservation.operation_ids.push(HistoryTextRange { start: *result_start as u32, len });
                             this.result_len = *result_start + u64::from(len);
-                            next = Some(HistoryReplayPhase::Frame { index: *index, cursor: HistoryFrameCursor::new(*next_offset) });
+                            next = Some(HistoryReplayPhase::CommittedBody { index: *index });
                         } else {
                             fault = Some(DbError::Closed);
                         }
@@ -3410,31 +3392,21 @@ impl HistoryReplayFuture {
                 }
                 Ok(count) => *copied += count,
             },
-            HistoryReplayPhase::Frontier { index, next_offset, cursor } => {
+            HistoryReplayPhase::Frontier { index, cursor } => {
                 let step = match this.reservation.as_mut().and_then(|owner| owner.scratch.as_mut()) {
-                    Some(scratch) => cursor.step(&this.pages, scratch),
+                    Some(scratch) => this.authenticated.as_ref().ok_or(DbError::Closed).and_then(|source| cursor.step(source.source(), scratch, &this.document)),
                     None => Err(DbError::Closed),
                 };
                 match step {
                     Err(error) => fault = Some(error),
-                    Ok(Some((head_seq, commit_seq, chain_hash, epoch))) => next = Some(HistoryReplayPhase::Publish { index: *index, next_offset: *next_offset, head_seq, commit_seq, chain_hash, epoch }),
+                    Ok(Some(frontier)) => { this.pending_frontier = Some(frontier); next = Some(HistoryReplayPhase::CommittedBody { index: *index }); },
                     Ok(None) => {}
                 }
             }
-            HistoryReplayPhase::ClearPending { index, next_offset } => {
-                let reservation = this.reservation.as_mut();
-                if reservation.as_ref().is_some_and(|owner| owner.operation_ids.len() > this.pending_start) {
-                    if let Some(range) = reservation.and_then(|owner| owner.operation_ids.pop()) {
-                        this.result_len = range.start as u64;
-                    }
-                } else {
-                    next = Some(HistoryReplayPhase::Frame { index: *index, cursor: HistoryFrameCursor::new(*next_offset) });
-                }
-            }
-            HistoryReplayPhase::Publish { index, next_offset, head_seq, commit_seq, chain_hash, epoch } => {
+            HistoryReplayPhase::Publish { index, head_seq, commit_seq, chain_hash, epoch } => {
                 let operation_end = this.reservation.as_ref().map_or(this.pending_start, |owner| owner.operation_ids.len());
                 if operation_end == this.pending_start {
-                    next = Some(HistoryReplayPhase::Frame { index: *index, cursor: HistoryFrameCursor::new(*next_offset) });
+                    next = Some(HistoryReplayPhase::Frame { index: *index });
                 } else if this.reservation.as_ref().is_none_or(|owner| owner.entries.len() >= HISTORY_REPLAY_MAX_ENTRIES) {
                     fault = Some(DbError::LimitExceeded("history entry item credit"));
                 } else {
@@ -3445,20 +3417,30 @@ impl HistoryReplayFuture {
                         (Ok(operation_start), Ok(operation_count), Some(reservation)) => {
                             reservation.entries.push(ArtifactHistoryEntry { operation_start, operation_count, head_seq: *head_seq, commit_seq: *commit_seq, chain_hash: *chain_hash, epoch: *epoch });
                             this.pending_start = operation_end;
-                            next = Some(HistoryReplayPhase::Frame { index: *index, cursor: HistoryFrameCursor::new(*next_offset) });
+                            next = Some(HistoryReplayPhase::Frame { index: *index });
                         }
                         _ => fault = Some(DbError::LimitExceeded("history entry range")),
                     }
                 }
+                if fault.is_none() {
+                    if let Err(error) = this.authenticated.as_mut().ok_or(DbError::Closed).and_then(|source| source.finish_transaction()) { fault = Some(error); }
+                }
             }
-            HistoryReplayPhase::Retire { next_index } => {
+            HistoryReplayPhase::Retire => {
                 if this.page_count != 0 {
                     this.page_count -= 1;
                     drop(this.pages.pages[this.page_count].take());
                 } else {
                     this.pages.len = 0;
-                    next = Some(HistoryReplayPhase::Probe { index: *next_index });
+                    this.segment_ordinal += 1;
+                    next = Some(HistoryReplayPhase::Probe);
                 }
+            }
+            HistoryReplayPhase::InventoryClose => {
+                if let Some(segments) = this.segments.as_mut() {
+                    segments.close_step();
+                    if segments.terminal_is_empty() { this.segments = None; }
+                } else { next = Some(HistoryReplayPhase::FinalizeSuccess); }
             }
             HistoryReplayPhase::FinalizeSuccess => {
                 if this.reservation.as_mut().and_then(|owner| owner.scratch.take()).is_some() {
@@ -4097,9 +4079,163 @@ mod tests {
     use super::*;
     use std::sync::Arc as StdArc;
 
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_open_ignores_neutral_aborted_command_snapshot_and_cas() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../📝️wal/🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+        let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == "aborted-commands-snapshot-cas-have-no-effects").unwrap();
+        let document = ArtifactId::from("committed-artifact");
+        let memory = db_wal::tests::committed_fixture_storage(row, &document).await;
+        let storage = StdArc::new(db_storage::DbBackend::Memory(memory));
+        let (mut engine, report) = ArtifactEngine::open_retained(protocol::ArtifactId(document.0.clone()), storage, ArtifactEngineConfig::default(), 1).await.unwrap();
+        assert_eq!(report.commands_replayed, 0);
+        assert!(!report.from_snapshot);
+        assert_eq!(engine.frontier.head_seq, 0);
+        assert!(engine.state.values.is_empty());
+        assert!(engine.applied.is_empty());
+        while engine.wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
+        while engine.state.values.close_step().unwrap() { semio_framework_async::yield_once().await; }
+    }
+
     fn history_construction_test_lock() -> std::sync::MutexGuard<'static, ()> {
         static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
         LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_history_replay_uses_neutral_committed_inventory_and_retires_every_owner() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../📝️wal/🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+        for (name, compacted, hole) in [
+            ("high-water-across-segments", false, false), ("high-water-across-segments", true, false), ("high-water-across-segments", false, true),
+            ("aborted-commands-snapshot-cas-have-no-effects", false, false), ("commit-outside-transaction", false, false), ("active-incomplete-needs-durable-abort", false, false),
+        ] {
+            let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == name).unwrap();
+            let document = ArtifactId::from("committed-history");
+            let memory = db_wal::tests::committed_fixture_storage(row, &document).await;
+            if compacted { db_storage::WalStorage::delete_segment(&memory, &document, 0).await.unwrap(); }
+            if hole { db_storage::WalStorage::create_segment(&memory, &document, 3).await.unwrap(); }
+            let storage = StdArc::new(db_storage::DbBackend::Memory(memory));
+            let mut replay = HistoryReplayFuture::new(storage, document, 1, StdArc::new(std::sync::atomic::AtomicBool::new(false)), HistoryReplayReservation::try_new().unwrap());
+            let result = (&mut replay).await;
+            assert!(replay.terminal_is_empty(), "{name}");
+            if !hole && row["expected"]["accepted"] == true && row["expected"]["recoverAbort"].is_null() {
+                let mut view = result.unwrap();
+                assert!(view.entries.is_empty(), "{name}");
+                assert!(view.operation_ids.is_empty(), "{name}");
+                assert_eq!(view.result_len, 0, "{name}");
+                while view.close_step() {}
+            } else {
+                assert!(matches!(result, Err(DbError::Corrupt(_))), "{name}");
+            }
+            eprintln!("[DEBUG] history committed neutral law retired source, inventory and result owners: {name}, compacted={compacted}, hole={hole}");
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_history_replay_projects_real_committed_batch_and_cancels_owned_sources() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../📝️wal/🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+        let projection = &fixture["historyProjection"];
+        let mut engine = ArtifactEngine::create_retained(document_id().await, storage().await, ArtifactEngineConfig::default(), 0).await.unwrap();
+        let mut commands = Vec::new();
+        for row in projection["commands"].as_array().unwrap() {
+            commands.push(envelope(row["id"].as_str().unwrap(), &[], "history-author", &[(row["path"].as_str().unwrap(), row["value"].clone())]).await);
+        }
+        let receipt = engine.submit(CommandBatch::new(commands).await.unwrap(), SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, 1).await.unwrap();
+        let mut replay = engine.history_replay(1, StdArc::new(std::sync::atomic::AtomicBool::new(false)), HistoryReplayReservation::try_new().unwrap());
+        let mut view = (&mut replay).await.unwrap();
+        assert!(replay.terminal_is_empty());
+        assert_eq!(view.entries.len() as u64, projection["expected"]["entries"].as_u64().unwrap());
+        let entry = view.entries[0];
+        assert_eq!(entry.operation_count, 2);
+        for (index, id) in projection["expected"]["operationIds"].as_array().unwrap().iter().enumerate() { assert!(view.operation_id_eq(0, index, id.as_str().unwrap())); }
+        assert_eq!(entry.head_seq, projection["expected"]["headSeq"].as_u64().unwrap());
+        assert_eq!(entry.commit_seq, projection["expected"]["commitSeq"].as_u64().unwrap());
+        assert_eq!((entry.head_seq, entry.commit_seq, entry.chain_hash, entry.epoch), (receipt.frontier.head_seq, receipt.frontier.commit_seq, receipt.frontier.chain_hash, receipt.frontier.epoch));
+        while view.close_step() {}
+        assert!(view.terminal_is_empty());
+        for checkpoint in ["verify", "committed", "copied", "published"] {
+            let cancelled = StdArc::new(std::sync::atomic::AtomicBool::new(false));
+            let mut replay = engine.history_replay(1, cancelled.clone(), HistoryReplayReservation::try_new().unwrap());
+            let mut turns = 0;
+            let reached = std::future::poll_fn(|context| {
+                let target = match checkpoint {
+                    "verify" => matches!(replay.phase.as_ref(), Some(HistoryReplayPhase::Verify { .. })),
+                    "committed" => matches!(replay.phase.as_ref(), Some(HistoryReplayPhase::CommittedBody { .. })),
+                    "copied" => replay.result_len > 0 && replay.reservation.as_ref().is_some_and(|owner| owner.operation_ids.len() == 1),
+                    "published" => replay.reservation.as_ref().is_some_and(|owner| owner.entries.len() == 1),
+                    _ => unreachable!(),
+                };
+                if target { return std::task::Poll::Ready(true); }
+                turns += 1;
+                assert!(turns < 100_000, "history cancellation checkpoint stopped progressing");
+                match Pin::new(&mut replay).poll(context) {
+                    std::task::Poll::Pending => std::task::Poll::Pending,
+                    std::task::Poll::Ready(result) => {
+                        if let Ok(mut view) = result { while view.close_step() {} }
+                        std::task::Poll::Ready(false)
+                    }
+                }
+            }).await;
+            assert!(reached);
+            assert!(replay.authenticated.is_some());
+            assert_eq!(replay.reservation.as_ref().unwrap().entries.len(), usize::from(checkpoint == "published"));
+            cancelled.store(true, std::sync::atomic::Ordering::Release);
+            assert!(matches!((&mut replay).await, Err(DbError::Closed)));
+            assert!(replay.terminal_is_empty());
+            eprintln!("[DEBUG] history cancelled and retired authenticated source at {checkpoint}");
+        }
+        while engine.wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
+        while engine.state.values.close_step().unwrap() { semio_framework_async::yield_once().await; }
+        eprintln!("[DEBUG] history projected one committed two-operation entry with the exact submitted frontier");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_history_and_opener_reject_neutral_inner_documents_and_frontier_order() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../📝️wal/🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+        for row in fixture["historyProjection"]["rejections"].as_array().unwrap() {
+            let backing = storage().await;
+            let mut engine = ArtifactEngine::create_retained(document_id().await, backing.clone(), ArtifactEngineConfig::default(), 0).await.unwrap();
+            let mut records = db_wal::WalRecordBatch::new();
+            for record in row["records"].as_array().unwrap() {
+                let document = if record["document"] == "foreign" { "foreign-history-document".to_string() } else { engine.document.0.clone() };
+                let record = match record["kind"].as_str().unwrap() {
+                    "command" => {
+                        let mut command = envelope("hostile-history", &[], "history-author", &[("entry", serde_json::json!("value"))]).await;
+                        command.document_id = protocol::ArtifactId(document);
+                        db_wal::WalRecord::Command(retained_wal_envelope(&command).await)
+                    }
+                    "frontier" => db_wal::WalRecord::Frontier(Frontier { document: ArtifactId(document), head_seq: 1, commit_seq: 1, chain_hash: [7; 32], epoch: 3 }),
+                    _ => unreachable!(),
+                };
+                records.push(record).unwrap_or_else(|mut record| { while record.close_step().unwrap() {} panic!("hostile history fixture exceeded record capacity"); });
+            }
+            let facet = backing.wal().await;
+            engine.wal.submit(&facet, &records, DurabilityClass::Fsync, 1).await.unwrap();
+            while records.close_step().unwrap() { semio_framework_async::yield_once().await; }
+            drop(records);
+            drop(facet);
+            let mut replay = engine.history_replay(1, StdArc::new(std::sync::atomic::AtomicBool::new(false)), HistoryReplayReservation::try_new().unwrap());
+            let rejected = match (&mut replay).await {
+                Err(DbError::Corrupt(_)) => true,
+                Ok(mut view) => { while view.close_step() {} false },
+                Err(_) => false,
+            };
+            assert!(replay.terminal_is_empty());
+            while engine.wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
+            while engine.state.values.close_step().unwrap() { semio_framework_async::yield_once().await; }
+            drop(engine);
+            assert!(rejected, "history admitted {}", row["name"]);
+            let rejected = match ArtifactEngine::open_retained(document_id().await, backing, ArtifactEngineConfig::default(), 2).await {
+                Err(DbError::Corrupt(_)) => true,
+                Ok((mut engine, _)) => {
+                    while engine.wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
+                    while engine.state.values.close_step().unwrap() { semio_framework_async::yield_once().await; }
+                    false
+                }
+                Err(_) => false,
+            };
+            assert!(rejected, "opener admitted {}", row["name"]);
+            eprintln!("[DEBUG] history and opener rejected authenticated committed projection and retired owners: {}", row["name"]);
+        }
     }
 
     #[semio_framework_async_macros::async_test]
@@ -4440,23 +4576,33 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn open_replays_the_wal_and_reconstructs_state_and_frontier_identically() {
         let storage = storage().await;
-        {
+        let (before_count, before_frontier) = {
             let mut engine = ArtifactEngine::create(document_id().await, storage.clone(), ArtifactEngineConfig::default(), 0).unwrap();
             let batch1 = CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("name", serde_json::json!("hello"))]).await]).await.unwrap();
             engine.submit(batch1, SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, 1).await.unwrap();
             let batch2 = CommandBatch::new(vec![envelope("op-2", &["op-1"], "alice", &[("count", serde_json::json!(2))]).await]).await.unwrap();
             engine.submit(batch2, SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, 2).await.unwrap();
-        }
+            let count = stored_json(engine.get("count").await.unwrap().unwrap()).await;
+            assert!(store::pack_rt::json_values_equal(&count, &serde_json::json!(2)));
+            let frontier = engine.frontier().await;
+            while engine.wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
+            while engine.state.values.close_step().unwrap() { semio_framework_async::yield_once().await; }
+            (count, frontier)
+        };
 
-        let (reopened, report) = ArtifactEngine::open(document_id().await, &storage, ArtifactEngineConfig::default(), 3).unwrap();
+        let (mut reopened, report) = ArtifactEngine::open(document_id().await, &storage, ArtifactEngineConfig::default(), 3).unwrap();
         assert_eq!(report.torn_tail_bytes, 0);
         assert_eq!(reopened.frontier().await.head_seq, 2);
         assert_eq!(reopened.frontier().await.commit_seq, 2);
+        assert_eq!(reopened.frontier().await, before_frontier);
 
         let name: serde_json::Value = stored_json(reopened.get("name").await.unwrap().unwrap()).await;
         assert_eq!(name, serde_json::json!("hello"));
         let count: serde_json::Value = stored_json(reopened.get("count").await.unwrap().unwrap()).await;
-        assert_eq!(count, serde_json::json!(2));
+        assert_eq!(count, before_count);
+        while reopened.wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
+        while reopened.state.values.close_step().unwrap() { semio_framework_async::yield_once().await; }
+        eprintln!("[DEBUG] replay preserved the complete live frontier and exact decoded numeric representation after explicit owner retirement");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -4957,19 +5103,22 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn artifact_history_panic_at_each_phase_transition_retains_then_fault_retires() {
-        let engine = ArtifactEngine::create_retained(document_id().await, storage().await, ArtifactEngineConfig::default(), 0).await.unwrap();
+        let mut engine = ArtifactEngine::create_retained(document_id().await, storage().await, ArtifactEngineConfig::default(), 0).await.unwrap();
         let phases = Vec::from([
-            HistoryReplayPhase::Probe { index: 0 },
+            HistoryReplayPhase::Probe,
             HistoryReplayPhase::SegmentLen { index: 0, future: Box::pin(async { Err(DbError::NotFound("phase fixture".to_string())) }) },
             HistoryReplayPhase::PageStart { index: 0, len: 1, offset: 0 },
             HistoryReplayPhase::PageRead { index: 0, len: 1, offset: 0, requested: 1, future: Box::pin(async { Ok(vec![0]) }) },
-            HistoryReplayPhase::Frame { index: 0, cursor: HistoryFrameCursor::new(0) },
-            HistoryReplayPhase::Envelope { index: 0, next_offset: 0, cursor: HistoryEnvelopeCursor { pos: 0, end: 0, field: HistoryEnvelopeField::MutationId, dependencies: 0, mutation_id: None } },
-            HistoryReplayPhase::CopyMutation { index: 0, next_offset: 0, range: 0..0, copied: 0, result_start: 0 },
-            HistoryReplayPhase::Frontier { index: 0, next_offset: 0, cursor: HistoryFrontierCursor { pos: 0, end: 0, field: HistoryFrontierField::Document, head_seq: 0, commit_seq: 0, chain_hash: [0; 32] } },
-            HistoryReplayPhase::ClearPending { index: 0, next_offset: 0 },
-            HistoryReplayPhase::Publish { index: 0, next_offset: 0, head_seq: 0, commit_seq: 0, chain_hash: [0; 32], epoch: 0 },
-            HistoryReplayPhase::Retire { next_index: 1 },
+            HistoryReplayPhase::Inventory { future: Box::pin(async { Ok(db_storage::DbIoU64List::new()) }) },
+            HistoryReplayPhase::Verify { index: 0 },
+            HistoryReplayPhase::Frame { index: 0 },
+            HistoryReplayPhase::CommittedBody { index: 0 },
+            HistoryReplayPhase::Envelope { index: 0, cursor: HistoryEnvelopeCursor { pos: 0, end: 0, field: HistoryEnvelopeField::MutationId, dependencies: 0, mutation_id: None } },
+            HistoryReplayPhase::CopyMutation { index: 0, range: 0..0, copied: 0, result_start: 0 },
+            HistoryReplayPhase::Frontier { index: 0, cursor: HistoryFrontierCursor { pos: 0, end: 0, field: HistoryFrontierField::Document, head_seq: 0, commit_seq: 0, chain_hash: [0; 32] } },
+            HistoryReplayPhase::Publish { index: 0, head_seq: 0, commit_seq: 0, chain_hash: [0; 32], epoch: 0 },
+            HistoryReplayPhase::Retire,
+            HistoryReplayPhase::InventoryClose,
             HistoryReplayPhase::FinalizeSuccess,
         ]);
         let waker = std::task::Waker::from(StdArc::new(HistoryReplayTestWake));
@@ -4993,6 +5142,8 @@ mod tests {
             assert!(terminal);
             assert!(replay.terminal_is_empty());
         }
+        while engine.wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
+        while engine.state.values.close_step().unwrap() { semio_framework_async::yield_once().await; }
     }
     //#endregion 🔖️Actor
 }

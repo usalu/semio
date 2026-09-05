@@ -24,7 +24,7 @@
 //
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/🔬️mesh-spike/📜️script.ts
 //      — the spike that proved this exact chain closes: build → export → re-import → weld → re-measure.
-// @see ../../../../../../📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts
+// @see ../../../../../../📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/⚙️generator/📜️script.ts
 //      — the sibling BRep pilot generator this file mirrors in CLI shape, bundle layout and manifest
 //      fields; its lessons (measure the ARTIFACT not the in-memory shape, scale-relative tolerances,
 //      `--only` merges rather than overwrites, weld before handing a soup to a solid kernel) are the

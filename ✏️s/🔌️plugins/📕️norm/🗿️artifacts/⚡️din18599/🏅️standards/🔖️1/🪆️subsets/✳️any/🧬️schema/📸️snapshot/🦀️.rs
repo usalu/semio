@@ -334,7 +334,7 @@ impl Default for Din18599Snapshot {
 
 //#region 🌉️ExternalCodecBridge
 /// 📤️ The canonical JSON projection of a [`Din18599Snapshot`] — the surface
-/// `../../../../../🧪️tests/🌵️mutate-din18599-1` is compared through under `ordered-json-v1`.
+/// `../../../../../🧪️tests/⚡️mutate-din18599-1` is compared through under `ordered-json-v1`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_din18599_snapshot_json(snapshot: &Din18599Snapshot) -> String {
     pack::json::to_json_string(snapshot)

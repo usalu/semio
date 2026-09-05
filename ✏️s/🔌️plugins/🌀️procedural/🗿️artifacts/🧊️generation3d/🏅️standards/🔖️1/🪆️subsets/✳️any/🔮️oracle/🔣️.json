@@ -65,7 +65,7 @@
           "scenarios": [
             {
               "id": "raises-the-storeys-answer-in-generation-1",
-              "directoryName": "🧪️raises-the-storeys-answer-in-generation-1"
+              "directoryName": "🏢️raises-the-storeys-answer-in-generation-1"
             }
           ]
         },
@@ -76,7 +76,7 @@
           "scenarios": [
             {
               "id": "restamps-the-fixture-schema-id",
-              "directoryName": "🧪️restamps-the-fixture-schema-id"
+              "directoryName": "🏷️restamps-the-fixture-schema-id"
             }
           ]
         },
@@ -87,7 +87,7 @@
           "scenarios": [
             {
               "id": "wires-node-b-to-node-c-at-index-1",
-              "directoryName": "🧪️wires-node-b-to-node-c-at-index-1"
+              "directoryName": "🔌️wires-node-b-to-node-c-at-index-1"
             }
           ]
         },
@@ -98,7 +98,7 @@
           "scenarios": [
             {
               "id": "appends-generation-2-and-moves-the-selection",
-              "directoryName": "🧪️appends-generation-2-and-moves-the-selection"
+              "directoryName": "🌱️appends-generation-2-and-moves-the-selection"
             }
           ]
         },
@@ -109,7 +109,7 @@
           "scenarios": [
             {
               "id": "inserts-node-c-at-index-2",
-              "directoryName": "🧪️inserts-node-c-at-index-2"
+              "directoryName": "📝️inserts-node-c-at-index-2"
             }
           ]
         },
@@ -120,7 +120,7 @@
           "scenarios": [
             {
               "id": "removes-the-selected-generation-2-and-falls-back",
-              "directoryName": "🧪️removes-the-selected-generation-2-and-falls-back"
+              "directoryName": "🚫️removes-the-selected-generation-2-and-falls-back"
             }
           ]
         },
@@ -131,7 +131,7 @@
           "scenarios": [
             {
               "id": "removes-node-a-and-leaves-wire-ab-dangling",
-              "directoryName": "🧪️removes-node-a-and-leaves-wire-ab-dangling"
+              "directoryName": "🚫️removes-node-a-and-leaves-wire-ab-dangling"
             }
           ]
         },
@@ -142,7 +142,7 @@
           "scenarios": [
             {
               "id": "unpins-the-node-a-position",
-              "directoryName": "🧪️unpins-the-node-a-position"
+              "directoryName": "🧹️unpins-the-node-a-position"
             }
           ]
         },
@@ -153,7 +153,7 @@
           "scenarios": [
             {
               "id": "cuts-wire-ab-leaving-both-nodes",
-              "directoryName": "🧪️cuts-wire-ab-leaving-both-nodes"
+              "directoryName": "✂️cuts-wire-ab-leaving-both-nodes"
             }
           ]
         },
@@ -164,7 +164,7 @@
           "scenarios": [
             {
               "id": "repositions-node-a-in-the-graph",
-              "directoryName": "🧪️repositions-node-a-in-the-graph"
+              "directoryName": "📍️repositions-node-a-in-the-graph"
             }
           ]
         },
@@ -175,7 +175,7 @@
           "scenarios": [
             {
               "id": "retitles-generation-1-via-new-name",
-              "directoryName": "🧪️retitles-generation-1-via-new-name"
+              "directoryName": "🏷️retitles-generation-1-via-new-name"
             }
           ]
         },
@@ -186,7 +186,7 @@
           "scenarios": [
             {
               "id": "frames-the-graph-at-double-zoom",
-              "directoryName": "🧪️frames-the-graph-at-double-zoom"
+              "directoryName": "🔍️frames-the-graph-at-double-zoom"
             }
           ]
         },
@@ -197,7 +197,7 @@
           "scenarios": [
             {
               "id": "repoints-wire-ab-onto-the-cap-port",
-              "directoryName": "🧪️repoints-wire-ab-onto-the-cap-port"
+              "directoryName": "📡️repoints-wire-ab-onto-the-cap-port"
             }
           ]
         },
@@ -208,7 +208,7 @@
           "scenarios": [
             {
               "id": "retunes-the-knob-slider-value",
-              "directoryName": "🧪️retunes-the-knob-slider-value"
+              "directoryName": "🎚️retunes-the-knob-slider-value"
             }
           ]
         }

@@ -114,11 +114,11 @@ fn world_meshes_json(doc: &LowpolyDocument, texture_cache: &HashMap<String, Stri
         .iter()
         .filter_map(|item| {
             let id = item.get("id")?.as_str()?;
-            let tessellation: serde_json::Value = item.get("tessellation")?.into();
+            let tessellation = item.get("tessellation")?;
             let texture = texture_cache.get(id).cloned();
             Some(dsl::DslValue::object([
                 ("id".to_string(), dsl::DslValue::String(id.to_string())),
-                ("data".to_string(), dsl::ToValue::to_value(&mesh_data_from_transfer(&tessellation, texture))),
+                ("data".to_string(), dsl::ToValue::to_value(&mesh_data_from_transfer(tessellation, texture))),
             ]))
         })
         .collect();

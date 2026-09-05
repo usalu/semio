@@ -94,7 +94,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-layout/🧪️tests/📃️renames-the-document/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-layout/🧪️tests/🏷️renames-the-document/🦀️.rs"]
                                     mod tests_renames_the_document;
                                 }
                                 #[path = "."]
@@ -112,7 +112,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾change-data-fields/🧪️tests/⛵️attaches-a-data-fields-payload/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾change-data-fields/🧪️tests/🧾️attaches-a-data-fields-payload/🦀️.rs"]
                                     mod tests_attaches_a_data_fields_payload;
                                 }
                                 #[path = "."]
@@ -121,7 +121,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-page/🧪️tests/📃️appends-page-3/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-page/🧪️tests/➕️appends-page-3/🦀️.rs"]
                                     mod tests_appends_page_3;
                                 }
                                 #[path = "."]
@@ -139,7 +139,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-page/🧪️tests/📃️renames-page-1/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-page/🧪️tests/🏷️renames-page-1/🦀️.rs"]
                                     mod tests_renames_page_1;
                                 }
                                 #[path = "."]
@@ -148,7 +148,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-page-width/🧪️tests/📃️widens-page-1/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-page-width/🧪️tests/↔️widens-page-1/🦀️.rs"]
                                     mod tests_widens_page_1;
                                 }
                                 #[path = "."]
@@ -157,7 +157,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-page-height/🧪️tests/📃️lengthens-page-1/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-page-height/🧪️tests/↕️lengthens-page-1/🦀️.rs"]
                                     mod tests_lengthens_page_1;
                                 }
                                 #[path = "."]
@@ -166,7 +166,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐update-page-margins/🧪️tests/📃️sets-asymmetric-margins-on-page-1/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐update-page-margins/🧪️tests/📐️sets-asymmetric-margins-on-page-1/🦀️.rs"]
                                     mod tests_sets_asymmetric_margins_on_page_1;
                                 }
                                 #[path = "."]
@@ -175,7 +175,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️update-page-columns/🧪️tests/📃️splits-page-1-into-three-columns/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️update-page-columns/🧪️tests/🏛️splits-page-1-into-three-columns/🦀️.rs"]
                                     mod tests_splits_page_1_into_three_columns;
                                 }
                                 #[path = "."]
@@ -184,7 +184,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-pages/🧪️tests/📃️moves-page-1-behind-page-2/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-pages/🧪️tests/🔀️moves-page-1-behind-page-2/🦀️.rs"]
                                     mod tests_moves_page_1_behind_page_2;
                                 }
                                 #[path = "."]
@@ -193,7 +193,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖create-story/🧪️tests/🟤️appends-story-3/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖create-story/🧪️tests/📖️appends-story-3/🦀️.rs"]
                                     mod tests_appends_story_3;
                                 }
                                 #[path = "."]
@@ -211,7 +211,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️edit-story/🧪️tests/🟦️rewrites-story-1-body/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️edit-story/🧪️tests/📝️rewrites-story-1-body/🦀️.rs"]
                                     mod tests_rewrites_story_1_body;
                                 }
                                 #[path = "."]
@@ -247,7 +247,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-frame/🧪️tests/🚪️inserts-a-rect-frame-at-index-1/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-frame/🧪️tests/🔲️inserts-a-rect-frame-at-index-1/🦀️.rs"]
                                     mod tests_inserts_a_rect_frame_at_index_1;
                                 }
                                 #[path = "."]
@@ -265,7 +265,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕹️move-frame/🧪️tests/🔵️moves-the-rect-frame/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕹️move-frame/🧪️tests/📍️moves-the-rect-frame/🦀️.rs"]
                                     mod tests_moves_the_rect_frame;
                                 }
                                 #[path = "."]
@@ -283,7 +283,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-frame-fill/🧪️tests/🍀️repaints-the-rect-frame-fill/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-frame-fill/🧪️tests/🎨️repaints-the-rect-frame-fill/🦀️.rs"]
                                     mod tests_repaints_the_rect_frame_fill;
                                 }
                                 #[path = "."]
@@ -292,7 +292,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️change-frame-stroke/🧪️tests/🦅️adds-a-stroke-to-the-rect-frame/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️change-frame-stroke/🧪️tests/🖊️adds-a-stroke-to-the-rect-frame/🦀️.rs"]
                                     mod tests_adds_a_stroke_to_the_rect_frame;
                                 }
                                 #[path = "."]
@@ -344,7 +344,7 @@ pub mod artifacts {
                                             pub mod v1_4 {
                                                 #[path = "."]
                                                 pub mod any {
-                                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🌳️pdf/🔖️1.4/✳️any/🦀️.rs"]
+                                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🦀️.rs"]
                                                     mod component;
                                                     pub use component::*;
                                                 }
@@ -425,7 +425,7 @@ pub mod artifacts {
                                             pub mod v1_4 {
                                                 #[path = "."]
                                                 pub mod any {
-                                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🌳️pdf/🔖️1.4/✳️any/🦀️.rs"]
+                                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🦀️.rs"]
                                                     mod component;
                                                     pub use component::*;
                                                 }

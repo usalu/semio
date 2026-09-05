@@ -153,6 +153,22 @@
         "os"
       ],
       "port": 6011
+    },
+    {
+      "name": "mit-bestand-demonstrator-noengine",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "SKIP_PLUGIN_BUILD=1",
+        "SKIP_ENGINE_BUILD=1",
+        "CARGO_TARGET_DIR=/Users/ueli/Documents/semio/target-engines",
+        "RUSTFLAGS=-Awarnings",
+        "CARGO_TERM_QUIET=true",
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/mit-bestand-demonstrator:dev"
+      ],
+      "port": 6029
     }
   ]
 }

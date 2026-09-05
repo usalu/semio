@@ -6,7 +6,25 @@ full cargo run to discover. This gate finds the whole class in under a second, s
 the repo-wide emoji rename can be triaged without holding the build lock.
 
 Usage: 🔨️check-path-mounts.py <root> [<root> …]
-Exit 0 when every mount resolves, 1 otherwise.
+Exit 0 when every build-blocking reference resolves, 1 otherwise.
+
+⚠️ A clear result is NECESSARY BUT NOT SUFFICIENT. Three things this cannot see:
+
+1. **Paths passed to macros.** Two sub-cases, both invisible:
+   - `include_bytes!($protocol)` inside a `macro_rules!` arm — no literal at the definition site, the
+     path exists only per expansion (`📇️registry/🦀️.rs:897`).
+   - a quoted path argument to an *ordinary* macro, e.g.
+     `native_codec_factory!(obj_codec, …, "../🗿️artifacts/🗽️obj/…/📡️.protocol.semio")`
+     (`📇️registry/🦀️.rs:923`) — neither a `#[path]` mount nor an `include_*`, so scanning for either
+     misses it entirely. This class hid one of the two `🧊️obj` bugs.
+
+   A `couldn't read` on a line this gate did not flag is the signature of both. Closing them means
+   resolving macro *invocation arguments*, not just attribute and include literals.
+2. **Reachability.** This is a per-file scan, so a reference in an orphaned file or in a crate nothing
+   depends on looks identical to a live one. Filter by build graph in the consumer.
+3. **Type errors.** Every unresolved-import and trait-bound failure is past this gate entirely. A crate
+   whose mounts all resolve can still fail to compile — and a crate that dies HERE never type-checks at
+   all, so any "0 errors of class X" taken from such a build is meaningless.
 """
 
 import os

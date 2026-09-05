@@ -20,7 +20,7 @@ use protocol::{OpBinary, OpText};
 /// matches the `SpaceMutation`/`FlowMutationDsl` framework precedent's formatting convention;
 /// `#[dsl(base64)]` on the one bare `Vec<u8>` payload (`SetFramePixels::indices`) keeps it compact.
 //#region 🔖️Leaves
-#[path = "🟤️set-snapshot/🦀️.rs"]
+#[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "📐set-screen-size/🦀️.rs"]
 pub mod set_screen_size;
@@ -597,7 +597,7 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "🟤️set-snapshot/🧪️tests/🟣️slows-the-second-frame-and-marks-it-do-not-dispose/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/⏱️slows-the-second-frame-and-marks-it-do-not-dispose/🦀️.rs"]
     mod tests_set_snapshot_slows_the_second_frame_and_marks_it_do_not_dispose;
 }
 //#endregion 🧪️FixtureTests

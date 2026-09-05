@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:hub:gis-map-proposal-approval-fixture:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "binding", "base", "sampleJobId", "proposalCanonical", "proposalHash", "preview", "inverseCanonical", "inverseHash", "lifecycle", "cancelLifecycle", "visibility", "errors", "approvalRejections", "limits", "nonclaims"],
+  "properties": {
+    "schema": { "const": "semio.hub.gis-map-proposal-approval-fixture/v1" },
+    "version": { "const": 1 },
+    "binding": { "$ref": "urn:semio:hub:inference-job:v1#/$defs/binding" },
+    "base": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["snapshot", "frontier", "expectedInference"],
+      "properties": {
+        "snapshot": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["positions", "routes", "regions"],
+          "properties": {
+            "positions": { "$ref": "#/$defs/features" },
+            "routes": { "$ref": "#/$defs/features" },
+            "regions": { "$ref": "#/$defs/features" }
+          }
+        },
+        "frontier": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["headEditOrdinal", "headEditId", "lastCommitSeq"],
+          "properties": {
+            "headEditOrdinal": { "$ref": "urn:semio:hub:inference-job:v1#/$defs/safeInteger" },
+            "headEditId": { "$ref": "urn:semio:hub:inference-job:v1#/$defs/serverId" },
+            "lastCommitSeq": { "$ref": "urn:semio:hub:inference-job:v1#/$defs/safeInteger" }
+          }
+        },
+        "expectedInference": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["positionCount", "routeCount", "regionCount", "bounds"],
+          "properties": {
+            "positionCount": { "type": "integer", "minimum": 0, "maximum": 65536 },
+            "routeCount": { "type": "integer", "minimum": 0, "maximum": 65536 },
+            "regionCount": { "type": "integer", "minimum": 0, "maximum": 65536 },
+            "bounds": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["lonMin", "lonMax", "latMin", "latMax"],
+              "properties": {
+                "lonMin": { "type": "number", "minimum": -180, "maximum": 180 },
+                "lonMax": { "type": "number", "minimum": -180, "maximum": 180 },
+                "latMin": { "type": "number", "minimum": -90, "maximum": 90 },
+                "latMax": { "type": "number", "minimum": -90, "maximum": 90 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "sampleJobId": { "$ref": "urn:semio:hub:inference-job:v1#/$defs/id" },
+    "proposalCanonical": { "type": "string", "minLength": 1, "maxLength": 4096 },
+    "proposalHash": { "$ref": "urn:semio:hub:inference-job:v1#/$defs/hash" },
+    "preview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "jobId", "proposalHash", "regionId", "ring"],
+      "properties": {
+        "schema": { "const": "semio.hub.gis-map-inference-preview/v1" },
+        "jobId": { "$ref": "urn:semio:hub:inference-job:v1#/$defs/id" },
+        "proposalHash": { "$ref": "urn:semio:hub:inference-job:v1#/$defs/hash" },
+        "regionId": { "type": "string", "pattern": "^inference-[0-9a-f]{32}$" },
+        "ring": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "prefixItems": [
+              { "type": "number", "minimum": -180, "maximum": 180 },
+              { "type": "number", "minimum": -90, "maximum": 90 }
+            ],
+            "items": false
+          }
+        }
+      }
+    },
+    "inverseCanonical": { "type": "string", "minLength": 1, "maxLength": 4096 },
+    "inverseHash": { "$ref": "urn:semio:hub:inference-job:v1#/$defs/hash" },
+    "lifecycle": { "allOf": [{ "$ref": "#/$defs/events" }, { "type": "array", "minItems": 5, "maxItems": 5 }] },
+    "cancelLifecycle": { "allOf": [{ "$ref": "#/$defs/events" }, { "type": "array", "minItems": 4, "maxItems": 4 }] },
+    "visibility": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["role", "readEvents", "readProposal", "approve", "expectedCode"],
+        "properties": {
+          "role": { "type": "string", "minLength": 1, "maxLength": 48 },
+          "readEvents": { "type": "boolean" },
+          "readProposal": { "type": "boolean" },
+          "approve": { "type": "boolean" },
+          "expectedCode": { "type": ["string", "null"], "pattern": "^(inference|approval)\\.[a-z-]+$" }
+        }
+      }
+    },
+    "errors": {
+      "type": "array",
+      "minItems": 11,
+      "maxItems": 11,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "code", "status"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 48 },
+          "code": { "type": "string", "pattern": "^(inference|approval)\\.[a-z-]+$" },
+          "status": { "enum": [400, 403, 404, 409, 410, 413, 429, 503] }
+        }
+      }
+    },
+    "approvalRejections": {
+      "type": "array",
+      "minItems": 11,
+      "maxItems": 11,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "code"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 48 },
+          "code": { "type": "string", "pattern": "^(inference|approval)\\.[a-z-]+$" }
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestMaxBytes", "inputMaxBytes", "resultMaxBytes", "proposalMaxBytes", "commandMaxBytes", "identityJsonMaxBytes",
+        "jobCapacity", "operationCapacity", "documentGateCapacity", "progressMaxCursor", "eventPageMaxItems",
+        "claimLeaseMaxMs", "jobMaxLifetimeMs", "workUnitLimit", "recursionDepth", "allocationBytes", "approvalMaxRecords"
+      ],
+      "properties": {
+        "requestMaxBytes": { "const": 1024 },
+        "inputMaxBytes": { "const": 65536 },
+        "resultMaxBytes": { "const": 16384 },
+        "proposalMaxBytes": { "const": 4096 },
+        "commandMaxBytes": { "const": 8192 },
+        "identityJsonMaxBytes": { "const": 8192 },
+        "jobCapacity": { "const": 128 },
+        "operationCapacity": { "const": 32 },
+        "documentGateCapacity": { "const": 64 },
+        "progressMaxCursor": { "const": 16 },
+        "eventPageMaxItems": { "const": 8 },
+        "claimLeaseMaxMs": { "const": 30000 },
+        "jobMaxLifetimeMs": { "const": 120000 },
+        "workUnitLimit": { "const": 4096 },
+        "recursionDepth": { "const": 32 },
+        "allocationBytes": { "const": 1048576 },
+        "approvalMaxRecords": { "const": 8 }
+      }
+    },
+    "nonclaims": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": { "enum": ["no-external-model-provider", "no-wgpu-rendering", "no-client-supplied-map-pack", "no-auto-apply"] }
+    }
+  },
+  "$defs": {
+    "features": {
+      "type": "array",
+      "maxItems": 8,
+      "items": { "type": "object", "additionalProperties": false, "required": ["id", "data"], "properties": { "id": { "type": "string", "minLength": 1, "maxLength": 32 }, "data": { "type": "object" } } }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ordinal", "kind"],
+        "properties": {
+          "ordinal": { "type": "integer", "minimum": 1, "maximum": 6 },
+          "kind": { "enum": ["accepted", "running", "succeeded", "failed", "cancelled", "cancel-requested", "proposal-cancelled", "proposal-stale", "approval-prepared", "approved"] }
+        }
+      }
+    }
+  }
+}

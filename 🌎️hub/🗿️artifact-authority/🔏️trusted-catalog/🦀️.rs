@@ -1,7 +1,6 @@
 //! 🗂️ Immutable trusted-catalog bundle verification for headless hub authority startup.
 
 use super::adapters::{bounded_message, AUTHORITY_MAX_CODEC_TEXT_BYTES, TRUSTED_CATALOG_MAX_CODECS, TRUSTED_CATALOG_MAX_PACKAGES};
-use super::native_openable_provider::NativeCodecProviderSetV1;
 use super::{AcceptedArtifactOperation, ArtifactPair, ArtifactValidationStage, AuthorityError, AuthorityProgress, AuthorityProgressStage, OperationContext, TrustedArtifactCatalog, TrustedArtifactCodec, TrustedArtifactIdentity};
 use directory::os_directory::{hex_lower, DocumentDescriptor, DocumentOpenArtifactV1, DocumentOpenGrantV1, DocumentOpenPackageV1, DocumentOpenRendererTargetV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1};
 use directory::os_store::{self, ArtifactCodec};
@@ -180,6 +179,33 @@ impl NativeCodecBinding {
     }
 }
 
+/// 🪪️ Borrowed immutable package identity passed from the trusted loader to one native provider.
+#[derive(Clone, Copy)]
+pub struct NativeCodecProviderPackageV1<'a> {
+    pub plugin_id: &'a str,
+    pub package_id: &'a str,
+    pub version: &'a str,
+}
+
+/// 🧬️ One descriptor-committed codec requirement exposed without product-plugin types.
+#[derive(Clone, Copy)]
+pub struct NativeCodecProviderRequirementV1<'a> {
+    pub package: NativeCodecProviderPackageV1<'a>,
+    pub artifact_kind: &'a str,
+    pub artifact_schema: &'a str,
+    pub pack_schema_hash: &'a str,
+}
+
+/// 🔌️ Headless Hub provider port. Implementations may supply executable codecs only for the exact
+/// verified package closure and cannot publish them outside the loader's atomic registration.
+pub trait NativeCodecProviderSourceV1: Sync {
+    fn preflight_selection(&self, _selected: &[NativeCodecProviderRequirementV1<'_>]) -> Result<(), AuthorityError> {
+        Ok(())
+    }
+
+    fn preview(&self, package: NativeCodecProviderPackageV1<'_>, descriptor: &PackageDescriptor, context: &OperationContext<'_>) -> Result<Vec<NativeCodecBinding>, AuthorityError>;
+}
+
 /// 🧬️ One fully verified package retained in dependency-first order.
 pub struct VerifiedTrustedPackage {
     plugin_id: String,
@@ -274,6 +300,15 @@ pub struct VerifiedTrustedCatalog {
     generation_id: String,
 }
 
+/// 🧱 The exact verified component and raw descriptor bytes bound to one current selection. It is
+/// produced only by [`VerifiedTrustedCatalog::assets_for_current_selection`] and carries no path,
+/// origin or catalog handle.
+pub struct VerifiedExecutionTargetAssets {
+    pub selection: VerifiedDocumentOpenSelectionV1,
+    pub component: Arc<[u8]>,
+    pub descriptor: Arc<[u8]>,
+}
+
 /// 🧬 One exact document-open choice retained only after the complete catalog verifies.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct VerifiedDocumentOpenSelectionV1 {
@@ -308,6 +343,29 @@ impl VerifiedTrustedCatalog {
     /// 🎯 Returns the profile's sole completely verified document-open choice without reconstructing it from public plan bytes.
     pub fn selected_document_open(&self) -> Option<&VerifiedDocumentOpenSelectionV1> {
         (self.open_targets.len() == 1).then(|| &self.open_targets[0])
+    }
+
+    /// 🧱 Returns the verified bytes of the current selection only. It is deliberately not a package
+    /// lookup: it accepts no package id, digest, path or generation selector from a caller, resolves
+    /// the selection from the durable descriptor and subject role alone, and answers only while the
+    /// caller-observed generation is still this immutable catalog's own.
+    pub fn assets_for_current_selection(&self, descriptor: &DocumentDescriptor, requested_surface_id: Option<&str>, writable: bool, current_generation: &str) -> Option<VerifiedExecutionTargetAssets> {
+        if current_generation != self.generation_id {
+            return None;
+        }
+        let selection = self.resolve_document_open(descriptor, requested_surface_id, writable)?;
+        let package = self.packages.iter().find(|retained| {
+            retained.plugin_id == selection.package.plugin_id
+                && retained.package.package.0 == selection.package.package_id
+                && retained.version == selection.package.version
+                && hex_lower(&retained.component_sha256) == selection.package.component_sha256
+                && hex_lower(&retained.package.hash.0) == selection.package.component_blake3
+                && hex_lower(&retained.descriptor_sha256) == selection.package.descriptor_byte_sha256
+        })?;
+        if package.component_bytes.is_empty() || package.descriptor_bytes.is_empty() || package.component_bytes.len() as u64 > TRUSTED_COMPONENT_MAX_BYTES || package.descriptor_bytes.len() as u64 > TRUSTED_DESCRIPTOR_MAX_BYTES {
+            return None;
+        }
+        Some(VerifiedExecutionTargetAssets { selection, component: Arc::clone(&package.component_bytes), descriptor: Arc::clone(&package.descriptor_bytes) })
     }
 
     /// 🎯 Resolves one exact descriptor, subject role, and optional surface preference without fallback.
@@ -348,27 +406,13 @@ impl TrustedArtifactCatalog for Arc<VerifiedTrustedCatalog> {
 /// 🏗️ Stateless verifier for one explicitly selected immutable trust bundle.
 pub struct TrustedCatalogLoader;
 
-trait NativeCodecProviderSourceV1: Sync {
-    fn preflight_selection(&self, _selected: &[&BundlePackage]) -> Result<(), AuthorityError> {
-        Ok(())
-    }
-
-    fn preview(&self, record: &BundlePackage, descriptor: &PackageDescriptor, context: &OperationContext<'_>) -> Result<Vec<NativeCodecBinding>, AuthorityError>;
-}
-
-impl NativeCodecProviderSourceV1 for NativeCodecProviderSetV1 {
-    fn preview(&self, record: &BundlePackage, _descriptor: &PackageDescriptor, context: &OperationContext<'_>) -> Result<Vec<NativeCodecBinding>, AuthorityError> {
-        self.preview(&record.plugin_id, &record.package_id, &record.version, context)
-    }
-}
-
 impl TrustedCatalogLoader {
     /// 🛡️ Verifies the complete selected closure before atomically registering any native codec.
-    pub async fn load(bundle_path: &Path, profile_id: &str, providers: &NativeCodecProviderSetV1, context: &OperationContext<'_>) -> Result<VerifiedTrustedCatalog, AuthorityError> {
+    pub async fn load(bundle_path: &Path, profile_id: &str, providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<VerifiedTrustedCatalog, AuthorityError> {
         Self::load_selected(bundle_path, profile_id, providers, context).await
     }
 
-    async fn load_selected(bundle_path: &Path, profile_id: &str, providers: &impl NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<VerifiedTrustedCatalog, AuthorityError> {
+    async fn load_selected(bundle_path: &Path, profile_id: &str, providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<VerifiedTrustedCatalog, AuthorityError> {
         context.report(AuthorityProgress { stage: AuthorityProgressStage::Preflight, completed_units: 0, total_units: 1 })?;
         let bundle_path = tokio::fs::canonicalize(bundle_path).await.map_err(|error| catalog_error(error))?;
         let root = bundle_path.parent().ok_or_else(|| catalog("bundle has no containing directory"))?.to_path_buf();
@@ -377,7 +421,20 @@ impl TrustedCatalogLoader {
         let SelectedTrustedBundleV1 { package_indices: order, profile } = validate_bundle(&bundle, profile_id)?;
         let order_len = u64::try_from(order.len()).map_err(|error| catalog_error(error))?;
         let total_units = order_len.checked_mul(3).and_then(|units| units.checked_add(1)).ok_or_else(|| catalog("catalog progress total overflow"))?;
-        providers.preflight_selection(&order.iter().map(|index| &bundle.packages[*index]).collect::<Vec<_>>())?;
+        let requirements = order
+            .iter()
+            .flat_map(|index| {
+                let record = &bundle.packages[*index];
+                record.native_codecs.iter().map(move |codec| NativeCodecProviderRequirementV1 {
+                    package: NativeCodecProviderPackageV1 { plugin_id: &record.plugin_id, package_id: &record.package_id, version: &record.version },
+                    artifact_kind: &codec.artifact_kind,
+                    artifact_schema: &codec.artifact_schema,
+                    pack_schema_hash: &codec.pack_schema_hash,
+                })
+            })
+            .collect::<Vec<_>>();
+        providers.preflight_selection(&requirements)?;
+        drop(requirements);
         let mut retained_component_bytes = 0u64;
         let mut retained_descriptor_bytes = 0u64;
         let mut packages = Vec::with_capacity(order.len());
@@ -421,7 +478,7 @@ impl TrustedCatalogLoader {
             report_package_progress(context, position, 2, total_units)?;
 
             context.checkpoint()?;
-            let native_bindings = providers.preview(record, &descriptor, context)?;
+            let native_bindings = providers.preview(NativeCodecProviderPackageV1 { plugin_id: &record.plugin_id, package_id: &record.package_id, version: &record.version }, &descriptor, context)?;
             context.checkpoint()?;
             let binding_map = validate_native_bindings(&native_bindings)?;
             let mut consumed_bindings = BTreeSet::new();
@@ -1116,6 +1173,8 @@ fn report_package_progress(context: &OperationContext<'_>, package_position: usi
 mod tests {
     use super::*;
     use crate::artifact_authority::adapters::AUTHORITY_MAX_DIAGNOSTIC_BYTES;
+    #[cfg(feature = "native-artifact-execution")]
+    use crate::artifact_authority::native_openable_provider::NativeCodecProviderSetV1;
     use crate::artifact_authority::{AuthorityLimits, AuthorityOperationControl};
     use directory::os_store::{document_codec, ArtifactPackFiles, ArtifactTextFiles, VcsError};
     use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -1168,13 +1227,11 @@ mod tests {
     }
 
     impl NativeCodecProviderSourceV1 for FixtureProviderSource<'_> {
-        fn preflight_selection(&self, selected: &[&BundlePackage]) -> Result<(), AuthorityError> {
+        fn preflight_selection(&self, selected: &[NativeCodecProviderRequirementV1<'_>]) -> Result<(), AuthorityError> {
             if self.exact_pool {
                 let bindings = validate_native_bindings(&self.bindings)?;
                 if bindings.keys().any(|key| {
-                    !selected
-                        .iter()
-                        .any(|record| record.plugin_id == key.plugin_id && record.package_id == key.package_id && record.native_codecs.iter().any(|codec| codec.artifact_kind == key.artifact_kind && codec.artifact_schema == key.artifact_schema))
+                    !selected.iter().any(|required| required.package.plugin_id == key.plugin_id && required.package.package_id == key.package_id && required.artifact_kind == key.artifact_kind && required.artifact_schema == key.artifact_schema)
                 }) {
                     return Err(catalog("no explicit native codec binding matches the selected closure"));
                 }
@@ -1182,16 +1239,16 @@ mod tests {
             Ok(())
         }
 
-        fn preview(&self, record: &BundlePackage, descriptor: &PackageDescriptor, _context: &OperationContext<'_>) -> Result<Vec<NativeCodecBinding>, AuthorityError> {
-            assert_eq!(descriptor.package_id, record.package_id);
-            assert_eq!(descriptor.manifest.plugin_id, record.plugin_id);
-            assert_eq!(descriptor.manifest.version, record.version);
-            self.calls.lock().expect("provider calls").push(record.package_id.clone());
-            if self.failure == Some(record.package_id.as_str()) {
+        fn preview(&self, package: NativeCodecProviderPackageV1<'_>, descriptor: &PackageDescriptor, _context: &OperationContext<'_>) -> Result<Vec<NativeCodecBinding>, AuthorityError> {
+            assert_eq!(descriptor.package_id, package.package_id);
+            assert_eq!(descriptor.manifest.plugin_id, package.plugin_id);
+            assert_eq!(descriptor.manifest.version, package.version);
+            self.calls.lock().expect("provider calls").push(package.package_id.to_owned());
+            if self.failure == Some(package.package_id) {
                 return Err(catalog("selected fixture provider failed"));
             }
-            let mut bindings = self.bindings.iter().filter(|binding| binding.plugin_id == record.plugin_id && binding.package_id == record.package_id).cloned().collect::<Vec<_>>();
-            if record.plugin_id == "fixture.editor" {
+            let mut bindings = self.bindings.iter().filter(|binding| binding.plugin_id == package.plugin_id && binding.package_id == package.package_id).cloned().collect::<Vec<_>>();
+            if package.plugin_id == "fixture.editor" {
                 match self.hostile {
                     Some("foreign") => bindings[0].package_id = "semio:unselected".into(),
                     Some("missing") => bindings.clear(),
@@ -1416,6 +1473,98 @@ mod tests {
         fixture.refresh_profile_generation();
         fixture.persist_bundle();
         fixture
+    }
+
+    /// 🧪️ Loads real GIS assembly metadata and native receipts around synthetic component bytes; component execution is outside this fixture.
+    async fn prepared_gis_binding_fixture(viewer: bool, foreign_service: bool) -> FixtureDirectory {
+        let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new();
+        semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_s_plugin_gis::plugin().expect("GIS assembly"));
+        let emitted = semio_framework_plugin::describe::describe_plugin(&runtime).await;
+        let mut descriptor = decode_package_descriptor(&emitted).expect("actual native GIS descriptor");
+        assert!(descriptor.manifest.dependencies.is_empty());
+        let component = b"synthetic-gis-component-for-catalog-binding-test";
+        let component_sha256 = hex_lower(&Sha256::digest(component));
+        let mut component_blake3 = Hasher::new();
+        component_blake3.update(component);
+        descriptor.hashes.wasm_sha256 = component_sha256.clone();
+        descriptor.hashes.core_wasm_sha256 = component_sha256.clone();
+        descriptor.hashes.descriptor_sha256.clear();
+        if foreign_service {
+            descriptor.contributions.inference_services.iter_mut().find(|service| service.inference_schema == "s.gis.gismap.inference").expect("actual GIS inference declaration").contributor = "foreign".into();
+        }
+        descriptor.hashes.descriptor_sha256 = hex_lower(&Sha256::digest(&os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).expect("GIS descriptor self-hash projection"))));
+        let bytes = os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).expect("project GIS descriptor"));
+        let native_codecs: Vec<_> = semio_s_plugin_gis::native_codecs::native_codec_factory_receipts()
+            .expect("actual GIS codec receipts")
+            .into_iter()
+            .map(|receipt| {
+                let identity = receipt.identity();
+                serde_json::json!({ "artifactKind": identity.artifact_kind, "artifactSchema": identity.schema, "packSchemaHash": hex_lower(&identity.pack_schema_hash) })
+            })
+            .collect();
+        let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧊️gis-map-frozen-binding-v1/🔣️.json")).expect("neutral frozen binding corpus");
+        let binding = &corpus["binding"];
+        let package = serde_json::json!({ "pluginId": descriptor.manifest.plugin_id, "packageId": descriptor.package_id, "version": descriptor.manifest.version });
+        let mut target = serde_json::json!({
+            "artifactKind": binding["artifact"]["kind"], "artifactSchema": binding["artifact"]["schema"],
+            "packSchemaHash": native_codecs.iter().find(|codec| codec["artifactKind"] == binding["artifact"]["kind"]).expect("Map native receipt")["packSchemaHash"],
+            "surfaceId": binding["surface"]["surfaceId"], "appId": binding["surface"]["appId"], "windowKindId": binding["surface"]["windowKindId"],
+            "role": binding["surface"]["role"], "rendererTarget": binding["surface"]["rendererTarget"],
+            "parentDialect": binding["parentDialect"], "grant": binding["grant"]
+        });
+        if viewer {
+            let app = descriptor.manifest.apps.iter().find(|app| app.role == semio_framework::AppRole::Viewer && app.dialect.artifact_kind == "s.gis.gismap").expect("actual Map viewer");
+            target["surfaceId"] = app.id.clone().into();
+            target["appId"] = app.id.clone().into();
+            target["windowKindId"] = app.window_kinds.first().expect("actual viewer window").id.clone().into();
+            target["role"] = "viewer".into();
+            target["grant"]["write"] = false.into();
+        }
+        let sequence = FIXTURE_SEQUENCE.fetch_add(1, Ordering::SeqCst);
+        let root = PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("ticket-owned exact-law artifact directory")).join(format!("gis-binding-catalog-{}-{sequence}", std::process::id()));
+        std::fs::create_dir(&root).expect("exclusive GIS binding fixture directory");
+        std::fs::write(root.join("component.wasm"), component).expect("write synthetic GIS component");
+        std::fs::write(root.join("descriptor.semio"), &bytes).expect("write actual GIS descriptor");
+        let bundle = serde_json::json!({
+            "schemaVersion": 2,
+            "profiles": [{ "id": "frozen-gis-test", "selectedClosure": [package.clone()], "selectedClosureSha256": "01".repeat(32),
+                "openTarget": { "package": package.clone(), "target": target.clone() }, "generationId": "02".repeat(32) }],
+            "packages": [{ "pluginId": package["pluginId"], "packageId": package["packageId"], "version": package["version"], "role": "plugin", "dependencies": [],
+                "component": { "path": "component.wasm", "byteLength": component.len(), "sha256": component_sha256, "blake3": hex_lower(component_blake3.finalize().as_bytes()) },
+                "descriptor": { "path": "descriptor.semio", "byteLength": bytes.len(), "sha256": hex_lower(&Sha256::digest(&bytes)) },
+                "nativeCodecs": native_codecs, "openTargets": [target] }]
+        });
+        let mut fixture = FixtureDirectory { bundle_path: root.join("trusted-catalog.json"), root, bundle, schema: "gis.map".into() };
+        fixture.refresh_profile_generation();
+        fixture.persist_bundle();
+        fixture
+    }
+
+    #[tokio::test]
+    async fn gis_map_binding_constructs_from_loaded_catalog_and_retains_verified_bytes() {
+        for (viewer, foreign_service) in [(false, false), (true, false), (false, true)] {
+            let fixture = prepared_gis_binding_fixture(viewer, foreign_service).await;
+            let control = TestControl::new();
+            let catalog = Arc::new(TrustedCatalogLoader::load(&fixture.bundle_path, "frozen-gis-test", &NativeCodecProviderSetV1::linked(), &control.context()).await.expect("catalog loaded with real GIS receipts"));
+            let result = crate::inference::verified_gis_map_binding(catalog.clone());
+            if foreign_service {
+                assert!(matches!(result, Err(crate::inference::InferenceErrorV1::Denied)));
+            } else if viewer {
+                assert!(result.expect("viewer profile is admissible").is_none());
+            } else {
+                let binding = result.expect("verified editor binding").expect("GIS Map editor is bound");
+                assert!(Arc::ptr_eq(binding.catalog(), &catalog));
+                assert_eq!(binding.selection(), catalog.selected_document_open().expect("sole selection"));
+                assert_eq!(binding.service().executable_identity(), semio_s_plugin_gis::artifacts::gismap::gis_map_inference_service().executable_identity());
+                let retained = catalog.packages()[0].component_bytes().to_vec();
+                let digest = binding.digest().to_owned();
+                std::fs::write(fixture.component_path(0), b"tampered").expect("mutate fixture backing component");
+                assert!(TrustedCatalogLoader::load(&fixture.bundle_path, "frozen-gis-test", &NativeCodecProviderSetV1::linked(), &control.context()).await.is_err());
+                drop(catalog);
+                assert_eq!(binding.catalog().packages()[0].component_bytes(), retained);
+                assert_eq!(binding.digest(), digest);
+            }
+        }
     }
 
     fn fixture_compile<'a>(_dsl: &'a str, _ops: &'a str) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(ArtifactPackFiles, String), VcsError>> + Send + 'a>> {
@@ -1643,6 +1792,61 @@ mod tests {
         assert_eq!(progress.first().map(|entry| entry.stage), Some(AuthorityProgressStage::Preflight));
         assert_eq!(progress.last().map(|entry| entry.stage), Some(AuthorityProgressStage::CatalogResolved));
         assert!(progress.iter().all(|entry| entry.completed_units <= entry.total_units));
+    }
+
+    /// 🧱 The exact-selection asset accessor is bound to the current generation and to every
+    /// selected digest: it answers only for the exact descriptor/role/surface the catalog itself
+    /// resolves, only while the caller-observed generation is still this catalog's own, and the
+    /// bytes it returns are the very bytes whose SHA-256/BLAKE3 the selection projects.
+    #[tokio::test]
+    async fn selected_execution_target_assets_are_generation_and_digest_bound() {
+        let fixture = prepared_fixture();
+        let catalog = load_fixture(&fixture, &[fixture.binding()], &TestControl::new().context()).await.expect("verified catalog");
+        let descriptor = DocumentDescriptor {
+            space_id: "space".into(),
+            document_id: "document".into(),
+            artifact_kind: "s.fixture.document".into(),
+            artifact_schema: fixture.schema.clone(),
+            owner: directory::os_directory::DocumentOwner {
+                plugin_id: "fixture.editor".into(),
+                package_id: "semio:fixture-editor".into(),
+                version: "1.2.3".into(),
+                package_hash: fixture_json()["componentSha256"].as_str().expect("component sha256").into(),
+            },
+            pack_schema_hash: "11".repeat(32),
+            bootstrap_version: 1,
+            bootstrap_frontier: directory::os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 },
+            bootstrap_snapshot_hash: "33".repeat(32),
+        };
+        let generation = catalog.generation_id().to_string();
+        let assets = catalog.assets_for_current_selection(&descriptor, Some("s.fixture.document@1/*#editor"), true, &generation).expect("selected assets");
+        let selection = catalog.resolve_document_open(&descriptor, Some("s.fixture.document@1/*#editor"), true).expect("selection");
+        assert_eq!(assets.selection, selection);
+        assert!(!assets.component.is_empty() && !assets.descriptor.is_empty());
+        assert_eq!(hex_lower(&Sha256::digest(&assets.component)), assets.selection.package.component_sha256);
+        assert_eq!(semio_framework_hash::hash_bytes(&assets.component), assets.selection.package.component_blake3);
+        assert_eq!(hex_lower(&Sha256::digest(&assets.descriptor)), assets.selection.package.descriptor_byte_sha256);
+        assert!(assets.component.len() as u64 <= TRUSTED_COMPONENT_MAX_BYTES && assets.descriptor.len() as u64 <= TRUSTED_DESCRIPTOR_MAX_BYTES);
+        // 🔁 A rotated (or merely guessed) generation is never served, and no role, surface or
+        // descriptor substitution reaches bytes.
+        assert!(catalog.assets_for_current_selection(&descriptor, Some("s.fixture.document@1/*#editor"), true, &"ab".repeat(32)).is_none());
+        assert!(catalog.assets_for_current_selection(&descriptor, Some("s.fixture.document@1/*#editor"), false, &generation).is_none());
+        assert!(catalog.assets_for_current_selection(&descriptor, Some("s.fixture.document@1/*#viewer"), true, &generation).is_none());
+        assert!(catalog.assets_for_current_selection(&descriptor, Some("foreign"), true, &generation).is_none());
+        for change in ["plugin", "package", "version", "hash", "kind", "schema", "pack"] {
+            let mut candidate = descriptor.clone();
+            match change {
+                "plugin" => candidate.owner.plugin_id.push_str(".foreign"),
+                "package" => candidate.owner.package_id.push_str(".foreign"),
+                "version" => candidate.owner.version.push_str("-foreign"),
+                "hash" => candidate.owner.package_hash = "ab".repeat(32),
+                "kind" => candidate.artifact_kind.push_str(".foreign"),
+                "schema" => candidate.artifact_schema.push_str("-foreign"),
+                "pack" => candidate.pack_schema_hash = "ab".repeat(32),
+                _ => unreachable!(),
+            }
+            assert!(catalog.assets_for_current_selection(&candidate, Some("s.fixture.document@1/*#editor"), true, &generation).is_none(), "descriptor {change} reached selected bytes");
+        }
     }
 
     #[tokio::test]

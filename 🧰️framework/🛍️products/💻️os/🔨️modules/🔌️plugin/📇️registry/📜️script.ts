@@ -528,6 +528,36 @@ export type GeneratePluginRegistryOptions = {
   readonly view?: RegistryCatalogInputView;
 };
 
+export type GeneratedCatalogProjection = { readonly entries: readonly PluginRegistryEntry[]; readonly playgrounds: readonly PlaygroundEntry[] };
+const GENERATED_PLUGINS_PROJECTION = "🔌️plugins.json";
+const GENERATED_PLAYGROUNDS_PROJECTION = "🎠️playgrounds.json";
+
+/** 📖️ Reads the rows `generate` just projected into `🤖️generated` so one dev boot walks the repository once instead of once per consumer; the projection is the language-agnostic twin of [[generatePluginRegistry]] and [[generatePlaygroundRegistry]]. */
+export function readGeneratedCatalogProjection(generatedDir = join(import.meta.dir, "🤖️generated")): GeneratedCatalogProjection {
+  const read = <T>(name: string): readonly T[] => {
+    const parsed: unknown = JSON.parse(readFileSync(join(generatedDir, name), "utf8"));
+    if (!Array.isArray(parsed)) throw new Error(`📇️registry: ${name} is not a projected row array`);
+    return parsed as T[];
+  };
+  return { entries: read<PluginRegistryEntry>(GENERATED_PLUGINS_PROJECTION), playgrounds: read<PlaygroundEntry>(GENERATED_PLAYGROUNDS_PROJECTION) };
+}
+
+/** 🏠️ Host detection of [[isHostPluginFilter]] over projected rows: a variant, alias or bare plugin id whose crate declares `[package.metadata.semio].host`. */
+export function projectedHostPluginFilter(projection: GeneratedCatalogProjection, pluginFilter?: string): boolean {
+  if (!pluginFilter) return true;
+  const variantRow = projection.playgrounds.find((row) => row.variant === pluginFilter || row.aliases.includes(pluginFilter));
+  const pluginId = variantRow?.pluginId ?? pluginFilter;
+  return projection.entries.some((entry) => entry.pluginId === pluginId && entry.host !== undefined);
+}
+
+/** 🎯️ Filter semantics of [[generatePluginRegistry]] (`filterPlaygroundPlugin`) applied to projected rows, sorted by plugin id like the generator. */
+export function filterProjectedPluginRegistry(projection: GeneratedCatalogProjection, filterPlaygroundPlugin?: string): PluginRegistryEntry[] {
+  const entries = [...projection.entries].sort((a, b) => a.pluginId.localeCompare(b.pluginId));
+  if (!filterPlaygroundPlugin || projectedHostPluginFilter(projection, filterPlaygroundPlugin)) return entries;
+  const ids = new Set(resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin, projection.entries, projection.playgrounds));
+  return entries.filter((entry) => ids.has(entry.pluginId));
+}
+
 /** @emoji 🎯️ Resolves a playground variant/alias or bare plugin id to its wasm registry plugin id. */
 export function resolveRegistryPluginIdForFilter(pluginFilter: string, repoRoot = getWorkspaceRoot()): string {
   for (const manifestPath of findPluginCargoFiles(repoRoot)) {
@@ -576,11 +606,8 @@ export function isHostPluginFilter(pluginFilter?: string, repoRoot = getWorkspac
  * Cargo dependency edge at all, so dropping the topic scan would silently shrink existing dev
  * sessions.
  */
-export function resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin: string): readonly string[] {
-  const repoRoot = getWorkspaceRoot();
-  const allEntries = generatePluginRegistry(repoRoot);
-  const playgrounds = generatePlaygroundRegistry(repoRoot);
-  const variantRow = playgrounds.find((p) => p.variant === filterPlaygroundPlugin);
+export function resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin: string, allEntries: readonly PluginRegistryEntry[] = generatePluginRegistry(getWorkspaceRoot()), playgrounds: readonly PlaygroundEntry[] = generatePlaygroundRegistry(getWorkspaceRoot())): readonly string[] {
+  const variantRow = playgrounds.find((p) => p.variant === filterPlaygroundPlugin || p.aliases.includes(filterPlaygroundPlugin));
   const targetPluginId = variantRow?.pluginId ?? filterPlaygroundPlugin;
   const byId = new Map(allEntries.map((entry) => [entry.pluginId, entry]));
   const targetEntry = byId.get(targetPluginId);
@@ -851,6 +878,7 @@ export type PlaygroundSessionPlugin = {
   readonly moduleUrl: string;
   readonly contributes: readonly string[];
   readonly consumes: readonly string[];
+  readonly dependencies: readonly { readonly pluginId: string; readonly version: string }[];
 };
 
 export type PlaygroundSession = {
@@ -863,12 +891,11 @@ export type PlaygroundSession = {
 };
 
 /** @emoji 🎮️ Builds the pre-expanded plugin list and host metadata for one playground launch. */
-export function buildPlaygroundSession(variant: string, repoRoot = getWorkspaceRoot()): PlaygroundSession {
-  const hostMode = isHostPluginFilter(variant, repoRoot);
-  const registryPluginId = resolveRegistryPluginIdForFilter(variant, repoRoot);
-  const playgrounds = generatePlaygroundRegistry(repoRoot);
-  const playground = playgrounds.find((entry) => entry.variant === variant || entry.aliases.includes(variant));
-  const entries = generatePluginRegistry(repoRoot, hostMode ? {} : { filterPlaygroundPlugin: registryPluginId });
+export function buildPlaygroundSession(variant: string, projection: GeneratedCatalogProjection = readGeneratedCatalogProjection()): PlaygroundSession {
+  const hostMode = projectedHostPluginFilter(projection, variant);
+  const playground = projection.playgrounds.find((entry) => entry.variant === variant || entry.aliases.includes(variant));
+  const registryPluginId = playground?.pluginId ?? variant;
+  const entries = filterProjectedPluginRegistry(projection, hostMode ? undefined : registryPluginId);
   const host = entries.find((entry) => entry.pluginId === registryPluginId)?.host;
   return {
     variant,
@@ -878,9 +905,10 @@ export function buildPlaygroundSession(variant: string, repoRoot = getWorkspaceR
     ...(host ? { host } : {}),
     plugins: entries.map((entry) => ({
       pluginId: entry.pluginId,
-      moduleUrl: `${MODULE_PLUGIN_ROUTE}/${moduleDirectoryName(entry.pluginId)}/${MODULE_BRIDGE_FILE}`,
+      moduleUrl: `${entry.role === "extension" ? MODULE_EXTENSION_ROUTE : MODULE_PLUGIN_ROUTE}/${moduleDirectoryName(entry.pluginId)}/${MODULE_BRIDGE_FILE}`,
       contributes: entry.contributes,
       consumes: entry.consumes,
+      dependencies: entry.dependsOn.map((pluginId) => ({ pluginId, version: "*" })),
     })),
   };
 }
@@ -889,7 +917,7 @@ function emitSessionTypeScript(session: PlaygroundSession): string {
   const host = session.host ? `{ landingAppId: ${JSON.stringify(session.host.landingAppId)}, hostAppId: ${JSON.stringify(session.host.hostAppId)} }` : "undefined";
   const defaultAppId = session.defaultAppId !== undefined ? JSON.stringify(session.defaultAppId) : "undefined";
   const pluginRows = session.plugins
-    .map((entry) => `\t{ pluginId: ${JSON.stringify(entry.pluginId)}, moduleUrl: ${JSON.stringify(entry.moduleUrl)}, contributes: ${JSON.stringify(entry.contributes)}, consumes: ${JSON.stringify(entry.consumes)} },`)
+    .map((entry) => `\t{ pluginId: ${JSON.stringify(entry.pluginId)}, moduleUrl: ${JSON.stringify(entry.moduleUrl)}, contributes: ${JSON.stringify(entry.contributes)}, consumes: ${JSON.stringify(entry.consumes)}, dependencies: ${JSON.stringify(entry.dependencies)} },`)
     .join("\n");
   return `/** @generated by framework/plugin/registry/script.ts — do not edit. */
 export type PlaygroundSessionPlugin = {
@@ -897,6 +925,7 @@ export type PlaygroundSessionPlugin = {
 \treadonly moduleUrl: string;
 \treadonly contributes: readonly string[];
 \treadonly consumes: readonly string[];
+\treadonly dependencies: readonly { readonly pluginId: string; readonly version: string }[];
 };
 
 export type PlaygroundSession = {
@@ -991,8 +1020,8 @@ ${rows}
 }
 
 /** @emoji 💾️ Writes the per-launch playground session artifact consumed by os/dev and wgpu boot. */
-export function writePlaygroundSession(variant: string, outPath: string, repoRoot = getWorkspaceRoot()): PlaygroundSession {
-  const session = buildPlaygroundSession(variant, repoRoot);
+export function writePlaygroundSession(variant: string, outPath: string, projection: GeneratedCatalogProjection = readGeneratedCatalogProjection()): PlaygroundSession {
+  const session = buildPlaygroundSession(variant, projection);
   mkdirSync(dirname(outPath), { recursive: true });
   writeFileSync(outPath, emitSessionTypeScript(session));
   return session;
@@ -1814,7 +1843,8 @@ function validatePlaygroundSessions(repoRoot: string): string[] {
     .map((entry) => entry.variant)
     .sort()[0];
   if (!standaloneVariant) throw new Error(`📇️registry: no playground variant found whose plugin does not declare [package.metadata.semio].host`);
-  const standalone = buildPlaygroundSession(standaloneVariant, repoRoot);
+  const liveProjection: GeneratedCatalogProjection = { entries: generatePluginRegistry(repoRoot), playgrounds: generatePlaygroundRegistry(repoRoot) };
+  const standalone = buildPlaygroundSession(standaloneVariant, liveProjection);
   const standalonePluginIds = standalone.plugins.map((entry) => entry.pluginId).sort();
   // 🎯️ "standalone session = target plugin plus every plugin whose `contributes` intersects the
   // target's `consumes`" — exactly what `resolveRegistryPluginIdsForFilter` computes, so re-derive the
@@ -1826,13 +1856,21 @@ function validatePlaygroundSessions(repoRoot: string): string[] {
   }
 
   const studioVariant = resolveDefaultHostVariant(repoRoot);
-  const studio = buildPlaygroundSession(studioVariant, repoRoot);
+  const studio = buildPlaygroundSession(studioVariant, liveProjection);
   // 🎯️ "studio/host session has landingAppId==='home', hostAppId==='studio', and includes every
   // registry plugin" — `buildPlaygroundSession` expands studio sessions with no filter, so the exact
   // registry plugin count is the structural expectation, not a magic threshold.
   const totalRegistryPlugins = generatePluginRegistry(repoRoot).length;
   if (!studio.hostMode || studio.host?.landingAppId !== "home" || studio.host.hostAppId !== "studio" || studio.plugins.length !== totalRegistryPlugins) {
     errors.push(`studio session "${studioVariant}" resolved unexpectedly (${JSON.stringify({ hostMode: studio.hostMode, host: studio.host, pluginCount: studio.plugins.length, totalRegistryPlugins })})`);
+  }
+  for (const entry of liveProjection.entries) {
+    const sessionEntry = studio.plugins.find((candidate) => candidate.pluginId === entry.pluginId);
+    const expectedModuleUrl = `${entry.role === "extension" ? MODULE_EXTENSION_ROUTE : MODULE_PLUGIN_ROUTE}/${moduleDirectoryName(entry.pluginId)}/${MODULE_BRIDGE_FILE}`;
+    const expectedDependencies = entry.dependsOn.map((pluginId) => ({ pluginId, version: "*" }));
+    if (!sessionEntry || sessionEntry.moduleUrl !== expectedModuleUrl || !isDeepStrictEqual(sessionEntry.dependencies, expectedDependencies)) {
+      errors.push(`studio session entry "${entry.pluginId}" lost its role-aware route or dependency graph (${JSON.stringify({ expectedModuleUrl, actualModuleUrl: sessionEntry?.moduleUrl, expectedDependencies, actualDependencies: sessionEntry?.dependencies })})`);
+    }
   }
 
   if (!isHostPluginFilter(studioVariant, repoRoot) || isHostPluginFilter(standaloneVariant, repoRoot)) {
@@ -1959,49 +1997,95 @@ export function publicationWasmPath(repoRoot: string, wasmOut: string): string {
   return join(repoRoot, ...WASM_TARGET_DIR, WASM_PUBLICATION_PROFILE, wasmOut);
 }
 
+const INTERACTIVE_JOB_RUST_NAMES: Readonly<Record<string, string>> = { Unclassified: "unclassified", Migrated: "migrated", BatchOnlyPendingRewrite: "batchOnlyPendingRewrite", ForbiddenFromUi: "forbiddenFromUi", Deleted: "deleted" };
+const INTERACTIVE_JOB_RUST_CALL = /\.action_interactive_job\(\s*"([^"]+)"\s*,\s*(?:\w+::)*InteractiveJobClassification::(\w+)\s*\)/gu;
+const INTERACTIVE_JOB_SKIP_DIRS = new Set(["node_modules", "dist", "pkg", ".git", "🤖️generated", "🧩️extensions"]);
+
+/** 🧵️ Collects every `action_interactive_job` disposition an owner tree declares in Rust, keyed by
+ * action id — an id may legitimately carry a different disposition per surface, so the value is the
+ * declared set rather than a single classification. */
+function rustInteractiveJobClassifications(ownerRoot: string): Map<string, Set<string>> {
+  const declared = new Map<string, Set<string>>();
+  const walk = (directory: string): void => {
+    for (const child of readdirSync(directory, { withFileTypes: true })) {
+      if (child.isDirectory()) {
+        if (!INTERACTIVE_JOB_SKIP_DIRS.has(child.name) && !child.name.startsWith("target")) walk(join(directory, child.name));
+      } else if (child.isFile() && child.name.endsWith(".rs")) {
+        for (const [, actionId, variant] of readFileSync(join(directory, child.name), "utf8").matchAll(INTERACTIVE_JOB_RUST_CALL)) {
+          const classification = INTERACTIVE_JOB_RUST_NAMES[variant!];
+          if (classification) (declared.get(actionId!) ?? declared.set(actionId!, new Set()).get(actionId!)!).add(classification);
+        }
+      }
+    }
+  };
+  if (existsSync(ownerRoot)) walk(ownerRoot);
+  return declared;
+}
+
+/** 🧵️ Reports every committed action whose explicit `interactiveJob` contradicts what the owner's own
+ * Rust declares — the exact shape a source migration that never re-ran `describe` leaves behind, which
+ * the runtime then rejects at dispatch. An action the descriptor leaves unclassified, or an id the owner
+ * inherits from a shared framework builder rather than declaring itself, is silent here by construction. */
+export function auditInteractiveJobClassificationDrift(pluginId: string, ownerRoot: string, descriptor: Record<string, unknown>): string[] {
+  const declared = rustInteractiveJobClassifications(ownerRoot);
+  if (declared.size === 0) return [];
+  const drift: string[] = [];
+  const manifest = descriptor.manifest as { apps?: readonly Record<string, any>[] } | undefined;
+  for (const app of manifest?.apps ?? []) {
+    for (const windowKind of (app.windowKinds ?? []) as readonly Record<string, any>[]) {
+      for (const action of (windowKind.actions ?? []) as readonly Record<string, any>[]) {
+        const committed = action.semantics?.execution?.interactiveJob as string | undefined;
+        if (!committed || committed === "unclassified") continue;
+        const source = declared.get(String(action.id));
+        if (source && !source.has(committed)) drift.push(`${pluginId}: ${app.id}#${action.id} is committed as ${JSON.stringify(committed)} but its Rust declares ${[...source].sort().map((value) => JSON.stringify(value)).join(", ")} — re-run \`describe\` for this owner`);
+      }
+    }
+  }
+  return drift;
+}
+
 /**
- * 🛂️ `📓️design-abi.md` §3's registry `check` extension: a descriptor exists per crate, `pluginId`
- * matches the component package, `extends` matches the first dependency, every
- * `on-extension-request:<point>` activation event an extension declares names a real extension point
- * on its host plugin, and the built wasm's sha256 matches `hashes.wasmSha256`.
+ * 🛂️ `📓️design-abi.md` §3's registry `check` extension, fail-closed: every discovered crate owns a
+ * complete `🔣️.json` + `🛂️.descriptor.semio` pair, the pair strict-decodes to one semantically
+ * identical value in both forms, it carries no placeholder identity, `pluginId`/`packageId`/`extends`
+ * match the Cargo component, every `on-extension-request:<point>` names a real host extension point,
+ * the built wasm's sha256 matches `hashes.wasmSha256`, and no committed `interactiveJob` contradicts
+ * the owner's own Rust classification.
  *
- * **Severity, deliberately asymmetric** (documented judgment call, `📓️terra-E1-describe-report.md`):
- * zero plugin crates have been migrated to emit a descriptor yet (W3's `M0`…`M8` land after this
- * packet) — hard-failing "descriptor exists" today would permanently red the gate until every plugin
- * migrates, which is not what a W2 packet's `check` extension is for. So "missing descriptor" and
- * "wasm not built" are **warnings** (mirrors this file's own `PLUGIN_AREAS_STATE`
- * legacy/mixed/clean idiom for the taxonomy-tree audit above); every check that only applies to a
- * crate that DOES have a descriptor (id/extends/extension-point/hash consistency) is a **hard
- * error** — a wrong descriptor is worse than a missing one.
+ * A missing, half-published, divergent or placeholder pair is an **error**, not a warning: the strict
+ * catalog gate treats exactly these as unpublishable, so a green `check` over them was reporting a
+ * catalog state that `catalog-complete` could never accept. The one remaining warning is "wasm not
+ * built" — publication identity is verified by `catalog-complete` against a dedicated fresh build
+ * root, never against whatever the ambient `target/` happens to hold. `generate` stays permissive so
+ * `dev s` keeps booting against a partially described catalog.
  */
-function validateDescriptors(entries: readonly PluginRegistryEntry[], repoRoot: string): { warnings: string[]; errors: string[] } {
+export function validateDescriptors(entries: readonly PluginRegistryEntry[], repoRoot: string): { warnings: string[]; errors: string[] } {
   const warnings: string[] = [];
   const errors: string[] = [];
   const byId = new Map(entries.map((entry) => [entry.pluginId, entry]));
   let described = 0;
   for (const entry of entries) {
     const descriptorPath = join(entry.cratePath, ...DESCRIPTOR_JSON_REL_PATH);
-    if (entry.hashes === undefined && entry.executionMode === undefined && entry.activationEvents.length === 0 && entry.extensionPoints.length === 0) {
-      // 🚧️ No `🔣️.json` (or one too malformed to read) — see `readDescriptorJson`.
-      warnings.push(`${entry.pluginId}: no ${descriptorPath} yet — run \`bun ./📜️script.ts describe\` in ${entry.cratePath} after building its wasm32-wasip2 component`);
+    const ownerRoot = resolve(repoRoot, dirname(descriptorPath));
+    const jsonExists = existsSync(join(repoRoot, descriptorPath));
+    const packExists = existsSync(join(ownerRoot, CATALOG_DESCRIPTOR_PACK_FILENAME));
+    if (!jsonExists || !packExists) {
+      errors.push(`${entry.pluginId}: owner-root descriptor ${jsonExists ? "pack 🛂️.descriptor.semio" : packExists ? "JSON 🔣️.json" : "pair"} is missing under ${relative(repoRoot, ownerRoot)} — run \`bun ./📜️script.ts describe\` in ${entry.cratePath} after building its wasm32-wasip2 component`);
+      continue;
+    }
+    let pair: StrictCatalogDescriptor | undefined;
+    try {
+      pair = validateCatalogDescriptorPair(entry, repoRoot);
+      rejectPlaceholderCatalogIdentity(entry.pluginId, String((pair.descriptor.manifest as Record<string, unknown>).version));
+      errors.push(...auditInteractiveJobClassificationDrift(entry.pluginId, ownerRoot, pair.descriptor as Record<string, unknown>));
+    } catch (error) {
+      errors.push(`${entry.pluginId}: ${boundedCatalogDiagnostic(error)}`);
       continue;
     }
     described++;
-    const descriptor = readDescriptorJson(repoRoot, entry.cratePath);
-    const packageId = descriptor?.packageId;
-    if (packageId !== entry.packageId) {
-      errors.push(`${entry.pluginId}: ${descriptorPath} packageId is ${JSON.stringify(packageId)}, expected ${JSON.stringify(entry.packageId)} (the complete [package.metadata.component] package)`);
-    }
-    const manifestPluginId = (descriptor?.manifest as Record<string, unknown> | undefined)?.pluginId;
-    if (manifestPluginId !== entry.pluginId) {
-      errors.push(`${entry.pluginId}: ${descriptorPath} manifest.pluginId is ${JSON.stringify(manifestPluginId)}, expected ${JSON.stringify(entry.pluginId)} (the [package.metadata.component] package)`);
-    }
-    if (entry.extends !== undefined) {
-      const manifestDependencies = (descriptor?.manifest as Record<string, unknown> | undefined)?.dependencies;
-      const firstDependencyId = Array.isArray(manifestDependencies) ? (manifestDependencies[0] as { pluginId?: unknown } | undefined)?.pluginId : undefined;
-      if (firstDependencyId !== entry.extends) {
-        errors.push(`${entry.pluginId}: extends ${JSON.stringify(entry.extends)} but manifest.dependencies[0].pluginId is ${JSON.stringify(firstDependencyId)} — contract freeze §4 rule 1 requires these to match`);
-      }
+    const firstDependencyId = ((pair.descriptor.manifest as Record<string, unknown>).dependencies as readonly { pluginId?: unknown }[] | undefined)?.[0]?.pluginId;
+    if (entry.extends !== undefined && firstDependencyId !== entry.extends) {
+      errors.push(`${entry.pluginId}: extends ${JSON.stringify(entry.extends)} but manifest.dependencies[0].pluginId is ${JSON.stringify(firstDependencyId)} — contract freeze §4 rule 1 requires these to match`);
     }
     const hostPluginId = entry.extends;
     const hostExtensionPoints = hostPluginId ? new Set(byId.get(hostPluginId)?.extensionPoints ?? []) : undefined;
@@ -2026,9 +2110,7 @@ function validateDescriptors(entries: readonly PluginRegistryEntry[], repoRoot: 
       }
     }
   }
-  if (described > 0 || warnings.length === 0) {
-    console.log(`descriptor gate: ${described}/${entries.length} crates have a 🔣️.json.`);
-  }
+  console.log(`descriptor gate: ${described}/${entries.length} crates own a verified 🔣️.json + 🛂️.descriptor.semio pair.`);
   return { warnings, errors };
 }
 //#endregion 🔖️DescriptorGate
@@ -2354,7 +2436,15 @@ function rejectDuplicateJsonObjectNames(source: string): void {
   if (index !== source.length) throw new Error(`trailing JSON input at byte ${index}`);
 }
 
-function validateCatalogDescriptorValue(entry: PluginRegistryEntry, descriptor: unknown): PluginDescriptorHashes {
+export type CatalogDescriptorIdentity = Readonly<{
+  pluginId: string;
+  packageId: string;
+  role: "plugin" | "extension";
+  extends?: string;
+  dependsOn: readonly string[];
+}>;
+
+function validateCatalogDescriptorValue(entry: CatalogDescriptorIdentity, descriptor: unknown): PluginDescriptorHashes {
   if (descriptor === null || typeof descriptor !== "object" || Array.isArray(descriptor) || !isStrictJsonValue(descriptor)) throw new Error(`${entry.pluginId}: descriptor is not a lossless JSON object`);
   const record = descriptor as Record<string, unknown>;
   const unknownTop = Object.keys(record).filter((key) => !CATALOG_DESCRIPTOR_TOP_LEVEL.has(key));
@@ -2392,9 +2482,30 @@ export type FreshCatalogPackageIdentityV1 = Readonly<{
   coreWasmSha256: string;
 }>;
 
-/** 🧬️ Verifies fresh diagnostic JSON and packed descriptor bytes without discovering or publishing owner state. */
-export function verifyFreshCatalogPackageV1(jsonBytes: Uint8Array, packBytes: Uint8Array, expected: FreshCatalogPackageIdentityV1): PluginDescriptorHashes {
-  if (jsonBytes.byteLength === 0 || jsonBytes.byteLength > CATALOG_DESCRIPTOR_MAX_BYTES || packBytes.byteLength === 0 || packBytes.byteLength > CATALOG_DESCRIPTOR_MAX_BYTES) throw new Error(`${expected.pluginId}: fresh descriptor forms exceed the fixed boundary`);
+export const CATALOG_PLACEHOLDER_PLUGIN_IDS: readonly string[] = ["empty", "assembly-failed", "unknown", "placeholder"];
+export const CATALOG_PLACEHOLDER_VERSION = "0.0.0";
+
+export type OwnerDescriptorPairV1 = Readonly<{
+  pluginId: string;
+  packageId: string;
+  role: "plugin" | "extension";
+  version: string;
+  execution: string;
+  extends?: string;
+  hashes: PluginDescriptorHashes;
+  descriptor: Readonly<Record<string, unknown>>;
+}>;
+
+/** 🚫️ Refuses the `pluginId: "empty"` / `0.0.0` stub shape a failed component assembly mints, which
+ * otherwise decodes, packs and hashes exactly like a real descriptor (the four CAD extension owners). */
+export function rejectPlaceholderCatalogIdentity(pluginId: string, version: string): void {
+  if (CATALOG_PLACEHOLDER_PLUGIN_IDS.includes(pluginId) || version === CATALOG_PLACEHOLDER_VERSION) throw new Error(`${pluginId}: descriptor carries the placeholder identity (pluginId=${JSON.stringify(pluginId)}, version=${JSON.stringify(version)}) a failed assembly mints`);
+}
+
+/** 🧬️ Verifies one emitted JSON/pack descriptor pair against the exact raw/core artifacts it
+ * describes, deriving identity from the descriptor itself rather than from owner discovery. */
+export function verifyDescriptorPairBytesV1(jsonBytes: Uint8Array, packBytes: Uint8Array, expected: Readonly<{ wasmSha256: string; coreWasmSha256: string }>): OwnerDescriptorPairV1 {
+  if (jsonBytes.byteLength === 0 || jsonBytes.byteLength > CATALOG_DESCRIPTOR_MAX_BYTES || packBytes.byteLength === 0 || packBytes.byteLength > CATALOG_DESCRIPTOR_MAX_BYTES) throw new Error("emitted descriptor forms exceed the fixed boundary");
   let descriptor: unknown;
   let packed: unknown;
   try {
@@ -2403,18 +2514,34 @@ export function verifyFreshCatalogPackageV1(jsonBytes: Uint8Array, packBytes: Ui
     descriptor = JSON.parse(json);
     packed = decodePackValue(packBytes);
   } catch (error) {
-    throw new Error(`${expected.pluginId}: fresh descriptor forms do not decode: ${boundedCatalogDiagnostic(error)}`);
+    throw new Error(`emitted descriptor forms do not decode: ${boundedCatalogDiagnostic(error)}`);
   }
-  const entry = { pluginId: expected.pluginId, packageId: expected.packageId, role: expected.role, dependsOn: [] } as PluginRegistryEntry;
-  const hashes = validateCatalogDescriptorValue(entry, descriptor);
+  if (descriptor === null || typeof descriptor !== "object" || Array.isArray(descriptor)) throw new Error("emitted descriptor is not a JSON object");
   const record = descriptor as Record<string, any>;
-  if (record.manifest.version !== expected.version || record.execution !== expected.execution || hashes.wasmSha256 !== expected.wasmSha256 || hashes.coreWasmSha256 !== expected.coreWasmSha256) throw new Error(`${expected.pluginId}: fresh descriptor identity, execution, or component hashes differ`);
-  if (!isDeepStrictEqual(normalizeCatalogDescriptorEnums(descriptor), normalizeCatalogDescriptorEnums(packed))) throw new Error(`${expected.pluginId}: fresh descriptor JSON and pack forms disagree`);
-  if (!Buffer.from(encodePackValue(packed)).equals(Buffer.from(packBytes))) throw new Error(`${expected.pluginId}: fresh descriptor pack is not canonical or contains trailing bytes`);
+  const role = record.role === "extension" ? "extension" : "plugin";
+  const host = role === "extension" ? (record.manifest?.dependencies?.[0]?.pluginId as string | undefined) : undefined;
+  const entry: CatalogDescriptorIdentity = { pluginId: String(record.manifest?.pluginId), packageId: String(record.packageId), role, extends: host, dependsOn: host ? [host] : [] };
+  const hashes = validateCatalogDescriptorValue(entry, descriptor);
+  if (hashes.wasmSha256 !== expected.wasmSha256 || hashes.coreWasmSha256 !== expected.coreWasmSha256) throw new Error(`${entry.pluginId}: emitted descriptor hashes do not name the exact raw/core artifacts it was emitted from`);
+  if (!isDeepStrictEqual(normalizeCatalogDescriptorEnums(descriptor), normalizeCatalogDescriptorEnums(packed))) throw new Error(`${entry.pluginId}: emitted descriptor JSON and pack forms disagree`);
+  if (!Buffer.from(encodePackValue(packed)).equals(Buffer.from(packBytes))) throw new Error(`${entry.pluginId}: emitted descriptor pack is not canonical or contains trailing bytes`);
   const blanked = structuredClone(packed as Record<string, any>);
   blanked.hashes.descriptorSha256 = "";
-  if (createHash("sha256").update(encodePackValue(blanked)).digest("hex") !== hashes.descriptorSha256) throw new Error(`${expected.pluginId}: fresh descriptor self-hash mismatch`);
-  return hashes;
+  if (createHash("sha256").update(encodePackValue(blanked)).digest("hex") !== hashes.descriptorSha256) throw new Error(`${entry.pluginId}: emitted descriptor self-hash mismatch`);
+  rejectPlaceholderCatalogIdentity(entry.pluginId, String(record.manifest.version));
+  return { pluginId: entry.pluginId, packageId: entry.packageId, role, version: String(record.manifest.version), execution: String(record.execution), extends: host, hashes, descriptor: packed as Record<string, unknown> };
+}
+
+/** 🧬️ Verifies fresh diagnostic JSON and packed descriptor bytes without discovering or publishing owner state. */
+export function verifyFreshCatalogPackageV1(jsonBytes: Uint8Array, packBytes: Uint8Array, expected: FreshCatalogPackageIdentityV1): PluginDescriptorHashes {
+  let pair: OwnerDescriptorPairV1;
+  try {
+    pair = verifyDescriptorPairBytesV1(jsonBytes, packBytes, expected);
+  } catch (error) {
+    throw new Error(`${expected.pluginId}: ${boundedCatalogDiagnostic(error)}`);
+  }
+  if (pair.pluginId !== expected.pluginId || pair.packageId !== expected.packageId || pair.role !== expected.role || pair.version !== expected.version || pair.execution !== expected.execution) throw new Error(`${expected.pluginId}: fresh descriptor identity, execution, or component hashes differ`);
+  return pair.hashes;
 }
 
 /** 🔐️ Strict-decodes and cross-checks one owner-root JSON/pack `PackageDescriptor` pair. */

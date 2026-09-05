@@ -5,7 +5,7 @@ use crate::editor::block3d::config::{block3d_window_view, Block3dConfig};
 use crate::editor::block3d::terminology::Block3dLabels;
 use semio_framework_plugin::WindowMeasure;
 
-pub async fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) -> WindowMeasure {
+pub fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) -> WindowMeasure {
     let view = block3d_window_view(config, window_id);
     let visible_set: std::collections::HashSet<&str> = if view.representation_ids.is_empty() { definition.representations.iter().map(|r| r.id.as_str()).collect() } else { view.representation_ids.iter().map(|s| s.as_str()).collect() };
     let rep_toggles: Vec<WindowMeasure> = definition
@@ -17,16 +17,13 @@ pub async fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, windo
             label: Some(representation.name.clone()),
             pressed: visible_set.contains(representation.id.as_str()),
             text: None,
-            on_change: crate::editor::block3d::block3d_action(
+            on_change: crate::editor::block3d::block3d_window_action(
                 "toggleWindowRepresentation",
-                Some(
-                    crate::editor::block3d::ui_value_map([
-                        ("windowId", crate::editor::block3d::ui_value_text(window_id).expect("window id fits ui text capacity")),
-                        ("representationId", crate::editor::block3d::ui_value_text(representation.id.as_str()).expect("representation id fits ui text capacity")),
-                        ("visible", crate::editor::block3d::ui_value_bool(!visible_set.contains(representation.id.as_str()))),
-                    ])
-                    .expect("toggle-representation args fit ui map capacity"),
-                ),
+                Some(dsl::DslValue::object([
+                    ("windowId".to_string(), dsl::DslValue::String(window_id.to_string())),
+                    ("representationId".to_string(), dsl::DslValue::String(representation.id.clone())),
+                    ("visible".to_string(), dsl::DslValue::Bool(!visible_set.contains(representation.id.as_str()))),
+                ])),
             ),
         })
         .collect();

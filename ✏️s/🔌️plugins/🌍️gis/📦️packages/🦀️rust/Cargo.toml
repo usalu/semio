@@ -74,7 +74,7 @@ plugin-entry = []
 
 [dependencies]
 semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
-semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
+semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false, features = ["full-artifact-catalog"] }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 framework_surface = { path = "../../../../../🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", package = "semio-framework-surface", default-features = false }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
