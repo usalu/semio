@@ -1008,7 +1008,7 @@ mod tests {
     use super::*;
     use crate::workspace::remote::{AuthorizedDescriptorSnapshot, AuthorizedDocumentView, HubStreamObservation};
     use semio_framework_async::TraceId;
-    use semio_framework_os_kernel::os_directory::{DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor, DocumentFrontier, DocumentOwner, DocumentView, MemberView, RebootstrapRequired, SpaceView};
+    use semio_framework_os_kernel::os_directory::{DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor, DocumentFrontier, DocumentOwner, DocumentView, MemberSpaceViewV1, MemberView, RebootstrapRequired};
     use std::collections::HashMap;
     use std::sync::atomic::{AtomicU64, AtomicUsize};
     use std::sync::{Arc, Mutex};
@@ -1061,13 +1061,13 @@ mod tests {
         let snapshot = AuthorizedDescriptorSnapshot {
             authenticated_user_id: membership.user_id.clone(),
             session_expires_at_ms: expires_at_ms,
-            space: SpaceView {
+            space: MemberSpaceViewV1 {
                 id: scope.space_id.clone(),
                 name: "A".into(),
                 kind: DirectorySpaceKind::Studio,
                 visibility: DirectorySpaceVisibility::Private,
                 owner_user_id: membership.user_id.clone(),
-                role: Some(membership.role),
+                role: membership.role,
                 member_count: 1,
                 document_count: 1,
                 active_connections: 0,

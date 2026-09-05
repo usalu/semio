@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "owner": "✏️s/🔌️plugins/📸️remodeling/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️replace-trajectory",
+  "owner": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️replace-trajectory",
   "semanticKind": "replace-trajectory",
   "displayName": "Replace Trajectory",
   "emoji": "🛣️",
   "aggregateVariant": "ReplaceTrajectory",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "replace-trajectory",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

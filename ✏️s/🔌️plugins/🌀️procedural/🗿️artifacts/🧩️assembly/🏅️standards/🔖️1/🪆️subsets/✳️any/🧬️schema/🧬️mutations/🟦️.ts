@@ -2,7 +2,7 @@
  * shape. Mirrors the Rust `🦀️.rs` sibling's `AssemblyMutation` enum, which carries only
  * `#[derive(dsl::Mutations)]` — no `#[serde(tag = ...)]` — so it serializes with serde's default
  * EXTERNALLY TAGGED shape: `{ "<PascalCaseVariantName>": { ...leaf-struct-fields } }`, confirmed by
- * the committed `🌱create-slot/🧪️tests/*​/🦠️mutation/🔣️.json` fixture
+ * the committed `🧩️create-slot/🧪️tests/*​/🦠️mutation/🔣️.json` fixture
  * (`{"CreateSlot":{"index":2,"slot":{...}}}`) — NOT the `{ kind: "create-slot"; ... }` internally
  * tagged, kebab-case shape this previously declared. None of the 9 leaf structs carry
  * `#[serde(rename_all = ...)]`, so every leaf's own field names are the literal Rust snake_case

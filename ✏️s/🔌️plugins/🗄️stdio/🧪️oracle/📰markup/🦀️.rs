@@ -2,7 +2,7 @@
 //! `viewBox`/`transform` grammars, the JSON spec codec and the semantic projection that the
 //! `🎨️svg` 1.1 `✳️tiny` and `✳️basic` subset oracles both drive.
 //!
-//! This is a family module, the same shape as `📄️document`/`🖼️raster`/`🎒️archive`/`🔊️audio`/
+//! This is a family module, the same shape as `📃️document`/`🖼️raster`/`🎒️archive`/`🔊️audio`/
 //! `📊️tabular`/`🧊️mesh`: two subsets that need the same reference machinery share it HERE rather
 //! than by copying it into both. `✳️tiny` and `✳️basic` are restrictions of one schema, so their
 //! oracles differ only in the profile gate they apply and the vocabulary they dispatch — every
@@ -12,8 +12,8 @@
 //! parallel to (and never imported from) the production `XmlNode`/`XmlDocument` the `📰️xml` subset
 //! persists, so a subset's own codec is never the thing measuring itself.
 //!
-//! @see ../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🦀️oracle.rs
-//! @see ../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🦀️oracle.rs
+//! @see ../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🔮️oracle/🦀️.rs
+//! @see ../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🔮️oracle/🦀️.rs
 
 //#region 🔖️Live
 #[cfg(feature = "oracles")]

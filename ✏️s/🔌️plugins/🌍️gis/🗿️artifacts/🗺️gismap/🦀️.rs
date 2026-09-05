@@ -14,12 +14,7 @@ use serde::{Deserialize, Serialize};
 
 pub const GIS_MAP_SCHEMA: &str = "gis.map";
 
-/// 🪪️ The canonical surface dialect for `s.gis.gismap@1/*` (contract §1 grammar) — lives at the
-/// ARTIFACT root, not under `✏️editor`/`👁️viewer`, so a viewer file can read it without ever
-/// importing through the sibling `editor` module. `artifact_kind` is the 3-part schema id this
-/// file's own `definition()` claims (`s.gis.gismap`), NOT the 2-part `ArtifactIdentity::parse("s.gismap")`
-/// string above and NOT the module-private `🚪️io/🦀️.rs` `GISMAP_DIALECT` (an older,
-/// unrelated io/composer const with a different 2-part `artifact_kind` — different file, no collision).
+/// 🪪️ One canonical map identity shared by definition, composer and both app roles.
 pub const GISMAP_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.gis.gismap", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
 //#endregion 🔹Constants
 
@@ -72,10 +67,10 @@ impl Patchable<MapFeaturePatch> for MapFeature {
 /// `positions`/`routes`/`regions` stay gis's own domain-specific id-keyed feature lists (analogous to
 /// `📐️cad`'s `nodes`/`references_by_model_definition_id`, kept inline rather than gutted — see that
 /// plugin's `🧬️schema/📸️snapshot/🦀️.rs` module doc for the precedent) since they are NOT a
-/// duplicated stdio type, just gis's own vocabulary; `drawing`/`value` are DERIVED composed children,
-/// deterministically re-minted from the current feature collections by
-/// `gis_map_snapshot_with_derived_children` every time the document changes (`GisMapArtifact::to_snapshot`,
-/// `apply_gis_map_mutation`), never independently mutable. `image` is honestly always absent: gis
+/// duplicated stdio type, just gis's own vocabulary; `drawing`/`value` are DERIVED composed children
+/// with stable admitted member identities. Their typed stores move content while the parent handles
+/// remain fixed; `gis_map_snapshot_with_derived_children` enforces those identities whenever the
+/// parent is constructed or changed. `image` is honestly always absent: gis
 /// carries no raster basemap capability today (see `render_mode`'s app-level raster/vector TOGGLE,
 /// which selects a rendering STYLE of the same vector data, not a second raster document) — the slot
 /// exists, real and typed, for the day a basemap capture lands, not as a stub.
@@ -83,28 +78,17 @@ pub type GisMapDrawingChild = store::ArtifactChild<SemioDrawingSnapshot>;
 pub type GisMapImageChild = store::ArtifactChild<SemioImageSnapshot>;
 pub type GisMapValueChild = store::ArtifactChild<SemioValueSnapshot>;
 
-/// 🕸️ Deterministic content-addressed CHILD handle for the map's composed drawing — same
-/// `(child_id, target)` for identical `content_key`, a different pair once the features actually
-/// change. Mirrors `🏔️gisterrain`'s `gis_terrain_mesh_child_handle`/`💠️lowpoly`'s `mesh_child_handle`.
-pub fn gis_map_drawing_child_handle(content_key: &str) -> GisMapDrawingChild {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_key.hash(&mut hasher);
-    let content_hash = hasher.finish();
-    let child_id = format!("gismap-drawing-{content_hash:016x}");
+/// 🕸️ Stable admitted CHILD handle for the map's composed drawing member.
+pub fn gis_map_drawing_child_handle(_content_key: &str) -> GisMapDrawingChild {
+    let child_id = "gismap-drawing".to_string();
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() };
     let target = store::os_io::ArtifactRef { artifact_id: "gismap-drawing".into(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 
-/// 🕸️ Deterministic content-addressed CHILD handle for the map's composed value graph — same
-/// hashing/dialect shape as `gis_map_drawing_child_handle`, targeting `s.stdio.semio.value` instead.
-pub fn gis_map_value_child_handle(content_key: &str) -> GisMapValueChild {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_key.hash(&mut hasher);
-    let content_hash = hasher.finish();
-    let child_id = format!("gismap-value-{content_hash:016x}");
+/// 🕸️ Stable admitted CHILD handle for the map's composed value member.
+pub fn gis_map_value_child_handle(_content_key: &str) -> GisMapValueChild {
+    let child_id = "gismap-value".to_string();
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "value".into() };
     let target = store::os_io::ArtifactRef { artifact_id: "gismap-value".into(), dialect };
     store::ArtifactChild::new(child_id, target)
@@ -166,8 +150,8 @@ pub fn gis_map_descriptor_json_from_value(value: &SemioValueSnapshot) -> String 
 /// 🔄️ Re-derives `drawing`/`value` from `document`'s CURRENT `positions`/`routes`/`regions` — the
 /// single call every constructor/mutator funnels through so the composed children never drift from
 /// what they actually describe (`image` stays `None`, honestly — see this region's own doc comment).
-/// Uses the SAME `gis_map_content_key` hash basis `GisMapSnapshot::default()` uses (`📸️snapshot/🦀️.rs`)
-/// so two paths building an identical empty/edited document always converge on the identical handles.
+/// Uses the same stable drawing/value coordinates as `GisMapSnapshot::default()`; content changes
+/// are expressed as typed child mutations and never by re-minting a child member.
 pub fn gis_map_snapshot_with_derived_children(mut document: GisMapSnapshot) -> GisMapSnapshot {
     let content_key = crate::artifacts::gismap::schema::snapshot::gis_map_content_key(&document.positions, &document.routes, &document.regions);
     document.drawing = gis_map_drawing_child_handle(&content_key);
@@ -177,10 +161,10 @@ pub fn gis_map_snapshot_with_derived_children(mut document: GisMapSnapshot) -> G
 //#endregion 🔖️Composition
 
 //#region 🔹ArtifactKind
-/// The `2d.map` artifact kind declaration.
+/// 🗺️ The canonical GIS map artifact-kind declaration; payload schemas remain independent.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
-        id: "2d.map".into(),
+        id: GISMAP_DIALECT.artifact_kind.into(),
         name: "2D Map".into(),
         source_format: GIS_MAP_SCHEMA.into(),
         component_kind: "gismap".into(),
@@ -202,7 +186,7 @@ pub fn gis_map_inference_service() -> semio_framework_plugin::ArtifactInferenceS
     semio_framework_plugin::ArtifactInferenceService::new(
         semio_framework_plugin::ArtifactInferenceServiceMetadata {
             owner: "gis",
-            artifact_kind: "s.gismap",
+            artifact_kind: "s.gis.gismap",
             artifact_schema: "s.gis.gismap",
             artifact_schema_version: 1,
             document_schema: GIS_MAP_SCHEMA,
@@ -246,66 +230,54 @@ fn admit_gis_map_inference_request(
     Ok(allocation)
 }
 
-/// ⏱️ Enforces the finite value-node work and nesting-depth contract before computation.
-fn validate_gis_map_inference_work(
-    snapshot: &GisMapSnapshot,
-    request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>,
-) -> Result<(), semio_framework_plugin::ArtifactInferenceExecutionError> {
-    let mut work = 1u64;
-    let mut pending = snapshot
-        .positions
-        .iter()
-        .chain(snapshot.routes.iter())
-        .chain(snapshot.regions.iter())
-        .map(|feature| (&feature.data, 1u32))
-        .collect::<Vec<_>>();
-    while let Some((value, depth)) = pending.pop() {
-        if depth > request.budgets.recursion_depth {
-            return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new(
-                "gis.gismap.inference.budget",
-                format!("feature value depth {depth} exceeds recursion limit {}", request.budgets.recursion_depth),
-            ));
-        }
-        work = work.saturating_add(1);
-        if work > request.budgets.work_units {
-            return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new(
-                "gis.gismap.inference.budget",
-                format!("inference requires more than {} work units", request.budgets.work_units),
-            ));
-        }
-        match value {
-            dsl::DslValue::Array(items) => pending.extend(items.iter().map(|item| (item, depth.saturating_add(1)))),
-            dsl::DslValue::Object(entries) => pending.extend(entries.iter().map(|(_, item)| (item, depth.saturating_add(1)))),
-            _ => {}
-        }
+struct InferenceOutputGuard(Vec<u8>);
+
+impl Drop for InferenceOutputGuard {
+    fn drop(&mut self) {
+        let pointer = self.0.as_mut_ptr();
+        for index in 0..self.0.capacity() { unsafe { std::ptr::write_volatile(pointer.add(index), 0); } }
+        std::sync::atomic::compiler_fence(std::sync::atomic::Ordering::SeqCst);
     }
-    Ok(())
 }
 
-/// 🧠️ Decodes one canonical snapshot, computes its exact typed inference, and emits stable wire bytes.
+/// ⏱️ The native GIS service with request-owned cancellation and progress at every value.
+pub fn infer_gis_map_controlled(
+    request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>,
+    checkpoint: &mut dyn FnMut(u64) -> Result<(), semio_framework_plugin::ArtifactInferenceExecutionError>,
+) -> Result<semio_framework_plugin::ArtifactInferenceExecution, semio_framework_plugin::ArtifactInferenceExecutionError> {
+    use crate::artifacts::gismap::standards::v1::subsets::any::schema::inferences::{bounds::controlled_lon_lat_bounds, GisMapInference};
+    let allocation = admit_gis_map_inference_request(request)?;
+    checkpoint(0)?;
+    let snapshot = <GisMapSnapshot as store::ArtifactPack>::decode_pack(request.canonical_payload)
+        .map_err(|_| semio_framework_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.snapshot-decode", "invalid canonical map snapshot"))?;
+    let mut work = 1u64;
+    checkpoint(work)?;
+    let bounds = controlled_lon_lat_bounds(&snapshot, &mut |depth| {
+        if depth > request.budgets.recursion_depth || depth > 64 {
+            return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.budget", "feature nesting exceeds the bounded inference depth"));
+        }
+        work = work.checked_add(1).ok_or_else(|| semio_framework_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.budget", "work counter exhausted"))?;
+        if work > request.budgets.work_units {
+            return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.budget", "inference work budget exhausted"));
+        }
+        checkpoint(work)
+    })?;
+    let inference = GisMapInference { position_count: snapshot.positions.len(), route_count: snapshot.routes.len(), region_count: snapshot.regions.len(), bounds };
+    let mut canonical_payload = InferenceOutputGuard(semio_framework_os_kernel::pack_rt::encode_wire_value(&semio_framework_os_kernel::ToValue::to_value(&inference)));
+    if canonical_payload.0.len() > allocation {
+        return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.budget", "inference result exceeds allocation budget"));
+    }
+    checkpoint(work)?;
+    Ok(semio_framework_plugin::ArtifactInferenceExecution {
+        canonical_payload: std::mem::take(&mut canonical_payload.0), diagnostics: Vec::new(), validity: "valid".into(), quality: "exact".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone(),
+    })
+}
+
+/// 🧠️ Whole-map native entry uses the same controlled fold with its finite request budgets.
 fn infer_gis_map(
     request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>,
 ) -> Result<semio_framework_plugin::ArtifactInferenceExecution, semio_framework_plugin::ArtifactInferenceExecutionError> {
-    let allocation = admit_gis_map_inference_request(request)?;
-    let snapshot = <GisMapSnapshot as store::ArtifactPack>::decode_pack(request.canonical_payload)
-        .map_err(|error| semio_framework_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.snapshot-decode", error.to_string()))?;
-    validate_gis_map_inference_work(&snapshot, request)?;
-    let inference = <crate::artifacts::gismap::standards::v1::subsets::any::schema::inferences::GisMapInference as protocol::Inference<GisMapSnapshot>>::infer(&snapshot);
-    let canonical_payload = semio_framework_os_kernel::pack_rt::encode_wire_value(&semio_framework_os_kernel::ToValue::to_value(&inference));
-    if canonical_payload.len() > allocation {
-        return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new(
-            "gis.gismap.inference.budget",
-            format!("result consumes {} bytes, above allocation limit {}", canonical_payload.len(), request.budgets.allocation_bytes),
-        ));
-    }
-    Ok(semio_framework_plugin::ArtifactInferenceExecution {
-        canonical_payload,
-        diagnostics: Vec::new(),
-        validity: "valid".into(),
-        quality: "exact".into(),
-        complete: true,
-        actual_cache_mode: request.requested_cache_mode.clone(),
-    })
+    infer_gis_map_controlled(request, &mut |_| Ok(()))
 }
 //#endregion 💡️InferenceService
 
@@ -315,63 +287,63 @@ fn infer_gis_map(
 /// the plugin root's `register_gis_exports` fan-out. Relocated from `⚙️engine` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g2): `declaration()` describes the artifact
 /// (kind, schema, io ports, ownership), which is not engine behaviour.
-/// 🧾️ Defines s.gismap's immutable runtime capability leaves.
+/// 🧾️ Defines s.gis.gismap's immutable runtime capability leaves.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    ArtifactDefinition::new(ArtifactIdentity::parse("s.gismap")?)
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.gis.gismap")?)
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.gis.gismap")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.gis.gismap")?)?,
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gismap.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.gis.gismap")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.gis.gismap")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.inference.artifact")?, ArtifactCapabilityKind::inference())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gismap.inference.artifact")?, ArtifactCapabilityKind::inference())
                 .descriptor(b"s.gis.gismap.inference")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.gis.gismap.inference")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.gismap@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.gismap@1/*")?)?,
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gismap.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.gis.gismap@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.gis.gismap@1/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.composer.svg")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gismap.composer.svg")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.svg@1.1/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.svg@1.1/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.composer.pdf")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gismap.composer.pdf")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.pdf@1.4/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.pdf@1.4/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.composer.png")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gismap.composer.png")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.png@1.2/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.png@1.2/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.composer.json")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gismap.composer.json")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.json@rfc8259/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.composer.dwg")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gismap.composer.dwg")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.dwg@ac1018/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.dwg@ac1018/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.composer.dxf")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gismap.composer.dxf")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.dxf@r12/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.dxf@r12/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.codec.document")?, ArtifactCapabilityKind::codec())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gismap.codec.document")?, ArtifactCapabilityKind::codec())
                 .descriptor(b"gis.map:gismap")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "gis.map")?)?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "gismap")?)?,
+                .claim(ArtifactIdentityClaim::codec_extension("gis.map", "gismap")?)?,
         )?
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"GIS Map")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "GIS Map")?)?)?
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.gismap.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"GIS Karte")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "GIS Karte")?)?)
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gismap.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"GIS Map")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "GIS Map")?)?)?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gismap.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"GIS Karte")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "GIS Karte")?)?)
 }
 
-/// 🔖️ Assembles s.gismap's typed runtime declaration.
+/// 🔖️ Assembles s.gis.gismap's typed runtime declaration.
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::gismap::schema::gismap_artifact_schema_descriptor())
@@ -416,9 +388,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn map_artifact_kind_matches_the_map_out_interchange_kind() {
         let kind = artifact_kind();
-        assert_eq!(kind.id, "2d.map");
+        assert_eq!(kind.id, GISMAP_DIALECT.artifact_kind);
         assert_eq!(kind.schema, GIS_MAP_SCHEMA);
     }
+
 
     #[semio_framework_async_macros::async_test]
     async fn the_map_snapshot_defaults_to_empty_feature_collections() {
@@ -433,7 +406,7 @@ mod tests {
         let service = gis_map_inference_service();
         let metadata = service.metadata();
         assert_eq!(metadata.owner, "gis");
-        assert_eq!(metadata.artifact_kind, "s.gismap");
+        assert_eq!(metadata.artifact_kind, "s.gis.gismap");
         assert_eq!(metadata.artifact_schema, "s.gis.gismap");
         assert_eq!(metadata.inference_schema, "s.gis.gismap.inference");
         let mut registry = ArtifactInferenceServiceRegistry::new();
@@ -444,7 +417,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn language_neutral_vectors_match_geo_bounding_rect_oracle_and_stable_payload() {
-        let vectors: serde_json::Value = serde_json::from_str(include_str!("🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/infer-gismap-1/🧫️fixtures/🔣️.json")).expect("language-neutral inference vectors");
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🗺️infer-gismap-1/🧫️fixtures/🔣️.json")).expect("language-neutral inference vectors");
         assert_eq!(vectors["subjectSchema"], "../../../🧬️schema/💡️inferences/🔣️.json");
         assert_eq!(vectors["inferenceSchema"], "s.gis.gismap.inference");
         assert_eq!(vectors["schemaVersion"], 1);
@@ -510,7 +483,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn service_enforces_work_recursion_and_cancellation_identity() {
         let snapshot = GisMapSnapshot {
-            positions: vec![MapFeature { id: "nested".into(), data: dsl::to_dsl_value(&serde_json::json!({ "geometry": { "lon": 1.0, "lat": 2.0 } })).expect("dsl value") }],
+            positions: vec![MapFeature { id: "nested".into(), data: dsl::DslValue::from(serde_json::json!({ "geometry": { "lon": 1.0, "lat": 2.0 } })) }],
             ..Default::default()
         };
         let no_work = WireArtifactInferenceBudget { allocation_bytes: 1_000_000, work_units: 1, recursion_depth: 32 };

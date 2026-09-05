@@ -5,7 +5,7 @@
   "displayName": "Rotate Object",
   "emoji": "🔃",
   "aggregateVariant": "RotateObject",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "rotate-object",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

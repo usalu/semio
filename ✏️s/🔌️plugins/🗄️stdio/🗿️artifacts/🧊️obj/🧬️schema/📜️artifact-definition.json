@@ -48,7 +48,9 @@
       "status": "declared"
     }
   ],
-  "codecs": [],
+  "codecs": [
+    { "id": "s.stdio.obj.standard.3-0.codec.native-document.v1", "status": "implemented", "from": "s.stdio.obj.standard.3-0.dialect.source", "to": "s.stdio.obj.standard.3-0.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.obj.v1", "artifact_kind": "stdio.obj", "document_schema": "stdio.obj", "extension": "obj", "pack_schema_hash": "c66960b9a3ae9b20cd6acc31c344d39b0f217b8d2423bb39082baa8c8bfba787", "runtime_capability_id": "s.stdio.obj.standard.3-0.codec.codec-stdio-obj-extension-obj.v1" } }
+  ],
   "mutations": [],
   "inferences": [],
   "resources": [
@@ -83,22 +85,22 @@
   ],
   "runtime_capabilities": [
     {
-      "id": "s.stdio.obj.runtime.codec.codec-stdio-obj-extension-obj.v1",
+      "id": "s.stdio.obj.standard.3-0.codec.codec-stdio-obj-extension-obj.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec:stdio.obj|extension:obj",
+      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.obj:obj|codec:stdio.obj",
       "claims": [
         {
           "namespace": "codec",
           "value": "stdio.obj"
         },
         {
-          "namespace": "extension",
-          "value": "obj"
+          "namespace": "codec-extension",
+          "value": "9:stdio.obj:obj"
         }
       ]
     },
     {
-      "id": "s.stdio.obj.runtime.composer.dialect-s-stdio-obj-3-0.v1",
+      "id": "s.stdio.obj.composer.dialect-s-stdio-obj-3-0.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.obj@3.0/*",
       "claims": [
@@ -109,7 +111,7 @@
       ]
     },
     {
-      "id": "s.stdio.obj.runtime.grammar.grammar-stdio-obj.v1",
+      "id": "s.stdio.obj.grammar.grammar-stdio-obj.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.obj",
       "claims": [
@@ -120,7 +122,7 @@
       ]
     },
     {
-      "id": "s.stdio.obj.runtime.grammar.grammar-stdio-obj-diff.v1",
+      "id": "s.stdio.obj.grammar.grammar-stdio-obj-diff.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.obj.diff",
       "claims": [
@@ -131,7 +133,7 @@
       ]
     },
     {
-      "id": "s.stdio.obj.runtime.grammar.grammar-stdio-obj-op.v1",
+      "id": "s.stdio.obj.grammar.grammar-stdio-obj-op.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.obj.op",
       "claims": [
@@ -142,7 +144,7 @@
       ]
     },
     {
-      "id": "s.stdio.obj.runtime.grammar.grammar-stdio-obj-pack.v1",
+      "id": "s.stdio.obj.grammar.grammar-stdio-obj-pack.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.obj.pack",
       "claims": [
@@ -153,7 +155,7 @@
       ]
     },
     {
-      "id": "s.stdio.obj.runtime.grammar.grammar-stdio-obj-spr.v1",
+      "id": "s.stdio.obj.grammar.grammar-stdio-obj-spr.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.obj.spr",
       "claims": [
@@ -164,7 +166,7 @@
       ]
     },
     {
-      "id": "s.stdio.obj.runtime.inference.schema-s-stdio-obj-inference.v1",
+      "id": "s.stdio.obj.inference.schema-s-stdio-obj-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:s.stdio.obj.inference",
       "claims": [
@@ -175,7 +177,7 @@
       ]
     },
     {
-      "id": "s.stdio.obj.runtime.representation.mime-model-obj-extension-obj.v1",
+      "id": "s.stdio.obj.standard.3-0.representation.mime-model-obj-extension-obj",
       "category": "representation",
       "descriptor": "runtime-capability:representation:mime:model/obj|extension:.obj",
       "claims": [
@@ -190,7 +192,7 @@
       ]
     },
     {
-      "id": "s.stdio.obj.runtime.schema.schema-s-stdio-obj.v1",
+      "id": "s.stdio.obj.schema.schema-s-stdio-obj.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.obj",
       "claims": [

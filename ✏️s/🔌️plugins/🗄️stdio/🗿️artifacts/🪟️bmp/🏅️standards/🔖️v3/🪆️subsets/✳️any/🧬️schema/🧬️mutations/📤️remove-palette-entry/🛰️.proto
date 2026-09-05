@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.bmp.mutation;
+// 🧬️ remove-palette-entry/RemovePaletteEntry; complex fields follow the direct payload schema.
+message RemovePaletteEntryMutation { uint64 index = 1; }

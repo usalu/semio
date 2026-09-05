@@ -4,8 +4,9 @@
 use crate::artifacts::iso16757::{part_5::PartNumberRule, Iso16757Mutation, Iso16757Snapshot};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[mutation_leaf(contract = ::protocol)]
 pub struct ReplacePartNumberRule {
     pub new_rule: PartNumberRule,
 }

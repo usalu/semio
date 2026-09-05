@@ -12,7 +12,7 @@ type IngressCase = { "🪪️id": string; frames: IngressFrame[]; expectedActors
 type Fixture = { schemaVersion: number; capacities: { mountedRelaySlots: number; replaySeedSlots: number; replayRefusalSlots: number; pageBytes: number }; ingressCases: IngressCase[]; traces: Trace[] };
 
 const here = dirname(fileURLToPath(import.meta.url));
-const fixture = JSON.parse(readFileSync(join(here, "../../🧫️fixtures/🔣️relay-lifecycle.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(join(here, "../../🧫️fixtures/♻️relay-lifecycle.json"), "utf8")) as Fixture;
 const schema = JSON.parse(readFileSync(join(here, "../../🧫️fixtures/🧬️relay-lifecycle.schema.json"), "utf8"));
 const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
 if (!validate(fixture)) throw new Error(`relay lifecycle fixture schema violation: ${JSON.stringify(validate.errors)}`);

@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "maximumItems", "maximumBytes", "targetBytes", "first", "cases", "linearizationCases", "publicationCases", "resultAck"],
+  "properties": {
+    "schema": { "const": "artifact-tool-latest-wins/v1" },
+    "maximumItems": { "const": 1 },
+    "maximumBytes": { "const": 4096 },
+    "targetBytes": { "const": 8192 },
+    "first": { "$ref": "#/definitions/scope" },
+    "cases": {
+      "type": "array", "minItems": 6, "maxItems": 6,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "next", "superseded"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "next": { "$ref": "#/definitions/scope" },
+          "superseded": { "type": "boolean" }
+        }
+      }
+    },
+    "linearizationCases": {
+      "type": "array", "minItems": 2, "maxItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "claimFirst", "committed"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "claimFirst": { "type": "boolean" },
+          "committed": { "type": "boolean" }
+        }
+      }
+    },
+    "publicationCases": {
+      "type": "array", "minItems": 5, "maxItems": 5,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["cancelAt", "committed"],
+        "properties": {
+          "cancelAt": { "enum": ["producer", "preparation", "preflight", "publishing", "awaitingAck"] },
+          "committed": { "type": "boolean" }
+        }
+      }
+    },
+    "resultAck": {
+      "type": "object", "additionalProperties": false,
+      "required": ["preAckPolls", "deliveries", "attempt"],
+      "properties": {
+        "preAckPolls": { "const": 512 },
+        "deliveries": { "const": 1 },
+        "attempt": { "const": 1 }
+      }
+    }
+  },
+  "definitions": {
+    "scope": {
+      "type": "object", "additionalProperties": false,
+      "required": ["instance", "document", "controller", "tool", "target"],
+      "properties": {
+        "instance": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "document": { "type": "string", "minLength": 1 },
+        "controller": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "tool": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "target": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

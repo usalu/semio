@@ -1,0 +1,4 @@
+module Stdio_las_mutations;
+type Document = unit {
+    payload: bytes &eod;
+};

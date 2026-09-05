@@ -5,7 +5,7 @@
   "displayName": "Change Node Kind Description",
   "emoji": "📃️",
   "aggregateVariant": "ChangeNodeKindDescription",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-node-kind-description",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

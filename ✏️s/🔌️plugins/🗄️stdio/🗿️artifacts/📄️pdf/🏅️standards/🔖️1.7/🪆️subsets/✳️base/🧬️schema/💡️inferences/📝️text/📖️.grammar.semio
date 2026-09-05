@@ -1,9 +1,0 @@
-dialect grammar
-grammar stdio.pdf.1.7.inference
-extension pdf.1.7.inference
-start document
-
-document = header body
-header = "schema" SP "stdio.pdf.1.7.inference" NL
-body = payload NL?
-payload = OCTET+

@@ -594,50 +594,50 @@ mod tests {
 //#region 🔖️Declaration
 pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    ArtifactDefinition::new(ArtifactIdentity::parse("s.program")?)
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.architect.program")?)
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.program.schema.artifact")?, ArtifactCapabilityKind::schema())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.architect.program.schema.artifact")?, ArtifactCapabilityKind::schema())
                 .descriptor(b"s.architect.program")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.architect.program")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.program.inference.artifact")?, ArtifactCapabilityKind::inference())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.architect.program.inference.artifact")?, ArtifactCapabilityKind::inference())
                 .descriptor(b"s.architect.program.inference")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.architect.program.inference")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.program.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.program@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.program@1/*")?)?,
+            ArtifactCapability::new(ArtifactIdentity::parse("s.architect.program.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.architect.program@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.architect.program@1/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.program.composer.zip")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.architect.program.composer.zip")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.zip@2.0/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.zip@2.0/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.program.composer.csv")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.architect.program.composer.csv")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.csv@rfc4180/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.csv@rfc4180/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.program.composer.xlsx")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.architect.program.composer.xlsx")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.xlsx@ecma-376/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.xlsx@ecma-376/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.program.composer.json")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.architect.program.composer.json")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.json@rfc8259/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.program.codec.document")?, ArtifactCapabilityKind::codec())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.architect.program.codec.document")?, ArtifactCapabilityKind::codec())
                 .descriptor(b"architect.program:architect")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "architect.program")?)?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "architect")?)?,
+                .claim(ArtifactIdentityClaim::codec_extension("architect.program", "architect")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.program.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Architect")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Architect")?)?,
+            ArtifactCapability::new(ArtifactIdentity::parse("s.architect.program.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Architect")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Architect")?)?,
         )?
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.program.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Architekt")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Architekt")?)?)
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.architect.program.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Architekt")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Architekt")?)?)
 }
 
 pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {

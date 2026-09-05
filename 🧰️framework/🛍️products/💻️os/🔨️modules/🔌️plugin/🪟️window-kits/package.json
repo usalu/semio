@@ -11,7 +11,7 @@
     "./tree": "./🌳️tree/🟦️.ts",
     "./image": "./🖼️image/🟦️.ts",
     "./mesh": "./🧊️mesh/🟦️.ts",
-    "./document": "./📄️document/🟦️.ts",
+    "./document": "./📃️document/🟦️.ts",
     "./media": "./🎬️media/🟦️.ts"
   },
   "dependencies": {

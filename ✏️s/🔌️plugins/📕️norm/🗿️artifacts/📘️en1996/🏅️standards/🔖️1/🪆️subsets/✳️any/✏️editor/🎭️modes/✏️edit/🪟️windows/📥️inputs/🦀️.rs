@@ -16,7 +16,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &En1996Snapshot) -> UiNode {
+pub fn render(document: &En1996Snapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     crate::app_surface::render_document_json(document)
 }
 //#endregion 🔖️Render

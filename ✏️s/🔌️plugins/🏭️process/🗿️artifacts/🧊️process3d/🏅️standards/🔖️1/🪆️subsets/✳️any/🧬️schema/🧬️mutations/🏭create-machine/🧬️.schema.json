@@ -1,0 +1,196 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateMachine",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "machine"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "machine": {
+      "title": "WorkshopMachine",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capabilities",
+        "iconId",
+        "id",
+        "label"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "iconId": {
+          "type": "string"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "title": "Capability",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "iconId",
+              "id",
+              "label",
+              "parameters",
+              "recipe",
+              "rules"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "iconId": {
+                "type": "string"
+              },
+              "recipe": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "recipe": {
+                        "const": "DiscCut"
+                      }
+                    },
+                    "required": [
+                      "recipe"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "recipe": {
+                        "const": "BladeCut"
+                      }
+                    },
+                    "required": [
+                      "recipe"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "recipe": {
+                        "const": "PocketCut"
+                      }
+                    },
+                    "required": [
+                      "recipe"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "recipe": {
+                        "const": "BoreDrill"
+                      }
+                    },
+                    "required": [
+                      "recipe"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "recipe": {
+                        "const": "CylinderAttach"
+                      }
+                    },
+                    "required": [
+                      "recipe"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "recipe": {
+                        "const": "BoxAttach"
+                      }
+                    },
+                    "required": [
+                      "recipe"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "parameters": {
+                "type": "array",
+                "items": {
+                  "title": "CapabilityParameter",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "label",
+                    "value"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "number"
+                    }
+                  }
+                }
+              },
+              "rules": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "const": "Min"
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "const": "Max"
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -5,7 +5,7 @@
   "displayName": "Remove Parameter Binding",
   "emoji": "🧹️",
   "aggregateVariant": "RemoveParameterBinding",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "remove-parameter-binding",
   "binaryTag": 4,
   "invertibility": "explicit-mutation",

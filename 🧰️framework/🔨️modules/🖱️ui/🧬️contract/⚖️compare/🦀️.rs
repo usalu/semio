@@ -124,7 +124,7 @@ macro_rules! wrapper {
     })*};
 }
 wrapper!(Label, SurfaceId);
-include!("../🧬️typed/🦀️.rs");
+include!("../🧾️typed/🦀️.rs");
 ui_typed_field_catalog!(typed_fields);
 
 macro_rules! variants {

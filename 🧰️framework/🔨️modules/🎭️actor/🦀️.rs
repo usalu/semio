@@ -27,14 +27,14 @@ pub use semio_framework_job as job;
 #[path = "🚪️lifetime/🦀️.rs"]
 pub mod instance_lifetime;
 
-#[path = "📄️page/🦀️.rs"]
+#[path = "📃️page/🦀️.rs"]
 pub mod byte_page;
 
 #[path = "📤️return/🦀️.rs"]
 pub mod return_page;
 
 #[cfg(test)]
-#[path = "📄️page/🧪️tests/🦀️.rs"]
+#[path = "📃️page/🧪️tests/🦀️.rs"]
 mod byte_page_tests;
 
 #[cfg(test)]

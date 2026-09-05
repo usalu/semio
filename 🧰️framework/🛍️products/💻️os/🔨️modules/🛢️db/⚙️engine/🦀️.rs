@@ -11668,7 +11668,7 @@ mod tests {
 
     #[test]
     fn artifact_runner_one_grant_polls_one_turn_and_never_blocks_on() {
-        let source = include_str!("../📄️artifact/🦀️.rs");
+        let source = include_str!("../🗿️artifact/🦀️.rs");
         let runner = &source[source.find("type ArtifactBuildFuture").unwrap()..source.find("//#region 🧪️Tests").unwrap()];
         assert!(!runner.contains("block_on("));
         assert!(!runner.contains("ask_blocking"));
@@ -11770,7 +11770,7 @@ mod tests {
 
     #[test]
     fn artifact_history_nested_derived_item_and_byte_caps_precede_materialization() {
-        let artifact = include_str!("../📄️artifact/🦀️.rs");
+        let artifact = include_str!("../🗿️artifact/🦀️.rs");
         for required in ["HISTORY_REPLAY_RESULT_BYTES", "HISTORY_REPLAY_OPERATION_BYTES", "HISTORY_REPLAY_MAX_ENTRIES", "HISTORY_REPLAY_MAX_OPERATION_IDS", "history dependency item credit", "history result byte credit"] {
             assert!(artifact.contains(required), "missing {required}");
         }
@@ -11781,7 +11781,7 @@ mod tests {
 
     #[test]
     fn artifact_history_segment_cap_plus_one_reads_only_one_admitted_page() {
-        let artifact = include_str!("../📄️artifact/🦀️.rs");
+        let artifact = include_str!("../🗿️artifact/🦀️.rs");
         assert!(artifact.contains("HISTORY_REPLAY_SEGMENT_PAGES: u64 = 1_024"));
         assert!(artifact.contains(".min(HISTORY_REPLAY_PAGE_BYTES)"));
         assert!(artifact.contains("pack::ByteRange { offset, len: requested }"));
@@ -11791,7 +11791,7 @@ mod tests {
 
     #[test]
     fn artifact_history_crc_and_frame_tokenizer_advance_one_page_per_grant() {
-        let artifact = include_str!("../📄️artifact/🦀️.rs");
+        let artifact = include_str!("../🗿️artifact/🦀️.rs");
         assert!(artifact.contains("protocol::codec::Crc32cCursor"));
         assert!(artifact.contains("self.crc.update_page(page)"));
         assert!(artifact.contains("self.payload_remaining.min(HISTORY_REPLAY_PAGE_BYTES)"));
@@ -11801,7 +11801,7 @@ mod tests {
 
     #[test]
     fn artifact_history_cancel_retires_one_page_or_nested_owner_per_actor_grant() {
-        let artifact = include_str!("../📄️artifact/🦀️.rs");
+        let artifact = include_str!("../🗿️artifact/🦀️.rs");
         assert!(artifact.contains("HistoryReplayTransition::FaultRetire"));
         assert!(artifact.contains("self.page_count -= 1"));
         assert!(artifact.contains("self.operation_ids.pop().is_some()"));
@@ -11847,7 +11847,7 @@ mod tests {
 
     #[test]
     fn artifact_history_replay_ordering_is_segment_frame_then_result_fifo() {
-        let artifact = include_str!("../📄️artifact/🦀️.rs");
+        let artifact = include_str!("../🗿️artifact/🦀️.rs");
         assert!(artifact.contains("HistoryReplayPhase::Probe { index: 0 }"));
         assert!(artifact.contains("cursor: HistoryFrameCursor::new(next_offset)"));
         assert!(artifact.contains("reservation.entries.push(ArtifactHistoryEntry"));
@@ -11877,7 +11877,7 @@ mod tests {
     #[test]
     fn artifact_history_construction_fault_is_public_and_admission_release_is_a_final_grant() {
         let engine = retained_submit_source();
-        let artifact = include_str!("../📄️artifact/🦀️.rs");
+        let artifact = include_str!("../🗿️artifact/🦀️.rs");
         for required in [
             "terminal_construction: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationConstructionFault>>",
             "pub struct ArtifactHistoryTerminalConstructionFault",
@@ -11908,7 +11908,7 @@ mod tests {
     #[test]
     fn artifact_history_one_grant_advances_one_retained_phase_without_blocking() {
         let engine = retained_submit_source();
-        let artifact = include_str!("../📄️artifact/🦀️.rs");
+        let artifact = include_str!("../🗿️artifact/🦀️.rs");
         let history = &engine[engine.find("const ARTIFACT_HISTORY_OPERATION_SLOTS").unwrap()..engine.find("pub struct ArtifactHandle").unwrap()];
         let replay = &artifact[artifact.find("//#region 🔖️HistoryReplay").unwrap()..artifact.find("//#endregion 🔖️HistoryReplay").unwrap()];
         for forbidden in ["block_on(", "ask_blocking", "submit_blocking", "loop {", "while "] {
@@ -11931,7 +11931,7 @@ mod tests {
 
     #[test]
     fn artifact_history_runner_close_mid_turn_retains_replay_until_terminal_empty() {
-        let artifact = include_str!("../📄️artifact/🦀️.rs");
+        let artifact = include_str!("../🗿️artifact/🦀️.rs");
         let runner = &artifact[artifact.find("enum ArtifactTurn").unwrap()..artifact.find("//#region 🧪️Tests").unwrap()];
         assert!(runner.contains("ArtifactTurn::History"));
         assert!(runner.contains("replay.request_close(DbError::Closed)"));

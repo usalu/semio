@@ -13,8 +13,6 @@ use schema::ArtifactSchema;
 /// ever replaced, so a single `Option<FlowContentChild>` — not the double-`Option` an optional slot
 /// needs — is the sparse-vs-unchanged signal here, matching writer's `document` field exactly).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.flow.flow")]
 pub struct FlowDiff {

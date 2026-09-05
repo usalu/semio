@@ -1,0 +1,129 @@
+{
+  "schema": "semio.workflow.media-contract-presentation/v1",
+  "cases": [
+    {
+      "id": "document-direct",
+      "input": {
+        "kindId": "s.fixture.vector",
+        "mediaType": {
+          "class": "twoD",
+          "form": "vector"
+        },
+        "wire": {
+          "kind": "document",
+          "schema": "s.fixture.vector"
+        },
+        "conversion": null
+      },
+      "expected": {
+        "kindId": "s.fixture.vector",
+        "mediaType": {
+          "class": "twoD",
+          "form": "vector"
+        },
+        "wire": {
+          "kind": "document",
+          "schema": "s.fixture.vector"
+        },
+        "conversion": null
+      },
+      "isConversion": false
+    },
+    {
+      "id": "document-conversion",
+      "input": {
+        "kindId": "s.fixture.vector",
+        "mediaType": {
+          "class": "twoD",
+          "form": "vector"
+        },
+        "wire": {
+          "kind": "document",
+          "schema": "s.fixture.vector"
+        },
+        "conversion": [
+          "vector",
+          "raster"
+        ]
+      },
+      "expected": {
+        "kindId": "s.fixture.vector",
+        "mediaType": {
+          "class": "twoD",
+          "form": "vector"
+        },
+        "wire": {
+          "kind": "document",
+          "schema": "s.fixture.vector"
+        },
+        "conversion": [
+          "vector",
+          "raster"
+        ]
+      },
+      "isConversion": true
+    },
+    {
+      "id": "binary-direct",
+      "input": {
+        "kindId": "s.fixture.vector",
+        "mediaType": {
+          "class": "twoD",
+          "form": "vector"
+        },
+        "wire": {
+          "kind": "binary",
+          "formatKind": "svg"
+        },
+        "conversion": null
+      },
+      "expected": {
+        "kindId": "s.fixture.vector",
+        "mediaType": {
+          "class": "twoD",
+          "form": "vector"
+        },
+        "wire": {
+          "kind": "binary",
+          "formatKind": "svg"
+        },
+        "conversion": null
+      },
+      "isConversion": false
+    },
+    {
+      "id": "binary-conversion",
+      "input": {
+        "kindId": "s.fixture.vector",
+        "mediaType": {
+          "class": "twoD",
+          "form": "vector"
+        },
+        "wire": {
+          "kind": "binary",
+          "formatKind": "svg"
+        },
+        "conversion": [
+          "vector",
+          "raster"
+        ]
+      },
+      "expected": {
+        "kindId": "s.fixture.vector",
+        "mediaType": {
+          "class": "twoD",
+          "form": "vector"
+        },
+        "wire": {
+          "kind": "binary",
+          "formatKind": "svg"
+        },
+        "conversion": [
+          "vector",
+          "raster"
+        ]
+      },
+      "isConversion": true
+    }
+  ]
+}

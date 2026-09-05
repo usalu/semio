@@ -1,4 +1,0 @@
-# 🧹️ Direct remove-dpart-root GraphQL payload.
-input RemoveDpartRootMutationInput {
-  _unit: Boolean
-}

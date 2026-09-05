@@ -1,0 +1,1296 @@
+{
+  "schemaVersion": 1,
+  "contractId": "package-language-semantic-kind-handoff-v1",
+  "semantics": {
+    "boundary": "semantic-directory-registry",
+    "parentKindId": "packages",
+    "variation": "canonical-registered-emoji",
+    "ambiguity": "fail-closed",
+    "packagePurity": "unchanged"
+  },
+  "oracleCompilation": {
+    "scope": "single-test-invocation",
+    "identity": "exact-serialized-json-schema",
+    "maxCompilationsPerIdentity": 1,
+    "validation": "every-scenario-step-and-compiler"
+  },
+  "languages": [
+    {
+      "id": "rust-language",
+      "name": "🦀️rust",
+      "emoji": "🦀️",
+      "slug": "rust",
+      "allowedDirectoryKindIds": [
+        "targets",
+        "benchmarks",
+        "typescript-language",
+        "library",
+        "binary",
+        "builder",
+        "tests"
+      ]
+    },
+    {
+      "id": "typescript-language",
+      "name": "🟦️typescript",
+      "emoji": "🟦️",
+      "slug": "typescript",
+      "allowedDirectoryKindIds": [
+        "targets",
+        "fixtures",
+        "apps"
+      ]
+    },
+    {
+      "id": "javascript-language",
+      "name": "🟨️javascript",
+      "emoji": "🟨️",
+      "slug": "javascript",
+      "allowedDirectoryKindIds": []
+    },
+    {
+      "id": "go-language",
+      "name": "🐹️go",
+      "emoji": "🐹️",
+      "slug": "go",
+      "allowedDirectoryKindIds": [
+        "targets",
+        "fixtures"
+      ]
+    },
+    {
+      "id": "python-language",
+      "name": "🐍️python",
+      "emoji": "🐍️",
+      "slug": "python",
+      "allowedDirectoryKindIds": [
+        "fixtures",
+        "styling"
+      ]
+    },
+    {
+      "id": "dotnet-language",
+      "name": "🔷️dotnet",
+      "emoji": "🔷️",
+      "slug": "dotnet",
+      "allowedDirectoryKindIds": [
+        "targets",
+        "fixtures"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "rust-library-context",
+      "steps": [
+        {
+          "name": "🦀rust",
+          "parentKindId": "packages",
+          "kindId": "rust-language",
+          "canonicalName": "🦀️rust",
+          "violationCodes": []
+        },
+        {
+          "name": "📚library",
+          "parentKindId": "previous",
+          "kindId": "library",
+          "canonicalName": "📚️library",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "wrong-language-parent",
+      "steps": [
+        {
+          "name": "🦀️rust",
+          "parentKindId": "artifacts",
+          "kindId": null,
+          "canonicalName": "🦀️rust",
+          "violationCodes": [
+            "directory-kind-unresolved"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wrong-library-parent",
+      "steps": [
+        {
+          "name": "📚️library",
+          "parentKindId": "packages",
+          "kindId": null,
+          "canonicalName": "📚️library",
+          "violationCodes": [
+            "directory-kind-unresolved"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "missing-semantic-language",
+      "removeKind": "rust-language",
+      "steps": [
+        {
+          "name": "🦀️rust",
+          "parentKindId": "packages",
+          "kindId": null,
+          "canonicalName": "🦀️rust",
+          "violationCodes": [
+            "directory-kind-unresolved"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ambiguous-semantic-language",
+      "duplicateKind": "rust-language",
+      "steps": [
+        {
+          "name": "🦀️rust",
+          "parentKindId": "packages",
+          "kindId": null,
+          "canonicalName": "🦀️rust",
+          "violationCodes": [
+            "directory-kind-ambiguous"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ambiguous-package-boundary",
+      "duplicateBoundary": "🦀️rust",
+      "steps": [
+        {
+          "name": "🦀rust",
+          "parentKindId": "packages",
+          "kindId": null,
+          "canonicalName": "🦀rust",
+          "violationCodes": [
+            "package-language-ambiguous"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "text-variation-is-not-emoji-variation",
+      "steps": [
+        {
+          "name": "🦀︎rust",
+          "parentKindId": "packages",
+          "kindId": null,
+          "canonicalName": "🦀︎rust",
+          "violationCodes": [
+            "directory-kind-unresolved"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-activation",
+      "steps": [
+        {
+          "name": "🪪️activation",
+          "parentKindId": "packages",
+          "kindId": "activation",
+          "canonicalName": "🪪️activation",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-assembly",
+      "steps": [
+        {
+          "name": "🎟️assembly",
+          "parentKindId": "packages",
+          "kindId": "assembly",
+          "canonicalName": "🎟️assembly",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-authority",
+      "steps": [
+        {
+          "name": "🪪️authority",
+          "parentKindId": "packages",
+          "kindId": "authority",
+          "canonicalName": "🪪️authority",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-base64",
+      "steps": [
+        {
+          "name": "🔤️base64",
+          "parentKindId": "packages",
+          "kindId": "base64",
+          "canonicalName": "🔤️base64",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-binding",
+      "steps": [
+        {
+          "name": "🔗️binding",
+          "parentKindId": "packages",
+          "kindId": "binding",
+          "canonicalName": "🔗️binding",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-bindings",
+      "steps": [
+        {
+          "name": "🔗️bindings",
+          "parentKindId": "packages",
+          "kindId": "bindings",
+          "canonicalName": "🔗️bindings",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-bootstrap",
+      "steps": [
+        {
+          "name": "🏗️bootstrap",
+          "parentKindId": "packages",
+          "kindId": "bootstrap",
+          "canonicalName": "🏗️bootstrap",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-budget",
+      "steps": [
+        {
+          "name": "⏱️budget",
+          "parentKindId": "packages",
+          "kindId": "budget",
+          "canonicalName": "⏱️budget",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-bytes",
+      "steps": [
+        {
+          "name": "🔢️bytes",
+          "parentKindId": "packages",
+          "kindId": "bytes",
+          "canonicalName": "🔢️bytes",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-cancellation",
+      "steps": [
+        {
+          "name": "🚫️cancellation",
+          "parentKindId": "packages",
+          "kindId": "cancellation",
+          "canonicalName": "🚫️cancellation",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-causal-add",
+      "steps": [
+        {
+          "name": "➕️causal-add",
+          "parentKindId": "packages",
+          "kindId": "causal-add",
+          "canonicalName": "➕️causal-add",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-clock",
+      "steps": [
+        {
+          "name": "⏱️clock",
+          "parentKindId": "packages",
+          "kindId": "clock",
+          "canonicalName": "⏱️clock",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-commit",
+      "steps": [
+        {
+          "name": "🔗️commit",
+          "parentKindId": "packages",
+          "kindId": "commit",
+          "canonicalName": "🔗️commit",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-compare",
+      "steps": [
+        {
+          "name": "⚖️compare",
+          "parentKindId": "packages",
+          "kindId": "compare",
+          "canonicalName": "⚖️compare",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-composition",
+      "steps": [
+        {
+          "name": "🏘️composition",
+          "parentKindId": "packages",
+          "kindId": "composition",
+          "canonicalName": "🏘️composition",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-content",
+      "steps": [
+        {
+          "name": "📦️content",
+          "parentKindId": "packages",
+          "kindId": "content",
+          "canonicalName": "📦️content",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-cooperative",
+      "steps": [
+        {
+          "name": "🤝️cooperative",
+          "parentKindId": "packages",
+          "kindId": "cooperative",
+          "canonicalName": "🤝️cooperative",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-copied",
+      "steps": [
+        {
+          "name": "📋️copied",
+          "parentKindId": "packages",
+          "kindId": "copied",
+          "canonicalName": "📋️copied",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-copy",
+      "steps": [
+        {
+          "name": "📋️copy",
+          "parentKindId": "packages",
+          "kindId": "copy",
+          "canonicalName": "📋️copy",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-credit",
+      "steps": [
+        {
+          "name": "🎟️credit",
+          "parentKindId": "packages",
+          "kindId": "credit",
+          "canonicalName": "🎟️credit",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-enqueue",
+      "steps": [
+        {
+          "name": "📥️enqueue",
+          "parentKindId": "packages",
+          "kindId": "enqueue",
+          "canonicalName": "📥️enqueue",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-entries",
+      "steps": [
+        {
+          "name": "📚️entries",
+          "parentKindId": "packages",
+          "kindId": "entries",
+          "canonicalName": "📚️entries",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-evidence",
+      "steps": [
+        {
+          "name": "🧾️evidence",
+          "parentKindId": "packages",
+          "kindId": "evidence",
+          "canonicalName": "🧾️evidence",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-fault",
+      "steps": [
+        {
+          "name": "🧯️fault",
+          "parentKindId": "packages",
+          "kindId": "fault",
+          "canonicalName": "🧯️fault",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-fixed",
+      "steps": [
+        {
+          "name": "🗃️fixed",
+          "parentKindId": "packages",
+          "kindId": "fixed",
+          "canonicalName": "🗃️fixed",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-framing",
+      "steps": [
+        {
+          "name": "🖼️framing",
+          "parentKindId": "packages",
+          "kindId": "framing",
+          "canonicalName": "🖼️framing",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-graph",
+      "steps": [
+        {
+          "name": "🔬️graph",
+          "parentKindId": "packages",
+          "kindId": "graph",
+          "canonicalName": "🔬️graph",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-inbound",
+      "steps": [
+        {
+          "name": "📨️inbound",
+          "parentKindId": "packages",
+          "kindId": "inbound",
+          "canonicalName": "📨️inbound",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-inbox",
+      "steps": [
+        {
+          "name": "📥️inbox",
+          "parentKindId": "packages",
+          "kindId": "inbox",
+          "canonicalName": "📥️inbox",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-index",
+      "steps": [
+        {
+          "name": "🗂️index",
+          "parentKindId": "packages",
+          "kindId": "index",
+          "canonicalName": "🗂️index",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-json",
+      "steps": [
+        {
+          "name": "🧩️json",
+          "parentKindId": "packages",
+          "kindId": "json",
+          "canonicalName": "🧩️json",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-lifetime",
+      "steps": [
+        {
+          "name": "🚪️lifetime",
+          "parentKindId": "packages",
+          "kindId": "lifetime",
+          "canonicalName": "🚪️lifetime",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-list",
+      "steps": [
+        {
+          "name": "📋️list",
+          "parentKindId": "packages",
+          "kindId": "list",
+          "canonicalName": "📋️list",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-local-interaction",
+      "steps": [
+        {
+          "name": "🏠️local-interaction",
+          "parentKindId": "packages",
+          "kindId": "local-interaction",
+          "canonicalName": "🏠️local-interaction",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-message",
+      "steps": [
+        {
+          "name": "💌️message",
+          "parentKindId": "packages",
+          "kindId": "message",
+          "canonicalName": "💌️message",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-mutation-leaf-contract",
+      "steps": [
+        {
+          "name": "🧬️mutation-leaf-contract",
+          "parentKindId": "packages",
+          "kindId": "mutation-leaf-contract",
+          "canonicalName": "🧬️mutation-leaf-contract",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-mutation-leaf-source-contract",
+      "steps": [
+        {
+          "name": "🧬️mutation-leaf-source-contract",
+          "parentKindId": "packages",
+          "kindId": "mutation-leaf-source-contract",
+          "canonicalName": "🧬️mutation-leaf-source-contract",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "replication-mutation-descriptor-agreement",
+      "steps": [
+        {
+          "name": "🤝️mutation-leaf-contract",
+          "parentKindId": "tests",
+          "kindId": "mutation-descriptor-agreement",
+          "canonicalName": "🤝️mutation-leaf-contract",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "replication-mutation-source-qualification",
+      "steps": [
+        {
+          "name": "🧭️mutation-leaf-source-contract",
+          "parentKindId": "tests",
+          "kindId": "mutation-source-qualification",
+          "canonicalName": "🧭️mutation-leaf-source-contract",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-nodes",
+      "steps": [
+        {
+          "name": "🗂️nodes",
+          "parentKindId": "packages",
+          "kindId": "nodes",
+          "canonicalName": "🗂️nodes",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-numeric",
+      "steps": [
+        {
+          "name": "🔢️numeric",
+          "parentKindId": "packages",
+          "kindId": "numeric",
+          "canonicalName": "🔢️numeric",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-operations",
+      "steps": [
+        {
+          "name": "🩹️operations",
+          "parentKindId": "packages",
+          "kindId": "operations",
+          "canonicalName": "🩹️operations",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-ordered",
+      "steps": [
+        {
+          "name": "🗂️ordered",
+          "parentKindId": "packages",
+          "kindId": "ordered",
+          "canonicalName": "🗂️ordered",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-ownership",
+      "steps": [
+        {
+          "name": "📏️ownership",
+          "parentKindId": "packages",
+          "kindId": "ownership",
+          "canonicalName": "📏️ownership",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-pack",
+      "steps": [
+        {
+          "name": "🧩️pack",
+          "parentKindId": "packages",
+          "kindId": "pack",
+          "canonicalName": "🧩️pack",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-page",
+      "steps": [
+        {
+          "name": "📃️page",
+          "parentKindId": "packages",
+          "kindId": "page",
+          "canonicalName": "📃️page",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-pages",
+      "steps": [
+        {
+          "name": "📃️pages",
+          "parentKindId": "packages",
+          "kindId": "pages",
+          "canonicalName": "📃️pages",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-payload",
+      "steps": [
+        {
+          "name": "📦️payload",
+          "parentKindId": "packages",
+          "kindId": "payload",
+          "canonicalName": "📦️payload",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-pending",
+      "steps": [
+        {
+          "name": "📨️pending",
+          "parentKindId": "packages",
+          "kindId": "pending",
+          "canonicalName": "📨️pending",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-poll",
+      "steps": [
+        {
+          "name": "📥️poll",
+          "parentKindId": "packages",
+          "kindId": "poll",
+          "canonicalName": "📥️poll",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-read-lease",
+      "steps": [
+        {
+          "name": "📖️read-lease",
+          "parentKindId": "packages",
+          "kindId": "read-lease",
+          "canonicalName": "📖️read-lease",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-reader",
+      "steps": [
+        {
+          "name": "📖️reader",
+          "parentKindId": "packages",
+          "kindId": "reader",
+          "canonicalName": "📖️reader",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-release",
+      "steps": [
+        {
+          "name": "🧾️release",
+          "parentKindId": "packages",
+          "kindId": "release",
+          "canonicalName": "🧾️release",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-resident",
+      "steps": [
+        {
+          "name": "🎟️resident",
+          "parentKindId": "packages",
+          "kindId": "resident",
+          "canonicalName": "🎟️resident",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-response",
+      "steps": [
+        {
+          "name": "📨️response",
+          "parentKindId": "packages",
+          "kindId": "response",
+          "canonicalName": "📨️response",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-retirement",
+      "steps": [
+        {
+          "name": "♻️retirement",
+          "parentKindId": "packages",
+          "kindId": "retirement",
+          "canonicalName": "♻️retirement",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-return",
+      "steps": [
+        {
+          "name": "📤️return",
+          "parentKindId": "packages",
+          "kindId": "return",
+          "canonicalName": "📤️return",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-set",
+      "steps": [
+        {
+          "name": "🧺️set",
+          "parentKindId": "packages",
+          "kindId": "set",
+          "canonicalName": "🧺️set",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-slot",
+      "steps": [
+        {
+          "name": "📨️slot",
+          "parentKindId": "packages",
+          "kindId": "slot",
+          "canonicalName": "📨️slot",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-source",
+      "steps": [
+        {
+          "name": "🏠️source",
+          "parentKindId": "packages",
+          "kindId": "source",
+          "canonicalName": "🏠️source",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-string",
+      "steps": [
+        {
+          "name": "🔤️string",
+          "parentKindId": "packages",
+          "kindId": "string",
+          "canonicalName": "🔤️string",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-tail",
+      "steps": [
+        {
+          "name": "🏁️tail",
+          "parentKindId": "packages",
+          "kindId": "tail",
+          "canonicalName": "🏁️tail",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-transaction",
+      "steps": [
+        {
+          "name": "🔄️transaction",
+          "parentKindId": "packages",
+          "kindId": "transaction",
+          "canonicalName": "🔄️transaction",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-tutorial",
+      "steps": [
+        {
+          "name": "🎬️tutorial",
+          "parentKindId": "packages",
+          "kindId": "tutorial",
+          "canonicalName": "🎬️tutorial",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-update",
+      "steps": [
+        {
+          "name": "🩹️update",
+          "parentKindId": "packages",
+          "kindId": "update",
+          "canonicalName": "🩹️update",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-validation",
+      "steps": [
+        {
+          "name": "🛡️validation",
+          "parentKindId": "packages",
+          "kindId": "validation",
+          "canonicalName": "🛡️validation",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-value",
+      "steps": [
+        {
+          "name": "🧾️value",
+          "parentKindId": "packages",
+          "kindId": "value",
+          "canonicalName": "🧾️value",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-whole",
+      "steps": [
+        {
+          "name": "📦️whole",
+          "parentKindId": "packages",
+          "kindId": "whole",
+          "canonicalName": "📦️whole",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-wire-retirement",
+      "steps": [
+        {
+          "name": "🧹️wire-retirement",
+          "parentKindId": "packages",
+          "kindId": "wire-retirement",
+          "canonicalName": "🧹️wire-retirement",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-writer",
+      "steps": [
+        {
+          "name": "✍️writer",
+          "parentKindId": "packages",
+          "kindId": "writer",
+          "canonicalName": "✍️writer",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "co-located-test-case-under-domain-module",
+      "steps": [
+        {
+          "name": "⏱️clock",
+          "parentKindId": "packages",
+          "kindId": "clock",
+          "canonicalName": "⏱️clock",
+          "violationCodes": []
+        },
+        {
+          "name": "🧪️contention",
+          "parentKindId": "previous",
+          "kindId": "test-case",
+          "canonicalName": "🧪️contention",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "fixture-member-nested-under-resolved-test-case",
+      "steps": [
+        {
+          "name": "🧪️tests",
+          "parentKindId": "packages",
+          "kindId": "tests",
+          "canonicalName": "🧪️tests",
+          "violationCodes": []
+        },
+        {
+          "name": "🧪️mycase",
+          "parentKindId": "previous",
+          "kindId": "test-case",
+          "canonicalName": "🧪️mycase",
+          "violationCodes": []
+        },
+        {
+          "name": "🧪️member",
+          "parentKindId": "previous",
+          "kindId": "test-fixture-member",
+          "canonicalName": "🧪️member",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-fonts",
+      "steps": [
+        {
+          "name": "🔤️fonts",
+          "parentKindId": "packages",
+          "kindId": "fonts",
+          "canonicalName": "🔤️fonts",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-hash",
+      "steps": [
+        {
+          "name": "🔢️hash",
+          "parentKindId": "packages",
+          "kindId": "hash",
+          "canonicalName": "🔢️hash",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-input-scoped-to-content",
+      "steps": [
+        {
+          "name": "📦️content",
+          "parentKindId": "packages",
+          "kindId": "content",
+          "canonicalName": "📦️content",
+          "violationCodes": []
+        },
+        {
+          "name": "📥️input",
+          "parentKindId": "previous",
+          "kindId": "input",
+          "canonicalName": "📥️input",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-schema-contract-synonym",
+      "steps": [
+        {
+          "name": "🧬️contract",
+          "parentKindId": "packages",
+          "kindId": "schema",
+          "canonicalName": "🧬️contract",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-font-subject",
+      "steps": [
+        {
+          "name": "🔤️fonts",
+          "parentKindId": "packages",
+          "kindId": "fonts",
+          "canonicalName": "🔤️fonts",
+          "violationCodes": []
+        },
+        {
+          "name": "🔤️anta",
+          "parentKindId": "previous",
+          "kindId": "font-subject",
+          "canonicalName": "🔤️anta",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-limits",
+      "steps": [
+        {
+          "name": "📐️limits",
+          "parentKindId": "packages",
+          "kindId": "limits",
+          "canonicalName": "📐️limits",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-ledger",
+      "steps": [
+        {
+          "name": "📒️ledger",
+          "parentKindId": "packages",
+          "kindId": "ledger",
+          "canonicalName": "📒️ledger",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-contention",
+      "steps": [
+        {
+          "name": "⏱️clock",
+          "parentKindId": "packages",
+          "kindId": "clock",
+          "canonicalName": "⏱️clock",
+          "violationCodes": []
+        },
+        {
+          "name": "🧬️contention",
+          "parentKindId": "previous",
+          "kindId": "contention",
+          "canonicalName": "🧬️contention",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-resident-admission",
+      "steps": [
+        {
+          "name": "🎟️resident",
+          "parentKindId": "packages",
+          "kindId": "resident",
+          "canonicalName": "🎟️resident",
+          "violationCodes": []
+        },
+        {
+          "name": "📨️admission",
+          "parentKindId": "previous",
+          "kindId": "resident-admission",
+          "canonicalName": "📨️admission",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-resident-fixture-member",
+      "steps": [
+        {
+          "name": "🎟️resident",
+          "parentKindId": "packages",
+          "kindId": "resident",
+          "canonicalName": "🎟️resident",
+          "violationCodes": []
+        },
+        {
+          "name": "📨️admission",
+          "parentKindId": "previous",
+          "kindId": "resident-admission",
+          "canonicalName": "📨️admission",
+          "violationCodes": []
+        },
+        {
+          "name": "🧪️fixture",
+          "parentKindId": "previous",
+          "kindId": "resident-fixture-member",
+          "canonicalName": "🧪️fixture",
+          "violationCodes": []
+        },
+        {
+          "name": "🧪️schema",
+          "parentKindId": "resident-admission",
+          "kindId": "resident-fixture-member",
+          "canonicalName": "🧪️schema",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-test-tube-fixtures-member",
+      "steps": [
+        {
+          "name": "🎟️resident",
+          "parentKindId": "packages",
+          "kindId": "resident",
+          "canonicalName": "🎟️resident",
+          "violationCodes": []
+        },
+        {
+          "name": "🧪️fixtures",
+          "parentKindId": "previous",
+          "kindId": "test-tube-fixtures",
+          "canonicalName": "🧪️fixtures",
+          "violationCodes": []
+        },
+        {
+          "name": "🧫️action-item",
+          "parentKindId": "previous",
+          "kindId": "fixture-case",
+          "canonicalName": "🧫️action-item",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "vocab-gap-shared-owner",
+      "steps": [
+        {
+          "name": "🎟️resident",
+          "parentKindId": "packages",
+          "kindId": "resident",
+          "canonicalName": "🎟️resident",
+          "violationCodes": []
+        },
+        {
+          "name": "🧪️fixtures",
+          "parentKindId": "previous",
+          "kindId": "test-tube-fixtures",
+          "canonicalName": "🧪️fixtures",
+          "violationCodes": []
+        },
+        {
+          "name": "📤️shared-owner",
+          "parentKindId": "previous",
+          "kindId": "shared-owner",
+          "canonicalName": "📤️shared-owner",
+          "violationCodes": []
+        }
+      ]
+    }
+  ]
+}

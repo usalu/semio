@@ -25,6 +25,7 @@ pub fn plugin() -> Result<Plugin<RemodelApps>, semio_framework_plugin::PluginAss
     Plugin::<RemodelApps>::builder("remodel")
         .label("Remodel")
         .version("0.1.0")
+        .package_id("semio:remodel")
         .artifact(crate::artifacts::remodeling::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .editor::<crate::editor::remodeling::RemodelingPlayApp>(crate::editor::remodeling::create_remodeling_app())
         .editor_mutation_roster::<crate::editor::remodeling::RemodelingPlayApp>()
@@ -32,8 +33,8 @@ pub fn plugin() -> Result<Plugin<RemodelApps>, semio_framework_plugin::PluginAss
         .viewer_mutation_roster::<crate::viewer::remodeling::RemodelingViewer>()
         // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M5 — `.activation(…)`/`.execution(…)`/
         // `.requests(…)` (`📓️design-abi.md` §3/§6). See `📓️terra-M5-report.md` for why
-        // `run_whole_pipeline`'s synchronous structure-from-motion loop (`🎮️commands/🚀️run-reconstruction`,
-        // `🚀️run-stage`, `🚀️retry-stage`) is this packet's genuine "SfM" long-running-compute finding,
+        // `run_whole_pipeline`'s synchronous structure-from-motion loop (`🎮️commands/🏗️run-reconstruction`,
+        // `▶️run-stage`, `🔁️retry-stage`) is this packet's genuine "SfM" long-running-compute finding,
         // and why its `Effect::SpawnJob` conversion is blocked upstream, not by anything in this crate.
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::remodeling::artifact_kind().id })
         .execution(ExecutionMode::Isolated)

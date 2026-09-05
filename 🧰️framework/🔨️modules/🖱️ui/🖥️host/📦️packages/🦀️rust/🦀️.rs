@@ -15,13 +15,13 @@
 
 #[path = "../../../../🌉️abi/🦀️.rs"]
 pub mod abi;
-#[path = "🦀️backend_alias.rs"]
+#[path = "🔌️backend_alias.rs"]
 mod backend_alias;
-#[path = "🦀️enqueue.rs"]
+#[path = "📥️enqueue.rs"]
 mod enqueue;
-#[path = "🦀️event.rs"]
+#[path = "📡️event.rs"]
 mod event;
-#[path = "🦀️window.rs"]
+#[path = "🪟️window.rs"]
 mod window;
 
 pub use backend_alias::*;

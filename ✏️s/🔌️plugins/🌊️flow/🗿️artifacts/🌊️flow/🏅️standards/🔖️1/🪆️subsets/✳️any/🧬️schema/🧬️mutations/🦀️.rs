@@ -18,8 +18,6 @@ use store::{ArtifactEnvelope, ArtifactStore};
 //#region 🔹Operation
 /// 🌊️ Typed, invertible flow-document semantic mutations.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, protocol::Mutations)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = FlowSnapshot, diff = FlowDiff, schema = "flow.flow")]
 pub enum FlowMutation {
@@ -38,7 +36,7 @@ pub enum FlowMutation {
 /// 🏷️ The kebab spelling of every [`FlowMutation`] variant, in DECLARATION ORDER — the one list the
 /// language-neutral test platform is measured against. It is duplicated in exactly two other places
 /// on purpose: this subset's own oracle manifest catalog `flow-1-any`
-/// (`../../🔣️oracle.json`), which the completeness gate counts, and the `mutate-flow-1`
+/// (`../../🔣️oracle.json`), which the completeness gate counts, and the `🌊️mutate-flow-1`
 /// case adapter, which must not link this crate in the oracle role.
 /// [`tests::kinds_match_the_enum_and_the_catalog`] is what keeps all three honest.
 pub const KINDS: &[&str] = &["create-widget", "delete-widget", "reorder-widgets", "replace-widget", "connect-widgets", "disconnect-widgets", "reorder-synapses", "update-synapse-endpoints", "move-widgets", "duplicate-widget"];
@@ -62,7 +60,7 @@ pub fn inverse_flow_mutation(snapshot: &FlowSnapshot, mutation: &FlowMutation) -
 
 //#region 🔖️CaseBridges
 /// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "createWidget", …}`) JSON projection
-/// — the shape the `mutate-flow-1` case's `Examples` rows carry — into a real [`FlowMutation`]. A
+/// — the shape the `🌊️mutate-flow-1` case's `Examples` rows carry — into a real [`FlowMutation`]. A
 /// thin `serde_json` wrapper (already a direct dependency of this crate, used behind this interface
 /// per CLAUDE.md's "external libraries behind an interface" rule, never a new one), so the case reads
 /// the committed feature row instead of re-declaring it as a Rust literal beside it.
@@ -241,25 +239,25 @@ mod tests {
     use crate::artifacts::flow::schema::mutations::replace_widget::ReplaceWidget;
     use crate::artifacts::flow::schema::mutations::update_synapse_endpoints::UpdateSynapseEndpoints;
     use flow::{FlowLayoutEntry, Widget, WidgetLayout};
-    use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
+    use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
 
-    async fn widget_note(id: &str) -> Widget {
+    fn widget_note(id: &str) -> Widget {
         Widget::InputNote { id: id.into(), text: String::new() }
     }
-    async fn widget_slider(id: &str) -> Widget {
+    fn widget_slider(id: &str) -> Widget {
         Widget::InputSlider { id: id.into(), label: id.into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 }
     }
 
-    async fn apply(base: &FlowSnapshot, mutation: &FlowMutation) -> FlowSnapshot {
+    fn apply(base: &FlowSnapshot, mutation: &FlowMutation) -> FlowSnapshot {
         <FlowMutation as Mutation<FlowSnapshot>>::diff(mutation, base).diff().apply(base).expect("valid mutation diff")
     }
 
-    async fn base_with_two_widgets() -> FlowSnapshot {
+    fn base_with_two_widgets() -> FlowSnapshot {
         let base = apply(&FlowSnapshot::default(), &FlowMutation::CreateWidget(CreateWidget { index: 0, widget: widget_note("w1") }));
         apply(&base, &FlowMutation::CreateWidget(CreateWidget { index: 1, widget: widget_slider("w2") }))
     }
 
-    async fn base_with_synapse() -> FlowSnapshot {
+    fn base_with_synapse() -> FlowSnapshot {
         let base = base_with_two_widgets();
         apply(&base, &FlowMutation::ConnectWidgets(ConnectWidgets { index: 0, id: "s1".into(), from: "w1".into(), from_port: "out".into(), to: "w2".into(), to_port: "in".into() }))
     }
@@ -272,14 +270,14 @@ mod tests {
     async fn create_widget_duplicate_id_is_fatal() {
         let base = base_with_two_widgets();
         let outcome = FlowMutation::CreateWidget(CreateWidget { index: 0, widget: widget_note("w1") }).diff(&base);
-        assert_fatal_never_applies(&outcome);
+        assert_fatal_never_applies(&outcome ).await;
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn delete_widget_missing_target_is_error() {
         let base = FlowSnapshot::default();
-        assert_missing_target_is_error(&base, &FlowMutation::DeleteWidget(DeleteWidget { id: "ghost".into() }));
+        assert_missing_target_is_error(&base, &FlowMutation::DeleteWidget(DeleteWidget { id: "ghost".into() }) ).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -297,14 +295,14 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn connect_widgets_missing_endpoint_is_error() {
         let base = base_with_two_widgets();
-        assert_missing_target_is_error(&base, &FlowMutation::ConnectWidgets(ConnectWidgets { index: 0, id: "edge-99".into(), from: "ghost".into(), from_port: "out".into(), to: "w2".into(), to_port: "in".into() }));
+        assert_missing_target_is_error(&base, &FlowMutation::ConnectWidgets(ConnectWidgets { index: 0, id: "edge-99".into(), from: "ghost".into(), from_port: "out".into(), to: "w2".into(), to_port: "in".into() }) ).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn connect_widgets_duplicate_id_is_fatal() {
         let base = base_with_synapse();
         let outcome = FlowMutation::ConnectWidgets(ConnectWidgets { index: 0, id: "s1".into(), from: "w2".into(), from_port: "out".into(), to: "w1".into(), to_port: "in".into() }).diff(&base);
-        assert_fatal_never_applies(&outcome);
+        assert_fatal_never_applies(&outcome ).await;
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
@@ -320,20 +318,20 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn disconnect_widgets_missing_target_is_error() {
         let base = base_with_two_widgets();
-        assert_missing_target_is_error(&base, &FlowMutation::DisconnectWidgets(DisconnectWidgets { id: "ghost".into() }));
+        assert_missing_target_is_error(&base, &FlowMutation::DisconnectWidgets(DisconnectWidgets { id: "ghost".into() }) ).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn move_widgets_missing_target_is_error() {
         let base = base_with_two_widgets();
-        assert_missing_target_is_error(&base, &FlowMutation::MoveWidgets(MoveWidgets { entries: vec![FlowLayoutEntry { id: "ghost".into(), layout: Some(WidgetLayout { x: 1.0, y: 1.0 }) }] }));
+        assert_missing_target_is_error(&base, &FlowMutation::MoveWidgets(MoveWidgets { entries: vec![FlowLayoutEntry { id: "ghost".into(), layout: Some(WidgetLayout { x: 1.0, y: 1.0 }) }] }) ).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn move_widgets_non_finite_is_fatal() {
         let base = base_with_two_widgets();
         let outcome = FlowMutation::MoveWidgets(MoveWidgets { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: Some(WidgetLayout { x: f64::NAN, y: 0.0 }) }] }).diff(&base);
-        assert_fatal_never_applies(&outcome);
+        assert_fatal_never_applies(&outcome ).await;
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
@@ -349,7 +347,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn replace_widget_missing_target_is_error() {
         let base = base_with_two_widgets();
-        assert_missing_target_is_error(&base, &FlowMutation::ReplaceWidget(ReplaceWidget { id: "ghost".into(), widget: widget_note("ghost") }));
+        assert_missing_target_is_error(&base, &FlowMutation::ReplaceWidget(ReplaceWidget { id: "ghost".into(), widget: widget_note("ghost") }) ).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -363,7 +361,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn reorder_widgets_missing_target_is_error() {
         let base = base_with_two_widgets();
-        assert_missing_target_is_error(&base, &FlowMutation::ReorderWidgets(ReorderWidgets { id: "ghost".into(), to_index: 0 }));
+        assert_missing_target_is_error(&base, &FlowMutation::ReorderWidgets(ReorderWidgets { id: "ghost".into(), to_index: 0 }) ).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -377,7 +375,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn reorder_synapses_missing_target_is_error() {
         let base = base_with_synapse();
-        assert_missing_target_is_error(&base, &FlowMutation::ReorderSynapses(ReorderSynapses { id: "ghost".into(), to_index: 0 }));
+        assert_missing_target_is_error(&base, &FlowMutation::ReorderSynapses(ReorderSynapses { id: "ghost".into(), to_index: 0 }) ).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -391,13 +389,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn update_synapse_endpoints_missing_target_is_error() {
         let base = base_with_synapse();
-        assert_missing_target_is_error(&base, &FlowMutation::UpdateSynapseEndpoints(UpdateSynapseEndpoints { id: "ghost".into(), from: "w1".into(), from_port: "out".into(), to: "w2".into(), to_port: "in".into() }));
+        assert_missing_target_is_error(&base, &FlowMutation::UpdateSynapseEndpoints(UpdateSynapseEndpoints { id: "ghost".into(), from: "w1".into(), from_port: "out".into(), to: "w2".into(), to_port: "in".into() }) ).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn update_synapse_endpoints_missing_endpoint_is_error() {
         let base = base_with_synapse();
-        assert_missing_target_is_error(&base, &FlowMutation::UpdateSynapseEndpoints(UpdateSynapseEndpoints { id: "s1".into(), from: "ghost".into(), from_port: "out".into(), to: "w2".into(), to_port: "in".into() }));
+        assert_missing_target_is_error(&base, &FlowMutation::UpdateSynapseEndpoints(UpdateSynapseEndpoints { id: "s1".into(), from: "ghost".into(), from_port: "out".into(), to: "w2".into(), to_port: "in".into() }) ).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -419,7 +417,7 @@ mod tests {
     fn kinds_match_the_enum_and_the_catalog() {
         let declared: Vec<&str> = <FlowMutation as protocol::SemanticMutation<FlowSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
         assert_eq!(KINDS, declared.as_slice(), "KINDS must name every FlowMutation variant, in declaration order, spelled as its own MutationKind::SEMANTICS.kind");
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔮️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in this subset's committed oracle manifest catalog flow-1-any");
         }

@@ -1,0 +1,39 @@
+{
+  "schema": "semio.member.history-id-cursor/v1",
+  "limits": { "identityBytes": 256, "dictionaryEntries": 8192 },
+  "completion": [
+    { "id": "empty-query", "case": "raw", "wireBytes": 0, "dictionaryBytes": null, "cancelled": false, "complete": false },
+    { "id": "tag-query", "case": "raw", "wireBytes": 1, "dictionaryBytes": null, "cancelled": false, "complete": false },
+    { "id": "length-query", "case": "raw", "wireBytes": 2, "dictionaryBytes": null, "cancelled": false, "complete": false },
+    { "id": "partial-query", "case": "raw", "wireBytes": 5, "dictionaryBytes": null, "cancelled": false, "complete": false },
+    { "id": "raw-terminal-query", "case": "raw", "wireBytes": 13, "dictionaryBytes": null, "cancelled": false, "complete": true },
+    { "id": "lookup-query", "case": "dictionary", "wireBytes": 2, "dictionaryBytes": null, "cancelled": false, "complete": false },
+    { "id": "dictionary-partial-query", "case": "dictionary", "wireBytes": 2, "dictionaryBytes": 3, "cancelled": false, "complete": false },
+    { "id": "dictionary-terminal-query", "case": "dictionary", "wireBytes": 2, "dictionaryBytes": 11, "cancelled": false, "complete": true },
+    { "id": "uuid-prefix-query", "case": "prefix-uuid", "wireBytes": 2, "dictionaryBytes": 4, "cancelled": false, "complete": false },
+    { "id": "uuid-terminal-query", "case": "prefix-uuid", "wireBytes": 18, "dictionaryBytes": 4, "cancelled": false, "complete": true },
+    { "id": "cancelled-terminal-query", "case": "raw", "wireBytes": 13, "dictionaryBytes": null, "cancelled": true, "complete": false }
+  ],
+  "cases": [
+    { "id": "raw", "wire": "000b666c6f772d6d656d626572", "dictionary": null, "expected": "flow-member", "error": null },
+    { "id": "dictionary", "wire": "0100", "dictionary": "flow-member", "expected": "flow-member", "error": null },
+    { "id": "prefix-uuid", "wire": "020000112233445566778899aabbccddeeff", "dictionary": "flow", "expected": "flow-00112233-4455-6677-8899-aabbccddeeff", "error": null },
+    { "id": "raw-unicode", "wire": "000c4772c3bcc39f652df09f9880", "dictionary": null, "expected": "Grüße-😀", "error": null },
+    { "id": "ordinal", "wire": "0300", "dictionary": null, "expected": null, "error": "malformed" },
+    { "id": "unknown-tag", "wire": "0400", "dictionary": null, "expected": null, "error": "malformed" },
+    { "id": "nonminimal-index", "wire": "018000", "dictionary": "flow-member", "expected": null, "error": "malformed" },
+    { "id": "index-capacity", "wire": "018040", "dictionary": null, "expected": null, "error": "capacity" },
+    { "id": "empty-raw", "wire": "0000", "dictionary": null, "expected": null, "error": "identity" },
+    { "id": "raw-capacity", "wire": "008102", "dictionary": null, "expected": null, "error": "capacity" },
+    { "id": "invalid-utf8", "wire": "0002c0af", "dictionary": null, "expected": null, "error": "malformed" },
+    { "id": "unicode-control", "wire": "0002c285", "dictionary": null, "expected": null, "error": "identity" },
+    { "id": "truncated-raw", "wire": "000261", "dictionary": null, "expected": null, "error": "malformed" },
+    { "id": "dictionary-control", "wire": "0100", "dictionary": "\u0085", "expected": null, "error": "identity" },
+    { "id": "dictionary-missing", "wire": "0100", "dictionary": null, "expected": null, "error": "malformed" },
+    { "id": "truncated-scalar", "wire": "0002f09f", "dictionary": null, "expected": null, "error": "malformed" },
+    { "id": "truncated-uuid", "wire": "0200001122", "dictionary": "flow", "expected": null, "error": "malformed" },
+    { "id": "empty-prefix", "wire": "020000112233445566778899aabbccddeeff", "dictionary": "", "expected": null, "error": "identity" },
+    { "id": "wrong-dictionary-index", "wire": "0100", "dictionary": "flow", "resolvedIndex": 1, "expected": null, "error": "state" },
+    { "id": "prefix-capacity", "wire": "020000112233445566778899aabbccddeeff", "dictionary": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "expected": null, "error": "capacity" }
+  ]
+}

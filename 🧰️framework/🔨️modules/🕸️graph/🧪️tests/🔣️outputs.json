@@ -1,0 +1,21 @@
+{
+  "catalog": {
+    "version": 1,
+    "shared": { "rustRegistry": "🦀️registry.rs", "typescriptIndex": "🟦️.ts", "typescriptTypes": "🔠️types.ts", "jsonSchema": "🔣️manifest.schema.json" },
+    "manifests": [
+      { "id": "chronology", "rust": "🕰️clock/🦀️.rs", "typescript": "🕰️clock/🟦️.ts" },
+      { "id": "measurement", "rust": "🌡️sensor/🦀️.rs", "typescript": "🌡️sensor/🟦️.ts" }
+    ]
+  },
+  "manifestIds": ["measurement", "chronology"],
+  "expectedPaths": ["🦀️registry.rs", "🟦️.ts", "🔠️types.ts", "🔣️manifest.schema.json", "🕰️clock/🦀️.rs", "🕰️clock/🟦️.ts", "🌡️sensor/🦀️.rs", "🌡️sensor/🟦️.ts"],
+  "invalid": [
+    { "name": "traversal", "path": ["manifests", 0, "rust"], "value": "../🦀️.rs", "schemaInvalid": true },
+    { "name": "wrong-language-leaf", "path": ["manifests", 0, "rust"], "value": "🕰️clock/🟦️.ts", "schemaInvalid": true },
+    { "name": "duplicate-id", "path": ["manifests", 1, "id"], "value": "chronology", "schemaInvalid": false },
+    { "name": "duplicate-output", "path": ["shared", "typescriptTypes"], "value": "🟦️.ts", "schemaInvalid": false },
+    { "name": "unpaired-owner", "path": ["manifests", 1, "typescript"], "value": "🌡️different/🟦️.ts", "schemaInvalid": false },
+    { "name": "missing-single-emoji", "path": ["manifests", 0, "rust"], "value": "clock/🦀️.rs", "schemaInvalid": false },
+    { "name": "unrecognized-field", "path": ["manifests", 0, "fallback"], "value": "old.rs", "schemaInvalid": true }
+  ]
+}

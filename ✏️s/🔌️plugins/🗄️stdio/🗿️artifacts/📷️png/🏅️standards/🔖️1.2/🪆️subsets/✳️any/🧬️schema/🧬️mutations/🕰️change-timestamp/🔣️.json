@@ -5,7 +5,7 @@
   "displayName": "Change Timestamp",
   "emoji": "🕰️",
   "aggregateVariant": "ChangeTimestamp",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-timestamp",
   "binaryTag": 9,
   "invertibility": "explicit-mutation",

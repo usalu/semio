@@ -5,7 +5,7 @@
   "displayName": "Change Active Model Definition",
   "emoji": "🎯",
   "aggregateVariant": "ChangeActiveModelDefinition",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-active-model-definition",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,0 +1,32 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.las/mutation.json",
+  "title": "LasMutation",
+  "type": "object",
+  "properties": {
+    "mutation": {
+      "type": "string",
+      "enum": [
+        "setSnapshot", "setVersion", "setSystemIdentifier", "setSoftwareInfo",
+        "setCreationDate", "setScaleAndOffset", "setBounds", "setPointsByReturn",
+        "insertVlr", "removeVlr", "setVlrData", "insertPoint", "removePoint", "setPoint"
+      ]
+    },
+    "snapshot": { "type": "object" },
+    "major": { "type": "integer" },
+    "minor": { "type": "integer" },
+    "systemIdentifier": { "type": "string" },
+    "generatingSoftware": { "type": "string" },
+    "dayOfYear": { "type": "integer" },
+    "year": { "type": "integer" },
+    "scale": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+    "offset": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+    "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+    "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+    "counts": { "type": "array", "items": { "type": "integer" }, "minItems": 5, "maxItems": 5 },
+    "index": { "type": "integer" },
+    "vlr": { "type": "object" },
+    "data": { "type": "array", "items": { "type": "integer" } },
+    "point": { "type": "object" }
+  },
+  "required": ["mutation"]
+}

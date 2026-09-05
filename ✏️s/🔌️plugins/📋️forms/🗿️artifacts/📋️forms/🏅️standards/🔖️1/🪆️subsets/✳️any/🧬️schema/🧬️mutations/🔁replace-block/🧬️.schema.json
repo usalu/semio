@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplaceBlock",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stepId",
+    "block"
+  ],
+  "properties": {
+    "stepId": {
+      "type": "string"
+    },
+    "block": {
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "kind"
+      ],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "kind": { "type": "string" },
+        "description": { "type": ["string", "null"] },
+        "required": { "type": ["boolean", "null"] },
+        "placeholder": { "type": ["string", "null"] },
+        "default": {},
+        "min": { "type": ["number", "null"] },
+        "max": { "type": ["number", "null"] },
+        "step": { "type": ["number", "null"] },
+        "unit": { "type": ["string", "null"] },
+        "text": { "type": ["string", "null"] },
+        "options": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "object",
+            "required": ["value", "label"],
+            "properties": {
+              "value": { "type": "string" },
+              "label": { "type": "string" }
+            }
+          }
+        },
+        "fields": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "object",
+            "required": ["key"],
+            "properties": {
+              "key": { "type": "string" },
+              "label": { "type": ["string", "null"] },
+              "value": { "type": ["number", "null"] }
+            }
+          }
+        },
+        "schema": { "type": ["string", "null"] },
+        "src": { "type": ["string", "null"] },
+        "accept": { "type": ["string", "null"] },
+        "fixtureSlug": { "type": ["string", "null"] },
+        "params": {},
+        "condition": {}
+      },
+      "additionalProperties": false
+    }
+  }
+}

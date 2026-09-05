@@ -10,7 +10,7 @@
 
 import { Button, LevelProvider, Navbar, RibbonDivider, RibbonGroup, RibbonItem, RibbonZone, Toggle } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "../../🧪️🐨️story.ts";
+import type { Meta, StoryObj } from "../../🧪️story.ts";
 
 // 🔷️#region 🩺️Navbar
 const Bell = createIconComponent("bell");

@@ -120,7 +120,7 @@ impl<R: BufRead, W: Write, L: Write> McpTransport for StdioTransport<R, W, L> {
 
 //#region 🔖️HttpTransport
 /// 🔢️ `HeaderMismatch` (Streamable HTTP, `MCP-Protocol-Version` header vs body `_meta` mismatch) —
-/// transport-local because it is an HTTP-framing concern the stdio-only `protocol.rs` never needs.
+/// transport-local because it is an HTTP-framing concern the stdio-only `🦀️🟪️protocol.rs` never needs.
 pub const HEADER_MISMATCH: i64 = -32020;
 
 #[derive(Clone)]

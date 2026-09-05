@@ -1,6 +1,6 @@
 // 🧵️ `ShellBridge` frame codec — TypeScript twin of `🦀️.rs` (the Rust SSOT). Same hand-
 // rolled binary framing (`tag: u8` + fields in declaration order, little-endian, length-prefixed
-// bytes/strings), `BRIDGE_VERSION = 1`. `🧫️fixtures/frames.json` is the anti-drift mechanism proving
+// bytes/strings), `BRIDGE_VERSION = 1`. `🧫️fixtures/📨️frames.json` is the anti-drift mechanism proving
 // both codecs agree byte-for-byte — see that file's sibling Rust test
 // (`bridge::quick::every_fixture_round_trips_through_the_rust_codec`) and this module's own
 // `checkFixtureParity` (run via a foreground `bun run` script, since this crate does not yet have a

@@ -1,8 +1,0 @@
-syntax = "proto3";
-package semio.stdio_xml.mutations_text;
-
-// 📝️ JSON text per the sibling XmlMutation message shape.
-message Artifact {
-  string schema = 1;
-  string json_text = 2;
-}

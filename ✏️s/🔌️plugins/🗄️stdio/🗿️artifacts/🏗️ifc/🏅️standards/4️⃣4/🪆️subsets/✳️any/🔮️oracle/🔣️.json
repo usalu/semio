@@ -1,0 +1,792 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🔮️ This subset's own contribution to the repository test platform: `ruststep` 0.4 registered as the real ISO 10303-21 reader for stdio.ifc 4/✳️any's exhaustive IfcMutation vocabulary, the mutation catalog it is measured against, and the tolerant structural comparison profile a re-serialized IFC4 exchange structure needs against an independently parsed one.",
+  "oracles": [
+    {
+      "id": "ruststep-ifc-4-any-mutate",
+      "ecosystem": "rust",
+      "package": "ruststep",
+      "version": "0.4",
+      "capabilities": [
+        "ifc-4-any-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-ifc-v1"
+      ],
+      "license": "Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/ricosjp/ruststep",
+      "rationale": "🩹️ RECLASSIFIED (ticket SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION, shard A10, 2026-09-02). This entry was registered `third-party-library` on the strength of a real crate that does genuine codec work, but the mutation's expected RESULT is computed by this owner's own `🦀️oracle.rs` -- its dispatch function's catch-all arm is `\"mutation kind {...} has no oracle implementation\"`, proof that every OTHER arm is an implementation, not a reading. Both halves of the comparison then descend from the same specification, so a shared misreading produces two agreeing wrong answers -- the one failure a differential oracle exists to catch. This is a `cross-semio-implementation`: a required SUPPLEMENT (metamorphic/inverse/round-trip evidence), never a substitute. A qualifying third-party reference for the mutation semantics is still owed. See $TICKET/📓️a10-oracle-honesty.md.\n\nIFC4 rides the same ISO 10303-21 (STEP physical file / Part-21) exchange-structure grammar as AP214 -- ruststep's `ast::Exchange`/`ast::DataSection`/`ast::Record`/`ast::Parameter`/`ast::EntityInstance` all implement `FromStr` over the real Part-21 clear-text grammar at the SYNTAX level only; ruststep compiles no IFC4 EXPRESS schema module at all, so this is a genuinely schema-agnostic reader, confirmed against this subset's own real fixture (a real 2.5 MB IfcOpenShell 0.8.4 export of the Nakagin Capsule Tower, 24792 entities, parsed with zero errors -- see `../🦀️oracle.rs`'s own `parses_the_real_fixture_and_projects_it` test). It has NO writer at all: `ast::ser::to_record` only builds a `Record` from an already-typed Rust struct, and grepping the crate for `Display`/`fmt::Formatter` impls on `Exchange`/`DataSection`/`Record`/`Parameter` finds none -- there is no serialize path back to Part-21 text anywhere in the crate (the same finding this wave's STEP AP214 case already made independently). Per the fleet brief's §6, this rules out `@mode-differential`: ruststep cannot be a second PRODUCER of mutated bytes to diff against. It is registered here strictly as the INDEPENDENT READER role -- every real mutation this subset's own oracle dispatcher (`../🦀️oracle.rs`) performs (via ruststep's real parse plus this module's own from-scratch Part-21 writer, since none exists to reuse) is read back through a FRESH, independent `ruststep::ast::Exchange::from_str` call before being projected onto `semantic-ifc-v1`, and the identity round trip is checked the same way. This is real third-party evidence about the STRUCTURE of the result (entity graph shape, header schema, argument values as ruststep's own parser sees them), even though it cannot discharge a byte-level differential claim.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "stepcode-independent",
+        "implementation": "ruststep pure-Rust EXPRESS/Part-21 reader",
+        "version": "0.4"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "ifcopenshell-ifc-4-any-differential",
+      "ecosystem": "python",
+      "package": "ifcopenshell",
+      "version": "0.8.4.post1",
+      "capabilities": [
+        "ifc-4-any-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-ifc-v1"
+      ],
+      "license": "LGPL-3.0-or-later",
+      "testOnly": true,
+      "homepage": "https://ifcopenshell.org",
+      "rationale": "IfcOpenShell 0.8.4 is the reference open-source IFC implementation and, unlike `ruststep`, it both READS and WRITES ISO 10303-21: `ifcopenshell.open` runs its own C++ Part-21 parser against the real IFC4 EXPRESS schema and `ifcopenshell.file.to_string`/`write` re-serialize the whole exchange structure from the parsed model. That makes it a genuine second PRODUCER — the role `ruststep` cannot fill — and it is registered here for exactly the differential case `../../../../🧪️tests/differential-ifc-4` that claims it. It does NOT replace `ruststep-ifc-4-any-mutate`, which stays the schema-agnostic independent READER of `mutate-ifc-4`: IfcOpenShell is schema-BOUND, so it can neither produce nor faithfully read the four kinds of this subset's vocabulary that leave the IFC4 schema. Measured on this subset's own real fixture rather than assumed — retyping `#16976` to `RENAMED_PROXY` makes `ifcopenshell.file.from_string` return 16975 of 24792 entities with no error raised, a tenth positional argument on a nine-attribute entity is read back silently dropped, and `ifcopenshell.file.remove` documents and performs reference repair (`#16976` disappears from `#16991`'s member aggregate) where `IfcMutation::RemoveEntity` deliberately does not cascade. `set-entity-name`, `insert-entity-arg`, `remove-entity-arg` and `remove-entity` are therefore NOT claimed here and carry no differential scenario; the seven kinds that are claimed are produced end to end by IfcOpenShell and re-read from its own written bytes.",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "ifcopenshell",
+        "implementation": "IfcOpenShell C++/Python IFC engine",
+        "version": "0.8.4.post1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "steputils-ifc-4-any-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "steputils",
+      "version": "0.1",
+      "engine": {
+        "family": "steputils",
+        "implementation": "steputils Part-21/STEP reader+writer",
+        "version": "0.1"
+      },
+      "capabilities": [
+        "ifc-4-any-mutate"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://github.com/mozman/steputils",
+      "comparisonProfiles": [
+        "semantic-ifc-v1"
+      ],
+      "rationale": "📖️ F1 (ticket SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). `4/any`'s own `IfcMutation` operates at the RAW Part-21 entity-graph level (InsertEntity/RemoveEntity/SetEntityName/SetEntityArg/InsertEntityArg/RemoveEntityArg over an id-keyed `entities` collection and its positional `args`) — the exact same generic model `step/ap214/base`'s own `StepMutation` uses, already discharged there by this same package (`steputils-step-ap214-base-mutate-reader`). The sibling `ifcopenshell-ifc-4-any-differential` entry registered in this file is schema-TYPED (IFC4 EXPRESS entities have fixed attribute arity in ifcopenshell's own C++ core) and cannot perform an arity-changing edit like InsertEntityArg/RemoveEntityArg at all — verified directly this session. `steputils` 0.1 (mozman, MIT) is schema-agnostic ISO 10303-21 Part-21 syntax: IFC4 is physically Part-21 text under a different EXPRESS schema, exactly as `ruststep`'s own sibling rationale in `2x3/base` already establishes for IFC2X3. Verified genuinely this session by round-tripping this subset's own real fixture (`shared://🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc`, IFC4, 24792 real entities) through `p21.readfile`/`StepFile.save` and diffing the result. Used here as the generator for every `fixtureManifests[]` entry below this rationale registers: `before` is this fixture round-tripped unmodified, `after` is the same load with exactly one raw entity/header edit applied through steputils' own object model before saving."
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "ifc-4-any",
+      "capability": "ifc-4-any-mutate",
+      "standardDirectoryName": "4️⃣4",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📸️set-snapshot",
+          "mutationDirectoryName": "📸️set-snapshot",
+          "scenarios": [
+            {
+              "id": "renames-the-exterior-wall",
+              "directoryName": "🧪️renames-the-exterior-wall"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "set-snapshot",
+        "set-file-description",
+        "set-file-name",
+        "set-file-schema",
+        "insert-entity",
+        "remove-entity",
+        "set-entity-name",
+        "set-entity-arg",
+        "insert-entity-arg",
+        "remove-entity-arg"
+      ]
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-ifc-v1",
+      "description": "IFC4 (ISO 10303-21 exchange structures carrying IFC4's own EXPRESS schema) compared by declared FILE_SCHEMA and the full id-keyed entity graph (name plus positional argument values, reals tolerant). Header timestamp, preprocessor/originating-system strings, comment placement and line-wrapping are writer freedom -- the same normative surface IfcDiff/IfcMutation themselves operate over.",
+      "tolerance": 1e-06,
+      "ignoreKeys": [
+        "timestamp",
+        "preprocessorVersion",
+        "originatingSystem",
+        "authorization",
+        "byteLength",
+        "fileSize"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.ifc",
+      "standard": "4",
+      "subset": "base",
+      "standardDirectoryName": "4️⃣4",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "insert-entity",
+          "capability": "ifc-4-any-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-entity",
+            "bridgeVersion": 1,
+            "variant": "InsertEntity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-4-any-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-entity-arg",
+          "capability": "ifc-4-any-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-entity-arg",
+            "bridgeVersion": 1,
+            "variant": "InsertEntityArg"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-4-any-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-entity",
+          "capability": "ifc-4-any-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-entity",
+            "bridgeVersion": 1,
+            "variant": "RemoveEntity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-4-any-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-entity-arg",
+          "capability": "ifc-4-any-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-entity-arg",
+            "bridgeVersion": 1,
+            "variant": "RemoveEntityArg"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-4-any-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-entity-arg",
+          "capability": "ifc-4-any-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-entity-arg",
+            "bridgeVersion": 1,
+            "variant": "SetEntityArg"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-4-any-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-entity-name",
+          "capability": "ifc-4-any-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-entity-name",
+            "bridgeVersion": 1,
+            "variant": "SetEntityName"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-4-any-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-file-description",
+          "capability": "ifc-4-any-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-file-description",
+            "bridgeVersion": 1,
+            "variant": "SetFileDescription"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-4-any-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-file-name",
+          "capability": "ifc-4-any-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-file-name",
+            "bridgeVersion": 1,
+            "variant": "SetFileName"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-4-any-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-file-schema",
+          "capability": "ifc-4-any-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-file-schema",
+            "bridgeVersion": 1,
+            "variant": "SetFileSchema"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-4-any-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "ifc-4-any-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-4-any-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-entity-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "4",
+        "subset": "base"
+      },
+      "mutation": "insert-entity",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/➕️insert-entity-applied/⬅️before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:fbc308edaebd94a9ef7408010859c8a9e39671a24ee15c6a039c70cacf1934ab",
+          "bytes": 2507576
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/➕️insert-entity-applied/➡️after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:35cfb1157e49d0154fc862168c53458e101cdf9e5a6523a9e5e2c82d5a74a01d",
+          "bytes": 2507646
+        }
+      ],
+      "generator": {
+        "oracle": "steputils-ifc-4-any-mutate-reader",
+        "packageVersion": "0.1",
+        "engineFamily": "steputils",
+        "engineVersion": "0.1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (steputils)",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Inserted a new #999001 IFCCARTESIANPOINT-shaped entity with no prior referent — a genuine raw insert, re-serialized by steputils' own writer."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-entity-arg-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "4",
+        "subset": "base"
+      },
+      "mutation": "insert-entity-arg",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/🧩️insert-entity-arg-applied/⬅️before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:fbc308edaebd94a9ef7408010859c8a9e39671a24ee15c6a039c70cacf1934ab",
+          "bytes": 2507576
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/🧩️insert-entity-arg-applied/➡️after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:1873b1f07d2689fa3ee2d84a65f6a3a31e5a33ef0a7d4042863216495d002cf7",
+          "bytes": 2507591
+        }
+      ],
+      "generator": {
+        "oracle": "steputils-ifc-4-any-mutate-reader",
+        "packageVersion": "0.1",
+        "engineFamily": "steputils",
+        "engineVersion": "0.1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (steputils)",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Inserted a new positional string argument at index 2 of #1 IFCPROJECT."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-entity-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "4",
+        "subset": "base"
+      },
+      "mutation": "remove-entity",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/➖️remove-entity-applied/⬅️before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:fbc308edaebd94a9ef7408010859c8a9e39671a24ee15c6a039c70cacf1934ab",
+          "bytes": 2507576
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/➖️remove-entity-applied/➡️after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:5bea33f66faaee21ce810383409dd5a1e1d49730185620098500a3314d2443e0",
+          "bytes": 2507513
+        }
+      ],
+      "generator": {
+        "oracle": "steputils-ifc-4-any-mutate-reader",
+        "packageVersion": "0.1",
+        "engineFamily": "steputils",
+        "engineVersion": "0.1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (steputils)",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Removed #15 outright — confirmed zero inbound references among this fixture's own entity graph before removal, so nothing else is left dangling by this specific removal."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-entity-arg-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "4",
+        "subset": "base"
+      },
+      "mutation": "remove-entity-arg",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/🧹️remove-entity-arg-applied/⬅️before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:fbc308edaebd94a9ef7408010859c8a9e39671a24ee15c6a039c70cacf1934ab",
+          "bytes": 2507576
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/🧹️remove-entity-arg-applied/➡️after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:50f4f6db9a196ea734c9c927b6869d1e4176864722341a1a8896c97b99ab3a75",
+          "bytes": 2507574
+        }
+      ],
+      "generator": {
+        "oracle": "steputils-ifc-4-any-mutate-reader",
+        "packageVersion": "0.1",
+        "engineFamily": "steputils",
+        "engineVersion": "0.1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (steputils)",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Removed the positional argument at index 3 of #1 IFCPROJECT."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-entity-arg-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "4",
+        "subset": "base"
+      },
+      "mutation": "set-entity-arg",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/🎛️set-entity-arg-applied/⬅️before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:fbc308edaebd94a9ef7408010859c8a9e39671a24ee15c6a039c70cacf1934ab",
+          "bytes": 2507576
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/🎛️set-entity-arg-applied/➡️after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:e81cadc7dc22e698fea7c9fb2672b7f0c3c18b9585e40b98528f525f821d7e00",
+          "bytes": 2507581
+        }
+      ],
+      "generator": {
+        "oracle": "steputils-ifc-4-any-mutate-reader",
+        "packageVersion": "0.1",
+        "engineFamily": "steputils",
+        "engineVersion": "0.1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (steputils)",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Replaced argument index 2 (Name) of #1 IFCPROJECT."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-entity-name-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "4",
+        "subset": "base"
+      },
+      "mutation": "set-entity-name",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/🏷️set-entity-name-applied/⬅️before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:fbc308edaebd94a9ef7408010859c8a9e39671a24ee15c6a039c70cacf1934ab",
+          "bytes": 2507576
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/🏷️set-entity-name-applied/➡️after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:fd6096578890da2c09dab3282bc3292876a46a997e9fad39e3a9d8a23efdadce",
+          "bytes": 2507584
+        }
+      ],
+      "generator": {
+        "oracle": "steputils-ifc-4-any-mutate-reader",
+        "packageVersion": "0.1",
+        "engineFamily": "steputils",
+        "engineVersion": "0.1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (steputils)",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Renamed the type keyword of #1 from IFCPROJECT to IFCPROJECT_RENAMED — a raw entity-name rewrite, args untouched."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-file-description-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "4",
+        "subset": "base"
+      },
+      "mutation": "set-file-description",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/🗒️set-file-description-applied/⬅️before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:fbc308edaebd94a9ef7408010859c8a9e39671a24ee15c6a039c70cacf1934ab",
+          "bytes": 2507576
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/🗒️set-file-description-applied/➡️after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:67b5bf8e11b54bf62383602d306dcaa9d6c84a494fa3c55f92bd479d7d68209f",
+          "bytes": 2507573
+        }
+      ],
+      "generator": {
+        "oracle": "steputils-ifc-4-any-mutate-reader",
+        "packageVersion": "0.1",
+        "engineFamily": "steputils",
+        "engineVersion": "0.1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (steputils)",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Replaced the header FILE_DESCRIPTION's description list."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-file-name-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "4",
+        "subset": "base"
+      },
+      "mutation": "set-file-name",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/📛️set-file-name-applied/⬅️before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:fbc308edaebd94a9ef7408010859c8a9e39671a24ee15c6a039c70cacf1934ab",
+          "bytes": 2507576
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/📛️set-file-name-applied/➡️after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:d1bb251c706f2c8cf76980ffb209579a9701190f93a817fda3d1fc9dac3ade30",
+          "bytes": 2507543
+        }
+      ],
+      "generator": {
+        "oracle": "steputils-ifc-4-any-mutate-reader",
+        "packageVersion": "0.1",
+        "engineFamily": "steputils",
+        "engineVersion": "0.1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (steputils)",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Replaced the header FILE_NAME's name/author/organization fields."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-file-schema-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "4",
+        "subset": "base"
+      },
+      "mutation": "set-file-schema",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/🧬️set-file-schema-applied/⬅️before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:fbc308edaebd94a9ef7408010859c8a9e39671a24ee15c6a039c70cacf1934ab",
+          "bytes": 2507576
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/🧬️set-file-schema-applied/➡️after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:5b77bd6cfe970d15838163c485d5965f2e129e6e4f288542247f1a0acc1d3852",
+          "bytes": 2507590
+        }
+      ],
+      "generator": {
+        "oracle": "steputils-ifc-4-any-mutate-reader",
+        "packageVersion": "0.1",
+        "engineFamily": "steputils",
+        "engineVersion": "0.1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (steputils)",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Replaced the header FILE_SCHEMA's schema list, adding a second declared schema."
+    }
+  ]
+}

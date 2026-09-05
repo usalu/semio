@@ -1,12 +1,12 @@
 # UI assets
 
-Shared fonts, cursors, lists, and UI chrome icons served at `/asset/*`.
+Shared fonts, cursors, lists, and UI chrome icons served at `/🖼️assets/*`.
 
 ## Icons
 
-Chrome icons are committed SVGs under `icon/`. Many were originally derived from [Lucide](https://lucide.dev) (**ISC License**); source: https://github.com/lucide-icons/lucide
+Chrome icons are committed SVGs grouped by subject under `🔣️icons/`. Each source has one handpicked emoji; its public icon id is independent of that path. Many were originally derived from [Lucide](https://lucide.dev) (**ISC License**); source: https://github.com/lucide-icons/lucide
 
-Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./📜️script.ts generate all`).
+Add or edit SVGs under `🔣️icons/`, then run the assets build launch configuration (`bun nx run @semio-tech/assets:build`). Generated Rust SVG copies retain the exact source paths.
 
 ### Catalog icon ids
 

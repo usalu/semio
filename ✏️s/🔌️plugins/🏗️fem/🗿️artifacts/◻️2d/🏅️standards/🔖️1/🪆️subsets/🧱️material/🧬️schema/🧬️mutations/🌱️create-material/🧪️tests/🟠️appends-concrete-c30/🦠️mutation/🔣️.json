@@ -1,0 +1,10 @@
+{
+  "mutation": "createMaterial",
+  "material": {
+    "id": "c30",
+    "name": "Concrete C30/37",
+    "e": 30000000000.0,
+    "nu": 0.25,
+    "rho": 2500.0
+  }
+}

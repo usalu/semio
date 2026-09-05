@@ -262,30 +262,30 @@ pub fn playbook_snapshot_with_steps(schema: &str, id: &str, version: &str, title
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.playbook.standard.v1", "standard", "1", &[], None),
-        ("s.playbook.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.playbook.schema.artifact", "schema", "s.playbook.playbook", &[("schema", "s.playbook.playbook")], None),
-        ("s.playbook.inference.artifact", "inference", "s.playbook.playbook.inference", &[("schema", "s.playbook.playbook.inference")], None),
+        ("s.playbook.playbook.standard.v1", "standard", "1", &[], None),
+        ("s.playbook.playbook.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.playbook.playbook.schema.artifact", "schema", "s.playbook.playbook", &[("schema", "s.playbook.playbook")], None),
+        ("s.playbook.playbook.inference.artifact", "inference", "s.playbook.playbook.inference", &[("schema", "s.playbook.playbook.inference")], None),
         // 🐛️ D2-capability-claim-repairs: `io_registry::entries()` registers SIX composer rows, not
         // five — the five below plus `composer_entry_of::<PlaybookAnyComposer>()` (`🚪️io/🦀️.rs`),
         // whose `writes` is this artifact's own native dialect (`PLAYBOOK_DIALECT`, `s.playbook@1/*`),
         // the same gap class `🗒️note` hit first (see that file's own `definition()` doc comment).
-        ("s.playbook.composer.playbook", "composer", "s.playbook@1/*", &[("dialect", "s.playbook@1/*")], None),
-        ("s.playbook.composer.txt", "composer", "s.stdio.txt@utf-8/*", &[("dialect", "s.stdio.txt@utf-8/*")], None),
-        ("s.playbook.composer.pdf", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
-        ("s.playbook.composer.docx", "composer", "s.stdio.docx@ecma-376/*", &[("dialect", "s.stdio.docx@ecma-376/*")], None),
-        ("s.playbook.composer.md", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
-        ("s.playbook.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.playbook.grammar.document", "grammar", "playbook.playbook", &[("grammar", "playbook.playbook")], None),
-        ("s.playbook.grammar.op", "grammar", "playbook.playbook.op", &[("grammar", "playbook.playbook.op")], None),
-        ("s.playbook.grammar.diff", "grammar", "playbook.playbook.diff", &[("grammar", "playbook.playbook.diff")], None),
-        ("s.playbook.grammar.pack", "grammar", "playbook.pack", &[("grammar", "playbook.pack")], None),
-        ("s.playbook.grammar.spr", "grammar", "playbook.spr", &[("grammar", "playbook.spr")], None),
-        ("s.playbook.codec.document.v1", "codec", "playbook.playbook:playbook", &[("codec", "playbook.playbook"), ("extension", "playbook")], None),
-        ("s.playbook.localization.en", "localization", "Playbook", &[], Some(("en", "Playbook"))),
-        ("s.playbook.localization.de", "localization", "Playbook", &[], Some(("de", "Playbook"))),
+        ("s.playbook.playbook.composer.playbook", "composer", "s.playbook.playbook@1/*", &[("dialect", "s.playbook.playbook@1/*")], None),
+        ("s.playbook.playbook.composer.txt", "composer", "s.stdio.txt@utf-8/*", &[("dialect", "s.stdio.txt@utf-8/*")], None),
+        ("s.playbook.playbook.composer.pdf", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
+        ("s.playbook.playbook.composer.docx", "composer", "s.stdio.docx@ecma-376/*", &[("dialect", "s.stdio.docx@ecma-376/*")], None),
+        ("s.playbook.playbook.composer.md", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
+        ("s.playbook.playbook.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.playbook.playbook.grammar.document", "grammar", "playbook.playbook", &[("grammar", "playbook.playbook")], None),
+        ("s.playbook.playbook.grammar.op", "grammar", "playbook.playbook.op", &[("grammar", "playbook.playbook.op")], None),
+        ("s.playbook.playbook.grammar.diff", "grammar", "playbook.playbook.diff", &[("grammar", "playbook.playbook.diff")], None),
+        ("s.playbook.playbook.grammar.pack", "grammar", "playbook.pack", &[("grammar", "playbook.pack")], None),
+        ("s.playbook.playbook.grammar.spr", "grammar", "playbook.spr", &[("grammar", "playbook.spr")], None),
+        ("s.playbook.playbook.codec.document.v1", "codec", "playbook.playbook:playbook", &[("codec", "playbook.playbook"), ("codec-extension", "17:playbook.playbook:playbook")], None),
+        ("s.playbook.playbook.localization.en", "localization", "Playbook", &[], Some(("en", "Playbook"))),
+        ("s.playbook.playbook.localization.de", "localization", "Playbook", &[], Some(("de", "Playbook"))),
     ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.playbook")?);
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.playbook.playbook")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
         for (namespace, value) in *claims {
@@ -496,7 +496,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn scene_owner_fixture_proves_identity_isolation_aba_wire_omission_and_bounded_close() {
-        let fixture: protocol::os_pack::json::Value = protocol::json::parse(include_str!("🧪️fixtures/playbook-scene-owner-law.json")).expect("language-neutral playbook scene fixture");
+        let fixture: protocol::os_pack::json::Value = protocol::json::parse(include_str!("🧪️fixtures/👑️playbook-scene-owner-law.json")).expect("language-neutral playbook scene fixture");
         let cases = fixture["cases"].as_array().expect("fixture cases");
         assert_eq!(fixture["schemaVersion"], 1);
         assert_eq!(fixture["ownedSlots"], 1);

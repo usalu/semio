@@ -1,3 +1,0 @@
-(* ebnf s.stdio.las.inference *)
-document = header, body ;
-header = 'schema', space, 's.stdio.las.inference', newline ;

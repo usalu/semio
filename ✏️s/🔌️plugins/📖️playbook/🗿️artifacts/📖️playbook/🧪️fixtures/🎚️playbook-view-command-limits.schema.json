@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/playbook-view-command-limits.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "tools", "limits", "cases"],
+  "properties": {
+    "$schema": { "type": "string", "const": "./🎚️playbook-view-command-limits.schema.json" },
+    "schemaVersion": { "const": 1 },
+    "tools": {
+      "type": "array",
+      "const": ["setLocale", "setContributions"]
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximumRawBytes", "maximumDecodedItems", "maximumWorkUnits", "maximumOutputBytes", "maximumStepMicros"],
+      "properties": {
+        "maximumRawBytes": { "const": 8192 },
+        "maximumDecodedItems": { "const": 2 },
+        "maximumWorkUnits": { "const": 1 },
+        "maximumOutputBytes": { "const": 16384 },
+        "maximumStepMicros": { "const": 2000 }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "declaredBytes", "checkpoint", "admitted"],
+        "properties": {
+          "name": { "enum": ["empty", "maximum", "maximum-plus-one", "checkpoint"] },
+          "declaredBytes": { "type": "integer", "minimum": 0, "maximum": 8193 },
+          "checkpoint": { "type": "boolean" },
+          "admitted": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

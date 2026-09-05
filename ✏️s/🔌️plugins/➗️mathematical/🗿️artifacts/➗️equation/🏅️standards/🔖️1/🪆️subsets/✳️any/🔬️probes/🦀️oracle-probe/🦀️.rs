@@ -308,16 +308,16 @@ fn fixtures(out: &str) -> Result<Vec<String>, String> {
     )?;
 
     for name in [
-        "create-node-adds-a-row/before.csv",
-        "create-node-adds-a-row/after.csv",
-        "delete-node-removes-a-row/before.csv",
-        "delete-node-removes-a-row/after.csv",
-        "delete-nodes-removes-two-rows/before.csv",
-        "delete-nodes-removes-two-rows/after.csv",
-        "change-node-label-rewrites-the-quoted-cell/before.csv",
-        "change-node-label-rewrites-the-quoted-cell/after.csv",
-        "move-node-rewrites-the-coordinate-cells/before.csv",
-        "move-node-rewrites-the-coordinate-cells/after.csv",
+        "🟢️create-node-adds-a-row/⬅️before.csv",
+        "🟢️create-node-adds-a-row/➡️after.csv",
+        "❌️delete-node-removes-a-row/⬅️before.csv",
+        "❌️delete-node-removes-a-row/➡️after.csv",
+        "🗑️delete-nodes-removes-two-rows/⬅️before.csv",
+        "🗑️delete-nodes-removes-two-rows/➡️after.csv",
+        "🏷️change-node-label-rewrites-the-quoted-cell/⬅️before.csv",
+        "🏷️change-node-label-rewrites-the-quoted-cell/➡️after.csv",
+        "🕹️move-node-rewrites-the-coordinate-cells/⬅️before.csv",
+        "🕹️move-node-rewrites-the-coordinate-cells/➡️after.csv",
     ] {
         written.push(name.to_string());
     }

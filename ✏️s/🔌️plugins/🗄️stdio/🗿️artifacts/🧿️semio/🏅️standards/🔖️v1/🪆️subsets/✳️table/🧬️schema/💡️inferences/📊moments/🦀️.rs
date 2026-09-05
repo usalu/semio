@@ -2,7 +2,7 @@
 //! `InferredField<SemioTableSnapshot>` (not a bare pass-through): one step per NUMERIC (`Int`/
 //! `Float`) column, keyed by column NAME (the native key, per this subset's own `SemioTableColumn`
 //! doc comment), NO parents — a column's moments depend only on its OWN cell values, never on any
-//! other column's, mirroring `✳️mesh`'s `📦aabb` pilot's per-primitive chain shape.
+//! other column's, mirroring `🔺️mesh`'s `📦aabb` pilot's per-primitive chain shape.
 //!
 //! Wraps `📊️statistics-internals::{mean, variance, std_dev}` — moved verbatim from
 //! `🧰️framework/🔨️modules/🧮️math/📊️statistics` in ticket 26/08/12/
@@ -24,7 +24,7 @@ use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::Se
 //#region 🔖️Value
 /// 📊️ One numeric column's descriptive moments. `SemioColumnMoments::default()` (all-zero) is the
 /// honest "no numeric data" value for a column with zero parseable cells — same convention
-/// `✳️mesh`'s `SemioAabb::default()` uses for "no geometry".
+/// `🔺️mesh`'s `SemioAabb::default()` uses for "no geometry".
 /// 🔀️ No longer dual-derives `serde`: `store::InferredField::Value` used to bound on `Serialize +
 /// DeserializeOwned`, forcing every implementor onto serde regardless of its own fields — that
 /// bound now reads `ToValue + FromValue` (ticket

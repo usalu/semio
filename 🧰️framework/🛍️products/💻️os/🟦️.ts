@@ -1,7 +1,7 @@
 // #region Header
 /**
  * 🖥️ `@semio-tech/framework-os` — JS sync/backbone protocol surface (backbone URIs, document
- * envelopes, `🟦️backbone-worker.ts` request/response wire types, `PersistenceBinding`/`MutationEnvelope`,
+ * envelopes, `🧵️backbone-worker.ts` request/response wire types, `PersistenceBinding`/`MutationEnvelope`,
  * {@link buildFrameworkSyncUtilities}) consumed by `framework/os/renderer/js/react/index.tsx` and
  * `framework/os/dev/script.ts`. The OS kernel's *stateful* logic (operation application, program
  * registry) is Rust/wasm-only, hosted by the s-plugin wasm — this file is not a JS port of that. The
@@ -18,7 +18,8 @@ import { conflictResolutionAsU8, createTurnOutcomeBroadcast, dialectCoordinate, 
  * {@link BackboneWorkerRequest}/{@link BackboneWorkerResponse}'s `directory-*` variants and this
  * file's `🔖️HubBinding` region; never redeclared (lane 0-A owns the type source). */
 import type { DirectoryCommand, DirectoryEvent, DirectoryStreamMessage } from "./🔨️modules/📇️directory/🟦️.ts";
-import type { DocumentOpenArtifactV1, DocumentOpenPackageV1, DocumentOpenSurfaceV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import type { DirectoryEventPageV1, DocumentExecutionTargetLeaseFieldsV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { DIRECTORY_EVENT_PAGE_MAX_BYTES, parseDirectoryEventPageV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 /** 📡️ The replication wire contract lives in `🧰️framework/🔨️modules/📡️replication` — os speaks it,
  * it is not os-owned. Frames/envelopes/presence peers all come from there. */
 import type { ArtifactPresencePeer, ClientFrame, LocalInteractionIdentity, LocalInteractionPage, LocalInteractionQueryCommand, LocalInteractionQueryReply, LocalInteractionQueryToken, MutationEnvelope, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireMutationEnvelope } from "@semio-tech/framework-replication";
@@ -548,17 +549,19 @@ export function desktopWindowControlsBridge(invoke: (channel: string) => Promise
 /** 📦️ Dev-server-proxied content-addressed blob endpoint: `PUT ${BLOB_ENDPOINT_PATH}?mediaType=` (raw
  * bytes body, returns `{"hash":"..."}`) and `GET ${BLOB_ENDPOINT_PATH}/:hash` (raw bytes response).
  * Shared with the dev host shim (`framework/os/dev/script.ts`'s `hostShimSource`) and the
- * browser blob cache (`🟦️backbone-worker.ts`) so all three stay in sync on the same literal. Backed by
+ * browser blob cache (`🧵️backbone-worker.ts`) so all three stay in sync on the same literal. Backed by
  * `vcs::BlobStore`'s native counterpart; a hub-backed route is a later ticket. */
 export const BLOB_ENDPOINT_PATH = "/semio-blob";
 //#endregion 🔖️Blob
 
 //#region 🔖️BackboneWorkerProtocol
-export type InstalledDocumentExecutionTargetV1 = Readonly<{
-  package: DocumentOpenPackageV1;
-  artifact: DocumentOpenArtifactV1;
-  surface: DocumentOpenSurfaceV1;
-}>;
+/** 🪪️ Hub documents compare a plan against the complete {@link DocumentExecutionTargetLeaseFieldsV1}
+ * of a locally installed execution target — catalog generation, both scope ids, descriptor digest,
+ * every package/component/descriptor digest with byte lengths, artifact, parent dialect, surface,
+ * grant, checkpoint and revalidation. A non-`react` renderer target is admitted only when the
+ * worker owns a live private lease that verified those exact bytes. */
+export type { DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+export { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, documentExecutionTargetStatusRoleV1, leaseFieldsFromPlanV1, parseDocumentExecutionTargetLeaseFieldsV1, sameLeaseFieldsV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 
 export type DocumentRuntimeScopeV1 = Readonly<{ kind: "hub"; spaceId: string; documentId: string }> | Readonly<{ kind: "local"; documentId: string }>;
 
@@ -578,7 +581,7 @@ export function documentRuntimeKeyV1(scope: DocumentRuntimeScopeV1): string {
 
 export type PersistenceBinding =
   | { readonly kind: "folder"; readonly path: string }
-  | { readonly kind: "hub"; readonly baseUrl: string; readonly spaceId: string; readonly installedTarget?: InstalledDocumentExecutionTargetV1 };
+  | { readonly kind: "hub"; readonly baseUrl: string; readonly spaceId: string; readonly installedTarget?: DocumentExecutionTargetLeaseFieldsV1 };
 
 /** 🧾️ Everything the worker needs to open one artifact's actor — mirrors `ArtifactActorConfig`. */
 export type ArtifactActorConfig = {
@@ -641,7 +644,7 @@ export type ArtifactEvent =
   | { readonly kind: "commandOutcome"; readonly batchId: number; readonly outcome: CommandAckOutcome }
   | ({ readonly kind: "conflict" } & SyncConflict);
 
-/** 📤️ Main thread → `🟦️backbone-worker.ts` — `bytes` is a UTF-8 worker wire payload (see {@link encodeBackboneWorkerRequest}). */
+/** 📤️ Main thread → `🧵️backbone-worker.ts` — `bytes` is a UTF-8 worker wire payload (see {@link encodeBackboneWorkerRequest}). */
 export type BackboneWorkerWireMessage = { readonly wire: Uint8Array };
 
 /** @emoji 🧵️ Worker wire magic — must match `store_sync::backbone_worker_wire::MAGIC`. */
@@ -695,15 +698,21 @@ export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerRe
   return parsed as BackboneWorkerResponse;
 }
 
-/** 📤️ Main thread → `🟦️backbone-worker.ts` messages (structured clone or {@link BackboneWorkerWireMessage}).
+/** 📤️ Main thread → `🧵️backbone-worker.ts` messages (structured clone or {@link BackboneWorkerWireMessage}).
  * The `directory-*` kinds (contract-freeze §C6) are the shell's ONLY way to reach the directory hub
  * — plugin surfaces never talk to the network, and the shell never opens a directory socket on the
- * UI thread; see `🟦️backbone-worker.ts`'s `🔖️Directory` region. */
+ * UI thread; see `🧵️backbone-worker.ts`'s `🔖️Directory` region. */
 export type BackboneWorkerRequest =
   | ({ readonly kind: "open" } & ArtifactActorConfig)
   | { readonly kind: "close"; readonly documentId: string; readonly spaceId?: string }
   | { readonly kind: "send"; readonly documentId: string; readonly spaceId?: string; readonly message: ArtifactActorMsg }
   | { readonly kind: "directory-open"; readonly baseUrl: string; readonly since: number }
+  | { readonly kind: "directory-bootstrap-open"; readonly baseUrl: string; readonly after: number; readonly bootstrapEpoch: number }
+  | ({ readonly kind: "directory-bootstrap-ack" } & DirectoryEventPageAckV1)
+  | { readonly kind: "directory-bootstrap-reject"; readonly bootstrapEpoch: number; readonly receiptSha256: string }
+  | { readonly kind: "directory-bootstrap-close"; readonly bootstrapEpoch: number }
+  | { readonly kind: "directory-scope-open"; readonly baseUrl: string; readonly scope: DocumentScope; readonly since: number }
+  | { readonly kind: "directory-scope-close"; readonly scope: DocumentScope }
   | { readonly kind: "directory-command"; readonly requestId: string; readonly command: DirectoryCommand }
   | { readonly kind: "directory-close" };
 
@@ -732,7 +741,7 @@ export type ArtifactBootstrapWorkerEvent =
       readonly retryable: true;
     };
 
-/** 📥️ `🟦️backbone-worker.ts` → main thread messages. `directory-status.pendingCommands` is the
+/** 📥️ `🧵️backbone-worker.ts` → main thread messages. `directory-status.pendingCommands` is the
  * bounded, in-memory offline queue's length (contract-freeze §C6 "commands queue... and flush on
  * reconnect"). */
 export type BackboneWorkerResponse =
@@ -740,6 +749,9 @@ export type BackboneWorkerResponse =
   | ArtifactBootstrapWorkerEvent
   | { readonly kind: "ready" }
   | { readonly kind: "directory-message"; readonly message: DirectoryStreamMessage }
+  | ({ readonly kind: "directory-event-page"; readonly canonicalJson: string } & DirectoryEventPageAckV1 & { readonly afterSeqExclusive: number; readonly hasMore: boolean })
+  | { readonly kind: "directory-bootstrap-failed"; readonly bootstrapEpoch: number; readonly code: "unauthorized" | "cancelled" | "transport" | "invalid-page"; readonly retryable: boolean }
+  | { readonly kind: "directory-scope-revoked"; readonly scope: DocumentScope }
   | { readonly kind: "directory-command-result"; readonly requestId: string; readonly ok: boolean; readonly events?: readonly DirectoryEvent[]; readonly error?: string }
   | { readonly kind: "socket-actor"; readonly documentId: string; readonly actorId: string }
   | { readonly kind: "socket-actor-failed"; readonly documentId: string; readonly code: "installed-target-unavailable" | "session-mismatch" }
@@ -2137,7 +2149,7 @@ export function decodeConflictsFromWire(conflictsBytes: readonly number[], decod
 }
 
 /** 📡️ TS twin of `protocol_channel::CHANNEL_VERSION`. Both constants are pinned against
- * `🧫️fixtures/📡️channel/channel-version.json`, which owns the number — this one sat at 8 while Rust
+ * `🧫️fixtures/📡️channel/🔖️channel-version.json`, which owns the number — this one sat at 8 while Rust
  * had moved to 10, so the pin exists to make a half-done bump fail a test instead of a session.
  * Channel v12 retired the `Hello`/`Welcome` handshake this constant used to be carried on — it now
  * exists purely for the drift-guard test below. */
@@ -2758,12 +2770,11 @@ if (import.meta.vitest) {
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(import.meta.url));
       const fixturesDir = join(here, "🧫️fixtures");
-      const dslFiles = readdirSync(fixturesDir).filter((file) => file.endsWith(".dsl"));
-      expect(dslFiles.length).toBeGreaterThanOrEqual(5);
-      for (const dslFile of dslFiles) {
-        expect(readFileSync(join(fixturesDir, dslFile), "utf8").length).toBeGreaterThan(0);
-        const spkFile = dslFile.replace(/^🗣️?/, "📦️").replace(/\.dsl$/, ".spk");
-        expect(readFileSync(join(fixturesDir, spkFile)).byteLength).toBeGreaterThan(0);
+      const owners = readdirSync(fixturesDir, { withFileTypes: true }).filter((entry) => entry.isDirectory() && readdirSync(join(fixturesDir, entry.name)).some((name) => name === "🗣️.dsl" || name === "📦️.spk"));
+      expect(owners.length).toBeGreaterThanOrEqual(5);
+      for (const owner of owners) {
+        expect(readFileSync(join(fixturesDir, owner.name, "🗣️.dsl"), "utf8").length).toBeGreaterThan(0);
+        expect(readFileSync(join(fixturesDir, owner.name, "📦️.spk")).byteLength).toBeGreaterThan(0);
       }
     });
   });
@@ -3059,7 +3070,7 @@ if (import.meta.vitest) {
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(import.meta.url));
-      const pin = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📡️channel", "channel-version.json"), "utf8")) as { channelVersion: number };
+      const pin = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📡️channel", "🔖️channel-version.json"), "utf8")) as { channelVersion: number };
       expect(APP_CHANNEL_VERSION).toBe(pin.channelVersion);
     });
 
@@ -3069,8 +3080,8 @@ if (import.meta.vitest) {
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(import.meta.url));
       const channelFixturesDir = join(here, "🧫️fixtures", "📡️channel");
-      const commandVectors = JSON.parse(readFileSync(join(channelFixturesDir, "app-command-transaction.json"), "utf8")) as Record<string, string>;
-      const frameVectors = JSON.parse(readFileSync(join(channelFixturesDir, "app-frame-transaction.json"), "utf8")) as Record<string, string>;
+      const commandVectors = JSON.parse(readFileSync(join(channelFixturesDir, "🧾️app-command-transaction.json"), "utf8")) as Record<string, string>;
+      const frameVectors = JSON.parse(readFileSync(join(channelFixturesDir, "📨️app-frame-transaction.json"), "utf8")) as Record<string, string>;
       const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 
       const commandCases: Readonly<Record<string, AppCommandValue>> = {
@@ -3112,7 +3123,7 @@ if (import.meta.vitest) {
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(import.meta.url));
       const channelFixturesDir = join(here, "🧫️fixtures", "📡️channel");
-      const commandVectors = JSON.parse(readFileSync(join(channelFixturesDir, "app-command-opening.json"), "utf8")) as Record<string, string>;
+      const commandVectors = JSON.parse(readFileSync(join(channelFixturesDir, "🚪️app-command-opening.json"), "utf8")) as Record<string, string>;
       const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 
       const commandCases: Readonly<Record<string, AppCommandValue>> = {
@@ -3142,8 +3153,8 @@ if (import.meta.vitest) {
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(import.meta.url));
       const channelFixturesDir = join(here, "🧫️fixtures", "📡️channel");
-      const commandVectors = JSON.parse(readFileSync(join(channelFixturesDir, "app-command-merge.json"), "utf8")) as Record<string, string>;
-      const frameVectors = JSON.parse(readFileSync(join(channelFixturesDir, "app-frame-merge.json"), "utf8")) as Record<string, string>;
+      const commandVectors = JSON.parse(readFileSync(join(channelFixturesDir, "🔀️app-command-merge.json"), "utf8")) as Record<string, string>;
+      const frameVectors = JSON.parse(readFileSync(join(channelFixturesDir, "📢️app-frame-merge.json"), "utf8")) as Record<string, string>;
       const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 
       const commandCases: Readonly<Record<string, AppCommandValue>> = {
@@ -3485,7 +3496,7 @@ if (import.meta.vitest) {
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(import.meta.url));
-      const commandVectors = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📡️channel", "app-command-merge.json"), "utf8")) as Record<string, string>;
+      const commandVectors = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📡️channel", "🔀️app-command-merge.json"), "utf8")) as Record<string, string>;
       const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 
       const seen: AppCommandValue[] = [];
@@ -3535,7 +3546,7 @@ if (import.meta.vitest) {
      * `ConflictKind`'s struct variants, `MergePolicy`'s bare un-camelCased variant names) actually
      * decodes the way the wire's `store::pack_rt::encode_wire_value`-backed `encode_wire_serialized`
      * would produce it, since no live Rust `DispatchReport`/`MergeReport`/`Conflict` pack bytes are
-     * checked into a fixture yet (only the outer `AppFrame` framing is, in `app-frame-merge.json`).
+     * checked into a fixture yet (only the outer `AppFrame` framing is, in `📢️app-frame-merge.json`).
      */
     it("faultMessages()/decodeDispatchReportFromWire()/decodeMergeReportFromWire()/decodeConflictsFromWire() decode the frozen TS report shapes", () => {
       const dispatchReport: DispatchReport = {
@@ -3809,7 +3820,7 @@ export function mediaAcceptFilterKinds(formatArtifactKinds: readonly string[]): 
 // `@semio-tech/framework-os` consumers get it from the package root. Logic lives in
 // `🔨️modules/📇️directory/🟦️.ts`; this region only imports/re-exports and, per this
 // package's `🧪️tests/🟦️.ts` (`include`/`includeSource` list only THIS file and
-// `🟦️backbone-worker.ts`), hosts the in-source parity test against the Rust twin's golden fixture.
+// `🧵️backbone-worker.ts`), hosts the in-source parity test against the Rust twin's golden fixture.
 import { descriptorDigestEncodingV1, descriptorDigestV1, emptyDirectoryReadModel, fold, foldAll, isDirectoryCommandKind, isDirectoryEventBodyKind, isDirectoryStreamMessageKind } from "./🔨️modules/📇️directory/🟦️.ts";
 import type { DirectoryReadModel, DocumentDescriptor } from "./🔨️modules/📇️directory/🟦️.ts";
 
@@ -3841,7 +3852,9 @@ export type {
   DirectoryEventBody,
   DirectoryReadModel,
   DirectorySpace,
+  DirectorySpaceDetailV1,
   DirectorySpaceKind,
+  DirectorySpaceListEntryV1,
   DirectorySpaceRole,
   DirectorySpaceVisibility,
   DirectoryStreamMessage,
@@ -3852,7 +3865,10 @@ export type {
   DocumentView,
   Hlc,
   InviteView,
+  MemberSpaceViewV1,
   MemberView,
+  PublicDocumentCatalogEntryV1,
+  PublicSpaceViewV1,
   SpaceView,
   UserView,
 } from "./🔨️modules/📇️directory/🟦️.ts";
@@ -3907,7 +3923,7 @@ if (import.meta.vitest) {
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(import.meta.url));
-      const fixture = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📇️directory", "📄️document-descriptor.json"), "utf8")) as { valid: import("./🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentDescriptor; canonical: string };
+      const fixture = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📇️directory", "🪪️document-descriptor.json"), "utf8")) as { valid: import("./🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentDescriptor; canonical: string };
       expect(JSON.stringify(fixture.valid)).toBe(fixture.canonical);
     });
 
@@ -3917,7 +3933,7 @@ if (import.meta.vitest) {
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(import.meta.url));
-      const fixture = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📇️directory", "📄️artifact-authority.json"), "utf8")) as { descriptor: DocumentDescriptor; descriptorEncodingHex: string; descriptorDigestV1: number[] };
+      const fixture = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📇️directory", "🛡️artifact-authority.json"), "utf8")) as { descriptor: DocumentDescriptor; descriptorEncodingHex: string; descriptorDigestV1: number[] };
       const encoded = descriptorDigestEncodingV1(fixture.descriptor);
       expect(Buffer.from(encoded).toString("hex")).toBe(fixture.descriptorEncodingHex);
       expect(Array.from(await descriptorDigestV1(fixture.descriptor))).toEqual(fixture.descriptorDigestV1);
@@ -3933,7 +3949,7 @@ if (import.meta.vitest) {
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(import.meta.url));
-      const fixture = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📇️directory", "📄️document-descriptor.json"), "utf8")) as { valid: import("./🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentDescriptor; conflictingSchemaHash: import("./🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentDescriptor };
+      const fixture = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📇️directory", "🪪️document-descriptor.json"), "utf8")) as { valid: import("./🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentDescriptor; conflictingSchemaHash: import("./🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentDescriptor };
       const created: DirectoryEvent = { seq: 1, id: "space", hlc: { physicalMs: 1, logical: 0 }, actor: { kind: "system", id: "system:test" }, spaceId: fixture.valid.spaceId, body: { kind: "space.created", spaceId: fixture.valid.spaceId, name: "Fixture", spaceKind: "studio", visibility: "private", ownerUserId: "user-owner" }, recordedAtMs: 1 };
       const announced: DirectoryEvent = { seq: 2, id: "document", hlc: { physicalMs: 2, logical: 0 }, actor: { kind: "user", id: "user:user-owner#test" }, spaceId: fixture.valid.spaceId, body: { kind: "document.announced", descriptor: fixture.valid }, recordedAtMs: 2 };
       const conflictReplay: DirectoryEvent = { ...announced, seq: 3, id: "conflict", body: { kind: "document.announced", descriptor: fixture.conflictingSchemaHash } };
@@ -3948,13 +3964,13 @@ if (import.meta.vitest) {
 //#region 🔖️HubBinding
 // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS C2/C6 — the shell's ONLY
 // point of contact with the directory hub's HTTP/WS control plane. Plugin surfaces never talk to
-// the network (contract §C6); `🟦️backbone-worker.ts`'s `🔖️Directory` region is the only caller, so
+// the network (contract §C6); `🧵️backbone-worker.ts`'s `🔖️Directory` region is the only caller, so
 // the shell never opens a directory socket on the UI thread. `fetch`/`WebSocket` only — no external
 // HTTP library (CLAUDE.md "no external libraries for runtime purposes").
-import type { DocumentView, InviteView, MemberView, SpaceView } from "./🔨️modules/📇️directory/🟦️.ts";
+import type { DirectorySpaceDetailV1, DirectorySpaceListEntryV1, DocumentScope } from "./🔨️modules/📇️directory/🟦️.ts";
 
 /** 🔁️ Reconnect backoff shared by every hub transport this package opens — `connectHub` in
- * `🟦️backbone-worker.ts` (artifact sync) and {@link DirectoryClient.stream} both import these
+ * `🧵️backbone-worker.ts` (artifact sync) and {@link DirectoryClient.stream} both import these
  * (single source of truth; the two used to carry independent copies of the same two numbers). */
 export const HUB_RECONNECT_MIN_MS = 500;
 export const HUB_RECONNECT_MAX_MS = 30_000;
@@ -3977,15 +3993,34 @@ export const HUB_HEALTHY_RESET_MS = HUB_RECONNECT_MAX_MS;
 /** 🔌️ A live {@link DirectoryClient.stream} subscription handle. */
 export type DirectoryStream = { readonly close: () => void };
 
+/** 📌️ A global stream whose reconnect cursor advances only after a Home page acknowledgement. */
+export type DirectoryAcknowledgedStream = DirectoryStream & { readonly acknowledge: (through: number) => void };
+
 export type DirectorySessionSummary = { readonly userId: string; readonly email: string; readonly displayName: string; readonly expiresAt: number };
-/** 🏠️ `GET /directory/spaces/{id}` — `invites` is always an array (empty for a non-author, per
- * contract §C2 "invites(authors only)"), never omitted; mirrors the Rust twin's `SpaceDetail`
- * (`🔨️modules/📇️directory/🔌️client/🦀️.rs`, `#[serde(default)]`, not `skip_serializing`). */
-export type DirectorySpaceDetail = SpaceView & { readonly members: readonly MemberView[]; readonly documents: readonly DocumentView[]; readonly invites: readonly InviteView[] };
 export type DirectoryCommandResult = { readonly events: readonly DirectoryEvent[]; readonly result?: unknown };
 
+/** 📄️ Exact canonical page bytes plus the bounded header a shell needs for ACK ordering. */
+export type CanonicalDirectoryEventPageV1 = Readonly<{
+  canonicalJson: string;
+  sessionBindingSha256: string;
+  authorizationGeneration: number;
+  afterSeqExclusive: number;
+  throughSeqInclusive: number;
+  hasMore: boolean;
+  receiptSha256: string;
+}>;
+
+/** ✅️ Exact retained-Home acknowledgement for one still-owned directory page. */
+export type DirectoryEventPageAckV1 = Readonly<{
+  bootstrapEpoch: number;
+  sessionBindingSha256: string;
+  authorizationGeneration: number;
+  throughSeqInclusive: number;
+  receiptSha256: string;
+}>;
+
 /** 🚨️ Thrown by every {@link DirectoryClient} REST method on a non-2xx response — `status` lets a
- * caller (this package's `🟦️backbone-worker.ts` directory lane) distinguish "the hub answered and
+ * caller (this package's `🧵️backbone-worker.ts` directory lane) distinguish "the hub answered and
  * rejected this" (surface immediately) from a thrown network error with no `status` at all ("the
  * hub is unreachable" — queue and retry). */
 export class DirectoryHttpError extends Error {
@@ -4034,6 +4069,138 @@ function exactRecordKeys(value: Readonly<Record<string, unknown>>, expected: rea
   return keys.length === expected.length && keys.every((key, index) => key === [...expected].sort()[index]);
 }
 
+function directoryProjectionRecord(value: unknown, keys: readonly string[]): Readonly<Record<string, unknown>> | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const record = value as Readonly<Record<string, unknown>>;
+  return exactRecordKeys(record, keys) ? record : undefined;
+}
+
+function directoryProjectionInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
+}
+
+function directoryProjectionSignedInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value);
+}
+
+function directoryProjectionText(value: unknown): value is string {
+  return typeof value === "string";
+}
+
+function directoryProjectionSpaceBase(record: Readonly<Record<string, unknown>>): boolean {
+  return directoryProjectionText(record.id)
+    && directoryProjectionText(record.name)
+    && (record.kind === "atelier" || record.kind === "studio" || record.kind === "archive")
+    && (record.visibility === "private" || record.visibility === "public")
+    && directoryProjectionInteger(record.memberCount)
+    && directoryProjectionInteger(record.documentCount)
+    && directoryProjectionSignedInteger(record.createdAtMs)
+    && directoryProjectionSignedInteger(record.updatedAtMs);
+}
+
+function directoryPublicSpace(value: unknown): boolean {
+  const record = directoryProjectionRecord(value, ["createdAtMs", "documentCount", "id", "kind", "memberCount", "name", "updatedAtMs", "visibility"]);
+  return record !== undefined && directoryProjectionSpaceBase(record) && record.visibility === "public";
+}
+
+function directoryMemberSpace(value: unknown): boolean {
+  const record = directoryProjectionRecord(value, ["activeConnections", "createdAtMs", "documentCount", "id", "kind", "memberCount", "name", "ownerUserId", "role", "updatedAtMs", "visibility"]);
+  return record !== undefined
+    && directoryProjectionSpaceBase(record)
+    && directoryProjectionText(record.ownerUserId)
+    && (record.role === "author" || record.role === "spectator")
+    && directoryProjectionInteger(record.activeConnections);
+}
+
+function directoryMemberSpaceRole(value: unknown, role: "author" | "spectator"): boolean {
+  return directoryMemberSpace(value) && (value as Readonly<Record<string, unknown>>).role === role;
+}
+
+function directoryOwner(value: unknown): boolean {
+  const record = directoryProjectionRecord(value, ["packageHash", "packageId", "pluginId", "version"]);
+  return record !== undefined
+    && directoryProjectionText(record.pluginId)
+    && directoryProjectionText(record.packageId)
+    && directoryProjectionText(record.version)
+    && typeof record.packageHash === "string"
+    && /^(?!0{64}$)[0-9a-f]{64}$/u.test(record.packageHash);
+}
+
+function directoryPublicDocument(value: unknown): boolean {
+  const record = directoryProjectionRecord(value, ["artifactKind", "artifactSchema", "documentId", "owner", "packSchemaHash"]);
+  return record !== undefined
+    && directoryProjectionText(record.documentId)
+    && directoryProjectionText(record.artifactKind)
+    && directoryProjectionText(record.artifactSchema)
+    && directoryOwner(record.owner)
+    && typeof record.packSchemaHash === "string"
+    && /^(?!0{64}$)[0-9a-f]{64}$/u.test(record.packSchemaHash);
+}
+
+function directoryMember(value: unknown): boolean {
+  const record = directoryProjectionRecord(value, ["displayName", "email", "role", "userId"]);
+  return record !== undefined
+    && directoryProjectionText(record.userId)
+    && directoryProjectionText(record.email)
+    && directoryProjectionText(record.displayName)
+    && (record.role === "author" || record.role === "spectator");
+}
+
+function directoryFrontier(value: unknown): boolean {
+  const record = directoryProjectionRecord(value, ["commitSeq", "epoch", "headSeq"]);
+  return record !== undefined && directoryProjectionInteger(record.headSeq) && directoryProjectionInteger(record.commitSeq) && directoryProjectionInteger(record.epoch);
+}
+
+function directoryDescriptor(value: unknown): boolean {
+  const record = directoryProjectionRecord(value, ["artifactKind", "artifactSchema", "bootstrapFrontier", "bootstrapSnapshotHash", "bootstrapVersion", "documentId", "owner", "packSchemaHash", "spaceId"]);
+  return record !== undefined
+    && directoryProjectionText(record.spaceId)
+    && directoryProjectionText(record.documentId)
+    && directoryProjectionText(record.artifactKind)
+    && directoryProjectionText(record.artifactSchema)
+    && directoryOwner(record.owner)
+    && typeof record.packSchemaHash === "string"
+    && /^(?!0{64}$)[0-9a-f]{64}$/u.test(record.packSchemaHash)
+    && directoryProjectionInteger(record.bootstrapVersion)
+    && directoryFrontier(record.bootstrapFrontier)
+    && typeof record.bootstrapSnapshotHash === "string"
+    && /^(?!0{64}$)[0-9a-f]{64}$/u.test(record.bootstrapSnapshotHash);
+}
+
+function directoryDocument(value: unknown): boolean {
+  const record = directoryProjectionRecord(value, ["commitSeq", "descriptor", "epoch", "headSeq"]);
+  return record !== undefined && directoryDescriptor(record.descriptor) && directoryProjectionInteger(record.headSeq) && directoryProjectionInteger(record.commitSeq) && directoryProjectionInteger(record.epoch);
+}
+
+function directoryInvite(value: unknown): boolean {
+  const record = directoryProjectionRecord(value, ["createdAtMs", "expiresAtMs", "id", "revoked", "role", "spaceId"]);
+  return record !== undefined
+    && directoryProjectionText(record.id)
+    && directoryProjectionText(record.spaceId)
+    && (record.role === "author" || record.role === "spectator")
+    && directoryProjectionSignedInteger(record.createdAtMs)
+    && directoryProjectionSignedInteger(record.expiresAtMs)
+    && typeof record.revoked === "boolean";
+}
+
+/** 🛡️ Strictly decodes the discriminated public/member/author detail boundary. */
+export function parseDirectorySpaceDetailV1(value: unknown): DirectorySpaceDetailV1 {
+  const record = value && typeof value === "object" && !Array.isArray(value) ? value as Readonly<Record<string, unknown>> : undefined;
+  if (record?.access === "public" && exactRecordKeys(record, ["access", "documents", "space"]) && directoryPublicSpace(record.space) && Array.isArray(record.documents) && record.documents.every(directoryPublicDocument)) return record as DirectorySpaceDetailV1;
+  if (record?.access === "member" && exactRecordKeys(record, ["access", "documents", "members", "space"]) && directoryMemberSpaceRole(record.space, "spectator") && Array.isArray(record.members) && record.members.every(directoryMember) && Array.isArray(record.documents) && record.documents.every(directoryDocument)) return record as DirectorySpaceDetailV1;
+  if (record?.access === "author" && exactRecordKeys(record, ["access", "documents", "invites", "members", "space"]) && directoryMemberSpaceRole(record.space, "author") && Array.isArray(record.members) && record.members.every(directoryMember) && Array.isArray(record.documents) && record.documents.every(directoryDocument) && Array.isArray(record.invites) && record.invites.every(directoryInvite)) return record as DirectorySpaceDetailV1;
+  throw new Error("directory: invalid space detail projection");
+}
+
+/** 🛡️ Strictly decodes one discriminated list projection. */
+export function parseDirectorySpaceListEntryV1(value: unknown): DirectorySpaceListEntryV1 {
+  const record = directoryProjectionRecord(value, ["access", "space"]);
+  if (record?.access === "public" && directoryPublicSpace(record.space)) return record as DirectorySpaceListEntryV1;
+  if (record?.access === "member" && directoryMemberSpaceRole(record.space, "spectator")) return record as DirectorySpaceListEntryV1;
+  if (record?.access === "author" && directoryMemberSpaceRole(record.space, "author")) return record as DirectorySpaceListEntryV1;
+  throw new Error("directory: invalid space list projection");
+}
+
 export function parseBrowserBrokerPortRequestV1(value: unknown): BrowserBrokerPortRequestV1 | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const record = value as Readonly<Record<string, unknown>>;
@@ -4054,6 +4221,7 @@ export function parseBrowserBrokerPortResponseV1(value: unknown): BrowserBrokerP
 /** 🔐 Narrow authority boundary that alone may retain an upstream session/share credential. */
 export interface SocketGrantIssuerV1 {
   issueDirectory(options?: DirectoryRequestOptions): Promise<SocketGrantReceiptV1>;
+  issueDirectoryScoped(scope: DocumentScope, options?: DirectoryRequestOptions): Promise<SocketGrantReceiptV1>;
   issueDocument(spaceId: string, documentId: string, options?: DirectoryRequestOptions): Promise<SocketGrantReceiptV1>;
 }
 
@@ -4067,6 +4235,7 @@ export interface SocketGrantRequestPortV1 {
 export function createSocketGrantIssuerV1(port: SocketGrantRequestPortV1): SocketGrantIssuerV1 {
   return {
     issueDirectory: async (options) => parseSocketGrantReceiptV1(await port.post("/directory/socket-grants", options)),
+    issueDirectoryScoped: async (scope, options) => parseSocketGrantReceiptV1(await port.post(`/directory/spaces/${encodeURIComponent(scope.spaceId)}/documents/${encodeURIComponent(scope.documentId)}/socket-grants`, options)),
     issueDocument: async (spaceId, documentId, options) => parseSocketGrantReceiptV1(await port.post(`/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}/socket-grants`, options)),
   };
 }
@@ -4153,12 +4322,14 @@ export class DirectoryClient {
     }
   }
 
-  async spaces(options?: DirectoryRequestOptions): Promise<readonly SpaceView[]> {
-    return this.getJson<SpaceView[]>("/directory/spaces", options);
+  async spaces(options?: DirectoryRequestOptions): Promise<readonly DirectorySpaceListEntryV1[]> {
+    const value = await this.getJson<unknown>("/directory/spaces", options);
+    if (!Array.isArray(value)) throw new Error("directory: invalid space list projection");
+    return value.map(parseDirectorySpaceListEntryV1);
   }
 
-  async space(id: string, options?: DirectoryRequestOptions): Promise<DirectorySpaceDetail> {
-    return this.getJson<DirectorySpaceDetail>(`/directory/spaces/${encodeURIComponent(id)}`, options);
+  async space(id: string, options?: DirectoryRequestOptions): Promise<DirectorySpaceDetailV1> {
+    return parseDirectorySpaceDetailV1(await this.getJson<unknown>(`/directory/spaces/${encodeURIComponent(id)}`, options));
   }
 
   async command(command: DirectoryCommand, options?: DirectoryRequestOptions): Promise<DirectoryCommandResult> {
@@ -4169,7 +4340,52 @@ export class DirectoryClient {
     return this.getJson<DirectoryEvent[]>(`/directory/events?since=${encodeURIComponent(String(since))}`, options);
   }
 
-  /** 🔌️ Fresh protected grant + `GET /directory/socket/v1?since=` — subscribes from `since`, replays gap-free, then goes
+  /** 📄️ Fetches and validates the original canonical page text without a JSON parse/reserialize gap. */
+  async eventPage(after: number, options?: DirectoryRequestOptions): Promise<CanonicalDirectoryEventPageV1> {
+    if (!Number.isSafeInteger(after) || after < 0) throw new Error("directory event page: invalid after frontier");
+    const path = `/directory/event-page/v1?after=${after}`;
+    const response = await this.request(`${this.requestBaseUrl}${path}`, { credentials: "include", headers: this.headers(false) }, { timeoutMs: DIRECTORY_HTTP_TIMEOUT_MS, signal: options?.signal });
+    if (!response.ok) throw new DirectoryHttpError(response.status, `directory: GET ${path} failed (${response.status})`);
+    const canonicalJson = await response.text();
+    if (options?.signal?.aborted) throw options.signal.reason ?? new Error("directory event page: cancelled");
+    if (new TextEncoder().encode(canonicalJson).byteLength > DIRECTORY_EVENT_PAGE_MAX_BYTES) throw new Error("directory event page: response too large");
+    let page: DirectoryEventPageV1;
+    try {
+      page = await parseDirectoryEventPageV1(canonicalJson);
+    } catch {
+      throw new Error("directory event page: invalid canonical response");
+    }
+    if (options?.signal?.aborted) throw options.signal.reason ?? new Error("directory event page: cancelled");
+    if (page.afterSeqExclusive !== after) throw new Error("directory event page: response frontier mismatch");
+    return {
+      canonicalJson,
+      sessionBindingSha256: page.sessionBindingSha256,
+      authorizationGeneration: page.authorizationGeneration,
+      afterSeqExclusive: page.afterSeqExclusive,
+      throughSeqInclusive: page.throughSeqInclusive,
+      hasMore: page.hasMore,
+      receiptSha256: page.receiptSha256,
+    };
+  }
+
+  /** 🔌️ Opens the explicitly global directory stream, which is not document-scope authority. */
+  stream(since: number, onMessage: (message: DirectoryStreamMessage) => void): DirectoryStream {
+    return this.streamFor(undefined, since, onMessage, undefined, true);
+  }
+
+  /** 📌️ Opens a global wakeup stream that never treats observed events or heartbeats as committed. */
+  streamAcknowledged(since: number, onMessage: (message: DirectoryStreamMessage) => void): DirectoryAcknowledgedStream {
+    if (!Number.isSafeInteger(since) || since < 0) throw new Error("directory stream: invalid acknowledged frontier");
+    return this.streamFor(undefined, since, onMessage, undefined, false);
+  }
+
+  /** 🎯️ Opens one exact document-scoped directory stream and terminally reports membership revocation. */
+  streamScoped(scope: DocumentScope, since: number, onMessage: (message: DirectoryStreamMessage) => void, onRevoked?: () => void): DirectoryStream {
+    if (!scope.spaceId || !scope.documentId || new TextEncoder().encode(scope.spaceId).byteLength > 4096 || new TextEncoder().encode(scope.documentId).byteLength > 4096) throw new Error("directory stream: invalid scope");
+    return this.streamFor(scope, since, onMessage, onRevoked, true);
+  }
+
+  /** 🔌️ Fresh protected grant + scoped/global socket — subscribes from `since`, replays gap-free, then goes
    * live; text (JSON) frames, one {@link DirectoryStreamMessage} each (contract §C2, unlike the
    * binary `protocol_wire` the artifact sync hub channel speaks). Auto-reconnects via
    * {@link retryWithJitteredBackoff} (finding 2 — full jitter avoids a thundering herd when many
@@ -4192,10 +4408,10 @@ export class DirectoryClient {
    * `retryWithJitteredBackoff`'s own jitter still inserts a `[MIN, 2·MIN]` pause before the real
    * redial — reusing its jitter math for that pause rather than reinventing it, and avoiding an
    * instant reconnect that would defeat jitter's whole point of not synchronizing many clients onto
-   * the same instant. Mirrors `🟦️backbone-worker.ts`'s `connectHubOnce`/`connectHub` idiom for the
+   * the same instant. Mirrors `🧵️backbone-worker.ts`'s `connectHubOnce`/`connectHub` idiom for the
    * base reconnect loop; the health-reset addition here has no counterpart there (routed to that
    * file's own owning packet). */
-  stream(since: number, onMessage: (message: DirectoryStreamMessage) => void): DirectoryStream {
+  private streamFor(scope: DocumentScope | undefined, since: number, onMessage: (message: DirectoryStreamMessage) => void, onRevoked: (() => void) | undefined, trackObservedFrontier: boolean): DirectoryAcknowledgedStream {
     const abort = new AbortController();
     let socket: WebSocket | null = null;
     let lastSeq = since;
@@ -4205,7 +4421,10 @@ export class DirectoryClient {
       const wsBase = this.baseUrl.replace(/^http/, "ws");
       const query = new URLSearchParams();
       query.set("since", String(lastSeq));
-      return `${wsBase}/directory/socket/v1?${query.toString()}`;
+      const path = scope
+        ? `/directory/spaces/${encodeURIComponent(scope.spaceId)}/documents/${encodeURIComponent(scope.documentId)}/socket/v1`
+        : "/directory/socket/v1";
+      return `${wsBase}${path}?${query.toString()}`;
     };
 
     /** 🔌️ One WS connection attempt. Resolves once {@link close} aborts (a clean shutdown) OR once
@@ -4217,7 +4436,7 @@ export class DirectoryClient {
     const connectOnce = async (): Promise<void> => {
       const issuer = this.socketGrantIssuer;
       if (!issuer) throw new Error("directory stream: socket grant issuer unavailable");
-      const receipt = parseSocketGrantReceiptV1(await issuer.issueDirectory({ signal: abort.signal }));
+      const receipt = parseSocketGrantReceiptV1(await (scope ? issuer.issueDirectoryScoped(scope, { signal: abort.signal }) : issuer.issueDirectory({ signal: abort.signal })));
       if (receipt.expiresAtMs <= Date.now()) throw new Error("directory stream: expired socket grant");
       return new Promise<void>((resolve, reject) => {
         if (abort.signal.aborted) {
@@ -4249,17 +4468,23 @@ export class DirectoryClient {
           try {
             const data = (event as { data: unknown }).data;
             const message = JSON.parse(String(data)) as DirectoryStreamMessage;
-            if (message.kind === "event") lastSeq = Math.max(lastSeq, message.event.seq);
-            if (message.kind === "heartbeat") lastSeq = Math.max(lastSeq, message.headSeq);
+            if (trackObservedFrontier && message.kind === "event") lastSeq = Math.max(lastSeq, message.event.seq);
+            if (trackObservedFrontier && !scope && message.kind === "heartbeat") lastSeq = Math.max(lastSeq, message.headSeq);
             onMessage(message);
           } catch {
             // 🛟️ malformed frame — dropped, never thrown into the caller.
           }
         };
-        ws.onclose = () => {
+        ws.onclose = (event: CloseEvent) => {
           abort.signal.removeEventListener("abort", onAbort);
           if (healthyTimer != null) clearTimeout(healthyTimer);
           if (socket === ws) socket = null;
+          if (scope && event.code === 4401) {
+            onRevoked?.();
+            abort.abort(new Error("directory stream: scope revoked"));
+            resolve();
+            return;
+          }
           if (abort.signal.aborted || healthy) {
             resolve();
             return;
@@ -4309,6 +4534,10 @@ export class DirectoryClient {
     void runCycles();
 
     return {
+      acknowledge: (through: number) => {
+        if (!Number.isSafeInteger(through) || through < lastSeq) throw new Error("directory stream: invalid acknowledged frontier");
+        lastSeq = through;
+      },
       close: () => {
         abort.abort();
         socket?.close();
@@ -4327,7 +4556,7 @@ if (import.meta.vitest) {
     readyState = 0;
     onopen: (() => void) | null = null;
     onmessage: ((event: { data: string }) => void) | null = null;
-    onclose: (() => void) | null = null;
+    onclose: ((event: CloseEvent) => void) | null = null;
     onerror: (() => void) | null = null;
     constructor(url: string, readonly protocols?: string | string[]) {
       this.url = url;
@@ -4344,9 +4573,9 @@ if (import.meta.vitest) {
     triggerMessage(message: DirectoryStreamMessage): void {
       this.onmessage?.({ data: JSON.stringify(message) });
     }
-    triggerClose(): void {
+    triggerClose(code = 1006): void {
       this.readyState = 3;
-      this.onclose?.();
+      this.onclose?.({ code } as CloseEvent);
     }
   }
 
@@ -4359,6 +4588,7 @@ if (import.meta.vitest) {
   };
   const testSocketGrantIssuer: SocketGrantIssuerV1 = {
     issueDirectory: async () => testSocketGrantReceipt,
+    issueDirectoryScoped: async () => testSocketGrantReceipt,
     issueDocument: async () => testSocketGrantReceipt,
   };
   const testDirectoryClient = (): DirectoryClient => new DirectoryClient("http://hub.test", { socketGrantIssuer: testSocketGrantIssuer });
@@ -4374,7 +4604,93 @@ if (import.meta.vitest) {
     };
   }
 
+  async function sampleCanonicalDirectoryEventPage(after = 3): Promise<string> {
+    const unsigned = {
+      schema: "semio.directory.event-page.v1" as const,
+      sessionBindingSha256: "a".repeat(64),
+      authorizationGeneration: 7,
+      afterSeqExclusive: after,
+      throughSeqInclusive: after + 2,
+      hasMore: true,
+      events: [] as DirectoryEvent[],
+    };
+    const digest = new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(unsigned))));
+    const receiptSha256 = Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("");
+    return JSON.stringify({ ...unsigned, receiptSha256 });
+  }
+
+  describe("DirectoryClient event page", () => {
+    it("preserves canonical response text and rejects a substituted request frontier", async () => {
+      const canonical = await sampleCanonicalDirectoryEventPage();
+      const text = vi.fn(async () => canonical);
+      const request = vi.fn(async () => ({ ok: true, status: 200, statusText: "OK", headers: { get: () => "application/json" }, json: async () => { throw new Error("event pages never use response.json"); }, text }));
+      const page = await new DirectoryClient("https://hub.test", { request: request as unknown as typeof fetchWithTimeout }).eventPage(3);
+      expect(page.canonicalJson).toBe(canonical);
+      expect(page.afterSeqExclusive).toBe(3);
+      expect(page.throughSeqInclusive).toBe(5);
+      expect(text).toHaveBeenCalledTimes(1);
+      expect(request.mock.calls[0]?.[0]).toBe("https://hub.test/directory/event-page/v1?after=3");
+
+      const substituted = await sampleCanonicalDirectoryEventPage(4);
+      const hostileRequest = vi.fn(async () => ({ ok: true, status: 200, statusText: "OK", headers: { get: () => "application/json" }, json: async () => ({}), text: async () => substituted }));
+      await expect(new DirectoryClient("https://hub.test", { request: hostileRequest as unknown as typeof fetchWithTimeout }).eventPage(3)).rejects.toThrow("response frontier mismatch");
+
+      const abort = new AbortController();
+      const cancelledRequest = vi.fn(async () => ({ ok: true, status: 200, statusText: "OK", headers: { get: () => "application/json" }, json: async () => ({}), text: async () => { abort.abort(new Error("page owner closed")); return canonical; } }));
+      await expect(new DirectoryClient("https://hub.test", { request: cancelledRequest as unknown as typeof fetchWithTimeout }).eventPage(3, { signal: abort.signal })).rejects.toThrow("page owner closed");
+    });
+  });
+
+  describe("DirectoryClient space public boundary", () => {
+    const publicDetail = {
+      access: "public",
+      space: { id: "space-public", name: "Public", kind: "studio", visibility: "public", memberCount: 2, documentCount: 1, createdAtMs: 1, updatedAtMs: 2 },
+      documents: [{ documentId: "document-public", artifactKind: "note.document", artifactSchema: "note.document@1", owner: { pluginId: "note", packageId: "note", version: "1", packageHash: "11".repeat(32) }, packSchemaHash: "22".repeat(32) }],
+    };
+
+    it("narrows the discriminator and rejects identity currentness and unknown fields", () => {
+      const detail = parseDirectorySpaceDetailV1(publicDetail);
+      if (detail.access !== "public") throw new Error("public discriminator did not narrow");
+      const documentId: string = detail.documents[0]!.documentId;
+      expect(documentId).toBe("document-public");
+      expect("members" in detail).toBe(false);
+      expect(() => parseDirectorySpaceDetailV1({ ...publicDetail, actor: "user:secret" })).toThrow("invalid space detail projection");
+      expect(() => parseDirectorySpaceDetailV1({ ...publicDetail, space: { ...publicDetail.space, ownerUserId: "user:secret" } })).toThrow("invalid space detail projection");
+      expect(() => parseDirectorySpaceDetailV1({ ...publicDetail, documents: [{ ...publicDetail.documents[0], headSeq: 9 }] })).toThrow("invalid space detail projection");
+      expect(() => parseDirectorySpaceListEntryV1({ access: "public", space: publicDetail.space, members: [] })).toThrow("invalid space list projection");
+    });
+  });
+
   describe("DirectoryClient.stream", () => {
+    it("round trips scoped directory worker ownership without flattening scope", () => {
+      const scope = { spaceId: "space/a", documentId: "document b" };
+      const request: BackboneWorkerRequest = { kind: "directory-scope-open", baseUrl: "http://hub.test", scope, since: 7 };
+      const response: BackboneWorkerResponse = { kind: "directory-scope-revoked", scope };
+      expect(decodeBackboneWorkerRequest(encodeBackboneWorkerRequest(request))).toEqual(request);
+      expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(response))).toEqual(response);
+    });
+
+    it("binds one document scope and treats close 4401 as terminal without reacquiring", async () => {
+      vi.useFakeTimers();
+      try {
+        FakeDirectoryWebSocket.instances = [];
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeDirectoryWebSocket;
+        const revoked = vi.fn();
+        const handle = testDirectoryClient().streamScoped({ spaceId: "space/a", documentId: "document b" }, 4, () => {}, revoked);
+        await Promise.resolve();
+        const socket = FakeDirectoryWebSocket.instances[0]!;
+        expect(socket.url).toBe("ws://hub.test/directory/spaces/space%2Fa/documents/document%20b/socket/v1?since=4");
+        socket.triggerClose(4401);
+        await Promise.resolve();
+        await vi.advanceTimersByTimeAsync(HUB_RECONNECT_MAX_MS * 2);
+        expect(revoked).toHaveBeenCalledTimes(1);
+        expect(FakeDirectoryWebSocket.instances).toHaveLength(1);
+        handle.close();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     it("replays then goes live with no gap and no duplicate", async () => {
       FakeDirectoryWebSocket.instances = [];
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeDirectoryWebSocket;
@@ -4392,6 +4708,35 @@ if (import.meta.vitest) {
       expect(received.map((message) => message.kind)).toEqual(["event", "event", "heartbeat"]);
       expect(received).toHaveLength(3);
       handle.close();
+    });
+
+    it("reconnects an acknowledged stream only from the last Home-committed frontier", async () => {
+      vi.useFakeTimers();
+      const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
+      try {
+        FakeDirectoryWebSocket.instances = [];
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeDirectoryWebSocket;
+        const handle = testDirectoryClient().streamAcknowledged(3, () => {});
+        await Promise.resolve();
+        const first = FakeDirectoryWebSocket.instances[0]!;
+        first.triggerMessage({ kind: "event", event: sampleDirectoryEvent(99) });
+        first.triggerMessage({ kind: "heartbeat", headSeq: 101 });
+        first.triggerClose();
+        await Promise.resolve();
+        await vi.advanceTimersByTimeAsync(HUB_RECONNECT_MIN_MS);
+        const second = FakeDirectoryWebSocket.instances[1]!;
+        expect(second.url).toBe("ws://hub.test/directory/socket/v1?since=3");
+        handle.acknowledge(5);
+        expect(() => handle.acknowledge(4)).toThrow("invalid acknowledged frontier");
+        second.triggerClose();
+        await Promise.resolve();
+        await vi.advanceTimersByTimeAsync(HUB_RECONNECT_MIN_MS);
+        expect(FakeDirectoryWebSocket.instances[2]!.url).toBe("ws://hub.test/directory/socket/v1?since=5");
+        handle.close();
+      } finally {
+        randomSpy.mockRestore();
+        vi.useRealTimers();
+      }
     });
 
     it("reconnects resuming from the last seen seq, with jittered backoff within bounds", async () => {

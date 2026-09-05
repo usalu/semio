@@ -13,8 +13,9 @@ pub use add_counter_then_notify_foreign::AddCounterThenNotifyForeign;
 #[path = "🔢️add-counter-sequence/🦀️.rs"] mod add_counter_sequence;
 pub use add_counter_sequence::AddCounterSequence;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl_derive::Mutations, dsl_derive::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl_derive::Mutations, dsl_derive::DslOps, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
+#[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = Counter, diff = CounterDiff, schema = "command.test.counter")]
 pub enum CounterMutation {
     AddCounter(AddCounter),

@@ -2,6 +2,15 @@
   "name": "@semio-tech/ui-contract-rs",
   "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
+    "built-tree-retirement-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts built-tree-retirement-check",
+        "forwardAllArgs": true
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

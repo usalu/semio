@@ -12,7 +12,7 @@ const TRACE_IDS: [&str; 5] = [
 ];
 
 fn fixture() -> Json {
-    parse_json(include_str!("../../🧫️fixtures/🔣️relay-lifecycle.json")).expect("relay lifecycle fixture")
+    parse_json(include_str!("../../🧫️fixtures/♻️relay-lifecycle.json")).expect("relay lifecycle fixture")
 }
 
 fn trace(id: &str) -> Result<Json, String> {

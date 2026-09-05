@@ -1,0 +1,41 @@
+{
+  "description": "Opaque transport bytes test nested source identity, not mesh decoding.",
+  "roots": [
+    {
+      "path": "🥇️primary",
+      "files": [
+        { "path": "💊️capsules/🪝️j/🧊️model.glb", "content": "primary-j" },
+        { "path": "💊️capsules/📐️l/🧊️model.glb", "content": "primary-l" },
+        { "path": "💊️capsules/🪝️j/💥️collision.glb", "content": "primary-collider" },
+        { "path": "💊️capsules/🪝️j/📐️source.3dm", "content": "not-a-delivered-mesh" }
+      ]
+    },
+    {
+      "path": "🥈️secondary",
+      "files": [
+        { "path": "💊️capsules/🪝️j/🧊️model.glb", "content": "shadowed-j" },
+        { "path": "🌉️bridge/🧊️model.glb", "content": "secondary-bridge" }
+      ]
+    }
+  ],
+  "placeholder": { "path": "🧊️placeholder.glb", "content": "placeholder" },
+  "catalog": {
+    "$schema": "./🧬️catalog.schema.json",
+    "version": 1,
+    "collections": [],
+    "entries": [
+      { "url": "/mesh/🪝️j.glb", "source": "🥇️primary/💊️capsules/🪝️j/🧊️model.glb", "path": "💊️capsules/🪝️j/🧊️model.glb" },
+      { "url": "/mesh/📐️l.glb", "source": "🥇️primary/💊️capsules/📐️l/🧊️model.glb", "path": "💊️capsules/📐️l/🧊️model.glb" },
+      { "url": "/mesh/💥️collision.glb", "source": "🥇️primary/💊️capsules/🪝️j/💥️collision.glb", "path": "💊️capsules/🪝️j/💥️collision.glb" },
+      { "url": "/mesh/🌉️bridge.glb", "source": "🥈️secondary/🌉️bridge/🧊️model.glb", "path": "🌉️bridge/🧊️model.glb" },
+      { "url": "/mesh/🧊️placeholder.glb", "source": "🧊️placeholder.glb", "path": "🧊️placeholder.glb" }
+    ]
+  },
+  "expected": [
+    { "path": "💊️capsules/📐️l/🧊️model.glb", "content": "primary-l" },
+    { "path": "💊️capsules/🪝️j/💥️collision.glb", "content": "primary-collider" },
+    { "path": "💊️capsules/🪝️j/🧊️model.glb", "content": "primary-j" },
+    { "path": "🌉️bridge/🧊️model.glb", "content": "secondary-bridge" },
+    { "path": "🧊️placeholder.glb", "content": "placeholder" }
+  ]
+}

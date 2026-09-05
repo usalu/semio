@@ -1,7 +1,7 @@
 //! @emoji 🎨️ Framework-neutral styling tokens generated from `ui/styling/🔣️.json`.
 
 #[allow(clippy::excessive_precision, reason = "🎨️ float literals mirror ui/styling/🔣️.json verbatim; truncating them by hand would drift from the source data on the next regeneration")]
-#[path = "../../🤖️generated.rs"]
+#[path = "../../🦀️tokens.generated.rs"]
 mod generated;
 
 pub use generated::*;

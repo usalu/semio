@@ -1,4 +1,0 @@
-syntax = "proto3";
-package stdio.svg.mutation;
-// set-doctype/SetDoctype
-message SetDoctypePayload { bytes doctype = 1; }

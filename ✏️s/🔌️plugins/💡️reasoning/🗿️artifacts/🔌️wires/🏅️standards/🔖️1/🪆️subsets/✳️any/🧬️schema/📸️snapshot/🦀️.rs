@@ -35,7 +35,7 @@ pub struct WiresSnapshot {
 
 //#region 🌉️ExternalCodecBridge
 /// 📤️ Renders a [`WiresSnapshot`] as this facet's own camelCase JSON projection — the comparison
-/// surface `mutate-wires-1`'s scenarios are measured through, and the shape the committed
+/// surface `📡️mutate-wires-1`'s scenarios are measured through, and the shape the committed
 /// `../🧬️mutations/<slug>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
 /// specification vectors are written in. Unlike `dag.dag`'s, this projection carries the board
 /// INLINE inside `wiresFixture`, so a mutation's effect is visible in it directly rather than only
@@ -48,7 +48,7 @@ pub fn encode_wires_snapshot_json(snapshot: &WiresSnapshot) -> String {
 }
 
 /// 📥️ The inverse of [`encode_wires_snapshot_json`] — decodes those committed specification vectors
-/// into real [`WiresSnapshot`] values, so `mutate-wires-1`'s adapter reads the committed fixture
+/// into real [`WiresSnapshot`] values, so `📡️mutate-wires-1`'s adapter reads the committed fixture
 /// rather than re-declaring it as a Rust literal beside it.
 pub fn decode_wires_snapshot_json(text: &str) -> Result<WiresSnapshot, String> {
     dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
@@ -56,7 +56,7 @@ pub fn decode_wires_snapshot_json(text: &str) -> Result<WiresSnapshot, String> {
 
 /// 📝️ Parses `.wires.dsl.semio` text into a [`WiresSnapshot`] — a named, non-async pass-through of
 /// this type's own `store::ArtifactDsl` impl (`../../🚪️io/📸️snapshot/📝️text/🦀️.rs`), whose
-/// trait and error type are both unnameable outside this crate, so `mutate-wires-1`'s
+/// trait and error type are both unnameable outside this crate, so `📡️mutate-wires-1`'s
 /// `identity-round-trip` scenario reaches the real committed artifact
 /// (`../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`) through this instead.
 pub fn parse_wires_dsl(text: &str) -> Result<WiresSnapshot, String> {

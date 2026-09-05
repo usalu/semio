@@ -1,0 +1,13 @@
+dialect grammar
+grammar din16798.op
+extension din16798
+use family-sheet
+start mutation
+
+artifact-mark = "norm.din16798-op"
+mutation = artifact-mark op-stmt+
+op-stmt = "set-field" field+ | "patch-field" field+ | "remove-field" field+
+field = ("din16798-basis" | "din16798-combination" | "din16798-partial-factor" | "din16798-verdict" | "din16798-annex" | "din16798-actor" | "started" | "actor") "=" value
+value = TEXT | INT | FLOAT | BOOL | QUANTITY
+QUANTITY = FLOAT UNIT | INT UNIT
+UNIT = IDENT

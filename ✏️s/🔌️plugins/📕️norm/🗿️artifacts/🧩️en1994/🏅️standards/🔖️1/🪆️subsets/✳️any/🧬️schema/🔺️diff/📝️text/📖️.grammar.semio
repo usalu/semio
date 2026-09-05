@@ -1,0 +1,9 @@
+dialect grammar
+grammar en1994.diff
+extension en1994
+start document
+
+document = header body
+header = "schema" SP "norm.en1994.diff" NL
+body = payload NL?
+payload = OCTET+

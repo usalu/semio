@@ -1,0 +1,2 @@
+# stdio.semio.brep diff text grammar schema
+type Document { line: String! }

@@ -1348,7 +1348,7 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
 /// (`descriptor_is_fresh`) already byte-compares each plugin's OWN native `describe()` build against
 /// its committed `🛂️.descriptor.semio`, and this ticket's whole premise (2550 installed records, zero
 /// runtime resources) forbids re-instantiating a component just to read its manifest — so
-/// `descriptor_path_for_plugin` (populated from the registry's `cratePath`, see `📦️bin.rs`) is tried
+/// `descriptor_path_for_plugin` (populated from the registry's `cratePath`, see `🚀️bin.rs`) is tried
 /// FIRST: zero instantiations. Only a plugin with no committed descriptor yet (most of the 33 today
 /// — packet D0 is still landing the emission plumbing) falls through to a hard, honest error; a live
 /// `describe()` fallback is DESIGNED (this struct's own doc, `📓️terra-R1-report.md` §1) but not
@@ -1380,7 +1380,7 @@ pub struct WasmtimeNodeHost<B: BlobStore + 'static = NoBlobStore> {
     kernel: NativeKernelRuntime,
     plugin_path_for_plugin: HashMap<String, PathBuf>,
     /// 📦️ `plugin_id -> its committed 🛂️.descriptor.semio path` (registry `cratePath`-derived, see
-    /// `📦️bin.rs`'s `resolve_descriptor_paths`) — `load_runtime_recursive`'s FIRST, zero-instantiation
+    /// `🚀️bin.rs`'s `resolve_descriptor_paths`) — `load_runtime_recursive`'s FIRST, zero-instantiation
     /// manifest source (this struct's own doc). A plugin absent from this map, or whose file does not
     /// exist on disk yet, has no committed descriptor — `load_runtime_recursive` fails loudly for it
     /// rather than falling back to a live `describe()` call (not wired here — see this struct's doc).
@@ -1471,7 +1471,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// `PLUGIN_WASM_ARTIFACTS`' first tuple element names) to the compiled `.wasm` component path the
     /// dev shell build already produces under `framework/os/dev/plugin-modules/<plugin id>/`.
     /// `descriptor_path_for_plugin` maps the SAME plugin id to its committed `🛂️.descriptor.semio`
-    /// (registry `cratePath`-derived — see `📦️bin.rs`'s `resolve_descriptor_paths`); absent entries
+    /// (registry `cratePath`-derived — see `🚀️bin.rs`'s `resolve_descriptor_paths`); absent entries
     /// simply have no committed descriptor yet (this struct's own doc).
     /// 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): `async` now — it
     /// builds `kernel` (`NativeKernelRuntime::new`, itself `async` since `Kernel::new`/`Kernel::
@@ -1663,7 +1663,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     ///
     /// ✅️ R1-native-manifest: reads `plugin_id`'s manifest from `descriptor_path_for_plugin`'s
     /// committed `🛂️.descriptor.semio` (packet E1's `describe_component` emitter output, decoded the
-    /// SAME way `🔌️plugin/📇️describe/📦️packages/🦀️rust/🦀️.rs`'s own `describe_component` decodes
+    /// SAME way `🔌️plugin/🖨️describe/📦️packages/🦀️rust/🦀️.rs`'s own `describe_component` decodes
     /// a live `describe()` return: `store::pack_rt::decode_wire_value` then `dsl::from_dsl_value`) —
     /// zero wasm instantiations (this struct's own doc). No live-`describe()` fallback yet — that
     /// needs a `GuestRuntime` seam on `🔌️plugin/🖥️host/🦀️.rs`, out of `path_scope` this
@@ -2757,7 +2757,7 @@ mod tests {
 
     //#region 🔖️NativeManifestSmoke
     /// 🧭️ Walks up from `CARGO_MANIFEST_DIR` looking for `nx.json` — the SAME strategy
-    /// `📦️bin.rs`'s own `find_repo_root` uses, duplicated here (not `include!`d — the bin crate's
+    /// `🚀️bin.rs`'s own `find_repo_root` uses, duplicated here (not `include!`d — the bin crate's
     /// own doc explains a `[[bin]]` target does not share the lib's module tree).
     fn test_repo_root() -> PathBuf {
         let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -2769,18 +2769,8 @@ mod tests {
         }
     }
 
-    /// 🧪️ R1-native-manifest runtime evidence: `🗒️note` is the one plugin with a committed
-    /// `🛂️.descriptor.semio` verified sha256-identical to a real native `describe()` build
-    /// (`design-abi.md` §3's `descriptor_is_fresh` gate; `📓️terra-D0-note-describe1.txt`) — every
-    /// other one of the 33 plugin ids has none yet (`📓️status.md`'s W3 report: descriptor emission
-    /// is fleet-wide blocked on a pre-existing capability-claim rule, packet D0). Tries every
-    /// location a compiled `note` wasm could plausibly be: the canonical `target/wasm32-wasip2/`
-    /// dirs `resolve_plugin_paths` (`📦️bin.rs`) uses at real CLI runtime, THEN this ticket's own
-    /// scratch build (`CARGO_TARGET_DIR=<ticket>/🎯️target-r1 cargo build -p semio-s-plugin-note
-    /// --target wasm32-wasip2`, run once to produce this evidence — see `📓️terra-R1-report.md`).
-    /// SKIPS rather than fails if none exist (a fresh checkout with neither built yet) — it exists
-    /// to demonstrate the wired path against real bytes when they are present, not to assert any
-    /// particular build artifact's existence.
+    /// 🧪️ Loads the committed note descriptor using the canonical runtime profile order.
+    /// Absence skips this optional integration probe and is never publication identity evidence.
     #[test]
     fn note_plugin_manifest_loads_from_its_committed_descriptor() {
         let repo_root = test_repo_root();
@@ -2788,9 +2778,8 @@ mod tests {
         assert!(descriptor_path.is_file(), "committed note descriptor missing at {}", descriptor_path.display());
 
         let candidate_wasm_paths = [
-            repo_root.join("target/wasm32-wasip2/debug/semio_s_plugin_note.wasm"),
+            repo_root.join("target/wasm32-wasip2/wasm-dev/semio_s_plugin_note.wasm"),
             repo_root.join("target/wasm32-wasip2/wasm-release/semio_s_plugin_note.wasm"),
-            repo_root.join(".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🎯️target-r1/wasm32-wasip2/debug/semio_s_plugin_note.wasm"),
         ];
         let Some(wasm_path) = candidate_wasm_paths.into_iter().find(|path| path.is_file()) else {
             eprintln!("[DEBUG] note_plugin_manifest_loads_from_its_committed_descriptor: SKIPPED — no compiled note wasm in any candidate location");

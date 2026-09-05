@@ -348,45 +348,45 @@ mod tests {
 //#region 🔖️Declaration
 pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    ArtifactDefinition::new(ArtifactIdentity::parse("s.sequence")?)
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.sequence.sequence")?)
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.schema.artifact")?, ArtifactCapabilityKind::schema())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.sequence.schema.artifact")?, ArtifactCapabilityKind::schema())
                 .descriptor(b"s.sequence.sequence")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.sequence.sequence")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.inference.artifact")?, ArtifactCapabilityKind::inference())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.sequence.inference.artifact")?, ArtifactCapabilityKind::inference())
                 .descriptor(b"s.sequence.sequence.inference")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.sequence.sequence.inference")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.composer.native")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.sequence@1/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.sequence@1/*")?)?,
+            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.sequence.composer.native")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.sequence.sequence@1/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.sequence.sequence@1/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.composer.csv")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.sequence.composer.csv")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.csv@rfc4180/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.csv@rfc4180/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.composer.md")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.sequence.composer.md")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.md@commonmark/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.md@commonmark/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.composer.json")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.sequence.composer.json")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.json@rfc8259/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.codec.document")?, ArtifactCapabilityKind::codec())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.sequence.codec.document")?, ArtifactCapabilityKind::codec())
                 .descriptor(b"sequence.sequence:sequence")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "sequence.sequence")?)?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "sequence")?)?,
+                .claim(ArtifactIdentityClaim::codec_extension("sequence.sequence", "sequence")?)?,
         )?
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Sequence")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Sequence")?)?)?
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Sequenz")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Sequenz")?)?)
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.sequence.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Sequence")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Sequence")?)?)?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.sequence.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Sequenz")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Sequenz")?)?)
 }
 
 //#endregion 🔖️Declaration

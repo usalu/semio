@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MoveReference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "modelDefinitionId",
+    "newOrigin",
+    "referenceId"
+  ],
+  "properties": {
+    "modelDefinitionId": {
+      "type": "string"
+    },
+    "referenceId": {
+      "type": "string"
+    },
+    "newOrigin": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    }
+  }
+}

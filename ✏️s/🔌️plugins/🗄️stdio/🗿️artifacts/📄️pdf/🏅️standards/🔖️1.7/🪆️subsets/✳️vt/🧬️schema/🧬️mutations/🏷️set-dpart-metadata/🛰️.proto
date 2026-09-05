@@ -1,7 +1,0 @@
-syntax = "proto3";
-package semio.s_stdio_pdf_1_7_vt.mutation.set_dpart_metadata;
-
-// 🏷️ Direct set-dpart-metadata protobuf payload.
-message SetDpartMetadataMutation {
-  string job = 1;
-}

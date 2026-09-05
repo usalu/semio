@@ -1,0 +1,33 @@
+# Direct identities: change-byte-order, insert-ifd, remove-ifd, replace-tag, remove-tag, replace-pixels
+dialect grammar
+grammar stdio.tiff.mutations
+extension tiff
+start document
+comment none
+
+document = change-byte-order | insert-ifd | remove-ifd | replace-tag | remove-tag | replace-pixels
+
+change-byte-order = "change-byte-order" "byte-order" "=" byte-order-lit
+insert-ifd = "insert-ifd" "index" "=" INT "ifd" "=" ifd-lit
+remove-ifd = "remove-ifd" "index" "=" INT
+replace-tag = "replace-tag" "ifd-index" "=" INT "tag" "=" INT "kind" "=" INT "values" "=" tiff-values
+remove-tag = "remove-tag" "ifd-index" "=" INT "tag" "=" INT
+replace-pixels = "replace-pixels" "pixels" "=" hex
+
+byte-order-lit = "0" | "1"
+
+snapshot-lit = "[" hex "," byte-order-lit "," ifds-list "," hex "]"
+ifds-list = "[" ifd-item-list? "]"
+ifd-item-list = ifd-lit {"," ifd-lit}*
+
+ifd-lit = "[" ifd-entry-list? "]"
+ifd-entry-list = tag-lit {"," tag-lit}*
+tag-lit = "[" INT "," INT "," tiff-values "]"
+
+tiff-values = "B" "[" hex "]" | "A" "[" hex "]" | "S" number-list | "L" number-list | "R" rational-list | "E" number-list | "U" "[" hex "]" | "H" number-list | "G" number-list | "Q" rational-list | "F" number-list | "D" number-list
+number-list = "[" number-comma-list? "]"
+number-comma-list = number {"," number}*
+number = FLOAT | INT
+rational-list = "[" rational-comma-list? "]"
+rational-comma-list = rational-item {"," rational-item}*
+rational-item = "[" number "," number "]"

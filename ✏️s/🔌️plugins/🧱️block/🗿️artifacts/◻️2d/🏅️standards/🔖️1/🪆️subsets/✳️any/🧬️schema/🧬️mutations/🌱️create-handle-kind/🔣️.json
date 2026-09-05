@@ -5,7 +5,7 @@
   "displayName": "Create Handle Kind",
   "emoji": "🌱️",
   "aggregateVariant": "CreateHandleKind",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "create-handle-kind",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

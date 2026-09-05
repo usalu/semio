@@ -40,15 +40,35 @@
       "id": "s.stdio.tiff.standard.6-0.representation.document",
       "standard": "s.stdio.tiff.standard.6-0",
       "representation": "document",
-      "mimes": ["image/tiff"],
-      "extensions": [".tiff"],
+      "mimes": [
+        "image/tiff"
+      ],
+      "extensions": [
+        ".tiff"
+      ],
       "is_binary": true,
       "aliases": [],
       "neutral": true,
       "status": "declared"
     }
   ],
-  "codecs": [],
+  "codecs": [
+    {
+      "id": "s.stdio.tiff.standard.6-0.codec.native-document.v1",
+      "status": "implemented",
+      "from": "s.stdio.tiff.standard.6-0.dialect.source",
+      "to": "s.stdio.tiff.standard.6-0.dialect.source",
+      "executable_registration": true,
+      "native_factory": {
+        "factory_id": "stdio.native.tiff.v1",
+        "artifact_kind": "stdio.tiff",
+        "document_schema": "stdio.tiff",
+        "extension": "tiff",
+        "pack_schema_hash": "498e64a94f0652c53ffc1839376721e66ba387d38681cc179d7b0bf844bc9b4a",
+        "runtime_capability_id": "s.stdio.tiff.standard.6-0.codec.codec-stdio-tiff-extension-tiff.v1"
+      }
+    }
+  ],
   "mutations": [],
   "inferences": [],
   "resources": [
@@ -83,22 +103,22 @@
   ],
   "runtime_capabilities": [
     {
-      "id": "s.stdio.tiff.runtime.codec.codec-stdio-tiff-extension-tiff.v1",
+      "id": "s.stdio.tiff.standard.6-0.codec.codec-stdio-tiff-extension-tiff.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec:stdio.tiff|extension:tiff",
+      "descriptor": "runtime-capability:codec:codec-extension:10:stdio.tiff:tiff|codec:stdio.tiff",
       "claims": [
         {
           "namespace": "codec",
           "value": "stdio.tiff"
         },
         {
-          "namespace": "extension",
-          "value": "tiff"
+          "namespace": "codec-extension",
+          "value": "10:stdio.tiff:tiff"
         }
       ]
     },
     {
-      "id": "s.stdio.tiff.runtime.composer.dialect-s-stdio-tiff-6-0.v1",
+      "id": "s.stdio.tiff.composer.dialect-s-stdio-tiff-6-0.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.tiff@6.0/*",
       "claims": [
@@ -109,7 +129,7 @@
       ]
     },
     {
-      "id": "s.stdio.tiff.runtime.composer.dialect-s-stdio-tiff-6-0-baseline.v1",
+      "id": "s.stdio.tiff.composer.dialect-s-stdio-tiff-6-0-baseline.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.tiff@6.0/baseline",
       "claims": [
@@ -120,7 +140,7 @@
       ]
     },
     {
-      "id": "s.stdio.tiff.runtime.grammar.grammar-stdio-tiff.v1",
+      "id": "s.stdio.tiff.grammar.grammar-stdio-tiff.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.tiff",
       "claims": [
@@ -131,7 +151,7 @@
       ]
     },
     {
-      "id": "s.stdio.tiff.runtime.grammar.grammar-stdio-tiff-diff.v1",
+      "id": "s.stdio.tiff.grammar.grammar-stdio-tiff-diff.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.tiff.diff",
       "claims": [
@@ -142,7 +162,7 @@
       ]
     },
     {
-      "id": "s.stdio.tiff.runtime.grammar.grammar-stdio-tiff-op.v1",
+      "id": "s.stdio.tiff.grammar.grammar-stdio-tiff-op.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.tiff.op",
       "claims": [
@@ -153,7 +173,7 @@
       ]
     },
     {
-      "id": "s.stdio.tiff.runtime.grammar.grammar-stdio-tiff-pack.v1",
+      "id": "s.stdio.tiff.grammar.grammar-stdio-tiff-pack.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.tiff.pack",
       "claims": [
@@ -164,7 +184,7 @@
       ]
     },
     {
-      "id": "s.stdio.tiff.runtime.grammar.grammar-stdio-tiff-spr.v1",
+      "id": "s.stdio.tiff.grammar.grammar-stdio-tiff-spr.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.tiff.spr",
       "claims": [
@@ -175,7 +195,7 @@
       ]
     },
     {
-      "id": "s.stdio.tiff.runtime.inference.schema-s-stdio-tiff-inference.v1",
+      "id": "s.stdio.tiff.inference.schema-s-stdio-tiff-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:s.stdio.tiff.inference",
       "claims": [
@@ -186,7 +206,7 @@
       ]
     },
     {
-      "id": "s.stdio.tiff.runtime.representation.mime-image-tiff-extension-tiff.v1",
+      "id": "s.stdio.tiff.standard.6-0.representation.mime-image-tiff-extension-tiff",
       "category": "representation",
       "descriptor": "runtime-capability:representation:mime:image/tiff|extension:.tiff",
       "claims": [
@@ -201,7 +221,7 @@
       ]
     },
     {
-      "id": "s.stdio.tiff.runtime.schema.schema-s-stdio-tiff.v1",
+      "id": "s.stdio.tiff.schema.schema-s-stdio-tiff.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.tiff",
       "claims": [
@@ -212,12 +232,12 @@
       ]
     },
     {
-      "id": "s.stdio.tiff.runtime.subset-validator.dialect-s-stdio-tiff-6-0-baseline.v1",
+      "id": "s.stdio.tiff.subset-validator.validated-dialect-s-stdio-tiff-6-0-baseline.v1",
       "category": "subset-validator",
-      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.tiff@6.0/baseline",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.tiff@6.0/baseline",
       "claims": [
         {
-          "namespace": "dialect",
+          "namespace": "validated-dialect",
           "value": "s.stdio.tiff@6.0/baseline"
         }
       ]

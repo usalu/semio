@@ -1,0 +1,75 @@
+{
+  "contract": "flow-add-widget-retained-child-v1",
+  "registration": {
+    "controller": "s.flow.flow@1/*#editor",
+    "tool": "addWidget",
+    "schema": "flow.fixture",
+    "classification": "migrated",
+    "publication": ["child"],
+    "execution": [16384, 256, 1, 16384, 7500, 1, 1]
+  },
+  "limits": { "rawBytes": 16384, "checkpointBytes": 512, "textBytes": 16384, "childItems": 256 },
+  "progress": { "en": "Applying command", "de": "Befehl wird angewendet" },
+  "canonical": {
+    "controller": "s.flow.flow@1/*#editor",
+    "tool": "addWidget",
+    "schema": "flow.fixture",
+    "rawBytes": 96,
+    "checkpointBytes": 0,
+    "wire": "canonical",
+    "command": { "kind": "inputNote", "neuronKind": null, "x": 40, "y": 41 },
+    "parent": { "childId": "flow-child-stable", "revisionCurrent": true, "rootCurrent": true },
+    "child": {
+      "present": true,
+      "slot": "content",
+      "id": "flow-child-stable",
+      "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "flow" },
+      "revisionCurrent": true,
+      "nodes": 1,
+      "edges": 0
+    },
+    "owner": "ready",
+    "cancel": "none",
+    "duplicateTarget": false
+  },
+  "accepted": [
+    {
+      "id": "note",
+      "command": { "kind": "inputNote", "neuronKind": null, "x": 40, "y": 41 },
+      "inserted": { "kind": "inputNote", "x": 40, "y": 41 },
+      "expected": { "accepted": true, "sessionCalls": 1, "parentMutations": 0, "childGroups": 1, "visibleGroups": 1 }
+    },
+    {
+      "id": "slider",
+      "command": { "kind": "inputSlider", "neuronKind": null, "x": -7.5, "y": 9.25 },
+      "inserted": { "kind": "inputSlider", "x": -7.5, "y": 9.25 },
+      "expected": { "accepted": true, "sessionCalls": 1, "parentMutations": 0, "childGroups": 1, "visibleGroups": 1 }
+    }
+  ],
+  "denials": [
+    { "id": "controller", "change": "wrong-controller", "expected": { "accepted": false, "sessionCalls": 0, "parentMutations": 0, "childGroups": 0, "visibleGroups": 0 } },
+    { "id": "tool", "change": "wrong-tool", "expected": { "accepted": false, "sessionCalls": 0, "parentMutations": 0, "childGroups": 0, "visibleGroups": 0 } },
+    { "id": "schema", "change": "wrong-schema", "expected": { "accepted": false, "sessionCalls": 0, "parentMutations": 0, "childGroups": 0, "visibleGroups": 0 } },
+    { "id": "raw", "change": "oversize-raw", "expected": { "accepted": false, "sessionCalls": 0, "parentMutations": 0, "childGroups": 0, "visibleGroups": 0 } },
+    { "id": "checkpoint", "change": "oversize-checkpoint", "expected": { "accepted": false, "sessionCalls": 0, "parentMutations": 0, "childGroups": 0, "visibleGroups": 0 } },
+    { "id": "wire-malformed", "change": "malformed-wire", "expected": { "accepted": false, "sessionCalls": 0, "parentMutations": 0, "childGroups": 0, "visibleGroups": 0 } },
+    { "id": "wire-trailing", "change": "trailing-wire", "expected": { "accepted": false, "sessionCalls": 0, "parentMutations": 0, "childGroups": 0, "visibleGroups": 0 } },
+    { "id": "kind-cap", "change": "oversize-kind", "expected": { "accepted": false, "sessionCalls": 0, "parentMutations": 0, "childGroups": 0, "visibleGroups": 0 } },
+    { "id": "neuron-cap", "change": "oversize-neuron-kind", "expected": { "accepted": false, "sessionCalls": 0, "parentMutations": 0, "childGroups": 0, "visibleGroups": 0 } },
+    { "id": "descriptor", "change": "unknown-descriptor", "expected": { "accepted": false, "sessionCalls": 1, "parentMutations": 0, "childGroups": 0, "visibleGroups": 0 } },
+    { "id": "x-finite", "change": "nonfinite-x", "expected": { "accepted": false, "sessionCalls": 0, "parentMutations": 0, "childGroups": 0, "visibleGroups": 0 } },
+    { "id": "y-finite", "change": "nonfinite-y", "expected": { "accepted": false, "sessionCalls": 0, "parentMutations": 0, "childGroups": 0, "visibleGroups": 0 } },
+    { "id": "child-missing", "change": "missing-child", "expected": { "accepted": false, "sessionCalls": 0, "parentMutations": 0, "childGroups": 0, "visibleGroups": 0 } },
+    { "id": "slot", "change": "wrong-slot", "expected": { "accepted": false, "sessionCalls": 0, "parentMutations": 0, "childGroups": 0, "visibleGroups": 0 } },
+    { "id": "child-id", "change": "wrong-child-id", "expected": { "accepted": false, "sessionCalls": 0, "parentMutations": 0, "childGroups": 0, "visibleGroups": 0 } },
+    { "id": "dialect", "change": "wrong-dialect", "expected": { "accepted": false, "sessionCalls": 0, "parentMutations": 0, "childGroups": 0, "visibleGroups": 0 } },
+    { "id": "parent-revision", "change": "stale-parent", "expected": { "accepted": false, "sessionCalls": 1, "parentMutations": 0, "childGroups": 1, "visibleGroups": 0 } },
+    { "id": "root", "change": "stale-root", "expected": { "accepted": false, "sessionCalls": 1, "parentMutations": 0, "childGroups": 1, "visibleGroups": 0 } },
+    { "id": "child-revision", "change": "stale-child", "expected": { "accepted": false, "sessionCalls": 1, "parentMutations": 0, "childGroups": 1, "visibleGroups": 0 } },
+    { "id": "duplicate", "change": "duplicate-target", "expected": { "accepted": false, "sessionCalls": 1, "parentMutations": 0, "childGroups": 1, "visibleGroups": 0 } },
+    { "id": "busy", "change": "owner-busy", "expected": { "accepted": false, "sessionCalls": 0, "parentMutations": 0, "childGroups": 0, "visibleGroups": 0 } },
+    { "id": "closing", "change": "owner-closing", "expected": { "accepted": false, "sessionCalls": 0, "parentMutations": 0, "childGroups": 0, "visibleGroups": 0 } },
+    { "id": "cancel-pre", "change": "cancel-before-work", "expected": { "accepted": false, "sessionCalls": 0, "parentMutations": 0, "childGroups": 0, "visibleGroups": 0 } },
+    { "id": "cancel-post", "change": "cancel-after-plan", "expected": { "accepted": false, "sessionCalls": 1, "parentMutations": 0, "childGroups": 1, "visibleGroups": 0 } }
+  ]
+}

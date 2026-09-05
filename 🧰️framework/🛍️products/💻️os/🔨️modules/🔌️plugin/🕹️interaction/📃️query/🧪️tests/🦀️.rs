@@ -9,7 +9,7 @@ use crate::local_interaction::retirement::interaction_store_owners;
 type InteractionStore = ArtifactStore<InteractionState, InteractionConfigMutation>;
 
 async fn fixture(source_case: &str) -> (InteractionStore, LocalInteractionQuery, Vec<u8>) {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == source_case).unwrap();
     let mut state = row["expected"].clone();
     state["hover"] = serde_json::json!({"private": {"channel": "pointer", "ids": ["not-captured"]}});
@@ -18,7 +18,14 @@ async fn fixture(source_case: &str) -> (InteractionStore, LocalInteractionQuery,
     let mut store = InteractionStore::new(envelope).await.unwrap();
     store.install_member_store_owners_exact(interaction_store_owners());
     let identity = LocalInteractionIdentity { app_instance_id: 7, generation: store.generation_now(), revision: store.content_revision_now(), document_revision: [2; 32], topology_revision: [3; 32] };
-    let expected = serde_json::to_vec(&serde_json::json!({"identity": identity, "state": row["expected"]})).unwrap();
+    let hex = |bytes: &[u8; 32]| bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+    let expected = serde_json::to_vec(&serde_json::json!({"identity": {
+        "appInstanceId": identity.app_instance_id,
+        "documentRevision": hex(&identity.document_revision),
+        "generation": identity.generation.to_string(),
+        "revision": hex(&identity.revision),
+        "topologyRevision": hex(&identity.topology_revision),
+    }, "state": row["expected"]})).unwrap();
     let capture = LocalInteractionCaptureCursor::new(store.snapshot_read().unwrap(), identity);
     (store, LocalInteractionQuery::new(capture, 13, 41), expected)
 }
@@ -70,7 +77,7 @@ fn wrong_token(mut token: LocalInteractionPageToken, field: &str) -> LocalIntera
 
 #[semio_framework_async_macros::async_test]
 async fn local_interaction_query_exact_pages_ack_backpressure_and_terminal_return() {
-    let laws: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️fixtures/📃️query/🔣️.json")).unwrap();
+    let laws: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🔣️.json")).unwrap();
     for source in laws["sourceCases"].as_array().unwrap() {
         for bytes in [1, 64, 4096] {
             let (mut store, mut query, expected) = fixture(source.as_str().unwrap()).await;
@@ -104,7 +111,7 @@ async fn local_interaction_query_exact_pages_ack_backpressure_and_terminal_retur
 
 #[semio_framework_async_macros::async_test]
 async fn local_interaction_query_zero_grants_cancel_and_worker_transfer() {
-    let laws: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️fixtures/📃️query/🔣️.json")).unwrap();
+    let laws: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🔣️.json")).unwrap();
     for prefix in laws["cancelAfterBytes"].as_array().unwrap() {
         let (mut store, mut query, _) = fixture("semantic-unicode-over-page").await;
         for grant in [ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: 4096 }, ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 0 }] {
@@ -192,7 +199,7 @@ impl LocalInteractionQueryCapture for HostileCapture {
 
 #[test]
 fn local_interaction_query_partial_encoder_failure_keeps_exact_byte_ownership() {
-    let laws: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️fixtures/📃️query/🔣️.json")).unwrap();
+    let laws: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🔣️.json")).unwrap();
     for bytes in [1, 64, 4096] {
         let root = std::sync::Arc::new(HostileRoot { first: laws["partialError"]["first"].as_str().unwrap().into(), second: HostileValue });
         let identity = LocalInteractionIdentity { app_instance_id: 1, generation: 1, revision: [1; 32], document_revision: [2; 32], topology_revision: [3; 32] };

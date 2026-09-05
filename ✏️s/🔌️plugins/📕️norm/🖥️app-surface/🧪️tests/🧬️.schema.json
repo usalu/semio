@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractId",
+    "rows"
+  ],
+  "properties": {
+    "contractId": {
+      "const": "semio.norm.surface-render/v1"
+    },
+    "rows": {
+      "type": "array",
+      "minItems": 30,
+      "maxItems": 30,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "variant",
+          "role",
+          "appId",
+          "bodyKeys"
+        ],
+        "properties": {
+          "variant": {
+            "enum": [
+              "din4108",
+              "din16798",
+              "din18599",
+              "en1990",
+              "en1991",
+              "en1992",
+              "en1993",
+              "en1994",
+              "en1995",
+              "en1996",
+              "en1997",
+              "en1998",
+              "en1999",
+              "iso16757",
+              "vdi3805"
+            ]
+          },
+          "role": {
+            "enum": [
+              "editor",
+              "viewer"
+            ]
+          },
+          "appId": {
+            "type": "string",
+            "pattern": "^s\\.norm\\.[a-z0-9]+@1/\\*#(editor|viewer)$"
+          },
+          "bodyKeys": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 6,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

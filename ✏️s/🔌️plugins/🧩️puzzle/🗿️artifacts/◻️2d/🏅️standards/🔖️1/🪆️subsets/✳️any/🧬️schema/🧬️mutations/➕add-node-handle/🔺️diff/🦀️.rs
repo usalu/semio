@@ -1,4 +1,4 @@
-//! 🔺️ Sparse diff builder for `AddNodeHandle` — patches the owner node's `handles` list. No-op
+//! 🔺️ Sparse diff builder for `AddNodeHandle` — patches the owner node's `🐙️handles` list. No-op
 //! when the handle id already exists on that node.
 use crate::artifacts::puzzle2d::diff::{Puzzle2dDiff, Puzzle2dNodePatch, Puzzle2dNodePatchEntry, Puzzle2dNodesDelta};
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;

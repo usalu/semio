@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🌐️ Vite plugin: serve and copy `framework/ui/asset` at `/asset/*` (fonts, cursors, …). */
+/** 🌐️ Vite plugins serving the asset-owned `/🖼️assets/*` namespace. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
@@ -16,7 +16,7 @@ import {
   type OwnedBuildConfig,
   type OwnedBuildMiddleware,
   type OwnedBuildPlugin,
-} from "../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️build-tooling.ts";
+} from "../📦️packages/🟦️typescript/🎯️targets/⚛️react/🏗️build-tooling.ts";
 import {
   PLAYGROUND_PORTS,
   allPlaygroundReservedPorts,
@@ -28,7 +28,10 @@ import {
   playgroundTestPortString,
   type PlaygroundHostKind,
 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import type { PlaygroundAssetSpec } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts";
+import type { PlaygroundAssetSpec } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts";
+import { parseMeshDeliveryCatalog, meshAssetTransportUrl, resolveMeshAsset, type MeshDeliveryCatalog } from "../../🖼️assets/🥽️mesh/🟦️.ts";
+import { assetPathFromRequest, SEMIO_ASSET_DIRECTORY } from "../../🖼️assets/🔍️resolver/🌐️delivery.ts";
+import faviconDelivery from "./🌐️favicon.json";
 // #endregion 🔌️Adapters
 
 export type { PlaygroundAssetSpec };
@@ -303,11 +306,11 @@ function contentTypeForUiAsset(filePath: string): string | undefined {
 function createUiAssetsMiddleware(assetsRoot: string): OwnedBuildMiddleware {
   const assetsRootResolved = resolve(assetsRoot);
   return (req, res, next) => {
-    if (!req.url?.startsWith("/asset/")) {
+    const rel = req.url ? assetPathFromRequest(req.url) : null;
+    if (rel === null) {
       next();
       return;
     }
-    const rel = decodeURIComponent(req.url.slice("/asset/".length).split(/[?#]/, 1)[0] ?? "");
     const filePath = resolve(assetsRootResolved, rel);
     const relToRoot = relative(assetsRootResolved, filePath);
     if (relToRoot.startsWith("..") || isAbsolute(relToRoot) || !existsSync(filePath) || !statSync(filePath).isFile()) {
@@ -323,80 +326,57 @@ function createUiAssetsMiddleware(assetsRoot: string): OwnedBuildMiddleware {
 }
 
 //#region 🔖️MeshCollectionAssetPlugin
-/** @emoji 🌐️ Connect middleware: serve a `mesh-collection` spec's GLBs at `{route}/<name>.glb` (first
- * matching root wins; `{route}/<placeholder-basename>` always serves `spec.placeholder`). Generalizes
- * the previous puzzle-3d-only `/mesh/*` middleware — driven entirely by the spec, no app names. */
+function readMeshDeliveryCatalog(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }>): MeshDeliveryCatalog {
+  if (spec.route !== "/mesh") throw new Error(`Unsupported mesh catalog route: ${spec.route}`);
+  const read = (path: string): unknown => JSON.parse(readFileSync(resolve(repoRoot, path), "utf8"));
+  return parseMeshDeliveryCatalog(read(spec.catalog), read);
+}
+
+/** 🌐️ Serves only explicit catalog transport paths, retaining public identity at the caller boundary. */
 function createMeshCollectionMiddleware(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }>): OwnedBuildMiddleware {
-  const route = spec.route.endsWith("/") ? spec.route : `${spec.route}/`;
-  const rootsResolved = spec.roots.map((root) => resolve(repoRoot, root));
-  const placeholderResolved = resolve(repoRoot, spec.placeholder);
-  const placeholderBasename = placeholderResolved.split(/[\\/]/).pop()!;
+  const route = `${spec.route}/`;
+  const catalog = new Map(readMeshDeliveryCatalog(repoRoot, spec).map(entry => [`${route}${entry.path}`, entry]));
   return (req, res, next) => {
     if (!req.url?.startsWith(route)) {
       next();
       return;
     }
-    const rawName = decodeURIComponent(req.url.slice(route.length).split(/[?#]/, 1)[0] ?? "");
-    if (rawName === placeholderBasename) {
-      if (!existsSync(placeholderResolved) || !statSync(placeholderResolved).isFile()) {
-        next();
-        return;
-      }
-      res.setHeader("Content-Type", "model/gltf-binary");
-      createReadStream(placeholderResolved).pipe(res);
+    let path: string;
+    try {
+      path = decodeURIComponent(req.url.split(/[?#]/, 1)[0] ?? "");
+    } catch {
+      res.statusCode = 400;
+      res.end();
       return;
     }
-    for (const meshRootResolved of rootsResolved) {
-      const filePath = resolve(meshRootResolved, rawName);
-      const relToRoot = relative(meshRootResolved, filePath);
-      if (relToRoot.startsWith("..") || isAbsolute(relToRoot)) {
-        continue;
-      }
-      if (!existsSync(filePath) || !statSync(filePath).isFile()) {
-        continue;
-      }
-      res.setHeader("Content-Type", "model/gltf-binary");
-      createReadStream(filePath).pipe(res);
-      return;
-    }
-    next();
+    const entry = catalog.get(path);
+    if (!entry) return next();
+    const source = resolve(repoRoot, entry.source);
+    if (!existsSync(source) || !statSync(source).isFile()) return next();
+    res.setHeader("Content-Type", "model/gltf-binary");
+    createReadStream(source).pipe(res);
   };
 }
 
-/** @emoji 📦️ Copies every `.glb` under `roots` into a static `dest` tree (first match per basename wins). */
-function copyMeshCollectionGlbs(roots: readonly string[], dest: string): void {
+/** 📦️ Copies only admitted source entries to their exact handpicked nested delivery paths. */
+function copyMeshCollectionGlbs(repoRoot: string, catalog: MeshDeliveryCatalog, dest: string): void {
   mkdirSync(dest, { recursive: true });
-  const copied = new Set<string>();
-  for (const root of roots) {
-    if (!existsSync(root)) {
-      continue;
-    }
-    for (const entry of readdirSync(root)) {
-      if (!entry.endsWith(".glb") || copied.has(entry)) {
-        continue;
-      }
-      const src = resolve(root, entry);
-      if (!statSync(src).isFile()) {
-        continue;
-      }
-      cpSync(src, resolve(dest, entry));
-      copied.add(entry);
-    }
+  for (const entry of catalog) {
+    const source = resolve(repoRoot, entry.source);
+    if (!existsSync(source) || !statSync(source).isFile()) throw new Error(`Missing catalog mesh source: ${entry.source}`);
+    const destination = resolve(dest, entry.path);
+    mkdirSync(dirname(destination), { recursive: true });
+    cpSync(source, destination);
   }
 }
 
-/** @emoji 🧊️ Generic dev/build Vite plugin pair for one `mesh-collection` asset spec: serves and
- * copies every GLB under `spec.roots` at `spec.route`, plus `spec.placeholder` as a fallback.
- * `spec.filterFromExamples` is reserved for a future per-locked-example basename filter (no source
- * data populates it yet, so every declared spec currently copies its full collection — matches the
- * puzzle-3d-only plugin this replaces, whose equivalent filter was already permanently inert). */
+/** 🧊️ Dev and static delivery share one explicit public-ID/source/output authority. */
 export function meshCollectionVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }>): OwnedBuildPlugin[] {
   const serveMeshes = createMeshCollectionMiddleware(repoRoot, spec);
-  const meshRoots = spec.roots.map((root) => resolve(repoRoot, root));
-  const placeholderMesh = resolve(repoRoot, spec.placeholder);
-  const placeholderBasename = placeholderMesh.split(/[\\/]/).pop()!;
+  const catalog = readMeshDeliveryCatalog(repoRoot, spec);
   const destName = spec.route.replace(/^\//, "");
   let outDir = resolve(process.cwd(), "dist");
+  let writeOutput = true;
   return [
     {
       name: `mesh-collection-serve${spec.route}`,
@@ -414,14 +394,13 @@ export function meshCollectionVitePlugin(repoRoot: string, spec: Extract<Playgro
       enforce: "pre",
       configResolved(config) {
         outDir = resolve(config.root, config.build.outDir);
+        writeOutput = config.build.write !== false;
       },
       closeBundle() {
+        if (!writeOutput) return;
         const dest = resolve(outDir, destName);
         mkdirSync(outDir, { recursive: true });
-        copyMeshCollectionGlbs(meshRoots, dest);
-        if (existsSync(placeholderMesh)) {
-          cpSync(placeholderMesh, resolve(dest, placeholderBasename));
-        }
+        copyMeshCollectionGlbs(repoRoot, catalog, dest);
       },
     },
   ];
@@ -473,14 +452,14 @@ export function playgroundPlayBootHtmlPlugin(): OwnedBuildPlugin {
 }
 
 /** @emoji 🔖️ Canonical semio emblem favicon `<link>` tags for playground and app `🌐️.html` heads. */
-export const SEMIO_FAVICON_HEAD_HTML = `<link rel="icon" href="./favicon.svg" type="image/svg+xml" />\n    <link rel="icon" href="./🖼️favicon.ico" sizes="any" />`;
+export const SEMIO_FAVICON_HEAD_HTML = `<link rel="icon" href="./${faviconDelivery.svg}" type="image/svg+xml" />\n    <link rel="icon" href="./${faviconDelivery.ico}" sizes="any" />`;
 
 /** @emoji 🔖️ Repo-root paths for the round dark emblem SVG and ICO fallback (matches {@link SemioLogo}). */
 export function semioFaviconSources(repoRoot: string): { readonly svg: string; readonly ico: string } {
   const logoRoot = resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️assets/🪧️logos");
   return {
-    svg: resolve(logoRoot, "🔣️emblem_dark_round.svg"),
-    ico: resolve(logoRoot, "🖼️favicon_dark_round_32x32.ico"),
+    svg: resolve(logoRoot, "🛡️emblem/🌘️dark-round/🖋️vector.svg"),
+    ico: resolve(logoRoot, "🌐️favicon/🌘️dark-round/📏️size-32.ico"),
   };
 }
 
@@ -507,13 +486,14 @@ type FaviconContent = { readonly svgMarkup?: string; readonly icoPath?: string }
 
 function createFaviconMiddleware(content: FaviconContent): OwnedBuildMiddleware {
   return (req, res, next) => {
-    const url = req.url?.split(/[?#]/, 1)[0];
-    if (url === "/favicon.svg" && content.svgMarkup) {
+    let url: string;
+    try { url = decodeURIComponent(req.url?.split(/[?#]/, 1)[0] ?? ""); } catch { next(); return; }
+    if (url === `/${faviconDelivery.svg}` && content.svgMarkup) {
       res.setHeader("Content-Type", "image/svg+xml");
       res.end(content.svgMarkup);
       return;
     }
-    if (url === "/🖼️favicon.ico" && content.icoPath && existsSync(content.icoPath)) {
+    if (url === `/${faviconDelivery.ico}` && content.icoPath && existsSync(content.icoPath)) {
       res.setHeader("Content-Type", "image/x-icon");
       createReadStream(content.icoPath).pipe(res);
       return;
@@ -522,10 +502,11 @@ function createFaviconMiddleware(content: FaviconContent): OwnedBuildMiddleware 
   };
 }
 
-/** @emoji 🔖️ Vite: serve and copy the given favicon content at `/favicon.svg` and `/🖼️favicon.ico`. */
+/** @emoji 🔖️ Vite: serve and copy the given emblem SVG and bookmark ICO under their exact publication names. */
 function faviconVitePlugins(content: FaviconContent): OwnedBuildPlugin[] {
   const serveFavicon = createFaviconMiddleware(content);
   let outDir = resolve(process.cwd(), "dist");
+  let writeOutput = true;
   return [
     {
       name: "semio-favicon-serve",
@@ -543,22 +524,24 @@ function faviconVitePlugins(content: FaviconContent): OwnedBuildPlugin[] {
       enforce: "pre",
       configResolved(config) {
         outDir = resolve(config.root, config.build.outDir);
+        writeOutput = config.build.write !== false;
       },
       closeBundle() {
+        if (!writeOutput) return;
         const dist = outDir;
         mkdirSync(dist, { recursive: true });
         if (content.svgMarkup) {
-          writeFileSync(resolve(dist, "favicon.svg"), content.svgMarkup);
+          writeFileSync(resolve(dist, faviconDelivery.svg), content.svgMarkup);
         }
         if (content.icoPath && existsSync(content.icoPath)) {
-          cpSync(content.icoPath, resolve(dist, "🖼️favicon.ico"));
+          cpSync(content.icoPath, resolve(dist, faviconDelivery.ico));
         }
       },
     },
   ];
 }
 
-/** @emoji 🔖️ Vite: serve and copy semio emblem favicons at `/favicon.svg` and `/🖼️favicon.ico`. */
+/** @emoji 🔖️ Vite: serve and copy semio emblem favicons at `/🛡️favicon.svg` and `/🔖️favicon.ico`. */
 export function semioFaviconVitePlugin(repoRoot: string): OwnedBuildPlugin[] {
   const favicons = semioFaviconSources(repoRoot);
   return faviconVitePlugins({ svgMarkup: semioFaviconSvgMarkup(favicons.svg), icoPath: favicons.ico });
@@ -578,6 +561,7 @@ export type ShellBrandHostChrome = {
  * `__vite-browser-external-*.js` shim chunk) and `dist/CNAME` when a brand declares `cnameHost`. */
 function staticDeployMarkerVitePlugins(cnameHost: string | undefined): OwnedBuildPlugin[] {
   let outDir = resolve(process.cwd(), "dist");
+  let writeOutput = true;
   return [
     {
       name: "static-deploy-markers",
@@ -585,8 +569,10 @@ function staticDeployMarkerVitePlugins(cnameHost: string | undefined): OwnedBuil
       enforce: "pre",
       configResolved(config) {
         outDir = resolve(config.root, config.build.outDir);
+        writeOutput = config.build.write !== false;
       },
       closeBundle() {
+        if (!writeOutput) return;
         mkdirSync(outDir, { recursive: true });
         writeFileSync(resolve(outDir, ".nojekyll"), "");
         if (cnameHost) writeFileSync(resolve(outDir, "CNAME"), `${cnameHost}\n`);
@@ -624,7 +610,6 @@ function semioEmojiIndexHtmlSpaFallbackRewrite(entry: string): OwnedBuildMiddlew
  * `index.html` name does not match the constitutional emoji entry filename. */
 export function semioEmojiIndexHtmlVitePlugin(rootDir: string, fileName = "🌐️.html"): OwnedBuildPlugin {
   const entry = `/${fileName}`;
-  let outDir = "";
   return {
     name: "semio-emoji-index-html",
     enforce: "pre",
@@ -636,16 +621,6 @@ export function semioEmojiIndexHtmlVitePlugin(rootDir: string, fileName = "🌐�
           },
         },
       };
-    },
-    configResolved(config) {
-      outDir = resolve(config.root, config.build.outDir);
-    },
-    closeBundle() {
-      const built = resolve(outDir, fileName);
-      if (!existsSync(built)) return;
-      const html = readFileSync(built, "utf8");
-      writeFileSync(resolve(outDir, "index.html"), html);
-      writeFileSync(resolve(outDir, "404.html"), html);
     },
     configureServer(server) {
       server.middlewares.use(semioEmojiIndexHtmlRootRewrite(entry));
@@ -662,7 +637,7 @@ export function semioEmojiIndexHtmlVitePlugin(rootDir: string, fileName = "🌐�
   };
 }
 
-/** @emoji 🏷️ Vite: brand-aware host chrome — rewrites the `<title>` to the brand's `windowTitle`, serves/copies the brand mark at `/favicon.svg` (ICO only when the brand provides one), and writes the static-deploy markers above; no brand ⇒ canonical semio favicons (still with `.nojekyll`). */
+/** @emoji 🏷️ Vite: brand-aware host chrome — rewrites the `<title>` to the brand's `windowTitle`, serves/copies the brand mark at `/🛡️favicon.svg` (ICO only when the brand provides one), and writes the static-deploy markers above; no brand ⇒ canonical semio favicons (still with `.nojekyll`). */
 export function semioBrandHtmlVitePlugins(repoRoot: string, brand: ShellBrandHostChrome | undefined): OwnedBuildPlugin[] {
   if (!brand) return [...semioFaviconVitePlugin(repoRoot), ...staticDeployMarkerVitePlugins(undefined)];
   return [
@@ -755,7 +730,7 @@ export function semioHostHtmlVitePlugin(repoRoot: string, spec: SemioHostHtmlSpe
 
 //#region 🔖️StatusSurfaceHtml
 /** @emoji 🎨️ Light/dark background+foreground hex pair mirrored from {@link PLAYGROUND_PLAY_BOOT_INLINE_STYLE}
- * / {@link PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT} — this file has no `../🎨️🟠️styling/🔣️.json` import, so these are the
+ * / {@link PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT} — this file has no `../🎨️styling/🔣️.json` import, so these are the
  * canonical values already baked into every other boot surface here, not new ones. */
 const SEMIO_STATUS_SURFACE_COLORS = { lightBg: "#f7f3e3", lightFg: "#001117", darkBg: "#001117", darkFg: "#f7f3e3" } as const;
 
@@ -792,7 +767,7 @@ export function statusSurfaceHtml(spec: { readonly kind: "empty" | "error" | "lo
 }
 //#endregion 🔖️StatusSurfaceHtml
 
-/** @emoji 🗂️ Canonical repo-relative root of `@semio-tech/assets`, the only tree served at `/asset/*`. */
+/** 🗂️ Canonical repo-relative root of the asset-owned public namespace. */
 export const SEMIO_ASSET_ROOT = "🧰️framework/🔨️modules/🖼️assets";
 
 /** @emoji 📂 Resolves and validates the merged Semio asset package root (fonts required). */
@@ -807,6 +782,7 @@ export function resolveSemioAssetRoot(repoRoot: string): string {
 
 function uiAssetsVitePluginsForRoot(assetsRoot: string): OwnedBuildPlugin[] {
   let outDir = resolve(process.cwd(), "dist");
+  let writeOutput = true;
   const serveAssets = createUiAssetsMiddleware(assetsRoot);
   return [
     {
@@ -825,12 +801,14 @@ function uiAssetsVitePluginsForRoot(assetsRoot: string): OwnedBuildPlugin[] {
       enforce: "pre",
       configResolved(config) {
         outDir = resolve(config.root, config.build.outDir);
+        writeOutput = config.build.write !== false;
       },
       closeBundle() {
+        if (!writeOutput) return;
         if (!existsSync(assetsRoot)) {
           return;
         }
-        const dest = resolve(outDir, "asset");
+        const dest = resolve(outDir, SEMIO_ASSET_DIRECTORY);
         mkdirSync(outDir, { recursive: true });
         cpSync(assetsRoot, dest, { recursive: true });
       },
@@ -838,7 +816,7 @@ function uiAssetsVitePluginsForRoot(assetsRoot: string): OwnedBuildPlugin[] {
   ];
 }
 
-/** @emoji 🌐️ Vite: serve and copy `@semio-tech/assets` at `/asset/*` for palette fonts and cursors. */
+/** 🌐️ Serves and copies shared fonts and cursors at `/🖼️assets/*`. */
 export function semioAssetsVitePlugin(repoRoot: string): OwnedBuildPlugin[] {
   return uiAssetsVitePluginsForRoot(resolveSemioAssetRoot(repoRoot));
 }
@@ -1290,6 +1268,7 @@ export function tileProxyVitePlugin(repoRoot: string, spec: Extract<PlaygroundAs
   const cacheRoot = resolve(repoRoot, ".🧬semio/🗺️map", spec.cache);
   const serveTiles = createTileProxyMiddleware(spec.route, cacheRoot, spec.upstream, mode);
   let outDir = resolve(process.cwd(), "dist");
+  let writeOutput = true;
   const plugins: OwnedBuildPlugin[] = [
     {
       name: `tile-proxy-serve${spec.route}`,
@@ -1309,8 +1288,10 @@ export function tileProxyVitePlugin(repoRoot: string, spec: Extract<PlaygroundAs
       enforce: "pre",
       configResolved(config) {
         outDir = resolve(config.root, config.build.outDir);
+        writeOutput = config.build.write !== false;
       },
       closeBundle() {
+        if (!writeOutput) return;
         const dist = outDir;
         mkdirSync(dist, { recursive: true });
         if (existsSync(cacheRoot)) {
@@ -1474,6 +1455,7 @@ export function staticDirVitePlugin(repoRoot: string, spec: Extract<PlaygroundAs
   const fixtureRoot = resolve(repoRoot, spec.root);
   const destName = spec.route.replace(/^\//, "");
   let outDir = resolve(process.cwd(), "dist");
+  let writeOutput = true;
   return [
     {
       name: `static-dir-serve${spec.route}`,
@@ -1493,8 +1475,10 @@ export function staticDirVitePlugin(repoRoot: string, spec: Extract<PlaygroundAs
         // 🖼️ `config.build.outDir` is root-relative unless already absolute — `resolve` handles both, so a
         // brand's custom `outDir` (see `ShellBrand.distDir`) is honored instead of assuming `<root>/dist`.
         outDir = resolve(config.root, config.build.outDir);
+        writeOutput = config.build.write !== false;
       },
       closeBundle() {
+        if (!writeOutput) return;
         if (!existsSync(fixtureRoot)) {
           return;
         }
@@ -1609,7 +1593,7 @@ if (import.meta.vitest) {
   const repoRoot = resolve(fileURLToPath(new URL(".", import.meta.url)), "../../../../../..");
 
   describe("playgroundFlowWasmDevStubPlugin", () => {
-    const importer = resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx");
+    const importer = resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx");
     const plugin = playgroundFlowWasmDevStubPlugin(repoRoot);
     const resolveId = plugin.resolveId as (id: string, importer: string) => string | undefined;
 
@@ -1684,9 +1668,9 @@ if (import.meta.vitest) {
 
   describe("contentTypeForStaticDirAsset", () => {
     it("assigns module script mime types for wasm plugin artifacts", () => {
-      expect(contentTypeForStaticDirAsset("/plugin-modules/sourcing/sourcing_plugin.js")).toBe("text/javascript");
-      expect(contentTypeForStaticDirAsset("/plugin-modules/_vendor/@bytecodealliance/preview2-shim/cli.js")).toBe("text/javascript");
-      expect(contentTypeForStaticDirAsset("/plugin-modules/puzzle/🕸️puzzle_plugin.wasm")).toBe("application/wasm");
+      expect(contentTypeForStaticDirAsset("/🔌️plugin-modules/⛏️sourcing/sourcing_plugin.js")).toBe("text/javascript");
+      expect(contentTypeForStaticDirAsset("/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js")).toBe("text/javascript");
+      expect(contentTypeForStaticDirAsset("/🔌️plugin-modules/🧩️puzzle/🕸️puzzle_plugin.wasm")).toBe("application/wasm");
     });
   });
 
@@ -1741,7 +1725,7 @@ if (import.meta.vitest) {
     it("resolves the merged asset package with fonts", () => {
       const root = resolveSemioAssetRoot(repoRoot);
       expect(root.endsWith(SEMIO_ASSET_ROOT.split("/").pop()!)).toBe(true);
-      expect(existsSync(resolve(root, "🔤️fonts/🔤️anta/🔤️latin.woff2"))).toBe(true);
+      expect(existsSync(resolve(root, "🔤️fonts/🚀️anta/🏛️latin/📖️regular/🗜️compressed.woff2"))).toBe(true);
     });
 
     it("throws when fonts are missing", () => {
@@ -1850,8 +1834,8 @@ if (import.meta.vitest) {
   describe("semioFaviconVitePlugin", () => {
     it("points at round dark emblem svg and ico under asset/logo", () => {
       const { svg, ico } = semioFaviconSources(repoRoot);
-      expect(svg).toBe(resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️assets/🪧️logos/🔣️emblem_dark_round.svg"));
-      expect(ico).toBe(resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️assets/🪧️logos/🖼️favicon_dark_round_32x32.ico"));
+      expect(svg).toBe(resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️assets/🪧️logos/🛡️emblem/🌘️dark-round/🖋️vector.svg"));
+      expect(ico).toBe(resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️assets/🪧️logos/🌐️favicon/🌘️dark-round/📏️size-32.ico"));
       expect(existsSync(svg)).toBe(true);
       expect(existsSync(ico)).toBe(true);
     });
@@ -1872,16 +1856,14 @@ if (import.meta.vitest) {
     const puzzle3dMeshSpec: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }> = {
       kind: "mesh-collection",
       route: "/mesh",
-      roots: ["./🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation", "./♻️mit-bestand/🖼️asset/🏚️abbau-aufbau"],
-      placeholder: "./🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧊️placeholder.glb",
-      filterFromExamples: true,
+      catalog: "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json",
     };
 
     it("points at metabolism and abbau-aufbau kit glbs plus shared placeholder", () => {
-      expect(existsSync(resolve(repoRoot, puzzle3dMeshSpec.roots[0]!, "🧊️capsule_J.glb"))).toBe(true);
-      expect(existsSync(resolve(repoRoot, puzzle3dMeshSpec.roots[0]!, "🧊️capsule-with-balcony_slash.glb"))).toBe(true);
-      expect(existsSync(resolve(repoRoot, puzzle3dMeshSpec.roots[1]!, "🧊️hexagonal-cut-concrete-forest-left.glb"))).toBe(true);
-      expect(existsSync(resolve(repoRoot, puzzle3dMeshSpec.placeholder))).toBe(true);
+      expect(existsSync(resolve(repoRoot, resolveMeshAsset("/mesh/🧊️capsule_J.glb").source))).toBe(true);
+      expect(existsSync(resolve(repoRoot, resolveMeshAsset("/mesh/🧊️capsule-with-balcony_slash.glb").source))).toBe(true);
+      expect(existsSync(resolve(repoRoot, resolveMeshAsset("/mesh/🧊️hexagonal-cut-concrete-forest-left.glb").source))).toBe(true);
+      expect(existsSync(resolve(repoRoot, resolveMeshAsset("/mesh/🧊️placeholder.glb").source))).toBe(true);
     });
 
     it("registers serve and build plugins named after the route", () => {
@@ -1898,7 +1880,7 @@ if (import.meta.vitest) {
       await new Promise<void>((resolveClose, reject) => probe.close((err) => (err ? reject(err) : resolveClose())));
       const server = startAssetServer(repoRoot, port, [puzzle3dMeshSpec]);
       try {
-        const response = await fetch(`http://127.0.0.1:${port}/mesh/🧊️base.glb`);
+        const response = await fetch(`http://127.0.0.1:${port}${meshAssetTransportUrl("/mesh/🧊️base.glb")}`);
         expect(response.status).toBe(200);
         expect(response.headers.get("content-type")).toBe("model/gltf-binary");
         const bytes = new Uint8Array(await response.arrayBuffer());

@@ -1,0 +1,15 @@
+dialect grammar
+grammar stdio.dwg.ac1024.inference
+extension stdio.dwg.ac1024.inference
+start document
+comment none
+
+document = IDENT structure
+structure = "structure" "=" "{" layer-count entity-count geometry-value-count geometry-index-count text-character-count codepage version "}"
+layer-count = "layer-count" "=" INT
+entity-count = "entity-count" "=" INT
+geometry-value-count = "geometry-value-count" "=" INT
+geometry-index-count = "geometry-index-count" "=" INT
+text-character-count = "text-character-count" "=" INT
+codepage = "codepage" "=" INT
+version = "version" "=" TEXT

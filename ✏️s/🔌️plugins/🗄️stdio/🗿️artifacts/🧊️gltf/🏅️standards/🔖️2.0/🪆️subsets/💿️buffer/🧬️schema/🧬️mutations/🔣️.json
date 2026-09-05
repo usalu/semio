@@ -1,0 +1,135 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/stdio/gltf/2.0/mutation/buffer",
+  "title": "glTF Buffer Mutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "create-buffer"
+        },
+        "payload": {
+          "$ref": "💿️buffer/🌱️create/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "create-buffer-view"
+        },
+        "payload": {
+          "$ref": "🪟️buffer-view/🌱️create/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "delete-buffer"
+        },
+        "payload": {
+          "$ref": "💿️buffer/🗑️delete/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "delete-buffer-view"
+        },
+        "payload": {
+          "$ref": "🪟️buffer-view/🗑️delete/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "move-buffer"
+        },
+        "payload": {
+          "$ref": "💿️buffer/🚚️move/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "move-buffer-view"
+        },
+        "payload": {
+          "$ref": "🪟️buffer-view/🚚️move/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorder-buffer-views"
+        },
+        "payload": {
+          "$ref": "🪟️buffer-view/🔀️reorder/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorder-buffers"
+        },
+        "payload": {
+          "$ref": "💿️buffer/🔀️reorder/🧬️.schema.json"
+        }
+      }
+    }
+  ]
+}

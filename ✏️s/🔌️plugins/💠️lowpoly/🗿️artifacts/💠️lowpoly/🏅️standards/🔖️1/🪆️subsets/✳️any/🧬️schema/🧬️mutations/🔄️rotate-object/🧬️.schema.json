@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RotateObject",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newRotation"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newRotation": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    }
+  }
+}

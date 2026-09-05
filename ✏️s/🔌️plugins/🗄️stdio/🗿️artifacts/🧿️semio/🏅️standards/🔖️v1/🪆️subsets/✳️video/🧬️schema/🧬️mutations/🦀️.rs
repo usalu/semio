@@ -25,7 +25,7 @@ use protocol::{Mutation, OpText};
 /// `Vec<SemioVideoStream>`-of-`Vec<SemioVideoSample>` nesting the diff side's own doc comment
 /// documents as blocking a derive attempt; `OpText`/`OpBinary` are hand-rolled below instead.
 //#region 🔖️Leaves
-#[path = "📄set-snapshot/🦀️.rs"]
+#[path = "🟤️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🎥insert-stream/🦀️.rs"]
 pub mod insert_stream;
@@ -65,7 +65,7 @@ pub enum SemioVideoMutation {
 }
 
 /// 🏷️ The declared kebab-case mutation vocabulary of `s.stdio.semio.video`, in enum declaration
-/// order — what the `mutate-semio-video` case's completeness gate counts against and what
+/// order — what the `🍐️mutate-semio-video` case's completeness gate counts against and what
 /// `../../🔣️oracle.json`'s catalog repeats. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this declaration honest.
 pub const KINDS: &[&str] = &["set-snapshot", "insert-stream", "remove-stream", "set-stream-meta", "insert-sample", "remove-sample", "set-sample-data", "set-sample-flags"];
@@ -371,7 +371,7 @@ mod tests {
     /// declaration order `variant_ordinal` assigns and the spelling `print_semio_video_mutation`
     /// emits, and every one of those names also appears in the committed oracle manifest's
     /// catalog. The bijection against `sample_mutations` is what makes a newly added variant fail
-    /// here instead of silently shrinking the vocabulary `mutate-semio-video` claims to cover.
+    /// here instead of silently shrinking the vocabulary `🍐️mutate-semio-video` claims to cover.
     #[test]
     fn kinds_match_the_enum_and_the_catalog() {
         assert_eq!(KINDS, &OP_KEYWORDS[..], "KINDS must be exactly the op keyword table — one kebab-case name per declared variant, in declaration order");
@@ -657,10 +657,10 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🧪️FixtureCases
-/// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
+/// 🧪️ Handcrafted `🟤️set-snapshot` fixture cases, wired from this tree's own mutations root so
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📄set-snapshot/🧪️tests/retimes-the-track-and-promotes-a-sample-to-a-keyframe/🦀️.rs"]
+#[path = "🟤️set-snapshot/🧪️tests/🧫️retimes-the-track-and-promotes-a-sample-to-a-keyframe/🦀️.rs"]
 mod set_snapshot_retimes_the_track_and_promotes_a_sample_to_a_keyframe;
 //#endregion 🧪️FixtureCases

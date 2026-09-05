@@ -35,7 +35,7 @@ use protocol::{Mutation, OpText};
 /// `MdDiff`'s own doc comment. `OpText`/`OpBinary` hand-rolled below, reusing `MdDiff`'s
 /// `pub(crate)` grammar primitives (`enc_block`/`enc_inline_list`/`split_top_level`/...).
 //#region 🔖️Leaves
-#[path = "📄set-snapshot/🦀️.rs"]
+#[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "➕insert-block/🦀️.rs"]
 pub mod insert_block;
@@ -43,7 +43,7 @@ pub mod insert_block;
 pub mod remove_block;
 #[path = "🔁replace-block/🦀️.rs"]
 pub mod replace_block;
-#[path = "✏set-inlines/🦀️.rs"]
+#[path = "✏️set-inlines/🦀️.rs"]
 pub mod set_inlines;
 //#endregion 🔖️Leaves
 
@@ -73,7 +73,7 @@ pub enum MdMutation {
 /// 🗂️ Kebab-case spelling of every `MdMutation` variant, declaration order. Every entry also
 /// appears in this subset's `🔣️oracle.json` mutation catalog (`md-commonmark-any`);
 /// `kinds_match_enum_variants_and_catalog` below is what keeps the two lists honest. The
-/// standalone `🧪️tests/mutate-md-commonmark/🦀️.rs` test adapter carries its OWN,
+/// standalone `🧪️tests/🎨️mutate-md-commonmark/🦀️.rs` test adapter carries its OWN,
 /// separately-declared `no-mutation` identity-probe scenario on top of these five real kinds — it
 /// names no `MdMutation` variant (dropped by the `26/08/29/S-END-TO-END` mutation-leaf migration:
 /// `no` is not an approved semantic verb) and is handled directly by that adapter's `mutate`/
@@ -453,12 +453,12 @@ mod op_codec_tests {
         assert_eq!(variant_kinds, declared_kinds, "KINDS must list every MdMutation variant exactly once");
 
         // 🧭️ Containment, not equality: the manifest's `kinds` ALSO carries `no-mutation`, the
-        // identity-probe row `🧪️tests/mutate-md-commonmark/🦀️.rs` registers directly
+        // identity-probe row `🧪️tests/🎨️mutate-md-commonmark/🦀️.rs` registers directly
         // (real `mutate-no-mutation`/`inverse-no-mutation` scenario rows in that case's own feature
         // file) — it names no `MdMutation` variant (dropped by the `26/08/29/S-END-TO-END`
         // mutation-leaf migration: `no` is not an approved semantic verb) and so cannot appear in
         // `KINDS`, which is exhaustively derived from the enum's own variants above.
-        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🧪️oracle/🔣️.json")).expect("valid catalog JSON");
+        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🔮️oracle/🔣️.json")).expect("valid catalog JSON");
         let catalog_kinds: Vec<&str> = manifest["mutationCatalogs"][0]["kinds"].as_array().expect("mutationCatalogs[0].kinds array").iter().map(|value| value.as_str().expect("kind is a string")).collect();
         for kind in KINDS {
             assert!(catalog_kinds.contains(kind), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
@@ -476,7 +476,7 @@ mod op_codec_tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/demotes-the-tower-heading-to-level-3/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/🧺️demotes-the-tower-heading-to-level-3/🦀️.rs"]
     mod tests_set_snapshot_demotes_the_tower_heading_to_level_3;
 }
 //#endregion 🧪️FixtureTests

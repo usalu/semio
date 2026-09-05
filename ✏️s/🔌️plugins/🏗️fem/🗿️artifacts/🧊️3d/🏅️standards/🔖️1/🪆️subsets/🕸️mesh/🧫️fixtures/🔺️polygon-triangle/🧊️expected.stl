@@ -1,0 +1,58 @@
+solid exported
+	facet normal 0 -1 0
+		outer loop
+			vertex 0 0 2
+			vertex 0 0 0
+			vertex 5 0 0
+		endloop
+	endfacet
+	facet normal -0.847998304005088 0.52999894000318 0
+		outer loop
+			vertex 0 0 2
+			vertex 2.5 4 2
+			vertex 0 0 0
+		endloop
+	endfacet
+	facet normal -0.847998304005088 0.52999894000318 0
+		outer loop
+			vertex 2.5 4 2
+			vertex 2.5 4 0
+			vertex 0 0 0
+		endloop
+	endfacet
+	facet normal 0 0 -1
+		outer loop
+			vertex 2.5 4 0
+			vertex 5 0 0
+			vertex 0 0 0
+		endloop
+	endfacet
+	facet normal 0.847998304005088 0.52999894000318 0
+		outer loop
+			vertex 5 0 2
+			vertex 5 0 0
+			vertex 2.5 4 0
+		endloop
+	endfacet
+	facet normal 0 -1 0
+		outer loop
+			vertex 5 0 2
+			vertex 0 0 2
+			vertex 5 0 0
+		endloop
+	endfacet
+	facet normal 0 0 1
+		outer loop
+			vertex 2.5 4 2
+			vertex 0 0 2
+			vertex 5 0 2
+		endloop
+	endfacet
+	facet normal 0.847998304005088 0.52999894000318 0
+		outer loop
+			vertex 2.5 4 2
+			vertex 5 0 2
+			vertex 2.5 4 0
+		endloop
+	endfacet
+endsolid exported

@@ -9,8 +9,8 @@
 //! document content per the ticket's own framing — are NOT owned here: `self.dag` is rebuilt
 //! wholesale from `NodeGraphScenePayload` every time [`GraphHost::sync_from_payload`]'s content-hash
 //! signature changes, and the payload itself is produced from `💻️os/🔨️modules/🌊️flow`'s `FlowFixture`
-//! (`Widget`/`SynapseSpec` graph, consumed via `EngineCanvas` — see
-//! `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs`).
+//! (`Widget`/`SynapseSpec` graph, consumed via `⚙️EngineCanvas` — see
+//! `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs`).
 //! That owner is real but **not yet properly event-sourced itself** — `🌊️flow/🌿️vcs/🦀️.rs`
 //! still dispatches through the banned `CollectionMutation<K,V,P>`/`Patch` shape at the time of this
 //! wave, per its own hot-file entry ("W3c flow agent" owns it; frozen, read-only, for this wave).

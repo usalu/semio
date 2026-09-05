@@ -1,7 +1,0 @@
-dialect grammar
-grammar stdio.pdf.1.7.mutations
-start op
-comment none
-
-# Generic aggregate framing: canonical internally tagged JSON represented as lower-case hex.
-op = "pdf-mutation" "payload" "=" hex

@@ -5,7 +5,7 @@
   "displayName": "Change Header",
   "emoji": "📐️",
   "aggregateVariant": "ChangeHeader",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-header",
   "binaryTag": 2,
   "invertibility": "explicit-mutation",

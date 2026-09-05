@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.inference.holes.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit",
+    "availability",
+    "validity",
+    "diagnosticIds",
+    "quality",
+    "provenance"
+  ],
+  "properties": {
+    "value": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "unit": {
+      "const": "unitless"
+    },
+    "availability": {
+      "enum": [
+        "available",
+        "approximate",
+        "unavailable",
+        "invalidInput",
+        "unsupportedPrimitive",
+        "openSurface",
+        "nonManifold",
+        "degenerate",
+        "unresolvedResource"
+      ]
+    },
+    "validity": {
+      "enum": [
+        "valid",
+        "invalid",
+        "indeterminate"
+      ]
+    },
+    "diagnosticIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "quality": {
+      "$ref": "#/$defs/quality"
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    }
+  },
+  "$defs": {
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "coverage",
+        "sampleCount",
+        "watertight",
+        "manifold",
+        "consistentlyOriented",
+        "warnings"
+      ],
+      "properties": {
+        "method": {
+          "enum": [
+            "exact",
+            "deterministicEstimate"
+          ]
+        },
+        "coverage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "absoluteError": {
+          "type": "number"
+        },
+        "relativeError": {
+          "type": "number"
+        },
+        "sampleCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "watertight": {
+          "type": "boolean"
+        },
+        "manifold": {
+          "type": "boolean"
+        },
+        "consistentlyOriented": {
+          "type": "boolean"
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm",
+        "algorithmVersion",
+        "dependencyFingerprints",
+        "coordinateSpace",
+        "toleranceFingerprint"
+      ],
+      "properties": {
+        "algorithm": {
+          "const": "s.stdio.gltf.geometry"
+        },
+        "algorithmVersion": {
+          "const": 2
+        },
+        "dependencyFingerprints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "coordinateSpace": {
+          "enum": [
+            "meshLocal",
+            "nodeLocal",
+            "sceneWorld"
+          ]
+        },
+        "toleranceFingerprint": {
+          "type": "string"
+        },
+        "samplingSeed": {
+          "type": "string"
+        },
+        "pose": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "x-semio": {
+    "id": "s.stdio.gltf.inference.holes.v1",
+    "kind": "inference",
+    "inference": {
+      "algorithmVersion": 1,
+      "cacheKey": "s.stdio.gltf.inference.holes.v1:geometry-v2",
+      "inputs": [
+        "schema/snapshot",
+        "buffers"
+      ],
+      "target": "geometry.overall.topology.holes"
+    }
+  }
+}

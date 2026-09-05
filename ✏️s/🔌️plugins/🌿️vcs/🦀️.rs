@@ -29,6 +29,7 @@ pub fn plugin() -> Result<Plugin<VcsApps>, semio_framework_plugin::PluginAssembl
     Plugin::<VcsApps>::builder("vcs")
         .label("VCS")
         .version("0.1.0")
+        .package_id("semio:vcs")
         .declare_artifact(crate::artifacts::vcs::artifact())
         .editor_mutation_roster::<crate::editor::vcs::VcsPlayApp>()
         .viewer_mutation_roster::<crate::viewer::vcs::VcsViewer>()

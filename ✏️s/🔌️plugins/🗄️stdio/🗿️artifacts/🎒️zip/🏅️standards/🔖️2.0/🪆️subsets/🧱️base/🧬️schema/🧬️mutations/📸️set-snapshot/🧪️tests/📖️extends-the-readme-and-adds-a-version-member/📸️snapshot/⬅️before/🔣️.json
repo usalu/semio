@@ -1,0 +1,13 @@
+{
+  "schema": "stdio.zip",
+  "entries": [
+    {
+      "name": "doc/readme.txt",
+      "data": [
+        104,
+        105
+      ]
+    }
+  ],
+  "comment": ""
+}

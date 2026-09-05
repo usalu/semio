@@ -700,6 +700,7 @@ impl protocol::OpBinary for Command {
 pub struct ModuleApp;
 
 impl ArtifactApp for ModuleApp {
+    const DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.playbook.procedural", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
     type Snapshot = ModuleRenderPayload;
     type Mutation = ModulePayloadMutation;
     type Config = semio_framework_plugin::NoConfig;

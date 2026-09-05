@@ -1,4 +1,0 @@
-module Stdio_avi_mutations;
-public type Op = unit {
-    json_utf8: bytes &eod;
-};

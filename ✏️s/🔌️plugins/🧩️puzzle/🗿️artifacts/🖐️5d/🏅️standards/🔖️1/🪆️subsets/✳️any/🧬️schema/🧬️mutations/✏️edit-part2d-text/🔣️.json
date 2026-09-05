@@ -5,7 +5,7 @@
   "displayName": "Edit Part2d Text",
   "emoji": "✏️",
   "aggregateVariant": "EditPart2dText",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "edit-part2d-text",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

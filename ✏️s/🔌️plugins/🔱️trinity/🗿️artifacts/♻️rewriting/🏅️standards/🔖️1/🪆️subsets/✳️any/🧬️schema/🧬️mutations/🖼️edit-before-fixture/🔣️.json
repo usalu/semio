@@ -5,7 +5,7 @@
   "displayName": "Edit Before Fixture",
   "emoji": "🖼️",
   "aggregateVariant": "EditBeforeFixture",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "edit-before-fixture",
   "binaryTag": 0,
   "invertibility": "explicit-mutation",

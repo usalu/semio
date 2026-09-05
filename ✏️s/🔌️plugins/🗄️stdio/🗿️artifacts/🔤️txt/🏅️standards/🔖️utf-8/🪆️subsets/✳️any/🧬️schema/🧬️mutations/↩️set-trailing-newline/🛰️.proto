@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.txt.mutation;
+// canonical set-trailing-newline/SetTrailingNewline
+message SetTrailingNewlinePayload { optional bool value = 1; }

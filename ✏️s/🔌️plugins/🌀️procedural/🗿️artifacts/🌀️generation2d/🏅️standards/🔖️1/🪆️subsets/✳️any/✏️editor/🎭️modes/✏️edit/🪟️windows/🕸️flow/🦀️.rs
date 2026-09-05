@@ -70,16 +70,16 @@ mod tests {
     use super::*;
     use crate::editor::generation2d::testkit::{app, render as render_body};
 
-    #[test]
-    fn renders_main_graph_scene() {
-        let mut app = app();
-        assert!(render_body(&mut app, GENERATION2D_PLAY_BODY_MAIN).contains("node-graph"));
+    #[semio_framework_async_macros::async_test]
+    async fn renders_main_graph_scene() {
+        let mut app = app().await;
+        assert!(render_body(&mut app, GENERATION2D_PLAY_BODY_MAIN).await.contains("node-graph"));
     }
 
-    #[test]
-    fn main_graph_scene_exports_flow_backed_node_graph_fields() {
-        let mut app = app();
-        let json = render_body(&mut app, GENERATION2D_PLAY_BODY_MAIN);
+    #[semio_framework_async_macros::async_test]
+    async fn main_graph_scene_exports_flow_backed_node_graph_fields() {
+        let mut app = app().await;
+        let json = render_body(&mut app, GENERATION2D_PLAY_BODY_MAIN).await;
         let value: serde_json::Value = serde_json::from_str(&json).expect("ui node json");
         let graph = value.get("nodeGraph").expect("nodeGraph");
         assert!(graph.get("fixtureJson").and_then(|v| v.as_str()).is_some_and(|s| s.contains("flow.fixture")));

@@ -1,0 +1,417 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "Ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION: split out of the former `✳️any` catch-all. AutoCAD DXF Reference (Release 12, Autodesk, 1992) defines a DXF file's body as a fixed sequence of normative sections -- HEADER, TABLES, BLOCKS, ENTITIES, EOF. This subset owns the BLOCKS section's own record kinds. The leaf struct definitions physically moved into this subset's own `🧬️schema/🧬️mutations`; the `DxfMutation` enum, its diff dispatch and the real text codec they compile into remain in `✳️header` (one shared, always-co-resident implementation across every DXF section -- the same family-module reuse this repo already uses for svg tiny/basic). This subset owns no new third-party oracle: `dxf-crate-r12-mutate-reader` (declared by `../../📰️header/🔮️oracle/🔣️.json`, merged into the shared registry) already reads this section's records back.",
+  "oracles": [],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.dxf",
+      "standard": "r12",
+      "subset": "blocks",
+      "standardDirectoryName": "🔖️r12",
+      "subsetDirectoryName": "🧱️blocks",
+      "mutations": [
+        {
+          "id": "insert-block",
+          "capability": "dxf-r12-blocks-mutate",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/📦insert-block/🦀️.rs#InsertBlock",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-block",
+            "bridgeVersion": 1,
+            "variant": "DxfMutation::InsertBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-blocks-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "blocks-gain-one-block-at-the-declared-index"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "remove-block",
+          "capability": "dxf-r12-blocks-mutate",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/🪓remove-block/🦀️.rs#RemoveBlock",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-block",
+            "bridgeVersion": 1,
+            "variant": "DxfMutation::RemoveBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-blocks-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "blocks-lose-the-block-at-the-declared-index"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-block",
+          "capability": "dxf-r12-blocks-mutate",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/🔲set-block/🦀️.rs#SetBlock",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-block",
+            "bridgeVersion": 1,
+            "variant": "DxfMutation::SetBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-blocks-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "block-base-point-and-nested-entities-agree"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-block-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.dxf",
+        "standard": "r12",
+        "subset": "blocks"
+      },
+      "mutation": "insert-block",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-dxf",
+          "path": "../🧫️fixtures/➕️insert-block-applied/⬅️before.dxf",
+          "mediaType": "image/vnd.dxf",
+          "sha256": "sha256:18f9470d4a545fcca0ad6fb7ce9d0721c098f1012a45dc4eed4e28cad80fbbdb",
+          "bytes": 9521
+        },
+        {
+          "role": "expected-after-dxf",
+          "path": "../🧫️fixtures/➕️insert-block-applied/➡️after.dxf",
+          "mediaType": "image/vnd.dxf",
+          "sha256": "sha256:ca1e16ca99327789077a373cdf87f11d93131840cc77c6b6b6c1b7985ca1278c",
+          "bytes": 9745
+        }
+      ],
+      "generator": {
+        "oracle": "dxf-crate-r12-mutate-reader",
+        "packageVersion": "0.6",
+        "engineFamily": "dxf-rs",
+        "engineVersion": "0.6.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only insert-block-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (dxf)",
+        "attribution": "Generated with dxf (MIT) via the standalone engine binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-dxf-r12-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A new BLOCK is inserted at a valid index."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-block-rejected-out-of-bounds",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.dxf",
+        "standard": "r12",
+        "subset": "blocks"
+      },
+      "mutation": "insert-block",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-dxf",
+          "path": "../🧫️fixtures/🚧️insert-block-rejected-out-of-bounds/⬅️before.dxf",
+          "mediaType": "image/vnd.dxf",
+          "sha256": "sha256:18f9470d4a545fcca0ad6fb7ce9d0721c098f1012a45dc4eed4e28cad80fbbdb",
+          "bytes": 9521
+        }
+      ],
+      "generator": {
+        "oracle": "dxf-crate-r12-mutate-reader",
+        "packageVersion": "0.6",
+        "engineFamily": "dxf-rs",
+        "engineVersion": "0.6.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only insert-block-rejected-out-of-bounds",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (dxf)",
+        "attribution": "Generated with dxf (MIT) via the standalone engine binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-dxf-r12-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Index exceeds the evolving sequence length — invalid-add-index."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-block-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.dxf",
+        "standard": "r12",
+        "subset": "blocks"
+      },
+      "mutation": "remove-block",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-dxf",
+          "path": "../🧫️fixtures/➖️remove-block-applied/⬅️before.dxf",
+          "mediaType": "image/vnd.dxf",
+          "sha256": "sha256:18f9470d4a545fcca0ad6fb7ce9d0721c098f1012a45dc4eed4e28cad80fbbdb",
+          "bytes": 9521
+        },
+        {
+          "role": "expected-after-dxf",
+          "path": "../🧫️fixtures/➖️remove-block-applied/➡️after.dxf",
+          "mediaType": "image/vnd.dxf",
+          "sha256": "sha256:ad3e88161ce60d14256f1491fd2c4850b948e74111efb69562d8c9623bb1381c",
+          "bytes": 9305
+        }
+      ],
+      "generator": {
+        "oracle": "dxf-crate-r12-mutate-reader",
+        "packageVersion": "0.6",
+        "engineFamily": "dxf-rs",
+        "engineVersion": "0.6.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only remove-block-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (dxf)",
+        "attribution": "Generated with dxf (MIT) via the standalone engine binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-dxf-r12-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The BLOCK at a valid index is removed."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-block-rejected-missing",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.dxf",
+        "standard": "r12",
+        "subset": "blocks"
+      },
+      "mutation": "remove-block",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-dxf",
+          "path": "../🧫️fixtures/🔍️remove-block-rejected-missing/⬅️before.dxf",
+          "mediaType": "image/vnd.dxf",
+          "sha256": "sha256:18f9470d4a545fcca0ad6fb7ce9d0721c098f1012a45dc4eed4e28cad80fbbdb",
+          "bytes": 9521
+        }
+      ],
+      "generator": {
+        "oracle": "dxf-crate-r12-mutate-reader",
+        "packageVersion": "0.6",
+        "engineFamily": "dxf-rs",
+        "engineVersion": "0.6.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only remove-block-rejected-missing",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (dxf)",
+        "attribution": "Generated with dxf (MIT) via the standalone engine binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-dxf-r12-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Index does not exist — invalid-remove-index."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-block-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.dxf",
+        "standard": "r12",
+        "subset": "blocks"
+      },
+      "mutation": "set-block",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-dxf",
+          "path": "../🧫️fixtures/🧱️set-block-applied/⬅️before.dxf",
+          "mediaType": "image/vnd.dxf",
+          "sha256": "sha256:18f9470d4a545fcca0ad6fb7ce9d0721c098f1012a45dc4eed4e28cad80fbbdb",
+          "bytes": 9521
+        },
+        {
+          "role": "expected-after-dxf",
+          "path": "../🧫️fixtures/🧱️set-block-applied/➡️after.dxf",
+          "mediaType": "image/vnd.dxf",
+          "sha256": "sha256:6671665598c588b3f1c0297120d7acba190731ab313abbcb1850b08d48340737",
+          "bytes": 9428
+        }
+      ],
+      "generator": {
+        "oracle": "dxf-crate-r12-mutate-reader",
+        "packageVersion": "0.6",
+        "engineFamily": "dxf-rs",
+        "engineVersion": "0.6.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only set-block-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (dxf)",
+        "attribution": "Generated with dxf (MIT) via the standalone engine binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-dxf-r12-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The BLOCK at a present index has its base point and nested entities whole-value replaced."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-block-rejected-out-of-bounds",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.dxf",
+        "standard": "r12",
+        "subset": "blocks"
+      },
+      "mutation": "set-block",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-dxf",
+          "path": "../🧫️fixtures/⛔️set-block-rejected-out-of-bounds/⬅️before.dxf",
+          "mediaType": "image/vnd.dxf",
+          "sha256": "sha256:18f9470d4a545fcca0ad6fb7ce9d0721c098f1012a45dc4eed4e28cad80fbbdb",
+          "bytes": 9521
+        }
+      ],
+      "generator": {
+        "oracle": "dxf-crate-r12-mutate-reader",
+        "packageVersion": "0.6",
+        "engineFamily": "dxf-rs",
+        "engineVersion": "0.6.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only set-block-rejected-out-of-bounds",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (dxf)",
+        "attribution": "Generated with dxf (MIT) via the standalone engine binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-dxf-r12-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Index is absent AND beyond the evolving length — invalid-add-index via the insert fallback."
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "dxf-r12-blocks",
+      "capability": "dxf-r12-blocks-mutate",
+      "standardDirectoryName": "🔖️r12",
+      "subsetDirectoryName": "🧱️blocks",
+      "vectors": [],
+      "kinds": [
+        "insert-block",
+        "remove-block",
+        "set-block"
+      ]
+    }
+  ]
+}

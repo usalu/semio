@@ -1,0 +1,53 @@
+{
+  "schema": "semio.hub.public-space-detail-v1.fixture/v1",
+  "positives": {
+    "anonymous": {
+      "access": "public",
+      "space": { "id": "space-public", "name": "Public Studio", "kind": "studio", "visibility": "public", "memberCount": 2, "documentCount": 1, "createdAtMs": 1700000000000, "updatedAtMs": 1700000001000 },
+      "documents": [{ "documentId": "document-public", "artifactKind": "note.document", "artifactSchema": "note.document@1", "owner": { "pluginId": "note", "packageId": "note", "version": "1.0.0", "packageHash": "1111111111111111111111111111111111111111111111111111111111111111" }, "packSchemaHash": "2222222222222222222222222222222222222222222222222222222222222222" }]
+    },
+    "publicNonmember": {
+      "access": "public",
+      "space": { "id": "space-public", "name": "Public Studio", "kind": "studio", "visibility": "public", "memberCount": 2, "documentCount": 1, "createdAtMs": 1700000000000, "updatedAtMs": 1700000001000 },
+      "documents": [{ "documentId": "document-public", "artifactKind": "note.document", "artifactSchema": "note.document@1", "owner": { "pluginId": "note", "packageId": "note", "version": "1.0.0", "packageHash": "1111111111111111111111111111111111111111111111111111111111111111" }, "packSchemaHash": "2222222222222222222222222222222222222222222222222222222222222222" }]
+    },
+    "member": {
+      "access": "member",
+      "space": { "id": "space-public", "name": "Public Studio", "kind": "studio", "visibility": "public", "ownerUserId": "user-author", "role": "spectator", "memberCount": 2, "documentCount": 1, "activeConnections": 1, "createdAtMs": 1700000000000, "updatedAtMs": 1700000001000 },
+      "members": [{ "userId": "user-spectator", "email": "spectator@example.invalid", "displayName": "Spectator", "role": "spectator" }],
+      "documents": [{ "descriptor": { "spaceId": "space-public", "documentId": "document-public", "artifactKind": "note.document", "artifactSchema": "note.document@1", "owner": { "pluginId": "note", "packageId": "note", "version": "1.0.0", "packageHash": "1111111111111111111111111111111111111111111111111111111111111111" }, "packSchemaHash": "2222222222222222222222222222222222222222222222222222222222222222", "bootstrapVersion": 1, "bootstrapFrontier": { "headSeq": 0, "commitSeq": 0, "epoch": 1 }, "bootstrapSnapshotHash": "3333333333333333333333333333333333333333333333333333333333333333" }, "headSeq": 7, "commitSeq": 6, "epoch": 2 }]
+    },
+    "author": {
+      "access": "author",
+      "space": { "id": "space-public", "name": "Public Studio", "kind": "studio", "visibility": "public", "ownerUserId": "user-author", "role": "author", "memberCount": 2, "documentCount": 1, "activeConnections": 1, "createdAtMs": 1700000000000, "updatedAtMs": 1700000001000 },
+      "members": [{ "userId": "user-author", "email": "author@example.invalid", "displayName": "Author", "role": "author" }],
+      "documents": [{ "descriptor": { "spaceId": "space-public", "documentId": "document-public", "artifactKind": "note.document", "artifactSchema": "note.document@1", "owner": { "pluginId": "note", "packageId": "note", "version": "1.0.0", "packageHash": "1111111111111111111111111111111111111111111111111111111111111111" }, "packSchemaHash": "2222222222222222222222222222222222222222222222222222222222222222", "bootstrapVersion": 1, "bootstrapFrontier": { "headSeq": 0, "commitSeq": 0, "epoch": 1 }, "bootstrapSnapshotHash": "3333333333333333333333333333333333333333333333333333333333333333" }, "headSeq": 7, "commitSeq": 6, "epoch": 2 }],
+      "invites": [{ "id": "invite-author", "spaceId": "space-public", "role": "spectator", "createdAtMs": 1700000000000, "expiresAtMs": 1700003600000, "revoked": false }]
+    }
+  },
+  "forbiddenPublicKeys": ["ownerUserId", "role", "activeConnections", "connections", "presence", "members", "invites", "email", "userId", "displayName", "actor", "hlc", "cursor", "headSeq", "commitSeq", "epoch", "bootstrapVersion", "bootstrapFrontier", "bootstrapSnapshotHash", "checkpointId", "storageKey"],
+  "hostileMutations": [
+    { "name": "owner-user-id", "path": ["space", "ownerUserId"], "value": "user-author" },
+    { "name": "role", "path": ["space", "role"], "value": "spectator" },
+    { "name": "active-connections", "path": ["space", "activeConnections"], "value": 1 },
+    { "name": "connections", "path": ["connections"], "value": [] },
+    { "name": "presence", "path": ["presence"], "value": [] },
+    { "name": "members", "path": ["members"], "value": [] },
+    { "name": "invites", "path": ["invites"], "value": [] },
+    { "name": "email", "path": ["email"], "value": "secret@example.invalid" },
+    { "name": "user-id", "path": ["userId"], "value": "user-secret" },
+    { "name": "display-name", "path": ["displayName"], "value": "Secret" },
+    { "name": "actor", "path": ["actor"], "value": { "kind": "user", "id": "user:secret" } },
+    { "name": "hlc", "path": ["hlc"], "value": { "physicalMs": 1, "logical": 0 } },
+    { "name": "cursor", "path": ["cursor"], "value": "private-cursor" },
+    { "name": "head-seq", "path": ["documents", 0, "headSeq"], "value": 7 },
+    { "name": "commit-seq", "path": ["documents", 0, "commitSeq"], "value": 6 },
+    { "name": "epoch", "path": ["documents", 0, "epoch"], "value": 2 },
+    { "name": "bootstrap-version", "path": ["documents", 0, "bootstrapVersion"], "value": 1 },
+    { "name": "bootstrap-frontier", "path": ["documents", 0, "bootstrapFrontier"], "value": { "headSeq": 0, "commitSeq": 0, "epoch": 1 } },
+    { "name": "bootstrap-snapshot-hash", "path": ["documents", 0, "bootstrapSnapshotHash"], "value": "3333333333333333333333333333333333333333333333333333333333333333" },
+    { "name": "checkpoint-id", "path": ["documents", 0, "checkpointId"], "value": "checkpoint-private" },
+    { "name": "storage-key", "path": ["documents", 0, "storageKey"], "value": "private/cas/key" }
+  ],
+  "rawPublicEvent": { "kind": "event", "event": { "seq": 9, "id": "event-secret", "hlc": { "physicalMs": 1700000002000, "logical": 0 }, "actor": { "kind": "user", "id": "user:secret" }, "spaceId": "space-public", "body": { "kind": "member.upserted", "spaceId": "space-public", "userId": "user-secret", "role": "spectator" }, "recordedAtMs": 1700000002000 } }
+}

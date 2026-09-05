@@ -1,0 +1,3 @@
+(* ebnf stdio.step diff *)
+document = header, body ;
+header = 'schema', space, 'stdio.step', newline ;

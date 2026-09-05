@@ -1,5 +1,5 @@
 //! 📏️ Main-window option — the line-height slider. Its command handler lives in
-//! `🎮️commands/⚙️toggle-line-numbers::set_line_height`.
+//! `🎮️commands/📏️set-line-height::set_line_height`.
 
 use crate::editor::writer::config::WriterConfig;
 use crate::editor::writer::terminology::WriterPlayLabels;

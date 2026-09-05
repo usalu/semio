@@ -137,7 +137,7 @@ pub fn print_dsl(projection: &WriterSnapshot) -> String {
 //#region 🔖️ExternalBridges
 /// 📖️ [`parse_dsl`] with a plain-`String` error, reachable from OUTSIDE this crate — `store` is a
 /// private `extern crate` alias (`🦀️.rs`), so `store::TextError` cannot be named by the
-/// `mutate-writer-1` test adapter that has to read the committed `🗣️.dsl.semio` artifact.
+/// `🟨️mutate-writer-1` test adapter that has to read the committed `🗣️.dsl.semio` artifact.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn parse_writer_dsl(text: &str) -> Result<WriterSnapshot, String> {
     <WriterSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())

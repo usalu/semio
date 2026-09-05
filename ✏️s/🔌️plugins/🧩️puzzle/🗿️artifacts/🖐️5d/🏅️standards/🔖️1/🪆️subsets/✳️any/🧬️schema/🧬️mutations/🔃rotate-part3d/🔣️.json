@@ -5,7 +5,7 @@
   "displayName": "Rotate Part3d",
   "emoji": "🔃",
   "aggregateVariant": "RotatePart3d",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "rotate-part3d",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

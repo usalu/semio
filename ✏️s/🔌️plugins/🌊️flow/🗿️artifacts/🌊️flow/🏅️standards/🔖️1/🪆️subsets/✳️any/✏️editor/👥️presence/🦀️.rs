@@ -4,6 +4,9 @@ use flow::CameraJson;
 use protocol::Mutation;
 use store::ArtifactPack;
 
+#[path = "♻️retirement/🦀️.rs"]
+pub mod retirement;
+
 //#region 🔖️Presence
 /// 👥️ Shareable live APP-SPECIFIC subset of flow view state — preview toggles + the node-graph camera
 /// only. Ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `selected_node_ids`/
@@ -28,7 +31,7 @@ impl Default for FlowPresence {
 
 impl protocol::MutationDiff<FlowPresence> for FlowPresence {
     fn apply(&self, _base: &FlowPresence) -> protocol::MutationApplyResult<FlowPresence> {
-        Ok({ self.clone() })
+        Ok(self.clone())
     }
     fn absorb(&mut self, other: Self) {
         *self = other;
@@ -94,6 +97,16 @@ pub enum FlowPresenceMutation {
 
 impl Mutation<FlowPresence> for FlowPresenceMutation {
     type Diff = FlowPresence;
+
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+    ];
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        match self {
+            Self::Snapshot { .. } => &Self::DESCRIPTORS[0],
+        }
+    }
 
     fn diff(&self, _base: &FlowPresence) -> protocol::MutationOutcome<FlowPresence> {
         match self {

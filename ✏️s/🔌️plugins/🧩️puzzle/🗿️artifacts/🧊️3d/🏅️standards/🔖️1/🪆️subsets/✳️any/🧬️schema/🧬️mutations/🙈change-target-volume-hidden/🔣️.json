@@ -5,7 +5,7 @@
   "displayName": "Change Target Volume Hidden",
   "emoji": "🙈",
   "aggregateVariant": "ChangeTargetVolumeHidden",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-target-volume-hidden",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

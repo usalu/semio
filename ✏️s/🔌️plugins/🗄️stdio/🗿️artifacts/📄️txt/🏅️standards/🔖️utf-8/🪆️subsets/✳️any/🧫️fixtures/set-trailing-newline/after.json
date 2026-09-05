@@ -1,9 +1,0 @@
-{
-  "schema": "stdio.txt",
-  "lines": [
-    "first line",
-    "second line"
-  ],
-  "trailingNewline": false,
-  "lineEnding": "lf"
-}

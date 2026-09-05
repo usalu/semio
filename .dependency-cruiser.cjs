@@ -5,7 +5,7 @@ const path = require("path");
 
 const TECHNOLOGIES = ["compose", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand"];
 const BOOTSTRAP_TOOLING_ENTRY_PATH = "(^|/)(?:📜️script\\.ts|(?:⚙️|🧪️)?(?:vite|vitest)\\.config\\.[cm]?[jt]s)$";
-const RENDERER_HOST_ROOT = "^🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/(📦️packages/🟦️typescript/🎯️targets/⚛️react|🧱️elements)/";
+const RENDERER_HOST_ROOT = "^🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/(📦️packages/🟦️typescript/🎯️targets/⚛️react|🧱️elements)/";
 const RESOLVED_NODE_BUILTIN_PATH = `^(?:${[...new Set(builtinModules.map((name) => name.replace(/^node:/, "")))].map(escapeRegex).join("|")})(?:$|/)`;
 const RENDERER_HOST_ALLOWED_RESOLVED_PATHS = [
   RENDERER_HOST_ROOT,
@@ -67,7 +67,7 @@ function assertFocusedBoundarySemantics() {
   }
   const rendererAllows = rendererRule.to.pathNot.map((pattern) => new RegExp(pattern, "u"));
   const allowedRendererTargets = [
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️.tsx",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🟦️.tsx",
     "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx",
     "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🟦️.ts",
     "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
@@ -83,7 +83,7 @@ function assertFocusedBoundarySemantics() {
     "🧰️framework/🔨️modules/🎠️kernel/🟦️.ts",
     "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️.ts",
     "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
-    "♻️mit-bestand/🧺️demonstrator/🟦️brand.ts",
+    "♻️mit-bestand/🧺️demonstrator/🪧️brand.ts",
   ];
   const allowed = (candidate) => rendererAllows.some((pattern) => pattern.test(candidate));
   if (allowedRendererTargets.some((candidate) => !allowed(candidate)) || forbiddenRendererTargets.some(allowed)) {

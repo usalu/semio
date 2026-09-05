@@ -1,0 +1,180 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/en1991/diff.json",
+  "title": "En1991Diff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "En1991Artifact",
+      "type": "object",
+      "x-semio-state": "artifact"
+    },
+    "areaM2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "category": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "annex": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "selfWeightMaterial": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "selfWeightThicknessM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "assumedGKKnM2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "fireCurve": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "fireResistanceMin": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "fireMemberCapacityC": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "snowZone": {
+      "type": "integer",
+      "format": "uint32",
+      "x-semio-state": "artifact"
+    },
+    "snowAltitudeM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "enSKKnM2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "windZone": {
+      "type": "integer",
+      "format": "uint32",
+      "x-semio-state": "artifact"
+    },
+    "enVBMS": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "deltaTK": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "constructionActivity": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "accidentalMassT": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "accidentalSpeedKmH": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "bridgeLane": {
+      "type": "integer",
+      "format": "uint32",
+      "x-semio-state": "artifact"
+    },
+    "bridgeSpanM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "bridgeLaneWidthM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "bridgeMomentResistanceKnm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "craneClass": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "hoistClass": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "hoistingSpeedMS": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "siloBulkDensityKnM3": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "siloHeightM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "siloHydraulicRadiusM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "siloMu": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "siloK": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "cS": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "cD": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "selectedCheckIndex": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      ],
+      "x-semio-state": "presence"
+    }
+  }
+}

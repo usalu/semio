@@ -1,6 +1,6 @@
 //! 📇️ `registry` — ticket 26/08/29/AI-MCP-END-TO-END packet W1: discovers the REAL installed plugin
 //! set at runtime (reusing `🏠️workspace`'s own `load_plugin_registry`/`load_package_descriptor` — the
-//! SAME generated `🔌️plugin/📇️registry/🤖️generated/🔣️plugins.json` + committed `descriptor.json` files
+//! SAME generated `🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json` + committed `descriptor.json` files
 //! `find_repo_root` already resolves, never a second copy of that logic) and compiles the live
 //! gateway's `CatalogSource` from it, replacing `root::build_catalog`'s previous hardcoded
 //! `🧫️note_and_cad_source()` fixture (`📓️status.md` B2: "the production catalog is a hardcoded
@@ -128,7 +128,7 @@ mod quick {
     fn write_registry(root: &Path, rows: &[(&str, &str)]) {
         let entries: Vec<serde_json::Value> =
             rows.iter().map(|(plugin_id, owner_rel)| serde_json::json!({ "pluginId": plugin_id, "cratePath": format!("{owner_rel}/📦️packages/🦀️rust"), "wasmOut": format!("{plugin_id}.wasm") })).collect();
-        let registry_path = root.join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔣️plugins.json");
+        let registry_path = root.join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json");
         std::fs::create_dir_all(registry_path.parent().expect("registry path has a parent")).expect("create registry dir");
         std::fs::write(&registry_path, serde_json::to_vec(&entries).expect("registry rows serialize")).expect("write registry");
     }

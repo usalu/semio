@@ -1,0 +1,2 @@
+/** 💾️ Binary representation for `norm.en1991.inference`. */
+export type En1991InferenceBinary = Uint8Array;

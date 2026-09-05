@@ -12,5 +12,5 @@
     "resolveJsonModule": true
   },
   "include": ["🟦️.ts", "../../🔍️discovery/**/*.ts", "../../🗂️workspaces/**/*.ts"],
-  "exclude": ["🧪️index.test.ts", "📜️script.ts"]
+  "exclude": ["🔬️index.test.ts", "📜️script.ts"]
 }

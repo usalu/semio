@@ -211,7 +211,7 @@ mod instance_lifetime_patch_close_tests {
 
     #[test]
     fn guest_instance_lifecycle_pending_patch_handback_preserves_rejected_owner_and_exact_bytes() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🚪️lifetime/🧪️fixture/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🚪️lifetime/🧫️fixture/🔣️.json")).unwrap();
         for grant in fixture["pendingPatch"]["grants"].as_array().unwrap() {
             let mut pending = PendingPatchAuthority::new();
             let first = fixture["pendingPatch"]["surfaces"][0].as_str().unwrap();
@@ -249,7 +249,7 @@ mod instance_lifetime_patch_close_tests {
 
     #[test]
     fn guest_instance_lifecycle_pending_patch_unwind_keeps_the_exact_typed_cursor_mounted() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🚪️lifetime/🧪️fixture/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🚪️lifetime/🧫️fixture/🔣️.json")).unwrap();
         let mut pending = PendingPatchAuthority::new();
         pending.push_external(patch(fixture["pendingPatch"]["surfaces"][0].as_str().unwrap())).unwrap();
         let key = super::super::instance_lifetime::NativeCloseKey::fixture(7, 1);

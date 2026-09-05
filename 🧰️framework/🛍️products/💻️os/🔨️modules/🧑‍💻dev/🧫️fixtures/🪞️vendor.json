@@ -1,0 +1,16 @@
+{
+  "vendorPath": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim",
+  "fontPath": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+  "shardDirectory": "🧵️shard",
+  "hotSwapFile": "♻️hot-swap.json",
+  "watchFile": "👀️extension-watch.json",
+  "prefix": "../../🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/",
+  "vendorFiles": ["cli.js", "clocks.js", "config.js", "environment.js", "filesystem.js", "http.js", "index.js", "io.js", "random.js", "sockets.js"],
+  "moduleRoots": [{ "directory": "🔌️plugin-modules", "route": "/🔌️plugin-modules", "components": 56, "imports": 237 }, { "directory": "🧩️extension-modules", "route": "/🧩️extension-modules", "components": 26, "imports": 108 }],
+  "sharedWorker": "🧵️shard/🟨️shard-worker.js",
+  "cases": [
+    { "input": "import { environment } from '@bytecodealliance/preview2-shim/cli';", "inputModule": "@bytecodealliance/preview2-shim/cli", "output": "import { environment } from '../../🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js';", "outputModule": "../../🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js" },
+    { "input": "import { streams } from '../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js';", "inputModule": "../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js", "output": "import { streams } from '../../🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js';", "outputModule": "../../🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js" },
+    { "input": "import { unrelated } from './🟦️';", "inputModule": "./🟦️", "output": "import { unrelated } from './🟦️';", "outputModule": "./🟦️" }
+  ]
+}

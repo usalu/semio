@@ -41,15 +41,35 @@
       "id": "s.stdio.zip.standard.2-0.representation.document",
       "standard": "s.stdio.zip.standard.2-0",
       "representation": "document",
-      "mimes": ["application/zip"],
-      "extensions": [".zip"],
+      "mimes": [
+        "application/zip"
+      ],
+      "extensions": [
+        ".zip"
+      ],
       "is_binary": true,
       "aliases": [],
       "neutral": true,
       "status": "declared"
     }
   ],
-  "codecs": [],
+  "codecs": [
+    {
+      "id": "s.stdio.zip.standard.2-0.codec.native-document.v1",
+      "status": "implemented",
+      "from": "s.stdio.zip.standard.2-0.dialect.source",
+      "to": "s.stdio.zip.standard.2-0.dialect.source",
+      "executable_registration": true,
+      "native_factory": {
+        "factory_id": "stdio.native.zip.v1",
+        "artifact_kind": "stdio.zip",
+        "document_schema": "stdio.zip",
+        "extension": "zip",
+        "pack_schema_hash": "dd8e607c9ce0dc46608d4fe57c72166e47013684ff0cd86407414332fc2391d2",
+        "runtime_capability_id": "s.stdio.zip.standard.2-0.codec.codec-stdio-zip-extension-zip.v1"
+      }
+    }
+  ],
   "mutations": [],
   "inferences": [],
   "resources": [
@@ -84,22 +104,22 @@
   ],
   "runtime_capabilities": [
     {
-      "id": "s.stdio.zip.runtime.codec.codec-stdio-zip-extension-zip.v1",
+      "id": "s.stdio.zip.standard.2-0.codec.codec-stdio-zip-extension-zip.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec:stdio.zip|extension:zip",
+      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.zip:zip|codec:stdio.zip",
       "claims": [
         {
           "namespace": "codec",
           "value": "stdio.zip"
         },
         {
-          "namespace": "extension",
-          "value": "zip"
+          "namespace": "codec-extension",
+          "value": "9:stdio.zip:zip"
         }
       ]
     },
     {
-      "id": "s.stdio.zip.runtime.composer.dialect-s-stdio-zip-2-0.v1",
+      "id": "s.stdio.zip.composer.dialect-s-stdio-zip-2-0.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.zip@2.0/*",
       "claims": [
@@ -110,7 +130,7 @@
       ]
     },
     {
-      "id": "s.stdio.zip.runtime.composer.dialect-s-stdio-zip-2-0-iso21320.v1",
+      "id": "s.stdio.zip.composer.dialect-s-stdio-zip-2-0-iso21320.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.zip@2.0/iso21320",
       "claims": [
@@ -121,7 +141,7 @@
       ]
     },
     {
-      "id": "s.stdio.zip.runtime.grammar.grammar-stdio-zip.v1",
+      "id": "s.stdio.zip.grammar.grammar-stdio-zip.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.zip",
       "claims": [
@@ -132,7 +152,7 @@
       ]
     },
     {
-      "id": "s.stdio.zip.runtime.grammar.grammar-stdio-zip-diff.v1",
+      "id": "s.stdio.zip.grammar.grammar-stdio-zip-diff.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.zip.diff",
       "claims": [
@@ -143,7 +163,7 @@
       ]
     },
     {
-      "id": "s.stdio.zip.runtime.grammar.grammar-stdio-zip-op.v1",
+      "id": "s.stdio.zip.grammar.grammar-stdio-zip-op.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.zip.op",
       "claims": [
@@ -154,7 +174,7 @@
       ]
     },
     {
-      "id": "s.stdio.zip.runtime.grammar.grammar-stdio-zip-pack.v1",
+      "id": "s.stdio.zip.grammar.grammar-stdio-zip-pack.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.zip.pack",
       "claims": [
@@ -165,7 +185,7 @@
       ]
     },
     {
-      "id": "s.stdio.zip.runtime.grammar.grammar-stdio-zip-spr.v1",
+      "id": "s.stdio.zip.grammar.grammar-stdio-zip-spr.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.zip.spr",
       "claims": [
@@ -176,7 +196,7 @@
       ]
     },
     {
-      "id": "s.stdio.zip.runtime.inference.schema-s-stdio-zip-inference.v1",
+      "id": "s.stdio.zip.inference.schema-s-stdio-zip-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:s.stdio.zip.inference",
       "claims": [
@@ -187,7 +207,7 @@
       ]
     },
     {
-      "id": "s.stdio.zip.runtime.representation.mime-application-zip-extension-zip.v1",
+      "id": "s.stdio.zip.standard.2-0.representation.mime-application-zip-extension-zip",
       "category": "representation",
       "descriptor": "runtime-capability:representation:mime:application/zip|extension:.zip",
       "claims": [
@@ -202,7 +222,7 @@
       ]
     },
     {
-      "id": "s.stdio.zip.runtime.schema.schema-s-stdio-zip.v1",
+      "id": "s.stdio.zip.schema.schema-s-stdio-zip.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.zip",
       "claims": [
@@ -213,12 +233,12 @@
       ]
     },
     {
-      "id": "s.stdio.zip.runtime.subset-validator.dialect-s-stdio-zip-2-0-iso21320.v1",
+      "id": "s.stdio.zip.subset-validator.validated-dialect-s-stdio-zip-2-0-iso21320.v1",
       "category": "subset-validator",
-      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.zip@2.0/iso21320",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.zip@2.0/iso21320",
       "claims": [
         {
-          "namespace": "dialect",
+          "namespace": "validated-dialect",
           "value": "s.stdio.zip@2.0/iso21320"
         }
       ]

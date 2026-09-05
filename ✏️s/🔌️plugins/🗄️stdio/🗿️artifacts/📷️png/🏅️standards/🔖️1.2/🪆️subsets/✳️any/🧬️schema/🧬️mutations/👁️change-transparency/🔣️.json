@@ -5,7 +5,7 @@
   "displayName": "Change Transparency",
   "emoji": "👁️",
   "aggregateVariant": "ChangeTransparency",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-transparency",
   "binaryTag": 4,
   "invertibility": "explicit-mutation",

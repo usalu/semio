@@ -1,0 +1,6 @@
+; ABNF-style descriptive mirror of `stdio.semio.flow`'s real op binary frame -- see the
+; authoritative `📡️.protocol.semio` for the conformance-tested version.
+document = format tag payload
+format   = %x01                  ; OP_BINARY_FORMAT
+tag      = OCTET                 ; SemioFlowMutation variant ordinal, see OP_KEYWORDS
+payload  = *OCTET                ; opaque "key=value ..." UTF-8 argument tail, see component.rs

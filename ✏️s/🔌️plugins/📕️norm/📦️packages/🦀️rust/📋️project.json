@@ -5,6 +5,30 @@
     "default": ["{workspaceRoot}/✏️s/🔌️plugins/📕️norm/**/*.rs", "{projectRoot}/**/*"]
   },
   "targets": {
+    "surface-render-source": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts surface-render-source", "forwardAllArgs": true }
+    },
+    "surface-render-test": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts surface-render-test", "forwardAllArgs": true }
+    },
+    "config-mutation-source": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts config-mutation-source", "forwardAllArgs": true }
+    },
+    "config-mutation-test": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts config-mutation-test", "forwardAllArgs": true }
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": true
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {
@@ -42,6 +66,22 @@
       "options": {
         "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts describe",
+        "forwardAllArgs": true
+      }
+    },
+    "mutation-leaf-taxonomy-generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts mutation-leaf-taxonomy-generate",
+        "forwardAllArgs": true
+      }
+    },
+    "mutation-leaf-taxonomy-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts mutation-leaf-taxonomy-check",
         "forwardAllArgs": true
       }
     }

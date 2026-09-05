@@ -16,12 +16,12 @@ import { type IconName } from "@semio-tech/assets";
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { CanvasSkeleton } from "../🦴️Skeletons/🟦️.tsx";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../☑️Select/🟦️.tsx";
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup, type ResizableJoinCornerResizeHandler, type ResizableJoinCornerSpec, type ResizableJoinEdgeSide } from "../↕️Resizable/🟦️.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../🔽️Select/🟦️.tsx";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup, type ResizableJoinCornerResizeHandler, type ResizableJoinCornerSpec, type ResizableJoinEdgeSide } from "../↔️Resizable/🟦️.tsx";
 import { Navbar, type NavbarItem } from "../🔝️Navbar/🟦️.tsx";
 import { Window, type WindowConfig } from "../🪟️Window/🟦️.tsx";
-import { type TreeDragAndDropController } from "../🪵️Tree/🟦️.tsx";
-import { type UiLabel } from "../🏷️UiLabel/🟦️.tsx";
+import { type TreeDragAndDropController } from "../🌳️Tree/🟦️.tsx";
+import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { interactiveHoverClass, interactiveActiveFillClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
 import { glassClass, surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { shellFloorFillClass } from "../../🔨️modules/🏠️shell-floor-presentation/🟦️.ts";
@@ -34,8 +34,8 @@ import { createEvenWindowLayout, focusActiveSearchInput, routeWindowSearchEscape
 import { CloseIcon, Maximize2Icon, Minimize2Icon, ExternalLinkIcon, Icon, type ControlIcon } from "../🔣️Icons/🟦️.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
 import { ChromeControlHint } from "../💡️ChromeControlHint/🟦️.tsx";
-import { useControlKeybinding } from "../../🔨️modules/⌨️control-keybinding-context/🟦️.tsx";
-import { ButtonGroup, ButtonGroupItem } from "../🎛️ButtonGroup/🟦️.tsx";
+import { useControlKeybinding } from "../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
+import { ButtonGroup, ButtonGroupItem } from "../🔳️ButtonGroup/🟦️.tsx";
 // #endregion 🔌️Adapters
 // #region ⚙️Canvas
 

@@ -1,0 +1,21 @@
+{
+  "runs": {
+    "values": [
+      {
+        "language": "en",
+        "content": "Hello",
+        "marks": []
+      },
+      {
+        "language": "en",
+        "content": "planet",
+        "marks": [
+          {
+            "kind": "bold",
+            "href": ""
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateRegion",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "region"
+  ],
+  "properties": {
+    "region": {
+      "title": "FemRegion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "holes",
+        "id",
+        "materialId",
+        "meshSize",
+        "name",
+        "outline",
+        "thickness"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "outline": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "holes": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          }
+        },
+        "thickness": {
+          "type": "number"
+        },
+        "materialId": {
+          "type": "string"
+        },
+        "meshSize": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "defaultDirectory": "🧪️oracle",
+  "overrides": {"🎠️kernel": "🔮️oracle"},
+  "cases": [
+    {"owner": "🎠️kernel", "directory": "🔮️oracle", "path": "🎠️kernel/🔮️oracle/🟦️.ts", "owned": true},
+    {"owner": "🎠️kernel", "directory": "🔮️oracle", "path": "🎠️kernel/🧪️oracle/🟦️.ts", "owned": false},
+    {"owner": "🎠️kernel/🧩️child", "directory": "🧪️oracle", "path": "🎠️kernel/🧩️child/🧪️oracle/🟦️.ts", "owned": true},
+    {"owner": "🎠️kernel/🧩️child", "directory": "🧪️oracle", "path": "🎠️kernel/🧩️child/🔮️oracle/🟦️.ts", "owned": false},
+    {"owner": "🎠️kernel-copy", "directory": "🧪️oracle", "path": "🎠️kernel-copy/🔮️oracle/🟦️.ts", "owned": false},
+    {"owner": "🧩️other", "directory": "🧪️oracle", "path": "🧩️other/🧪️oracle/🟦️.ts", "owned": true},
+    {"owner": "🧩️other", "directory": "🧪️oracle", "path": "🧩️other/🔮️oracle/🟦️.ts", "owned": false},
+    {"owner": ".", "directory": "🧪️oracle", "path": "🧪️oracle/🟦️.ts", "owned": true}
+  ]
+}

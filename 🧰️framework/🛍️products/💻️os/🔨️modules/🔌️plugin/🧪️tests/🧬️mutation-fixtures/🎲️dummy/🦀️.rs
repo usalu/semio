@@ -182,6 +182,7 @@ async fn dummy_manifest() -> crate::app::App {
 struct DummyApp;
 
 impl ArtifactApp for DummyApp {
+    const DIALECT: crate::Dialect = crate::Dialect { artifact_kind: "s.test.dummy", standard: crate::StandardId("1"), subset: crate::SubsetId::ANY };
     const APP_ID: &'static str = "testkit-dummy";
     const DOCUMENT_SCHEMA: &'static str = "semio.testkit/v1";
     type Snapshot = DummySnapshot;

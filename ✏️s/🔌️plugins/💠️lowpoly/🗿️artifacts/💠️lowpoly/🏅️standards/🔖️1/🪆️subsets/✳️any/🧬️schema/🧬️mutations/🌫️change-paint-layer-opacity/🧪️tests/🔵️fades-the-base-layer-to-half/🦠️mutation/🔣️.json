@@ -1,0 +1,7 @@
+{
+  "ChangePaintLayerOpacity": {
+    "objectId": "obj-hull",
+    "index": 0,
+    "newOpacity": 0.5
+  }
+}

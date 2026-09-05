@@ -132,7 +132,7 @@ impl store::ArtifactStoreOneItemPreparation<FlowConfig, FlowConfigMutation> for 
                 }
             }
             9 | 10 => {
-                let sequence = self.authority.as_ref().unwrap().next_sequence_number();
+                let sequence = self.authority.as_ref().unwrap().next_sequence_number() as u64;
                 let metadata = self.phase == 10;
                 let copy = self.id_copy.get_or_insert_with(TextCopy::default);
                 bytes = copy.advance_ascii(edit_id_length(sequence, metadata), |index| edit_id_byte(sequence, index, metadata), grant.maximum_bytes)?.unwrap_or(0);
@@ -228,6 +228,14 @@ impl store::SnapshotRetirementFactory<FlowConfig> for RetirementFactory {
     fn retire(&self, snapshot: Arc<FlowConfig>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(SnapshotRetirement { snapshot: Some(snapshot), retirement: Retirement::default() })
     }
+}
+
+/// 🎛️ Exact config ownership catalog with paged string and collection retirement.
+pub(in super::super) fn store_owners() -> store::MemberStoreOwners<FlowConfig, FlowConfigMutation> {
+    store::MemberStoreOwners::new(
+        Arc::new(RetirementFactory), Arc::new(RetirementFactory), Arc::new(RetirementFactory),
+        Box::new(store::ArtifactStoreCursorDisposer::<FlowConfig, FlowConfigMutation>::new()),
+    )
 }
 
 struct SnapshotRetirement {
@@ -380,10 +388,7 @@ mod tests {
                     let expected = if cancel.is_some() { initial.catalogue_sections_json.clone() } else { text.clone() };
                     let envelope = store::create_document_envelope::<FlowConfig, FlowConfigMutation>("flow.config", "grant-frontier", initial, None);
                     let mut store = store::ArtifactStore::new(envelope).await.unwrap();
-                    store.install_member_store_owners_exact(store::MemberStoreOwners::new(
-                        Arc::new(RetirementFactory), Arc::new(RetirementFactory), Arc::new(RetirementFactory),
-                        Box::new(store::ArtifactStoreCursorDisposer::<FlowConfig, FlowConfigMutation>::new()),
-                    ));
+                    store.install_member_store_owners_exact(store_owners());
                     let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes };
                     let generation = store.generation_now();
                     let mut publication = store.begin_apply_one(
@@ -474,7 +479,7 @@ mod tests {
         assert_eq!(variants.len(), fixture["canonicalVariants"].as_array().unwrap().len());
         for (index, value) in variants.into_iter().enumerate() {
             assert_eq!(value.canonical_json_key(&[], 0).unwrap(), fixture["canonicalVariants"][index].as_str().unwrap());
-            assert_eq!(oracle(&value, &mut Vec::new()), serde_json::to_value(&value).unwrap());
+            assert_eq!(oracle(&value, &mut Vec::new()), serde_json::Value::from(dsl::ToValue::to_value(&value)));
             assert!(value.canonical_json_node(&[9]).is_err());
             assert!(value.canonical_json_key(&[], 1).is_err());
         }

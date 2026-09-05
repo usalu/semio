@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "limits", "expected", "requestIdentity", "dictionary", "secondDictionary", "docHex", "compositionHex", "authority", "grants", "cases", "lifecycle", "recordRetirement", "ownerRetirement", "ownerEvents", "dictionaryRanges"],
+  "properties": {
+    "schema": { "const": "semio.member.retained-history-dictionary/v1" },
+    "limits": {
+      "type": "object", "additionalProperties": false,
+      "required": ["dictionaryEntries", "dictionaryBytes", "identityBytes", "pinGroups", "pins", "records", "pageEntries", "pageBytes", "pages"],
+      "properties": { "dictionaryEntries": { "const": 8192 }, "dictionaryBytes": { "const": 1048576 }, "identityBytes": { "const": 256 }, "pinGroups": { "const": 1024 }, "pins": { "const": 8192 }, "records": { "const": 8192 }, "pageEntries": { "const": 64 }, "pageBytes": { "const": 1024 }, "pages": { "const": 128 } }
+    },
+    "expected": {
+      "type": "object", "additionalProperties": false, "required": ["artifactId", "schema", "dialect", "owner"],
+      "properties": { "artifactId": { "$ref": "#/$defs/text" }, "schema": { "$ref": "#/$defs/text" }, "dialect": { "$ref": "#/$defs/triple" }, "owner": { "$ref": "#/$defs/triple" } }
+    },
+    "requestIdentity": { "type": "array", "minItems": 10, "maxItems": 10, "items": { "$ref": "#/$defs/text" } },
+    "dictionary": { "type": "array", "minItems": 7, "maxItems": 7, "items": { "$ref": "#/$defs/text" } },
+    "secondDictionary": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/$defs/text" } },
+    "docHex": { "$ref": "#/$defs/hex" }, "compositionHex": { "$ref": "#/$defs/hex" },
+    "ownerEvents": { "type": "array", "minItems": 14, "maxItems": 14, "items": { "type": "array", "minItems": 3, "maxItems": 3, "prefixItems": [{ "enum": ["delta-begin", "entry", "delta"] }, { "$ref": "#/$defs/entries" }, { "$ref": "#/$defs/pages" }], "items": false } },
+    "dictionaryRanges": { "type": "array", "minItems": 10, "maxItems": 10, "items": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "integer", "minimum": 0, "maximum": 4096 } } },
+    "authority": {
+      "type": "object", "additionalProperties": false, "required": ["operation", "generation", "expiresAtUs", "nowUs"],
+      "properties": { "operation": { "const": 7 }, "generation": { "const": 11 }, "expiresAtUs": { "const": 1000 }, "nowUs": { "const": 1 } }
+    },
+    "grants": { "const": [1, 7, 4096] },
+    "cases": { "type": "array", "minItems": 36, "maxItems": 36, "items": { "$ref": "#/$defs/case" } },
+    "lifecycle": { "type": "array", "minItems": 11, "maxItems": 11, "items": { "$ref": "#/$defs/lifecycle" } },
+    "recordRetirement": { "type": "array", "minItems": 7, "maxItems": 7, "items": { "$ref": "#/$defs/recordRetirement" } },
+    "ownerRetirement": { "type": "array", "minItems": 9, "maxItems": 9, "items": { "$ref": "#/$defs/ownerRetirement" } }
+  },
+  "$defs": {
+    "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]+$", "maxLength": 64 },
+    "text": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "hex": { "type": "string", "pattern": "^(?:[a-f0-9]{2})+$", "maxLength": 4096 },
+    "triple": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/$defs/text" } },
+    "entries": { "type": "integer", "minimum": 0, "maximum": 8192 },
+    "pages": { "type": "integer", "minimum": 0, "maximum": 128 },
+    "ownerRetirement": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "operation", "hex", "stage", "occurrence", "offset", "entries", "pages", "pendingBytes", "lookupBytes", "idBytes", "inputBytes", "retiredBytes", "error"],
+      "properties": {
+        "id": { "$ref": "#/$defs/name" }, "operation": { "enum": ["unchanged", "raw-document"] },
+        "hex": { "type": ["string", "null"], "pattern": "^(?:[a-f0-9]{2}){1,256}$" },
+        "stage": { "enum": ["copy", "framing", "lookup-copy", "lookup-parse", "id-complete", "id-retire", "id-raw"] },
+        "occurrence": { "type": "integer", "minimum": 1, "maximum": 256 }, "offset": { "enum": [null, 32] },
+        "entries": { "enum": [0, 7] }, "pages": { "enum": [0, 1] }, "pendingBytes": { "enum": [0, 1] }, "lookupBytes": { "enum": [0, 1] },
+        "idBytes": { "type": "integer", "minimum": 0, "maximum": 256 }, "inputBytes": { "type": "integer", "minimum": 1, "maximum": 4096 },
+        "retiredBytes": { "type": "integer", "minimum": 1, "maximum": 8192 }, "error": { "const": "cancelled" }
+      }
+    },
+    "recordRetirement": {
+      "type": "object", "additionalProperties": false, "required": ["id", "index", "hex", "cancelAfter", "entries", "pages", "scratchBytes", "inputBytes", "retiredBytes", "error"],
+      "properties": {
+        "id": { "$ref": "#/$defs/name" }, "index": { "enum": [0, 1] }, "hex": { "type": "string", "pattern": "^(?:[a-f0-9]{2}){1,4}$" },
+        "cancelAfter": { "enum": [null, 1, 2, 3] }, "entries": { "const": 0 }, "pages": { "enum": [0, 1] },
+        "scratchBytes": { "type": "integer", "minimum": 1, "maximum": 4 }, "inputBytes": { "type": "integer", "minimum": 1, "maximum": 4096 },
+        "retiredBytes": { "type": "integer", "minimum": 1, "maximum": 8192 }, "error": { "enum": ["malformed", "cancelled"] }
+      }
+    },
+    "case": {
+      "type": "object", "additionalProperties": false, "required": ["id", "operation", "entries", "pages", "groups", "pins", "inputBytes", "retiredBytes", "error"],
+      "properties": {
+        "id": { "$ref": "#/$defs/name" },
+        "operation": { "enum": ["unchanged", "entry-limit", "byte-limit", "second-base", "invalid-utf8", "delta-tail", "critical-composition", "noncritical-document", "noncritical-dictionary", "lookup-missing", "duplicate-document", "wrong-owner", "wrong-dialect", "missing-composition", "earlier-foreign", "earlier-malformed", "pin-limit", "aggregate-pin-limit", "extra-entries", "uncommitted-tail", "first-base", "aggregate-group-limit", "request-field", "unused-empty", "empty-identity", "bom-identity"] },
+        "value": { "type": "integer", "minimum": 0, "maximum": 1048576 },
+        "index": { "type": "integer", "minimum": 0, "maximum": 9 }, "text": { "$ref": "#/$defs/text" },
+        "entries": { "$ref": "#/$defs/entries" }, "pages": { "$ref": "#/$defs/pages" }, "groups": { "type": "integer", "minimum": 0, "maximum": 1024 }, "pins": { "$ref": "#/$defs/entries" },
+        "inputBytes": { "type": "integer", "minimum": 1, "maximum": 1048576 }, "retiredBytes": { "type": "integer", "minimum": 1, "maximum": 2097152 },
+        "error": { "enum": [null, "malformed", "capacity", "identity"] }
+      },
+      "allOf": [
+        { "if": { "properties": { "operation": { "enum": ["entry-limit", "byte-limit", "second-base", "pin-limit", "aggregate-pin-limit", "extra-entries", "first-base", "aggregate-group-limit"] } } }, "then": { "required": ["value"], "properties": { "value": true } }, "else": { "properties": { "value": false } } },
+        { "if": { "properties": { "operation": { "const": "request-field" } } }, "then": { "required": ["index", "text"], "properties": { "index": true, "text": true } }, "else": { "properties": { "index": false, "text": false } } }
+      ]
+    },
+    "lifecycle": {
+      "type": "object", "additionalProperties": false, "required": ["id", "at", "event", "entries", "pages", "handoffs", "inputBytes", "retiredBytes", "error"],
+      "properties": {
+        "id": { "$ref": "#/$defs/name" }, "at": { "enum": ["begin", "first-entry", "first-delta", "ready", "witness"] },
+        "event": { "enum": ["cancel", "generation", "operation", "expired", "clock-absent", "none"] },
+        "entries": { "$ref": "#/$defs/entries" }, "pages": { "$ref": "#/$defs/pages" }, "handoffs": { "enum": [0, 1] },
+        "inputBytes": { "const": 315 }, "retiredBytes": { "enum": [387, 1411] },
+        "error": { "enum": [null, "cancelled", "stale", "expired"] }
+      }
+    }
+  }
+}

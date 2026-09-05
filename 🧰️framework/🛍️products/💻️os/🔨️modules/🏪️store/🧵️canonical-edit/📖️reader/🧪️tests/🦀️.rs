@@ -77,11 +77,11 @@ fn retire(root: Arc<Edit<MapMutation>>, lifetime: &MapLifetime) {
 //#region 🧪️ReaderLifecycle
 #[test]
 fn canonical_reader_large_borrowed_map_matches_serde_and_transfers_exact_root() {
-    let reader_fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️canonical-reader.json")).unwrap();
+    let reader_fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/📖️canonical-reader.json")).unwrap();
     for bytes in [1, 7, 4096] {
         let (mut reader, fixture, lifetime) = make_reader();
         let address = Arc::as_ptr(reader.owned.root.as_ref().unwrap());
-        let expected = serde_json::to_vec(reader.owned.root.as_ref().unwrap().as_ref()).unwrap();
+        let expected = serde_json::to_vec(&test_support::SerdeValue(&reader.owned.root.as_ref().unwrap().as_ref().to_value())).unwrap();
         assert_eq!(expected, fixture["expectedJson"].as_str().unwrap().as_bytes());
         assert_eq!(expected.len() as u64, reader_fixture["expectedByteLength"].as_u64().unwrap());
         assert!(reader.take_root().is_none());
@@ -232,7 +232,7 @@ impl ArtifactOwnedValueRetirementFactory<ErrorRoot> for ErrorRootRetirement {
 
 #[test]
 fn canonical_reader_error_after_partial_unicode_output_accounts_every_initialized_byte() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️canonical-error-progress.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🚧️canonical-error-progress.json")).unwrap();
     let oracle = serde_json::to_string(&serde_json::json!([fixture["text"], null])).unwrap();
     let prefix = oracle.strip_suffix("null]").unwrap().as_bytes();
     assert_eq!(prefix, fixture["expectedPrefix"].as_str().unwrap().as_bytes());
@@ -295,7 +295,7 @@ fn canonical_reader_error_after_partial_unicode_output_accounts_every_initialize
 
 #[test]
 fn canonical_reader_indexed_cursor_error_preserves_actual_chunk_prefix() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️canonical-error-progress.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🚧️canonical-error-progress.json")).unwrap();
     for maximum in [1, 7, 256, 4096] {
         let root = ErrorRoot { text: fixture["text"].as_str().unwrap().into(), borrowed: false, error: ErrorLeaf };
         let mut cursor = ArtifactCanonicalJsonCursor::default();
@@ -327,15 +327,15 @@ fn canonical_reader_indexed_cursor_error_preserves_actual_chunk_prefix() {
 
 #[test]
 fn canonical_reader_sealer_failed_prefix_is_accounted_without_minting_authority() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️canonical-error-progress.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🚧️canonical-error-progress.json")).unwrap();
     for borrowed in [false, true] {
         for maximum_bytes in [1, 7, 4096] {
-            let mut value: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️canonical-edit-sealer.json")).unwrap();
+            let mut value: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔏️canonical-edit-sealer.json")).unwrap();
             value["edit"]["forwards"] = serde_json::json!([]);
             value["edit"]["inverse"] = serde_json::json!([]);
-            let mut oracle: Edit<serde_json::Value> = serde_json::from_value(value["edit"].take()).unwrap();
-            oracle.forwards.push(serde_json::json!([fixture["text"], null]));
-            let expected = serde_json::to_string(&oracle).unwrap();
+            let mut oracle = Edit::<DslValue>::from_value(value["edit"].take().into()).unwrap();
+            oracle.forwards.push(serde_json::json!([fixture["text"], null]).into());
+            let expected = serde_json::to_string(&test_support::SerdeValue(&oracle.to_value())).unwrap();
             let prefix = &expected.as_bytes()[..expected.find("null]").unwrap()];
             let edit = Edit {
                 id: oracle.id,

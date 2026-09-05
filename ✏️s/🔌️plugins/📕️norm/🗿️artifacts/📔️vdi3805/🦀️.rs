@@ -280,7 +280,7 @@ pub struct EditionId {
 }
 
 impl EditionId {
-    pub fn new(year: u16, month: u8) -> Self {
+    pub const fn new(year: u16, month: u8) -> Self {
         Self { year, month }
     }
 
@@ -1299,26 +1299,26 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     use crate::artifacts::definition::{CapabilitySpec as C, ClaimSpec as Q, LocalizationSpec as L};
     const S: &[Q] = &[Q { namespace: "schema", value: "s.norm.vdi3805" }];
     const I: &[Q] = &[Q { namespace: "schema", value: "s.norm.vdi3805.inference" }];
-    const M: &[Q] = &[Q { namespace: "dialect", value: "s.vdi3805@1/*" }];
-    const K: &[Q] = &[Q { namespace: "codec", value: "semio.norm.vdi3805/v1" }, Q { namespace: "extension", value: "vdi3805" }];
+    const M: &[Q] = &[Q { namespace: "dialect", value: "s.norm.vdi3805@1/*" }];
+    const K: &[Q] = &[Q { namespace: "codec", value: "semio.norm.vdi3805/v1" }, Q { namespace: "codec-extension", value: "21:semio.norm.vdi3805/v1:vdi3805" }];
     const EN: &[L] = &[L { locale: "en", text: "VDI 3805 manufacturer product data" }];
     const DE: &[L] = &[L { locale: "de", text: "VDI 3805 Produktdaten der Technischen Gebäudeausrüstung" }];
     const ROWS: &[C] = &[
-        C { identity: "s.vdi3805.standard.v1", kind: "standard", descriptor: "v1", claims: &[], localizations: &[] },
-        C { identity: "s.vdi3805.standard.v1.profile.any", kind: "profile", descriptor: "any", claims: &[], localizations: &[] },
-        C { identity: "s.vdi3805.schema.artifact", kind: "schema", descriptor: "s.norm.vdi3805", claims: S, localizations: &[] },
-        C { identity: "s.vdi3805.inference.outline", kind: "inference", descriptor: "s.norm.vdi3805.inference", claims: I, localizations: &[] },
-        C { identity: "s.vdi3805.composer.any", kind: "composer", descriptor: "s.vdi3805@1/*", claims: M, localizations: &[] },
-        C { identity: "s.vdi3805.grammar.document", kind: "grammar", descriptor: "vdi3805.document", claims: &[Q { namespace: "grammar", value: "vdi3805.document" }], localizations: &[] },
-        C { identity: "s.vdi3805.grammar.op", kind: "grammar", descriptor: "vdi3805.op", claims: &[Q { namespace: "grammar", value: "vdi3805.op" }], localizations: &[] },
-        C { identity: "s.vdi3805.grammar.diff", kind: "grammar", descriptor: "vdi3805.diff", claims: &[Q { namespace: "grammar", value: "vdi3805.diff" }], localizations: &[] },
-        C { identity: "s.vdi3805.grammar.pack", kind: "grammar", descriptor: "vdi3805.pack", claims: &[Q { namespace: "grammar", value: "vdi3805.pack" }], localizations: &[] },
-        C { identity: "s.vdi3805.grammar.spr", kind: "grammar", descriptor: "vdi3805.spr", claims: &[Q { namespace: "grammar", value: "vdi3805.spr" }], localizations: &[] },
-        C { identity: "s.vdi3805.codec.document.v1", kind: "codec", descriptor: "semio.norm.vdi3805/v1:vdi3805", claims: K, localizations: &[] },
-        C { identity: "s.vdi3805.localization.en", kind: "localization", descriptor: "VDI 3805 manufacturer product data", claims: &[], localizations: EN },
-        C { identity: "s.vdi3805.localization.de", kind: "localization", descriptor: "VDI 3805 Produktdaten der Technischen Gebäudeausrüstung", claims: &[], localizations: DE },
+        C { identity: "s.norm.vdi3805.standard.v1", kind: "standard", descriptor: "v1", claims: &[], localizations: &[] },
+        C { identity: "s.norm.vdi3805.standard.v1.profile.any", kind: "profile", descriptor: "any", claims: &[], localizations: &[] },
+        C { identity: "s.norm.vdi3805.schema.artifact", kind: "schema", descriptor: "s.norm.vdi3805", claims: S, localizations: &[] },
+        C { identity: "s.norm.vdi3805.inference.outline", kind: "inference", descriptor: "s.norm.vdi3805.inference", claims: I, localizations: &[] },
+        C { identity: "s.norm.vdi3805.composer.any", kind: "composer", descriptor: "s.norm.vdi3805@1/*", claims: M, localizations: &[] },
+        C { identity: "s.norm.vdi3805.grammar.document", kind: "grammar", descriptor: "vdi3805.document", claims: &[Q { namespace: "grammar", value: "vdi3805.document" }], localizations: &[] },
+        C { identity: "s.norm.vdi3805.grammar.op", kind: "grammar", descriptor: "vdi3805.op", claims: &[Q { namespace: "grammar", value: "vdi3805.op" }], localizations: &[] },
+        C { identity: "s.norm.vdi3805.grammar.diff", kind: "grammar", descriptor: "vdi3805.diff", claims: &[Q { namespace: "grammar", value: "vdi3805.diff" }], localizations: &[] },
+        C { identity: "s.norm.vdi3805.grammar.pack", kind: "grammar", descriptor: "vdi3805.pack", claims: &[Q { namespace: "grammar", value: "vdi3805.pack" }], localizations: &[] },
+        C { identity: "s.norm.vdi3805.grammar.spr", kind: "grammar", descriptor: "vdi3805.spr", claims: &[Q { namespace: "grammar", value: "vdi3805.spr" }], localizations: &[] },
+        C { identity: "s.norm.vdi3805.codec.document.v1", kind: "codec", descriptor: "semio.norm.vdi3805/v1:vdi3805", claims: K, localizations: &[] },
+        C { identity: "s.norm.vdi3805.localization.en", kind: "localization", descriptor: "VDI 3805 manufacturer product data", claims: &[], localizations: EN },
+        C { identity: "s.norm.vdi3805.localization.de", kind: "localization", descriptor: "VDI 3805 Produktdaten der Technischen Gebäudeausrüstung", claims: &[], localizations: DE },
     ];
-    crate::artifacts::definition::assemble_definition("s.vdi3805", ROWS)
+    crate::artifacts::definition::assemble_definition("s.norm.vdi3805", ROWS)
 }
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {

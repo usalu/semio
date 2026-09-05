@@ -976,7 +976,7 @@ mod codec_tests {
     }
 
     //#region codec_retention_law — the REAL 43KB fixture
-    /// 🎬️ The real 43KB `logo.mp4` (copied verbatim from `🧰️framework/🔨️modules/🖼️assets/🪧️logos/🎬️.mp4`
+    /// 🎬️ The real 43KB `logo.mp4` (copied verbatim from `🧰️framework/🔨️modules/🖼️assets/🪧️logos/🎞️animation/🎬️animation.mp4`
     /// into this artifact's own examples per W0/W1b — see `fixtures/mp4/NOTES.md` in the ticket
     /// folder: `ffprobe` confirms `codec_name=h264, width=410, height=140, nb_frames=1441,
     /// nal_length_size=4, extradata_size=46`).

@@ -5,7 +5,7 @@
   "displayName": "Insert Text Chunk",
   "emoji": "📥️",
   "aggregateVariant": "InsertTextChunk",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "insert-text-chunk",
   "binaryTag": 11,
   "invertibility": "explicit-mutation",

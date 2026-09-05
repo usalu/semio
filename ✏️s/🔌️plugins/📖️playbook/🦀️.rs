@@ -28,9 +28,10 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// runs `Isolated` (its one `🧩️extensions/🌀️procedural` runs `Declarative` instead — see that
 /// extension's own `bundle()`), and it asks the broker for document write access to persist edits.
 pub fn plugin() -> Result<Plugin<PlaybookApps>, semio_framework_plugin::PluginAssemblyError> {
-    Plugin::<PlaybookApps>::builder("playbook-play")
+    Plugin::<PlaybookApps>::builder("playbook")
         .label("Playbook")
         .version("0.1.0")
+        .package_id("semio:playbook")
         .declare_artifact(crate::artifacts::playbook::artifact())
         .editor_mutation_roster::<crate::editor::playbook::PlaybookPlayApp>()
         .viewer_mutation_roster::<crate::viewer::playbook::PlaybookViewer>()

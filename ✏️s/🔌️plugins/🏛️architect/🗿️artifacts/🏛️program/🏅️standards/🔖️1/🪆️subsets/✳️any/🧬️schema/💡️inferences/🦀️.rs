@@ -4,7 +4,7 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 //!
-//! Architectural-programming elements are non-spatial (no x/y/z — `area`/`volume`/`height` are
+//! Architectural-programming elements are non-spatial (no x/y/z — `area`/`🟫️volume`/`height` are
 //! target BANDS, not measured geometry), so `flat-position`/`bounds`-style derivations don't
 //! apply; `elements[].parentId` is the one real structural relationship on the snapshot, so a
 //! topology summary over it is the honest whole-snapshot derivation. Whole-snapshot scalar, not

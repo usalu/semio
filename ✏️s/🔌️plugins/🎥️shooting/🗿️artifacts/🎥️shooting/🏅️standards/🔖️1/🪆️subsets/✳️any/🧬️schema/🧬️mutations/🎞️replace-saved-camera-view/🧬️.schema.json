@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplaceSavedCameraView",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newCamera"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newCamera": {
+      "title": "ShootingCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fov",
+        "position",
+        "target",
+        "zoom"
+      ],
+      "properties": {
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "target": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "zoom": {
+          "type": "number"
+        },
+        "fov": {
+          "type": "number"
+        },
+        "up": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "projection": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

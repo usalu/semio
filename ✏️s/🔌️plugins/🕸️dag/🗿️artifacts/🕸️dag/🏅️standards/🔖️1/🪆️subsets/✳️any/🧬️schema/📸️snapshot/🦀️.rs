@@ -94,7 +94,7 @@ impl DagSnapshot {
 
 //#region 🌉️ExternalCodecBridge
 /// 📤️ Renders a [`DagSnapshot`] as this facet's own camelCase JSON projection — the comparison
-/// surface `mutate-dag-1`'s scenarios are measured through, and the shape the committed
+/// surface `🌳️mutate-dag-1`'s scenarios are measured through, and the shape the committed
 /// `../🧬️mutations/<slug>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
 /// specification vectors are written in. It carries `content` as a HANDLE, never as a graph, which
 /// is exactly what makes it a usable observability surface here: the handle's `childId` is a digest
@@ -107,7 +107,7 @@ pub fn encode_dag_snapshot_json(snapshot: &DagSnapshot) -> String {
 }
 
 /// 📥️ The inverse of [`encode_dag_snapshot_json`] — decodes those committed specification vectors
-/// into real [`DagSnapshot`] values, so `mutate-dag-1`'s adapter reads the committed fixture rather
+/// into real [`DagSnapshot`] values, so `🌳️mutate-dag-1`'s adapter reads the committed fixture rather
 /// than re-declaring it as a Rust literal beside it. Reaching `serde_json` from that adapter is
 /// impossible: the generated test host links only this crate and `semio-repo-test-host`.
 pub fn decode_dag_snapshot_json(text: &str) -> Result<DagSnapshot, String> {
@@ -118,7 +118,7 @@ pub fn decode_dag_snapshot_json(text: &str) -> Result<DagSnapshot, String> {
 /// handle it mints — a named, non-async pass-through of this type's own `store::ArtifactDsl` impl,
 /// whose trait and error type are both unnameable outside this crate. This is the only way an
 /// external caller can obtain a dag document whose composed `s.stdio.semio.graph` child actually
-/// resolves, which is what `mutate-dag-1` needs before any kind can have a visible effect.
+/// resolves, which is what `🌳️mutate-dag-1` needs before any kind can have a visible effect.
 pub fn parse_dag_dsl(text: &str) -> Result<DagSnapshot, String> {
     <DagSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }

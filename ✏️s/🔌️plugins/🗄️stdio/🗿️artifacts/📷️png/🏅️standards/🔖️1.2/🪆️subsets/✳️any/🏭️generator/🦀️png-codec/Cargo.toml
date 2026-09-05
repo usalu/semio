@@ -11,3 +11,7 @@ edition = "2021"
 
 [dependencies]
 png = "=0.18.1"
+
+[[bin]]
+name = "png-codec"
+path = "src/main.rs"

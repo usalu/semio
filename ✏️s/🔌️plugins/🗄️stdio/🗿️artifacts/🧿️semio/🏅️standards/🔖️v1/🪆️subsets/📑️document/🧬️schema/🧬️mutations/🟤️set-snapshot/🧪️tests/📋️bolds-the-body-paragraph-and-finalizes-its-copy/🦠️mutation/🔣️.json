@@ -1,0 +1,53 @@
+{
+  "mutation": "setSnapshot",
+  "snapshot": {
+    "schema": "s.stdio.semio.document",
+    "styles": [
+      {
+        "id": "Body",
+        "name": "Body Text",
+        "basedOn": null
+      }
+    ],
+    "images": [],
+    "blocks": [
+      {
+        "kind": "heading",
+        "level": 2,
+        "style_id": null,
+        "runs": [
+          {
+            "text": "Overview",
+            "style": {
+              "bold": false,
+              "italic": false,
+              "underline": false,
+              "size": null,
+              "font": null,
+              "color": null,
+              "link": null
+            }
+          }
+        ]
+      },
+      {
+        "kind": "paragraph",
+        "style_id": "Body",
+        "runs": [
+          {
+            "text": "Final copy.",
+            "style": {
+              "bold": true,
+              "italic": false,
+              "underline": false,
+              "size": null,
+              "font": null,
+              "color": null,
+              "link": null
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

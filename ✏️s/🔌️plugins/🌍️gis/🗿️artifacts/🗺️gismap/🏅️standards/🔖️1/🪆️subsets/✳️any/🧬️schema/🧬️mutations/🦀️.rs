@@ -65,7 +65,7 @@ mod tests {
     }
 
     fn dsl_of(value: &serde_json::Value) -> dsl::DslValue {
-        dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null)
+        dsl::DslValue::from(value)
     }
 
     fn feature(id: &str) -> crate::artifacts::gismap::MapFeature {
@@ -102,34 +102,34 @@ mod tests {
     async fn create_position_obeys_the_inverse_and_diff_absorb_laws() {
         let base = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() });
         let mutation = GisMapMutation::CreatePosition(create_position::CreatePosition { index: 1, item: feature("p2") });
-        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).into_parts().0;
         let d2 = GisMapMutation::CreatePosition(create_position::CreatePosition { index: 2, item: feature("p3") }).diff(&base).into_parts().0;
-        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn delete_route_obeys_the_inverse_law() {
         let base = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { routes: vec![feature("r1")], ..Default::default() });
         let mutation = GisMapMutation::DeleteRoute(delete_route::DeleteRoute { id: "r1".into() });
-        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn replace_region_data_obeys_the_inverse_and_diff_absorb_laws() {
         let base = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { regions: vec![feature("g1")], ..Default::default() });
         let mutation = GisMapMutation::ReplaceRegionData(replace_region_data::ReplaceRegionData { id: "g1".into(), new_data: dsl_of(&json!({ "kind": "boundary" })) });
-        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).into_parts().0;
         let d2 = GisMapMutation::ReplaceRegionData(replace_region_data::ReplaceRegionData { id: "g1".into(), new_data: dsl_of(&json!({ "kind": "district" })) }).diff(&base).into_parts().0;
-        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn reorder_routes_obeys_the_inverse_law() {
         let base = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { routes: vec![feature("r1"), feature("r2")], ..Default::default() });
         let mutation = GisMapMutation::ReorderRoutes(reorder_routes::ReorderRoutes { id: "r1".into(), to_index: 1 });
-        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -159,38 +159,36 @@ mod tests {
     async fn delete_position_missing_target_is_error() {
         let base = GisMapSnapshot::default();
         let mutation = GisMapMutation::DeletePosition(delete_position::DeletePosition { id: "gone".into() });
-        protocol::testkit::assert_missing_target_is_error(&base, &mutation);
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn reorder_positions_missing_target_is_error() {
         let base = GisMapSnapshot::default();
         let mutation = GisMapMutation::ReorderPositions(reorder_positions::ReorderPositions { id: "gone".into(), to_index: 0 });
-        protocol::testkit::assert_missing_target_is_error(&base, &mutation);
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn replace_route_data_missing_target_is_error() {
         let base = GisMapSnapshot::default();
         let mutation = GisMapMutation::ReplaceRouteData(replace_route_data::ReplaceRouteData { id: "gone".into(), new_data: dsl::DslValue::Null });
-        protocol::testkit::assert_missing_target_is_error(&base, &mutation);
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn create_position_duplicate_id_fatal_never_applies() {
         let base = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() });
         let mutation = GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: feature("p1") });
-        protocol::testkit::assert_fatal_never_applies(&Mutation::diff(&mutation, &base));
+        protocol::os_spr::testkit::assert_fatal_never_applies(&Mutation::diff(&mutation, &base)).await;
     }
     //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🔹Tests
 
+/// 🕸️ Applies one parent mutation while preserving the stable drawing/value member coordinates.
 pub fn apply_gis_map_mutation(snapshot: &mut GisMapSnapshot, mutation: &GisMapMutation) -> protocol::MutationApplyResult<()> {
     let (next, _messages) = vcs::apply_mutation(snapshot, mutation)?;
-    // 🕸️ `drawing`/`value` are pure functions of `(positions, routes, regions)` — re-derive them
-    // after every mutation so the composed children never drift from what they actually describe
-    // (see `crate::artifacts::gismap::🦀️.rs`'s `🔖️Composition` region doc).
     *snapshot = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(next);
     Ok(())
 }
@@ -290,7 +288,7 @@ mod kinds_conformance {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔮️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

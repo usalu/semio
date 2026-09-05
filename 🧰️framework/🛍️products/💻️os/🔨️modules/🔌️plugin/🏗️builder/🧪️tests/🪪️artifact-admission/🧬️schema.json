@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases",
+    "firstParty"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.plugin.artifact-admission/v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 15,
+      "maxItems": 15,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "plugin",
+          "package",
+          "channel",
+          "kind",
+          "code"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "plugin": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "package": {
+            "type": "string",
+            "pattern": "^semio:[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "channel": {
+            "enum": [
+              "artifact",
+              "definition",
+              "tree"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "code": {
+            "enum": [
+              "accepted",
+              "plugin-assembly.artifact-kind",
+              "plugin-assembly.artifact-owner"
+            ]
+          }
+        }
+      }
+    },
+    "firstParty": {
+      "type": "array",
+      "minItems": 39,
+      "maxItems": 39,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "plugin",
+          "kind",
+          "definition",
+          "root"
+        ],
+        "properties": {
+          "plugin": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "kind": {
+            "type": "string",
+            "pattern": "^s\\.[a-z0-9]+(?:-[a-z0-9]+)*\\.[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "definition": {
+            "type": "string",
+            "minLength": 1
+          },
+          "root": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

@@ -4,9 +4,10 @@ use super::super::{CounterDiff, CounterMutation};
 use crate::os_spr::{MutationKind, MutationOutcome, OpText, SemanticDescriptor};
 
 //#region 🧬️Payload
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl_derive::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl_derive::MutationLeaf, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(deny_unknown_fields)]
+#[value(deny_unknown_fields)]
 pub struct AddRejectedCounter {}
 //#endregion 🧬️Payload
 

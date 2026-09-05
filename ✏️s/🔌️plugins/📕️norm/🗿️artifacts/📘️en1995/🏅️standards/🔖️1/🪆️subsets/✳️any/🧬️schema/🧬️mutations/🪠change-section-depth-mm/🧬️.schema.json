@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeSectionDepthMm",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newSectionDepthMm"
+  ],
+  "properties": {
+    "newSectionDepthMm": {
+      "type": "number"
+    }
+  }
+}

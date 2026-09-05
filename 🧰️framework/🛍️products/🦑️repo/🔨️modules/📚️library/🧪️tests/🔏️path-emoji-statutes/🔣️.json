@@ -1,7 +1,526 @@
 {
   "schemaVersion": 1,
+  "mutationCatalogSourceOwnership": {
+    "source": "🗿️sample/🏅️standards/🔖️1/🪆️subsets/✳️any",
+    "catalog": "🗿️sample/🏅️standards/🔖️1/🪆️subsets/✳️camera",
+    "domains": { "🎥️camera": { "🌱️create": "create-camera", "🔀️reorder": "reorder-cameras" }, "🌳️node": { "🌱️create": "create-node", "📷️bind": "bind-node-camera" } },
+    "cases": [
+      { "id": "same-standard", "owner": "🗿️sample/🏅️standards/🔖️1/🪆️subsets/✳️camera", "source": "🗿️sample/🏅️standards/🔖️1/🪆️subsets/✳️any", "valid": true },
+      { "id": "another-exact-subset", "owner": "🗿️sample/🏅️standards/🔖️1/🪆️subsets/✳️scene", "source": "🗿️sample/🏅️standards/🔖️1/🪆️subsets/✳️any", "valid": true },
+      { "id": "different-artifact", "owner": "🗿️foreign/🏅️standards/🔖️1/🪆️subsets/✳️camera", "source": "🗿️sample/🏅️standards/🔖️1/🪆️subsets/✳️any", "valid": false },
+      { "id": "different-standard", "owner": "🗿️sample/🏅️standards/🔖️2/🪆️subsets/✳️camera", "source": "🗿️sample/🏅️standards/🔖️1/🪆️subsets/✳️any", "valid": false },
+      { "id": "nested-catalog", "owner": "🗿️sample/🏅️standards/🔖️1/🪆️subsets/✳️camera/✏️editor", "source": "🗿️sample/🏅️standards/🔖️1/🪆️subsets/✳️any", "valid": false },
+      { "id": "nested-source", "owner": "🗿️sample/🏅️standards/🔖️1/🪆️subsets/✳️camera", "source": "🗿️sample/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema", "valid": false },
+      { "id": "unregistered-source", "owner": "🗿️sample/🏅️standards/🔖️1/🪆️subsets/✳️camera", "source": "🗿️sample/🏅️standards/🔖️1/🪆️subsets/✳️unknown", "valid": false },
+      { "id": "absolute-owner", "owner": "/🗿️sample/🏅️standards/🔖️1/🪆️subsets/✳️camera", "source": "🗿️sample/🏅️standards/🔖️1/🪆️subsets/✳️any", "valid": false },
+      { "id": "traversal-owner", "owner": "🗿️sample/../🗿️sample/🏅️standards/🔖️1/🪆️subsets/✳️camera", "source": "🗿️sample/🏅️standards/🔖️1/🪆️subsets/✳️any", "valid": false },
+      { "id": "self-owner", "owner": "🗿️sample/🏅️standards/🔖️1/🪆️subsets/✳️any", "source": "🗿️sample/🏅️standards/🔖️1/🪆️subsets/✳️any", "valid": false }
+    ]
+  },
+  "gltfFixtureCoordinates": {
+    "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any",
+    "id": "create-camera-applied",
+    "pathShapes": ["*/🧫️fixtures/*/*.gltf", "*/🧫️fixtures/*/*/*.gltf"],
+    "cases": [
+      { "id": "handpicked-pair", "paths": ["../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/⬅️before.gltf", "../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/➡️after.gltf"], "valid": true },
+      { "id": "domain-pair", "paths": ["../../💎️material/🧫️fixtures/🎨️texture/🌱️create/⬅️before.gltf", "../../💎️material/🧫️fixtures/🎨️texture/🌱️create/➡️after.gltf"], "valid": true },
+      { "id": "alternate-domain-pair", "paths": ["../../🕸️mesh/🧫️fixtures/🔤️attributes/🔗️bind/🕰️input.gltf", "../../🕸️mesh/🧫️fixtures/🔤️attributes/🔗️bind/🎯️output.gltf"], "valid": true },
+      { "id": "too-many-domains", "paths": ["../../💎️material/🧫️fixtures/🎨️texture/🖼️image/🌱️create/⬅️before.gltf", "../../💎️material/🧫️fixtures/🎨️texture/🖼️image/🌱️create/➡️after.gltf"], "valid": false },
+      { "id": "cross-domain-pair", "paths": ["../../💎️material/🧫️fixtures/🎨️texture/🌱️create/⬅️before.gltf", "../../💎️material/🧫️fixtures/🖼️image/🌱️create/➡️after.gltf"], "valid": false },
+      { "id": "erased-domain", "paths": ["../../💎️material/🧫️fixtures/🎨️texture/../🌱️create/⬅️before.gltf", "../../💎️material/🧫️fixtures/🌱️create/➡️after.gltf"], "valid": false },
+      { "id": "alternate-pair", "paths": ["../../🎥️camera/🧫️fixtures/🎥️perspective/🕰️input.gltf", "../../🎥️camera/🧫️fixtures/🎥️perspective/🎯️output.gltf"], "valid": true },
+      { "id": "missing-after", "paths": ["../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/⬅️before.gltf"], "valid": false },
+      { "id": "outside-subsets", "paths": ["../../../escape.gltf", "../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/➡️after.gltf"], "valid": false },
+      { "id": "absolute-path", "paths": ["/escape.gltf", "../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/➡️after.gltf"], "valid": false },
+      { "id": "mixed-fixture-owners", "paths": ["../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/⬅️before.gltf", "../../🎥️camera/🧫️fixtures/🗑️delete-camera-applied/➡️after.gltf"], "valid": false },
+      { "id": "same-output", "paths": ["../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/⬅️before.gltf", "../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/⬅️before.gltf"], "valid": false },
+      { "id": "wrong-media-extension", "paths": ["../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/⬅️before.json", "../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/➡️after.gltf"], "valid": false },
+      { "id": "non-fixture-target", "paths": ["../../🎥️camera/🧬️schema/🌱️create-camera-applied/⬅️before.gltf", "../../🎥️camera/🧬️schema/🌱️create-camera-applied/➡️after.gltf"], "valid": false }
+    ]
+  },
+  "assetLogoKeyframes": [
+    "🎞️animation/1️⃣one/🖋️vector.svg",
+    "🎞️animation/2️⃣two/🖋️vector.svg",
+    "🎞️animation/3️⃣three/🖋️vector.svg",
+    "🎞️animation/4️⃣four/🖋️vector.svg",
+    "🎞️animation/5️⃣five/🖋️vector.svg",
+    "🎞️animation/6️⃣six/🖋️vector.svg"
+  ],
+  "assetDocumentation": { "generatorId": "assets-build", "outputPath": "🧰️framework/🔨️modules/🖼️assets/README.md" },
+  "assetIconPaths": [
+    { "paths": ["💊️capsules/🪝️j/🖋️capsule_J.svg"], "expected": [{ "id": "capsule_J", "path": "💊️capsules/🪝️j/🖋️capsule_J.svg" }] },
+    { "paths": ["🔼️arrow-up.svg"], "expected": [{ "id": "arrow-up", "path": "🔼️arrow-up.svg" }] },
+    { "paths": ["🧭️navigation/⬆️arrow-up.svg", "🧭️navigation/⬇️arrow-down.svg"], "expected": [{ "id": "arrow-up", "path": "🧭️navigation/⬆️arrow-up.svg" }, { "id": "arrow-down", "path": "🧭️navigation/⬇️arrow-down.svg" }] },
+    { "paths": ["📐️projection/1️⃣projection-one-point.svg"], "expected": [{ "id": "projection-one-point", "path": "📐️projection/1️⃣projection-one-point.svg" }] },
+    { "paths": ["🎨️drawing/🧑️‍🎨️paintbrush.svg"], "expected": [{ "id": "paintbrush", "path": "🎨️drawing/🧑️‍🎨️paintbrush.svg" }] },
+    { "paths": ["⬆️arrow-up.svg", "🧭️navigation/🔼️arrow-up.svg"], "expected": null },
+    { "paths": ["arrow-up.svg"], "expected": null },
+    { "paths": ["🧬️⬆️arrow-up.svg"], "expected": null },
+    { "paths": ["⬆️arrow-🧬️up.svg"], "expected": null },
+    { "paths": ["⬆️.svg"], "expected": null },
+    { "paths": ["../⬆️arrow-up.svg"], "expected": null },
+    { "paths": ["/⬆️arrow-up.svg"], "expected": null },
+    { "paths": ["navigation/⬆️arrow-up.svg"], "expected": null },
+    { "paths": ["🧭️navigation/../⬆️arrow-up.svg"], "expected": null },
+    { "paths": ["🧭️navigation\\⬆️arrow-up.svg"], "expected": null },
+    { "paths": ["🧭️navigation/⬆️arrow-up.png"], "expected": null }
+  ],
+  "taxonomyEmojiIdentities": [
+    { "emoji": "1️⃣", "expected": true },
+    { "emoji": "2️⃣", "expected": true },
+    { "emoji": "#️⃣", "expected": true },
+    { "emoji": "*️⃣", "expected": true },
+    { "emoji": "🔣️", "expected": true },
+    { "emoji": "🧑‍🎨", "expected": true },
+    { "emoji": "👨‍💻", "expected": true },
+    { "emoji": "🧑️‍🎨️", "expected": false },
+    { "emoji": "1", "expected": false },
+    { "emoji": "1⃣", "expected": false },
+    { "emoji": "1️⃣2️⃣", "expected": false },
+    { "emoji": "🧬️🌾️", "expected": false },
+    { "emoji": "text️", "expected": false },
+    { "emoji": "️", "expected": false }
+  ],
+  "selectorFreeZwjOwners": [
+    { "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev", "legacyPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev", "nodeKind": "directory" },
+    { "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🧑‍💻development", "legacyPath": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🧑️‍💻️development", "nodeKind": "directory" },
+    { "path": "🧰️framework/🔨️modules/🖼️assets/🪧️logos/🧑‍💻codeicon", "legacyPath": "🧰️framework/🔨️modules/🖼️assets/🪧️logos/🧑️‍💻️codeicon", "nodeKind": "directory" },
+    { "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine", "legacyPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine", "nodeKind": "directory" },
+    { "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/📚️documents/👨‍💻file-code.svg", "legacyPath": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/📚️documents/👨️‍💻️file-code.svg", "nodeKind": "file" },
+    { "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🧑‍💻development/🧑‍💻code.svg", "legacyPath": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🧑️‍💻️development/🧑️‍💻️code.svg", "nodeKind": "file" },
+    { "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🧑‍🍳recipe", "legacyPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🧑️‍🍳️recipe", "nodeKind": "directory" }
+  ],
+  "mutationPayloadOwnership": {
+    "owner": "🗿️fixture/🧬️schema/🧬️mutations/🔑️access-rule/🌱️create",
+    "document": { "$schema": "http://json-schema.org/draft-07/schema#", "title": "CreateAccessRule", "type": "object", "properties": { "name": { "type": "string" } }, "required": ["name"], "additionalProperties": false },
+    "descriptors": [
+      { "id": "one-authority", "present": true, "extra": "absent", "expected": true },
+      { "id": "missing-authority", "present": false, "extra": "absent", "expected": false },
+      { "id": "competing-authority", "present": true, "extra": "descriptor", "expected": false },
+      { "id": "separate-schema-not-authority", "present": true, "extra": "schema", "expected": true }
+    ],
+    "rawDocuments": [
+      { "content": "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"}}}", "expected": true },
+      { "content": "{\"$schema\":\"invalid\",\"$schema\":\"http://json-schema.org/draft-07/schema#\"}", "expected": false },
+      { "content": "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"properties\":{\"name\":{\"type\":42,\"type\":\"string\"}}}", "expected": false },
+      { "content": "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"type\":\"object\",\"t\\u0079pe\":\"string\"}", "expected": false },
+      { "content": "{", "expected": false }
+    ],
+    "cases": [
+      { "path": "🧬️.schema.json", "state": "file", "expected": true },
+      { "path": "📐️shape.schema.json", "state": "file", "expected": true },
+      { "path": "🧬️schema/🔣️.json", "state": "file", "expected": true },
+      { "path": "/🧬️.schema.json", "state": "file", "expected": false },
+      { "path": "C:/🧬️.schema.json", "state": "file", "expected": false },
+      { "path": "../🧬️.schema.json", "state": "file", "expected": false },
+      { "path": "🧬️schema/../🧬️.schema.json", "state": "file", "expected": false },
+      { "path": "🧬️schema\\🔣️.json", "state": "file", "expected": false },
+      { "path": "🧬️.schema.json#/$defs/value", "state": "file", "expected": false },
+      { "path": "🧬️.schema.json", "state": "absent", "expected": false },
+      { "path": "🧬️.schema.json", "state": "directory", "expected": false },
+      { "path": "🧬️.schema.json", "state": "symlink", "expected": false },
+      { "path": "🧬️schema/🔣️.json", "state": "file", "linkedAncestor": true, "expected": false },
+      { "path": "🧬️schema/🔣️.json", "state": "file", "repositoryBoundary": true, "expected": false },
+      { "path": "🦀️.rs", "state": "file", "expected": false }
+    ],
+    "documents": [
+      { "value": { "$schema": "http://json-schema.org/draft-07/schema#", "type": ["object", "null"], "properties": { "list": { "type": "array", "items": { "type": "integer" } } } }, "expected": true },
+      { "value": { "$schema": "http://json-schema.org/draft-07/schema#", "anyOf": [true, { "type": "string" }], "dependencies": { "name": ["id"] } }, "expected": true },
+      { "value": null, "expected": false },
+      { "value": [], "expected": false },
+      { "value": { "name": "not a schema" }, "expected": false },
+      { "value": { "$schema": "http://json-schema.org/draft-07/schema#", "type": "blob" }, "expected": false },
+      { "value": { "$schema": "http://json-schema.org/draft-07/schema#", "properties": { "name": { "type": 42 } } }, "expected": false },
+      { "value": { "$schema": "http://json-schema.org/draft-07/schema#", "required": ["name", "name"] }, "expected": false },
+      { "value": { "$schema": "http://json-schema.org/draft-07/schema#", "minimum": "zero" }, "expected": false },
+      { "value": { "$schema": "http://json-schema.org/draft-07/schema#", "allOf": [] }, "expected": false },
+      { "value": { "$schema": "http://json-schema.org/draft-07/schema#", "items": 3 }, "expected": false },
+      { "value": { "$schema": "http://json-schema.org/draft-07/schema#", "enum": [{ "a": 1, "b": 2 }, { "b": 2, "a": 1 }] }, "expected": false }
+    ]
+  },
+  "mutationDomainContract": {
+    "root": "🗿️fixture/🧬️schema/🧬️mutations",
+    "domains": {
+      "🔑️access-rule": {
+        "🌱️create": "create-access-rule",
+        "🗑️delete": "delete-access-rule",
+        "🏷️rename": "rename-access-rule",
+        "♻️replace": "replace-access-rule"
+      },
+      "🔒️privacy-requirement": {
+        "🌱️create": "create-privacy-requirement",
+        "🗑️delete": "delete-privacy-requirement",
+        "🏷️rename": "rename-privacy-requirement",
+        "♻️replace": "replace-privacy-requirement"
+      },
+      "🎥️camera": {
+        "🌱️create": "create-camera",
+        "🔀️reorder": "reorder-cameras"
+      },
+      "🌳️node": {
+        "🏷️change-name": "change-node-name",
+        "🎥️bind-camera": "bind-node-camera"
+      }
+    },
+    "invalidDefinitions": [
+      { "domain": "🌳️node", "operation": "🏷️change-name", "identity": "" },
+      { "domain": "🌳️node", "operation": "🏷️change-name", "identity": "rename" },
+      { "domain": "🌳️node", "operation": "🏷️change-name", "identity": "Change-node-name" },
+      { "domain": "🌳️node", "operation": "🏷️change-name", "identity": "change--node-name" },
+      { "domain": "🌳️node", "operation": "🏷️change-name", "identity": "change-node/name" },
+      { "domain": "🌳️node", "operation": "🏷️change-name", "identity": "change-node-name/../other" },
+      { "domain": "🌳️node", "operation": "🏷️change-name", "identity": null },
+      { "domain": "🌳️node", "operation": "🏷️change-name", "identity": 42 },
+      { "domain": "🌳️node", "operation": "🏷️change-name", "identity": "reorder-cameras" },
+      { "domain": "🌳️node", "operation": "🚫️change--name", "identity": "change-node-label" },
+      { "domain": "🌳️node", "operation": "🚫️nested/change-name", "identity": "change-node-label" },
+      { "domain": "🌳️node/nested", "operation": "🚫️rename", "identity": "change-node-label" }
+    ],
+    "cases": [
+      { "path": "🔑️access-rule/🌱️create", "expected": "create-access-rule" },
+      { "path": "🔒️privacy-requirement/🌱️create", "expected": "create-privacy-requirement" },
+      { "path": "🔑️access-rule/🏷️rename", "expected": "rename-access-rule" },
+      { "path": "🎥️camera/🔀️reorder", "expected": "reorder-cameras" },
+      { "path": "🌳️node/🏷️change-name", "expected": "change-node-name" },
+      { "path": "🌳️node/🎥️bind-camera", "expected": "bind-node-camera" },
+      { "path": "🎥️camera/🔀️reorder-cameras", "expected": null },
+      { "path": "🌳️node/🏷️change-unknown", "expected": null },
+      { "path": "🌳️unknown/🏷️change-name", "expected": null },
+      { "path": "🌳️node/🏷️change-name/📥️extra", "expected": null },
+      { "path": "🌳️node/🏷️change-name/", "expected": null },
+      { "path": "🌱️create-access-rule", "expected": null },
+      { "path": "🔑️access-rule/🌱️create-access-rule", "expected": null },
+      { "path": "🔑️access-rule/📄️create", "expected": null },
+      { "path": "🔑️access-rule/🧬️nested/🌱️create", "expected": null },
+      { "path": "../🔑️access-rule/🌱️create", "expected": null }
+    ]
+  },
+  "projectionOracleDirectories": [
+    { "owner": "owner-a", "override": "⚖️oracle", "candidate": "owner-a/⚖️oracle/🔣️.json", "expected": true },
+    { "owner": "owner-a", "override": "⚖️oracle", "candidate": "owner-a/🔮️oracle/🔣️.json", "expected": false },
+    { "owner": "owner-a", "override": "⚖️oracle", "candidate": "owner-b/⚖️oracle/🔣️.json", "expected": false },
+    { "owner": "owner-b", "override": null, "candidate": "owner-b/🔮️oracle/🔣️.json", "expected": true }
+  ],
+  "subsetDirectoryOverrides": {
+    "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets",
+    "directories": {
+      "*": "🌐️any",
+      "analysis": "📈️analysis",
+      "boundary": "🛡️boundary",
+      "load": "🏋️load",
+      "material": "🧱️material",
+      "mesh": "🕸️mesh"
+    },
+    "cases": [
+      { "id": "*", "directory": "🌐️any" },
+      { "id": "analysis", "directory": "📈️analysis" },
+      { "id": "boundary", "directory": "🛡️boundary" },
+      { "id": "load", "directory": "🏋️load" },
+      { "id": "material", "directory": "🧱️material" },
+      { "id": "mesh", "directory": "🕸️mesh" }
+    ]
+  },
+  "semanticManifestFilenameOverrides": {
+    "overrides": {
+      "owner/🚪️io/📥️import/🧩️deserializers/🗿️artifacts": "📥️manifest.json",
+      "owner/🚪️io/📤️export/🧵️serializers/🗿️artifacts": "📤️manifest.json"
+    },
+    "cases": [
+      { "owner": "owner/🚪️io/📥️import/🧩️deserializers/🗿️artifacts", "expected": "📥️manifest.json" },
+      { "owner": "owner/🚪️io/📤️export/🧵️serializers/🗿️artifacts", "expected": "📤️manifest.json" },
+      { "owner": "owner/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/child", "expected": "🔣️.json" },
+      { "owner": "owner/other", "expected": "🔣️.json" }
+    ]
+  },
+  "projectionScenarios": [
+    { "id": "connect", "directoryName": "🔌️connect", "expected": true },
+    { "id": "connect", "directoryName": "🧲️connect", "expected": true },
+    { "id": "connect", "directoryName": "connect", "expected": false },
+    { "id": "connect", "directoryName": "🧪️🔌️connect", "expected": false },
+    { "id": "connect", "directoryName": "📄️connect", "expected": false },
+    { "id": "connect", "directoryName": "🔌️disconnect", "expected": false },
+    { "id": "connect", "directoryName": "🔌️nested/connect", "expected": false }
+  ],
   "genericEmojiIdentities": ["📁️", "📂️", "📄️"],
+  "authoredSubtreeNames": ["asset", "assets", "fixtures", "🧪️fixtures", "📚️examples", "🤖️generated", "🌐️public"],
+  "nextEntryNames": [
+    { "path": "layout.tsx", "expected": true },
+    { "path": "page.tsx", "expected": true },
+    { "path": "api/v1/health/route.ts", "expected": true },
+    { "path": "api/v1/health/helpers.ts", "expected": false },
+    { "path": "api/v1/health/🛣️route.ts", "expected": false },
+    { "path": "🪟️page.tsx", "expected": false }
+  ],
+  "graphManifestNames": [
+    { "name": "🕸️manifest.json", "expected": true },
+    { "name": "🛂️manifest.json", "expected": true },
+    { "name": "🛂️manifest.jsondefault.manifest.json", "expected": true },
+    { "name": "🔣️.json", "expected": false },
+    { "name": "package.json", "expected": false }
+  ],
+  "storyNames": [
+    { "name": "🪗️.story.tsx", "expected": true },
+    { "name": "✅️.story.tsx", "expected": true },
+    { "name": "📨️.story.tsx", "expected": true },
+    { "name": "🧪️.story.tsx", "expected": true },
+    { "name": "🧪️.test.tsx", "expected": false },
+    { "name": "🟦️.tsx", "expected": false }
+  ],
+  "normalization": [
+    { "name": "🧬️.schema.json", "expectedName": "🧬️.schema.json", "expectedViolations": [] },
+    { "name": "🔑️share-token-vectors.json", "expectedName": "🔑️share-token-vectors.json", "expectedViolations": [] },
+    { "name": "🔣️🧬️schema.json", "expectedName": "🔣️🧬️schema.json", "expectedViolations": ["path-emoji-multiple"] },
+    { "name": "🧬️shape-🔍️.json", "expectedName": "🧬️shape-🔍️.json", "expectedViolations": ["path-emoji-multiple"] },
+    { "name": "README.md", "expectedName": "README.md", "expectedViolations": [] },
+    { "name": "📖️README.md", "expectedName": "README.md", "expectedViolations": [] },
+    { "name": "README.rst", "expectedName": "README.rst", "expectedViolations": [] },
+    { "name": "📖️README.txt", "expectedName": "README.txt", "expectedViolations": [] },
+    { "name": "LICENSE.txt", "expectedName": "LICENSE.txt", "expectedViolations": [] },
+    { "name": "⚖️LICENSE.rst", "expectedName": "LICENSE.rst", "expectedViolations": [] }
+  ],
   "cases": [
+    {
+      "id": "mp3-tags-frames-and-snapshot-have-distinct-semantic-identities",
+      "entries": [
+        { "path": "mp3/🔮️oracle", "nodeKind": "directory" },
+        { "path": "mp3/🧪️tests", "nodeKind": "directory" },
+        { "path": "mp3/mutations/🎼️set-frames", "nodeKind": "directory" },
+        { "path": "mp3/mutations/🔖️set-id3v1", "nodeKind": "directory" },
+        { "path": "mp3/mutations/🏷️set-id3v2", "nodeKind": "directory" },
+        { "path": "mp3/mutations/📸️set-snapshot", "nodeKind": "directory" },
+        { "path": "mp3/mutations/📸️set-snapshot/🔣️.json", "nodeKind": "file" },
+        { "path": "mp3/mutations/📸️set-snapshot/🧬️.schema.json", "nodeKind": "file" },
+        { "path": "mp3/fixtures/🎼️set-frames/⬅️before.json", "nodeKind": "file" },
+        { "path": "mp3/fixtures/🎼️set-frames/➡️after.json", "nodeKind": "file" }
+      ],
+      "expected": []
+    },
+    {
+      "id": "binary-specimens-retain-one-distinct-meaningful-emoji",
+      "entries": [
+        { "path": "binary/🔮️oracle", "nodeKind": "directory" },
+        { "path": "binary/🧪️tests", "nodeKind": "directory" },
+        { "path": "binary/window/🎚️config", "nodeKind": "directory" },
+        { "path": "binary/window/☑️options", "nodeKind": "directory" },
+        { "path": "binary/fixtures/➕️append-bytes", "nodeKind": "directory" },
+        { "path": "binary/fixtures/✂️splice", "nodeKind": "directory" },
+        { "path": "binary/fixtures/🔪️truncate-at", "nodeKind": "directory" },
+        { "path": "binary/fixtures/✂️splice/⬅️before.json", "nodeKind": "file" },
+        { "path": "binary/fixtures/✂️splice/➡️after.json", "nodeKind": "file" }
+      ],
+      "expected": []
+    },
+    {
+      "id": "stdio-benchmark-and-catalog-specimens-remain-governed",
+      "entries": [
+        { "path": "stdio/🏃️benches", "nodeKind": "directory" },
+        { "path": "stdio/🏃️benches/⏱️brep-kernel.rs", "nodeKind": "file" },
+        { "path": "stdio/🧫️fixtures", "nodeKind": "directory" },
+        { "path": "stdio/🧫️fixtures/🌳️catalog-root", "nodeKind": "directory" },
+        { "path": "stdio/🧪️tests", "nodeKind": "directory" }
+      ],
+      "expected": []
+    },
+    {
+      "id": "cargo-test-discovery-keeps-handpicked-file-identities",
+      "entries": [
+        { "path": "dispatch/tests", "nodeKind": "directory", "reserved": true },
+        { "path": "dispatch/tests/🧩️mixed-receivers.rs", "nodeKind": "file" },
+        { "path": "dispatch/tests/✍️mutable-receiver.rs", "nodeKind": "file" },
+        { "path": "dispatch/tests/📈️scale.rs", "nodeKind": "file" },
+        { "path": "dispatch/tests/🕳️uninhabited.rs", "nodeKind": "file" }
+      ],
+      "expected": []
+    },
+    {
+      "id": "reserved-cargo-directory-does-not-exempt-a-test-source",
+      "entries": [
+        { "path": "dispatch/tests", "nodeKind": "directory", "reserved": true },
+        { "path": "dispatch/tests/mixed_receivers.rs", "nodeKind": "file" }
+      ],
+      "expected": [{ "kind": "missing", "path": "dispatch/tests/mixed_receivers.rs" }]
+    },
+    {
+      "id": "async-clock-and-cooperative-have-distinct-identities",
+      "entries": [
+        { "path": "⏳️async/⏱️clock", "nodeKind": "directory" },
+        { "path": "⏳️async/🤝️cooperative", "nodeKind": "directory" }
+      ],
+      "expected": []
+    },
+    {
+      "id": "budget-tests-and-fixture-share-one-sibling-namespace",
+      "entries": [
+        { "path": "⏱️budget/🧪️tests", "nodeKind": "directory" },
+        { "path": "⏱️budget/🧫️fixture", "nodeKind": "directory" },
+        { "path": "⏱️budget/🕰️clock.json", "nodeKind": "file" },
+        { "path": "⏱️budget/🪢️binding.json", "nodeKind": "file" }
+      ],
+      "expected": []
+    },
+    {
+      "id": "emoji-cannot-hide-after-the-semantic-stem",
+      "entries": [
+        { "path": "owner/🎨️paint-🖌️brush", "nodeKind": "directory" },
+        { "path": "owner/📖️guide-🔍️.md", "nodeKind": "file" }
+      ],
+      "expected": [
+        { "kind": "multiple", "path": "owner/🎨️paint-🖌️brush", "emoji": "🎨️" },
+        { "kind": "multiple", "path": "owner/📖️guide-🔍️.md", "emoji": "📖️" }
+      ]
+    },
+    {
+      "id": "polygon-element-fixtures-have-handpicked-identities",
+      "entries": [
+        { "path": "🗿️artifacts/🧱️ply", "nodeKind": "directory" },
+        { "path": "🗿️artifacts/☁️las", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/🧱️add-element", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/🚮️remove-element", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/📥️insert-row", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/📤️remove-row", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/🏷️set-row-property", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/💬️insert-comment", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/🗑️remove-comment", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/🎚️set-format", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/🌐️pattern-sphere", "nodeKind": "directory" },
+        { "path": "🧪️tests/🧱️mutate-ply-1-0", "nodeKind": "directory" }
+      ],
+      "expected": []
+    },
+    {
+      "id": "triangle-mesh-owners-and-fixtures-have-handpicked-identities",
+      "entries": [
+        { "path": "🗿️artifacts/🔺️stl", "nodeKind": "directory" },
+        { "path": "🗿️artifacts/🧊️obj", "nodeKind": "directory" },
+        { "path": "🗿️artifacts/☁️las", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/📥️insert-triangle", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/🗑️remove-triangle", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/🏷️set-solid-name", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/🧭️set-triangle-normal", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/📐️set-triangle-vertices", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/🏛️hexagonal-cut-concrete-forest-left", "nodeKind": "directory" },
+        { "path": "🧪️tests/🔺️mutate-stl-ascii", "nodeKind": "directory" },
+        { "path": "🧪️tests/🔁️create-and-round-trip-stl", "nodeKind": "directory" },
+        { "path": "📸️set-snapshot/🔣️.json", "nodeKind": "file" },
+        { "path": "📸️set-snapshot/🧬️.schema.json", "nodeKind": "file" }
+      ],
+      "expected": []
+    },
+    {
+      "id": "tabular-mutation-payloads-have-distinct-identities",
+      "entries": [
+        { "path": "🧬️mutations/➕insert-row", "nodeKind": "directory" },
+        { "path": "🧬️mutations/➖remove-row", "nodeKind": "directory" },
+        { "path": "🧬️mutations/🔲set-cell", "nodeKind": "directory" },
+        { "path": "🧬️mutations/📸️set-snapshot", "nodeKind": "directory" },
+        { "path": "🧬️mutations/🔀set-line-ending", "nodeKind": "directory" },
+        { "path": "🧬️mutations/🔚set-trailing-newline", "nodeKind": "directory" },
+        { "path": "🧬️mutations/🦀️.rs", "nodeKind": "file" },
+        { "path": "🧬️mutations/🔣️.json", "nodeKind": "file" }
+      ],
+      "expected": []
+    },
+    {
+      "id": "tabular-fixtures-and-reuse-survey-have-distinct-identities",
+      "entries": [
+        { "path": "🧫️fixtures/📥️insert-row", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/🗑️remove-row", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/🔲️set-cell", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/📸️set-snapshot", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/🔚️set-line-ending", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/↩️set-trailing-newline", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/♻️reuse-marketplaces.tsv", "nodeKind": "file" },
+        { "path": "🧫️fixtures/📥️insert-row/⬅️before.json", "nodeKind": "file" },
+        { "path": "🧫️fixtures/📥️insert-row/➡️after.json", "nodeKind": "file" }
+      ],
+      "expected": []
+    },
+    {
+      "id": "plain-text-carriers-keep-their-own-sibling-identity",
+      "entries": [
+        { "path": "🗿️artifacts/🔤️txt", "nodeKind": "directory" },
+        { "path": "🗿️artifacts/🔣️json", "nodeKind": "directory" },
+        { "path": "🗿️artifacts/💾️binary", "nodeKind": "directory" },
+        { "path": "📥️import/🗿️artifacts/🔤️txt", "nodeKind": "directory" },
+        { "path": "📥️import/🗿️artifacts/🔣️json", "nodeKind": "directory" },
+        { "path": "📥️import/🗿️artifacts/📝️md", "nodeKind": "directory" },
+        { "path": "📤️export/🗿️artifacts/🔤️txt", "nodeKind": "directory" },
+        { "path": "📤️export/🗿️artifacts/🔣️json", "nodeKind": "directory" },
+        { "path": "📤️export/🗿️artifacts/📝️md", "nodeKind": "directory" }
+      ],
+      "expected": []
+    },
+    {
+      "id": "text-line-fixtures-and-spoken-transcript-have-distinct-identities",
+      "entries": [
+        { "path": "🧫️fixtures/📥️insert-line", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/✏️set-line", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/🗑️remove-line", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/🔚️set-line-ending", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/↩️set-trailing-newline", "nodeKind": "directory" },
+        { "path": "🧫️fixtures/🎙️interview-transkript.tex", "nodeKind": "file" },
+        { "path": "🧫️fixtures/🔤️.txt", "nodeKind": "file" },
+        { "path": "🧫️fixtures/📥️insert-line/⬅️before.json", "nodeKind": "file" },
+        { "path": "🧫️fixtures/📥️insert-line/➡️after.json", "nodeKind": "file" },
+        { "path": "📥️insert-line/🔣️.json", "nodeKind": "file" },
+        { "path": "📥️insert-line/🧬️schema", "nodeKind": "directory" },
+        { "path": "📥️insert-line/🧬️schema/🔣️.json", "nodeKind": "file" }
+      ],
+      "expected": []
+    },
+    {
+      "id": "os-semantic-stem-owners-use-canonical-leaves-and-exact-tool-authority",
+      "entries": [
+        { "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🔣️.json", "nodeKind": "file" },
+        { "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/package.json", "nodeKind": "file", "reserved": true },
+        { "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🤖️generated/🟦️.ts", "nodeKind": "file" },
+        { "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/📤️macro-exports/🔣️.json", "nodeKind": "file" },
+        { "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📤️distribution/🧶️bundles/🔤️fonts/✒️script/🔤️outline-C5JkGWo-.ttf", "nodeKind": "file" },
+        { "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🖥️associations/🐧️linux/🏷️.xml", "nodeKind": "file" },
+        { "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🖥️associations/🐧️linux/🖥️.desktop", "nodeKind": "file" }
+      ],
+      "expected": []
+    },
+    {
+      "id": "plugin-latest-wins-integration-schema-is-distinct-from-composition",
+      "entries": [
+        { "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition", "nodeKind": "directory" },
+        { "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚖️tool-latest-wins-integration.schema.json", "nodeKind": "file" }
+      ],
+      "expected": []
+    },
+    {
+      "id": "norm-vdi3805-scaffold-roles-have-distinct-sibling-identities",
+      "entries": [
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracle", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🎚️config", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/☑️options", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/☑️options", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🎚️config", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/☑️options", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐞add-geometry-connection/🔣️.json", "nodeKind": "file" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐞add-geometry-connection/🧬️.schema.json", "nodeKind": "file" }
+      ],
+      "expected": []
+    },
+    {
+      "id": "norm-iso16757-scaffold-roles-have-distinct-sibling-identities",
+      "entries": [
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracle", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🎚️config", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/☑️options", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/☑️options", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🎚️config", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/☑️options", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛁add-selection-constraint/🔣️.json", "nodeKind": "file" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛁add-selection-constraint/🧬️.schema.json", "nodeKind": "file" }
+      ],
+      "expected": []
+    },
     {
       "id": "canonical-and-reserved",
       "entries": [
@@ -36,7 +555,24 @@
         { "path": "🧰️framework/🧑️‍💻️dev", "nodeKind": "directory" }
       ],
       "expected": [
-        { "kind": "duplicate", "path": "🧰️framework/🦀️alpha.rs", "sibling": "🧰️framework/🦀beta", "emoji": "🦀" }
+        { "kind": "duplicate", "path": "🧰️framework/🦀️alpha.rs", "sibling": "🧰️framework/🦀beta", "emoji": "🦀" },
+        { "kind": "multiple", "path": "🧰️framework/🦀️🔴️gamma.rs", "emoji": "🦀️🔴️" },
+        { "kind": "duplicate", "path": "🧰️framework/🦀️🔴️gamma.rs", "sibling": "🧰️framework/🦀beta", "emoji": "🦀" },
+        { "kind": "multiple", "path": "🧰️framework/🦀️🔵️delta.rs", "emoji": "🦀️🔵️" },
+        { "kind": "duplicate", "path": "🧰️framework/🦀️🔵️delta.rs", "sibling": "🧰️framework/🦀beta", "emoji": "🦀" }
+      ]
+    },
+    {
+      "id": "reserved-readme-keeps-its-literal-name",
+      "entries": [
+        { "path": "owner/README.md", "nodeKind": "file" },
+        { "path": "owner/README", "nodeKind": "file" },
+        { "path": "owner/📖️README.md", "nodeKind": "file" },
+        { "path": "owner/⚖️LICENSE.md", "nodeKind": "file", "reserved": true }
+      ],
+      "expected": [
+        { "kind": "reserved-emoji", "path": "owner/⚖️LICENSE.md", "emoji": "⚖️" },
+        { "kind": "reserved-emoji", "path": "owner/📖️README.md", "emoji": "📖️" }
       ]
     }
   ]

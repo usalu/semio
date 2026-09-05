@@ -251,7 +251,7 @@ fn inference_list_capability() -> CapabilityDefinition {
         "inference.list",
         "inference_list",
         "List Declared Inferences",
-        "Lists inference services declared for one artifact (by id) or, with no artifactId, every inference declared by this workspace's default plugin.",
+        "Lists inference metadata declared for one resolvable artifact or every catalogued workspace plugin. Discovery does not grant execution or document access.",
         inference_list_input_schema(),
         inference_list_output_schema(),
     )
@@ -405,10 +405,14 @@ mod quick {
     }
 
     fn procedural_only_catalog() -> Arc<Catalog> {
+        plugin_only_catalog("procedural")
+    }
+
+    fn plugin_only_catalog(plugin_id: &str) -> Arc<Catalog> {
         let capability = CapabilityDefinition {
-            id: CapabilityRef("procedural.probe".to_string()),
+            id: CapabilityRef(format!("{plugin_id}.probe")),
             version: 1,
-            owner: CapabilityOwner::Plugin { plugin_id: "procedural".to_string(), app_id: None, window_kind_id: None, mode_id: None },
+            owner: CapabilityOwner::Plugin { plugin_id: plugin_id.to_string(), app_id: None, window_kind_id: None, mode_id: None },
             kind: CapabilityKind::Query,
             title: "Probe".to_string(),
             description: "test fixture".to_string(),
@@ -477,6 +481,22 @@ mod quick {
     //#endregion 🧪️ToolsBareTier
 
     //#region 🧪️Discovery
+    #[test]
+    fn gis_inference_discovery_reads_committed_descriptor_through_registered_mcp_tool_without_execution_authority() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🗺️gis-discovery/🔣️.json")).expect("neutral GIS discovery fixture");
+        let workspace = open_workspace(plugin_only_catalog(fixture["pluginId"].as_str().unwrap()));
+        let mut registry = InMemoryToolRegistry::new();
+        register_inference_tools(&mut registry, Some(workspace));
+        let result = registry.call(fixture["tool"].as_str().unwrap(), fixture["arguments"].clone()).expect("registered MCP discovery tool");
+        assert!(!result.is_error, "committed GIS descriptor must load");
+        assert_eq!(result.structured_content.unwrap(), fixture["expected"], "the exact committed descriptor, not source scraping, supplies the GIS roster");
+        let denied = registry.call("inference_get", serde_json::json!({ "artifactId": fixture["unboundArtifact"], "inferenceSchema": fixture["expected"]["declared"][0]["inferenceSchema"] })).expect("registered MCP inference tool");
+        assert!(denied.is_error, "metadata discovery must not create execution authority");
+        let error = denied.structured_content.unwrap();
+        assert_eq!(error["code"], fixture["executionError"]);
+        assert_eq!(error["retryable"], true);
+    }
+
     #[test]
     fn declared_inferences_for_workspace_finds_the_real_procedural_roster() {
         let workspace = open_workspace(procedural_only_catalog());

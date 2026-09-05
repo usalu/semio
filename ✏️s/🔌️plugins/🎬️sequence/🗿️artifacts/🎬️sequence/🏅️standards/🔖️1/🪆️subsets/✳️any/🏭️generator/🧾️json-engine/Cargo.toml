@@ -1,0 +1,23 @@
+# 🧭️ Standalone workspace with one third-party dependency and no production-code linkage.
+[workspace]
+
+[package]
+name = "sequence-1-any-json-engine"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "generate"
+path = "src/â¨ï¸generate.rs"
+
+[[bin]]
+name = "reader"
+path = "src/ðï¸reader.rs"
+
+[lib]
+name = "sequence_json"
+path = "src/lib.rs"
+
+[dependencies]
+serde_json = "1"

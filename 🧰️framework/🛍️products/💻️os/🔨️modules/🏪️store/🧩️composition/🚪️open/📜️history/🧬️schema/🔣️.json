@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "historyHex", "identity", "authority", "grants", "inputs", "lifecycle"],
+  "properties": {
+    "schema": { "const": "semio.member.retained-history-input/v1" },
+    "historyHex": { "type": "string", "pattern": "^[a-f0-9]{510}$" },
+    "identity": { "const": { "artifactId": "flow-member", "kind": "s.stdio.semio", "standard": "v1", "subset": "flow" } },
+    "authority": { "const": { "operation": 7, "generation": 11, "expiresAtUs": 1000, "nowUs": 1 } },
+    "grants": { "const": [1, 7, 4096] },
+    "inputs": { "type": "array", "minItems": 5, "maxItems": 5, "items": { "$ref": "#/$defs/input" } },
+    "lifecycle": { "type": "array", "minItems": 13, "maxItems": 13, "items": { "$ref": "#/$defs/lifecycle" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z-]+$", "maxLength": 40 },
+    "input": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "operation", "historyBytes", "verifiedEnd", "tailBytes", "retiredBytes", "error"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" }, "operation": { "enum": ["exact", "torn", "paged-tail", "header-only", "bad-crc"] },
+        "historyBytes": { "type": "integer", "minimum": 32, "maximum": 5000 },
+        "verifiedEnd": { "type": ["integer", "null"], "minimum": 32, "maximum": 5000 },
+        "tailBytes": { "type": ["integer", "null"], "minimum": 0, "maximum": 5000 },
+        "retiredBytes": { "type": "integer", "minimum": 1, "maximum": 6000 }, "error": { "enum": [null, "malformed"] }
+      }
+    },
+    "lifecycle": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "at", "event", "error", "retainedBytes", "retiredBytes", "handoffs"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" }, "at": { "enum": ["input", "pending-byte", "ready", "witness"] },
+        "event": { "enum": ["none", "cancel", "operation", "generation", "expired", "clock-absent"] },
+        "error": { "enum": [null, "cancelled", "stale", "expired"] },
+        "retainedBytes": { "type": "integer", "minimum": 1, "maximum": 6000 },
+        "retiredBytes": { "type": "integer", "minimum": 1, "maximum": 6000 },
+        "handoffs": { "type": "integer", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}

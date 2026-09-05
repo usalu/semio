@@ -1,5 +1,5 @@
 /** 🧭️ Raster editor — Navigator window: typed twin of `🦀️.rs`'s view-model. Mirrors the
- * pane's `render(document: &RasterDocument, config: &RasterConfig)` boundary. No `🎚️options` node:
+ * pane's `render(document: &RasterDocument, config: &RasterConfig)` boundary. No `☑️options` node:
  * the navigator has no live chrome measures of its own, matching the Rust file's own doc comment. */
 
 /** ✏️ The Navigator window's typed view-model — mirrors the Rust `render()` boundary's inputs. */

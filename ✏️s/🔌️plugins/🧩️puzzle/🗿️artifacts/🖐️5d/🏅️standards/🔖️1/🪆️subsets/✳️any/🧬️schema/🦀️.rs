@@ -266,7 +266,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for Puzzle5dAnalyzerAnalysis {
         type Parts = Puzzle5dParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.puzzle5d", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.puzzle.puzzle5d", standard: StandardId("1"), subset: SubsetId("*") };
 
         fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium

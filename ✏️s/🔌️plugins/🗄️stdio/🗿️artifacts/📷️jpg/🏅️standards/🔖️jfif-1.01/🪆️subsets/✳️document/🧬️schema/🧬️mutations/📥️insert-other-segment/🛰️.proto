@@ -1,4 +1,0 @@
-syntax = "proto3";
-package stdio.jpg.mutation;
-// 🧬️ insert-other-segment/InsertOtherSegment; complex fields follow the direct payload schema.
-message InsertOtherSegmentMutation { uint64 index = 1; bytes segment = 2; }

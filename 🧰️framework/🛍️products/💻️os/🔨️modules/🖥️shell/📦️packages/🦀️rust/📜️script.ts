@@ -22,9 +22,9 @@ class TestScript extends BundleScript {
 /** 🧬️ Name of the versioned owned-schema export test in `🦀️.rs`. */
 const TYPEGEN_TEST_FILTER = "exports_typescript_bindings";
 
-/** 🎯️ The mirror lives at `<owner>/🤖️generated/🟦️shell.ts`, a sibling of `📦️packages`. */
+/** 🎯️ The mirror lives at `<owner>/🤖️generated/🟦️.ts`, a sibling of `📦️packages`. */
 function generatedBindingsPath(root: string): string {
-  return join(root, "..", "..", "🤖️generated", "🟦️shell.ts");
+  return join(root, "..", "..", "🤖️generated", "🟦️.ts");
 }
 
 function runTypegenExportTest(root: string, outPath: string): void {

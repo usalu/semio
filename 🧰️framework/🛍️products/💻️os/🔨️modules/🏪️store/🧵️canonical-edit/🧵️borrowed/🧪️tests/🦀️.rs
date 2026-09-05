@@ -19,15 +19,38 @@ pub(super) enum MapValue {
     Object(BTreeMap<String, MapValue>),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToValue, FromValue)]
 pub(super) enum MapMutation {
     ReplaceMap {
         map: BTreeMap<String, MapValue>,
         #[serde(skip)]
+        #[value(skip)]
         lifetime: Arc<MapLifetime>,
         #[serde(skip)]
+        #[value(skip)]
         tracked: bool,
     },
+}
+
+impl ToValue for MapValue {
+    fn to_value(&self) -> DslValue {
+        match self {
+            Self::Text(value) => value.to_value(),
+            Self::Array(value) => value.to_value(),
+            Self::Object(value) => value.to_value(),
+        }
+    }
+}
+
+impl FromValue for MapValue {
+    fn from_value(value: DslValue) -> Result<Self, protocol::ValueError> {
+        match value {
+            DslValue::String(value) => Ok(Self::Text(value)),
+            DslValue::Array(value) => value.into_iter().map(Self::from_value).collect::<Result<_, _>>().map(Self::Array),
+            DslValue::Object(value) => value.into_iter().map(|(key, value)| Ok((key, Self::from_value(value)?))).collect::<Result<_, protocol::ValueError>>().map(Self::Object),
+            _ => Err(protocol::ValueError("map fixture requires text, array, or object".into())),
+        }
+    }
 }
 
 impl Drop for MapMutation {
@@ -156,8 +179,8 @@ impl ArtifactOwnedValueRetirementFactory<MapMutation> for MapRetirementFactory {
 
 //#region 📦️FixtureOwners
 pub(super) fn fixture() -> (Edit<MapMutation>, serde_json::Value, Arc<MapLifetime>) {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️canonical-borrowed-map.json")).unwrap();
-    let mut edit: Edit<MapMutation> = serde_json::from_value(fixture["edit"].clone()).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🗺️canonical-borrowed-map.json")).unwrap();
+    let mut edit = Edit::<MapMutation>::from_value(fixture["edit"].clone().into()).unwrap();
     let MapMutation::ReplaceMap { lifetime, tracked, .. } = &mut edit.forwards[0];
     *tracked = true;
     let lifetime = Arc::clone(lifetime);
@@ -195,7 +218,7 @@ fn close(owner: &mut ArtifactStoreOneItemSealer<u64, MapMutation>, lifetime: &Ma
 fn borrowed_map_long_unicode_keys_nested_and_empty_maps_match_serde_under_tiny_grants() {
     for maximum in [1, 7, 256, 4096] {
         let (mut owner, fixture, lifetime) = owner();
-        let expected = serde_json::to_vec(owner.edit.as_ref().unwrap().as_ref()).unwrap();
+        let expected = serde_json::to_vec(&test_support::SerdeValue(&owner.edit.as_ref().unwrap().as_ref().to_value())).unwrap();
         assert_eq!(expected, fixture["expectedJson"].as_str().unwrap().as_bytes());
         let before = owner.checkpoint();
         for (maximum_items, maximum_bytes) in [(0, maximum), (1, 0)] {

@@ -1,0 +1,25 @@
+{
+  "schema": null,
+  "seed": null,
+  "slotsRemoved": [],
+  "slotsUpserted": [],
+  "edgesRemoved": [],
+  "edgesUpserted": [],
+  "weightsRemoved": [],
+  "weightsUpserted": [],
+  "rulesRemoved": [],
+  "rulesUpserted": [
+    [
+      1,
+      {
+        "id": "rule-roof-wall",
+        "moduleAId": "module-roof",
+        "moduleBId": "module-wall",
+        "allowed": false,
+        "params": {
+          "kind": "null"
+        }
+      }
+    ]
+  ]
+}

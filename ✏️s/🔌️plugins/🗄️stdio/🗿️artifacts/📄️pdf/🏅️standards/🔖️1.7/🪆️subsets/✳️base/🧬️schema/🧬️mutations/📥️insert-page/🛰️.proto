@@ -1,8 +1,0 @@
-syntax = "proto3";
-package semio.s_stdio_pdf_1_7.mutation.insert_page;
-
-// 📥️ Direct insert-page protobuf payload.
-message InsertPageMutation {
-  uint64 index = 1;
-  bytes page = 2;
-}

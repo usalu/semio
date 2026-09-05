@@ -16,7 +16,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
-ui_render = { path = "../../../🖼️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
+ui_render = { path = "../../../🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
 ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 raw-window-handle = "0.6"
 
@@ -31,13 +31,13 @@ rfd = "0.15.4"
 semio-framework-job = { path = "../../../../🧵️job/📦️packages/🦀️rust" }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-backend_metal = { path = "../../../🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust", package = "semio-framework-ui-backend-metal" }
+backend_metal = { path = "../../../🖌️render/🎯️targets/🍎️metal/📦️packages/🦀️rust", package = "semio-framework-ui-backend-metal" }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-backend_d3d12 = { path = "../../../🖼️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust", package = "semio-framework-ui-backend-d3d12" }
+backend_d3d12 = { path = "../../../🖌️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust", package = "semio-framework-ui-backend-d3d12" }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-backend_vulkan = { path = "../../../🖼️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust", package = "semio-framework-ui-backend-vulkan" }
+backend_vulkan = { path = "../../../🖌️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust", package = "semio-framework-ui-backend-vulkan" }
 
 # 🌉️ `backend_webgpu` is a browser-only WebGPU-via-`wasm-bindgen` backend. Excluded from
 # `wasm32-wasip2` because `target_arch = "wasm32"` is TRUE for the WASI component target too.
@@ -46,4 +46,4 @@ backend_vulkan = { path = "../../../🖼️render/🎯️targets/🌋️vulkan/�
 # `🦀️backend_alias.rs`): a headless component has no platform GPU surface to alias to. Left
 # unresolved for wasip2 deliberately; fixing it is out of this slice's scope.
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
-backend_webgpu = { path = "../../../🖼️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust", package = "semio-framework-ui-backend-webgpu" }
+backend_webgpu = { path = "../../../🖌️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust", package = "semio-framework-ui-backend-webgpu" }

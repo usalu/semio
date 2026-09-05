@@ -6,12 +6,18 @@ import { basename, dirname, join, posix } from "node:path";
 import { createFixedContractResolver, fileKindIdForSourcePath, leadingEmojiIdentity, loadCatalogTaxonomy, pathEmojiStatuteFindings, semanticDirectoryKindId } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 
 type Entry = { path: string; name: string; parent: string; directory: boolean };
-type Finding = { kind: "missing" | "generic" | "presentation" | "spacing" | "duplicate" | "oracle"; path: string; sibling?: string; emoji?: string };
+type Finding = { kind: "missing" | "generic" | "presentation" | "spacing" | "duplicate" | "multiple" | "reserved-emoji" | "oracle"; path: string; sibling?: string; emoji?: string };
+
+if ((Bun.argv[2] ?? "audit") !== "audit") throw new Error("Disabled: automatic emoji selection and bulk basename replacement corrupted the workspace. Only read-only audit is permitted; names must be handpicked individually.");
 
 const root = process.cwd();
-const taxonomy = loadCatalogTaxonomy();
-const raw = Bun.spawnSync(["git", "ls-files", "-co", "--exclude-standard", "-z"], { cwd: root }).stdout.toString();
-const observedInventory = raw.split("\0").filter(Boolean).map((path) => path.replace(/\/$/u, "").normalize("NFC")).flatMap((path) => {
+const requestedPrefix = (Bun.argv[3] ?? "").replace(/^\.\//u, "").replace(/\/$/u, "").normalize("NFC");
+const taxonomy = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")) as ReturnType<typeof loadCatalogTaxonomy>;
+const gitPathspecs = requestedPrefix
+  ? [requestedPrefix]
+  : [".", ...taxonomy.pathEmojiPolicy.reservedSubtreeDirectoryNames.map((name) => `:(exclude)${name}`)];
+const raw = Bun.spawnSync(["git", "ls-files", "-co", "--exclude-standard", "-z", "--", ...gitPathspecs], { cwd: root }).stdout.toString();
+const observedInventory = raw.split("\0").filter(Boolean).map((path) => path.replace(/\/$/u, "").normalize("NFC")).filter((path) => requestedPrefix === "" || path === requestedPrefix || path.startsWith(`${requestedPrefix}/`)).flatMap((path) => {
   try { return [{ path, directory: lstatSync(join(root, path)).isDirectory() }]; } catch { return []; }
 });
 const inventory = observedInventory.map((entry) => entry.path);
@@ -38,8 +44,7 @@ const fold = (value: string): string => value.replaceAll("\uFE0F", "").replaceAl
 const reservedSubtrees = new Set(taxonomy.pathEmojiPolicy.reservedSubtreeDirectoryNames.map(fold));
 const isReservedSubtreeName = (name: string): boolean => reservedSubtrees.has(fold(name)) || reservedSubtrees.has(fold(leadingEmojiIdentity(name).rest));
 const resolver = createFixedContractResolver(taxonomy);
-const underReservedSubtree = (path: string): boolean => path.split("/").slice(0, -1).some(isReservedSubtreeName);
-const packageContext = (path: string): { packageRoot: boolean; ecosystemId?: string; siblingFixedFilenameContractIds?: readonly string[] } => {
+const packageContext = (path: string): { packageRoot: boolean; ecosystemId?: string; parentDirectoryKindId?: string; siblingFixedFilenameContractIds?: readonly string[] } => {
   const parent = dirname(path).replaceAll("\\", "/");
   const segments = parent.split("/");
   let packages = -1;
@@ -49,11 +54,18 @@ const packageContext = (path: string): { packageRoot: boolean; ecosystemId?: str
       break;
     }
   }
-  const ecosystemId = packages >= 0 ? segments[packages + 1] : undefined;
-  const packageManifest = basename(path) === "package.json" || existsSync(join(root, parent, "package.json"));
+  const adjacentEcosystem = ([
+    ["Cargo.toml", "🦀️rust"],
+    ["go.mod", "🐹️go"],
+    ["package.json", "🟦️typescript"],
+  ] as const).find(([manifest]) => basename(path) === manifest || existsSync(join(root, parent, manifest)))?.[1];
+  const ecosystemId = packages >= 0 ? segments[packages + 1] : adjacentEcosystem;
   const siblingFixedFilenameContractIds = existsSync(join(root, parent, "📋️project.json")) ? ["nx-project-manifest"] : undefined;
-  return { packageRoot: packages === segments.length - 2 || packageManifest, ecosystemId, siblingFixedFilenameContractIds };
+  return { packageRoot: packages === segments.length - 2 || adjacentEcosystem !== undefined, ecosystemId, parentDirectoryKindId: semanticDirectoryKindId(basename(parent), taxonomy) ?? undefined, siblingFixedFilenameContractIds };
 };
+const fixedDirectoryIds = new Map([...directories].map((path) => [path, resolver.directoryIdsForPath(path, packageContext(path))] as const));
+const fixedReservedSubtreeRoots = [...fixedDirectoryIds].filter(([, ids]) => ids.some((id) => taxonomy.fixedDirectoryContracts[id]?.descendants === "reserved")).map(([path]) => path);
+const underReservedSubtree = (path: string): boolean => path.split("/").slice(0, -1).some(isReservedSubtreeName) || fixedReservedSubtreeRoots.some((reservedRoot) => path.startsWith(`${reservedRoot}/`));
 const entries: Entry[] = [
   ...[...directories].map((path) => ({ path, name: path.split("/").at(-1)!, parent: dirname(path).replaceAll("\\", "/"), directory: true })),
   ...files.map((path) => ({ path, name: path.split("/").at(-1)!, parent: dirname(path).replaceAll("\\", "/"), directory: false })),
@@ -62,7 +74,7 @@ const entries: Entry[] = [
 const statuteEntries = entries.map((entry) => {
   const context = packageContext(entry.path);
   const fixed = entry.directory
-    ? resolver.directoryIdsForPath(entry.path, context).length > 0
+    ? (fixedDirectoryIds.get(entry.path) ?? resolver.directoryIdsForPath(entry.path, context)).length > 0
     : resolver.filenameIdsForPath(entry.path, context).length > 0;
   return { path: entry.path, nodeKind: entry.directory ? "directory" as const : "file" as const, reserved: underReservedSubtree(entry.path) || entry.directory && isReservedSubtreeName(entry.name) || fixed };
 });
@@ -75,7 +87,7 @@ for (const entry of entries.filter((candidate) => !statuteByPath.get(candidate.p
   if (oracle && fold(emoji) !== fold(oracle)) findings.push({ kind: "oracle", path: entry.path, emoji: `${emoji} != ${oracle}` });
 }
 
-const counts = Object.fromEntries(["missing", "generic", "presentation", "spacing", "duplicate", "oracle"].map((kind) => [kind, findings.filter((finding) => finding.kind === kind).length]));
+const counts = Object.fromEntries(["missing", "generic", "presentation", "spacing", "duplicate", "multiple", "reserved-emoji", "oracle"].map((kind) => [kind, findings.filter((finding) => finding.kind === kind).length]));
 const audit = { files: files.length, directories: directories.size, governed: statuteEntries.filter((entry) => !entry.reserved).length, counts, findings };
 
 type PlannedMove = { source: string; destination: string; sourceName: string; destinationName: string; nodeKind: "directory" | "file" };
@@ -116,6 +128,60 @@ const fileKindEmoji = (path: string): string => {
 };
 const cleanRest = (value: string): string => value.replace(/^\s+/u, "");
 
+type ReplacementNode = { next: Map<string, number>; fail: number; outputs: number[] };
+
+const createReplacer = (pairs: readonly (readonly [string, string])[], bounded: boolean): ((value: string) => string) => {
+  const nodes: ReplacementNode[] = [{ next: new Map(), fail: 0, outputs: [] }];
+  for (const [pairIndex, [source]] of pairs.entries()) {
+    let state = 0;
+    for (const character of source) {
+      const existing = nodes[state]!.next.get(character);
+      if (existing !== undefined) state = existing;
+      else {
+        const target = nodes.length;
+        nodes[state]!.next.set(character, target);
+        state = target;
+        nodes.push({ next: new Map(), fail: 0, outputs: [] });
+      }
+    }
+    nodes[state]!.outputs.push(pairIndex);
+  }
+  const queue = [...nodes[0]!.next.values()];
+  for (let cursor = 0; cursor < queue.length; cursor += 1) {
+    const state = queue[cursor]!;
+    for (const [character, target] of nodes[state]!.next) {
+      queue.push(target);
+      let failure = nodes[state]!.fail;
+      while (failure !== 0 && !nodes[failure]!.next.has(character)) failure = nodes[failure]!.fail;
+      nodes[target]!.fail = nodes[failure]!.next.get(character) ?? 0;
+      nodes[target]!.outputs.push(...nodes[nodes[target]!.fail]!.outputs);
+    }
+  }
+  const boundary = /[\/\\"'`]/u;
+  return (value: string): string => {
+    const matches: { start: number; end: number; pairIndex: number }[] = [];
+    let state = 0, offset = 0;
+    for (const character of value) {
+      while (state !== 0 && !nodes[state]!.next.has(character)) state = nodes[state]!.fail;
+      state = nodes[state]!.next.get(character) ?? 0;
+      const end = offset + character.length;
+      for (const pairIndex of nodes[state]!.outputs) {
+        const start = end - pairs[pairIndex]![0].length;
+        if (!bounded || (start === 0 || boundary.test(value[start - 1]!)) && (end === value.length || boundary.test(value[end]!))) matches.push({ start, end, pairIndex });
+      }
+      offset = end;
+    }
+    matches.sort((left, right) => left.start - right.start || right.end - left.end);
+    let output = "", cursor = 0;
+    for (const match of matches) {
+      if (match.start < cursor) continue;
+      output += value.slice(cursor, match.start) + pairs[match.pairIndex]![1];
+      cursor = match.end;
+    }
+    return matches.length === 0 ? value : output + value.slice(cursor);
+  };
+};
+
 const planMoves = (): PlannedMove[] => {
   const affected = new Set(findings.filter((finding) => finding.kind !== "oracle").map((finding) => finding.path));
   const findingsByPath = new Map<string, Set<string>>();
@@ -139,10 +205,11 @@ const planMoves = (): PlannedMove[] => {
       const identity = leadingEmojiIdentity(entry.name);
       const rest = cleanRest(identity.rest || entry.name);
       const semantic = semanticEmoji(rest);
+      const canonicalIdentity = identity.first ? identity.emoji.replace(identity.first, emoji(identity.first)) : identity.emoji;
       let prefix: string;
       if (kinds.has("missing")) prefix = entry.directory ? semantic : `${fileKindEmoji(entry.path)}${semantic}`;
       else if (kinds.has("generic")) prefix = entry.directory ? semantic : `${fileKindEmoji(entry.path)}${semantic}`;
-      else prefix = `${identity.emoji}${semantic}`;
+      else prefix = `${canonicalIdentity}${semantic}`;
       let folded = fold(prefix);
       if (used.has(folded)) {
         const hash = stableHash(`${entry.name}\0${entry.directory ? "directory" : "file"}`);
@@ -203,26 +270,25 @@ const replaceReferences = (moves: readonly PlannedMove[]): number => {
     destinations.add(move.destinationName);
     basenameDestinations.set(move.sourceName, destinations);
   }
-  const uniqueNames = [...basenameDestinations].filter(([, destinations]) => destinations.size === 1).map(([sourceName, destinations]) => [sourceName, [...destinations][0]!] as const).sort((left, right) => right[0].length - left[0].length);
+  const inventoryByName = new Map<string, Entry[]>();
+  for (const entry of entries) inventoryByName.set(entry.name, [...(inventoryByName.get(entry.name) ?? []), entry]);
+  const movedPaths = new Set(moves.map((move) => move.source));
+  const uniqueNames = [...basenameDestinations]
+    .filter(([sourceName, destinations]) => destinations.size === 1 && inventoryByName.get(sourceName)?.every((entry) => movedPaths.has(entry.path)))
+    .map(([sourceName, destinations]) => [sourceName, [...destinations][0]!] as const)
+    .sort((left, right) => right[0].length - left[0].length);
+  const replaceFull = createReplacer(full.map((move) => [move.source, move.destination] as const), false);
+  const replaceName = createReplacer(uniqueNames, true);
   const historical = (path: string): boolean => path === ".🧬semio" || path.startsWith(".🧬semio/") || path === ".🧬️semio" || path.startsWith(".🧬️semio/");
-  const bulkyReserved = new Set(["🗿️artifacts", "🖼️asset", "🖼️assets", "🧫️fixtures", "🧪️fixtures", "📚️examples", "🤖️generated", "🌐️public"].map(fold));
-  const bulky = (path: string): boolean => path.split("/").some((segment) => bulkyReserved.has(fold(segment)));
   let changed = 0;
   for (const [index, path] of files.entries()) {
-    if (historical(path) || bulky(path) || !existsSync(join(root, path))) continue;
+    if (historical(path) || !existsSync(join(root, path))) continue;
     const stat = lstatSync(join(root, path));
     if (!stat.isFile() || stat.size > 8 * 1024 * 1024) continue;
     const bytes = readFileSync(join(root, path));
     if (bytes.subarray(0, Math.min(bytes.length, 8192)).includes(0)) continue;
     let content = bytes.toString("utf8"), updated = content;
-    for (const move of full) updated = updated.replaceAll(move.source, move.destination);
-    for (const [sourceName, destinationName] of uniqueNames) {
-      if (leadingEmojiIdentity(sourceName).emoji) updated = updated.replaceAll(sourceName, destinationName);
-      else {
-        const escaped = sourceName.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
-        updated = updated.replace(new RegExp(`(^|[\\/\\\\\"'\\x60])${escaped}(?=([\\/\\\\\"'\\x60]|$))`, "gmu"), `$1${destinationName}`);
-      }
-    }
+    updated = replaceName(replaceFull(updated));
     if (updated !== content) { writeFileSync(join(root, path), updated); changed++; }
     if (existsSync(join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️08/ENFORCE-UNIQUE-SEMANTIC-EMOJIS-ACROSS-REPOSITORY/⛔️cancel"))) throw new Error("Cancelled by ticket marker.");
     if (index % 500 === 0) process.stderr.write(`references ${index}/${files.length}\r`);
@@ -249,7 +315,7 @@ const reconcileMoves = (moves: readonly PlannedMove[]): number => {
   let moved = 0;
   const ordered = [...moves].sort((left, right) => right.source.split("/").length - left.source.split("/").length || Buffer.from(right.source).compare(Buffer.from(left.source)));
   for (const move of ordered) {
-    if (move.nodeKind === "directory" && move.source.startsWith("🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/internal")) continue;
+    if (move.nodeKind === "directory" && move.source.startsWith("🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/internal")) continue;
     const source = join(root, move.source);
     const destination = join(root, dirname(move.source), move.destinationName);
     if (!existsSync(source) || existsSync(destination)) continue;
@@ -391,17 +457,77 @@ const repairActiveReferences = (): { references: number } => {
   return { references };
 };
 
+/** 🔗️Repairs relative string references by projecting their pre-migration coordinates through the recorded rename plan. */
+const repairRelativeReferences = (): { files: number; literals: number } => {
+  const moves: PlannedMove[] = JSON.parse(readFileSync(join(import.meta.dir, "🗑️generated/🧭️rename-plan.json"), "utf8")).moves;
+  const bySource = new Map(moves.map((move) => [move.source, move]));
+  const byDestination = new Map(moves.map((move) => [move.destination, move]));
+  const sourceDirectories = moves.filter((move) => move.nodeKind === "directory").sort((left, right) => right.source.length - left.source.length);
+  const destinationDirectories = [...sourceDirectories].sort((left, right) => right.destination.length - left.destination.length);
+  const oldPathForCurrent = (path: string): string => {
+    const exact = byDestination.get(path);
+    if (exact) return exact.source;
+    const parent = destinationDirectories.find((move) => path.startsWith(`${move.destination}/`));
+    return parent ? `${parent.source}${path.slice(parent.destination.length)}` : path;
+  };
+  const currentPathForOld = (path: string): string => {
+    const exact = bySource.get(path);
+    if (exact) return exact.destination;
+    const parent = sourceDirectories.find((move) => path.startsWith(`${move.source}/`));
+    return parent ? `${parent.destination}${path.slice(parent.source.length)}` : path;
+  };
+  const resolves = (path: string): boolean => [
+    path,
+    `${path}.ts`,
+    `${path}.tsx`,
+    `${path}.js`,
+    `${path}.mjs`,
+    `${path}.cjs`,
+    `${path}.json`,
+    posix.join(path, "🟦️.ts"),
+    posix.join(path, "🟨️.mjs"),
+  ].some((candidate) => existsSync(join(root, candidate)));
+  let changedFiles = 0, changedLiterals = 0;
+  for (const currentSource of files) {
+    if (currentSource === ".🧬semio" || currentSource.startsWith(".🧬semio/")) continue;
+    const absolute = join(root, currentSource);
+    let stat;
+    try { stat = lstatSync(absolute); } catch { continue; }
+    if (!stat.isFile() || stat.size > 8 * 1024 * 1024) continue;
+    const bytes = readFileSync(absolute);
+    if (bytes.subarray(0, Math.min(bytes.length, 8192)).includes(0)) continue;
+    const oldSource = oldPathForCurrent(currentSource);
+    const content = bytes.toString("utf8");
+    const updated = content.replace(/(["'])(\.\.?\/[^"'\r\n]+)\1/gu, (literal, quote: string, specifier: string) => {
+      const currentTarget = posix.normalize(posix.join(posix.dirname(currentSource), specifier));
+      if (resolves(currentTarget)) return literal;
+      const oldTarget = posix.normalize(posix.join(posix.dirname(oldSource), specifier));
+      const projectedTarget = currentPathForOld(oldTarget);
+      if (projectedTarget === currentTarget || !resolves(projectedTarget)) return literal;
+      let projectedSpecifier = posix.relative(posix.dirname(currentSource), projectedTarget);
+      if (!projectedSpecifier.startsWith(".")) projectedSpecifier = `./${projectedSpecifier}`;
+      changedLiterals += 1;
+      return `${quote}${projectedSpecifier}${quote}`;
+    });
+    if (updated === content) continue;
+    writeFileSync(absolute, updated);
+    changedFiles += 1;
+  }
+  return { files: changedFiles, literals: changedLiterals };
+};
+
 const command = Bun.argv[2] ?? "audit";
 if (command === "audit") process.stdout.write(`${JSON.stringify(audit, null, 2)}\n`);
 else if (command === "resolve-final-collision") process.stdout.write(`${JSON.stringify(resolveFinalCollision(), null, 2)}\n`);
 else if (command === "restore-go-import-directories") process.stdout.write(`${JSON.stringify(restoreGoImportDirectories(), null, 2)}\n`);
 else if (command === "repair-active-references") process.stdout.write(`${JSON.stringify(repairActiveReferences(), null, 2)}\n`);
+else if (command === "repair-relative-references") process.stdout.write(`${JSON.stringify(repairRelativeReferences(), null, 2)}\n`);
 else {
-  const moves: PlannedMove[] = command === "reconcile"
+  const moves: PlannedMove[] = command === "reconcile" || command === "apply-plan"
     ? JSON.parse(readFileSync(join(import.meta.dir, "🗑️generated/🧭️rename-plan.json"), "utf8")).moves
     : planMoves();
   if (command === "plan") process.stdout.write(`${JSON.stringify({ audit, moves }, null, 2)}\n`);
-  else if (command === "apply") {
+  else if (command === "apply" || command === "apply-plan") {
     const changedReferences = replaceReferences(moves);
     applyMoves(moves);
     process.stdout.write(`${JSON.stringify({ moves: moves.length, changedReferences }, null, 2)}\n`);
@@ -409,5 +535,5 @@ else {
     const reconciled = reconcileMoves(moves);
     const fixed = restoreFixedLeaves(moves);
     process.stdout.write(`${JSON.stringify({ reconciled, ...fixed }, null, 2)}\n`);
-  } else throw new Error(`Unknown command ${JSON.stringify(command)}. Expected audit, plan, apply, reconcile, resolve-final-collision, restore-go-import-directories, or repair-active-references.`);
+  } else throw new Error(`Unknown command ${JSON.stringify(command)}. Expected audit, plan, apply, apply-plan, reconcile, resolve-final-collision, restore-go-import-directories, repair-active-references, or repair-relative-references.`);
 }

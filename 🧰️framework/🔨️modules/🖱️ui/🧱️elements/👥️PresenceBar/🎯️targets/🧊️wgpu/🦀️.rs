@@ -2,12 +2,12 @@
 //! lane 2-F). Unlike the `widgets`-mod chrome renderers this file sits beside (`Button`, `KeyValue`,
 //! `Ring`, …), `PresenceBar` never held shell-chrome inline code to extract — it builds a plain
 //! `UiNode` tree (`Stack` of `Stack`-wrapped `Text` avatars) through the same declarative builders the
-//! generic `Interpreter` element (`os/renderer/engine/elements/Interpreter`) already walks for every
+//! generic `🟦️Interpreter` element (`os/renderer/engine/elements/🟦️Interpreter`) already walks for every
 //! plugin surface, so it needs only the light `wgpu` feature (declarative types), never `wgpu-engine`.
 //! Each peer is its own `UiStackNode` carrying `id: "peer:{actor}"`; the Interpreter's
 //! `uiNodePathSegment` (`type[index]#id`) turns that into a `data-ui-path` segment on the React side —
 //! the wgpu↔React parity join this ticket's contract freeze §C0 asks for — with no new `UiNode`
-//! variant and no edit to the shared `component.rs`/`Interpreter` files (out of this lane's lease).
+//! variant and no edit to the shared `component.rs`/`🟦️Interpreter` files (out of this lane's lease).
 //! Wired as a CRATE-ROOT sibling module of `crate::wgpu::widgets`, `#[path]`-mounted right before
 //! `pub mod widgets` in `🦀️.rs`, mirroring how `button`/`key_value`/`ring` are mounted there.
 //!
@@ -18,7 +18,7 @@
 //! `data-ui-path` note (requested by the W0 scout): grepping `os/renderer/engine/elements/Table` and
 //! the React `📊️Table` element turned up no `data-ui-path` on table rows — only `data-row-id`. The
 //! scout's suspicion was correct; `data-ui-path` genuinely exists only on the generic `Interpreter`'s
-//! own rendered nodes (`os/renderer/engine/elements/Interpreter/🟦️.tsx`), which is the
+//! own rendered nodes (`os/renderer/engine/elements/🟦️Interpreter/🟦️.tsx`), which is the
 //! mechanism this file's `UiStackNode` ids plug into.
 
 use crate::wgpu::{Label, Locale, LocalizedLabel, Terminology, UiNode, UiPresence, UiStackNode, UiTextNode};

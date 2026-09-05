@@ -1,6 +1,6 @@
-//! 📄 Process3d mutation — `ReplaceStepMeasure` (repurposes the pre-migration `📄set-snapshot/`
+//! 📄 Process3d mutation — `ReplaceStepMeasure` (repurposes the pre-migration `🟤️set-snapshot/`
 //! triad dir — glue.rs path-includes this exact directory outside this facet's writable boundary,
-//! so the directory name stays `📄set-snapshot`; see the migration report's `sharedFileRequests`
+//! so the directory name stays `🟤️set-snapshot`; see the migration report's `sharedFileRequests`
 //! for the rename once a later pass can touch `🦀️.rs`).
 //!
 //! Whole-document snapshot replacement is BANNED by

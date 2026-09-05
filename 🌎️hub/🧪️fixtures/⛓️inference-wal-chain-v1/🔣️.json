@@ -1,0 +1,32 @@
+{
+  "schema": "semio.hub.inference-wal-chain-fixture/v1",
+  "hashAlgorithm": "blake3-256",
+  "requiredFlags": 1,
+  "recordDigest": "full-frame-including-length-crc-and-back-length",
+  "commitDigest": "previous-chain-hash-followed-by-ordered-record-digests",
+  "hashingOwnership": [
+    { "interrupt": "drop", "expected": "cancelled", "heldActive": 1, "releasedActive": 0, "stoppedProgress": 0, "hashingSteps": 1 },
+    { "interrupt": "cancel", "expected": "cancelled", "heldActive": 1, "releasedActive": 0, "stoppedProgress": 0, "hashingSteps": 1 },
+    { "interrupt": "deadline", "expected": "expired", "heldActive": 1, "releasedActive": 0, "stoppedProgress": 0, "hashingSteps": 1 }
+  ],
+  "retainedBoundaries": [
+    { "mutation": "none", "replayAccepted": true, "genesisProofAccepted": false },
+    { "mutation": "wrong-prior-tip", "replayAccepted": true, "genesisProofAccepted": false }
+  ],
+  "cases": [
+    { "name": "one-segment-three-commits", "segments": 1, "mutation": "none", "accepted": true },
+    { "name": "two-segments-exact-prior-tip", "segments": 2, "mutation": "none", "accepted": true },
+    { "name": "alter-nontarget-record-repair-crc-retain-old-commit", "segments": 1, "mutation": "record-crc-repaired", "accepted": false },
+    { "name": "alter-commit-hash-repair-crc", "segments": 1, "mutation": "commit-hash-crc-repaired", "accepted": false },
+    { "name": "alter-commit-record-count-repair-crc", "segments": 1, "mutation": "commit-count-crc-repaired", "accepted": false },
+    { "name": "alter-commit-record-length-repair-crc", "segments": 1, "mutation": "commit-length-crc-repaired", "accepted": false },
+    { "name": "alter-commit-sequence-repair-crc", "segments": 1, "mutation": "commit-sequence-crc-repaired", "accepted": false },
+    { "name": "alter-commit-offset-repair-crc", "segments": 1, "mutation": "commit-offset-crc-repaired", "accepted": false },
+    { "name": "valid-chain-without-required-flag", "segments": 1, "mutation": "missing-required-chain", "accepted": false },
+    { "name": "valid-segment-chain-wrong-stored-prior-tip", "segments": 2, "mutation": "wrong-prior-tip", "accepted": false },
+    { "name": "valid-segment-chain-wrong-document", "segments": 2, "mutation": "wrong-segment-document", "accepted": false },
+    { "name": "valid-segment-chain-skipped-index", "segments": 2, "mutation": "skipped-segment-index", "accepted": false },
+    { "name": "noncritical-commit-with-valid-crc", "segments": 1, "mutation": "noncritical-commit-crc-repaired", "accepted": false },
+    { "name": "nonzero-commit-reserved-with-valid-crc", "segments": 1, "mutation": "commit-reserved-crc-repaired", "accepted": false }
+  ]
+}

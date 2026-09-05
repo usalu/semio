@@ -5,7 +5,7 @@
   "displayName": "Edit Object Label",
   "emoji": "🖋️",
   "aggregateVariant": "EditObjectLabel",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "edit-object-label",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

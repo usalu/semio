@@ -35,7 +35,7 @@ pub fn definition(envelope: &Puzzle2dScene, host: &BoardHost, labels: &Puzzle2dL
     }
 }
 
-/// 🎚️ The live chrome measures for this window, collected from the mode's `🎚️options/*` components.
+/// 🎚️ The live chrome measures for this window, collected from the mode's `☑️options/*` components.
 pub fn window_measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> Vec<WindowMeasure> {
     let mode = envelope.runtime.lod_mode_by_pane.get(WINDOW_KIND_ID).map_or(PUZZLE2D_LOD_MODE_AUTOMATIC, String::as_str);
     vec![options::lod::measure(WINDOW_KIND_ID, mode, labels), options::brush::measure(envelope, labels)]

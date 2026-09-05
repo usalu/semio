@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 2,
+  "pluginId": "stdio",
+  "packageId": "semio:stdio",
+  "wasmOut": "semio_s_plugin_stdio.wasm",
+  "limits": {
+    "artifactBytes": 67108864,
+    "ioChunkBytes": 65536,
+    "deadlineMs": 1200000
+  },
+  "vectors": [
+    {
+      "name": "independent",
+      "raw": "0061736d0d000100",
+      "core": "0061736d01000000",
+      "distinct": true
+    },
+    {
+      "name": "raw-only-substitution",
+      "raw": "0061736d0d000100",
+      "core": "0061736d0d000100",
+      "distinct": false
+    }
+  ],
+  "wasmStructures": [
+    {
+      "name": "empty-core",
+      "core": "0061736d01000000",
+      "definedFunctions": 0,
+      "componentizable": true
+    },
+    {
+      "name": "single-function-core",
+      "core": "0061736d01000000010401600000030201000a040102000b",
+      "definedFunctions": 1,
+      "componentizable": true
+    },
+    {
+      "name": "over-function-limit",
+      "core": "0061736d010000000303c1843d",
+      "definedFunctions": 1000001,
+      "componentizable": false
+    }
+  ]
+}

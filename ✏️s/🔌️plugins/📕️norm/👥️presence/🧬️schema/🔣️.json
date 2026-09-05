@@ -1,6 +1,6 @@
 {
   "$id": "https://semio.tech/schema/app/norm/norm/presence.json",
-  "title": "NormPresence",
+  "title": "NoPresence",
   "type": "object",
   "additionalProperties": false,
   "required": [],

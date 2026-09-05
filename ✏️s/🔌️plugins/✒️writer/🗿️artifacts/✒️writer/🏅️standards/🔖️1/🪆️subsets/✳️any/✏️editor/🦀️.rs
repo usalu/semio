@@ -26,7 +26,7 @@ use crate::editor::writer::presence::{WriterPresence, WriterPresenceMutation};
 use crate::editor::writer::terminology::writer_play_labels;
 use semio_framework::{kernel::Effect, InteractiveJobClassification, RetainedToolWireInput, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, Operation, RetainedJobPayload, StepContext, StepOutcome};
-use semio_framework_plugin::app::{ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, EditorApp, EphemeralEmit, InteractionView};
+use semio_framework_plugin::app::{ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolCompletion, ArtifactToolCompletionRejection, ArtifactToolFactoryRegistry, EditorApp, EphemeralEmit, InteractionView};
 use semio_framework_plugin::{
     engagement_token_matches, strip_engagement_prefix, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, AppActionRegistry, AppIo, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec,
     ContextMenuRequest, ContextMenuTextContext, Dialect, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media,
@@ -325,6 +325,7 @@ struct WriterCommandToolJob {
     text: Option<Arc<str>>,
     config: Option<Arc<WriterConfig>>,
     completion: Option<ArtifactToolCompletion<EditorApp<WriterPlayApp>>>,
+    pending_completion_rejection: Option<ArtifactToolCompletionRejection<EditorApp<WriterPlayApp>>>,
     raw_input: Option<RetainedToolWireInput>,
     raw_bytes: Vec<u8>,
     raw_page_cursor: usize,
@@ -553,6 +554,9 @@ impl InteractiveJob for WriterCommandToolJob {
             context.consume_fuel(1);
             return self.checkpoint(context);
         }
+        if self.pending_completion_rejection.is_some() {
+            return Self::fault();
+        }
         if !self.completed {
             let Some(completion) = self.completion.clone() else { return Self::fault() };
             if !completion.has_mounted_consumer() {
@@ -562,7 +566,8 @@ impl InteractiveJob for WriterCommandToolJob {
                 Ok(emit) => emit,
                 Err(_) => return Self::fault(),
             };
-            if completion.complete(Ok(emit), EphemeralEmit::default()).is_err() {
+            if let Err(rejected) = completion.complete(Ok(emit), EphemeralEmit::default()) {
+                self.pending_completion_rejection = Some(rejected);
                 return Self::fault();
             }
             self.completed = true;
@@ -608,6 +613,22 @@ impl InteractiveJob for WriterCommandToolJob {
                 other => other,
             };
         }
+        if let Some(rejected) = self.pending_completion_rejection.as_mut() {
+            if let Ok(emit) = rejected.emit.as_mut() {
+                if let Some(step) = emit.close_child_one(maximum_items, maximum_bytes) {
+                    return match step {
+                        semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes } => InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                        semio_framework_plugin::PluginCloseStep::Blocked { .. } | semio_framework_plugin::PluginCloseStep::AwaitingInput { .. } => InteractiveJobCloseStep::Blocked,
+                        semio_framework_plugin::PluginCloseStep::Complete => unreachable!("child close helper consumes completed children"),
+                    };
+                }
+            }
+            if maximum_items == 0 {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.pending_completion_rejection = None;
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
         if self.command.is_some() {
             if maximum_items == 0 || maximum_bytes < MAX_WRITER_COMMAND_RAW_BYTES {
                 return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
@@ -650,7 +671,7 @@ impl InteractiveJob for WriterCommandToolJob {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.command.is_none() && self.snapshot.is_none() && self.text.is_none() && self.config.is_none() && self.completion.is_none() && self.raw_input.is_none() && self.raw_bytes.is_empty() && self.raw_bytes.capacity() == 0
+        self.closing && self.pending_completion_rejection.is_none() && self.command.is_none() && self.snapshot.is_none() && self.text.is_none() && self.config.is_none() && self.completion.is_none() && self.raw_input.is_none() && self.raw_bytes.is_empty() && self.raw_bytes.capacity() == 0
     }
 }
 
@@ -691,6 +712,7 @@ impl ToolJobFactory for WriterCommandJobFactory {
             text: Some(payload.text),
             config: Some(payload.config),
             completion: payload.completion,
+            pending_completion_rejection: None,
             raw_input: None,
             raw_bytes: Vec::new(),
             raw_page_cursor: 0,
@@ -1614,6 +1636,7 @@ mod tests {
             text: Some(text),
             config: Some(Arc::new(WriterConfig::default())),
             completion: None,
+            pending_completion_rejection: None,
             raw_input: None,
             raw_bytes: vec![1, 2, 3],
             raw_page_cursor: 2,
@@ -1623,6 +1646,42 @@ mod tests {
             completed: false,
             closing: false,
         }
+    }
+
+    #[test]
+    fn writer_completion_rejection_retires_child_before_command_without_reemission() {
+        let mut emit: Emit<WriterMutation, WriterConfigMutation, NoDraftMutation> = Emit::default();
+        emit.child_emits.push(semio_framework_plugin::app::ChildEmit::of::<WriterSnapshot, WriterMutation>("member", "writer-child", Vec::new()));
+        let rejected = ArtifactToolCompletionRejection::<EditorApp<WriterPlayApp>> {
+            emit: Ok(emit),
+            ephemeral: EphemeralEmit::default(),
+            fault: Fault::new(semio_framework_plugin::FaultOrigin::Framework, semio_framework_plugin::FaultCode::new("test.completion-rejected"), "injected completion rejection"),
+        };
+        let mut job = writer_command_job(WriterCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }), Arc::from("writer"));
+        job.raw_bytes = Vec::new();
+        job.pending_completion_rejection = Some(rejected);
+        job.begin_close();
+        assert_eq!(job.close_step(0, 1), InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 1 });
+        assert!(job.pending_completion_rejection.is_some());
+        assert!(job.command.is_some());
+        for _ in 0..128 {
+            if job.pending_completion_rejection.is_none() {
+                break;
+            }
+            let step = job.close_step(1, 4);
+            if let InteractiveJobCloseStep::Pending { released_items, released_bytes } = step {
+                assert!(released_items <= 1 && released_bytes <= 4);
+            }
+        }
+        assert!(job.pending_completion_rejection.is_none());
+        assert!(job.command.is_some(), "typed command owner stays retained until the rejected output is terminal");
+        for _ in 0..16 {
+            if job.terminal_is_empty() {
+                break;
+            }
+            let _ = job.close_step(1, MAX_WRITER_COMMAND_RAW_BYTES);
+        }
+        assert!(job.terminal_is_empty());
     }
 
     #[test]

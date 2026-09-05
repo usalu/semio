@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/s/stdio/avi/inference/text.json",
-  "title": "AviInferenceText",
-  "type": "object"
-}

@@ -29,7 +29,7 @@
 //! (`ObjMutation::SetObject { name, faces }` over a strict subset of the faces it held)
 //! re-rendered to the ORIGINAL membership — the encoded document was semantically unchanged and
 //! the mutation unobservable (ticket `26/08/23/END-TO-END-TESTING-REFACTOR`, subject scenario
-//! `mutate-set-object` of `mutate-obj-3-0`; pinned by
+//! `mutate-set-object` of `🦁️mutate-obj-3-0`; pinned by
 //! `an_object_run_that_ends_is_closed_with_a_bare_o`).
 //#region 🔖️Codec
 //#region 🔖️IndexResolution

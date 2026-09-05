@@ -18,7 +18,7 @@ class FontsScript extends BundleScript {
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
-    runTestBudgeted(process.execPath, ["test", "../../🧪️test/🟦️s.ts", ...rest], { cwd: this.root });
+    runTestBudgeted(process.execPath, ["test", "../../🧪️tests/🟦️.ts", ...rest], { cwd: this.root });
   }
 }
 

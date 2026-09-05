@@ -1,2 +1,2 @@
-type NormPresence {
-}
+"""👥️ An empty JSON object; no shareable presence fields exist."""
+scalar NoPresence

@@ -3,7 +3,7 @@
 /** @emoji 🛂️ `@semio-tech/framework` — AppDefinition, PluginManifest, contributions, and declarative UI contract. */
 import type { IconName } from "@semio-tech/assets";
 export type { IconName };
-import { SHELL_LOCALES, isShellLocale, SHELL_TERMINOLOGIES, isShellTerminology, type ShellLocale, type ShellTerminology, type LocalizedLabel } from "./🤖️generated/🟦️ui-axes.ts";
+import { SHELL_LOCALES, isShellLocale, SHELL_TERMINOLOGIES, isShellTerminology, type ShellLocale, type ShellTerminology, type LocalizedLabel } from "./🤖️generated/🎚️ui-axes.ts";
 export { SHELL_LOCALES, isShellLocale, SHELL_TERMINOLOGIES, isShellTerminology };
 export type { ShellLocale, ShellTerminology, LocalizedLabel };
 // 🧭️ `ContextMenuItemSpec`/`Effect` are hand-written types owned by sibling modules aggregated
@@ -134,7 +134,7 @@ import type {
   AppRole as GeneratedAppRole,
   AppRef as GeneratedAppRef,
   ArtifactDialect as GeneratedArtifactDialect,
-} from "./🤖️generated/🟦️manifest.ts";
+} from "./🤖️generated/🪪️manifest.ts";
 // #endregion 🧬️GeneratedMirror
 
 // #region 🧬️GeneratedUiContract
@@ -225,7 +225,7 @@ import type {
   SurfaceKind as GeneratedSurfaceKind,
   SurfaceDoc as GeneratedSurfaceDoc,
   SurfaceProps as GeneratedSurfaceProps,
-} from "./🤖️generated/🟦️ui-contract.ts";
+} from "./🤖️generated/📜️ui-contract.ts";
 
 export type Liveness = GeneratedLiveness;
 export type AccessibilitySpec = GeneratedAccessibilitySpec;

@@ -1,0 +1,58 @@
+{
+  "artifact": null,
+  "schema": null,
+  "camera": null,
+  "nodes": null,
+  "edges": null,
+  "meta": {
+    "manifestId": "manifest-alpha",
+    "kindCompatibility": [
+      {
+        "source": "handle-kind-a",
+        "target": "handle-kind-b",
+        "bidirectional": true,
+        "important": false,
+        "specificity": "handle"
+      }
+    ],
+    "kindCatalogs": {
+      "nodes": [],
+      "handles": [
+        {
+          "id": "handle-kind-a",
+          "compatibleWith": [
+            "handle-kind-b"
+          ],
+          "description": "Alpha port",
+          "icon": "circle",
+          "color": "#3366ff",
+          "defaultWireKind": "wire-kind-a"
+        }
+      ],
+      "edges": [],
+      "wires": []
+    }
+  },
+  "selectedIds": null,
+  "activeUtilityId": null,
+  "cameraX": null,
+  "cameraY": null,
+  "cameraZoom": null,
+  "selectionMethod": null,
+  "gridSnapEnabled": null,
+  "gridFactor": null,
+  "suggestionOffset": null,
+  "fillCount": null,
+  "brushCandidateIndex": null,
+  "brushCandidateSourceHandleId": null,
+  "locale": null,
+  "terminology": null,
+  "lodModeByPaneJson": null,
+  "engagementInputByPaneJson": null,
+  "brushCandidatesJson": null,
+  "nodeKindWeightsJson": null,
+  "handleKindWeightsJson": null,
+  "activeUtilityByWindowIdJson": null,
+  "hoveredNodeId": null,
+  "previewSeq": null
+}

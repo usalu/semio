@@ -1,3 +1,0 @@
-(* ebnf norm.en1994.mutations *)
-document = header, body ;
-header = 'schema', space, 'norm.en1994.mutations', newline ;

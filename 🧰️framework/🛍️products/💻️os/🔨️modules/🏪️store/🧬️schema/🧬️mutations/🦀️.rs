@@ -1,8 +1,6 @@
 //! 🧬️ Transparent space-history mutation aggregate.
 use super::super::{SpaceHistoryDiff, SpaceHistorySnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
 #[path = "📌️commit-space-checkpoint/🦀️.rs"]
@@ -28,11 +26,6 @@ pub use switch_space_alternative::SwitchSpaceAlternative;
 
 //#region 🔖️Aggregate
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations)]
-// 🔮️ serde stays TEST-ONLY: the sibling leaf tests use `serde_json` as an independent
-// differential oracle against the first-party `ToValue`/`FromValue` path. Production code
-// never serializes through serde, so this never reaches a shipped plugin component.
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields))]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = SpaceHistorySnapshot, diff = SpaceHistoryDiff, schema = "os.space.history")]
 pub enum SpaceHistoryMutation {

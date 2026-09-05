@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "roles": { "snapshot": "📸️snapshot.json", "expect": "🎯️expect.json", "patch": "🩹️patch.json" },
+  "groups": {
+    "♿️accessibility": {
+      "patch": false,
+      "cases": {
+        "decorative-image": "🖼️decorative-image",
+        "described": "💬️described",
+        "labelled": "🏷️labelled",
+        "live-region": "📢️live-region",
+        "shortcut": "⌨️shortcut"
+      }
+    },
+    "📐️layout": {
+      "patch": false,
+      "cases": {
+        "absolute": "📍️absolute",
+        "grid": "🕸️grid",
+        "leaf": "🍃️leaf",
+        "nesting": "🪆️nesting",
+        "overlay": "🪟️overlay",
+        "scroll": "📜️scroll",
+        "stack": "📚️stack"
+      }
+    },
+    "🖥️composite": {
+      "patch": false,
+      "cases": {
+        "dialog": "💭️dialog",
+        "form-with-validation": "☑️form-with-validation",
+        "surface-embedded": "🗺️surface-embedded",
+        "toolbar": "🧰️toolbar",
+        "tree-nested-sections": "🌳️tree-nested-sections"
+      }
+    },
+    "🚫️rejection": {
+      "patch": true,
+      "cases": {
+        "cycle": "🔁️cycle",
+        "dangling-child": "🔗️dangling-child",
+        "duplicate-sibling-key": "🗝️duplicate-sibling-key",
+        "quota-children": "👶️quota-children",
+        "quota-depth": "📏️quota-depth",
+        "quota-nodes": "🔢️quota-nodes",
+        "quota-patch-bytes": "💾️quota-patch-bytes",
+        "quota-patch-ops": "🧮️quota-patch-ops",
+        "quota-text-bytes": "🔤️quota-text-bytes",
+        "stale-base-revision": "🕰️stale-base-revision"
+      }
+    },
+    "🧩️component": {
+      "patch": false,
+      "cases": {
+        "button": "🔘️button",
+        "container": "🧺️container",
+        "extension": "🔌️extension",
+        "icon-select": "🎴️icon-select",
+        "image": "🖼️image",
+        "input": "⌨️input",
+        "key-value-list": "📋️key-value-list",
+        "number-stepper": "🔢️number-stepper",
+        "ring": "💍️ring",
+        "select": "🔽️select",
+        "separator": "➖️separator",
+        "slider": "🎚️slider",
+        "state-activity-finished": "🏁️state-activity-finished",
+        "state-activity-loading": "⏳️state-activity-loading",
+        "state-activity-waiting": "⏸️state-activity-waiting",
+        "state-disabled": "⛔️state-disabled",
+        "state-transition-celebrating": "🎉️state-transition-celebrating",
+        "state-transition-introducing": "👋️state-transition-introducing",
+        "state-with-menu": "🍽️state-with-menu",
+        "surface": "🗺️surface",
+        "text": "📝️text",
+        "toggle": "🔀️toggle",
+        "tree": "🌳️tree"
+      }
+    },
+    "🩹️patch": {
+      "patch": true,
+      "cases": {
+        "remove-subtree": "🪓️remove-subtree",
+        "reorder-children": "🔀️reorder-children",
+        "set-accessibility": "♿️set-accessibility",
+        "set-activity": "⏳️set-activity",
+        "set-bindings": "🔗️set-bindings",
+        "set-children": "👶️set-children",
+        "set-component": "🧩️set-component",
+        "set-layout": "📐️set-layout",
+        "set-menu": "🍽️set-menu",
+        "set-root": "🌱️set-root",
+        "set-style": "🎨️set-style",
+        "upsert": "📥️upsert"
+      }
+    }
+  }
+}

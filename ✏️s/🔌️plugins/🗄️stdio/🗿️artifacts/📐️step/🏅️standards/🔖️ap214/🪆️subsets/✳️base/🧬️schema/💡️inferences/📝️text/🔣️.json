@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/s/stdio/step/inference/text.json",
-  "title": "StepInferenceText",
-  "type": "object"
-}

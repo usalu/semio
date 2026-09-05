@@ -1,0 +1,7 @@
+{
+  "SetPrimitiveTopology": {
+    "mesh_id": "mesh-a",
+    "primitive_id": "prim-a",
+    "topology": "triangleStrip"
+  }
+}

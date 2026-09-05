@@ -14,7 +14,7 @@
 //! B-R4), making that convention genuinely resolvable for the first time (previously zero live
 //! consumers per the P2-W0 recon). [`full_resolver`] now reads a live snapshot of that global
 //! registry instead of returning a hardcoded empty map. Full fan-in across every real app schema
-//! (the `🧪️fixture-sweep` crate's dev-dependency list is the template for what that eventually looks
+//! (the `🧹️fixture-sweep` crate's dev-dependency list is the template for what that eventually looks
 //! like) is still tracked as the W8 "dsl_registry completeness assertion" item in
 //! `.claude/plans/the-final-goal-for-jolly-spindle.md` — this wave builds the mechanism, not the
 //! full 32-standard fan-in.

@@ -1,5 +1,0 @@
-{
-  "mutation": "updateLayerTraceParams",
-  "layerId": "trace-a",
-  "params": { "threshold": 0.8, "simplifyEpsilon": 0.25 }
-}

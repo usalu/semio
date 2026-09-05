@@ -1,6 +1,0 @@
-# bind-node-mesh mutation facet.
-input GltfBindNodeMeshPayloadV1 {
-  node: Int!
-  mesh: Int!
-}
-type GltfBindNodeMeshMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

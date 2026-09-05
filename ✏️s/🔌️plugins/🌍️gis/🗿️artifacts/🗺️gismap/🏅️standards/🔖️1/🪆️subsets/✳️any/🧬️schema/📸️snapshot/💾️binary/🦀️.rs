@@ -43,7 +43,7 @@ mod tests {
     /// doc comment) — this bridges a `serde_json::json!` literal into one for test-fixture ergonomics.
     #[semio_framework_async_macros::async_test]
     async fn gis_map_document_pack_agrees_with_dsl_for_synthetic_value_shapes() {
-        let dsl_of = |value: serde_json::Value| ::dsl::to_dsl_value(&value).unwrap_or(::dsl::DslValue::Null);
+        let dsl_of = |value: serde_json::Value| ::dsl::DslValue::from(value);
         let document = GisMapSnapshot {
             positions: vec![MapFeature {
                 id: "p1".into(),

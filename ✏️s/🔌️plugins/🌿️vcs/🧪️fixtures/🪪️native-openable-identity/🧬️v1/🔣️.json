@@ -1,0 +1,31 @@
+{
+  "schema": "semio.vcs.native-openable-identity/v1",
+  "snapshotProtocolSha256": "e16083d1e963d571b44c3cc4eac8d5d3992aeecf606cd4a4a6b1095c101605d3",
+  "authority": {
+    "pluginId": "vcs",
+    "packageId": "semio:vcs",
+    "artifactKind": "vcs.vcs",
+    "artifactSchema": "vcs.vcs",
+    "dialectKind": "s.vcs.vcs",
+    "standard": "1",
+    "subset": "*",
+    "viewerApp": "s.vcs.vcs@1/*#viewer",
+    "editorApp": "s.vcs.vcs@1/*#editor",
+    "viewerWindowKindId": "framework.window.tree",
+    "rendererTarget": "wasm",
+    "execution": "isolated"
+  },
+  "hostileCases": [
+    { "name": "missing-package", "field": "packageId", "value": null },
+    { "name": "foreign-package", "field": "packageId", "value": "semio:other" },
+    { "name": "legacy-kind", "field": "artifactKind", "value": "vcs.document" },
+    { "name": "foreign-schema", "field": "artifactSchema", "value": "other.document" },
+    { "name": "foreign-dialect", "field": "dialectKind", "value": "s.other.vcs" },
+    { "name": "foreign-plugin", "field": "pluginId", "value": "other" },
+    { "name": "viewer-role-substitution", "field": "viewerApp", "value": "s.vcs.vcs@1/*#editor" },
+    { "name": "editor-standard-substitution", "field": "editorApp", "value": "s.vcs.vcs@2/*#editor" },
+    { "name": "in-process-execution", "field": "execution", "value": "shared" },
+    { "name": "foreign-window", "field": "viewerWindowKindId", "value": "other.window" },
+    { "name": "foreign-renderer", "field": "rendererTarget", "value": "wgpu" }
+  ]
+}

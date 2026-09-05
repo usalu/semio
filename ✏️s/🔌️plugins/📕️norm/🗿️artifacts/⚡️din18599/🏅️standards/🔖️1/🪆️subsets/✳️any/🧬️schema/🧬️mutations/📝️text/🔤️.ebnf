@@ -1,0 +1,3 @@
+(* ebnf norm.din18599.mutations *)
+document = header, body ;
+header = 'schema', space, 'norm.din18599.mutations', newline ;

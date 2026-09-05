@@ -67,7 +67,7 @@ mod tests {
     /// 🕹️ Selection is framework-owned now (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-
     /// MECHANISM); selects the live tile through the real `interactionSelect` action (the only way a
     /// downstream crate can populate a genuine `InteractionView`, see
-    /// `🎮️commands/🀄️delete-selection`'s own tests for the equivalent single-tile case).
+    /// `🎮️commands/🚮️delete-selection`'s own tests for the equivalent single-tile case).
     #[semio_framework_async_macros::async_test]
     async fn delete_selection_removes_only_the_selected_tile() {
         use crate::editor::animate::{PRESENTATION_INTERACTION_DOMAIN, PRESENTATION_INTERACTION_GRANULARITY};

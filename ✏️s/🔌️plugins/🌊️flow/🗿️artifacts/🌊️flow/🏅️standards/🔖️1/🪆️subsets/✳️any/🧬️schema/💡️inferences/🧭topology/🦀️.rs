@@ -87,11 +87,11 @@ pub fn compute_flow_topology(widgets: &[Widget], synapses: &[SynapseSpec]) -> Fl
 mod tests {
     use super::*;
 
-    async fn slider(id: &str) -> Widget {
+    fn slider(id: &str) -> Widget {
         Widget::InputSlider { id: id.into(), label: id.into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 }
     }
 
-    async fn synapse(id: &str, from: &str, to: &str) -> SynapseSpec {
+    fn synapse(id: &str, from: &str, to: &str) -> SynapseSpec {
         SynapseSpec { id: id.into(), from: from.into(), to: to.into(), from_port: String::new(), to_port: String::new() }
     }
 

@@ -420,9 +420,14 @@ pub const fn validate_mutation_leaf_descriptor(descriptor: &MutationLeafDescript
 }
 
 /// 🧷️ Validates exact descriptor uniqueness within one explicit owner roster.
-pub const fn validate_mutation_leaf_descriptor_roster(mutation_root: &'static str, descriptors: &'static [MutationLeafDescriptor]) -> Result<(), MutationLeafDescriptorRosterValidationError> {
+pub const fn validate_mutation_leaf_descriptor_roster(mutation_root: &'static str, descriptors: &'static [MutationLeafDescriptor], owner_layout: MutationOwnerLayout) -> Result<(), MutationLeafDescriptorRosterValidationError> {
     if !mutation_leaf_descriptor_root(mutation_root) {
         return Err(MutationLeafDescriptorRosterValidationError { owner: mutation_root, field: "owner", first_index: 0, index: 0 });
+    }
+    if let MutationOwnerLayout::DomainOperations(owners) = owner_layout {
+        if owners.is_empty() || owners.len() != descriptors.len() {
+            return Err(MutationLeafDescriptorRosterValidationError { owner: mutation_root, field: "owner", first_index: 0, index: 0 });
+        }
     }
     let mut index = 0;
     while index < descriptors.len() {
@@ -430,7 +435,7 @@ pub const fn validate_mutation_leaf_descriptor_roster(mutation_root: &'static st
         if let Err(error) = validate_mutation_leaf_descriptor(descriptor) {
             return Err(MutationLeafDescriptorRosterValidationError { owner: mutation_root, field: error.field, first_index: index, index });
         }
-        if !mutation_leaf_descriptor_direct_child(mutation_root, descriptor.owner) {
+        if !mutation_owner_layout_matches(mutation_root, owner_layout, descriptor.owner, descriptor.semantic_kind) {
             return Err(MutationLeafDescriptorRosterValidationError { owner: mutation_root, field: "owner", first_index: index, index });
         }
         index += 1;
@@ -497,6 +502,41 @@ const fn mutation_leaf_descriptor_direct_child(root: &str, owner: &str) -> bool 
         index += 1;
     }
     !(owner.len() == start + 1 && owner[start] == b'.') && !(owner.len() == start + 2 && owner[start] == b'.' && owner[start + 1] == b'.')
+}
+
+const fn mutation_owner_domain_child(root: &str, owner: &str) -> bool {
+    if !mutation_leaf_source_path(owner) { return false; }
+    let root = root.as_bytes();
+    let owner = owner.as_bytes();
+    if owner.len() <= root.len() + 1 || !mutation_leaf_descriptor_bytes_at(owner, 0, root) || owner[root.len()] != b'/' { return false; }
+    let mut index = root.len() + 1;
+    let mut separators = 0;
+    while index < owner.len() {
+        if owner[index] == b'/' { separators += 1; }
+        index += 1;
+    }
+    separators == 1
+}
+
+const fn mutation_owner_layout_matches(root: &str, layout: MutationOwnerLayout, owner: &str, semantic_kind: &str) -> bool {
+    match layout {
+        MutationOwnerLayout::Flat => mutation_leaf_descriptor_direct_child(root, owner),
+        MutationOwnerLayout::DomainOperations(owners) => {
+            if !mutation_owner_domain_child(root, owner) { return false; }
+            let mut index = 0;
+            let mut matches = 0;
+            while index < owners.len() {
+                let entry = &owners[index];
+                if !mutation_owner_domain_child(root, entry.owner) || !mutation_leaf_descriptor_kebab(entry.semantic_kind) { return false; }
+                let same_owner = mutation_leaf_descriptor_str_eq(owner, entry.owner);
+                let same_identity = mutation_leaf_descriptor_str_eq(semantic_kind, entry.semantic_kind);
+                if same_owner != same_identity { return false; }
+                if same_owner { matches += 1; }
+                index += 1;
+            }
+            matches == 1
+        }
+    }
 }
 
 const fn mutation_leaf_descriptor_relative_path(bytes: &[u8]) -> bool {
@@ -621,12 +661,28 @@ pub struct MutationSourceProvenance {
     pub taxonomy_path: &'static str,
 }
 
-/// 🧭️ Aggregate-owned source facts used to validate one direct mutation leaf.
+/// 🏘️ One explicitly registered physical domain-operation owner and its unchanged semantic identity.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct MutationDomainOperation {
+    pub owner: &'static str,
+    pub semantic_kind: &'static str,
+}
+
+/// 🗺️ Exact aggregate layout authority; domain owners never infer identities or accept arbitrary descendants.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MutationOwnerLayout {
+    Flat,
+    DomainOperations(&'static [MutationDomainOperation]),
+}
+
+/// 🧭️ Aggregate-owned source facts used to validate one explicitly owned mutation leaf.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct MutationLeafSourceScope {
     pub workspace_token: [u8; 32],
     pub mutation_root: &'static str,
+    pub owner_layout: MutationOwnerLayout,
     pub taxonomy_path: &'static str,
+    pub mutation_payload_facet: &'static str,
     pub source_filename: &'static str,
     pub descriptor_filename: &'static str,
 }
@@ -653,6 +709,9 @@ pub const fn validate_mutation_leaf_source(
     if !mutation_leaf_source_path(scope.taxonomy_path) {
         return Err(MutationLeafSourceValidationError { field: "taxonomyPath", requirement: "must be a safe normalized portable path" });
     }
+    if !mutation_leaf_source_filename(scope.mutation_payload_facet) {
+        return Err(MutationLeafSourceValidationError { field: "mutationPayloadFacet", requirement: "must be one safe normalized portable segment" });
+    }
     if !mutation_leaf_source_filename(scope.source_filename) {
         return Err(MutationLeafSourceValidationError { field: "sourceFilename", requirement: "must be a safe normalized portable filename" });
     }
@@ -662,8 +721,8 @@ pub const fn validate_mutation_leaf_source(
     if !mutation_leaf_source_path(descriptor.owner) {
         return Err(MutationLeafSourceValidationError { field: "owner", requirement: "must be a safe normalized portable path" });
     }
-    if !mutation_leaf_descriptor_direct_child(scope.mutation_root, descriptor.owner) {
-        return Err(MutationLeafSourceValidationError { field: "owner", requirement: "must be an immediate child of mutationRoot" });
+    if !mutation_owner_layout_matches(scope.mutation_root, scope.owner_layout, descriptor.owner, descriptor.semantic_kind) {
+        return Err(MutationLeafSourceValidationError { field: "owner", requirement: "must match the aggregate's exact physical owner and semantic identity layout" });
     }
     if !mutation_leaf_source_tokens_match(&scope.workspace_token, &provenance.workspace_token) {
         return Err(MutationLeafSourceValidationError { field: "workspaceToken", requirement: "must equal the aggregate workspace token" });
@@ -677,8 +736,8 @@ pub const fn validate_mutation_leaf_source(
     if !mutation_leaf_descriptor_str_eq(provenance.taxonomy_path, scope.taxonomy_path) {
         return Err(MutationLeafSourceValidationError { field: "taxonomyPath", requirement: "must equal the aggregate taxonomy path" });
     }
-    if !mutation_leaf_source_path_matches(descriptor.owner, scope.source_filename, provenance.source_path) {
-        return Err(MutationLeafSourceValidationError { field: "sourcePath", requirement: "must equal owner plus the canonical source filename" });
+    if !mutation_leaf_source_path_matches_direct_or_payload(descriptor.owner, scope.mutation_payload_facet, scope.source_filename, provenance.source_path) {
+        return Err(MutationLeafSourceValidationError { field: "sourcePath", requirement: "must equal owner plus the canonical source filename, directly or under the canonical payload facet" });
     }
     if !mutation_leaf_source_path_matches(descriptor.owner, scope.descriptor_filename, provenance.descriptor_path) {
         return Err(MutationLeafSourceValidationError { field: "descriptorPath", requirement: "must equal owner plus the canonical descriptor filename" });
@@ -742,6 +801,20 @@ const fn mutation_leaf_source_path_matches(owner: &str, filename: &str, value: &
         && mutation_leaf_descriptor_bytes_at(value, owner.len() + 1, filename)
 }
 
+const fn mutation_leaf_source_path_matches_direct_or_payload(owner: &str, payload_facet: &str, filename: &str, value: &str) -> bool {
+    if mutation_leaf_source_path_matches(owner, filename, value) { return true; }
+    let owner = owner.as_bytes();
+    let payload_facet = payload_facet.as_bytes();
+    let filename = filename.as_bytes();
+    let value = value.as_bytes();
+    value.len() == owner.len() + 1 + payload_facet.len() + 1 + filename.len()
+        && mutation_leaf_descriptor_bytes_at(value, 0, owner)
+        && value[owner.len()] == b'/'
+        && mutation_leaf_descriptor_bytes_at(value, owner.len() + 1, payload_facet)
+        && value[owner.len() + 1 + payload_facet.len()] == b'/'
+        && mutation_leaf_descriptor_bytes_at(value, owner.len() + 1 + payload_facet.len() + 1, filename)
+}
+
 /// 🪪️ Metadata-only ownership contract for a direct mutation leaf.
 pub trait MutationLeaf {
     const DESCRIPTOR: MutationLeafDescriptor;
@@ -780,7 +853,9 @@ mod mutation_leaf_metadata_tests {
     const LEAF_SOURCE_SCOPE: MutationLeafSourceScope = MutationLeafSourceScope {
         workspace_token: [0x2a; 32],
         mutation_root: "✏️s/🔌️plugins/🧪️probe/🧬️mutations",
+        owner_layout: MutationOwnerLayout::Flat,
         taxonomy_path: "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        mutation_payload_facet: "🦠️mutation",
         source_filename: "🦀️.rs",
         descriptor_filename: "🔣️.json",
     };
@@ -789,6 +864,19 @@ mod mutation_leaf_metadata_tests {
     const LEAF_SOURCE_TOKEN_REJECTED: Result<(), MutationLeafSourceValidationError> = validate_mutation_leaf_source(&LEAF_DESCRIPTOR, &LEAF_PROVENANCE_TOKEN_MISMATCH, &LEAF_SOURCE_SCOPE);
     const _: () = match LEAF_SOURCE_VALID { Ok(()) => (), Err(_) => panic!("canonical leaf source must validate") };
     const _: () = match LEAF_SOURCE_TOKEN_REJECTED { Err(_) => (), Ok(()) => panic!("workspace-token mismatch must reject") };
+    const DOMAIN_OWNER: &str = "✏️s/🔌️plugins/🧪️probe/🧬️mutations/🎥️camera/🔀️reorder";
+    const DOMAIN_DESCRIPTOR: MutationLeafDescriptor = MutationLeafDescriptor { owner: DOMAIN_OWNER, semantic_kind: "reorder-cameras", ..LEAF_DESCRIPTOR };
+    const DOMAIN_SCOPE: MutationLeafSourceScope = MutationLeafSourceScope {
+        owner_layout: MutationOwnerLayout::DomainOperations(&[MutationDomainOperation { owner: DOMAIN_OWNER, semantic_kind: "reorder-cameras" }]),
+        ..LEAF_SOURCE_SCOPE
+    };
+    const DOMAIN_PROVENANCE: MutationSourceProvenance = MutationSourceProvenance {
+        owner: DOMAIN_OWNER,
+        source_path: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/🎥️camera/🔀️reorder/🦀️.rs",
+        descriptor_path: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/🎥️camera/🔀️reorder/🔣️.json",
+        ..LEAF_PROVENANCE
+    };
+    const _: () = match validate_mutation_leaf_source(&DOMAIN_DESCRIPTOR, &DOMAIN_PROVENANCE, &DOMAIN_SCOPE) { Ok(()) => (), Err(_) => panic!("exact domain source must validate in const evaluation") };
     struct BorrowedLeaf<'a, T>(&'a T);
     impl<'a, T> MutationLeaf for BorrowedLeaf<'a, T> {
         const DESCRIPTOR: MutationLeafDescriptor = LEAF_DESCRIPTOR;
@@ -812,7 +900,7 @@ mod mutation_leaf_metadata_tests {
 
     #[test]
     fn compiler_contract_vectors_have_complete_expected_outcomes() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🧬️mutation-leaf-contract/🧫️fixtures/🔣️.json")).expect("valid lower mutation leaf contract fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🤝️mutation-leaf-contract/🧫️fixtures/🔣️.json")).expect("valid lower mutation leaf contract fixture");
         let cases = fixture["cases"].as_array().expect("compiler cases");
         assert_eq!(cases.len(), 3);
         assert!(cases.iter().any(|case| case["borrowedGeneric"] == true && case["expectedCompile"] == true));
@@ -823,7 +911,7 @@ mod mutation_leaf_metadata_tests {
 
     #[test]
     fn source_contract_rejects_every_workspace_token_byte_and_path_decoy() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🧬️mutation-leaf-source-contract/🧫️fixtures/🔣️.json")).expect("valid lower mutation leaf source fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🧭️mutation-leaf-source-contract/🧫️fixtures/🔣️.json")).expect("valid lower mutation leaf source fixture");
         let bytes = fixture["workspaceTokenMismatchBytes"].as_array().expect("workspace token byte vectors");
         assert_eq!(bytes.len(), 32);
         for byte in bytes {
@@ -836,6 +924,14 @@ mod mutation_leaf_metadata_tests {
         assert_eq!(validate_mutation_leaf_source(&nested, &LEAF_PROVENANCE, &LEAF_SOURCE_SCOPE).unwrap_err().field, "owner");
         let historical = MutationSourceProvenance { source_path: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page/component.rs", ..LEAF_PROVENANCE };
         assert_eq!(validate_mutation_leaf_source(&LEAF_DESCRIPTOR, &historical, &LEAF_SOURCE_SCOPE).unwrap_err().field, "sourcePath");
+        let split = MutationSourceProvenance { source_path: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page/🦠️mutation/🦀️.rs", ..LEAF_PROVENANCE };
+        assert_eq!(validate_mutation_leaf_source(&LEAF_DESCRIPTOR, &split, &LEAF_SOURCE_SCOPE), Ok(()));
+        let wrong_facet = MutationSourceProvenance { source_path: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page/payload/🦀️.rs", ..LEAF_PROVENANCE };
+        assert_eq!(validate_mutation_leaf_source(&LEAF_DESCRIPTOR, &wrong_facet, &LEAF_SOURCE_SCOPE).unwrap_err().field, "sourcePath");
+        let nested_facet = MutationSourceProvenance { source_path: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page/🦠️mutation/nested/🦀️.rs", ..LEAF_PROVENANCE };
+        assert_eq!(validate_mutation_leaf_source(&LEAF_DESCRIPTOR, &nested_facet, &LEAF_SOURCE_SCOPE).unwrap_err().field, "sourcePath");
+        let split_descriptor = MutationSourceProvenance { descriptor_path: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page/🦠️mutation/🔣️.json", ..LEAF_PROVENANCE };
+        assert_eq!(validate_mutation_leaf_source(&LEAF_DESCRIPTOR, &split_descriptor, &LEAF_SOURCE_SCOPE).unwrap_err().field, "descriptorPath");
         let alternate_scope = MutationLeafSourceScope { source_filename: "operation.rs", descriptor_filename: "metadata.json", ..LEAF_SOURCE_SCOPE };
         let alternate_provenance = MutationSourceProvenance { source_path: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page/operation.rs", descriptor_path: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page/metadata.json", ..LEAF_PROVENANCE };
         assert_eq!(validate_mutation_leaf_source(&LEAF_DESCRIPTOR, &alternate_provenance, &alternate_scope), Ok(()));
@@ -844,6 +940,41 @@ mod mutation_leaf_metadata_tests {
         let compose_filename = MutationLeafSourceScope { source_filename: "Compose", ..LEAF_SOURCE_SCOPE };
         assert_eq!(validate_mutation_leaf_source(&LEAF_DESCRIPTOR, &LEAF_PROVENANCE, &compose_filename).unwrap_err().field, "sourceFilename");
         assert_eq!(fixture["cases"].as_array().expect("source cases").len(), 26);
+    }
+
+    #[test]
+    fn exact_domain_layout_preserves_full_identity_and_rejects_unregistered_pairs() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🛂️mutation-source-authority/🧫️fixtures/🧭️domains.json")).expect("shared exact-owner fixture");
+        let root: &'static str = Box::leak(fixture["mutationRoot"].as_str().unwrap().to_string().into_boxed_str());
+        let owners: &'static [MutationDomainOperation] = Box::leak(fixture["domains"].as_object().unwrap().iter().flat_map(|(domain, operations)| {
+            operations.as_object().unwrap().iter().map(move |(operation, identity)| MutationDomainOperation {
+                owner: Box::leak(format!("{root}/{domain}/{operation}").into_boxed_str()),
+                semantic_kind: Box::leak(identity.as_str().unwrap().to_string().into_boxed_str()),
+            })
+        }).collect::<Vec<_>>().into_boxed_slice());
+        let layout = MutationOwnerLayout::DomainOperations(owners);
+        let descriptors: &'static [MutationLeafDescriptor] = Box::leak(owners.iter().map(|entry| MutationLeafDescriptor { owner: entry.owner, semantic_kind: entry.semantic_kind, ..LEAF_DESCRIPTOR }).collect::<Vec<_>>().into_boxed_slice());
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, descriptors, layout), Ok(()));
+        assert!(validate_mutation_leaf_descriptor_roster(root, &descriptors[..descriptors.len() - 1], layout).is_err());
+        assert!(validate_mutation_leaf_descriptor_roster(root, descriptors, MutationOwnerLayout::Flat).is_err());
+        for vector in fixture["cases"].as_array().unwrap().iter().filter(|vector| vector["fault"].is_null()) {
+            let owner: &'static str = Box::leak(format!("{root}/{}", vector["owner"].as_str().unwrap()).into_boxed_str());
+            let descriptor = MutationLeafDescriptor { owner, semantic_kind: Box::leak(vector["semanticKind"].as_str().unwrap().to_string().into_boxed_str()), ..LEAF_DESCRIPTOR };
+            let provenance = MutationSourceProvenance {
+                mutation_root: root, owner,
+                source_path: Box::leak(format!("{owner}/{}", vector["source"].as_str().unwrap()).into_boxed_str()),
+                descriptor_path: Box::leak(format!("{owner}/🔣️.json").into_boxed_str()),
+                ..LEAF_PROVENANCE
+            };
+            let scope = MutationLeafSourceScope { mutation_root: root, owner_layout: layout, ..LEAF_SOURCE_SCOPE };
+            assert_eq!(validate_mutation_leaf_source(&descriptor, &provenance, &scope).is_ok(), vector["accepted"].as_bool().unwrap(), "{}", vector["name"]);
+        }
+        let duplicate = MutationOwnerLayout::DomainOperations(&[
+            MutationDomainOperation { owner: DOMAIN_OWNER, semantic_kind: "reorder-cameras" },
+            MutationDomainOperation { owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/🎥️camera/🌱️create", semantic_kind: "reorder-cameras" },
+        ]);
+        assert!(validate_mutation_leaf_source(&DOMAIN_DESCRIPTOR, &DOMAIN_PROVENANCE, &MutationLeafSourceScope { owner_layout: duplicate, ..DOMAIN_SCOPE }).is_err());
+        assert!(validate_mutation_leaf_source(&DOMAIN_DESCRIPTOR, &DOMAIN_PROVENANCE, &MutationLeafSourceScope { owner_layout: MutationOwnerLayout::DomainOperations(&[]), ..DOMAIN_SCOPE }).is_err());
     }
 }
 

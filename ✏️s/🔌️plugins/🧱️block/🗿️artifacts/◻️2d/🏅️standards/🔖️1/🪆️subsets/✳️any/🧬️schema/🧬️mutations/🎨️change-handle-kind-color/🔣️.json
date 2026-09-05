@@ -5,7 +5,7 @@
   "displayName": "Change Handle Kind Color",
   "emoji": "🎨️",
   "aggregateVariant": "ChangeHandleKindColor",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-handle-kind-color",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

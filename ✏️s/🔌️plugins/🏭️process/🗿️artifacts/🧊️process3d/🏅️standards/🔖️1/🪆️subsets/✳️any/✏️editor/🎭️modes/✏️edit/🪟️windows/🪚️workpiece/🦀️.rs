@@ -42,7 +42,7 @@ pub fn definition() -> WindowKindDefinition {
     }
 }
 
-/// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
+/// 🎚️ The live chrome measures for this window, collected from its `☑️options/*` components.
 pub fn window_measures(config: &Process3dConfig) -> Vec<WindowMeasure> {
     vec![options::sun::measure(&config_sun(config))]
 }

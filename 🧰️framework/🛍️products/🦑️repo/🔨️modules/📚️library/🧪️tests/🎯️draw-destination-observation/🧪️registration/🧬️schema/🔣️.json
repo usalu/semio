@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Closed Draw Destination Observation Registration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contractId",
+    "command",
+    "target",
+    "source",
+    "runner",
+    "budget",
+    "launchName",
+    "launchGroup",
+    "launchOrder"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "contractId": {
+      "const": "draw-destination-observation-registration-v1"
+    },
+    "command": {
+      "const": "draw-destination-observation"
+    },
+    "target": {
+      "const": "test-draw-destination-observation"
+    },
+    "source": {
+      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️draw-destination-observation.ts"
+    },
+    "runner": {
+      "const": "runTestBudgeted"
+    },
+    "budget": {
+      "const": "default"
+    },
+    "launchName": {
+      "const": "🧹clean🧩️taxonomy🎯️draw-destination-observation"
+    },
+    "launchGroup": {
+      "const": "4_gate"
+    },
+    "launchOrder": {
+      "const": 410.211
+    }
+  }
+}
+

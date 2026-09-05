@@ -1,0 +1,219 @@
+{
+  "schema": "semio.registry.native-catalog-selection/v1",
+  "authority": "planning-only",
+  "packages": [
+    {
+      "pluginId": "stdio",
+      "packageId": "semio:stdio",
+      "version": "0.1.0",
+      "dependencies": [],
+      "receiptCount": 26
+    },
+    {
+      "pluginId": "vcs",
+      "packageId": "semio:vcs",
+      "version": "0.1.0",
+      "dependencies": [
+        {
+          "pluginId": "stdio",
+          "packageId": "semio:stdio",
+          "version": "0.1.0"
+        }
+      ],
+      "receiptCount": 1
+    }
+  ],
+  "profiles": [
+    {
+      "id": "native-stdio-v1",
+      "roots": [
+        {
+          "pluginId": "stdio",
+          "packageId": "semio:stdio",
+          "version": "0.1.0"
+        }
+      ]
+    },
+    {
+      "id": "native-stdio-vcs-v1",
+      "roots": [
+        {
+          "pluginId": "vcs",
+          "packageId": "semio:vcs",
+          "version": "0.1.0"
+        }
+      ]
+    }
+  ],
+  "availableProviders": [
+    {
+      "pluginId": "stdio",
+      "packageId": "semio:stdio",
+      "receiptCount": 26
+    },
+    {
+      "pluginId": "vcs",
+      "packageId": "semio:vcs",
+      "receiptCount": 1
+    }
+  ],
+  "cases": [
+    {
+      "id": "stdio-only-does-not-call-vcs",
+      "profileId": "native-stdio-v1",
+      "mutation": "none",
+      "expectedCode": "planned",
+      "expectedCalls": [
+        "semio:stdio"
+      ],
+      "expectedReceiptCount": 26
+    },
+    {
+      "id": "stdio-vcs-dependency-first",
+      "profileId": "native-stdio-vcs-v1",
+      "mutation": "none",
+      "expectedCode": "planned",
+      "expectedCalls": [
+        "semio:stdio",
+        "semio:vcs"
+      ],
+      "expectedReceiptCount": 27
+    },
+    {
+      "id": "unknown-profile",
+      "profileId": "native-stdio-vcs-v1",
+      "mutation": "unknown-profile",
+      "expectedCode": "denied",
+      "expectedCalls": [],
+      "expectedReceiptCount": 0
+    },
+    {
+      "id": "duplicate-root",
+      "profileId": "native-stdio-vcs-v1",
+      "mutation": "duplicate-root",
+      "expectedCode": "denied",
+      "expectedCalls": [],
+      "expectedReceiptCount": 0
+    },
+    {
+      "id": "missing-root",
+      "profileId": "native-stdio-vcs-v1",
+      "mutation": "missing-root",
+      "expectedCode": "denied",
+      "expectedCalls": [],
+      "expectedReceiptCount": 0
+    },
+    {
+      "id": "missing-dependency",
+      "profileId": "native-stdio-vcs-v1",
+      "mutation": "missing-dependency",
+      "expectedCode": "denied",
+      "expectedCalls": [],
+      "expectedReceiptCount": 0
+    },
+    {
+      "id": "dependency-version",
+      "profileId": "native-stdio-vcs-v1",
+      "mutation": "dependency-version",
+      "expectedCode": "denied",
+      "expectedCalls": [],
+      "expectedReceiptCount": 0
+    },
+    {
+      "id": "cycle",
+      "profileId": "native-stdio-vcs-v1",
+      "mutation": "cycle",
+      "expectedCode": "denied",
+      "expectedCalls": [],
+      "expectedReceiptCount": 0
+    },
+    {
+      "id": "duplicate-package",
+      "profileId": "native-stdio-vcs-v1",
+      "mutation": "duplicate-package",
+      "expectedCode": "denied",
+      "expectedCalls": [],
+      "expectedReceiptCount": 0
+    },
+    {
+      "id": "foreign-package",
+      "profileId": "native-stdio-vcs-v1",
+      "mutation": "foreign-package",
+      "expectedCode": "denied",
+      "expectedCalls": [],
+      "expectedReceiptCount": 0
+    },
+    {
+      "id": "duplicate-provider",
+      "profileId": "native-stdio-vcs-v1",
+      "mutation": "duplicate-provider",
+      "expectedCode": "denied",
+      "expectedCalls": [],
+      "expectedReceiptCount": 0
+    },
+    {
+      "id": "missing-provider",
+      "profileId": "native-stdio-vcs-v1",
+      "mutation": "missing-provider",
+      "expectedCode": "denied",
+      "expectedCalls": [],
+      "expectedReceiptCount": 0
+    },
+    {
+      "id": "provider-package",
+      "profileId": "native-stdio-vcs-v1",
+      "mutation": "provider-package",
+      "expectedCode": "denied",
+      "expectedCalls": [],
+      "expectedReceiptCount": 0
+    },
+    {
+      "id": "provider-count",
+      "profileId": "native-stdio-vcs-v1",
+      "mutation": "provider-count",
+      "expectedCode": "denied",
+      "expectedCalls": [],
+      "expectedReceiptCount": 0
+    },
+    {
+      "id": "unselected-result",
+      "profileId": "native-stdio-v1",
+      "mutation": "unselected-result",
+      "expectedCode": "denied",
+      "expectedCalls": ["semio:stdio"],
+      "expectedReceiptCount": 0
+    },
+    {
+      "id": "selected-provider-failure",
+      "profileId": "native-stdio-vcs-v1",
+      "mutation": "selected-provider-failure",
+      "expectedCode": "denied",
+      "expectedCalls": ["semio:stdio", "semio:vcs"],
+      "expectedReceiptCount": 0
+    },
+    {
+      "id": "cancel-before-first",
+      "profileId": "native-stdio-vcs-v1",
+      "mutation": "cancel-before-first",
+      "expectedCode": "denied",
+      "expectedCalls": [],
+      "expectedReceiptCount": 0
+    },
+    {
+      "id": "cancel-after-first",
+      "profileId": "native-stdio-vcs-v1",
+      "mutation": "cancel-after-first",
+      "expectedCode": "denied",
+      "expectedCalls": ["semio:stdio"],
+      "expectedReceiptCount": 0
+    },
+    {
+      "id": "registry-conflict",
+      "profileId": "native-stdio-vcs-v1",
+      "mutation": "registry-conflict",
+      "expectedCode": "denied",
+      "expectedCalls": ["semio:stdio", "semio:vcs"],
+      "expectedReceiptCount": 0
+    }
+  ]
+}

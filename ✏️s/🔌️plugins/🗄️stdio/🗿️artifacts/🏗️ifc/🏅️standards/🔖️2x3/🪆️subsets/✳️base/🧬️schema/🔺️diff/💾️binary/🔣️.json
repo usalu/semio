@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/stdio.ifc.2x3/diff/binary.json",
-  "title": "Ifc2x3DiffBinary",
-  "type": "object"
-}

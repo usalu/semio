@@ -1,4 +1,4 @@
-//! 🧾️ Typed borrowed Flow JSON in exact serde declaration order, with retained native map iterators.
+//! 🧾️ Typed borrowed Flow JSON in lexical object order, with retained native map iterators.
 
 use super::{neural, FlowGui, FlowLayoutEntry, FlowMutation, FlowPreviewGui, NodeChrome, Widget};
 use store::{ArtifactCanonicalJson, ArtifactCanonicalJsonArray as Array, ArtifactCanonicalJsonNode as Node, ArtifactCanonicalJsonObject as Object, ArtifactCanonicalJsonValue as Value};
@@ -9,7 +9,10 @@ fn number<'a>(value: f64) -> Value<'a> { Value::Scalar(Node::F64(value)) }
 fn index<'a>(value: usize) -> Value<'a> { Value::Scalar(Node::U64(value as u64)) }
 fn boolean<'a>(value: bool) -> Value<'a> { Value::Scalar(Node::Bool(value)) }
 fn null<'a>() -> Value<'a> { Value::Scalar(Node::Null) }
-fn object<'a, const N: usize>(fields: [(&'a str, Value<'a>); N]) -> Value<'a> { Value::Object(Object::new(fields.into_iter())) }
+fn object<'a, const N: usize>(mut fields: [(&'a str, Value<'a>); N]) -> Value<'a> {
+    fields.sort_unstable_by(|left, right| left.0.cmp(right.0));
+    Value::Object(Object::new(fields.into_iter()))
+}
 fn array<'a>(values: impl Iterator<Item = Value<'a>> + Send + 'a) -> Value<'a> { Value::Array(Array::new(values)) }
 fn strings(values: &[String]) -> Value<'_> { array(values.iter().map(|value| text(value))) }
 fn set(values: &flow::OrderedSet) -> Value<'_> { array(values.iter().map(|value| text(value))) }
@@ -36,10 +39,10 @@ fn tree(value: &neural::Tree) -> Value<'_> {
 }
 
 fn neuron(value: &neural::Neuron) -> Value<'_> {
-    Value::Object(Object::new([
-        Some(("id", text(&value.id))), Some(("kind", text(&value.kind))), Some(("params", dictionary(&value.params))),
-        value.tree.as_ref().map(|value| ("tree", tree(value))),
-    ].into_iter().flatten()))
+    object([
+        ("id", text(&value.id)), ("kind", text(&value.kind)), ("params", dictionary(&value.params)),
+        ("tree", value.tree.as_ref().map(|value| tree(value)).unwrap_or_else(null)),
+    ])
 }
 
 fn synapse(value: &neural::Synapse) -> Value<'_> {
@@ -78,7 +81,7 @@ fn widget(value: &Widget) -> Value<'_> {
     match value {
         Widget::Neuron { id, neuron_kind, params, input_ports, output_ports, preview } => object([
             ("kind", text("neuron")), ("id", text(id)), ("neuronKind", text(neuron_kind)), ("params", dictionary(params)),
-            ("input_ports", strings(input_ports)), ("output_ports", strings(output_ports)), ("preview", boolean(*preview)),
+            ("inputPorts", strings(input_ports)), ("outputPorts", strings(output_ports)), ("preview", boolean(*preview)),
         ]),
         Widget::InputSlider { id, label, value, min, max, step } => object([
             ("kind", text("inputSlider")), ("id", text(id)), ("label", text(label)), ("value", number(*value)), ("min", number(*min)), ("max", number(*max)), ("step", number(*step)),
@@ -170,15 +173,22 @@ mod tests {
     fn every_artifact_variant_matches_serde_bytes_including_nested_chrome() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧾️artifact-canonical.json")).unwrap();
         for row in fixture["widgets"].as_array().unwrap() {
-            let value: Widget = serde_json::from_value(row.clone()).unwrap();
+            let value: Widget = dsl::FromValue::from_value(dsl::DslValue::from(row.clone())).unwrap();
+            if let Widget::Neuron { input_ports, output_ports, .. } = &value {
+                assert_eq!(input_ports, &["in"]);
+                assert_eq!(output_ports, &["out"]);
+            }
             let mut bytes = Vec::new(); encode(widget(&value), &mut bytes);
-            assert_eq!(bytes, serde_json::to_vec(&value).unwrap(), "widget {:?}", row["kind"]);
+            assert_eq!(bytes, serde_json::to_vec(&serde_json::Value::from(dsl::ToValue::to_value(&value))).unwrap(), "widget {:?}", row["kind"]);
+            value.retire_cold();
         }
         for row in fixture["mutations"].as_array().unwrap() {
-            let value: FlowMutation = serde_json::from_value(row.clone()).unwrap();
+            let value: FlowMutation = dsl::FromValue::from_value(dsl::DslValue::from(row.clone())).unwrap();
             let mut bytes = Vec::new(); encode(value.canonical_json_borrowed_root().unwrap().unwrap(), &mut bytes);
-            assert_eq!(bytes, serde_json::to_vec(&value).unwrap(), "mutation {:?}", row["mutation"]);
+            assert_eq!(bytes, serde_json::to_vec(&serde_json::Value::from(dsl::ToValue::to_value(&value))).unwrap(), "mutation {:?}", row["mutation"]);
+            crate::artifacts::flow::retirement::retire_mutation(value).retire_cold();
         }
+        eprintln!("[DEBUG] Flow borrowed canonical bytes match typed-DSL serde oracle:9 widgets,10 mutations,nonempty ports");
     }
 
     #[test]
@@ -189,8 +199,16 @@ mod tests {
             synapses: Vec::new(),
         };
         let mut bytes = Vec::new(); encode(scene.canonical_json_borrowed_root().unwrap().unwrap(), &mut bytes);
-        assert_eq!(bytes, serde_json::to_vec(&scene).unwrap());
+        assert_eq!(bytes, serde_json::to_vec(&serde_json::Value::from(dsl::ToValue::to_value(&scene))).unwrap());
         assert!(bytes.len() > 4096);
+        crate::artifacts::flow::retirement::retire_scene(scene).retire_cold();
+        let absent_tree = neural::Neuron { id: "n".into(), kind: "core.number".into(), params: neural::Dictionary::new(), tree: None };
+        let mut bytes = Vec::new(); encode(neuron(&absent_tree), &mut bytes);
+        assert_eq!(bytes, serde_json::to_vec(&serde_json::Value::from(dsl::ToValue::to_value(&absent_tree))).unwrap());
+        let mut retirement = flow::retained::FlowRetirement::default();
+        retirement.push(flow::retained::FlowOwner::Neurons(vec![absent_tree]));
+        retirement.retire_cold();
+        eprintln!("[DEBUG] Flow borrowed canonical bytes preserve large Unicode keys, labels and explicit absent-tree null");
     }
 }
 //#endregion 🧪️SerdeOracle

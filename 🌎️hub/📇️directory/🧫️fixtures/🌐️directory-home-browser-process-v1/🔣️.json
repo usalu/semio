@@ -1,0 +1,35 @@
+{
+  "schema": "semio.hub.directory-home-browser-process-fixture/v1",
+  "limits": { "journeyMs": 120000, "stepMs": 10000, "responseBytes": 65536, "appliedEvents": 256 },
+  "profiles": {
+    "a": { "profileId": "directory-browser-a", "subject": "directory-browser-process-a", "displayName": "Directory Browser A" },
+    "b": { "profileId": "directory-browser-b", "subject": "directory-browser-process-b", "displayName": "Directory Browser B" }
+  },
+  "home": { "pluginId": "s", "appId": "s.home@1/*#editor", "actionId": "applyDirectoryEventPage", "moduleDirectory": "🪐️s" },
+  "pages": {
+    "initial": { "epoch": 1, "binding": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "generation": 1, "after": 0, "through": 3, "hasMore": false, "receipt": "1111111111111111111111111111111111111111111111111111111111111111", "eventIds": ["event-1", "event-3"] },
+    "gap": { "epoch": 1, "binding": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "generation": 1, "after": 3, "through": 5, "hasMore": false, "receipt": "2222222222222222222222222222222222222222222222222222222222222222", "eventIds": ["event-5"] },
+    "reconnect": { "epoch": 1, "binding": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "generation": 1, "after": 5, "through": 8, "hasMore": false, "receipt": "3333333333333333333333333333333333333333333333333333333333333333", "eventIds": ["event-8"] },
+    "new-session": { "epoch": 2, "binding": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "generation": 2, "after": 0, "through": 8, "hasMore": false, "receipt": "4444444444444444444444444444444444444444444444444444444444444444", "eventIds": ["event-1", "event-3", "event-5", "event-8"] }
+  },
+  "traces": [
+    { "name": "receipt-ack", "steps": [{ "kind": "present", "page": "initial" }, { "kind": "ack", "page": "initial" }, { "kind": "dial", "since": 3 }], "expected": { "epoch": 1, "frontier": 3, "phase": "live", "appliedEventIds": ["event-1", "event-3"], "dials": [3], "retries": [], "denials": 0 } },
+    { "name": "dirty-wake-does-not-advance", "steps": [{ "kind": "present", "page": "initial" }, { "kind": "ack", "page": "initial" }, { "kind": "wake" }], "expected": { "epoch": 1, "frontier": 3, "phase": "fetching", "appliedEventIds": ["event-1", "event-3"], "dials": [], "retries": [], "denials": 0 } },
+    { "name": "gap-applied-once", "steps": [{ "kind": "present", "page": "initial" }, { "kind": "ack", "page": "initial" }, { "kind": "wake" }, { "kind": "present", "page": "gap" }, { "kind": "ack", "page": "gap" }, { "kind": "dial", "since": 5 }], "expected": { "epoch": 1, "frontier": 5, "phase": "live", "appliedEventIds": ["event-1", "event-3", "event-5"], "dials": [5], "retries": [], "denials": 0 } },
+    { "name": "retry-from-acked-frontier", "steps": [{ "kind": "present", "page": "initial" }, { "kind": "ack", "page": "initial" }, { "kind": "wake" }, { "kind": "present", "page": "gap" }, { "kind": "reject", "page": "gap" }, { "kind": "present", "page": "gap" }, { "kind": "ack", "page": "gap" }], "expected": { "epoch": 1, "frontier": 5, "phase": "live", "appliedEventIds": ["event-1", "event-3", "event-5"], "dials": [], "retries": [3], "denials": 0 } },
+    { "name": "disconnect-redials-at-ack", "steps": [{ "kind": "present", "page": "initial" }, { "kind": "ack", "page": "initial" }, { "kind": "dial", "since": 3 }, { "kind": "wake" }, { "kind": "present", "page": "gap" }, { "kind": "ack", "page": "gap" }, { "kind": "dial", "since": 5 }, { "kind": "wake" }, { "kind": "present", "page": "reconnect" }, { "kind": "ack", "page": "reconnect" }], "expected": { "epoch": 1, "frontier": 8, "phase": "live", "appliedEventIds": ["event-1", "event-3", "event-5", "event-8"], "dials": [3, 5], "retries": [], "denials": 0 } },
+    { "name": "close-suppresses-late-page", "steps": [{ "kind": "present", "page": "initial" }, { "kind": "close" }, { "kind": "ack", "page": "initial" }], "expected": { "epoch": 1, "frontier": 0, "phase": "closed", "appliedEventIds": [], "dials": [], "retries": [], "denials": 1 } },
+    { "name": "new-session-rebootstrap", "steps": [{ "kind": "present", "page": "initial" }, { "kind": "ack", "page": "initial" }, { "kind": "rebootstrap", "epoch": 2 }, { "kind": "ack", "page": "initial" }, { "kind": "present", "page": "new-session" }, { "kind": "ack", "page": "new-session" }, { "kind": "dial", "since": 8 }], "expected": { "epoch": 2, "frontier": 8, "phase": "live", "appliedEventIds": ["event-1", "event-3", "event-5", "event-8"], "dials": [8], "retries": [], "denials": 1 } },
+    { "name": "receipt-mismatch-does-not-advance", "steps": [{ "kind": "present", "page": "initial" }, { "kind": "ack", "page": "gap" }], "expected": { "epoch": 1, "frontier": 0, "phase": "awaiting-ack", "appliedEventIds": [], "dials": [], "retries": [], "denials": 1 } }
+  ],
+  "hostile": [
+    { "name": "wrong-epoch", "mutation": "epoch" },
+    { "name": "wrong-binding", "mutation": "binding" },
+    { "name": "wrong-generation", "mutation": "generation" },
+    { "name": "wrong-through", "mutation": "through" },
+    { "name": "wrong-receipt", "mutation": "receipt" },
+    { "name": "duplicate-event-id", "mutation": "duplicate-event" },
+    { "name": "socket-before-ack", "mutation": "socket-before-ack" },
+    { "name": "late-page-after-close", "mutation": "late-after-close" }
+  ]
+}

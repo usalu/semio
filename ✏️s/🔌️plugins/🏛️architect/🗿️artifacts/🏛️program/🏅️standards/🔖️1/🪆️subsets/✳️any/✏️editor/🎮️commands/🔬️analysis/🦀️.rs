@@ -46,7 +46,7 @@ pub mod run_analysis {
         let result_json = dsl::json::to_string_pretty(&dsl::json::from_dsl_value(&dsl::ToValue::to_value(&result)));
         next.last_analysis_json = result_json.clone();
         next.last_result_json = result_json;
-        Ok(Emit { artifact_mutations: vec![ProgramMutation::CreateAnalysisRecord(leaves::create_analysis_record::mutation::CreateAnalysisRecord { analysis_record: record })], config_mutations: snapshot(next), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![ProgramMutation::CreateAnalysisRecord(leaves::create_analysis_record::CreateAnalysisRecord { analysis_record: record })], config_mutations: snapshot(next), ..Default::default() })
     }
 }
 
@@ -74,6 +74,6 @@ pub mod run_report {
         let mut next = cfg.snapshot.clone();
         next.active_report_json = dsl::json::to_json_string(&report);
         next.last_result_json = dsl::json::to_string_pretty(&dsl::json::from_dsl_value(&dsl::ToValue::to_value(&report)));
-        Ok(Emit { artifact_mutations: vec![ProgramMutation::CreateReportRecord(leaves::create_report_record::mutation::CreateReportRecord { report_record: record })], config_mutations: snapshot(next), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![ProgramMutation::CreateReportRecord(leaves::create_report_record::CreateReportRecord { report_record: record })], config_mutations: snapshot(next), ..Default::default() })
     }
 }

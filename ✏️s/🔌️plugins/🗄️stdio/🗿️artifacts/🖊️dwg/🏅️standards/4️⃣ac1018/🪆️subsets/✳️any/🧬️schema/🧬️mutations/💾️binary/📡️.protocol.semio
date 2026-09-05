@@ -1,0 +1,7 @@
+dialect protocol
+protocol stdio.dwg.ac1018.mutations
+version 1
+schema stdio.dwg.op
+start op
+framing record
+chain body bytes

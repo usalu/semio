@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "owner": "✏️s/🔌️plugins/📸️remodeling/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧿create-gcp",
+  "owner": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧿create-gcp",
   "semanticKind": "create-gcp",
   "displayName": "Create Gcp",
   "emoji": "🧿",
   "aggregateVariant": "CreateGcp",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "create-gcp",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

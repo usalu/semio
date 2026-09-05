@@ -6,7 +6,7 @@
 
 // #region 🔌️Adapters
 import { NextRequest, NextResponse } from "next/server";
-import { ownedSchema as z } from "../../../../🟦️✅️validation.ts";
+import { ownedSchema as z } from "../../../../✅️validation.ts";
 // #endregion 🔌️Adapters
 
 import { replaceScopes, upsertClaim, listConflicts, replaceWarnings, newId, type Warning, type Scope } from "@/lib";

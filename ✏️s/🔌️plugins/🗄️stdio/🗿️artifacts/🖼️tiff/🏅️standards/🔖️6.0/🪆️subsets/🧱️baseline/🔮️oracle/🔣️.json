@@ -1,0 +1,579 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🔮️ This subset's own contribution. The ✳️any sibling registers `image` 0.25 for the DOCUMENT vocabulary, composed with its own hand-rolled IFD-chain reader; this conformance-class vocabulary registers no oracle of its own — see noOracleDecisions for why a class verdict is not a thing any package can adjudicate, and why four of its six kinds could not be measured at the byte level regardless.",
+  "oracles": [
+    {
+      "id": "tiff-tiff-6-0-baseline-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "tiff",
+      "version": "0.11",
+      "engine": {
+        "family": "tiff",
+        "implementation": "tiff reader/writer",
+        "version": "0.11"
+      },
+      "capabilities": [
+        "tiff-6-0-baseline-mutate"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://github.com/image-rs/image-tiff",
+      "rationale": "📖️ A READER. This subset carries no reimplementation oracle of its own (no `oracles` entry existed in this file before this registration). `tiff` 0.11 is the SAME crate already verified and registered for the sibling 🧾️document subset's `image-tiff-6-0-mutate-reader` (that entry's own rationale documents the full investigation: `image` 0.25's public TIFF surface is single-IFD-only with no tag/byte-order accessors, while `tiff` 0.11's `Decoder::{tag_iter,byte_order}` gives full IFD tag enumeration including an `unknown(u16)` variant for non-baseline tags). This baseline subset's own vocabulary — `set-bits-per-sample`, `set-compression`, `set-photometric-interpretation`, `set-strip-offsets`/`remove-strip-offsets`, `insert-tile-tags`/`remove-tile-tags`, `set-snapshot` — is exactly the baseline IFD tag set (`BitsPerSample`, `Compression`, `PhotometricInterpretation`, `StripOffsets`, `TileOffsets`/`TileByteCounts`) that `Decoder::tag_iter` enumerates directly, independent of this repository's own TIFF decoder or its `image`-crate-based encoder.",
+      "comparisonProfiles": [
+        "semantic-raster-v1"
+      ]
+    }
+  ],
+  "noOracleDecisions": [
+    {
+      "id": "tiff-6-0-baseline-conformance-class-semantics",
+      "capabilities": [],
+      "rationale": "Two independent reasons. (1) THE QUESTION IS NOT ONE A PACKAGE ANSWERS. This vocabulary asks whether a decoded document is inside Adobe TIFF 6.0 Part 1's Baseline class, read on five specific fields of IFD 0 — `Compression` (259) restricted to {1, 2, 32773}, `PhotometricInterpretation` (262) to 0..=3, `BitsPerSample` (258) to {1, 4, 8}, `TileWidth`/`TileLength` (322/323) absent because Baseline is strip-organized, and `StripOffsets` (273) present when it is not tiled. `image` 0.25's TIFF surface is a single-IFD raster codec: it decodes pixels and re-encodes them under its own choice of those very tags, and exposes no API to set an arbitrary compression, an out-of-range photometric or a tile-organized IFD. It could not perform any row of this vocabulary, and it holds no opinion about class membership to be compared against. (2) FOUR OF SIX KINDS ARE NOT BYTE-OBSERVABLE THROUGH THIS REPOSITORY'S OWN ENCODER EITHER: `encode_tiff` regenerates every one of `CORE_STRIP_TAGS` from the raster it is about to write, so `set-compression`, `set-photometric-interpretation`, `set-bits-per-sample` and `set-strip-offsets` are normalized away on re-serialization — a documented property of the codec, stated in the vocabulary's own module docstring, and the same constraint PNG's IHDR is under. Only the two tile kinds survive, because `TileWidth`/`TileLength` sit outside `CORE_STRIP_TAGS` and are carried verbatim. The substitutes are therefore TIFF 6.0's own tag-value tables read against `check_tiff_baseline_conformance`, which is where the class verdict lives, plus the inverse law as a metamorphic property over the decoded snapshot. `mutate-tiff-6-0-baseline` measures the vocabulary there and says in as many words that it makes no byte-level claim for those four kinds; its `identity-round-trip` does re-encode, and reads both sides through the independent IFD reader the ✳️any subset registers. [Narrowed 2026-09-02, ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION shard D2: capabilities emptied because a real mutationManifest now requires a qualifying third-party oracle for this exact capability, and noOracleMisuseBreaches correctly refuses to let a recorded decision paper over a real runtime requirement (per shard A10's precedent for mathematical/sequence/draw) -- the honest state is a visible missing-external-oracle gap, not a hidden one. Rationale above is kept for the record: it still explains why no third-party library is credible for this domain, which is exactly why the gap is expected to stay open rather than be filled.]",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "tiff-6-0-baseline",
+      "capability": "tiff-6-0-baseline-mutate",
+      "standardDirectoryName": "🔖️6.0",
+      "subsetDirectoryName": "🧱️baseline",
+      "vectors": [],
+      "kinds": [
+        "set-snapshot",
+        "set-compression",
+        "set-photometric-interpretation",
+        "set-bits-per-sample",
+        "insert-tile-tags",
+        "remove-tile-tags",
+        "set-strip-offsets",
+        "remove-strip-offsets"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.tiff",
+      "standard": "6.0",
+      "subset": "baseline",
+      "standardDirectoryName": "🔖️6.0",
+      "subsetDirectoryName": "🧱️baseline",
+      "mutations": [
+        {
+          "id": "insert-tile-tags",
+          "capability": "tiff-6-0-baseline-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-tile-tags",
+            "bridgeVersion": 1,
+            "variant": "InsertTileTags"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tiff-6-0-baseline-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tiff-tiff-6-0-baseline-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-strip-offsets",
+          "capability": "tiff-6-0-baseline-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-strip-offsets",
+            "bridgeVersion": 1,
+            "variant": "RemoveStripOffsets"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tiff-6-0-baseline-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tiff-tiff-6-0-baseline-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-tile-tags",
+          "capability": "tiff-6-0-baseline-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-tile-tags",
+            "bridgeVersion": 1,
+            "variant": "RemoveTileTags"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tiff-6-0-baseline-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tiff-tiff-6-0-baseline-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-bits-per-sample",
+          "capability": "tiff-6-0-baseline-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-bits-per-sample",
+            "bridgeVersion": 1,
+            "variant": "SetBitsPerSample"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tiff-6-0-baseline-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tiff-tiff-6-0-baseline-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-compression",
+          "capability": "tiff-6-0-baseline-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-compression",
+            "bridgeVersion": 1,
+            "variant": "SetCompression"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tiff-6-0-baseline-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tiff-tiff-6-0-baseline-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-photometric-interpretation",
+          "capability": "tiff-6-0-baseline-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-photometric-interpretation",
+            "bridgeVersion": 1,
+            "variant": "SetPhotometricInterpretation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tiff-6-0-baseline-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tiff-tiff-6-0-baseline-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "tiff-6-0-baseline-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tiff-6-0-baseline-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tiff-tiff-6-0-baseline-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-strip-offsets",
+          "capability": "tiff-6-0-baseline-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-strip-offsets",
+            "bridgeVersion": 1,
+            "variant": "SetStripOffsets"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tiff-6-0-baseline-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tiff-tiff-6-0-baseline-mutate-reader"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-photometric-interpretation-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.tiff",
+        "standard": "6.0",
+        "subset": "baseline"
+      },
+      "mutation": "set-photometric-interpretation",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🌈️set-photometric-interpretation/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ab83296e71281adfe8d1cccdc91c1c134059cf08fec3fe6e6e0773c909d725e6",
+          "bytes": 1936
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🌈️set-photometric-interpretation/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:07f834f71b635a2668e6d738e246f91bc865943e79bd780f1352851675fc1a4d",
+          "bytes": 1936
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "tiff-baseline-carrier",
+      "notes": "Handcrafted TiffSnapshot before/after pair, schema taken from this artifact's own document-subset TiffSnapshot/TiffTag/TiffValues Rust types (baseline reuses them directly). SetPhotometricInterpretation{photometric:2} switches PhotometricInterpretation (tag 262) from 1 (BlackIsZero) to 2 (RGB), TIFF6 §Baseline's own well-known values."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-tile-tags-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.tiff",
+        "standard": "6.0",
+        "subset": "baseline"
+      },
+      "mutation": "remove-tile-tags",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🗑️remove-tile-tags/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e2d4853884f2bb131cf323d14520102fbc142729989b3077d0f4b6dcab327089",
+          "bytes": 2304
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🗑️remove-tile-tags/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ab83296e71281adfe8d1cccdc91c1c134059cf08fec3fe6e6e0773c909d725e6",
+          "bytes": 1936
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "tiff-baseline-carrier",
+      "notes": "Handcrafted TiffSnapshot before/after pair, schema taken from this artifact's own document-subset TiffSnapshot/TiffTag/TiffValues Rust types (baseline reuses them directly). RemoveTileTags{} drops TileWidth (322) and TileLength (323) from IFD 0, converting a tiled directory back to a stripped one."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-tile-tags-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.tiff",
+        "standard": "6.0",
+        "subset": "baseline"
+      },
+      "mutation": "insert-tile-tags",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🧱️insert-tile-tags/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ab83296e71281adfe8d1cccdc91c1c134059cf08fec3fe6e6e0773c909d725e6",
+          "bytes": 1936
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🧱️insert-tile-tags/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e2d4853884f2bb131cf323d14520102fbc142729989b3077d0f4b6dcab327089",
+          "bytes": 2304
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "tiff-baseline-carrier",
+      "notes": "Handcrafted TiffSnapshot before/after pair, schema taken from this artifact's own document-subset TiffSnapshot/TiffTag/TiffValues Rust types (baseline reuses them directly). InsertTileTags{tileWidth:4,tileLength:4} adds TileWidth (322) and TileLength (323) to IFD 0, per TIFF6 §Tiled Images."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-strip-offsets-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.tiff",
+        "standard": "6.0",
+        "subset": "baseline"
+      },
+      "mutation": "remove-strip-offsets",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/✂️remove-strip-offsets/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ab83296e71281adfe8d1cccdc91c1c134059cf08fec3fe6e6e0773c909d725e6",
+          "bytes": 1936
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/✂️remove-strip-offsets/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:0a9e415dd6f1812237cd530ba3128b031ef8755a0edb7d6b05893e9ceacbf5b4",
+          "bytes": 1752
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "tiff-baseline-carrier",
+      "notes": "Handcrafted TiffSnapshot before/after pair, schema taken from this artifact's own document-subset TiffSnapshot/TiffTag/TiffValues Rust types (baseline reuses them directly). RemoveStripOffsets{} drops the StripOffsets tag (273) from IFD 0."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-strip-offsets-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.tiff",
+        "standard": "6.0",
+        "subset": "baseline"
+      },
+      "mutation": "set-strip-offsets",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📍️set-strip-offsets/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ab83296e71281adfe8d1cccdc91c1c134059cf08fec3fe6e6e0773c909d725e6",
+          "bytes": 1936
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📍️set-strip-offsets/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:1b7613e0b25b24e4a8be33d9acb66a9a6600e526390c9a4041c34107b14695ee",
+          "bytes": 1937
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "tiff-baseline-carrier",
+      "notes": "Handcrafted TiffSnapshot before/after pair, schema taken from this artifact's own document-subset TiffSnapshot/TiffTag/TiffValues Rust types (baseline reuses them directly). SetStripOffsets{offsets:[16]} overwrites the StripOffsets tag (273) value in place."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.tiff",
+        "standard": "6.0",
+        "subset": "baseline"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📸️set-snapshot/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ab83296e71281adfe8d1cccdc91c1c134059cf08fec3fe6e6e0773c909d725e6",
+          "bytes": 1936
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📸️set-snapshot/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:59a94a5443e6df436a83b4f8e86bc220c516403a8808321422fd0d061fbdc4a6",
+          "bytes": 1934
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "tiff-baseline-carrier",
+      "notes": "Handcrafted TiffSnapshot before/after pair, schema taken from this artifact's own document-subset TiffSnapshot/TiffTag/TiffValues Rust types (baseline reuses them directly). SetSnapshot replaces the whole document — byte order flips littleEndian to bigEndian, BitsPerSample (258) moves 8->16, and the raster payload is a different real byte sequence."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-compression-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.tiff",
+        "standard": "6.0",
+        "subset": "baseline"
+      },
+      "mutation": "set-compression",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🗜️set-compression/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ab83296e71281adfe8d1cccdc91c1c134059cf08fec3fe6e6e0773c909d725e6",
+          "bytes": 1936
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🗜️set-compression/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:11db16c059f9bd2aa681d1ed65e71b2582a565a690e2e92db1dd60acc6eb43c9",
+          "bytes": 1936
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "tiff-baseline-carrier",
+      "notes": "Handcrafted TiffSnapshot before/after pair, schema taken from this artifact's own document-subset TiffSnapshot/TiffTag/TiffValues Rust types (baseline reuses them directly). SetCompression{compression:5} switches Compression (tag 259) from 1 (None) to 5 (LZW), a TIFF6 §Baseline-extension value in real use."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-bits-per-sample-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.tiff",
+        "standard": "6.0",
+        "subset": "baseline"
+      },
+      "mutation": "set-bits-per-sample",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🔢️set-bits-per-sample/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ab83296e71281adfe8d1cccdc91c1c134059cf08fec3fe6e6e0773c909d725e6",
+          "bytes": 1936
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🔢️set-bits-per-sample/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:174c4b370442e7fca90969d8a764f6e0bbaf5a7800e565d42b8e9890a45fd0ef",
+          "bytes": 1937
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "tiff-baseline-carrier",
+      "notes": "Handcrafted TiffSnapshot before/after pair, schema taken from this artifact's own document-subset TiffSnapshot/TiffTag/TiffValues Rust types (baseline reuses them directly). SetBitsPerSample{bits:[16]} overwrites BitsPerSample (tag 258) from 8-bit to 16-bit."
+    }
+  ]
+}

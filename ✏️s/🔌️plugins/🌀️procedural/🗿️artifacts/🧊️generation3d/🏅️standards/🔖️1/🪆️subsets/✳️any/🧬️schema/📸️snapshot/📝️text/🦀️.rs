@@ -16,14 +16,14 @@ use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use std::collections::BTreeMap;
 
 //#region 🔖️Examples
-pub const GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT: &str = include_str!("../../../📚️examples/🎬️hexagonal-mushroom-column/🖼️assets/🧪️hexagonal-mushroom-column/🗣️.dsl.semio");
-pub const GENERATION3D_EXAMPLE_RECT_EXTRUDE_TEXT: &str = include_str!("../../../📚️examples/🎬️rectangle-extrude-volume/🖼️assets/🧪️rectangle-extrude-volume/🗣️.dsl.semio");
-pub const GENERATION3D_EXAMPLE_SPHERE_TORUS_TEXT: &str = include_str!("../../../📚️examples/🎬️sphere-cut-with-torus/🖼️assets/🧪️sphere-cut-with-torus/🗣️.dsl.semio");
-pub const GENERATION3D_EXAMPLE_BOX_FILLET_TEXT: &str = include_str!("../../../📚️examples/🎬️box-fillet-preview/🖼️assets/🧪️box-fillet-preview/🗣️.dsl.semio");
-pub const GENERATION3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT: &str = include_str!("../../../📚️examples/🎬️sphere-box-fuse/🖼️assets/🧪️sphere-box-fuse/🗣️.dsl.semio");
-pub const GENERATION3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT: &str = include_str!("../../../📚️examples/🎬️face-sweep-extrude/🖼️assets/🧪️face-sweep-extrude/🗣️.dsl.semio");
-pub const GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT: &str = include_str!("../../../📚️examples/🎬️rectangle-wire-preview/🖼️assets/🧪️rectangle-wire-preview/🗣️.dsl.semio");
-pub const GENERATION3D_EXAMPLE_BOX_SHELL_TEXT: &str = include_str!("../../../📚️examples/🎬️box-shell-preview/🖼️assets/🧪️box-shell-preview/🗣️.dsl.semio");
+pub const GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT: &str = include_str!("../../../📚️examples/🍄️hexagonal-mushroom-column/🖼️assets/🧪️hexagonal-mushroom-column/🗣️.dsl.semio");
+pub const GENERATION3D_EXAMPLE_RECT_EXTRUDE_TEXT: &str = include_str!("../../../📚️examples/📦️rectangle-extrude-volume/🖼️assets/🧪️rectangle-extrude-volume/🗣️.dsl.semio");
+pub const GENERATION3D_EXAMPLE_SPHERE_TORUS_TEXT: &str = include_str!("../../../📚️examples/🍩️sphere-cut-with-torus/🖼️assets/🧪️sphere-cut-with-torus/🗣️.dsl.semio");
+pub const GENERATION3D_EXAMPLE_BOX_FILLET_TEXT: &str = include_str!("../../../📚️examples/📐️box-fillet-preview/🖼️assets/🧪️box-fillet-preview/🗣️.dsl.semio");
+pub const GENERATION3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT: &str = include_str!("../../../📚️examples/🧲️sphere-box-fuse/🖼️assets/🧪️sphere-box-fuse/🗣️.dsl.semio");
+pub const GENERATION3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT: &str = include_str!("../../../📚️examples/🧹️face-sweep-extrude/🖼️assets/🧪️face-sweep-extrude/🗣️.dsl.semio");
+pub const GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT: &str = include_str!("../../../📚️examples/🪢️rectangle-wire-preview/🖼️assets/🧪️rectangle-wire-preview/🗣️.dsl.semio");
+pub const GENERATION3D_EXAMPLE_BOX_SHELL_TEXT: &str = include_str!("../../../📚️examples/🐚️box-shell-preview/🖼️assets/🧪️box-shell-preview/🗣️.dsl.semio");
 //#endregion 🔖️Examples
 
 //#region 🔖️DslMirror

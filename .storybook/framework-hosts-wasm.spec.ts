@@ -2,7 +2,7 @@
 // 💻️ .storybook/framework-hosts-wasm.spec.ts
 // Specs: End-to-end checks for the framework renderer hosts backed by prebuilt Rust/WASM engines, inside the
 // aggregated Storybook static build: `NodeGraphHost` (workflow + flow-graph variants), `TextEditorHost`,
-// `Paint2dHost`, `TiledMapHost`, `WorldTerrainLayer`, `World3dHost`.
+// `Paint2dHost`, `TiledMapHost`, `🗺️WorldTerrainLayer`, `World3dHost`.
 // Summary: Loads each story's `iframe.html?id=...`, asserts a clean boot (no page/console errors, storybook-root
 // populated) and a host-specific marker element/text. Tile/DEM fetches against intentionally-missing storybook
 // paths produce benign `Failed to load resource … 404` console entries, which `significantConsoleErrors` filters

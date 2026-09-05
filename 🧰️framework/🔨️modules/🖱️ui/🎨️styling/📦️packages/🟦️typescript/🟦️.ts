@@ -2,7 +2,7 @@
 /** @emoji 🎨️ `@semio-tech/ui-styling` centralizes palette CSS, Tailwind entry, and the shared typography preset for ui consumers. */
 // #endregion 🧲️Header
 
-export { tailwindConfig, tailwindConfig as default } from "../../🎨️tailwind/🎨️tailwind.config.ts";
+export { tailwindConfig, tailwindConfig as default } from "../../💨️tailwind/🎨️tailwind.config.ts";
 export {
   STYLING_BOARD_PALETTES,
   STYLING_CANVAS_FONTS,
@@ -1206,7 +1206,7 @@ export function elementStateHidden(s: Pick<UiElementState, "state">): boolean {
  * `introducing` also stamps `data-introduced="true"` — the exact attribute `UIIntroduction`'s
  * tour-driven reveal already stamps imperatively (see `framework/ui/js/react/index.tsx`), so an authored
  * `state: "introducing"` and a live tour step converge on the identical CSS rule
- * (`[data-introduced="true"]` in `🎨️ui.css`) with no duplicate styling to maintain. `celebrating`
+ * (`[data-introduced="true"]` in `🖌️ui.css`) with no duplicate styling to maintain. `celebrating`
  * mirrors this exactly with `data-celebrated="true"`, converging with `celebrateElements()`'s
  * transient imperative stamp on the same `[data-celebrated="true"]` rule. All axes are omitted at
  * their default value — the DOM stays clean when nothing is going on. A hidden element gets `{}`:

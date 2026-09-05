@@ -1,3 +1,0 @@
-# stdio.ifc.2x3 diff binary grammar schema
-scalar Bytes
-type Document { schema: String! payload: Bytes! }

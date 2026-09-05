@@ -1106,7 +1106,7 @@ mod tests {
     }
 
     fn artifact_bootstrap_fixture() -> serde_json::Value {
-        serde_json::from_str(include_str!("../🧫️fixtures/🧫️artifact-bootstrap/🔣️.json")).expect("artifact bootstrap fixture")
+        serde_json::from_str(include_str!("../🧫️fixtures/🚀️artifact-bootstrap/🔣️.json")).expect("artifact bootstrap fixture")
     }
 
     fn bytes_from_hex(hex: &str) -> Vec<u8> {
@@ -1207,7 +1207,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn client_frame_tag_zero_is_terminally_rejected() {
         assert!(decode_client_frame(&[0, 0]).await.is_err());
-        assert!(decode_client_frame(include_bytes!("../🧫️fixtures/🧫️wire/🚫️legacy-client-hello-rejected/💾️.bin")).await.is_err());
+        assert!(decode_client_frame(include_bytes!("../🧫️fixtures/📡️wire/🚫️legacy-client-hello-rejected/💾️.bin")).await.is_err());
     }
 
     #[semio_framework_async_macros::async_test]

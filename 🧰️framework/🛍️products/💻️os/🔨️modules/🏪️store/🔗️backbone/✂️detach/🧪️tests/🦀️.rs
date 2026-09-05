@@ -24,7 +24,7 @@ async fn observe_refusal(case_id: &str) {
         None
     };
     let before_generation = store.generation;
-    let before_descriptor = serde_json::to_value(&store.envelope.backbone).unwrap();
+    let before_descriptor = serde_json::Value::from(store.envelope.backbone.to_value());
     let before_revision = store.content_revision;
     let mut detached = None;
     let attempt = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
@@ -35,7 +35,7 @@ async fn observe_refusal(case_id: &str) {
     }));
     let refused = matches!(attempt, Ok(true));
     let panicked = attempt.is_err();
-    let descriptor_preserved = serde_json::to_value(&store.envelope.backbone).unwrap() == before_descriptor;
+    let descriptor_preserved = serde_json::Value::from(store.envelope.backbone.to_value()) == before_descriptor;
     let generation_preserved = store.generation == before_generation;
     let revision_preserved = store.content_revision == before_revision;
     let backbone_preserved = matches!(store.backbone.as_ref(), Some(Backbones::Memory(local)) if Arc::as_ptr(local.outbox.as_ref().unwrap()) == original_outbox);

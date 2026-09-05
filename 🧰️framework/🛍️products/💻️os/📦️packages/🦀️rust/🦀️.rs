@@ -87,7 +87,7 @@ pub mod os_dsl {
         #[path = "../../🔨️modules/🗣️dsl/👪️family/🕸️graph/🦀️.rs"]
         pub mod graph;
 
-        #[path = "../../🔨️modules/🗣️dsl/👪️family/🧑‍🍳️recipe/🦀️.rs"]
+        #[path = "../../🔨️modules/🗣️dsl/👪️family/🧑‍🍳recipe/🦀️.rs"]
         pub mod recipe;
 
         #[path = "../../🔨️modules/🗣️dsl/👪️family/🎬️scene/🦀️.rs"]
@@ -97,7 +97,7 @@ pub mod os_dsl {
         pub mod sheet;
     }
 
-    #[path = "../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️.rs"]
+    #[path = "../../🔨️modules/🗣️dsl/🧹️fixture-sweep/🦀️.rs"]
     pub mod fixture_sweep;
 
     #[path = "../../🔨️modules/🗣️dsl/📖️grammar/🦀️.rs"]
@@ -149,7 +149,7 @@ pub mod os_pack {
     #[path = "../../🔨️modules/🎒️pack/🧪️testkit/🦀️.rs"]
     pub mod testkit;
 
-    #[path = "../../🔨️modules/🎒️pack/🔢️value/🦀️.rs"]
+    #[path = "../../🔨️modules/🎒️pack/🌱️value/🦀️.rs"]
     pub mod value;
 }
 
@@ -257,6 +257,9 @@ pub use crate::os_io::{ComposeFuture, ErasedComposeSource};
 // which resolves correctly whichever crate compiles that shared file.
 #[path = "../../../../🔨️modules/🚪️io/🧬️schema/🦀️.rs"]
 pub mod io_schema;
+
+#[path = "../../../../🔨️modules/🧬️schema/🧩️composition/🦀️.rs"]
+pub mod os_schema_composition;
 
 #[path = "."]
 pub mod os_store {

@@ -1,9 +1,0 @@
-# stdio.avi diff 💾️binary facet — same shape as ../🔗️.graphql.
-type AviChunkDiff { data: [Int!] keyframe: Boolean }
-type AviStreamDiff { strh: AviStreamHeader strf: AviStreamFormat chunksRemoved: [Int!] }
-type AviDiff {
-  mainHeader: AviMainHeader
-  streamsRemoved: [Int!]
-  idx1Present: Boolean
-  unknownChunksRemoved: [Int!]
-}

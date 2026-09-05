@@ -1,4 +1,0 @@
-syntax = "proto3";
-package stdio.svg.mutation;
-// set-attribute/SetAttribute
-message SetAttributePayload { bytes path = 1; string name = 2; string value = 3; }

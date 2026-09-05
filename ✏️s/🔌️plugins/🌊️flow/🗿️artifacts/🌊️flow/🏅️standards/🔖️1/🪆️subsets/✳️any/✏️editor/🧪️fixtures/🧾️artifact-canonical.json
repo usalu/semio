@@ -1,7 +1,7 @@
 {
   "schema": "semio.flow.artifact-canonical",
   "widgets": [
-    { "kind": "neuron", "id": "n", "neuronKind": "core.number", "params": { "a": null, "b": true, "i": -3, "n": 1.25, "nested": { "🌊": "value\n" } }, "input_ports": ["in"], "output_ports": ["out"], "preview": true },
+    { "kind": "neuron", "id": "n", "neuronKind": "core.number", "params": { "a": null, "b": true, "i": -3, "n": 1.25, "nested": { "🌊": "value\n" } }, "inputPorts": ["in"], "outputPorts": ["out"], "preview": true },
     { "kind": "inputSlider", "id": "slider", "label": "Column Height", "value": 6, "min": 0, "max": 10, "step": 0.5 },
     { "kind": "inputNote", "id": "note", "text": "Höhe 🌊" },
     { "kind": "inputImage", "id": "image", "src": "data:image/png;base64," },
@@ -9,7 +9,7 @@
     { "kind": "outputPreview", "id": "preview", "preview": { "answer": 42 }, "expanded": ["answer"] },
     { "kind": "outputAction", "id": "action", "action": "log" },
     { "kind": "outputExport", "id": "export", "format": "svg" },
-    { "kind": "cluster", "id": "cluster", "name": "Nested", "tree": { "neurons": [ { "id": "nested", "kind": "core.number", "params": {}, "tree": { "neurons": [], "synapses": [] } } ], "synapses": [ { "id": "edge", "from": "nested", "to": "nested", "fromPort": "a", "toPort": "b" } ] }, "flow": { "camera": { "x": 1, "y": 2, "zoom": 3 }, "nodes": { "a": { "layout": { "x": 0, "y": 1 }, "chrome": { "kind": "slider", "label": "Profile Radius", "min": 0, "max": 10, "step": 0.5, "value": 1 } }, "b": { "layout": { "x": 1, "y": 1 }, "chrome": { "kind": "note", "text": "note" } }, "c": { "layout": { "x": 2, "y": 1 }, "chrome": { "kind": "image", "src": "image" } }, "d": { "layout": { "x": 3, "y": 1 }, "chrome": { "kind": "variable", "name": "v", "schema": "number" } }, "e": { "layout": { "x": 4, "y": 1 }, "chrome": { "kind": "plain", "preview": false } } }, "previews": [ { "id": "p", "source": { "neuron": "nested", "channel": "out" }, "mode": "text", "preview": {}, "expanded": [], "layout": null }, { "id": "q", "source": null, "mode": "image", "preview": {}, "expanded": [], "layout": { "x": 1, "y": 2 } } ] } }
+    { "kind": "cluster", "id": "cluster", "name": "Nested", "tree": { "neurons": [ { "id": "nested", "kind": "core.number", "params": {}, "tree": { "neurons": [{ "id": "leaf", "kind": "core.number", "params": {}, "tree": null }], "synapses": [] } } ], "synapses": [ { "id": "edge", "from": "nested", "to": "nested", "fromPort": "a", "toPort": "b" } ] }, "flow": { "camera": { "x": 1, "y": 2, "zoom": 3 }, "nodes": { "a": { "layout": { "x": 0, "y": 1 }, "chrome": { "kind": "slider", "label": "Profile Radius", "min": 0, "max": 10, "step": 0.5, "value": 1 } }, "b": { "layout": { "x": 1, "y": 1 }, "chrome": { "kind": "note", "text": "note" } }, "c": { "layout": { "x": 2, "y": 1 }, "chrome": { "kind": "image", "src": "image" } }, "d": { "layout": { "x": 3, "y": 1 }, "chrome": { "kind": "variable", "name": "v", "schema": "number" } }, "e": { "layout": { "x": 4, "y": 1 }, "chrome": { "kind": "plain", "preview": false } } }, "previews": [ { "id": "p", "source": { "neuron": "nested", "channel": "out" }, "mode": "text", "preview": {}, "expanded": [], "layout": null }, { "id": "q", "source": null, "mode": "image", "preview": {}, "expanded": [], "layout": { "x": 1, "y": 2 } } ] } }
   ],
   "mutations": [
     { "mutation": "createWidget", "index": 0, "widget": { "kind": "inputSlider", "id": "slider", "label": "Column Height", "value": 6, "min": 0, "max": 10, "step": 0.5 } },

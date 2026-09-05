@@ -1,0 +1,33 @@
+{
+  "artifact": null,
+  "schema": null,
+  "camera": null,
+  "nodes": null,
+  "edges": null,
+  "meta": {
+    "manifestId": "manifest-alpha",
+    "kindCompatibility": []
+  },
+  "selectedIds": null,
+  "activeUtilityId": null,
+  "cameraX": null,
+  "cameraY": null,
+  "cameraZoom": null,
+  "selectionMethod": null,
+  "gridSnapEnabled": null,
+  "gridFactor": null,
+  "suggestionOffset": null,
+  "fillCount": null,
+  "brushCandidateIndex": null,
+  "brushCandidateSourceHandleId": null,
+  "locale": null,
+  "terminology": null,
+  "lodModeByPaneJson": null,
+  "engagementInputByPaneJson": null,
+  "brushCandidatesJson": null,
+  "nodeKindWeightsJson": null,
+  "handleKindWeightsJson": null,
+  "activeUtilityByWindowIdJson": null,
+  "hoveredNodeId": null,
+  "previewSeq": null
+}

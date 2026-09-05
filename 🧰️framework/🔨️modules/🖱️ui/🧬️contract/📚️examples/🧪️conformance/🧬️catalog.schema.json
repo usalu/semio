@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "roles", "groups"],
+  "properties": {
+    "version": { "const": 1 },
+    "roles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["snapshot", "expect", "patch"],
+      "properties": {
+        "snapshot": { "const": "📸️snapshot.json" },
+        "expect": { "const": "🎯️expect.json" },
+        "patch": { "const": "🩹️patch.json" }
+      }
+    },
+    "groups": {
+      "type": "object",
+      "minProperties": 6,
+      "maxProperties": 6,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["patch", "cases"],
+        "properties": {
+          "patch": { "type": "boolean" },
+          "cases": {
+            "type": "object",
+            "minProperties": 1,
+            "propertyNames": { "pattern": "^[a-z][a-z0-9-]*$" },
+            "additionalProperties": { "type": "string", "minLength": 2, "pattern": "^[^/\\\\.]+$" }
+          }
+        }
+      }
+    }
+  }
+}

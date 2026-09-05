@@ -1,6 +1,6 @@
 //! ⚙️ Puzzle 3d play app panel — the app-wide settings: the brush placement overlap budget, the
 //! relocate proximity radius, the viewport chunk size and the grid spacing. Unlike the
-//! window-instance chrome in `🎭️modes/✏️edit/🎚️options/*`, these are settings a user tunes once for
+//! window-instance chrome in `🎭️modes/✏️edit/☑️options/*`, these are settings a user tunes once for
 //! the whole session rather than per pane. 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM:
 //! the default selection merge mode dropdown is gone — merge is a per-gesture `interactionSelect` arg
 //! (modifier-driven) in the framework's model now, with no equivalent "default" setting.

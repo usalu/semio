@@ -6,6 +6,7 @@ use super::*;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[value(rename_all = "camelCase")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveRow {
     pub(crate) index: usize,

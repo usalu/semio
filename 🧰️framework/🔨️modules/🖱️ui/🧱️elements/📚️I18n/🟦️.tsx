@@ -531,7 +531,7 @@ export type UiTranslationSchema = {
         readonly body: UiLabelValue;
       };
     };
-    /** ⚔️ First-class conflict vocabulary (contract freeze §C5/§C9) — the `ChromePanels` Conflicts
+    /** ⚔️ First-class conflict vocabulary (contract freeze §C5/§C9) — the `📌️ChromePanels` Conflicts
      * panel's own chrome strings; per-conflict `MutationMessage`s reuse `ui.mutation.*` above. */
     readonly conflict: {
       readonly panel: UiLabelValue;

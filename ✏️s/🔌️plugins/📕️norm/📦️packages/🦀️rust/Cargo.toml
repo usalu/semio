@@ -97,6 +97,14 @@ path = "🦀️.rs"
 default = []
 cross-fem = ["dep:fem"]
 
+[[test]]
+name = "config_mutation"
+path = "../../🎚️config/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "surface_render"
+path = "../../🖥️app-surface/🧪️tests/🦀️.rs"
+
 [dependencies]
 semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
@@ -113,6 +121,7 @@ semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️
 pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 
 [dev-dependencies]
+semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
 serde.workspace = true
 serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

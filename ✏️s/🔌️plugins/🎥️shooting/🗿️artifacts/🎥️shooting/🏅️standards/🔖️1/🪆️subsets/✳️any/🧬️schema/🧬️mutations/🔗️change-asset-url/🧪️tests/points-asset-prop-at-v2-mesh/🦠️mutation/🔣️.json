@@ -1,5 +1,0 @@
-{
-  "mutation": "changeAssetUrl",
-  "id": "asset-prop",
-  "new_url": "/mesh/prop-v2.glb"
-}

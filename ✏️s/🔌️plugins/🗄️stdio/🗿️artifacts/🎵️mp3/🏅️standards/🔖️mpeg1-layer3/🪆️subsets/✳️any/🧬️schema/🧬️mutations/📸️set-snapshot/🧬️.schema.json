@@ -1,0 +1,149 @@
+{
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string"
+    },
+    "id3v2": {
+      "type": "object",
+      "properties": {
+        "majorVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minorVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "flags": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "frames": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "flags": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "required": [
+              "id",
+              "flags",
+              "data"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "majorVersion",
+        "minorVersion",
+        "flags",
+        "frames"
+      ],
+      "additionalProperties": false
+    },
+    "frames": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "header": {
+            "type": "object",
+            "properties": {
+              "protectionBit": {
+                "type": "boolean"
+              },
+              "bitrateIndex": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "sampleRateIndex": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "padding": {
+                "type": "boolean"
+              },
+              "privateBit": {
+                "type": "boolean"
+              },
+              "modeExtension": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "copyright": {
+                "type": "boolean"
+              },
+              "original": {
+                "type": "boolean"
+              },
+              "emphasis": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "protectionBit",
+              "bitrateIndex",
+              "sampleRateIndex",
+              "padding",
+              "privateBit",
+              "modeExtension",
+              "copyright",
+              "original",
+              "emphasis"
+            ],
+            "additionalProperties": false
+          },
+          "payload": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "required": [
+          "header",
+          "payload"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "id3v1": {
+      "type": "object",
+      "properties": {
+        "raw": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "required": [
+        "raw"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema",
+    "frames"
+  ],
+  "additionalProperties": false
+}

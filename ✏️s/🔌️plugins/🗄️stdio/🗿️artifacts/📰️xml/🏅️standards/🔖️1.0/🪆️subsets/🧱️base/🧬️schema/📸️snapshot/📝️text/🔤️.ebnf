@@ -1,0 +1,26 @@
+(* ebnf stdio.xml snapshot -- the subset of XML 1.0 this codec actually parses/emits *)
+document = [declaration], [doctype], element, {misc} ;
+declaration = "<?xml", sp, "version", eq, attValue, [sp, "encoding", eq, attValue], [sp, "standalone", eq, yesNo], [sp], "?>" ;
+yesNo = '"yes"' | '"no"' | "'yes'" | "'no'" ;
+doctype = "<!DOCTYPE", { character - ">" | bracketed }, ">" ;
+bracketed = "[", { character - "]" }, "]" ;
+eq = [sp], "=", [sp] ;
+misc = comment | pi | sp ;
+element = emptyElemTag | ( sTag, content, eTag ) ;
+emptyElemTag = "<", name, { attribute }, [sp], "/>" ;
+sTag = "<", name, { attribute }, [sp], ">" ;
+eTag = "</", name, [sp], ">" ;
+attribute = sp, name, eq, attValue ;
+attValue = '"', { character - '"' }, '"' | "'", { character - "'" }, "'" ;
+content = { element | reference | cdSect | pi | comment | charData } ;
+charData = { character - ("<" | "&") } ;
+cdSect = "<![CDATA[", { character }, "]]>" ;
+comment = "<!--", { character }, "-->" ;
+pi = "<?", name, [ sp, { character } ], "?>" ;
+reference = entityRef | charRef ;
+entityRef = "&", ( "amp" | "lt" | "gt" | "quot" | "apos" ), ";" ;
+charRef = "&#", digit, { digit }, ";" | "&#x", hexDigit, { hexDigit }, ";" ;
+name = nameStartChar, { nameChar } ;
+nameStartChar = ":" | letter | "_" ;
+nameChar = nameStartChar | digit | "-" | "." ;
+sp = whitespaceChar, { whitespaceChar } ;

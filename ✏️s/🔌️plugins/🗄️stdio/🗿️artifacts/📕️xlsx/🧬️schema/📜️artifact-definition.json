@@ -41,15 +41,35 @@
       "id": "s.stdio.xlsx.standard.ecma-376.representation.document",
       "standard": "s.stdio.xlsx.standard.ecma-376",
       "representation": "document",
-      "mimes": ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
-      "extensions": [".xlsx"],
+      "mimes": [
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      ],
+      "extensions": [
+        ".xlsx"
+      ],
       "is_binary": true,
       "aliases": [],
       "neutral": true,
       "status": "declared"
     }
   ],
-  "codecs": [],
+  "codecs": [
+    {
+      "id": "s.stdio.xlsx.standard.ecma-376.codec.native-document.v1",
+      "status": "implemented",
+      "from": "s.stdio.xlsx.standard.ecma-376.dialect.source",
+      "to": "s.stdio.xlsx.standard.ecma-376.dialect.source",
+      "executable_registration": true,
+      "native_factory": {
+        "factory_id": "stdio.native.xlsx.v1",
+        "artifact_kind": "stdio.xlsx",
+        "document_schema": "stdio.xlsx",
+        "extension": "xlsx",
+        "pack_schema_hash": "e2bbdb5cdb474f7c003f5648673867868ebf172836d36d6e74dcd5296cc72366",
+        "runtime_capability_id": "s.stdio.xlsx.standard.ecma-376.codec.codec-stdio-xlsx-extension-xlsx.v1"
+      }
+    }
+  ],
   "mutations": [],
   "inferences": [],
   "resources": [
@@ -84,22 +104,22 @@
   ],
   "runtime_capabilities": [
     {
-      "id": "s.stdio.xlsx.runtime.codec.codec-stdio-xlsx-extension-xlsx.v1",
+      "id": "s.stdio.xlsx.standard.ecma-376.codec.codec-stdio-xlsx-extension-xlsx.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec:stdio.xlsx|extension:xlsx",
+      "descriptor": "runtime-capability:codec:codec-extension:10:stdio.xlsx:xlsx|codec:stdio.xlsx",
       "claims": [
         {
           "namespace": "codec",
           "value": "stdio.xlsx"
         },
         {
-          "namespace": "extension",
-          "value": "xlsx"
+          "namespace": "codec-extension",
+          "value": "10:stdio.xlsx:xlsx"
         }
       ]
     },
     {
-      "id": "s.stdio.xlsx.runtime.composer.dialect-s-stdio-xlsx-ecma-376.v1",
+      "id": "s.stdio.xlsx.composer.dialect-s-stdio-xlsx-ecma-376.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.xlsx@ecma-376/*",
       "claims": [
@@ -110,7 +130,7 @@
       ]
     },
     {
-      "id": "s.stdio.xlsx.runtime.composer.dialect-s-stdio-xlsx-ecma-376-strict.v1",
+      "id": "s.stdio.xlsx.composer.dialect-s-stdio-xlsx-ecma-376-strict.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.xlsx@ecma-376/strict",
       "claims": [
@@ -121,7 +141,7 @@
       ]
     },
     {
-      "id": "s.stdio.xlsx.runtime.composer.dialect-s-stdio-xlsx-ecma-376-transitional.v1",
+      "id": "s.stdio.xlsx.composer.dialect-s-stdio-xlsx-ecma-376-transitional.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.xlsx@ecma-376/transitional",
       "claims": [
@@ -132,7 +152,7 @@
       ]
     },
     {
-      "id": "s.stdio.xlsx.runtime.grammar.grammar-stdio-xlsx.v1",
+      "id": "s.stdio.xlsx.grammar.grammar-stdio-xlsx.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.xlsx",
       "claims": [
@@ -143,7 +163,7 @@
       ]
     },
     {
-      "id": "s.stdio.xlsx.runtime.grammar.grammar-stdio-xlsx-diff.v1",
+      "id": "s.stdio.xlsx.grammar.grammar-stdio-xlsx-diff.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.xlsx.diff",
       "claims": [
@@ -154,7 +174,7 @@
       ]
     },
     {
-      "id": "s.stdio.xlsx.runtime.grammar.grammar-stdio-xlsx-op.v1",
+      "id": "s.stdio.xlsx.grammar.grammar-stdio-xlsx-op.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.xlsx.op",
       "claims": [
@@ -165,7 +185,7 @@
       ]
     },
     {
-      "id": "s.stdio.xlsx.runtime.grammar.grammar-stdio-xlsx-pack.v1",
+      "id": "s.stdio.xlsx.grammar.grammar-stdio-xlsx-pack.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.xlsx.pack",
       "claims": [
@@ -176,7 +196,7 @@
       ]
     },
     {
-      "id": "s.stdio.xlsx.runtime.grammar.grammar-stdio-xlsx-spr.v1",
+      "id": "s.stdio.xlsx.grammar.grammar-stdio-xlsx-spr.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.xlsx.spr",
       "claims": [
@@ -187,7 +207,7 @@
       ]
     },
     {
-      "id": "s.stdio.xlsx.runtime.inference.schema-s-stdio-xlsx-inference.v1",
+      "id": "s.stdio.xlsx.inference.schema-s-stdio-xlsx-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:s.stdio.xlsx.inference",
       "claims": [
@@ -198,7 +218,7 @@
       ]
     },
     {
-      "id": "s.stdio.xlsx.runtime.representation.mime-application-vnd-openxmlformats-officedocument-spreadsheetml-sheet-extension-xlsx.v1",
+      "id": "s.stdio.xlsx.standard.ecma-376.representation.mime-application-vnd-openxmlformats-officedocument-spreadsheetml-sheet-extension-xlsx",
       "category": "representation",
       "descriptor": "runtime-capability:representation:mime:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|extension:.xlsx",
       "claims": [
@@ -213,7 +233,7 @@
       ]
     },
     {
-      "id": "s.stdio.xlsx.runtime.schema.schema-s-stdio-xlsx.v1",
+      "id": "s.stdio.xlsx.schema.schema-s-stdio-xlsx.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.xlsx",
       "claims": [
@@ -224,23 +244,23 @@
       ]
     },
     {
-      "id": "s.stdio.xlsx.runtime.subset-validator.dialect-s-stdio-xlsx-ecma-376-strict.v1",
+      "id": "s.stdio.xlsx.subset-validator.validated-dialect-s-stdio-xlsx-ecma-376-strict.v1",
       "category": "subset-validator",
-      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.xlsx@ecma-376/strict",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.xlsx@ecma-376/strict",
       "claims": [
         {
-          "namespace": "dialect",
+          "namespace": "validated-dialect",
           "value": "s.stdio.xlsx@ecma-376/strict"
         }
       ]
     },
     {
-      "id": "s.stdio.xlsx.runtime.subset-validator.dialect-s-stdio-xlsx-ecma-376-transitional.v1",
+      "id": "s.stdio.xlsx.subset-validator.validated-dialect-s-stdio-xlsx-ecma-376-transitional.v1",
       "category": "subset-validator",
-      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.xlsx@ecma-376/transitional",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.xlsx@ecma-376/transitional",
       "claims": [
         {
-          "namespace": "dialect",
+          "namespace": "validated-dialect",
           "value": "s.stdio.xlsx@ecma-376/transitional"
         }
       ]

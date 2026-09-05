@@ -1,0 +1,347 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.shell.persistence/v1",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/request"
+    },
+    {
+      "$ref": "#/$defs/event"
+    }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "windowId": {
+          "$ref": "#/$defs/id"
+        },
+        "spaceId": {
+          "$ref": "#/$defs/id"
+        },
+        "sessionId": {
+          "$ref": "#/$defs/id"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740990
+        }
+      },
+      "required": [
+        "windowId",
+        "spaceId",
+        "sessionId",
+        "generation"
+      ]
+    },
+    "correlation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "requestId": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "scope",
+        "requestId"
+      ]
+    },
+    "operation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "createSpace"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\p{Cc}]+$"
+            },
+            "spaceKind": {
+              "enum": [
+                "atelier",
+                "studio",
+                "archive"
+              ]
+            },
+            "visibility": {
+              "enum": [
+                "private",
+                "public"
+              ]
+            },
+            "selectionId": {
+              "$ref": "#/$defs/id"
+            }
+          },
+          "required": [
+            "kind",
+            "name",
+            "spaceKind",
+            "visibility",
+            "selectionId"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "bindSpace"
+            },
+            "selectionId": {
+              "$ref": "#/$defs/id"
+            }
+          },
+          "required": [
+            "kind",
+            "selectionId"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "importSpace"
+            },
+            "selectionId": {
+              "$ref": "#/$defs/id"
+            }
+          },
+          "required": [
+            "kind",
+            "selectionId"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "deleteEntry"
+            },
+            "entryId": {
+              "$ref": "#/$defs/id"
+            }
+          },
+          "required": [
+            "kind",
+            "entryId"
+          ]
+        }
+      ]
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "semio.shell.persistence-request/v1"
+        },
+        "correlation": {
+          "$ref": "#/$defs/correlation"
+        },
+        "operation": {
+          "$ref": "#/$defs/operation"
+        },
+        "deadlineMs": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 30000
+        }
+      },
+      "required": [
+        "schema",
+        "correlation",
+        "operation",
+        "deadlineMs"
+      ]
+    },
+    "outcome": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "committed"
+            },
+            "spaceId": {
+              "$ref": "#/$defs/id"
+            },
+            "catalogGeneration": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "contentDigest": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$",
+              "not": { "const": "0000000000000000000000000000000000000000000000000000000000000000" }
+            },
+            "byteLength": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 67108864
+            }
+          },
+          "required": [
+            "kind",
+            "spaceId",
+            "catalogGeneration",
+            "contentDigest",
+            "byteLength"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "deleted"
+            },
+            "entryId": {
+              "$ref": "#/$defs/id"
+            },
+            "catalogGeneration": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "kind",
+            "entryId",
+            "catalogGeneration"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "failed"
+            },
+            "code": {
+              "enum": [
+                "denied",
+                "capacity",
+                "stale",
+                "openFailed",
+                "writeFailed",
+                "invalidDocument",
+                "deadline",
+                "workerFailed"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "code"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "cancelled"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        }
+      ]
+    },
+    "event": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schema": {
+              "const": "semio.shell.persistence-event/v1"
+            },
+            "kind": {
+              "const": "progress"
+            },
+            "correlation": {
+              "$ref": "#/$defs/correlation"
+            },
+            "phase": {
+              "enum": [
+                "queued",
+                "selecting",
+                "opening",
+                "writing",
+                "committing"
+              ]
+            },
+            "completedBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 67108864
+            },
+            "totalBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 67108864
+            }
+          },
+          "required": [
+            "schema",
+            "kind",
+            "correlation",
+            "phase",
+            "completedBytes",
+            "totalBytes"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schema": {
+              "const": "semio.shell.persistence-event/v1"
+            },
+            "kind": {
+              "const": "terminal"
+            },
+            "correlation": {
+              "$ref": "#/$defs/correlation"
+            },
+            "outcome": {
+              "$ref": "#/$defs/outcome"
+            }
+          },
+          "required": [
+            "schema",
+            "kind",
+            "correlation",
+            "outcome"
+          ]
+        }
+      ]
+    }
+  }
+}

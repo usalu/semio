@@ -1,5 +1,0 @@
-# 🔄️ Direct set-page-rotation GraphQL payload.
-input SetPageRotationMutationInput {
-  index: Int
-  rotation: Int
-}

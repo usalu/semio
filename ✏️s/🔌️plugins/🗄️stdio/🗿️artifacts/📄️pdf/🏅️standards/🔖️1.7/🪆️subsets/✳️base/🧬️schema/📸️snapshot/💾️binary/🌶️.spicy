@@ -1,6 +1,0 @@
-module Stdio_pdf_1_7_Snapshot;
-
-# Semio Pack payload containing the logical snapshot codec. It is not native PDF framing.
-public type Document = unit {
-    logical_snapshot: bytes &eod;
-};

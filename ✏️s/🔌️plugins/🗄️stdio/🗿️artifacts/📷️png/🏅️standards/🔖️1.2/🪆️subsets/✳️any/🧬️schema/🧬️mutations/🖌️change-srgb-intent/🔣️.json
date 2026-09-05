@@ -5,7 +5,7 @@
   "displayName": "Change Srgb Intent",
   "emoji": "🖌️",
   "aggregateVariant": "ChangeSrgbIntent",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-srgb-intent",
   "binaryTag": 7,
   "invertibility": "explicit-mutation",

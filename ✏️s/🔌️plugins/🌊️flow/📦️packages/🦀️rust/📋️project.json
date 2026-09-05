@@ -5,6 +5,30 @@
     "default": ["{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/**/*.rs", "{projectRoot}/**/*"]
   },
   "targets": {
+    "add-widget-retained-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts add-widget-retained-check",
+        "forwardAllArgs": true
+      }
+    },
+    "child-edit-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts child-edit-check",
+        "forwardAllArgs": true
+      }
+    },
+    "child-identity-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts child-identity-check",
+        "forwardAllArgs": true
+      }
+    },
     "test-source": {
       "executor": "nx:run-commands",
       "options": {

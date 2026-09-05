@@ -7,7 +7,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { FrameworkOsShell, resolveShellLocks, type FrameworkOsLocks } from "@semio-tech/framework-renderer-react";
-import { PLUGIN_BUILD_TARGETS, pluginModuleUrl, type PluginBuildTarget } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️plugins.ts";
+import { PLUGIN_BUILD_TARGETS, pluginModuleUrl, type PluginBuildTarget } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
 import { bootstrapElementsSurfaceChromeDocument, readStoredUiChromeAppearance } from "@semio-tech/ui-react";
 import { createBrowserStoragePort } from "@semio-tech/framework";
 
@@ -50,7 +50,7 @@ function resolveTargetPlugin(pluginId: string): PluginBuildTarget | undefined {
  * fully remounts the shell (plugin runtimes are module-singletons and must not be reused across boots). */
 export function OsBootHost({ plugin, appId, locks }: OsBootHostProps) {
   const target = resolveTargetPlugin(plugin);
-  const moduleUrl = target ? pluginModuleUrl(target.pluginId, target.wasmOut) : undefined;
+  const moduleUrl = target ? pluginModuleUrl(target.pluginId) : undefined;
   const available = usePluginArtifactAvailable(moduleUrl ?? "");
   const resolvedLocks = useMemo(() => resolveShellLocks(locks), [locks]);
 
@@ -137,7 +137,7 @@ export function WgpuBootHost({ plugin }: WgpuBootHostProps) {
     let dispose: (() => void) | undefined;
     setState({ kind: "booting" });
     (async () => {
-      const moduleUrl = pluginModuleUrl(target.pluginId, target.wasmOut);
+      const moduleUrl = pluginModuleUrl(target.pluginId);
       const artifactRes = await fetch(moduleUrl, { method: "HEAD" }).catch(() => undefined);
       if (cancelled) return;
       if (!artifactRes?.ok) {

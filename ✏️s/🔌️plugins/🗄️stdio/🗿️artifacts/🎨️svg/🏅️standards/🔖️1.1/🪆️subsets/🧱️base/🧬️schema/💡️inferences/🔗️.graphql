@@ -1,0 +1,10 @@
+# 💡️ Svg inference schema — root `<svg>` intrinsic size.
+
+type SvgInference {
+  dimensions: SvgDimensions! @derived
+}
+
+type SvgDimensions {
+  width: Float!
+  height: Float!
+}

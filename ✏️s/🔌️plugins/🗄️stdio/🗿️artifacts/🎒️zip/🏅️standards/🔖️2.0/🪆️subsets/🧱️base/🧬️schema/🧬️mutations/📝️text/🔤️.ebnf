@@ -1,0 +1,3 @@
+(* ebnf stdio.zip mutations *)
+document = header, body ;
+header = 'schema', space, 'stdio.zip', newline ;

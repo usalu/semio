@@ -27,7 +27,7 @@
         "responsibility": "Resolves a registered playground variant and launches its Framework OS development session with the selected environment."
       },
       {
-        "directory": "🧭️cli-usage-presentation",
+        "directory": "⌨️cli-usage-presentation",
         "id": "framework.repo.command.cli-usage-presentation",
         "kind": "command",
         "responsibility": "Presents the non-interactive Semio CLI usage reference."
@@ -45,7 +45,7 @@
         "responsibility": "Delegates an otherwise unhandled Semio CLI invocation to the root script, preserving the parsed verb and positional segments."
       },
       {
-        "directory": "🧭️command-tree-discovery",
+        "directory": "🌳️command-tree-discovery",
         "id": "framework.repo.command.command-tree-discovery",
         "kind": "command",
         "responsibility": "Runtime repo walk producing the wizard command tree from nx targets, taxonomy paths, and playground catalog."

@@ -48,7 +48,9 @@
       "status": "declared"
     }
   ],
-  "codecs": [],
+  "codecs": [
+    { "id": "s.stdio.mp4.standard.isobmff.codec.native-document.v1", "status": "implemented", "from": "s.stdio.mp4.standard.isobmff.dialect.source", "to": "s.stdio.mp4.standard.isobmff.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.mp4.v1", "artifact_kind": "stdio.mp4", "document_schema": "stdio.mp4", "extension": "semio", "pack_schema_hash": "3dd6f57488121f469eaa871386c4842c322c25dbfa417b79342d2e547c57a915", "runtime_capability_id": "s.stdio.mp4.standard.isobmff.codec.codec-stdio-mp4-extension-semio.v1" } }
+  ],
   "mutations": [],
   "inferences": [],
   "resources": [
@@ -83,22 +85,22 @@
   ],
   "runtime_capabilities": [
     {
-      "id": "s.stdio.mp4.runtime.codec.codec-stdio-mp4-extension-semio.v1",
+      "id": "s.stdio.mp4.standard.isobmff.codec.codec-stdio-mp4-extension-semio.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec:stdio.mp4|extension:semio",
+      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.mp4:semio|codec:stdio.mp4",
       "claims": [
         {
           "namespace": "codec",
           "value": "stdio.mp4"
         },
         {
-          "namespace": "extension",
-          "value": "semio"
+          "namespace": "codec-extension",
+          "value": "9:stdio.mp4:semio"
         }
       ]
     },
     {
-      "id": "s.stdio.mp4.runtime.composer.dialect-s-stdio-mp4-isobmff.v1",
+      "id": "s.stdio.mp4.composer.dialect-s-stdio-mp4-isobmff.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.mp4@isobmff/*",
       "claims": [
@@ -109,7 +111,7 @@
       ]
     },
     {
-      "id": "s.stdio.mp4.runtime.inference.schema-s-stdio-mp4-inference.v1",
+      "id": "s.stdio.mp4.inference.schema-s-stdio-mp4-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:s.stdio.mp4.inference",
       "claims": [
@@ -120,7 +122,7 @@
       ]
     },
     {
-      "id": "s.stdio.mp4.runtime.representation.mime-video-mp4-extension-mp4.v1",
+      "id": "s.stdio.mp4.standard.isobmff.representation.mime-video-mp4-extension-mp4",
       "category": "representation",
       "descriptor": "runtime-capability:representation:mime:video/mp4|extension:.mp4",
       "claims": [
@@ -135,7 +137,7 @@
       ]
     },
     {
-      "id": "s.stdio.mp4.runtime.schema.schema-s-stdio-mp4.v1",
+      "id": "s.stdio.mp4.schema.schema-s-stdio-mp4.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.mp4",
       "claims": [

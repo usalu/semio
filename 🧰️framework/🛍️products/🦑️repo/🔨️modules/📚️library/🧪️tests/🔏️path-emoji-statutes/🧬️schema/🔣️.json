@@ -2,9 +2,221 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "genericEmojiIdentities", "cases"],
+  "required": ["schemaVersion", "genericEmojiIdentities", "cases", "normalization", "authoredSubtreeNames", "graphManifestNames", "storyNames", "nextEntryNames", "projectionScenarios", "projectionOracleDirectories", "subsetDirectoryOverrides", "semanticManifestFilenameOverrides", "mutationDomainContract", "mutationCatalogSourceOwnership", "mutationPayloadOwnership", "taxonomyEmojiIdentities", "selectorFreeZwjOwners", "assetIconPaths", "assetDocumentation", "assetLogoKeyframes", "gltfFixtureCoordinates"],
   "properties": {
     "schemaVersion": { "const": 1 },
+    "mutationCatalogSourceOwnership": {
+      "type": "object", "additionalProperties": false, "required": ["source", "catalog", "domains", "cases"],
+      "properties": {
+        "source": { "type": "string", "minLength": 1 }, "catalog": { "type": "string", "minLength": 1 },
+        "domains": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string" } } },
+        "cases": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["id", "owner", "source", "valid"], "properties": { "id": { "type": "string" }, "owner": { "type": "string" }, "source": { "type": "string" }, "valid": { "type": "boolean" } } } }
+      }
+    },
+    "gltfFixtureCoordinates": {
+      "type": "object", "additionalProperties": false, "required": ["owner", "id", "pathShapes", "cases"],
+      "properties": {
+        "owner": { "type": "string", "minLength": 1 },
+        "id": { "type": "string", "minLength": 1 },
+        "pathShapes": { "const": ["*/🧫️fixtures/*/*.gltf", "*/🧫️fixtures/*/*/*.gltf"] },
+        "cases": { "type": "array", "minItems": 1, "items": {
+          "type": "object", "additionalProperties": false, "required": ["id", "paths", "valid"],
+          "properties": { "id": { "type": "string" }, "paths": { "type": "array", "items": { "type": "string" } }, "valid": { "type": "boolean" } }
+        } }
+      }
+    },
+    "assetLogoKeyframes": { "type": "array", "minItems": 6, "maxItems": 6, "uniqueItems": true, "items": { "type": "string", "pattern": "\\.svg$" } },
+    "assetDocumentation": { "type": "object", "additionalProperties": false, "required": ["generatorId", "outputPath"], "properties": { "generatorId": { "const": "assets-build" }, "outputPath": { "const": "🧰️framework/🔨️modules/🖼️assets/README.md" } } },
+    "assetIconPaths": { "type": "array", "minItems": 1, "items": {
+      "type": "object", "additionalProperties": false, "required": ["paths", "expected"],
+      "properties": {
+        "paths": { "type": "array", "items": { "type": "string" } },
+        "expected": { "type": ["array", "null"], "items": {
+          "type": "object", "additionalProperties": false, "required": ["id", "path"],
+          "properties": { "id": { "type": "string" }, "path": { "type": "string" } }
+        } }
+      }
+    } },
+    "taxonomyEmojiIdentities": { "type": "array", "minItems": 1, "items": {
+      "type": "object", "additionalProperties": false, "required": ["emoji", "expected"],
+      "properties": { "emoji": { "type": "string" }, "expected": { "type": "boolean" } }
+    } },
+    "selectorFreeZwjOwners": { "type": "array", "minItems": 7, "maxItems": 7, "items": {
+      "type": "object", "additionalProperties": false, "required": ["path", "legacyPath", "nodeKind"],
+      "properties": { "path": { "type": "string", "minLength": 1 }, "legacyPath": { "type": "string", "minLength": 1 }, "nodeKind": { "enum": ["file", "directory"] } }
+    } },
+    "mutationPayloadOwnership": {
+      "type": "object", "additionalProperties": false, "required": ["owner", "document", "rawDocuments", "cases", "documents", "descriptors"],
+      "properties": {
+        "owner": { "type": "string", "minLength": 1 },
+        "document": { "type": "object" },
+        "descriptors": { "type": "array", "minItems": 1, "items": {
+          "type": "object", "additionalProperties": false, "required": ["id", "present", "extra", "expected"],
+          "properties": { "id": { "type": "string" }, "present": { "type": "boolean" }, "extra": { "enum": ["absent", "descriptor", "schema"] }, "expected": { "type": "boolean" } }
+        } },
+        "rawDocuments": { "type": "array", "minItems": 1, "items": {
+          "type": "object", "additionalProperties": false, "required": ["content", "expected"],
+          "properties": { "content": { "type": "string" }, "expected": { "type": "boolean" } }
+        } },
+        "cases": { "type": "array", "minItems": 1, "items": {
+          "type": "object", "additionalProperties": false, "required": ["path", "state", "expected"],
+          "properties": { "path": { "type": "string" }, "state": { "enum": ["file", "directory", "symlink", "absent"] }, "linkedAncestor": { "type": "boolean" }, "repositoryBoundary": { "type": "boolean" }, "expected": { "type": "boolean" } }
+        } },
+        "documents": { "type": "array", "minItems": 1, "items": {
+          "type": "object", "additionalProperties": false, "required": ["value", "expected"],
+          "properties": { "value": true, "expected": { "type": "boolean" } }
+        } }
+      }
+    },
+    "mutationDomainContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root", "domains", "cases", "invalidDefinitions"],
+      "properties": {
+        "root": { "type": "string", "minLength": 1 },
+        "domains": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)+$" }
+          }
+        },
+        "invalidDefinitions": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["domain", "operation", "identity"],
+            "properties": { "domain": { "type": "string" }, "operation": { "type": "string" }, "identity": true }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "expected"],
+            "properties": {
+              "path": { "type": "string", "minLength": 1 },
+              "expected": { "type": ["string", "null"] }
+            }
+          }
+        }
+      }
+    },
+    "projectionOracleDirectories": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["owner", "override", "candidate", "expected"],
+        "properties": {
+          "owner": { "type": "string", "minLength": 1 },
+          "override": { "type": ["string", "null"] },
+          "candidate": { "type": "string", "minLength": 1 },
+          "expected": { "type": "boolean" }
+        }
+      }
+    },
+    "subsetDirectoryOverrides": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "directories", "cases"],
+      "properties": {
+        "owner": { "type": "string", "minLength": 1 },
+        "directories": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string", "minLength": 1 } },
+        "cases": { "type": "array", "minItems": 1, "items": {
+          "type": "object", "additionalProperties": false, "required": ["id", "directory"],
+          "properties": { "id": { "type": "string" }, "directory": { "type": "string", "minLength": 1 } }
+        } }
+      }
+    },
+    "semanticManifestFilenameOverrides": {
+      "type": "object", "additionalProperties": false, "required": ["overrides", "cases"],
+      "properties": {
+        "overrides": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string", "minLength": 1 } },
+        "cases": { "type": "array", "minItems": 1, "items": {
+          "type": "object", "additionalProperties": false, "required": ["owner", "expected"],
+          "properties": { "owner": { "type": "string", "minLength": 1 }, "expected": { "type": "string", "minLength": 1 } }
+        } }
+      }
+    },
+    "projectionScenarios": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "directoryName", "expected"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "directoryName": { "type": "string", "minLength": 1 },
+          "expected": { "type": "boolean" }
+        }
+      }
+    },
+    "nextEntryNames": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "expected"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "expected": { "type": "boolean" }
+        }
+      }
+    },
+    "graphManifestNames": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "expected"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "expected": { "type": "boolean" }
+        }
+      }
+    },
+    "authoredSubtreeNames": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "storyNames": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "expected"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "expected": { "type": "boolean" }
+        }
+      }
+    },
+    "normalization": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "expectedName", "expectedViolations"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "expectedName": { "type": "string", "minLength": 1 },
+          "expectedViolations": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+        }
+      }
+    },
     "genericEmojiIdentities": {
       "type": "array",
       "minItems": 1,
@@ -40,7 +252,7 @@
               "additionalProperties": false,
               "required": ["kind", "path"],
               "properties": {
-                "kind": { "enum": ["missing", "generic", "presentation", "spacing", "duplicate"] },
+                "kind": { "enum": ["missing", "generic", "presentation", "spacing", "duplicate", "multiple", "reserved-emoji"] },
                 "path": { "type": "string", "minLength": 1 },
                 "sibling": { "type": "string", "minLength": 1 },
                 "emoji": { "type": "string", "minLength": 1 }

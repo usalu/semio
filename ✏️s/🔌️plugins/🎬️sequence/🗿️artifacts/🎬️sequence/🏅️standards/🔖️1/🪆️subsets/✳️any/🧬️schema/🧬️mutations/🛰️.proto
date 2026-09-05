@@ -1,14 +1,14 @@
 syntax = "proto3";
 package semio.s.sequence.sequence.mutation;
 
-import "../../../✳️step/🧬️schema/🧬️mutations/🌱create-step/🛰️.proto";
-import "../../../✳️step/🧬️schema/🧬️mutations/🗑️delete-step/🛰️.proto";
-import "../../../✳️step/🧬️schema/🧬️mutations/📍move-step/🛰️.proto";
-import "../../../✳️step/🧬️schema/🧬️mutations/🔧edit-step-params/🛰️.proto";
-import "../../../✳️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🛰️.proto";
-import "../../../✳️dependency/🧬️schema/🧬️mutations/🔗connect-steps/🛰️.proto";
-import "../../../✳️dependency/🧬️schema/🧬️mutations/✂️disconnect-steps/🛰️.proto";
-import "../../../✳️step/🧬️schema/🧬️mutations/🧬duplicate-step/🛰️.proto";
+import "../../../🪜️step/🧬️schema/🧬️mutations/🌱️create-step/🛰️.proto";
+import "../../../🪜️step/🧬️schema/🧬️mutations/🗑️delete-step/🛰️.proto";
+import "../../../🪜️step/🧬️schema/🧬️mutations/📍️move-step/🛰️.proto";
+import "../../../🪜️step/🧬️schema/🧬️mutations/🔧️edit-step-params/🛰️.proto";
+import "../../../🪜️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🛰️.proto";
+import "../../../🔗️dependency/🧬️schema/🧬️mutations/🔗️connect-steps/🛰️.proto";
+import "../../../🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect-steps/🛰️.proto";
+import "../../../🪜️step/🧬️schema/🧬️mutations/🧬️duplicate-step/🛰️.proto";
 
 message SequenceMutation {
   oneof mutation {

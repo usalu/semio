@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** 🦀️ `@semio-tech/framework-surface-rs` router: `bun ./📜️script.ts <wasm|test>` — one wasm-bindgen crate for the paint/terrain/node-graph/tiled-map surface family (puzzle's `board-2d` surface now lives in the puzzle plugin crate itself). */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { join } from "node:path";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runCmd, runWasmPackWebBuild } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 class WasmScript extends BundleScript {
   run(): void {
@@ -9,6 +10,7 @@ class WasmScript extends BundleScript {
       skipEnvVar: "FRAMEWORK_SURFACE_RS_SKIP_WASM_BUILD",
       logPrefix: "framework/surface/rs",
       wasmBaseName: "framework_surface",
+      outputDirectory: "🕸️bindings",
       shipProfile: "wasm-release",
       noDefaultFeatures: true,
       cargoFeatures: ["session-bindgen"],
@@ -25,6 +27,7 @@ class WasmScript extends BundleScript {
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
+    runCmd("bun", ["test", join(this.root, "../../🧪️tests/🟦️.ts")], { cwd: this.repoRoot });
     runCargoTestBudgeted(["semio-framework-surface"], this.repoRoot, segments);
   }
 }

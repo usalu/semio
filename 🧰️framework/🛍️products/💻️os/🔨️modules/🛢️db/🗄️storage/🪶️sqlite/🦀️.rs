@@ -544,7 +544,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
     }
 
     async fn execute(pool: &WorkerPool, task: DbIoTask) -> Result<DbIoResult, DbError> {
-        submit_db_io_task(pool, task).map_err(|(error, _)| error)?.await.map_err(crate::db_storage::DbIoFault::into_db_error)?.into_result()
+        submit_db_io_task(pool, task).map_err(|(error, _)| error)?.finish().await
     }
 
     fn output_writer(bytes: u64) -> Result<DbIoPageWriter, DbError> {

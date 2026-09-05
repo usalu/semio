@@ -5,7 +5,7 @@
   "displayName": "Delete Vortex Kind",
   "emoji": "❌",
   "aggregateVariant": "DeleteVortexKind",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "delete-vortex-kind",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

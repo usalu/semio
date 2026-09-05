@@ -28,6 +28,7 @@ pub fn plugin() -> Result<Plugin<LowpolyApps>, semio_framework_plugin::PluginAss
     Plugin::<LowpolyApps>::builder("lowpoly")
         .label("Lowpoly")
         .version("0.1.0")
+        .package_id("semio:lowpoly")
         .artifact(crate::artifacts::lowpoly::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .editor::<crate::editor::lowpoly::LowpolyPlayApp>(crate::editor::lowpoly::create_lowpoly_app())
         .editor_mutation_roster::<crate::editor::lowpoly::LowpolyPlayApp>()

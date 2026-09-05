@@ -34,6 +34,7 @@ pub fn plugin() -> Result<Plugin<SourcingApps>, semio_framework_plugin::PluginAs
     Plugin::<SourcingApps>::builder("sourcing")
         .label("Sourcing")
         .version("0.1.0")
+        .package_id("semio:sourcing")
         .declare_artifact(crate::artifacts::curation::artifact())
         .editor_mutation_roster::<crate::editor::sourcing::SourcingCurationApp>()
         .viewer_mutation_roster::<crate::viewer::sourcing::SourcingViewer>()

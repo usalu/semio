@@ -1,5 +1,0 @@
-{
-  "mutation": "changeNodeKind",
-  "nodeId": "node-metabolism",
-  "newNodeKind": "topic"
-}

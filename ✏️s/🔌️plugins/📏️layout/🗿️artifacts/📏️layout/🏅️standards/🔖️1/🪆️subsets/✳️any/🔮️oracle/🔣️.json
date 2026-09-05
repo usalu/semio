@@ -1,0 +1,897 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution. `s.layout.layout` is a semio-NATIVE artifact carried in `.dsl.semio`/`.pack.semio`, so no third party can serve as its reference — see the noOracleDecision below.",
+  "oracles": [
+    {
+      "id": "layout-1-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "capabilities": [
+        "layout-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "🐍️ No third-party library reads or writes s.layout.layout's .dsl.semio/.pack.semio carriers, and this repository's own five export serializers (dxf/png/svg/dwg/pdf) do not witness this artifact's shape either -- confirmed by noOracleDecisions['layout-mutation-semantics']'s carrier-side re-examination (each serializer coerces the document into an empty/erroring/unparsed result). The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../../../🧪️tests/📐️mutate-layout-1/🐍️.py, written from this subset's own committed ../🧬️schema/🔣️.json document shape and each mutation's own committed (before, mutation, after) specification vector, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's create/delete/rename/change/update/reorder/edit/move/resize verb entries and 📓️derivation-rules.md's shape rules. It imports nothing from the Rust it judges and transliterates none of it -- inverse-change-data-fields restoring dataFieldsJson as an explicit null instead of omitting the key (the committed before-document genuinely omits it) is a bug a first standalone run caught and fixed before registration. All 25 kinds' mutate and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan -- all 50 passed.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.layout.layout",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "dxf 0.6 (rust, already a registered stdio test-oracle)",
+              "reason": "The layout->dxf export serializer coerces LayoutSnapshot through serde into a permanently empty (0-entity) dxf document regardless of content, confirmed by this repository own contract checker; reading its output witnesses nothing."
+            },
+            {
+              "package": "png 0.18 (rust, already a registered stdio test-oracle)",
+              "reason": "The layout->png export path errors on every real document because PngSnapshot required fields carry no serde default; there is no output to read."
+            },
+            {
+              "package": "svg/dwg export path (this repository own serializers)",
+              "reason": "Both feed the artifact own internal key=hex(json-bytes) DSL text into an SVG XML parser / SVG-to-DWG flattener and fail to parse any real document; not an independent reading."
+            },
+            {
+              "package": "pdf export path (this repository own serializer)",
+              "reason": "Dumps the same raw hex-DSL text into one PDF text field, an alternate encoding of our own snapshot rather than a structural reading of it."
+            },
+            {
+              "package": "generic desktop-publishing libraries (idml/scribus python bindings)",
+              "reason": "No published reader targets this repository own .dsl.semio/.pack.semio grammars; searched by name and by domain keyword, no match in pypi/crates.io/npm."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md; .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️derivation-rules.md; ../🧬️schema/🔣️.json; each mutation's own 🧬️.schema.json",
+        "fixtureCoverage": {
+          "vectors": 25,
+          "capabilitiesCovered": [
+            "layout-1-mutate"
+          ]
+        }
+      }
+    }
+  ],
+  "noOracleDecisions": [
+    {
+      "id": "layout-mutation-semantics",
+      "capabilities": [],
+      "rationale": "No third-party library reads or writes this subset's carriers, and none models a layout document of this shape. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-note-1`, whose document is a z-ordered tree of six differently-shaped typed blocks, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the twenty-five committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is `mutate-note-1`: a positional document whose element ORDER is meaningful, whose inverses must therefore restore position and not merely membership.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows. AND, SEPARATELY, `identity-round-trip` WOULD STILL BE REFUSED. This subset's committed snapshot text grammar describes a DIFFERENT DOCUMENT: it is the generic `family-scene` canvas grammar — `doc-body = schema-line layers-block`, `layer = shape-layer | path-layer | text-layer` — and the committed artifact carries no `layers` block at all. `📖️playbook` and `📋️forms` carry byte-identical copies of the same canvas grammar over two more unrelated documents.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen.\n\nADDENDUM — 2026-08-27, ticket SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING. This decision was re-examined from the CARRIER side rather than the vocabulary side: even setting the second-implementation debt above aside, could a qualifying third-party reader (the repository already approves `dxf` 0.6 and `png` 0.18 as Rust test-oracles, both linked into `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust`) witness this subset's mutations by reading what its OWN dxf/png/svg/pdf/dwg exporters produce? Reading every export serializer body answers NO, and each is confirmed independently by `bun 🧰️framework/… 🧪️tests/📜️cript.ts contract`, which now reports all five as `testing/contract` breaches without this ticket asserting anything: `../🚪️io/📤️export/🧵️serializers/🗿️artifacts/📐️dxf/🔖️r12/✳️any/🦀️.rs` and its `📷️png` sibling both do `serde_json::to_value(from)` then `serde_json::from_value::<DxfSnapshot|PngSnapshot>(value)` — `LayoutSnapshot`'s own JSON reinterpreted AS the target schema, not a real encoder. `DxfSnapshot`'s five non-`schema` fields all carry `#[serde(default)]` and none of their names occur in `LayoutSnapshot`, so this ALWAYS 'succeeds' with a well-formed but PERMANENTLY EMPTY (0 entities) document, whatever the layout content is — the contract checker's own words: 'the dxf serializer coerces this artifact through serde into an empty dxf document.' `PngSnapshot.width`/`height`/`bitDepth`/`colorType` carry no default, so the PNG path does not even reach that far — it ERRORS on every real document (the checker: 'coerces this artifact through serde into an empty png document'). The `🎨️svg` and `🏗️dwg` siblings both feed `<LayoutSnapshot as store::ArtifactDsl>::print_dsl(from)` — this subset's OWN `key=hex(json-bytes)` DSL text (confirmed against the committed `../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`, which is not XML) — into an SVG XML parser and an SVG-to-DWG geometry flattener respectively; both fail to parse on any real document (the checker: 'the svg/dwg serializer emits the artifact's internal DSL text, not svg/dwg'). `📄️pdf` does not fail, but only because it dumps that same raw hex-DSL text into one PDF page's text field — an alternate encoding of our own snapshot, not an independent structural reading of it, and therefore no different from the JSON-does-not-count rule this repository already applies elsewhere. CONCLUSION: not merely un-surveyed, but UN-ORACLE-ABLE as exported today on EVERY one of its five carriers — this is a serializer-repair debt for `✏️s/🔌️plugins/📏️layout` to discharge before any oracle registration (third-party or second-implementation) could mean anything here, and is reported rather than worked around per this ticket's own instruction.\n\n[C2 2026-09-02] Narrowed `capabilities` to remove 'layout-1-mutate': a mutation manifest already requires an external-oracle discharge for this capability (tracked honestly as `missing-external-oracle`), so a no-oracle decision claiming the same capability made that gap invisible to `no-oracle-covers-mutation` without discharging it. The rationale above is kept verbatim as the record of what was actually investigated; only the claim is withdrawn. See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️c2-native-artifact-oracles.md.\n\n[E1 2026-09-02] The asset:// fixture-declaration blocker named above is now resolved (this feature's Examples now carry declared asset:// fixtures) and a Python second implementation is registered as oracle 'layout-1-python-independent' (kind verified-native-second-implementation). Capabilities stay empty ([]) — this entry is kept, not deleted, as the honest record of what was investigated on the carrier side; the mutation-semantics gap it used to name is now discharged by the registered oracle instead. See $TICKET/📓️e1-remodel-shooting-layout.md.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "layout-1-any",
+      "capability": "layout-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-data-fields",
+          "sourceMutationDirectoryName": "🧾change-data-fields",
+          "mutationDirectoryName": "🧾change-data-fields",
+          "scenarios": [
+            {
+              "id": "attaches-a-data-fields-payload",
+              "directoryName": "⛵️attaches-a-data-fields-payload"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-frame-columns",
+          "sourceMutationDirectoryName": "🔢change-frame-columns",
+          "mutationDirectoryName": "🔢change-frame-columns",
+          "scenarios": [
+            {
+              "id": "splits-the-text-frame-into-two-columns",
+              "directoryName": "🔤️splits-the-text-frame-into-two-columns"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-frame-fill",
+          "sourceMutationDirectoryName": "🎨change-frame-fill",
+          "mutationDirectoryName": "🎨change-frame-fill",
+          "scenarios": [
+            {
+              "id": "repaints-the-rect-frame-fill",
+              "directoryName": "🍀️repaints-the-rect-frame-fill"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-frame-stroke",
+          "sourceMutationDirectoryName": "🖊️change-frame-stroke",
+          "mutationDirectoryName": "🖊️change-frame-stroke",
+          "scenarios": [
+            {
+              "id": "adds-a-stroke-to-the-rect-frame",
+              "directoryName": "🦅️adds-a-stroke-to-the-rect-frame"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-frame-wrap-mode",
+          "sourceMutationDirectoryName": "🔤change-frame-wrap-mode",
+          "mutationDirectoryName": "🔤change-frame-wrap-mode",
+          "scenarios": [
+            {
+              "id": "switches-the-text-frame-to-column-wrap",
+              "directoryName": "🔤️switches-the-text-frame-to-column-wrap"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-link-path",
+          "sourceMutationDirectoryName": "🛤️change-link-path",
+          "mutationDirectoryName": "🛤️change-link-path",
+          "scenarios": [
+            {
+              "id": "relinks-link-1-to-a-new-file",
+              "directoryName": "🔗️relinks-link-1-to-a-new-file"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-page-height",
+          "sourceMutationDirectoryName": "↕️change-page-height",
+          "mutationDirectoryName": "↕️change-page-height",
+          "scenarios": [
+            {
+              "id": "lengthens-page-1",
+              "directoryName": "📃️lengthens-page-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-page-width",
+          "sourceMutationDirectoryName": "↔️change-page-width",
+          "mutationDirectoryName": "↔️change-page-width",
+          "scenarios": [
+            {
+              "id": "widens-page-1",
+              "directoryName": "📃️widens-page-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-print-target",
+          "sourceMutationDirectoryName": "🖨️change-print-target",
+          "mutationDirectoryName": "🖨️change-print-target",
+          "scenarios": [
+            {
+              "id": "sets-a-cmyk-print-target",
+              "directoryName": "🖨️sets-a-cmyk-print-target"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-frame",
+          "sourceMutationDirectoryName": "➕create-frame",
+          "mutationDirectoryName": "➕create-frame",
+          "scenarios": [
+            {
+              "id": "inserts-a-rect-frame-at-index-1",
+              "directoryName": "🚪️inserts-a-rect-frame-at-index-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-link",
+          "sourceMutationDirectoryName": "🖇️create-link",
+          "mutationDirectoryName": "🖇️create-link",
+          "scenarios": [
+            {
+              "id": "appends-link-3",
+              "directoryName": "🔗️appends-link-3"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-page",
+          "sourceMutationDirectoryName": "🌱create-page",
+          "mutationDirectoryName": "🌱create-page",
+          "scenarios": [
+            {
+              "id": "appends-page-3",
+              "directoryName": "📃️appends-page-3"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-story",
+          "sourceMutationDirectoryName": "📖create-story",
+          "mutationDirectoryName": "📖create-story",
+          "scenarios": [
+            {
+              "id": "appends-story-3",
+              "directoryName": "🟤️appends-story-3"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-frame",
+          "sourceMutationDirectoryName": "➖delete-frame",
+          "mutationDirectoryName": "➖delete-frame",
+          "scenarios": [
+            {
+              "id": "removes-the-text-frame-and-its-layer-membership",
+              "directoryName": "🚫️removes-the-text-frame-and-its-layer-membership"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-link",
+          "sourceMutationDirectoryName": "✂️delete-link",
+          "mutationDirectoryName": "✂️delete-link",
+          "scenarios": [
+            {
+              "id": "removes-link-2",
+              "directoryName": "🔗️removes-link-2"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-page",
+          "sourceMutationDirectoryName": "🗑️delete-page",
+          "mutationDirectoryName": "🗑️delete-page",
+          "scenarios": [
+            {
+              "id": "removes-page-2",
+              "directoryName": "🚫️removes-page-2"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-story",
+          "sourceMutationDirectoryName": "📕delete-story",
+          "mutationDirectoryName": "📕delete-story",
+          "scenarios": [
+            {
+              "id": "removes-story-2",
+              "directoryName": "🚫️removes-story-2"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-story",
+          "sourceMutationDirectoryName": "✍️edit-story",
+          "mutationDirectoryName": "✍️edit-story",
+          "scenarios": [
+            {
+              "id": "rewrites-story-1-body",
+              "directoryName": "🟦️rewrites-story-1-body"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-frame",
+          "sourceMutationDirectoryName": "🕹️move-frame",
+          "mutationDirectoryName": "🕹️move-frame",
+          "scenarios": [
+            {
+              "id": "moves-the-rect-frame",
+              "directoryName": "🔵️moves-the-rect-frame"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-layout",
+          "sourceMutationDirectoryName": "✏️rename-layout",
+          "mutationDirectoryName": "✏️rename-layout",
+          "scenarios": [
+            {
+              "id": "renames-the-document",
+              "directoryName": "📃️renames-the-document"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-page",
+          "sourceMutationDirectoryName": "🏷️rename-page",
+          "mutationDirectoryName": "🏷️rename-page",
+          "scenarios": [
+            {
+              "id": "renames-page-1",
+              "directoryName": "📃️renames-page-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-pages",
+          "sourceMutationDirectoryName": "🔀reorder-pages",
+          "mutationDirectoryName": "🔀reorder-pages",
+          "scenarios": [
+            {
+              "id": "moves-page-1-behind-page-2",
+              "directoryName": "📃️moves-page-1-behind-page-2"
+            }
+          ]
+        },
+        {
+          "mutationId": "resize-frame",
+          "sourceMutationDirectoryName": "📏resize-frame",
+          "mutationDirectoryName": "📏resize-frame",
+          "scenarios": [
+            {
+              "id": "resizes-the-rect-frame",
+              "directoryName": "📐️resizes-the-rect-frame"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-page-columns",
+          "sourceMutationDirectoryName": "🏛️update-page-columns",
+          "mutationDirectoryName": "🏛️update-page-columns",
+          "scenarios": [
+            {
+              "id": "splits-page-1-into-three-columns",
+              "directoryName": "📃️splits-page-1-into-three-columns"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-page-margins",
+          "sourceMutationDirectoryName": "📐update-page-margins",
+          "mutationDirectoryName": "📐update-page-margins",
+          "scenarios": [
+            {
+              "id": "sets-asymmetric-margins-on-page-1",
+              "directoryName": "📃️sets-asymmetric-margins-on-page-1"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "rename-layout",
+        "change-print-target",
+        "change-data-fields",
+        "create-page",
+        "delete-page",
+        "rename-page",
+        "change-page-width",
+        "change-page-height",
+        "update-page-margins",
+        "update-page-columns",
+        "reorder-pages",
+        "create-story",
+        "delete-story",
+        "edit-story",
+        "create-link",
+        "delete-link",
+        "change-link-path",
+        "create-frame",
+        "delete-frame",
+        "move-frame",
+        "resize-frame",
+        "change-frame-fill",
+        "change-frame-stroke",
+        "change-frame-wrap-mode",
+        "change-frame-columns"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.layout.layout",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-data-fields",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-data-fields",
+            "bridgeVersion": 1,
+            "variant": "ChangeDataFields"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-frame-columns",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-frame-columns",
+            "bridgeVersion": 1,
+            "variant": "ChangeFrameColumns"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-frame-fill",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-frame-fill",
+            "bridgeVersion": 1,
+            "variant": "ChangeFrameFill"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-frame-stroke",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-frame-stroke",
+            "bridgeVersion": 1,
+            "variant": "ChangeFrameStroke"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-frame-wrap-mode",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-frame-wrap-mode",
+            "bridgeVersion": 1,
+            "variant": "ChangeFrameWrapMode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-link-path",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-link-path",
+            "bridgeVersion": 1,
+            "variant": "ChangeLinkPath"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-page-height",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-page-height",
+            "bridgeVersion": 1,
+            "variant": "ChangePageHeight"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-page-width",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-page-width",
+            "bridgeVersion": 1,
+            "variant": "ChangePageWidth"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-print-target",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-print-target",
+            "bridgeVersion": 1,
+            "variant": "ChangePrintTarget"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-frame",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-frame",
+            "bridgeVersion": 1,
+            "variant": "CreateFrame"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-link",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-link",
+            "bridgeVersion": 1,
+            "variant": "CreateLink"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-page",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-page",
+            "bridgeVersion": 1,
+            "variant": "CreatePage"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-story",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-story",
+            "bridgeVersion": 1,
+            "variant": "CreateStory"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-frame",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-frame",
+            "bridgeVersion": 1,
+            "variant": "DeleteFrame"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-link",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-link",
+            "bridgeVersion": 1,
+            "variant": "DeleteLink"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-page",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-page",
+            "bridgeVersion": 1,
+            "variant": "DeletePage"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-story",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-story",
+            "bridgeVersion": 1,
+            "variant": "DeleteStory"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "edit-story",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "edit-story",
+            "bridgeVersion": 1,
+            "variant": "EditStory"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "move-frame",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-frame",
+            "bridgeVersion": 1,
+            "variant": "MoveFrame"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "rename-layout",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-layout",
+            "bridgeVersion": 1,
+            "variant": "RenameLayout"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "rename-page",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-page",
+            "bridgeVersion": 1,
+            "variant": "RenamePage"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "reorder-pages",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-pages",
+            "bridgeVersion": 1,
+            "variant": "ReorderPages"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "resize-frame",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "resize-frame",
+            "bridgeVersion": 1,
+            "variant": "ResizeFrame"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "update-page-columns",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-page-columns",
+            "bridgeVersion": 1,
+            "variant": "UpdatePageColumns"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "update-page-margins",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-page-margins",
+            "bridgeVersion": 1,
+            "variant": "UpdatePageMargins"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

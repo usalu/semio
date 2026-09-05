@@ -1,0 +1,6 @@
+syntax = "proto3";
+// `keyword arg=value ...` op text, carried verbatim.
+package semio.s_stdio_semio_document.mutations.text;
+message SemioDocumentMutationOpText {
+  string line = 1;
+}

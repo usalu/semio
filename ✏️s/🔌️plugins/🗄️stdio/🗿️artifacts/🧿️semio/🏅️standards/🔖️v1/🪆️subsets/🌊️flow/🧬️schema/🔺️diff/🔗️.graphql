@@ -1,0 +1,71 @@
+# 🔺️ SemioFlowDiff schema — real facet mirror of 🦀️.rs.
+type SemioPoint2 {
+  x: Float!
+  y: Float!
+}
+type PortRef {
+  node: String!
+  port: String!
+}
+type FlowParam {
+  key: String!
+  value: String!
+}
+type FlowParamDiff {
+  value: String
+}
+type FlowParamModified {
+  key: String!
+  diff: FlowParamDiff!
+}
+type FlowParamsDiff {
+  removed: [String!]!
+  modified: [FlowParamModified!]!
+  added: [FlowParam!]!
+}
+type FlowNode {
+  id: String!
+  kind: String!
+  label: String!
+  params: [FlowParam!]!
+  position: SemioPoint2!
+}
+type FlowNodeDiff {
+  kind: String
+  label: String
+  params: FlowParamsDiff
+  position: SemioPoint2
+}
+type FlowNodeModified {
+  key: String!
+  diff: FlowNodeDiff!
+}
+type FlowNodesDiff {
+  removed: [String!]!
+  modified: [FlowNodeModified!]!
+  added: [FlowNode!]!
+}
+type FlowEdge {
+  id: String!
+  from: PortRef!
+  to: PortRef!
+  kind: String!
+}
+type FlowEdgeDiff {
+  from: PortRef
+  to: PortRef
+  kind: String
+}
+type FlowEdgeModified {
+  key: String!
+  diff: FlowEdgeDiff!
+}
+type FlowEdgesDiff {
+  removed: [String!]!
+  modified: [FlowEdgeModified!]!
+  added: [FlowEdge!]!
+}
+type SemioFlowDiff {
+  nodes: FlowNodesDiff @state(class: ARTIFACT)
+  edges: FlowEdgesDiff @state(class: ARTIFACT)
+}

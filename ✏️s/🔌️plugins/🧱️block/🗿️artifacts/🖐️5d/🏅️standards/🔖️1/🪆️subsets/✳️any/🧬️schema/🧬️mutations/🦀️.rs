@@ -23,7 +23,7 @@ pub type Block5dStore = store::ArtifactStore<Block5dSnapshot, Block5dMutation>;
 /// grip is placed in both projections at once), set-like compatibility-rule/attribute/author
 /// add/remove, both cameras' pan/zoom, and the session meta description. The old whole-document-
 /// replace and no-op sentinel variants are gone — whole-document loads now decompose into this
-/// vocabulary (see `🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs`'s
+/// vocabulary (see `🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎬️set-active-example/🦀️.rs`'s
 /// `replace_document_operations`).
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum, dsl::Mutations)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -77,7 +77,7 @@ pub enum Block5dMutation {
 //#region 🏷️Kinds
 /// 🏷️ The kebab-case spelling of every [`Block5dMutation`] variant, in declaration order — the exact
 /// vocabulary the `block-5d-1-any` mutation catalog (`../../🔣️oracle.json`) declares and
-/// the `mutate-block-5d-1` exhaustive case measures itself against. The framework never parses Rust, so
+/// the `🧩️mutate-block-5d-1` exhaustive case measures itself against. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
 pub const KINDS: &[&str] = &[
     "rename-part-kind",
@@ -446,7 +446,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔮️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

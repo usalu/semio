@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateClimate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newClimate"
+  ],
+  "properties": {
+    "newClimate": {
+      "title": "MonthlyClimate",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gHWM2",
+        "thetaEC"
+      ],
+      "properties": {
+        "thetaEC": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 12,
+          "maxItems": 12
+        },
+        "gHWM2": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 12,
+          "maxItems": 12
+        }
+      }
+    }
+  }
+}

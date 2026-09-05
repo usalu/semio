@@ -1000,7 +1000,7 @@ pub trait AsyncHttpTransport: Send + Sync {
 // UreqHttpTransport` implements a trait `semio-framework-os-services` defines, so `os-services`
 // cannot name `UreqHttpTransport` without a reverse dependency) — OR (b) generics, which would force
 // the widely-referenced, non-generic `HttpPool`/`HttpPoolTransport` (60 references across 5 files,
-// including `📺️renderer/…/Shell/🎯️targets/🧊️wgpu/🦀️.rs` — flagged in `📌️important.md` as live/shared with
+// including `📺️renderer/…/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs` — flagged in `📌️important.md` as live/shared with
 // concurrent tickets right now) to become generic too, for a trait that costs nothing left as `dyn`.
 // Revisit if `HttpTransport` ever needs to become `async fn` (R2/universal-async) — an async trait
 // method genuinely cannot stay `dyn`, unlike this sync one.
@@ -1761,7 +1761,7 @@ struct StorageState<R: HostAsyncRuntime> {
 /// WHY THIS CRATE CARRIES A SECOND E5 EXCEPTION, past R2's normal "at most one per crate": R2's
 /// bound is a discipline against proliferating ad-hoc bridges, not a literal ceiling that survives
 /// every cross-crate constraint. `StorageScheduler::submit`'s signature is fixed SYNCHRONOUS by a
-/// caller this packet cannot edit: `🔌️plugin/🖥️host/⏳️imports/🦀️.rs`'s `storage_read`/`storage_write`
+/// caller this packet cannot edit: `🔌️plugin/🖥️host/📥️imports/🦀️.rs`'s `storage_read`/`storage_write`
 /// call it un-awaited, inside an already-`async fn`, then immediately `.await` the returned
 /// [`StorageTicket`] separately — `submit` becoming `async fn` would desync that call site with no
 /// way for this packet to fix it, so `storage_try_dispatch` (which `submit` calls synchronously) has
@@ -1878,7 +1878,7 @@ impl<R: HostAsyncRuntime + 'static> StorageScheduler<R> {
     /// [`StorageError::BytesQuotaExceeded`] immediately if the reservation itself does not fit —
     /// the wheel is left untouched on that path, same discipline as [`WheelCore::arm`]. The ticket
     /// captures `ctx.deadline_ms` (if set) to race against in [`StorageTicket::await_result`].
-    // 🚫️async: E1-adjacent — forced synchronous by `🔌️plugin/🖥️host/⏳️imports/🦀️.rs`'s
+    // 🚫️async: E1-adjacent — forced synchronous by `🔌️plugin/🖥️host/📥️imports/🦀️.rs`'s
     // `storage_read`/`storage_write`, which call this un-awaited inside an already-`async fn` then
     // `.await` the returned `StorageTicket` separately (that file is outside this packet's
     // `path_scope`, so it cannot be updated to `.await` this call instead). See `resolve_ready`'s

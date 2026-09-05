@@ -1,0 +1,36 @@
+{
+  "mutation": "insertShape",
+  "slide_index": 0,
+  "shape_index": 1,
+  "shape": {
+    "shapeKind": "textBox",
+    "frame": {
+      "origin": {
+        "x": 2.0,
+        "y": 4.0
+      },
+      "width": 40.0,
+      "height": 8.0
+    },
+    "blocks": [
+      {
+        "kind": "paragraph",
+        "style_id": null,
+        "runs": [
+          {
+            "text": "Agenda",
+            "style": {
+              "bold": false,
+              "italic": false,
+              "underline": false,
+              "size": null,
+              "font": null,
+              "color": null,
+              "link": null
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

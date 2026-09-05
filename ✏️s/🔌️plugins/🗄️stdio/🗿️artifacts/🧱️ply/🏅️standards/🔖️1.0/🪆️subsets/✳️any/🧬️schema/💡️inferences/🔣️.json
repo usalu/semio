@@ -1,0 +1,23 @@
+{
+  "$id": "https://semio.tech/schema/s/stdio/ply/inference.json",
+  "title": "PlyInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bounds"],
+  "properties": {
+    "bounds": { "$ref": "#/$defs/PlyBounds", "x-semio-derived": true }
+  },
+  "$defs": {
+    "PlyBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max", "vertexCount", "faceCount"],
+      "properties": {
+        "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "vertexCount": { "type": "integer", "minimum": 0 },
+        "faceCount": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

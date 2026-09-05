@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/playbook-scene-owner-law.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "ownedSlots", "maximumCases", "cases"],
+  "properties": {
+    "$schema": { "type": "string", "const": "./🎬️playbook-scene-owner.schema.json" },
+    "schemaVersion": { "const": 1 },
+    "ownedSlots": { "const": 1 },
+    "maximumCases": { "type": "integer", "minimum": 5, "maximum": 8 },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["law", "first", "second"],
+        "properties": {
+          "law": { "enum": ["cloneIdentity", "instanceIsolation", "abaIsolation", "wireOmission", "boundedClose"] },
+          "first": { "type": "string", "maxLength": 64 },
+          "second": { "type": "string", "maxLength": 64 }
+        }
+      }
+    }
+  }
+}

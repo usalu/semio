@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.cad.retained-route-audit.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "owner", "documentSchema", "payloadSchema", "routeCount", "excludedFrameworkRoutes", "activation", "limits", "admittedRoutes", "routes", "laws", "hostileSourceMutations"],
+  "properties": {
+    "$schema": { "const": "./🧬️.schema.json" },
+    "owner": { "const": "CadPlayApp" },
+    "documentSchema": { "const": "cad.scene" },
+    "payloadSchema": { "const": "cad.scene.tool-command.v1" },
+    "routeCount": { "const": 40 },
+    "excludedFrameworkRoutes": { "const": ["setActiveUtility"] },
+    "activation": { "const": {"controller": "s.cad.cad@1/*#editor", "factory": "CadRetainedCommandJobFactory", "proofRows": 25, "injectedTool": "setActiveUtility", "closeItems": 1, "closeBytes": 4096} },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rawBytes", "decodedItems", "workItems", "outputBytes", "stepMicros", "closePageBytes"],
+      "properties": {
+        "rawBytes": { "const": 8192 },
+        "decodedItems": { "const": 64 },
+        "workItems": { "const": 1 },
+        "outputBytes": { "const": 16384 },
+        "stepMicros": { "const": 7500 },
+        "closePageBytes": { "const": 16384 }
+      }
+    },
+    "admittedRoutes": {
+      "const": [
+        "addNode",
+        "renameNode",
+        "patchCadPlayReference",
+        "focusModelDefinition",
+        "setCamera",
+        "setProjection",
+        "setProjectionParam",
+        "setDislocateOption",
+        "setNodeSelection",
+        "setReferenceSelection",
+        "referenceHover",
+        "engagementInput",
+        "engagementPossibleSelect",
+        "engagementRepeatLast",
+        "engagementAbort",
+        "worldPointerMove",
+        "toggleSun",
+        "setSunAzimuth",
+        "setSunElevation",
+        "setSunIntensity",
+        "setActiveUtility",
+        "setLocale",
+        "setTerminology",
+        "setContributions",
+        "loadRawRequest"
+      ]
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 40,
+      "maxItems": 40,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "intendedLanes", "disposition", "blocker"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "intendedLanes": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "enum": ["artifact", "config", "child", "hostEffect", "hostDownload"] }
+          },
+          "disposition": { "enum": ["migrated", "batchOnlyPendingRewrite"] },
+          "blocker": {
+            "enum": [
+              "none",
+              "artifactPreparationFactoryMissing",
+              "configPreparationFactoryMissing",
+              "childPublicationUnavailable",
+              "persistentDecodeJobMissing",
+              "persistentSerializationJobMissing"
+            ]
+          }
+        }
+      }
+    },
+    "laws": {
+      "const": ["ownerLocal", "progress", "cancel", "freshness", "ackBeforeClose", "incrementalClose", "terminalEmpty"]
+    },
+    "hostileSourceMutations": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "mutation", "expected"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "mutation": { "type": "string", "minLength": 1 },
+          "expected": { "const": "rejected" }
+        }
+      }
+    }
+  }
+}

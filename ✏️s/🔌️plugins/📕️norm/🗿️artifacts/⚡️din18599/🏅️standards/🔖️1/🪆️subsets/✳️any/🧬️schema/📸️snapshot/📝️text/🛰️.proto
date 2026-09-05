@@ -1,0 +1,3 @@
+syntax = "proto3";
+package semio.s.norm.din18599.snapshot_text;
+message Artifact { string schema = 1; bytes payload = 2; }

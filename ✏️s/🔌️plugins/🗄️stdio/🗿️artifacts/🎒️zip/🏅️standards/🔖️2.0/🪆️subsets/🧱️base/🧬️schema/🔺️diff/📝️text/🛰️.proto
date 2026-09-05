@@ -1,0 +1,3 @@
+syntax = "proto3";
+package semio.stdio_zip.diff_text;
+message Artifact { string schema = 1; bytes payload = 2; }

@@ -30,7 +30,7 @@ fn retained_resident_fixed_backing_counts_against_the_same_aggregate() {
     eprintln!("[DEBUG] resident-fixed contract={} runtime={runtime} total={} dynamic-slots=64 final-release-excludes-static=true", actual.bytes, registered.bytes);
 }
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap() }
 fn empty_snapshot() -> UiResidentSnapshot { UiResidentSnapshot { bytes: UiResidentPermit::fixed_backing_bytes().unwrap(), ..Default::default() } }
 fn reserve(items: usize, bytes: usize) -> UiResidentPermit {
     let mut result = None;

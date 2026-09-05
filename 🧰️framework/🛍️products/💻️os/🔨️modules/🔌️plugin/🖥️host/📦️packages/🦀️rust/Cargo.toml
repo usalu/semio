@@ -68,7 +68,7 @@ serde_json = "1.0.140"
 # 🎯️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS (W2-A): `HostTransactionCoordinator`
 # hashes a `ForeignStep`'s payload into `protocol::PayloadHash` for `MutationOrigin::Contributed`, the
 # exact algorithm `📡️spr/🎮️command/🦀️.rs`'s own `Planner` cycle-guard already uses.
-semio-framework-hash = { path = "../../../../../../../🔨️modules/🔢️hash/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

@@ -28,12 +28,14 @@ import {
   writeSync,
 } from "node:fs";
 import type { Stats } from "node:fs";
-import { registryCatalogInputPaths, registryCatalogInputView, registryCatalogPathMayAffect, semanticPackageAdapterPreview, semanticPackageGeneratedLeafPreview, semanticPackageIgnoredGeneratedOutputPaths, semanticPackageJoinedPathReferenceAuthority, semanticPackageAuthoredFragmentReferences, semanticPackageProjectionAuthority, semanticPackageProjectionCatalog, type GeneratorProjectionActivation, type RegistryCatalogInputDiscovery, type RegistryCatalogInputView, type SemanticPackageGeneration, type SemanticPackageProjectionCase } from "../🔍️discovery/🟦️.ts";
+import { generatorPreviewResourceLimits, generatorPreviewScriptArguments, registryCatalogInputPaths, registryCatalogInputView, registryCatalogPathMayAffect, semanticPackageAdapterPreview, semanticPackageGeneratedLeafPreview, semanticPackageIgnoredGeneratedOutputPaths, semanticPackageJoinedPathReferenceAuthority, semanticPackageAuthoredFragmentReferences, semanticPackageProjectionAuthority, semanticPackageProjectionCatalog, type GeneratorProjectionActivation, type RegistryCatalogInputDiscovery, type RegistryCatalogInputView, type SemanticPackageGeneration, type SemanticPackageProjectionCase } from "../🔍️discovery/🟦️.ts";
 import { tmpdir } from "node:os";
+import { parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile } from "../🔍️discovery/🟦️.ts";
+import { parseFixedDirectoryContractSetScope, parseNamedFixedDirectoryContractSetScope } from "../🔍️discovery/🟦️.ts";
 import { parseGeneratorInputProjection, parseSemanticOwnedCurrentSourceRevisions, parseSemanticOwnedDocumentCorrections, semanticExactOwnedDocumentCorrectionAuthority, semanticOwnedInputFileSnapshot, type GeneratorInputProjection, type SemanticOwnedInputFileSnapshot } from "../🔍️discovery/🟦️.ts";
 import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustNonRepoJoinBaseSpans, rustTokens as rustSyntaxTokens, rustTokenPairs, validateFrozenCoordinateEvidenceContracts, type RustModuleGraph, type FrozenCoordinateEvidenceContract } from "../🔍️discovery/🟦️.ts";
 import { validateFrozenMarkdownCoordinateEvidenceContracts, type FrozenMarkdownCoordinateEvidenceContract } from "../🔍️discovery/🟦️.ts";
-import { mutationPayloadSchemaRelativePath } from "../🔍️discovery/🟦️.ts";
+import { jsonDocumentDuplicateKeys, mutationCatalogSourceOwner, mutationCatalogSourceOwnersProblems, mutationOwnerIdentity, mutationOwnerRelativePath, mutationPayloadSchemaProblems, pathEmojiStatuteFindings, reservedDocumentationBasename } from "../🔍️discovery/🟦️.ts";
 import { basename, dirname, isAbsolute, join, parse, posix, relative, resolve, sep } from "node:path";
 import { artifactPathProjectionCatalogRoots, createTaxonomyPathMatcher, renderArtifactPathProjectionRoot, semanticArtifactEmptyFacetProjectionAuthority, semanticExactOwnedFileCatalog, semanticExactOwnedFileProjectionAuthority, semanticOwnedFileHistoryProjectionAuthority, semanticOwnedFileProjectionAuthority, semanticOwnedPrimaryFileProjectionAuthority, semanticPathProjectionAuthority, semanticPathProjectionReferenceConsumers, validateTaxonomy, type TaxonomyPathMatcher, type SemanticExactOwnedFileCase, type SemanticExactOwnedFileCatalog, type SemanticFacetPrimaryFileProjectionContract, type SemanticPathProjectionReferenceConsumerForm, type SemanticProjectionAuthorityNode, type Taxonomy as DiscoveryTaxonomy } from "../🔍️discovery/🟦️.ts";
 //#endregion 🔌️Adapters
@@ -522,6 +524,7 @@ type FixedContractScope = Readonly<
   | { kind: "package-root"; ecosystemId: string }
   | { kind: "directory-kind"; directoryKindId: string }
   | { kind: "fixed-directory-contract"; fixedDirectoryContractId: string }
+  | { kind: "fixed-directory-contract-set"; fixedDirectoryContractIds: readonly string[] }
   | { kind: "sibling-fixed-filename-contract"; fixedFilenameContractId: string }
   | { kind: "path-pattern" }
 >;
@@ -747,6 +750,9 @@ interface GeneratorContractSpec {
   readonly ownerPath: string | null;
   readonly target: string | null;
   readonly previewTarget?: string;
+  readonly previewArguments?: readonly string[];
+  readonly previewLimits?: { readonly maxOutputBytes: number; readonly timeoutMs: number };
+  readonly compilerInputManifest?: { readonly kind: "compiler-input-manifest-v1"; readonly manifestOutputPath: string; readonly manifestSchemaPath: string; readonly staticAuthorityPath: string; readonly maxFiles: number };
   readonly checkTarget?: string;
   readonly inputPatterns: readonly string[];
   readonly inputDiscovery?: RegistryCatalogInputDiscovery;
@@ -783,7 +789,7 @@ interface PackageBoundaryProfile {
 interface PackageSourceDisposition {
   readonly contractKind: "fixed" | "configurable";
   readonly disposition: "adapter-source" | "tool-metadata";
-  readonly validator: "package-glue" | "command-router" | "vitest-configuration" | "tool-config-vitest" | "tool-config-tailwind" | "tool-config-postcss" | "tool-config-eslint" | "tool-config-dependency-cruiser";
+  readonly validator: "package-glue" | "command-router" | "vitest-configuration" | "tool-config-vitest" | "tool-config-tailwind" | "tool-config-postcss" | "tool-config-eslint" | "tool-config-dependency-cruiser" | "pytest-configuration" | "eslint-configuration" | "vscode-test-configuration";
   readonly authority: string;
   readonly verification: string;
 }
@@ -910,7 +916,7 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
       if ((segment.match(/\[/gu)?.length ?? 0) !== (segment.match(/\]/gu)?.length ?? 0)) throw new Error(`Taxonomy v7 ${name} has an unclosed character class`);
     }
     const filename = pattern.slice(pattern.lastIndexOf("/") + 1);
-    if (exactBasename && /[*?\[\]]/u.test(filename)) throw new Error(`Taxonomy v7 ${name} must end in one exact literal basename`);
+    if (exactBasename && /[*?\[\]{}]/u.test(filename)) throw new Error(`Taxonomy v7 ${name} must end in one exact literal basename`);
     pathMatcher.matches("", pattern);
     return pattern;
   }
@@ -975,9 +981,10 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
   for (const [id, value] of Object.entries(fixedRows)) {
     const spec = record(value, `fixedFilenameContracts.${id}`);
     if (spec.configurability !== "unconfigurable") throw new Error(`Taxonomy v7 fixedFilenameContracts.${id}.configurability must be unconfigurable`);
-    const scopeRow = record(spec.scope, `fixedFilenameContracts.${id}.scope`);
+    const inputScopeRow = record(spec.scope, `fixedFilenameContracts.${id}.scope`);
+    const scopeRow = inputScopeRow.kind === "named-fixed-directory-contract-set" ? parseNamedFixedDirectoryContractSetScope(inputScopeRow, root.fixedDirectoryContracts as DiscoveryTaxonomy["fixedDirectoryContracts"], (root.fixedDirectoryContractSets ?? {}) as NonNullable<DiscoveryTaxonomy["fixedDirectoryContractSets"]>) : inputScopeRow;
     const scopeKind = requiredString(scopeRow.kind, `fixedFilenameContracts.${id}.scope.kind`) as FixedContractScope["kind"];
-    if (!["exact-path", "repository-root", "package-root", "directory-kind", "fixed-directory-contract", "sibling-fixed-filename-contract", "path-pattern"].includes(scopeKind)) throw new Error(`Taxonomy v7 fixedFilenameContracts.${id}.scope.kind is invalid`);
+    if (!["exact-path", "repository-root", "package-root", "directory-kind", "fixed-directory-contract", "fixed-directory-contract-set", "sibling-fixed-filename-contract", "path-pattern"].includes(scopeKind)) throw new Error(`Taxonomy v7 fixedFilenameContracts.${id}.scope.kind is invalid`);
     const scope: FixedContractScope = scopeKind === "exact-path"
       ? (requireExactKeys(scopeRow, ["kind", "path"], `fixedFilenameContracts.${id}.scope`), { kind: "exact-path", path: normalizeRelative(requiredString(scopeRow.path, `fixedFilenameContracts.${id}.scope.path`)) })
       : scopeKind === "package-root"
@@ -986,6 +993,8 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
           ? (requireExactKeys(scopeRow, ["kind", "directoryKindId"], `fixedFilenameContracts.${id}.scope`), { kind: "directory-kind", directoryKindId: requiredString(scopeRow.directoryKindId, `fixedFilenameContracts.${id}.scope.directoryKindId`) })
           : scopeKind === "fixed-directory-contract"
             ? (requireExactKeys(scopeRow, ["kind", "fixedDirectoryContractId"], `fixedFilenameContracts.${id}.scope`), { kind: "fixed-directory-contract", fixedDirectoryContractId: requiredString(scopeRow.fixedDirectoryContractId, `fixedFilenameContracts.${id}.scope.fixedDirectoryContractId`) })
+            : scopeKind === "fixed-directory-contract-set"
+              ? parseFixedDirectoryContractSetScope(scopeRow, root.fixedDirectoryContracts as DiscoveryTaxonomy["fixedDirectoryContracts"])
             : scopeKind === "sibling-fixed-filename-contract"
               ? (requireExactKeys(scopeRow, ["kind", "fixedFilenameContractId"], `fixedFilenameContracts.${id}.scope`), { kind: "sibling-fixed-filename-contract", fixedFilenameContractId: requiredString(scopeRow.fixedFilenameContractId, `fixedFilenameContracts.${id}.scope.fixedFilenameContractId`) })
           : (requireExactKeys(scopeRow, ["kind"], `fixedFilenameContracts.${id}.scope`), { kind: scopeKind });
@@ -1486,7 +1495,11 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
     if (target && !/^@?[a-z0-9][a-z0-9@._/-]*:[a-z0-9][a-z0-9._-]*$/u.test(target)) throw new Error(`Taxonomy v7 generatorContracts.${id}.target must be one exact Nx target`);
     if (ownership === "owned" ? !previewTarget : previewTarget !== undefined) throw new Error(`Taxonomy v7 generatorContracts.${id}.previewTarget does not match ownership`);
     if (previewTarget && !/^@?[a-z0-9][a-z0-9@._/-]*:[a-z0-9][a-z0-9._-]*$/u.test(previewTarget)) throw new Error(`Taxonomy v7 generatorContracts.${id}.previewTarget must be one exact Nx target`);
-    if (target && previewTarget !== `${target.slice(0, target.lastIndexOf(":"))}:preview-generated`) throw new Error(`Taxonomy v7 generatorContracts.${id}.previewTarget must be the exact owner preview-generated target`);
+    const previewArguments = spec.previewArguments === undefined ? undefined : stringArray(spec.previewArguments, `generatorContracts.${id}.previewArguments`);
+    if (target) generatorPreviewScriptArguments({ ownership, target, previewTarget, previewArguments });
+    else if (previewArguments !== undefined) throw new Error(`Taxonomy v7 generatorContracts.${id}.previewArguments requires owned output authority`);
+    const previewLimits = spec.previewLimits === undefined ? undefined : generatorPreviewResourceLimits({ ownership, previewTarget, previewLimits: spec.previewLimits as GeneratorContractSpec["previewLimits"] });
+    const compilerInputManifest = spec.compilerInputManifest === undefined ? undefined : record(spec.compilerInputManifest, `generatorContracts.${id}.compilerInputManifest`) as unknown as GeneratorContractSpec["compilerInputManifest"];
     if (checkTarget && !/^@?[a-z0-9][a-z0-9@._/-]*:[a-z0-9][a-z0-9._-]*$/u.test(checkTarget)) throw new Error(`Taxonomy v7 generatorContracts.${id}.checkTarget must be one exact Nx target`);
     const inputPatterns = stringArray(spec.inputPatterns, `generatorContracts.${id}.inputPatterns`).map((pattern, index) => validatedContractPattern(pattern, `generatorContracts.${id}.inputPatterns[${index}]`, false));
     if (ownership === "owned" ? inputPatterns.length === 0 : inputPatterns.length !== 0) throw new Error(`Taxonomy v7 generatorContracts.${id}.inputPatterns do not match ownership`);
@@ -1505,7 +1518,7 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
     if (inputDiscovery && (id !== "plugin-registry" || ownership !== "owned" || inputDiscovery.kind !== "registry-catalog")) throw new Error(`Taxonomy v7 generatorContracts.${id}.inputDiscovery has no exact catalog authority`);
     const projectionActivation = spec.projectionActivation === undefined ? undefined : record(spec.projectionActivation, `generatorContracts.${id}.projectionActivation`) as unknown as GeneratorProjectionActivation;
     const packageGeneration = spec.packageGeneration === undefined ? undefined : record(spec.packageGeneration, `generatorContracts.${id}.packageGeneration`) as unknown as SemanticPackageGeneration;
-    generatorContracts[id] = { ownership, ownerPath, target, previewTarget, checkTarget, inputPatterns: [...new Set(inputPatterns)].sort(), inputDiscovery, packageGeneration, projectionActivation, outputRoots, reason: requiredString(spec.reason, `generatorContracts.${id}.reason`) };
+    generatorContracts[id] = { ownership, ownerPath, target, previewTarget, previewArguments, previewLimits, checkTarget, inputPatterns: [...new Set(inputPatterns)].sort(), inputDiscovery, compilerInputManifest, packageGeneration, projectionActivation, outputRoots, reason: requiredString(spec.reason, `generatorContracts.${id}.reason`) };
   }
   if (Object.keys(generatorContracts).length === 0) throw new Error("Taxonomy v7 generatorContracts must not be empty");
   for (let left = 0; left < generatorRoots.length; left++) for (let right = left + 1; right < generatorRoots.length; right++) {
@@ -1569,7 +1582,7 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
   }
   if (Object.keys(packageBoundaryProfiles).length === 0) throw new Error("Taxonomy v7 packageBoundaryProfiles must not be empty");
   /** 🔖️ Each externally-mandated tool-config validator token is reserved for exactly one contract id, mirroring the pre-existing vitest-configuration/vitest-config-entry pinning. */
-  const TOOL_CONFIG_VALIDATORS: Readonly<Record<string, string>> = { "vitest-configuration": "vitest-config-entry", "tool-config-vitest": "vitest-config", "tool-config-tailwind": "tailwind-config", "tool-config-postcss": "postcss-config", "tool-config-eslint": "eslint-config", "tool-config-dependency-cruiser": "dependency-cruiser-config" };
+  const TOOL_CONFIG_VALIDATORS: Readonly<Record<string, string>> = { "vitest-configuration": "vitest-config-entry", "tool-config-vitest": "vitest-config", "tool-config-tailwind": "tailwind-config", "tool-config-postcss": "postcss-config", "tool-config-eslint": "eslint-config", "tool-config-dependency-cruiser": "dependency-cruiser-config", "pytest-configuration": "root-pytest-config", "eslint-configuration": "root-eslint-config", "vscode-test-configuration": "vscode-test-cli-config" };
   const packageSourceDispositions: Record<string, PackageSourceDisposition> = {};
   for (const [id, value] of Object.entries(sourceDispositionRows)) {
     const spec = record(value, `packageSourceDispositions.${id}`);
@@ -2240,7 +2253,7 @@ function matchDirectoryKind(name: string, taxonomy: LoadedTaxonomy, parentKindId
       if (nearest.length === 1) return { kind: { id: nearest[0].id, emoji: leading.emoji }, slug: leading.rest, ambiguous: [] };
       return { kind: null, slug: leading.rest, ambiguous: nearest.map((entry) => entry.id) };
     }
-    return { kind: null, slug: leading.rest, ambiguous: ordinary.length > 0 ? ordinary.map((entry) => entry.id) : global.map((entry) => entry.id) };
+    return { kind: null, slug: leading.rest, ambiguous: ordinary.map((entry) => entry.id) };
   }
   const exact = taxonomy.directoryKinds.filter((kind) => contextAllows(kind) && kind.inferWithoutEmoji !== false && kind.id.normalize("NFC").toLocaleLowerCase("und") === normalized.toLocaleLowerCase("und"));
   if (exact.length === 1) return { kind: exact[0], slug: normalized, ambiguous: [] };
@@ -3004,6 +3017,7 @@ const FIXED_CONTRACT_SCOPE_SPECIFICITY: Readonly<Record<FixedContractScopeKind, 
   "directory-kind": 2,
   "package-root": 3,
   "fixed-directory-contract": 4,
+  "fixed-directory-contract-set": 4,
   "sibling-fixed-filename-contract": 5,
   "exact-path": 6,
 };
@@ -3037,6 +3051,7 @@ function fixedScopeMatches(contract: FixedContract, path: string, packageInfo: R
   if (contract.scope.kind === "package-root") return packageInfo?.packageRoot === dirname(path) && packageInfo.ecosystemId === contract.scope.ecosystemId;
   if (contract.scope.kind === "directory-kind") return parentKindId === contract.scope.directoryKindId;
   if (contract.scope.kind === "fixed-directory-contract") return parentFixedDirectoryContractId === contract.scope.fixedDirectoryContractId;
+  if (contract.scope.kind === "fixed-directory-contract-set") return parentFixedDirectoryContractId !== undefined && contract.scope.fixedDirectoryContractIds.includes(parentFixedDirectoryContractId);
   if (contract.scope.kind === "sibling-fixed-filename-contract") return siblingFixedFilenameContractIds.includes(contract.scope.fixedFilenameContractId);
   return true;
 }
@@ -3245,6 +3260,8 @@ function classifyPackageRole(path: string, kindId: string | null, fixedId: strin
 
 function canonicalDirectory(path: string, parentCanonical: string, parentKindId: string | undefined, ancestorKindIds: readonly string[], taxonomy: LoadedTaxonomy): { readonly path: string; readonly kindId: string | null; readonly fixedId?: string; readonly violations: readonly TaxonomyViolation[] } {
   const name = basename(path).normalize("NFC");
+  const domains = taxonomy.discoverySchema.mutationDomainOwners[dirname(path)], domainOwner = mutationDomainOwnerLocation(path, taxonomy);
+  if (domains && Object.hasOwn(domains, name) || domainOwner && path === `${domainOwner.root}/${domainOwner.relativePath}`) return { path: parentCanonical ? `${parentCanonical}/${name}` : name, kindId: "members-of-schema", violations: [] };
   const fixed = matchingFixedContracts(path, taxonomy.schema.fixedDirectoryContracts, taxonomy, packageLocation(path, taxonomy), parentKindId);
   if (fixed.ambiguous.length > 0) return { path: parentCanonical ? `${parentCanonical}/${name}` : name, kindId: null, violations: [violation("fixed-directory-contract-ambiguous", path, `Equal-specificity fixed directory contracts match: ${fixed.ambiguous.join(", ")}`)] };
   if (fixed.selected) {
@@ -3262,7 +3279,8 @@ function canonicalDirectory(path: string, parentCanonical: string, parentKindId:
   }
   const identity = splitLeadingEmojiIdentity(name);
   const canonicalName = identity.sequence !== identity.first ? name : `${match.kind.emoji}${match.slug}`.normalize("NFC");
-  return { path: parentCanonical ? `${parentCanonical}/${canonicalName}` : canonicalName, kindId: match.kind.id, violations: [] };
+  const violations = identity.first ? pathEmojiStatuteFindings([{ path, nodeKind: "directory" }], []).map((finding) => violation(`path-emoji-${finding.kind}`, path, "Directory emoji must be handpicked, singular, and correctly presented.")) : [];
+  return { path: parentCanonical ? `${parentCanonical}/${canonicalName}` : canonicalName, kindId: match.kind.id, violations };
 }
 
 function canonicalFile(
@@ -3291,6 +3309,8 @@ function canonicalFile(
   }
   if (fixed.ambiguous.length > 0) return { path: parentCanonical ? `${parentCanonical}/${basename(path)}` : basename(path), fileKind: null, stem: null, violations: [violation("fixed-contract-ambiguous", path, `Equal-specificity fixed filename contracts match: ${fixed.ambiguous.join(", ")}`)] };
   if (fixed.selected) return { path: parentCanonical ? `${parentCanonical}/${fixedName}` : fixedName, fileKind: null, stem: null, fixedId: fixed.selected[0], violations: [] };
+  const documentationName = reservedDocumentationBasename(basename(path));
+  if (documentationName) return { path: parentCanonical ? `${parentCanonical}/${documentationName}` : documentationName, fileKind: null, stem: null, violations: [] };
   const configurable = configurableContract(path, taxonomy, packageInfo);
   const resolvedKind = resolveFileKind(path, taxonomy, parentKindId, ancestorKindIds, configurable?.[1].fileKindId, contentKindId);
   if (!resolvedKind.kind) {
@@ -3298,9 +3318,10 @@ function canonicalFile(
     return { path: parentCanonical ? `${parentCanonical}/${basename(path).normalize("NFC")}` : basename(path).normalize("NFC"), fileKind: null, stem: null, violations: [violation(resolvedKind.ambiguous.length > 1 ? "file-kind-ambiguous" : "file-kind-unresolved", path, message)] };
   }
   const sourceIdentity = splitLeadingEmojiIdentity(resolvedKind.stem);
-  if (sourceIdentity.sequence !== sourceIdentity.first && emojiFold(sourceIdentity.first) === emojiFold(resolvedKind.kind.emoji)) {
+  if (sourceIdentity.first) {
     const preserved = basename(path).normalize("NFC");
-    return { path: parentCanonical ? `${parentCanonical}/${preserved}` : preserved, fileKind: resolvedKind.kind.id, stem: sourceIdentity.rest || null, violations: [] };
+    const violations = pathEmojiStatuteFindings([{ path, nodeKind: "file" }], []).map((finding) => violation(`path-emoji-${finding.kind}`, path, "File emoji must be handpicked, singular, and correctly presented."));
+    return { path: parentCanonical ? `${parentCanonical}/${preserved}` : preserved, fileKind: resolvedKind.kind.id, stem: sourceIdentity.rest || null, violations };
   }
   const leadingSemantic = splitLeadingEmoji(resolvedKind.stem);
   const semanticEvidence = leadingSemantic.emoji || "";
@@ -3680,8 +3701,8 @@ interface MutationStructuralPath {
   readonly suffix: string;
 }
 
-const OLD_MUTATION_TEST_PREFIX_SOURCE = "🏅️standards/🔖️([^/\\s\"'`|]+)\\/🪆️subsets/✳️([^/\\s\"'`|]+)\\/🧬️schema/🧬️mutations\\/([^/\\s\"'`|]+)\\/🧪️tests\\/";
-const OLD_MUTATION_STRUCTURE_SOURCE = `${OLD_MUTATION_TEST_PREFIX_SOURCE}([^/\\s\"'\u0060|]+)(\\/[^\\s\"'\u0060|)>}\\]]+)?`;
+const MUTATION_SOURCE_TEST_PREFIX = "🏅️standards/🔖️([^/\\s\"'`|]+)\\/🪆️subsets/✳️([^/\\s\"'`|]+)\\/🧬️schema/🧬️mutations\\/([^/\\s\"'`|]+(?:/[^/\\s\"'`|]+)?)\\/🧪️tests\\/";
+const MUTATION_SOURCE_STRUCTURE = `${MUTATION_SOURCE_TEST_PREFIX}([^/\\s\"'\u0060|]+)(\\/[^\\s\"'\u0060|)>}\\]]+)?`;
 
 function artifactRootForPath(path: string): string | null {
   const segments = normalizeRelative(path).split("/");
@@ -3693,7 +3714,7 @@ function artifactRootForPath(path: string): string | null {
 
 function mutationStructuralPaths(content: string, fragmentStart = 0): readonly MutationStructuralPath[] {
   const rows: MutationStructuralPath[] = [];
-  const pattern = new RegExp(OLD_MUTATION_STRUCTURE_SOURCE, "gu");
+  const pattern = new RegExp(MUTATION_SOURCE_STRUCTURE, "gu");
   for (const match of content.matchAll(pattern)) {
     if (match.index === undefined) continue;
     rows.push({ value: match[0], start: fragmentStart + match.index, standard: match[1], subset: match[2], mutation: match[3], scenario: match[4], suffix: match[5] ?? "" });
@@ -5650,6 +5671,16 @@ function ancestorDirectoryKindIds(path: string, kinds: ReadonlyMap<string, strin
 }
 
 //#region 🧭️Artifact Mutation Projection
+function mutationDomainOwnerLocation(path: string, taxonomy: LoadedTaxonomy): { root: string; relativePath: string; identity: string } | null {
+  for (const root of Object.keys(taxonomy.discoverySchema.mutationDomainOwners)) {
+    if (!path.startsWith(`${root}/`)) continue;
+    const relativePath = path.slice(root.length + 1).split("/").slice(0, 2).join("/");
+    const identity = mutationOwnerIdentity(root, relativePath, taxonomy.discoverySchema);
+    if (identity !== null) return { root, relativePath, identity };
+  }
+  return null;
+}
+
 interface MutationProjectionSource {
   readonly artifactRoot: string;
   readonly artifactId: string;
@@ -5672,6 +5703,8 @@ interface MutationProjectionVector {
   readonly mutationDirectoryName: string;
   readonly scenarioId: string;
   readonly scenarioDirectoryName: string;
+  readonly catalogOwner?: string;
+  readonly catalogPath?: string;
 }
 
 function projectionDirectorySlug(name: string, kindId: string, taxonomy: LoadedTaxonomy): string | null {
@@ -5691,17 +5724,21 @@ function projectionSourceAt(
 ): MutationProjectionSource | null {
   const ids = taxonomy.schema.mutationCatalogProjection;
   const contract = taxonomy.schema.semanticPathProjectionContracts[ids.projectionContractId];
-  const segments = path.split("/");
+  const domainOwner = mutationDomainOwnerLocation(path, taxonomy);
+  if (!domainOwner && Object.keys(taxonomy.discoverySchema.mutationDomainOwners).some((root) => path.startsWith(`${root}/`))) return null;
+  const physicalSegments = path.split("/"), domainIndex = domainOwner ? domainOwner.root.split("/").length : null;
+  const segments = physicalSegments.filter((_segment, index) => index !== domainIndex);
+  const physicalPrefix = (length: number): string => physicalSegments.slice(0, length + (domainIndex !== null && length > domainIndex ? 1 : 0)).join("/");
   if (segments.length <= contract.sourceSegments.length) return null;
   const start = segments.length - contract.sourceSegments.length;
-  const artifactRoot = segments.slice(0, start).join("/");
+  const artifactRoot = physicalPrefix(start);
   const ownerRegistry = taxonomy.schema.semanticDirectoryMemberKinds[contract.sourceOwnerKindId];
   const ownerMatches = ownerRegistry.memberNames.filter((name) => emojiFold(name) === emojiFold(basename(artifactRoot)));
   if (ownerMatches.length !== 1 && !(scope && (artifactRoot === scope || artifactRoot.startsWith(`${scope}/`)))) return null;
   const captures = new Map<SemanticProjectionCaptureField, string>();
   for (let index = 0; index < contract.sourceSegments.length; index++) {
     const segment = contract.sourceSegments[index];
-    const currentPath = segments.slice(0, start + index + 1).join("/");
+    const currentPath = physicalPrefix(start + index + 1);
     const current = entries.get(currentPath);
     if (!current || current.nodeKind !== "directory") return null;
     const canonicalName = basename(current.normalizedPath);
@@ -5714,10 +5751,14 @@ function projectionSourceAt(
       const sourceName = basename(current.sourcePath).normalize("NFC");
       const slug = splitLeadingEmoji(sourceName).rest;
       if (!slug) return null;
-      captures.set(segment.capture, slug);
+      captures.set(segment.capture, domainOwner?.identity ?? slug);
       continue;
     }
     const sourceName = basename(current.sourcePath).normalize("NFC");
+    if (segment.capture === "scenarioId" && pathEmojiStatuteFindings([{ path: sourceName, nodeKind: "directory" }], taxonomy.discoverySchema.pathEmojiPolicy.genericEmojiIdentities).length === 0 && new RegExp(taxonomy.schema.semanticDirectoryKinds[segment.kindId].slugPattern, "u").test(splitLeadingEmoji(sourceName).rest)) {
+      captures.set(segment.capture, splitLeadingEmoji(sourceName).rest);
+      continue;
+    }
     const contextualUnprefixed = segment.capture === "scenarioId" && !splitLeadingEmoji(sourceName).emoji && new RegExp(taxonomy.schema.semanticDirectoryKinds[segment.kindId].slugPattern, "u").test(sourceName);
     if (kinds.get(currentPath) !== segment.kindId && !contextualUnprefixed) return null;
     const slug = contextualUnprefixed ? sourceName : projectionDirectorySlug(canonicalName, segment.kindId, taxonomy);
@@ -5729,7 +5770,7 @@ function projectionSourceAt(
   const mutationId = captures.get("mutationId");
   const sourceScenarioId = captures.get("scenarioId");
   if (!standardVersion || !subsetId || !mutationId || !sourceScenarioId) return null;
-  const source = contract.sourceSegments.map((_segment, index) => segments.slice(0, start + index + 1).join("/"));
+  const source = contract.sourceSegments.map((_segment, index) => physicalPrefix(start + index + 1));
   return {
     artifactRoot,
     artifactId: splitLeadingEmoji(basename(artifactRoot)).rest || basename(artifactRoot),
@@ -5793,10 +5834,23 @@ function projectionCatalogVectors(path: string, source: Pick<MutationProjectionS
   return { vectors: vectors.sort((left, right) => left.sourceMutationDirectoryName.localeCompare(right.sourceMutationDirectoryName) || left.scenarioDirectoryName.localeCompare(right.scenarioDirectoryName)) };
 }
 
-function projectionCatalogEntryForSubset(entries: ReadonlyMap<string, MutableInventoryEntry>, subsetRoot: string): MutableInventoryEntry | null {
-  const oracleRoot = `${subsetRoot}/🧪️oracle`;
+function projectionCatalogEntryForSubset(entries: ReadonlyMap<string, MutableInventoryEntry>, subsetRoot: string, taxonomy: LoadedTaxonomy): MutableInventoryEntry | null {
+  const oracleRoot = `${subsetRoot}/${taxonomy.discoverySchema.testContributionDirectoryOverrides[subsetRoot] ?? "🔮️oracle"}`;
   const candidates = [...entries.values()].filter((entry) => entry.nodeKind === "file" && entry.fileKind === "json" && dirname(entry.sourcePath) === oracleRoot && basename(entry.normalizedPath) === "🔣️.json");
   return candidates.length === 1 ? candidates[0] : null;
+}
+
+function projectionCatalogsForMutationSource(repoRoot: string, entries: ReadonlyMap<string, MutableInventoryEntry>, sourceOwner: string, taxonomy: LoadedTaxonomy): { owner: string; path: string; entry: MutableInventoryEntry | null; vectors: readonly MutationProjectionVector[]; error?: string }[] {
+  const problems = mutationCatalogSourceOwnersProblems(taxonomy.discoverySchema);
+  if (problems.length > 0) throw new Error(problems.join("\n"));
+  const owners = [sourceOwner, ...Object.entries(taxonomy.discoverySchema.mutationCatalogSourceOwners).filter(([, source]) => source === sourceOwner).map(([owner]) => owner)];
+  return owners.map((owner) => {
+    const entry = projectionCatalogEntryForSubset(entries, owner, taxonomy);
+    const path = entry?.sourcePath ?? `${owner}/${taxonomy.discoverySchema.testContributionDirectoryOverrides[owner] ?? "🔮️oracle"}/🔣️.json`;
+    const profile = { standardDirectoryName: owner.split("/").at(-3)!, subsetDirectoryName: basename(owner) };
+    const catalog = entry ? projectionCatalogVectors(absolutePath(repoRoot, path), profile) : { vectors: [], error: `catalog is missing at ${path}` };
+    return { owner, path, entry, ...catalog, vectors: catalog.vectors.map((vector) => ({ ...vector, catalogOwner: owner, catalogPath: path })) };
+  });
 }
 
 function mutationDescendantContract(taxonomy: LoadedTaxonomy): SemanticKindDescendantContract {
@@ -5820,6 +5874,15 @@ function canonicalProjectedMemberName(name: string, taxonomy: LoadedTaxonomy): s
   const sourceKind = taxonomy.schema.semanticProjectedMemberKinds[ids.projectedMemberKindId].sourceMemberKindId;
   const matches = taxonomy.schema.semanticDirectoryMemberKinds[sourceKind].memberNames.filter((candidate) => emojiFold(candidate) === emojiFold(name.normalize("NFC")));
   return matches.length === 1 ? matches[0] : null;
+}
+
+function canonicalProjectedMutationOwner(name: string, identity: string, subsetRoot: string, taxonomy: LoadedTaxonomy): string | null {
+  const sourceOwner = mutationCatalogSourceOwner(subsetRoot, taxonomy.discoverySchema);
+  if (sourceOwner === null) return null;
+  const root = `${sourceOwner}/🧬️schema/🧬️mutations`;
+  if (!Object.hasOwn(taxonomy.discoverySchema.mutationDomainOwners, root)) return canonicalProjectedMemberName(name, taxonomy);
+  const owner = mutationOwnerRelativePath(root, identity, taxonomy.discoverySchema);
+  return owner && basename(owner) === name ? owner : null;
 }
 
 function projectionBundleProblem(source: MutationProjectionSource, entries: ReadonlyMap<string, MutableInventoryEntry>, kinds: ReadonlyMap<string, string>, contract: SemanticDescendantContract, taxonomy: LoadedTaxonomy): string | null {
@@ -5860,7 +5923,17 @@ function mutationProjectionRationale(sourcePath: string, destinationPath: string
   const artifactRoot = artifactRootForPath(sourcePath);
   if (!artifactRoot) return null;
   const relativeDestination = destinationPath.startsWith(`${artifactRoot}/`) ? destinationPath.slice(artifactRoot.length + 1).split("/") : [];
-  if (structural && relativeDestination[0] === "🧪️tests" && relativeDestination[1] === `🪆️${structural.standard}-${structural.subset}` && canonicalProjectedMemberName(relativeDestination[2] ?? "", taxonomy) === relativeDestination[2] && emojiFold(splitLeadingEmoji(relativeDestination[3] ?? "").emoji) === emojiFold(taxonomy.schema.semanticDirectoryKinds[taxonomy.schema.semanticDescendantContracts[taxonomy.schema.mutationCatalogProjection.descendantContractId].rootDirectoryKindId].emoji)) return "artifact-mutation-test-projection-v1";
+  if (structural && relativeDestination[0] === "🧪️tests") {
+    const sourceOwner = `${artifactRoot}/🏅️standards/🔖️${structural.standard}/🪆️subsets/✳️${structural.subset}`;
+    const catalogOwners = [sourceOwner, ...Object.entries(taxonomy.discoverySchema.mutationCatalogSourceOwners).filter(([, source]) => source === sourceOwner).map(([owner]) => owner)];
+    const admittedProfile = catalogOwners.some((owner) => mutationCatalogSourceOwner(owner, taxonomy.discoverySchema) === sourceOwner && relativeDestination[1] === `🪆️${structural.standard}-${splitLeadingEmoji(basename(owner)).rest}`);
+    const root = `${sourceOwner}/🧬️schema/🧬️mutations`;
+    const registered = Object.hasOwn(taxonomy.discoverySchema.mutationDomainOwners, root), depth = registered ? 2 : 1;
+    const owner = relativeDestination.slice(2, 2 + depth).join("/"), scenario = relativeDestination[2 + depth] ?? "";
+    const identity = mutationOwnerIdentity(root, structural.mutation, taxonomy.discoverySchema);
+    const validOwner = registered ? identity !== null && mutationOwnerRelativePath(root, identity, taxonomy.discoverySchema) === owner : !structural.mutation.includes("/") && canonicalProjectedMemberName(owner, taxonomy) === owner;
+    if (admittedProfile && validOwner && /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(splitLeadingEmoji(scenario).rest) && pathEmojiStatuteFindings([{ path: scenario, nodeKind: "directory" }], taxonomy.discoverySchema.pathEmojiPolicy.genericEmojiIdentities).length === 0) return "artifact-mutation-test-projection-v1";
+  }
   const relativeSource = sourcePath.slice(artifactRoot.length + 1).split("/");
   const prefix = ["🏅️standards", relativeSource[1], "🪆️subsets", relativeSource[3], "🧬️schema", "🧬️mutations"];
   if (relativeSource.length > 7 && prefix.every((segment, index) => relativeSource[index] === segment) && prefix.every((segment, index) => relativeDestination[index] === segment) && relativeSource[6] !== relativeDestination[6] && canonicalProjectedMemberName(relativeDestination[6] ?? "", taxonomy) === relativeDestination[6]) return "artifact-mutation-source-canonicalization-v1";
@@ -5890,38 +5963,45 @@ function projectMutationTestBundles(
     profileOwners.set(key, owners);
   }
   for (const [subsetRoot, subsetSources] of [...bySubset.entries()].sort(([left], [right]) => left.localeCompare(right))) {
-    const catalogEntry = projectionCatalogEntryForSubset(entries, subsetRoot);
-    const catalogPath = catalogEntry?.sourcePath ?? `${subsetRoot}/🔣️oracle.json`;
-    const catalog = catalogEntry?.nodeKind === "file" ? projectionCatalogVectors(absolutePath(repoRoot, catalogPath), subsetSources[0]) : { vectors: [] as readonly MutationProjectionVector[], error: `catalog is missing at ${catalogPath}` };
-    if (catalog.error) {
-      for (const source of subsetSources) entries.get(source.scenarioRoot)?.violations.push(violation("projection-catalog-invalid", catalogPath, catalog.error));
+    const catalogs = projectionCatalogsForMutationSource(repoRoot, entries, subsetRoot, taxonomy);
+    const invalid = catalogs.filter((catalog) => catalog.error);
+    if (invalid.length > 0) {
+      for (const source of subsetSources) for (const catalog of invalid) entries.get(source.scenarioRoot)?.violations.push(violation("projection-catalog-invalid", catalog.path, catalog.error!));
       continue;
+    }
+    const catalog = { vectors: catalogs.flatMap((entry) => entry.vectors) };
+    for (const owner of catalogs) {
+      const subsetId = splitLeadingEmoji(basename(owner.owner)).rest;
+      const profile = renderer.template.replace("{standardVersion}", subsetSources[0]!.standardVersion).replace("{subsetId}", subsetId);
+      const key = `${subsetSources[0]!.artifactRoot}\u0000${emojiFold(profile).toLocaleLowerCase("und")}`;
+      const owners = profileOwners.get(key) ?? new Set<string>();
+      owners.add(`${subsetSources[0]!.artifactId}\u0000${subsetSources[0]!.standardVersion}\u0000${subsetId}`);
+      profileOwners.set(key, owners);
     }
     const vectorsByMutation = new Map<string, MutationProjectionVector[]>();
     for (const vector of catalog.vectors) {
-      const key = vector.sourceMutationDirectoryName;
+      const key = vector.mutationId;
       vectorsByMutation.set(key, [...(vectorsByMutation.get(key) ?? []), vector]);
     }
     const sourcesByMutation = new Map<string, MutationProjectionSource[]>();
     for (const source of subsetSources) {
-      const key = source.mutationDirectoryName.normalize("NFC");
+      const key = source.mutationId;
       sourcesByMutation.set(key, [...(sourcesByMutation.get(key) ?? []), source]);
     }
     const consumed = new Set<string>();
     const canonicalizedMutationRoots = new Set<string>();
     for (const [mutationKey, mutationSources] of sourcesByMutation) {
       const vectors = vectorsByMutation.get(mutationKey) ?? [];
-      const canonicalNames = [...new Set(vectors.map((vector) => canonicalProjectedMemberName(vector.mutationDirectoryName, taxonomy)).filter((name): name is string => name !== null))];
+      const canonicalNames = [...new Set(vectors.map((vector) => canonicalProjectedMutationOwner(vector.mutationDirectoryName, vector.mutationId, subsetRoot, taxonomy)).filter((name): name is string => name !== null))];
       const mutationName = canonicalNames.length === 1 ? canonicalNames[0] : null;
-      if (!mutationName || vectors.some((vector) => vector.sourceMutationDirectoryName !== mutationKey || vector.mutationDirectoryName !== mutationName)) {
+      if (!mutationName || vectors.some((vector) => vector.mutationDirectoryName !== basename(mutationName) || mutationSources.some((source) => source.mutationDirectoryName !== vector.sourceMutationDirectoryName))) {
         for (const source of mutationSources) entries.get(source.scenarioRoot)?.violations.push(violation("projection-member-unresolved", source.mutationRoot, `Mutation member ${source.mutationDirectoryName} has no unique canonical registry identity`));
         continue;
       }
       const exact = new Map(vectors.map((vector) => [vector.scenarioDirectoryName, vector]));
       const assignments = new Map<MutationProjectionSource, MutationProjectionVector>();
       for (const source of mutationSources) {
-        const canonicalSourceName = `${taxonomy.schema.semanticDirectoryKinds[descendant.rootDirectoryKindId].emoji}${source.sourceScenarioId}`.normalize("NFC");
-        const vector = exact.get(canonicalSourceName);
+        const vector = exact.get(source.sourceScenarioDirectoryName);
         if (vector) assignments.set(source, vector);
       }
       const unmatchedSources = mutationSources.filter((source) => !assignments.has(source));
@@ -5943,7 +6023,8 @@ function projectMutationTestBundles(
           entries.get(source.scenarioRoot)?.violations.push(violation("projection-bundle-invalid", source.scenarioRoot, problem));
           continue;
         }
-        const profile = renderer.template.replace("{standardVersion}", source.standardVersion).replace("{subsetId}", source.subsetId).normalize("NFC");
+        const subsetId = vector.catalogOwner ? splitLeadingEmoji(basename(vector.catalogOwner)).rest : source.subsetId;
+        const profile = renderer.template.replace("{standardVersion}", source.standardVersion).replace("{subsetId}", subsetId).normalize("NFC");
         const profileKey = `${source.artifactRoot}\u0000${emojiFold(profile).toLocaleLowerCase("und")}`;
         if ((profileOwners.get(profileKey)?.size ?? 0) !== 1) {
           entries.get(source.scenarioRoot)?.violations.push(violation("projection-profile-collision", source.scenarioRoot, `Profile ${profile} is not a unique standard/subset rendering`));
@@ -5974,7 +6055,7 @@ function projectMutationTestBundles(
           const testsRoot = dirname(source.scenarioRoot);
           if (mutation) {
             const initialMutationRoot = mutation.normalizedPath;
-            const canonicalMutationRoot = `${dirname(source.mutationRoot)}/${mutationName}`.normalize("NFC");
+            const canonicalMutationRoot = `${subsetRoot}/🧬️schema/🧬️mutations/${mutationName}`.normalize("NFC");
             const mutationEntries = [...entries.values()].filter((entry) => entry.sourcePath === source.mutationRoot || entry.sourcePath.startsWith(`${source.mutationRoot}/`)).filter((entry) => entry.sourcePath !== testsRoot && !entry.sourcePath.startsWith(`${testsRoot}/`));
             mutation.violations = mutation.violations.filter((row) => row.code !== "directory-kind-unresolved");
             for (const entry of mutationEntries) {
@@ -5988,7 +6069,7 @@ function projectMutationTestBundles(
     }
     for (const vector of catalog.vectors) {
       const key = `${vector.mutationId}\u0000${vector.sourceMutationDirectoryName}\u0000${vector.scenarioId}`;
-      if (!consumed.has(key)) catalogEntry?.violations.push(violation("projection-catalog-unrealized", catalogPath, `Registered vector ${key.replaceAll("\u0000", "/")} has no physical bundle`));
+      if (!consumed.has(key) && vector.catalogPath) entries.get(vector.catalogPath)?.violations.push(violation("projection-catalog-unrealized", vector.catalogPath, `Registered vector ${key.replaceAll("\u0000", "/")} has no physical bundle`));
     }
   }
 }
@@ -6005,7 +6086,8 @@ function validateProjectedMutationTestBundles(
   const descendant = mutationDescendantContract(taxonomy);
   const renderer = taxonomy.schema.semanticPathProjectionProfileRenderers[projection.profileRendererId];
   const expected = new Set<string>();
-  const catalogs = [...entries.values()].filter((entry) => entry.nodeKind === "file" && entry.fileKind === "json" && basename(dirname(entry.sourcePath)) === "🧪️oracle" && basename(entry.normalizedPath) === "🔣️.json").sort((left, right) => left.sourcePath.localeCompare(right.sourcePath));
+  const profileDepths = new Map<string, number>();
+  const catalogs = [...entries.values()].filter((entry) => entry.nodeKind === "file" && entry.fileKind === "json" && basename(dirname(entry.sourcePath)) === (taxonomy.discoverySchema.testContributionDirectoryOverrides[dirname(dirname(entry.sourcePath))] ?? "🔮️oracle") && basename(entry.normalizedPath) === "🔣️.json").sort((left, right) => left.sourcePath.localeCompare(right.sourcePath));
   for (const catalogEntry of catalogs) {
     const subsetRoot = dirname(dirname(catalogEntry.sourcePath));
     const segments = subsetRoot.split("/");
@@ -6025,13 +6107,20 @@ function validateProjectedMutationTestBundles(
       continue;
     }
     const profile = renderer.template.replace("{standardVersion}", standardVersion).replace("{subsetId}", subsetId).normalize("NFC");
+    const sourceOwner = mutationCatalogSourceOwner(subsetRoot, taxonomy.discoverySchema);
+    if (sourceOwner === null) {
+      catalogEntry.violations.push(violation("projection-catalog-invalid", catalogEntry.sourcePath, "Catalog source ownership is invalid"));
+      continue;
+    }
+    profileDepths.set(`${artifactRoot}/🧪️tests/${profile}`, Object.hasOwn(taxonomy.discoverySchema.mutationDomainOwners, `${sourceOwner}/🧬️schema/🧬️mutations`) ? 3 : 2);
     for (const vector of catalog.vectors) {
-      const mutationDirectoryName = canonicalProjectedMemberName(vector.mutationDirectoryName, taxonomy);
-      if (!mutationDirectoryName) {
+      const ownerRelativePath = canonicalProjectedMutationOwner(vector.mutationDirectoryName, vector.mutationId, subsetRoot, taxonomy);
+      if (!ownerRelativePath) {
         catalogEntry.violations.push(violation("projection-member-unresolved", catalogEntry.sourcePath, `Mutation member ${vector.mutationDirectoryName} has no unique canonical registry identity`));
         continue;
       }
-      const mutationRoot = `${artifactRoot}/🧪️tests/${profile}/${mutationDirectoryName}`;
+      const mutationDirectoryName = basename(ownerRelativePath);
+      const mutationRoot = `${artifactRoot}/🧪️tests/${profile}/${ownerRelativePath}`;
       const scenarioRoot = `${mutationRoot}/${vector.scenarioDirectoryName}`;
       expected.add(scenarioRoot);
       const root = entries.get(scenarioRoot);
@@ -6058,11 +6147,7 @@ function validateProjectedMutationTestBundles(
   }
   for (const entry of entries.values()) {
     if (entry.nodeKind !== "directory" || expected.has(entry.sourcePath)) continue;
-    const segments = entry.sourcePath.split("/");
-    if (segments.length < 4) continue;
-    const profilePath = segments.slice(0, -2).join("/");
-    const testsPath = dirname(profilePath);
-    if (kinds.get(profilePath) === renderer.directoryKindId && basename(testsPath) === "🧪️tests") entry.violations.push(violation("projection-destination-unregistered", entry.sourcePath, "Projected scenario has no exact catalog vector identity"));
+    if ([...profileDepths].some(([profile, depth]) => entry.sourcePath.startsWith(`${profile}/`) && entry.sourcePath.slice(profile.length + 1).split("/").length === depth)) entry.violations.push(violation("projection-destination-unregistered", entry.sourcePath, "Projected scenario has no exact catalog vector identity"));
   }
 }
 //#endregion 🧭️Artifact Mutation Projection
@@ -6391,6 +6476,10 @@ function projectExactOwnedFiles(repoRoot: string, entries: Map<string, MutableIn
   for (const entry of entries.values()) {
     const owner = governed.get(entry.sourcePath);
     if (!owner || entry.nodeKind === "directory") continue;
+    if (reservedDocumentationBasename(basename(entry.sourcePath))) {
+      entry.normalizedPath = entry.sourcePath;
+      continue;
+    }
     let problems: readonly string[] = [], disposition = "problem";
     try {
       const { result } = exactOwnedFileResolution(repoRoot, entry, snapshot, taxonomy);
@@ -6560,54 +6649,54 @@ function validateTicketImportantDirectories(repoRoot: string, entries: Map<strin
 }
 //#endregion 📌️Ticket Important Projection
 
-//#region 🧬️Mutation Payload Schema Projection
-function mutationPayloadSchemaOwner(path: string, taxonomy: LoadedTaxonomy): string | null {
-  const contract = taxonomy.discoverySchema.mutationPayloadSchemaProjection, owner = dirname(path);
-  return basename(path) === contract.sourceFilename && taxonomy.pathMatcher.matches(owner, contract.ownerPathPattern) && new RegExp(taxonomy.discoverySchema.mutationDirectoryPattern, "u").test(basename(owner)) ? owner : null;
-}
-
-/** 🪲️ The source is correctly classified `json-schema` (its own `.schema.json` chain outranks `.json`)
- * while the destination is deliberately the coarser `json` kind — `🧬️schema` already carries that
- * semantics. Only `nodeKind` is checked here; JSON/dialect/descriptor shape is proven further below. */
-function projectMutationPayloadSchemas(repoRoot: string, entries: Map<string, MutableInventoryEntry>, taxonomy: LoadedTaxonomy): void {
-  const contract = taxonomy.discoverySchema.mutationPayloadSchemaProjection;
-  const descriptorKind = taxonomy.discoverySchema.fileKinds[taxonomy.discoverySchema.mutationDescriptorFileKindId]!;
+//#region 🧬️Mutation Payload Schema Authority
+/** 🪢️ Validates each descriptor's authored schema pointer without relocating its payload file. */
+function validateMutationPayloadSchemas(repoRoot: string, entries: Map<string, MutableInventoryEntry>, taxonomy: LoadedTaxonomy): void {
+  const contract = taxonomy.discoverySchema.mutationPayloadSchemaAuthority;
+  const descriptorKind = taxonomy.discoverySchema.fileKinds[contract.descriptorFileKindId]!;
   const descriptorFilename = `${descriptorKind.emoji}${descriptorKind.extensionChains[0]}`;
+  const owners = new Map<string, { identity: string; children: MutableInventoryEntry[] }>();
   for (const entry of entries.values()) {
-    const owner = mutationPayloadSchemaOwner(entry.sourcePath, taxonomy);
-    if (!owner) continue;
+    const owner = entry.nodeKind === "directory" ? entry.sourcePath : dirname(entry.sourcePath), marker = owner.lastIndexOf("/🧬️mutations/");
+    if (marker < 0) continue;
+    const root = owner.slice(0, marker + "/🧬️mutations".length), identity = mutationOwnerIdentity(root, owner.slice(root.length + 1), taxonomy.discoverySchema);
+    if (identity === null) continue;
+    const state = owners.get(owner) ?? { identity, children: [] };
+    state.children.push(entry);
+    owners.set(owner, state);
+  }
+  for (const [owner, { identity, children }] of owners) {
+    const descriptorPath = `${owner}/${descriptorFilename}`, descriptorEntry = entries.get(descriptorPath);
+    const entry = descriptorEntry ?? entries.get(owner) ?? children[0]!;
     try {
-      if (entry.nodeKind !== "file") throw new Error("Payload schema must be a regular JSON leaf");
-      const descriptors = [contract.descriptorSourceFilename, descriptorFilename].map((name) => entries.get(`${owner}/${name}`)).filter((candidate) => candidate !== undefined);
-      if (descriptors.length === 0) continue;
-      if (descriptors.length !== 1 || descriptors[0]!.nodeKind !== "file") throw new Error("Payload schema requires exactly one admitted regular owner descriptor");
+      if (descriptorEntry?.nodeKind !== "file") throw new Error("Mutation owner requires one canonical regular-file descriptor");
       const content = (path: string): string => {
         const bytes = readFileSync(assertLexicalInputOutsideOpaque(repoRoot, path, "Mutation payload authority", true)), value = bytes.toString("utf8");
         if (!Buffer.from(value, "utf8").equals(bytes)) throw new Error("Payload authority must be exact UTF-8");
-        record(JSON.parse(value), "Mutation payload authority");
         return value;
       };
-      const descriptorContent = content(descriptors[0]!.sourcePath), descriptorDocument = JSON.parse(descriptorContent) as Record<string, unknown>;
-      if (!Object.hasOwn(descriptorDocument, contract.descriptorField)) continue;
-      const descriptor = jsonStringCoordinates(descriptorContent);
-      const schema = jsonStringCoordinates(content(entry.sourcePath));
-      if (descriptorDocument.schemaVersion !== contract.descriptorSchemaVersion || descriptor.find((row) => row.pointer === `/${contract.descriptorOwnerField}`)?.value !== owner || descriptor.find((row) => row.pointer === `/${contract.descriptorIdentityField}`)?.value !== splitLeadingEmoji(basename(owner)).rest) throw new Error("Descriptor version and semantic identity must belong to the exact source owner");
-      if (descriptor.find((row) => row.pointer === `/${contract.descriptorField}`)?.value !== contract.sourceFilename) throw new Error("Owner descriptor does not point to the exact payload source");
-      if (schema.find((row) => row.pointer === "/$schema")?.value !== contract.jsonSchemaDialect) throw new Error("Payload source lacks its declared JSON Schema dialect");
-      const destination = `${entries.get(owner)?.normalizedPath ?? owner}/${mutationPayloadSchemaRelativePath(taxonomy.discoverySchema)}`;
-      entry.violations = entry.violations.filter((problem) => problem.code !== "semantic-stem-unresolved");
-      setProjectedPath(entry, destination, taxonomy, "parent-rebase");
+      for (const child of children) {
+        if (child.nodeKind !== "file" || child.sourcePath === descriptorPath || !child.sourcePath.endsWith(".json")) continue;
+        let other: unknown;
+        try { other = JSON.parse(content(child.sourcePath)); } catch { continue; }
+        if (other !== null && typeof other === "object" && !Array.isArray(other) && ["schemaVersion", contract.descriptorOwnerField, contract.descriptorIdentityField, contract.descriptorField].every((field) => Object.hasOwn(other, field))) throw new Error("Mutation owner contains a competing descriptor");
+      }
+      const descriptorContent = content(descriptorPath), descriptor = record(JSON.parse(descriptorContent), "Mutation payload descriptor"), pointer = descriptor[contract.descriptorField];
+      if (!(Array.isArray(descriptor.requiredLanguageSurfaces) && descriptor.requiredLanguageSurfaces.includes("json-schema")) && !(typeof pointer === "string" && pointer.endsWith(".json"))) continue;
+      if (jsonDocumentDuplicateKeys(descriptorContent).length > 0) throw new Error("Mutation payload descriptor has duplicate JSON members");
+      if (descriptor.schemaVersion !== contract.descriptorSchemaVersion || descriptor[contract.descriptorOwnerField] !== owner || descriptor[contract.descriptorIdentityField] !== identity) throw new Error("Descriptor version and semantic identity must belong to the exact source owner");
+      const problems = mutationPayloadSchemaProblems(owner, pointer, (path) => {
+        const source = entries.get(path);
+        return { kind: source?.nodeKind ?? "absent", ...(source?.nodeKind === "file" ? { content: content(path) } : {}), repositoryBoundary: isExcluded(path, taxonomy) };
+      }, contract.jsonSchemaDialect);
+      if (problems.length > 0) throw new Error(problems.join("; "));
     } catch (error) {
       entry.violations.push(violation("mutation-payload-schema-authority-invalid", entry.sourcePath, error instanceof Error ? error.message : String(error)));
     }
   }
 }
 
-function mutationPayloadSchemaProjectionRationale(entry: TaxonomyInventoryEntry, entries: readonly TaxonomyInventoryEntry[], taxonomy: LoadedTaxonomy): string | null {
-  const owner = mutationPayloadSchemaOwner(entry.sourcePath, taxonomy);
-  return owner && entry.normalizedPath === `${projectedPath(owner, entries)}/${mutationPayloadSchemaRelativePath(taxonomy.discoverySchema)}` ? taxonomy.discoverySchema.mutationPayloadSchemaProjection.rationaleRule : null;
-}
-//#endregion 🧬️Mutation Payload Schema Projection
+//#endregion 🧬️Mutation Payload Schema Authority
 
 /** 🧱️ Inventories Git-index paths and explicitly admitted ticket paths without traversing opaque exclusions or following symlinks. */
 export function inventoryTaxonomy(options: TaxonomyInventoryOptions): TaxonomyInventory {
@@ -6761,7 +6850,7 @@ function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOpti
   projectTicketImportantFiles(repoRoot, entries, fixedDirectoryContractByPath, taxonomy);
   validateTicketImportantDirectories(repoRoot, entries, directoryKindByPath, fixedDirectoryContractByPath);
   projectMutationTestBundles(repoRoot, scope, entries, directoryKindByPath, taxonomy);
-  projectMutationPayloadSchemas(repoRoot, entries, taxonomy);
+  validateMutationPayloadSchemas(repoRoot, entries, taxonomy);
   validateProjectedMutationTestBundles(repoRoot, scope, entries, directoryKindByPath, taxonomy);
   projectArtifactCatalogs(repoRoot, entries, taxonomy);
   projectNestedCargoPackages(repoRoot, entries, taxonomy, prunableSourceParents);
@@ -6901,6 +6990,39 @@ function generatorTreeInventory(repoRoot: string, roots: readonly string[], taxo
 }
 
 /** 📇️ Selects schema-owned generator inputs through physical or logical preimage membership. */
+function compilerInputManifestRows(value: unknown, authority: NonNullable<GeneratorContractSpec["compilerInputManifest"]>, label: string): readonly Readonly<{ path: string; bytes: number; sha256: string }>[] {
+  const manifest = record(value, label);
+  if (Object.keys(manifest).sort().join("|") !== "contractId|inputs|layoutSha256|outputs|version" || manifest.version !== 1 || typeof manifest.contractId !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(manifest.contractId) || typeof manifest.layoutSha256 !== "string" || !/^[a-f0-9]{64}$/u.test(manifest.layoutSha256) || !Array.isArray(manifest.outputs) || !Array.isArray(manifest.inputs) || manifest.inputs.length < 1 || manifest.inputs.length > authority.maxFiles) throw new Error(`${label} is not one bounded compiler input manifest`);
+  const seen = new Set<string>();
+  const rows = manifest.inputs.map((value, index) => {
+    const row = record(value, `${label}.inputs[${index}]`);
+    if (Object.keys(row).sort().join("|") !== "bytes|path|sha256" || typeof row.path !== "string" || row.path !== normalizeRelative(row.path) || !Number.isSafeInteger(row.bytes) || row.bytes < 0 || typeof row.sha256 !== "string" || !/^[a-f0-9]{64}$/u.test(row.sha256) || seen.has(row.path)) throw new Error(`${label} contains an invalid compiler input witness`);
+    seen.add(row.path);
+    return { path: row.path, bytes: row.bytes as number, sha256: row.sha256 };
+  });
+  if (rows.some((row, index) => index > 0 && generatorPathCompare(rows[index - 1]!.path, row.path) > 0)) throw new Error(`${label} compiler inputs are not path-sorted`);
+  return rows;
+}
+
+function compilerInputRecords(repoRoot: string, contract: GeneratorContractSpec, taxonomy: LoadedTaxonomy, manifest: unknown, label: string): readonly TaxonomyGeneratorNodeRecord[] {
+  const authority = contract.compilerInputManifest;
+  if (!authority) return [];
+  return compilerInputManifestRows(manifest, authority, label).map(row => {
+    if (isExcluded(row.path, taxonomy) || contract.outputRoots.some(root => row.path === root.path || row.path.startsWith(`${root.path}/`))) throw new Error(`${label} owns an opaque or self-produced compiler input: ${row.path}`);
+    const node = generatorNodeRecord(repoRoot, row.path, taxonomy);
+    if (node.nodeKind !== "file" || node.size !== row.bytes || node.contentHash !== row.sha256) throw new Error(`${label} compiler input bytes differ: ${row.path}`);
+    return node;
+  });
+}
+
+function compilerPreviewInputRecords(repoRoot: string, contract: GeneratorContractSpec, taxonomy: LoadedTaxonomy, preview: TaxonomyGeneratorPreviewManifest): readonly TaxonomyGeneratorNodeRecord[] {
+  const authority = contract.compilerInputManifest;
+  if (!authority) return [];
+  const node = preview.nodes.find(node => node.path === authority.manifestOutputPath);
+  if (!node || node.nodeKind !== "file") throw new Error(`Compiler preview lacks its declared input manifest: ${authority.manifestOutputPath}`);
+  return compilerInputRecords(repoRoot, contract, taxonomy, JSON.parse(Buffer.from(node.bytesBase64, "base64").toString("utf8")), "Compiler preview manifest");
+}
+
 export function generatorInputPaths(inventory: Pick<TaxonomyInventory, "repoRoot">, contract: GeneratorContractSpec, taxonomy: LoadedTaxonomy, cancelFile?: string, view?: RegistryCatalogInputView): readonly string[] {
   const paths = new Set<string>();
   const inputView = view ?? registryCatalogInputView(inventory.repoRoot, taxonomy.discoverySchema);
@@ -6947,6 +7069,12 @@ export function generatorInputPaths(inventory: Pick<TaxonomyInventory, "repoRoot
       if (taxonomy.pathMatcher.matches(candidate, pattern)) paths.add(candidate);
     }
   }
+  if (contract.compilerInputManifest) {
+    const manifestPath = absolutePath(inventory.repoRoot, contract.compilerInputManifest.manifestOutputPath), node = lstatOrNull(manifestPath);
+    if (node?.isSymbolicLink()) throw new Error(`Compiler input manifest is a symlink: ${contract.compilerInputManifest.manifestOutputPath}`);
+    if (node?.isFile()) for (const row of compilerInputRecords(inventory.repoRoot, contract, taxonomy, JSON.parse(readFileSync(manifestPath, "utf8")), "Current compiler input manifest")) paths.add(row.path);
+    else if (node !== null) throw new Error(`Compiler input manifest is not a regular file: ${contract.compilerInputManifest.manifestOutputPath}`);
+  }
   return [...paths].filter((path) => !isExcluded(path, taxonomy) && !contract.outputRoots.some((output) => path === output.path || path.startsWith(output.path + "/"))).sort(generatorPathCompare).filter((path) => {
     checkCancellation(inventory.repoRoot, cancelFile);
     const kind = inputView.kind(path);
@@ -6986,13 +7114,14 @@ function generatorPreviewProjection(contractId: GeneratorInputProjection["contra
 
 function invokeGeneratorPreview(inventory: TaxonomyInventory, id: string, contract: GeneratorContractSpec, taxonomy: LoadedTaxonomy, projection?: GeneratorInputProjection, cancelFile?: string): { readonly manifest: TaxonomyGeneratorPreviewManifest; readonly digest: string } {
   if (!contract.ownerPath || !contract.previewTarget) throw new Error(`Owned generator ${id} has no preview target`);
-  assertGeneratorPreviewTarget(inventory.repoRoot, contract.ownerPath, contract.previewTarget);
+  assertGeneratorPreviewTarget(inventory.repoRoot, contract);
   checkCancellation(inventory.repoRoot, cancelFile);
   const protocol = contract.inputDiscovery?.previewInput ?? contract.packageGeneration?.previewInput;
   const input = projection ? canonicalJson(projection) + "\n" : undefined;
   if (input && (!protocol || Buffer.byteLength(input) > protocol.maxBytes)) throw new Error(`Generator ${id} projected input exceeds its declared byte limit`);
   const cancellationPath = cancelFile ? assertLexicalInputOutsideOpaque(inventory.repoRoot, cancelFile, "Generator preview cancellation", true) : "";
-  const result = spawnSync("bun", ["./📜️script.ts", "preview-generated"], { cwd: absolutePath(inventory.repoRoot, contract.ownerPath), encoding: "utf8", input, maxBuffer: 128 * 1024 * 1024, timeout: 60_000, env: { ...process.env, REPO_ROOT: inventory.repoRoot, SEMIO_GENERATOR_PREVIEW_PROTOCOL: projection ? protocol!.protocol : "", SEMIO_GENERATOR_PREVIEW_CANCEL_FILE: cancellationPath } });
+  const limits = generatorPreviewResourceLimits(contract);
+  const result = spawnSync("bun", ["./📜️script.ts", ...generatorPreviewScriptArguments(contract)], { cwd: absolutePath(inventory.repoRoot, contract.ownerPath), encoding: "utf8", input, maxBuffer: limits.maxOutputBytes, timeout: limits.timeoutMs, env: { ...process.env, REPO_ROOT: inventory.repoRoot, SEMIO_GENERATOR_PREVIEW: "1", SEMIO_GENERATOR_PREVIEW_PROTOCOL: projection ? protocol!.protocol : "", SEMIO_GENERATOR_PREVIEW_CANCEL_FILE: cancellationPath } });
   checkCancellation(inventory.repoRoot, cancelFile);
   const stdout = result.stdout ?? "", stderr = result.stderr ?? "";
   if (result.error || result.status !== 0 || result.signal !== null || stderr !== "") throw new Error(`Generator preview command failed for ${id}: status=${result.status ?? -1}, stdout=${sha256(stdout)}, stderr=${sha256(stderr)}`);
@@ -7762,7 +7891,7 @@ function planMoveReferenceAuthority(inventory: TaxonomyInventory, taxonomy: Load
       sourcePath: entry.sourcePath,
       destinationPath: entry.normalizedPath,
       sourcePreimage,
-      rationaleRule: emptyFacet?.disposition === "project" && emptyFacet.destinationPath === entry.normalizedPath ? emptyFacet.contractId : ownerMappings.get(entry.sourcePath) === entry.normalizedPath ? "readme-license-owner-projection-v1" : packageMappings.get(entry.sourcePath) === entry.normalizedPath ? "nested-cargo-package-projection-v1" : basename(entry.sourcePath) === "ticket.md" && entry.normalizedPath === `${dirname(entry.sourcePath)}/📝️.md` ? "ticket-document-primary-markdown-v1" : exactTicketImportant?.disposition === "move" ? "ticket-important-presence-owned-markdown-v1" : basename(entry.sourcePath) === "📌️important.md" && entry.normalizedPath.endsWith("/📌️important/📝️.md") ? "ticket-important-markdown-projection-v1" : basename(entry.sourcePath) === "📌️important.md" && entry.normalizedPath.endsWith("/📓️important/📝️.md") ? "ticket-important-history-markdown-v1" : mutationPayloadSchemaProjectionRationale(entry, inventory.entries, taxonomy) ?? artifactCatalogProjectionRationale(entry.sourcePath, entry.normalizedPath, taxonomy) ?? mutationProjectionRationale(entry.sourcePath, entry.normalizedPath, taxonomy) ?? (entry.semanticStem ? "semantic-stem-resolution" : entry.fixedContractId ? "fixed-contract-preservation" : "canonical-kind-name"),
+      rationaleRule: emptyFacet?.disposition === "project" && emptyFacet.destinationPath === entry.normalizedPath ? emptyFacet.contractId : ownerMappings.get(entry.sourcePath) === entry.normalizedPath ? "readme-license-owner-projection-v1" : packageMappings.get(entry.sourcePath) === entry.normalizedPath ? "nested-cargo-package-projection-v1" : basename(entry.sourcePath) === "ticket.md" && entry.normalizedPath === `${dirname(entry.sourcePath)}/📝️.md` ? "ticket-document-primary-markdown-v1" : exactTicketImportant?.disposition === "move" ? "ticket-important-presence-owned-markdown-v1" : basename(entry.sourcePath) === "📌️important.md" && entry.normalizedPath.endsWith("/📌️important/📝️.md") ? "ticket-important-markdown-projection-v1" : basename(entry.sourcePath) === "📌️important.md" && entry.normalizedPath.endsWith("/📓️important/📝️.md") ? "ticket-important-history-markdown-v1" : artifactCatalogProjectionRationale(entry.sourcePath, entry.normalizedPath, taxonomy) ?? mutationProjectionRationale(entry.sourcePath, entry.normalizedPath, taxonomy) ?? (entry.semanticStem ? "semantic-stem-resolution" : entry.fixedContractId ? "fixed-contract-preservation" : "canonical-kind-name"),
       ownerId: entry.ownerId,
       collisionGroup: groupBySource.get(entry.sourcePath),
       referenceEdits: [],
@@ -7783,6 +7912,19 @@ function planMoveReferenceAuthority(inventory: TaxonomyInventory, taxonomy: Load
 }
 
 function packageGeneratorActivated(repoRoot: string, moves: readonly TaxonomyMove[], contract: GeneratorContractSpec, taxonomy: LoadedTaxonomy, removals: readonly TaxonomyEvidenceRemoval[]): boolean {
+  if (contract.target === taxonomy.discoverySchema.generatorContracts["jco-package-adapter"]?.target) {
+    semanticPackageAdapterPreview(repoRoot, "jcoprobe-guest", taxonomy.discoverySchema);
+    return true;
+  }
+  if (contract.packageGeneration) {
+    const generation = contract.packageGeneration, profile = parseSemanticPackageBrowserProfile(generation.browserProfile, taxonomy.discoverySchema.pathEmojiPolicy.genericEmojiIdentities);
+    const catalogPath = assertLexicalInputOutsideOpaque(repoRoot, generation.catalogPath, "Current WGPU catalog activation", true), catalogState = lstatOrNull(catalogPath);
+    if (!catalogState?.isFile() || catalogState.isSymbolicLink()) throw new Error("Current WGPU activation requires its no-follow catalog");
+    const catalog = parseCanonicalWgpuPackageCatalog(readFileSync(catalogPath, "utf8"), generation.catalogSha256, profile, taxonomy.discoverySchema);
+    const manifestPath = assertLexicalInputOutsideOpaque(repoRoot, catalog.ownerPath + "/" + catalog.packageRelativePath + "/Cargo.toml", "Current WGPU package activation", true), manifest = lstatOrNull(manifestPath);
+    if (!manifest?.isFile() || manifest.isSymbolicLink()) throw new Error("Current WGPU activation requires its no-follow package manifest");
+    return true;
+  }
   const activation = contract.projectionActivation;
   if (!activation) return true;
   const source = lstatOrNull(assertLexicalInputOutsideOpaque(repoRoot, activation.sourceManifestPath, "Generator source activation", true));
@@ -7802,7 +7944,8 @@ function packageGeneratorActivated(repoRoot: string, moves: readonly TaxonomyMov
 }
 
 function generatorPlanning(inventory: TaxonomyInventory, moves: readonly TaxonomyMove[], edits: readonly ReferenceEdit[], taxonomy: LoadedTaxonomy, options: TaxonomyPlanOptions, evidenceRemovals: readonly TaxonomyEvidenceRemoval[] = []): GeneratorPlanningResult {
-  const packageCatalog = semanticPackageProjectionCatalog(inventory.repoRoot, taxonomy.discoverySchema);
+  const jcoActivation = taxonomy.schema.generatorContracts["jco-package-adapter"]?.projectionActivation;
+  const packageCatalog = jcoActivation && moves.some((move) => inScope(move.sourcePath, dirname(jcoActivation.sourceManifestPath))) ? semanticPackageProjectionCatalog(inventory.repoRoot, taxonomy.discoverySchema) : null;
   const jco = packageCatalog?.packages.find((row) => row.id === "jcoprobe-guest");
   const preservedLocks = new Set(jco?.mappings.filter((mapping) => basename(mapping.sourcePath) === "Cargo.lock" && moves.some((move) => move.sourcePath === mapping.sourcePath && move.destinationPath === mapping.destinationPath && move.sourcePreimage.contentHash === mapping.sourceHash && move.sourcePreimage.size === mapping.sourceSize) && !edits.some((edit) => edit.path === mapping.destinationPath)).map((mapping) => mapping.destinationPath) ?? []);
   const mutations = new Set<string>();
@@ -7827,13 +7970,16 @@ function generatorPlanning(inventory: TaxonomyInventory, moves: readonly Taxonom
     const outputProblem = outputEntries.some((entry) => !roots.includes(entry.sourcePath) && (entry.sourcePath !== entry.normalizedPath || entry.violations.some((entry) => entry.severity === "error")));
     const outputMutation = [...mutations].some((path) => roots.some((root) => pathsOverlap(path, root)) && !(id === "external-cargo-locks" && preservedLocks.has(path)));
     const catalogInputs = contract.inputDiscovery && [...mutations].some((path) => registryCatalogPathMayAffect(path, taxonomy.discoverySchema)) ? generatorInputInventory(inventory, contract, taxonomy, options.cancelFile) : undefined;
-    const inputMutation = [...mutations].some((path) => contract.inputPatterns.some((pattern) => taxonomy.pathMatcher.matches(path, pattern))) || Boolean(catalogInputs && (edits.some((edit) => catalogInputs.some((input) => input.path === edit.path)) || moves.some((move) => catalogInputs.some((input) => input.path === move.sourcePath || input.path === move.destinationPath || input.nodeKind === "directory" && (inScope(move.sourcePath, input.path) || inScope(move.destinationPath, input.path))))));
-    const packageOwner = contract.packageGeneration ? packageCatalog?.packages.find((row) => row.id === contract.projectionActivation?.packageId) : undefined;
-    const packageOutputVerification = packageOwner && (!inventory.scope || pathsOverlap(inventory.scope, packageOwner.semanticOwnerRoot));
-    if (!outputProblem && !outputMutation && !inputMutation && !packageOutputVerification) continue;
+    const compilerInputs = contract.compilerInputManifest ? generatorInputInventory(inventory, contract, taxonomy, options.cancelFile) : undefined;
+    const discoveredInputs = catalogInputs ?? compilerInputs;
+    const inputMutation = [...mutations].some((path) => contract.inputPatterns.some((pattern) => taxonomy.pathMatcher.matches(path, pattern))) || Boolean(discoveredInputs && (edits.some((edit) => discoveredInputs.some((input) => input.path === edit.path)) || moves.some((move) => discoveredInputs.some((input) => input.path === move.sourcePath || input.path === move.destinationPath || input.nodeKind === "directory" && (inScope(move.sourcePath, input.path) || inScope(move.destinationPath, input.path))))));
+    const packageOwnerPath = contract.packageGeneration?.browserProfile.ownerPath;
+    const packageOutputVerification = packageOwnerPath && (!inventory.scope || pathsOverlap(inventory.scope, packageOwnerPath));
+    const compilerOutputVerification = contract.compilerInputManifest && (!inventory.scope || pathsOverlap(inventory.scope, contract.ownerPath!));
+    if (!outputProblem && !outputMutation && !inputMutation && !packageOutputVerification && !compilerOutputVerification) continue;
     try { if (!packageGeneratorActivated(inventory.repoRoot, moves, contract, taxonomy, evidenceRemovals)) continue; }
     catch (error) { rows.push(violation("generator-activation-invalid", roots[0], `Generator ${id}: ${error instanceof Error ? error.message : String(error)}`)); continue; }
-    const inputs = catalogInputs ?? generatorInputInventory(inventory, contract, taxonomy, options.cancelFile);
+    const inputs = discoveredInputs ?? generatorInputInventory(inventory, contract, taxonomy, options.cancelFile);
     const preOutputs = generatorTreeInventory(inventory.repoRoot, roots, taxonomy);
     const inputDigest = sha256(canonicalJson(inputs));
     const preOutputDigest = sha256(canonicalJson(preOutputs));
@@ -7849,6 +7995,7 @@ function generatorPlanning(inventory: TaxonomyInventory, moves: readonly Taxonom
       checkCancellation(inventory.repoRoot, options.cancelFile);
       validatePreviewPreState(preview.manifest, preOutputs);
       const outputs = previewNodeRecords(preview.manifest);
+      const freshInputs = [...new Map([...inputs, ...compilerPreviewInputRecords(inventory.repoRoot, contract, taxonomy, preview.manifest)].map(row => [row.path, row])).values()].sort((left, right) => generatorPathCompare(left.path, right.path));
       const retirements = generatedRetirements.filter((entry) => entry.authority.generatorContractId === id);
       for (const retirement of retirements) {
         const generated = outputs.find((output) => output.path === retirement.authority.destinationPath);
@@ -7860,7 +8007,7 @@ function generatorPlanning(inventory: TaxonomyInventory, moves: readonly Taxonom
       if (inputMutation || outputMutation || changed) {
         const command = ["bun", "nx", "run", contract.target!] as const;
         const verifyCommand = contract.checkTarget ? (["bun", "nx", "run", contract.checkTarget] as const) : undefined;
-        const provisional = { contractId: id, cwd: contract.ownerPath!, command, verifyCommand, outputRoots: roots, inputs, preOutputs, outputs, preview: preview.manifest, previewManifestDigest: preview.digest, staleRemovals: preview.manifest.staleRemovals };
+        const provisional = { contractId: id, cwd: contract.ownerPath!, command, verifyCommand, outputRoots: roots, inputs: freshInputs, preOutputs, outputs, preview: preview.manifest, previewManifestDigest: preview.digest, staleRemovals: preview.manifest.staleRemovals };
         regenerations.push({ id: sha256(canonicalJson(provisional)).slice(0, 24), ...provisional });
       }
       report(options.progress, "plan", "generator-preview", index + 1, contracts.length, id);
@@ -8849,10 +8996,12 @@ function assertNxTarget(repoRoot: string, ownerPath: string, target: string): vo
   nxTargetRecord(repoRoot, ownerPath, target);
 }
 
-function assertGeneratorPreviewTarget(repoRoot: string, ownerPath: string, target: string): void {
+function assertGeneratorPreviewTarget(repoRoot: string, contract: GeneratorContractSpec): void {
+  const { ownerPath, previewTarget: target } = contract;
+  if (!ownerPath || !target) throw new Error("Generator lacks an exact owner JSON preview command");
   const preview = nxTargetRecord(repoRoot, ownerPath, target);
   const options = record(preview.options, `Nx target ${target}.options`);
-  if (preview.executor !== "nx:run-commands" || options.cwd !== ownerPath || options.command !== "bun ./📜️script.ts preview-generated") throw new Error(`Nx target ${target} is not the exact owner JSON preview command`);
+  if (preview.executor !== "nx:run-commands" || options.cwd !== ownerPath || options.command !== `bun ./📜️script.ts ${generatorPreviewScriptArguments(contract).join(" ")}`) throw new Error(`Nx target ${target} is not the exact owner JSON preview command`);
 }
 
 function assertRegenerationContract(regeneration: TaxonomyRegeneration, taxonomy: LoadedTaxonomy, repoRoot: string): GeneratorContractSpec {
@@ -8866,14 +9015,16 @@ function assertRegenerationContract(regeneration: TaxonomyRegeneration, taxonomy
   assertGeneratorNodeRecords(regeneration.preOutputs, roots, `Regeneration ${regeneration.id} preOutputs`);
   assertGeneratorNodeRecords(regeneration.outputs, roots, `Regeneration ${regeneration.id} outputs`);
   assertGeneratorNodeRecords(regeneration.inputs, regeneration.inputs.map((input) => input.path), `Regeneration ${regeneration.id} inputs`);
-  for (const input of regeneration.inputs) if (!contract.inputDiscovery && !contract.inputPatterns.some((pattern) => taxonomy.pathMatcher.matches(input.path, pattern))) throw new Error(`Regeneration ${regeneration.id} input is not schema-owned: ${input.path}`);
   const preview = parseGeneratorPreviewManifest(`${generatorPreviewJson(regeneration.preview)}\n`, regeneration.contractId, roots, taxonomy.exclusions.map((entry) => entry.path));
+  const compilerRecords = compilerPreviewInputRecords(repoRoot, contract, taxonomy, preview), compilerPaths = new Set(compilerRecords.map(row => row.path));
+  for (const row of compilerRecords) if (canonicalJson(regeneration.inputs.find(input => input.path === row.path)) !== canonicalJson(row)) throw new Error(`Regeneration ${regeneration.id} omits its compiler input witness: ${row.path}`);
+  for (const input of regeneration.inputs) if (!contract.inputDiscovery && !contract.inputPatterns.some((pattern) => taxonomy.pathMatcher.matches(input.path, pattern)) && !compilerPaths.has(input.path)) throw new Error(`Regeneration ${regeneration.id} input is not schema-owned: ${input.path}`);
   if (regeneration.previewManifestDigest !== sha256(`${generatorPreviewJson(preview)}\n`) || canonicalJson(regeneration.staleRemovals) !== canonicalJson(preview.staleRemovals) || canonicalJson(regeneration.outputs) !== canonicalJson(previewNodeRecords(preview))) throw new Error(`Regeneration ${regeneration.id} does not match its frozen preview manifest`);
   validatePreviewPreState(preview, regeneration.preOutputs);
   const identity = sha256(canonicalJson({ contractId: regeneration.contractId, cwd: regeneration.cwd, command: regeneration.command, verifyCommand: regeneration.verifyCommand, outputRoots: roots, inputs: regeneration.inputs, preOutputs: regeneration.preOutputs, outputs: regeneration.outputs, preview, previewManifestDigest: regeneration.previewManifestDigest, staleRemovals: regeneration.staleRemovals })).slice(0, 24);
   if (regeneration.id !== identity) throw new Error(`Regeneration ${regeneration.id} does not match canonical regeneration bytes`);
   assertNxTarget(repoRoot, contract.ownerPath, contract.target);
-  assertGeneratorPreviewTarget(repoRoot, contract.ownerPath, contract.previewTarget);
+  assertGeneratorPreviewTarget(repoRoot, contract);
   if (contract.checkTarget) assertNxTarget(repoRoot, contract.ownerPath, contract.checkTarget);
   return contract;
 }
@@ -10161,7 +10312,7 @@ function canonicalMutationProjectionPresent(paths: Iterable<string>, taxonomy: L
 function staleProjectionContentViolations(path: string, content: string, groups: readonly ArtifactStaleGroup[], taxonomy: LoadedTaxonomy, mutationActive: boolean): readonly TaxonomyViolation[] {
   const rows: TaxonomyViolation[] = [];
   if (mutationActive) {
-    const pattern = new RegExp(OLD_MUTATION_TEST_PREFIX_SOURCE, "gu");
+    const pattern = new RegExp(MUTATION_SOURCE_TEST_PREFIX, "gu");
     for (const match of content.matchAll(pattern)) if (match.index !== undefined) rows.push(violation("projection-old-token-stale", path, `Old artifact mutation test hierarchy remains at raw offset ${match.index}`));
   }
   const consumers = Object.values(taxonomy.schema.semanticPathProjectionReferenceConsumerContracts);

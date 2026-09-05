@@ -150,7 +150,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for PlaygroundAnalyzerAnalysis {
         type Parts = PlaygroundParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.playground", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.demonstrator.playground", standard: StandardId("1"), subset: SubsetId("*") };
 
         fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium

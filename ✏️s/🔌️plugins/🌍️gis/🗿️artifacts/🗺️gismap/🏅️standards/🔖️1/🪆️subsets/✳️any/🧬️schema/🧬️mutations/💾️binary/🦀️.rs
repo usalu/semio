@@ -1241,7 +1241,7 @@ mod tests {
     use serde_json::json;
 
     fn dsl_of(value: &serde_json::Value) -> dsl::DslValue {
-        dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null)
+        dsl::DslValue::from(value)
     }
 
     fn sample_feature(id: &str) -> crate::artifacts::gismap::MapFeature {

@@ -1077,73 +1077,73 @@ mod tests {
 //#region 🔖️Declaration
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    ArtifactDefinition::new(ArtifactIdentity::parse("s.process3d")?)
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.process.process3d")?)
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.schema.artifact")?, ArtifactCapabilityKind::schema())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.schema.artifact")?, ArtifactCapabilityKind::schema())
                 .descriptor(b"s.process.process3d")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.process.process3d")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.inference.artifact")?, ArtifactCapabilityKind::inference())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.inference.artifact")?, ArtifactCapabilityKind::inference())
                 .descriptor(b"s.process.process3d.inference")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.process.process3d.inference")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.composer.native")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.process3d@1/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.process3d@1/*")?)?,
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.composer.native")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.process.process3d@1/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.process.process3d@1/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.composer.ifc")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.composer.ifc")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.ifc@4/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.ifc@4/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.composer.step")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.composer.step")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.step@ap214/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.step@ap214/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.composer.png")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.composer.png")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.png@1.2/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.png@1.2/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.composer.json")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.composer.json")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.json@rfc8259/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.composer.dwg")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.composer.dwg")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.dwg@ac1018/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.dwg@ac1018/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.composer.stl")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.composer.stl")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.stl@ascii/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.stl@ascii/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.composer.gltf")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.composer.gltf")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.gltf@2.0/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.gltf@2.0/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.composer.obj")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.composer.obj")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.obj@3.0/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.obj@3.0/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.codec.document")?, ArtifactCapabilityKind::codec())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.codec.document")?, ArtifactCapabilityKind::codec())
                 .descriptor(b"process.3d:process3d")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "process.3d")?)?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "process3d")?)?,
+                .claim(ArtifactIdentityClaim::codec_extension("process.3d", "process3d")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Process 3D")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Process 3D")?)?,
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Process 3D")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Process 3D")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.process3d.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Process 3D")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Process 3D")?)?,
+            ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Process 3D")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Process 3D")?)?,
         )
 }
 

@@ -1,0 +1,88 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.dxf/diff.json",
+  "title": "DxfDiff",
+  "type": "object",
+  "$defs": {
+    "DxfHeaderVarDiff": { "type": "object", "properties": { "groupCode": { "type": "integer" }, "value": { "type": "object" }, "extraGroupCodes": { "type": "array" } } },
+    "DxfHeaderVarsDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "modified": { "type": "array", "items": { "type": "object", "properties": { "name": { "type": "string" }, "diff": { "$ref": "#/$defs/DxfHeaderVarDiff" } }, "required": ["name", "diff"] } },
+        "added": { "type": "array", "items": { "type": "object", "properties": { "index": { "type": "integer" }, "headerVar": { "type": "object" } }, "required": ["index", "headerVar"] } }
+      }
+    },
+    "DxfLayerDiff": { "type": "object", "properties": { "color": { "type": "integer" }, "linetype": { "type": "string" }, "flags": { "type": "integer" }, "unknownGroupCodes": { "type": "array" } } },
+    "DxfLayersDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "modified": { "type": "array", "items": { "type": "object", "properties": { "name": { "type": "string" }, "diff": { "$ref": "#/$defs/DxfLayerDiff" } }, "required": ["name", "diff"] } },
+        "added": { "type": "array", "items": { "type": "object", "properties": { "index": { "type": "integer" }, "layer": { "type": "object" } }, "required": ["index", "layer"] } }
+      }
+    },
+    "DxfStyleDiff": { "type": "object", "properties": { "flags": { "type": "integer" }, "fontName": { "type": "string" }, "unknownGroupCodes": { "type": "array" } } },
+    "DxfStylesDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "modified": { "type": "array", "items": { "type": "object", "properties": { "name": { "type": "string" }, "diff": { "$ref": "#/$defs/DxfStyleDiff" } }, "required": ["name", "diff"] } },
+        "added": { "type": "array", "items": { "type": "object", "properties": { "index": { "type": "integer" }, "style": { "type": "object" } }, "required": ["index", "style"] } }
+      }
+    },
+    "DxfLinetypeDiff": { "type": "object", "properties": { "flags": { "type": "integer" }, "description": { "type": "string" }, "unknownGroupCodes": { "type": "array" } } },
+    "DxfLinetypesDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "modified": { "type": "array", "items": { "type": "object", "properties": { "name": { "type": "string" }, "diff": { "$ref": "#/$defs/DxfLinetypeDiff" } }, "required": ["name", "diff"] } },
+        "added": { "type": "array", "items": { "type": "object", "properties": { "index": { "type": "integer" }, "linetype": { "type": "object" } }, "required": ["index", "linetype"] } }
+      }
+    },
+    "DxfTablesDiff": {
+      "type": "object",
+      "properties": { "layers": { "$ref": "#/$defs/DxfLayersDiff" }, "styles": { "$ref": "#/$defs/DxfStylesDiff" }, "linetypes": { "$ref": "#/$defs/DxfLinetypesDiff" } }
+    },
+    "DxfEntityDiff": {
+      "description": "Replace on entity-kind change; else a kind-specific sparse field diff.",
+      "oneOf": [
+        { "type": "object", "properties": { "replace": { "type": "object", "properties": { "entity": { "type": "object" } }, "required": ["entity"] } }, "required": ["replace"] },
+        { "type": "object", "properties": { "line": { "type": "object" } }, "required": ["line"] },
+        { "type": "object", "properties": { "circle": { "type": "object" } }, "required": ["circle"] },
+        { "type": "object", "properties": { "arc": { "type": "object" } }, "required": ["arc"] },
+        { "type": "object", "properties": { "polyline": { "type": "object" } }, "required": ["polyline"] },
+        { "type": "object", "properties": { "text": { "type": "object" } }, "required": ["text"] },
+        { "type": "object", "properties": { "solid": { "type": "object" } }, "required": ["solid"] },
+        { "type": "object", "properties": { "insert": { "type": "object" } }, "required": ["insert"] },
+        { "type": "object", "properties": { "other": { "type": "object" } }, "required": ["other"] }
+      ]
+    },
+    "DxfEntitiesDiff": {
+      "description": "Index-keyed; reused for both DxfSnapshot.entities and each DxfBlock.entities.",
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer" } },
+        "modified": { "type": "array", "items": { "type": "object", "properties": { "index": { "type": "integer" }, "diff": { "$ref": "#/$defs/DxfEntityDiff" } }, "required": ["index", "diff"] } },
+        "added": { "type": "array", "items": { "type": "object", "properties": { "index": { "type": "integer" }, "entity": { "type": "object" } }, "required": ["index", "entity"] } }
+      }
+    },
+    "DxfBlockDiff": {
+      "type": "object",
+      "properties": { "name": { "type": "string" }, "basePoint": { "type": "array" }, "entities": { "$ref": "#/$defs/DxfEntitiesDiff" }, "unknownGroupCodes": { "type": "array" } }
+    },
+    "DxfBlocksDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer" } },
+        "modified": { "type": "array", "items": { "type": "object", "properties": { "index": { "type": "integer" }, "diff": { "$ref": "#/$defs/DxfBlockDiff" } }, "required": ["index", "diff"] } },
+        "added": { "type": "array", "items": { "type": "object", "properties": { "index": { "type": "integer" }, "block": { "type": "object" } }, "required": ["index", "block"] } }
+      }
+    }
+  },
+  "properties": {
+    "headerVars": { "$ref": "#/$defs/DxfHeaderVarsDiff", "x-semio-state": "artifact" },
+    "tables": { "$ref": "#/$defs/DxfTablesDiff", "x-semio-state": "artifact" },
+    "blocks": { "$ref": "#/$defs/DxfBlocksDiff", "x-semio-state": "artifact" },
+    "entities": { "$ref": "#/$defs/DxfEntitiesDiff", "x-semio-state": "artifact" }
+  }
+}

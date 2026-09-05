@@ -1,5 +1,0 @@
-{
-  "mutation": "renameRelationship",
-  "id": "relationship-a",
-  "newName": "Renamed Relationship A"
-}

@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplaceActivity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "activity"
+  ],
+  "properties": {
+    "activity": {
+      "type": "string",
+      "enum": [
+        "Waiting",
+        "Loading",
+        "Idle",
+        "Finished"
+      ]
+    }
+  }
+}

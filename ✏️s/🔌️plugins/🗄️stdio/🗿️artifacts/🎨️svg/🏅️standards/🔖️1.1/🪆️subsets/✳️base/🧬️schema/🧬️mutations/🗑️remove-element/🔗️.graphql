@@ -1,2 +1,0 @@
-# 🧬 remove-element/RemoveElement
-input RemoveElementPayload { parent: [Int!]! index: Int! }

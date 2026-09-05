@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./pkg/framework_surface.js",
-    "./pkg/framework_surface.js": "./pkg/framework_surface.js"
+    ".": "./🕸️bindings/framework_surface.js",
+    "./🕸️bindings/framework_surface.js": "./🕸️bindings/framework_surface.js"
   }
 }

@@ -6,7 +6,7 @@
     "target": {
       "artifact": "s.note.note",
       "standard": "1",
-      "subset": "any"
+      "subset": "asset"
     },
     "mutation": "create-asset",
     "outcome": "applied",
@@ -19,14 +19,14 @@
     "files": [
       {
         "role": "before-svg",
-        "path": "../🧫️fixtures/adds-the-diagram-asset/before.svg",
+        "path": "../../🖼️asset/🧫️fixtures/➕️adds-the-diagram-asset/⬅️before.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:33c861c534b51d3768bd43db877996b6e2d1ad7b5f1b7c57f983a0e7660944a8",
         "bytes": 852
       },
       {
         "role": "after-svg",
-        "path": "../🧫️fixtures/adds-the-diagram-asset/after.svg",
+        "path": "../../🖼️asset/🧫️fixtures/➕️adds-the-diagram-asset/➡️after.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:90767b9386e4e2a28d0394a9a8e2a40c30ef2237b122e7dd3b6700c277cac180",
         "bytes": 1035
@@ -60,7 +60,7 @@
     "target": {
       "artifact": "s.note.note",
       "standard": "1",
-      "subset": "any"
+      "subset": "block"
     },
     "mutation": "create-block",
     "outcome": "applied",
@@ -73,28 +73,28 @@
     "files": [
       {
         "role": "before-dxf",
-        "path": "../🧫️fixtures/creates-an-ink-block/before.dxf",
+        "path": "../../🧱️block/🧫️fixtures/🖋️creates-an-ink-block/🖊️before.dxf",
         "mediaType": "image/vnd.dxf",
         "sha256": "sha256:01cfad4fe25311b21dd646e9451ac5dcb079a8ea2aae92fc68f7f3549317229f",
         "bytes": 7785
       },
       {
         "role": "after-dxf",
-        "path": "../🧫️fixtures/creates-an-ink-block/after.dxf",
+        "path": "../../🧱️block/🧫️fixtures/🖋️creates-an-ink-block/📐️after.dxf",
         "mediaType": "image/vnd.dxf",
         "sha256": "sha256:b314bea7989583bb41640b8df1fdbff5a729ebb657cc03f792727237ba376c00",
         "bytes": 7977
       },
       {
         "role": "before-svg",
-        "path": "../🧫️fixtures/creates-an-ink-block/before.svg",
+        "path": "../../🧱️block/🧫️fixtures/🖋️creates-an-ink-block/🖼️before.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:33c861c534b51d3768bd43db877996b6e2d1ad7b5f1b7c57f983a0e7660944a8",
         "bytes": 852
       },
       {
         "role": "after-svg",
-        "path": "../🧫️fixtures/creates-an-ink-block/after.svg",
+        "path": "../../🧱️block/🧫️fixtures/🖋️creates-an-ink-block/🎨️after.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:92fb6277ab33d1f46eb4084b161d411b531f539a4313ec15943bae83e36f56c3",
         "bytes": 950
@@ -128,7 +128,7 @@
     "target": {
       "artifact": "s.note.note",
       "standard": "1",
-      "subset": "any"
+      "subset": "block"
     },
     "mutation": "delete-blocks",
     "outcome": "applied",
@@ -141,42 +141,42 @@
     "files": [
       {
         "role": "before-dxf",
-        "path": "../🧫️fixtures/deletes-the-ink-and-text-blocks/before.dxf",
+        "path": "../../🧱️block/🧫️fixtures/🗑️deletes-the-ink-and-text-blocks/🖊️before.dxf",
         "mediaType": "image/vnd.dxf",
         "sha256": "sha256:01cfad4fe25311b21dd646e9451ac5dcb079a8ea2aae92fc68f7f3549317229f",
         "bytes": 7785
       },
       {
         "role": "after-dxf",
-        "path": "../🧫️fixtures/deletes-the-ink-and-text-blocks/after.dxf",
+        "path": "../../🧱️block/🧫️fixtures/🗑️deletes-the-ink-and-text-blocks/📐️after.dxf",
         "mediaType": "image/vnd.dxf",
         "sha256": "sha256:fc62a9b91e2c8c3710ea2c326648ee97afb6c72e1a2e306a096eb4d0811a741e",
         "bytes": 7601
       },
       {
         "role": "before-svg",
-        "path": "../🧫️fixtures/deletes-the-ink-and-text-blocks/before.svg",
+        "path": "../../🧱️block/🧫️fixtures/🗑️deletes-the-ink-and-text-blocks/🖼️before.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:33c861c534b51d3768bd43db877996b6e2d1ad7b5f1b7c57f983a0e7660944a8",
         "bytes": 852
       },
       {
         "role": "after-svg",
-        "path": "../🧫️fixtures/deletes-the-ink-and-text-blocks/after.svg",
+        "path": "../../🧱️block/🧫️fixtures/🗑️deletes-the-ink-and-text-blocks/🎨️after.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:a2ef63722dfaadd4bd24c087d923577c40f7a185c3c665ce71b53580581160da",
         "bytes": 677
       },
       {
         "role": "before-pdf",
-        "path": "../🧫️fixtures/deletes-the-ink-and-text-blocks/before.pdf",
+        "path": "../../🧱️block/🧫️fixtures/🗑️deletes-the-ink-and-text-blocks/📖️before.pdf",
         "mediaType": "application/pdf",
         "sha256": "sha256:9968679f0fc791102940ea7e93cb1d0aeea2c315d880e8617f4ca6182f46b059",
         "bytes": 431
       },
       {
         "role": "after-pdf",
-        "path": "../🧫️fixtures/deletes-the-ink-and-text-blocks/after.pdf",
+        "path": "../../🧱️block/🧫️fixtures/🗑️deletes-the-ink-and-text-blocks/📕️after.pdf",
         "mediaType": "application/pdf",
         "sha256": "sha256:5101c435cdc739c666e5116019039ae5d668b18182e30b069f45bfcac275fcbf",
         "bytes": 410
@@ -210,7 +210,7 @@
     "target": {
       "artifact": "s.note.note",
       "standard": "1",
-      "subset": "any"
+      "subset": "block"
     },
     "mutation": "delete-block",
     "outcome": "applied",
@@ -223,28 +223,28 @@
     "files": [
       {
         "role": "before-svg",
-        "path": "../🧫️fixtures/deletes-the-intro-text-block/before.svg",
+        "path": "../../🧱️block/🧫️fixtures/✂️deletes-the-intro-text-block/🖼️before.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:33c861c534b51d3768bd43db877996b6e2d1ad7b5f1b7c57f983a0e7660944a8",
         "bytes": 852
       },
       {
         "role": "after-svg",
-        "path": "../🧫️fixtures/deletes-the-intro-text-block/after.svg",
+        "path": "../../🧱️block/🧫️fixtures/✂️deletes-the-intro-text-block/🎨️after.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:63d6ec59b2023c583966b5ea3c0ce5c90de160634aa4fe823b7249945676747c",
         "bytes": 765
       },
       {
         "role": "before-pdf",
-        "path": "../🧫️fixtures/deletes-the-intro-text-block/before.pdf",
+        "path": "../../🧱️block/🧫️fixtures/✂️deletes-the-intro-text-block/📖️before.pdf",
         "mediaType": "application/pdf",
         "sha256": "sha256:9968679f0fc791102940ea7e93cb1d0aeea2c315d880e8617f4ca6182f46b059",
         "bytes": 431
       },
       {
         "role": "after-pdf",
-        "path": "../🧫️fixtures/deletes-the-intro-text-block/after.pdf",
+        "path": "../../🧱️block/🧫️fixtures/✂️deletes-the-intro-text-block/📕️after.pdf",
         "mediaType": "application/pdf",
         "sha256": "sha256:5101c435cdc739c666e5116019039ae5d668b18182e30b069f45bfcac275fcbf",
         "bytes": 410
@@ -278,7 +278,7 @@
     "target": {
       "artifact": "s.note.note",
       "standard": "1",
-      "subset": "any"
+      "subset": "block"
     },
     "mutation": "drag-blocks",
     "outcome": "applied",
@@ -291,14 +291,14 @@
     "files": [
       {
         "role": "before-svg",
-        "path": "../🧫️fixtures/drags-the-callout-group-subtree/before.svg",
+        "path": "../../🧱️block/🧫️fixtures/🤏️drags-the-callout-group-subtree/⬅️before.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:33c861c534b51d3768bd43db877996b6e2d1ad7b5f1b7c57f983a0e7660944a8",
         "bytes": 852
       },
       {
         "role": "after-svg",
-        "path": "../🧫️fixtures/drags-the-callout-group-subtree/after.svg",
+        "path": "../../🧱️block/🧫️fixtures/🤏️drags-the-callout-group-subtree/➡️after.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:13db0d6df1c48c5c5273f198679d464ede185e6edfc46714c9c7fe525048afcb",
         "bytes": 852
@@ -332,7 +332,7 @@
     "target": {
       "artifact": "s.note.note",
       "standard": "1",
-      "subset": "any"
+      "subset": "block"
     },
     "mutation": "duplicate-blocks",
     "outcome": "applied",
@@ -345,42 +345,42 @@
     "files": [
       {
         "role": "before-dxf",
-        "path": "../🧫️fixtures/duplicates-the-ink-and-text-blocks/before.dxf",
+        "path": "../../🧱️block/🧫️fixtures/👥️duplicates-the-ink-and-text-blocks/🖊️before.dxf",
         "mediaType": "image/vnd.dxf",
         "sha256": "sha256:01cfad4fe25311b21dd646e9451ac5dcb079a8ea2aae92fc68f7f3549317229f",
         "bytes": 7785
       },
       {
         "role": "after-dxf",
-        "path": "../🧫️fixtures/duplicates-the-ink-and-text-blocks/after.dxf",
+        "path": "../../🧱️block/🧫️fixtures/👥️duplicates-the-ink-and-text-blocks/📐️after.dxf",
         "mediaType": "image/vnd.dxf",
         "sha256": "sha256:05bb1d1af578e93296e60fd96dca6c92802b387a4f62d6546eb328a7126823c2",
         "bytes": 7969
       },
       {
         "role": "before-svg",
-        "path": "../🧫️fixtures/duplicates-the-ink-and-text-blocks/before.svg",
+        "path": "../../🧱️block/🧫️fixtures/👥️duplicates-the-ink-and-text-blocks/🖼️before.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:33c861c534b51d3768bd43db877996b6e2d1ad7b5f1b7c57f983a0e7660944a8",
         "bytes": 852
       },
       {
         "role": "after-svg",
-        "path": "../🧫️fixtures/duplicates-the-ink-and-text-blocks/after.svg",
+        "path": "../../🧱️block/🧫️fixtures/👥️duplicates-the-ink-and-text-blocks/🎨️after.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:a0e5fb9d69797a5b643c117bb12e7be0c090a3dd8be764aceee8b50716d23a96",
         "bytes": 1027
       },
       {
         "role": "before-pdf",
-        "path": "../🧫️fixtures/duplicates-the-ink-and-text-blocks/before.pdf",
+        "path": "../../🧱️block/🧫️fixtures/👥️duplicates-the-ink-and-text-blocks/📖️before.pdf",
         "mediaType": "application/pdf",
         "sha256": "sha256:9968679f0fc791102940ea7e93cb1d0aeea2c315d880e8617f4ca6182f46b059",
         "bytes": 431
       },
       {
         "role": "after-pdf",
-        "path": "../🧫️fixtures/duplicates-the-ink-and-text-blocks/after.pdf",
+        "path": "../../🧱️block/🧫️fixtures/👥️duplicates-the-ink-and-text-blocks/📕️after.pdf",
         "mediaType": "application/pdf",
         "sha256": "sha256:eeb0361ee45bb69df07a7a210a9393074cfbc3f67154c9833b215858df9c1a49",
         "bytes": 452
@@ -414,7 +414,7 @@
     "target": {
       "artifact": "s.note.note",
       "standard": "1",
-      "subset": "any"
+      "subset": "block"
     },
     "mutation": "duplicate-block",
     "outcome": "applied",
@@ -427,28 +427,28 @@
     "files": [
       {
         "role": "before-dxf",
-        "path": "../🧫️fixtures/duplicates-the-ink-block/before.dxf",
+        "path": "../../🧱️block/🧫️fixtures/📋️duplicates-the-ink-block/🖊️before.dxf",
         "mediaType": "image/vnd.dxf",
         "sha256": "sha256:01cfad4fe25311b21dd646e9451ac5dcb079a8ea2aae92fc68f7f3549317229f",
         "bytes": 7785
       },
       {
         "role": "after-dxf",
-        "path": "../🧫️fixtures/duplicates-the-ink-block/after.dxf",
+        "path": "../../🧱️block/🧫️fixtures/📋️duplicates-the-ink-block/📐️after.dxf",
         "mediaType": "image/vnd.dxf",
         "sha256": "sha256:05bb1d1af578e93296e60fd96dca6c92802b387a4f62d6546eb328a7126823c2",
         "bytes": 7969
       },
       {
         "role": "before-svg",
-        "path": "../🧫️fixtures/duplicates-the-ink-block/before.svg",
+        "path": "../../🧱️block/🧫️fixtures/📋️duplicates-the-ink-block/🖼️before.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:33c861c534b51d3768bd43db877996b6e2d1ad7b5f1b7c57f983a0e7660944a8",
         "bytes": 852
       },
       {
         "role": "after-svg",
-        "path": "../🧫️fixtures/duplicates-the-ink-block/after.svg",
+        "path": "../../🧱️block/🧫️fixtures/📋️duplicates-the-ink-block/🎨️after.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:97d31de6d2006c713fe08ab02885ad25b16deb2a7c33998ff2f8b41506b59267",
         "bytes": 940
@@ -482,7 +482,7 @@
     "target": {
       "artifact": "s.note.note",
       "standard": "1",
-      "subset": "any"
+      "subset": "text"
     },
     "mutation": "edit-block-text",
     "outcome": "applied",
@@ -495,28 +495,28 @@
     "files": [
       {
         "role": "before-pdf",
-        "path": "../🧫️fixtures/edits-the-intro-paragraph/before.pdf",
+        "path": "../../📝️text/🧫️fixtures/✏️edits-the-intro-paragraph/📖️before.pdf",
         "mediaType": "application/pdf",
         "sha256": "sha256:9968679f0fc791102940ea7e93cb1d0aeea2c315d880e8617f4ca6182f46b059",
         "bytes": 431
       },
       {
         "role": "after-pdf",
-        "path": "../🧫️fixtures/edits-the-intro-paragraph/after.pdf",
+        "path": "../../📝️text/🧫️fixtures/✏️edits-the-intro-paragraph/📕️after.pdf",
         "mediaType": "application/pdf",
         "sha256": "sha256:28351770ea693d0983522d2b1c8a465cea463915d333580ea9876e88236c6599",
         "bytes": 448
       },
       {
         "role": "before-svg",
-        "path": "../🧫️fixtures/edits-the-intro-paragraph/before.svg",
+        "path": "../../📝️text/🧫️fixtures/✏️edits-the-intro-paragraph/🖼️before.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:33c861c534b51d3768bd43db877996b6e2d1ad7b5f1b7c57f983a0e7660944a8",
         "bytes": 852
       },
       {
         "role": "after-svg",
-        "path": "../🧫️fixtures/edits-the-intro-paragraph/after.svg",
+        "path": "../../📝️text/🧫️fixtures/✏️edits-the-intro-paragraph/🎨️after.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:57159317d0d938ac42f0d99b82a8a11a17aee90385f004503b1610286e8ec878",
         "bytes": 869
@@ -550,7 +550,7 @@
     "target": {
       "artifact": "s.note.note",
       "standard": "1",
-      "subset": "any"
+      "subset": "block"
     },
     "mutation": "change-block-visible",
     "outcome": "applied",
@@ -563,14 +563,14 @@
     "files": [
       {
         "role": "before-svg",
-        "path": "../🧫️fixtures/hides-the-intro-text-block/before.svg",
+        "path": "../../🧱️block/🧫️fixtures/🙈️hides-the-intro-text-block/⬅️before.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:33c861c534b51d3768bd43db877996b6e2d1ad7b5f1b7c57f983a0e7660944a8",
         "bytes": 852
       },
       {
         "role": "after-svg",
-        "path": "../🧫️fixtures/hides-the-intro-text-block/after.svg",
+        "path": "../../🧱️block/🧫️fixtures/🙈️hides-the-intro-text-block/➡️after.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:63d6ec59b2023c583966b5ea3c0ce5c90de160634aa4fe823b7249945676747c",
         "bytes": 765
@@ -604,7 +604,7 @@
     "target": {
       "artifact": "s.note.note",
       "standard": "1",
-      "subset": "any"
+      "subset": "block"
     },
     "mutation": "move-block",
     "outcome": "applied",
@@ -617,14 +617,14 @@
     "files": [
       {
         "role": "before-svg",
-        "path": "../🧫️fixtures/moves-the-math-block/before.svg",
+        "path": "../../🧱️block/🧫️fixtures/🚚️moves-the-math-block/⬅️before.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:33c861c534b51d3768bd43db877996b6e2d1ad7b5f1b7c57f983a0e7660944a8",
         "bytes": 852
       },
       {
         "role": "after-svg",
-        "path": "../🧫️fixtures/moves-the-math-block/after.svg",
+        "path": "../../🧱️block/🧫️fixtures/🚚️moves-the-math-block/➡️after.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:e7bde000c5ee1d27a9e10b45feb02d56c7854395262e86a5e38bd96f041ea42a",
         "bytes": 852
@@ -658,7 +658,7 @@
     "target": {
       "artifact": "s.note.note",
       "standard": "1",
-      "subset": "any"
+      "subset": "ink"
     },
     "mutation": "edit-block-ink-stroke",
     "outcome": "applied",
@@ -671,28 +671,28 @@
     "files": [
       {
         "role": "before-dxf",
-        "path": "../🧫️fixtures/redraws-the-sketch-polyline/before.dxf",
+        "path": "../../🖋️ink/🧫️fixtures/🎨️redraws-the-sketch-polyline/🖊️before.dxf",
         "mediaType": "image/vnd.dxf",
         "sha256": "sha256:01cfad4fe25311b21dd646e9451ac5dcb079a8ea2aae92fc68f7f3549317229f",
         "bytes": 7785
       },
       {
         "role": "after-dxf",
-        "path": "../🧫️fixtures/redraws-the-sketch-polyline/after.dxf",
+        "path": "../../🖋️ink/🧫️fixtures/🎨️redraws-the-sketch-polyline/📐️after.dxf",
         "mediaType": "image/vnd.dxf",
         "sha256": "sha256:61625d26dc5253113d1c0175f71756c817b8e831073be53a8ad96ecacc037fa8",
         "bytes": 7785
       },
       {
         "role": "before-svg",
-        "path": "../🧫️fixtures/redraws-the-sketch-polyline/before.svg",
+        "path": "../../🖋️ink/🧫️fixtures/🎨️redraws-the-sketch-polyline/🖼️before.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:33c861c534b51d3768bd43db877996b6e2d1ad7b5f1b7c57f983a0e7660944a8",
         "bytes": 852
       },
       {
         "role": "after-svg",
-        "path": "../🧫️fixtures/redraws-the-sketch-polyline/after.svg",
+        "path": "../../🖋️ink/🧫️fixtures/🎨️redraws-the-sketch-polyline/🎨️after.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:55f5c9ab74dc39c3682e40d7a9debe5f79a017ac67dad2d5d014eae70cfef92f",
         "bytes": 852
@@ -726,7 +726,7 @@
     "target": {
       "artifact": "s.note.note",
       "standard": "1",
-      "subset": "any"
+      "subset": "asset"
     },
     "mutation": "delete-asset",
     "outcome": "applied",
@@ -739,14 +739,14 @@
     "files": [
       {
         "role": "before-svg",
-        "path": "../🧫️fixtures/removes-the-logo-asset/before.svg",
+        "path": "../../🖼️asset/🧫️fixtures/🗑️removes-the-logo-asset/⬅️before.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:33c861c534b51d3768bd43db877996b6e2d1ad7b5f1b7c57f983a0e7660944a8",
         "bytes": 852
       },
       {
         "role": "after-svg",
-        "path": "../🧫️fixtures/removes-the-logo-asset/after.svg",
+        "path": "../../🖼️asset/🧫️fixtures/🗑️removes-the-logo-asset/➡️after.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:a7106fdefa2c7f24889d7618f968eaa1a2195b2fd861320341777b5463046f83",
         "bytes": 729
@@ -780,7 +780,7 @@
     "target": {
       "artifact": "s.note.note",
       "standard": "1",
-      "subset": "any"
+      "subset": "block"
     },
     "mutation": "resize-block",
     "outcome": "applied",
@@ -793,14 +793,14 @@
     "files": [
       {
         "role": "before-svg",
-        "path": "../🧫️fixtures/resizes-the-image-block/before.svg",
+        "path": "../../🧱️block/🧫️fixtures/↔️resizes-the-image-block/⬅️before.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:33c861c534b51d3768bd43db877996b6e2d1ad7b5f1b7c57f983a0e7660944a8",
         "bytes": 852
       },
       {
         "role": "after-svg",
-        "path": "../🧫️fixtures/resizes-the-image-block/after.svg",
+        "path": "../../🧱️block/🧫️fixtures/↔️resizes-the-image-block/➡️after.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:7f346e233037f0bc17732cc1adeeb9e5329249ff83c9d3b34f662a0acee4aea8",
         "bytes": 852
@@ -834,7 +834,7 @@
     "target": {
       "artifact": "s.note.note",
       "standard": "1",
-      "subset": "any"
+      "subset": "document"
     },
     "mutation": "rename-note",
     "outcome": "applied",
@@ -847,14 +847,14 @@
     "files": [
       {
         "role": "before-pdf",
-        "path": "../🧫️fixtures/retitles-the-document/before.pdf",
+        "path": "../../📜️document/🧫️fixtures/🏷️retitles-the-document/⬅️before.pdf",
         "mediaType": "application/pdf",
         "sha256": "sha256:9968679f0fc791102940ea7e93cb1d0aeea2c315d880e8617f4ca6182f46b059",
         "bytes": 431
       },
       {
         "role": "after-pdf",
-        "path": "../🧫️fixtures/retitles-the-document/after.pdf",
+        "path": "../../📜️document/🧫️fixtures/🏷️retitles-the-document/➡️after.pdf",
         "mediaType": "application/pdf",
         "sha256": "sha256:7123b8e6abf2ef75eecc29294930e05f1cddf9d771de3e97ae29db9e2950f903",
         "bytes": 439
@@ -888,7 +888,7 @@
     "target": {
       "artifact": "s.note.note",
       "standard": "1",
-      "subset": "any"
+      "subset": "asset"
     },
     "mutation": "replace-asset-payload",
     "outcome": "applied",
@@ -901,14 +901,14 @@
     "files": [
       {
         "role": "before-svg",
-        "path": "../🧫️fixtures/swaps-the-logo-payload/before.svg",
+        "path": "../../🖼️asset/🧫️fixtures/🔁️swaps-the-logo-payload/⬅️before.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:33c861c534b51d3768bd43db877996b6e2d1ad7b5f1b7c57f983a0e7660944a8",
         "bytes": 852
       },
       {
         "role": "after-svg",
-        "path": "../🧫️fixtures/swaps-the-logo-payload/after.svg",
+        "path": "../../🖼️asset/🧫️fixtures/🔁️swaps-the-logo-payload/➡️after.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:d378c98fcae5dbe64b1ef2f9a8913fcf767591646ac0a82ec836b6322d90a3ba",
         "bytes": 912
@@ -942,7 +942,7 @@
     "target": {
       "artifact": "s.note.note",
       "standard": "1",
-      "subset": "any"
+      "subset": "ink"
     },
     "mutation": "change-block-ink-width",
     "outcome": "applied",
@@ -955,14 +955,14 @@
     "files": [
       {
         "role": "before-svg",
-        "path": "../🧫️fixtures/thickens-the-sketch-stroke/before.svg",
+        "path": "../../🖋️ink/🧫️fixtures/🖊️thickens-the-sketch-stroke/⬅️before.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:33c861c534b51d3768bd43db877996b6e2d1ad7b5f1b7c57f983a0e7660944a8",
         "bytes": 852
       },
       {
         "role": "after-svg",
-        "path": "../🧫️fixtures/thickens-the-sketch-stroke/after.svg",
+        "path": "../../🖋️ink/🧫️fixtures/🖊️thickens-the-sketch-stroke/➡️after.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:dc8527dc53c09731b8a8b3844b8228f512393907ecf2fe7720e13e1e6db53808",
         "bytes": 852

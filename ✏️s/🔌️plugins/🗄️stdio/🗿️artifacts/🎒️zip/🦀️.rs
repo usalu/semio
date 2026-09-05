@@ -21,7 +21,7 @@ pub const ZIP_ARTIFACT_SCHEMA_ID: &str = "s.stdio.zip";
 /// ZipMutation>(...))` call. `.composers(...)` reaches the subset IO module's own `io_registry`
 /// (the former `⚙️engine`'s `io_registry`, dissolved into `standards::v2_0::subsets::any::io` per
 /// ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES), whose `entries()` already
-/// aggregates BOTH the `✳️base` and `✳️iso21320` `ComposerEntry` rows — NOT this file's own
+/// aggregates BOTH the `🧱️base` and `🌐️iso21320` `ComposerEntry` rows — NOT this file's own
 /// shadowing `io_registry` below, whose `entries()` returns `&'static [&'static ComposerEntry]`
 /// (references) and would silently rebind under a bare call (this ticket's "SILENT REBIND" hazard).
 /// `.subset_validators(...)` is new here: the old `register()`'s
@@ -55,7 +55,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .try_build()
 }
 
-/// 🛡️ The `✳️iso21320` subset's `SubsetValidatorEntry`, re-derived (not moved) from the same
+/// 🛡️ The `🌐️iso21320` subset's `SubsetValidatorEntry`, re-derived (not moved) from the same
 /// side-effect-free `subset_validator_entry_of::<ZipIso21320Validator>()` constructor
 /// `🚪️io/🦀️.rs`'s own (module-private) `validator_entry()` calls.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

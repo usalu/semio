@@ -203,7 +203,7 @@ pub struct SemanticDescriptor {
 /// 🪞️ Reexports the lower mutation metadata contract through the public OS command façade.
 pub use protocol::mutation::{
     validate_mutation_leaf_descriptor, validate_mutation_leaf_descriptor_roster, validate_mutation_leaf_source, MutationComposition, MutationDiffParticipation, MutationInvertibility, MutationLanguageSurface, MutationLeaf,
-    MutationLeafDescriptor, MutationLeafDescriptorRosterValidationError, MutationLeafDescriptorValidationError, MutationLeafSourceScope, MutationLeafSourceValidationError, MutationOutcomeClass, MutationSourceProvenance,
+    MutationDomainOperation, MutationOwnerLayout, MutationLeafDescriptor, MutationLeafDescriptorRosterValidationError, MutationLeafDescriptorValidationError, MutationLeafSourceScope, MutationLeafSourceValidationError, MutationOutcomeClass, MutationSourceProvenance,
 };
 //#endregion 🪪️MutationLeafDescriptor
 
@@ -877,7 +877,7 @@ pub fn plan_foreign_steps<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P,
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🧬️registry/🦀️.rs"]
+#[path = "🧪️tests/📔️registry/🦀️.rs"]
 mod registry_fixture;
 
 #[cfg(test)]
@@ -889,13 +889,18 @@ mod tests {
     use super::*;
     use super::mutation_laws_fixture::{AddCounter, AddCounterTwice, AddCounterFourTimes, AddCounterThenNotifyForeign, CounterDiff, CounterMutation, foreign_step_fixture};
 
+    fn json_oracle<T: protocol::value::ToValue>(value: &T) -> serde_json::Value {
+        serde_json::from_str(&crate::os_pack::json::to_json_string(value)).expect("independent JSON parser accepts first-party value encoding")
+    }
+
     //#region 🧪️ApplyErrorContract
     #[test]
     fn mutation_apply_error_json_round_trip_matches_typescript_parity_vector() {
         let error = MutationApplyError::new("mutation.apply.invalid-index", "index 4 exceeds length 2").at(["slides", "4"]);
-        let json = serde_json::to_string(&error).expect("serialize apply error");
+        let json = crate::os_pack::json::to_json_string(&error);
         assert_eq!(json, r#"{"code":"mutation.apply.invalid-index","message":"index 4 exceeds length 2","target":["slides","4"]}"#);
-        assert_eq!(serde_json::from_str::<MutationApplyError>(&json).expect("deserialize apply error"), error);
+        assert_eq!(json_oracle(&error), serde_json::json!({"code":"mutation.apply.invalid-index","message":"index 4 exceeds length 2","target":["slides","4"]}));
+        assert_eq!(crate::os_pack::json::from_json_str::<MutationApplyError>(&json).expect("decode apply error value"), error);
     }
 
     #[test]
@@ -985,7 +990,7 @@ mod tests {
 
     //#region 🧪️MetaSerde
     #[test]
-    fn operation_meta_serde_round_trip() {
+    fn operation_meta_value_round_trip_matches_serde_oracle() {
         let meta = MutationMeta {
             mutation_id: Some(crate::os_spr::ids::MutationId("op-1".into())),
             dependencies: vec![crate::os_spr::ids::MutationId("op-0".into())],
@@ -999,20 +1004,21 @@ mod tests {
             group_id: Some("invocation-1".to_string()),
             origin: MutationOrigin::Owner,
         };
-        let json = serde_json::to_string(&meta).expect("serialize");
+        let json = crate::os_pack::json::to_json_string(&meta);
         assert!(json.contains("\"group_id\":\"invocation-1\""), "group_id must serialize under its own field name (MutationMeta has no rename_all), got {json}");
-        let round_tripped: MutationMeta = serde_json::from_str(&json).expect("deserialize");
-        assert_eq!(round_tripped, meta, "group_id must round-trip through serde exactly like semantic_kind/label");
+        assert_eq!(json_oracle(&meta)["group_id"], serde_json::json!("invocation-1"));
+        let round_tripped: MutationMeta = crate::os_pack::json::from_json_str(&json).expect("decode mutation metadata value");
+        assert_eq!(round_tripped, meta, "group_id must round-trip through the value contract exactly like semantic_kind/label");
 
         let solitary = MutationMeta { group_id: None, ..meta };
-        let solitary_json = serde_json::to_string(&solitary).expect("serialize");
+        let solitary_json = crate::os_pack::json::to_json_string(&solitary);
         assert!(!solitary_json.contains("group_id"), "a solitary edit's None group_id must be omitted, matching skip_serializing_if on the sibling optional fields");
-        let solitary_round_tripped: MutationMeta = serde_json::from_str(&solitary_json).expect("deserialize");
+        let solitary_round_tripped: MutationMeta = crate::os_pack::json::from_json_str(&solitary_json).expect("decode solitary mutation metadata value");
         assert_eq!(solitary_round_tripped, solitary);
     }
 
     #[test]
-    fn edit_serde_round_trip() {
+    fn edit_value_round_trip_matches_serde_oracle() {
         let edit = Edit::<CounterMutation> {
             id: "edit-1".into(),
             actor: Some("actor-1".into()),
@@ -1037,8 +1043,9 @@ mod tests {
             started_at: "2026-07-27T00:00:00Z".into(),
             finished_at: None,
         };
-        let json = serde_json::to_string(&edit).expect("serialize");
-        let round_tripped: Edit<CounterMutation> = serde_json::from_str(&json).expect("deserialize");
+        let json = crate::os_pack::json::to_json_string(&edit);
+        assert_eq!(json_oracle(&edit)["id"], serde_json::json!("edit-1"));
+        let round_tripped: Edit<CounterMutation> = crate::os_pack::json::from_json_str(&json).expect("decode edit value");
         assert_eq!(round_tripped, edit);
     }
     //#endregion 🧪️MetaSerde
@@ -1194,7 +1201,7 @@ mod tests {
 
     #[test]
     fn space_history_verbs_match_the_language_neutral_contract() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🧬️verb-vocabulary/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🗣️verb-vocabulary/🔣️.json")).unwrap();
         for case in fixture["cases"].as_array().unwrap() {
             let verb = case["verb"].as_str().unwrap();
             let expected = case["record"].as_str();
@@ -1238,8 +1245,8 @@ mod tests {
         let descriptor = mutation_descriptor("mini.doc#rename-mini").unwrap();
         assert_eq!(descriptor.semantics(), mutation.semantics());
         assert_eq!(descriptor.leaf(), mutation.descriptor());
-        let declared: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🧬️registry/🧬️mutations/📛️rename-mini/🔣️.json")).unwrap();
-        assert_eq!(serde_json::to_value(descriptor.leaf()).unwrap(), declared);
+        let declared: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/📔️registry/🧬️mutations/📛️rename-mini/🔣️.json")).unwrap();
+        assert_eq!(json_oracle(descriptor.leaf()), declared);
         assert!(register_mini_mutation_descriptors(crate::os_spr::StateClass::Config).is_err());
         assert_eq!(mutation_descriptor("mini.doc#rename-mini"), Some(descriptor));
     }
@@ -1289,7 +1296,7 @@ mod tests {
     }
 
     fn mutation_leaf_descriptor_fixture_json() -> serde_json::Value {
-        serde_json::from_str(include_str!("🧪️tests/🧬️mutation-leaf-descriptor/🧫️fixtures/🔣️.json")).expect("valid neutral descriptor fixture")
+        serde_json::from_str(include_str!("🧪️tests/🪪️mutation-leaf-descriptor/🧫️fixtures/🔣️.json")).expect("valid neutral descriptor fixture")
     }
 
     static MUTATION_LEAF_DESCRIPTOR_DUPLICATE_OUTCOMES: [MutationOutcomeClass; 2] = [MutationOutcomeClass::Applied, MutationOutcomeClass::Applied];
@@ -1322,14 +1329,14 @@ mod tests {
     static MUTATION_LEAF_DESCRIPTOR_ROSTER_NUL_CHILD: [MutationLeafDescriptor; 1] = [MutationLeafDescriptor { owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➖️remove-page\0", ..MUTATION_LEAF_DESCRIPTOR_ROSTER_REMOVE }];
     static MUTATION_LEAF_DESCRIPTOR_ROSTER_OTHER_OWNER_SINGLE: [MutationLeafDescriptor; 1] = [MUTATION_LEAF_DESCRIPTOR_ROSTER_OTHER_OWNER];
     const MUTATION_LEAF_DESCRIPTOR_CONST_VALID: Result<(), MutationLeafDescriptorValidationError> = validate_mutation_leaf_descriptor(&MUTATION_LEAF_DESCRIPTOR_ROSTER_INSERT);
-    const MUTATION_LEAF_DESCRIPTOR_CONST_ROSTER_VALID: Result<(), MutationLeafDescriptorRosterValidationError> = validate_mutation_leaf_descriptor_roster(MUTATION_LEAF_DESCRIPTOR_ROSTER_ROOT, &MUTATION_LEAF_DESCRIPTOR_ROSTER_UNIQUE);
+    const MUTATION_LEAF_DESCRIPTOR_CONST_ROSTER_VALID: Result<(), MutationLeafDescriptorRosterValidationError> = validate_mutation_leaf_descriptor_roster(MUTATION_LEAF_DESCRIPTOR_ROSTER_ROOT, &MUTATION_LEAF_DESCRIPTOR_ROSTER_UNIQUE, MutationOwnerLayout::Flat);
 
     #[test]
     fn mutation_leaf_descriptor_serializes_all_schema_fields() {
         let descriptor = mutation_leaf_descriptor_fixture();
         let fixture = mutation_leaf_descriptor_fixture_json();
         assert_eq!(validate_mutation_leaf_descriptor(&descriptor), Ok(()));
-        let serialized = serde_json::to_value(descriptor).expect("serialize descriptor");
+        let serialized = json_oracle(&descriptor);
         assert_eq!(serialized, fixture["descriptor"]);
         assert_eq!(serialized.as_object().expect("descriptor object").len(), 14);
         assert!(serialized.get("textOpcode").expect("required nullable text opcode").is_null());
@@ -1340,11 +1347,11 @@ mod tests {
     fn mutation_leaf_descriptor_enum_wires_match_neutral_fixture() {
         let fixture = mutation_leaf_descriptor_fixture_json();
         let wires = serde_json::json!({
-            "invertibility": [MutationInvertibility::SelfInvertible, MutationInvertibility::ExplicitMutation, MutationInvertibility::Plan, MutationInvertibility::NonInvertible],
-            "diffParticipation": [MutationDiffParticipation::Detect, MutationDiffParticipation::ApplyOnly, MutationDiffParticipation::Plan, MutationDiffParticipation::None],
-            "outcomeClasses": [MutationOutcomeClass::Applied, MutationOutcomeClass::Info, MutationOutcomeClass::Warning, MutationOutcomeClass::Error, MutationOutcomeClass::Fatal],
-            "composition": [MutationComposition::Atomic, MutationComposition::Composite],
-            "requiredLanguageSurfaces": [MutationLanguageSurface::Rust, MutationLanguageSurface::Typescript, MutationLanguageSurface::Graphql, MutationLanguageSurface::Protobuf, MutationLanguageSurface::JsonSchema, MutationLanguageSurface::Text, MutationLanguageSurface::Binary],
+            "invertibility": json_oracle(&vec![MutationInvertibility::SelfInvertible, MutationInvertibility::ExplicitMutation, MutationInvertibility::Plan, MutationInvertibility::NonInvertible]),
+            "diffParticipation": json_oracle(&vec![MutationDiffParticipation::Detect, MutationDiffParticipation::ApplyOnly, MutationDiffParticipation::Plan, MutationDiffParticipation::None]),
+            "outcomeClasses": json_oracle(&vec![MutationOutcomeClass::Applied, MutationOutcomeClass::Info, MutationOutcomeClass::Warning, MutationOutcomeClass::Error, MutationOutcomeClass::Fatal]),
+            "composition": json_oracle(&vec![MutationComposition::Atomic, MutationComposition::Composite]),
+            "requiredLanguageSurfaces": json_oracle(&vec![MutationLanguageSurface::Rust, MutationLanguageSurface::Typescript, MutationLanguageSurface::Graphql, MutationLanguageSurface::Protobuf, MutationLanguageSurface::JsonSchema, MutationLanguageSurface::Text, MutationLanguageSurface::Binary]),
         });
         assert_eq!(wires, fixture["enumWireValues"]);
     }
@@ -1367,7 +1374,7 @@ mod tests {
             }
         }
         let descriptor = mutation_leaf_descriptor_fixture();
-        assert!(serde_json::to_value(descriptor).expect("serialize descriptor").get("binaryTag").is_some(), "binaryTag cannot be omitted from the static descriptor shape");
+        assert!(json_oracle(&descriptor).get("binaryTag").is_some(), "binaryTag cannot be omitted from the static descriptor shape");
 
         let mut invalid = descriptor;
         invalid.schema_version = 2;
@@ -1430,21 +1437,21 @@ mod tests {
         let names: Vec<(&str, bool)> = fixture["rosterVectors"].as_array().expect("roster vectors").iter().map(|vector| (vector["name"].as_str().expect("name"), vector["expected"].as_bool().expect("expected"))).collect();
         assert_eq!(names, [("same-owner-unique", true), ("duplicate-semantic-kind", false), ("duplicate-text-opcode", false), ("duplicate-binary-tag", false), ("nullable-identities-repeat", true), ("unrelated-owner", false), ("duplicate-owner", false), ("nested-child", false), ("parent-child", false), ("backslash-child", false), ("absolute-root", false), ("windows-root", false), ("windows-slash-drive-root", false), ("windows-relative-drive-root", false), ("empty-segment-root", false), ("dot-root", false), ("parent-root", false), ("nul-root", false), ("nul-child", false), ("distinct-owner-same-identities", true)]);
         let root = MUTATION_LEAF_DESCRIPTOR_ROSTER_ROOT;
-        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_UNIQUE), Ok(()));
-        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_DUPLICATE_SEMANTIC).expect_err("duplicate semantic kind").field, "semanticKind");
-        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_DUPLICATE_OPCODE).expect_err("duplicate text opcode").field, "textOpcode");
-        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_DUPLICATE_TAG).expect_err("duplicate binary tag").field, "binaryTag");
-        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_NULLABLE_REPEAT), Ok(()));
-        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_OWNER_MISMATCH).expect_err("unrelated owner").field, "owner");
-        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_DUPLICATE_OWNER).expect_err("duplicate owner").field, "owner");
-        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_NESTED_OWNER).expect_err("nested child").field, "owner");
-        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_PARENT_CHILD).expect_err("parent child").field, "owner");
-        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_BACKSLASH_CHILD).expect_err("backslash child").field, "owner");
-        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_NUL_CHILD).expect_err("nul child").field, "owner");
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_UNIQUE, MutationOwnerLayout::Flat), Ok(()));
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_DUPLICATE_SEMANTIC, MutationOwnerLayout::Flat).expect_err("duplicate semantic kind").field, "semanticKind");
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_DUPLICATE_OPCODE, MutationOwnerLayout::Flat).expect_err("duplicate text opcode").field, "textOpcode");
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_DUPLICATE_TAG, MutationOwnerLayout::Flat).expect_err("duplicate binary tag").field, "binaryTag");
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_NULLABLE_REPEAT, MutationOwnerLayout::Flat), Ok(()));
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_OWNER_MISMATCH, MutationOwnerLayout::Flat).expect_err("unrelated owner").field, "owner");
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_DUPLICATE_OWNER, MutationOwnerLayout::Flat).expect_err("duplicate owner").field, "owner");
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_NESTED_OWNER, MutationOwnerLayout::Flat).expect_err("nested child").field, "owner");
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_PARENT_CHILD, MutationOwnerLayout::Flat).expect_err("parent child").field, "owner");
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_BACKSLASH_CHILD, MutationOwnerLayout::Flat).expect_err("backslash child").field, "owner");
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_NUL_CHILD, MutationOwnerLayout::Flat).expect_err("nul child").field, "owner");
         for unsafe_root in ["/✏️s/🔌️plugins/🧪️probe/🧬️mutations", "C:\\✏️s\\🔌️plugins\\🧪️probe\\🧬️mutations", "C:/✏️s/🔌️plugins/🧪️probe/🧬️mutations", "C:✏️s/🔌️plugins/🧪️probe/🧬️mutations", "✏️s//🔌️plugins/🧪️probe/🧬️mutations", "./✏️s/🔌️plugins/🧪️probe/🧬️mutations", "../✏️s/🔌️plugins/🧪️probe/🧬️mutations", "✏️s/\0🔌️plugins/🧪️probe/🧬️mutations"] {
-            assert_eq!(validate_mutation_leaf_descriptor_roster(unsafe_root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_UNIQUE).expect_err("unsafe root").field, "owner");
+            assert_eq!(validate_mutation_leaf_descriptor_roster(unsafe_root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_UNIQUE, MutationOwnerLayout::Flat).expect_err("unsafe root").field, "owner");
         }
-        assert_eq!(validate_mutation_leaf_descriptor_roster("✏️s/🔌️plugins/🧪️other/🧬️mutations", &MUTATION_LEAF_DESCRIPTOR_ROSTER_OTHER_OWNER_SINGLE), Ok(()));
+        assert_eq!(validate_mutation_leaf_descriptor_roster("✏️s/🔌️plugins/🧪️other/🧬️mutations", &MUTATION_LEAF_DESCRIPTOR_ROSTER_OTHER_OWNER_SINGLE, MutationOwnerLayout::Flat), Ok(()));
     }
     //#endregion 🧪️MutationLeafDescriptorLaws
 
@@ -1474,7 +1481,7 @@ mod tests {
     // Smallest possible (P=i64) Inference/InferenceSpec/DiffRegions fixture: infers "is_even" and
     // "abs_value" from an i64 snapshot, reusing the same CounterDiff/CounterMutation pair as the Mutation laws
     // above so this proves the inference traits interoperate with the existing diff/mutation shape.
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue)]
     struct AddInference {
         is_even: bool,
         abs_value: i64,
@@ -1511,6 +1518,7 @@ mod tests {
         let json_a = serde_json::to_string(&AddInference::infer(&base)).unwrap();
         let json_b = serde_json::to_string(&AddInference::infer(&42)).unwrap();
         assert_eq!(json_a, json_b, "equal snapshots must infer byte-equal canonical serializations");
+        assert_eq!(json_oracle(&AddInference::infer(&base)), serde_json::from_str::<serde_json::Value>(&json_a).unwrap());
     }
 
     #[test]

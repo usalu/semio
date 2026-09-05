@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.sequence.sequence.mutation;
+
+message EditStepParams {
+  string id = 1;
+  string params_json = 2;
+}

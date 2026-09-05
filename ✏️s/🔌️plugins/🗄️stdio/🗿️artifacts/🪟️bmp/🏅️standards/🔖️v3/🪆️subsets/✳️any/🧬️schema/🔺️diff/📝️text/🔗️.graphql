@@ -1,0 +1,3 @@
+# stdio.bmp diff text grammar schema — the JSON serialization of BmpDiff (see 🦀️.rs).
+scalar Bytes
+type Document { schema: String! payload: String! }

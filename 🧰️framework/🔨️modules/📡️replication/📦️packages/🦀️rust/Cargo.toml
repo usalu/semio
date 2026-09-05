@@ -29,7 +29,7 @@ deflate = ["dep:semio-framework-deflate"]
 ordered-set-serde = []
 
 [dependencies]
-semio-framework-hash = { path = "../../../🔢️hash/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../🔏️hash/📦️packages/🦀️rust" }
 semio-framework-deflate = { path = "../../../🗜️deflate/📦️packages/🦀️rust", optional = true }
 semio-framework-io-base64 = { path = "../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
@@ -73,4 +73,5 @@ serde_json = "1.0.140"
 wasm-bindgen = "0.2.106"
 
 [dev-dependencies]
+blake3 = "1.8.2"
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }

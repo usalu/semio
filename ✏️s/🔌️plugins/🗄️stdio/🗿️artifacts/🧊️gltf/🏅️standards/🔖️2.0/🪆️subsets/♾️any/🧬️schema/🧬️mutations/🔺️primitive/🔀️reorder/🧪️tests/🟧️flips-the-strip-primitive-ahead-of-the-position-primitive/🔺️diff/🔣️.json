@@ -1,0 +1,22 @@
+{
+  "meshes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "primitives": [
+            {
+              "attributes": {},
+              "mode": 5
+            },
+            {
+              "attributes": {
+                "POSITION": 0
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,231 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/stdio/gltf/2.0/mutation/asset",
+  "title": "glTF Asset Mutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-asset-descriptive-metadata"
+        },
+        "payload": {
+          "$ref": "🪪️asset/📝️change-description/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-asset-extension-data"
+        },
+        "payload": {
+          "$ref": "🪪️asset/🧩️change-extensions/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-asset-extra-data"
+        },
+        "payload": {
+          "$ref": "🪪️asset/🧾️change-extras/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-asset-version"
+        },
+        "payload": {
+          "$ref": "🪪️asset/🔖️version/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-document-extension-data"
+        },
+        "payload": {
+          "$ref": "📃️document/🧩️change-extensions/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-document-extra-data"
+        },
+        "payload": {
+          "$ref": "📃️document/📝️change-extras/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "add-used-extension"
+        },
+        "payload": {
+          "$ref": "📣️used-extension/➕️add/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "move-required-extension"
+        },
+        "payload": {
+          "$ref": "✅️required-extension/🚚️move/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "move-used-extension"
+        },
+        "payload": {
+          "$ref": "📣️used-extension/🚚️move/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorder-required-extensions"
+        },
+        "payload": {
+          "$ref": "✅️required-extension/🔀️reorder/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorder-used-extensions"
+        },
+        "payload": {
+          "$ref": "📣️used-extension/🔀️reorder/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "add-required-extension"
+        },
+        "payload": {
+          "$ref": "✅️required-extension/➕️add/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "remove-required-extension"
+        },
+        "payload": {
+          "$ref": "✅️required-extension/➖️remove/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "remove-used-extension"
+        },
+        "payload": {
+          "$ref": "📣️used-extension/➖️remove/🧬️.schema.json"
+        }
+      }
+    }
+  ]
+}

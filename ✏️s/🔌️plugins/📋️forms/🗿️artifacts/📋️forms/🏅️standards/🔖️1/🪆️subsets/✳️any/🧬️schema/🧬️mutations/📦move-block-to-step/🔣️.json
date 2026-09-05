@@ -5,7 +5,7 @@
   "displayName": "Move Block To Step",
   "emoji": "📦",
   "aggregateVariant": "MoveBlockToStep",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

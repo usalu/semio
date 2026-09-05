@@ -5,7 +5,7 @@ import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runV
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
-    runVitest(this.root, rest);
+    runVitest(this.root, rest, "vitest.config.ts");
   }
 }
 

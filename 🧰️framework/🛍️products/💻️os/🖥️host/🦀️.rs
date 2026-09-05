@@ -898,14 +898,14 @@ pub mod host {
         /// (every scheme forwards to the host over the injected `BackboneChannelPort`, a pure queue) —
         /// see {@link attach_backbone} for the native counterpart, which takes an explicit
         /// `Box<dyn store::Backbone>` since native has no URI→IO auto-resolution anymore (`framework/sync`'s
-        /// `host_runtime` module owns constructing the real endpoint via `ArtifactHost`).
+        /// `ArtifactHost` module owns constructing the real endpoint via `ArtifactHost`).
         #[cfg(target_arch = "wasm32")]
         pub fn attach_backbone(&mut self, uri: &str) -> Result<(), VcsError> {
             resolve_kernel_future(self.inner.attach_backbone_uri(uri))
         }
 
         /// @emoji 🔗️ Attaches an explicit native backbone channel (typically a `channel_backbone` handed
-        /// out by `framework/sync`'s `ArtifactHost::open`, per `host_runtime`'s canonical sequence).
+        /// out by `framework/sync`'s `ArtifactHost::open`, per `ArtifactHost`'s canonical sequence).
         #[cfg(not(target_arch = "wasm32"))]
         pub fn attach_backbone(&mut self, backbone: Box<dyn store::Backbone>) -> Result<(), VcsError> {
             self.inner.attach_backbone(backbone)
@@ -2147,6 +2147,7 @@ pub mod host {
         fn sample_extension_sxt(extension_id: &str, extends: &str, capabilities: Vec<String>) -> Vec<u8> {
             let manifest = store::extension::ExtensionPackageManifest {
                 extension_id: extension_id.into(),
+                directory_name: "🧩️sample-extension".into(),
                 label: extension_id.into(),
                 version: "0.1.0".into(),
                 extends: extends.into(),
@@ -2197,6 +2198,7 @@ pub mod host {
             // envelope/zip checks would reject for an unrelated reason).
             let mismatched_manifest = store::extension::ExtensionPackageManifest {
                 extension_id: "ext-mismatch".into(),
+                directory_name: "⚖️ext-mismatch".into(),
                 label: "Ext Mismatch".into(),
                 version: "0.1.0".into(),
                 extends: "flow".into(),
@@ -2404,115 +2406,6 @@ pub mod backbone {
     // #endregion backbone
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-#[cfg(feature = "os-host-full")]
-pub mod host_runtime {
-    // #region host_runtime
-    //! 🧵️ Canonical native document-open sequencing shared by every native host that links this crate
-    //! (currently the wgpu shell). Native-only: it depends on `framework/sync`'s `ArtifactHost`, whose
-    //! actor is a native-thread (or wasm `spawn_local`) concern — WASI-P2 plugins never see it, and the
-    //! browser React shell talks to its own TS twin (`framework/product/os/core/js/🟦️backbone-worker.ts`)
-    //! through a different FFI boundary (the WIT program sandbox), not through this Rust module. Keeping
-    //! this doc-comment as the single canonical description of the sequence — referenced from both
-    //! `os-shell.tsx`'s `openDocument` and `framework/renderer/wgpu/rs/lib.rs` — is how the two stay in
-    //! lockstep without a literal shared code path across the Rust/TS boundary.
-    //!
-    //! ## Canonical open/spawn/effect sequence (mirrored in TS by `os-shell.tsx`'s `openDocument`):
-    //! 1. Build a `ArtifactActorConfig{document_id, schema, bindings, watch_external, actor}` for the
-    //!    document being opened — either the os/studio document itself, or one app instance's
-    //!    {@link crate::instance::OsArtifactRef}.
-    //! 2. `ArtifactHost::open(config)` → `ArtifactChannels{cmd_tx, channel_backbone}`.
-    //! 3. Attach `channel_backbone` to the document's own store: `store.attach_backbone(Box::new(...))`.
-    //!    For a native WASM plugin instance this ALSO means calling `framework/plugin/host`'s
-    //!    `WasmPluginRuntime::register_host_backbone(uri, Box::new(channel_backbone))` so the sandboxed
-    //!    plugin's `backbone-send`/`backbone-poll` host imports reach the same channel — this crate does
-    //!    not link `framework/plugin/host` directly (no existing dependency edge), so the wgpu shell,
-    //!    which links both, is the one that actually performs that registration call using the
-    //!    {@link OpenedDocument} this module hands back.
-    //! 4. `ArtifactHost::subscribe(&document_id)` → `broadcast::Receiver<ArtifactEvent>`; on each event:
-    //!    - `RemoteMutations`/`SnapshotReplaced` are already pushed into the store's inbound queue by the actor
-    //!      — the caller just needs to call `store.tick()` (step 5) to materialize them.
-    //!    - `Presence{peers}` is pushed to the plugin instance as `AppCommand::Presence` (contract-
-    //!      freeze §C7.6) — the ONLY plugin ingress for peers; the old `presence:` backbone-URI hack
-    //!      and the later `ViewModel.presence_peers_json` JSON-array bridge are both gone entirely.
-    //!    - `Status`/`Conflict` surface on the shell's sync-status badge / conflict card.
-    //! 5. Every tick/frame: `store.tick()` drains the attached backbone's inbound queue into the store.
-    //! 6. On `Effect::SpawnPluginInstance`/`OpenPluginInstance` from an action result: mint (if
-    //!    needed) a fresh `OsArtifactRef` (see {@link crate::instance::create_os_artifact_id}), then repeat
-    //!    steps 1-5 for that app's own document.
-    //! 7. On close: send `ArtifactActorMsg::Detach` (flushes pending operations) via `host.send(id, Detach)`, then
-    //!    `ArtifactHost::close(&id)`, then `store.detach_backbone()` /
-    //!    `WasmPluginRuntime::deregister_host_backbone(uri)`.
-
-    use crate::instance::OsArtifactRef;
-    use crate::store_sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactChannels, ArtifactEvent, ArtifactHost, PersistenceBinding};
-
-    /// @emoji 📌️ The local persistence binding for a folder-backed document (one row per `document_id`
-    /// in the folder's `.semio` append-only event log — see `FolderEventLogStorage`).
-    pub fn folder_binding(folder_path: std::path::PathBuf) -> PersistenceBinding {
-        PersistenceBinding::Folder { path: folder_path }
-    }
-
-    /// @emoji ☁️ The semio_hub persistence binding for a document. `surface` is the out-of-band
-    /// presence scope (ticket 26/08/16/HUB-SPACES-…, contract §C0) — `None` for non-presence
-    /// documents (e.g. the OS config/home documents, which stay folder-only per contract §C3).
-    pub fn hub_binding(base_url: impl Into<String>, space_id: impl Into<String>, surface: Option<String>) -> PersistenceBinding {
-        PersistenceBinding::Hub { base_url: base_url.into(), space_id: space_id.into(), surface }
-    }
-
-    /// @emoji 🔗️ Builds the `ArtifactActorConfig` to open an app instance's own document, from its
-    /// `OsArtifactRef` — step 1 of the canonical sequence.
-    pub fn app_artifact_config(document: &OsArtifactRef, bindings: Vec<PersistenceBinding>, actor: &str) -> ArtifactActorConfig {
-        ArtifactActorConfig { document_id: document.document_id.clone(), schema: document.schema.clone(), bindings, watch_external: true, actor: actor.to_string() }
-    }
-
-    /// @emoji 🧵️ Channels + a fresh event receiver for one opened document — steps 2 and 4 of the
-    /// canonical sequence.
-    pub struct OpenedDocument {
-        pub channels: ArtifactChannels,
-        pub events: tokio::sync::broadcast::Receiver<ArtifactEvent>,
-    }
-
-    /// @emoji 🚀️ Opens a document on `host` and subscribes to its events in one call (steps 1-2 & 4).
-    pub fn open_document(host: &ArtifactHost, document_id: &str, schema: &str, bindings: Vec<PersistenceBinding>, actor: &str) -> OpenedDocument {
-        let channels = host.open(ArtifactActorConfig { document_id: document_id.to_string(), schema: schema.to_string(), bindings, watch_external: true, actor: actor.to_string() });
-        let events = host.subscribe(document_id);
-        OpenedDocument { channels, events }
-    }
-
-    /// @emoji ✂️ Detaches and closes a document's actor (step 7's `ArtifactHost` half).
-    pub fn close_document(host: &ArtifactHost, document_id: &str) {
-        host.send(document_id, ArtifactActorMsg::Detach);
-        host.close(document_id);
-    }
-
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        fn test_pool() -> Arc<semio_framework_async::WorkerPool> {
-            static POOL: std::sync::OnceLock<Arc<semio_framework_async::WorkerPool>> = std::sync::OnceLock::new();
-            POOL.get_or_init(|| Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)))).clone()
-        }
-
-        #[test]
-        fn opens_a_document_and_subscribes_to_its_events() {
-            let host = ArtifactHost::new(test_pool());
-            let opened = open_document(&host, "doc-1", "test.schema", vec![], "actor-1");
-            drop(opened.events);
-            close_document(&host, "doc-1");
-        }
-
-        #[test]
-        fn app_artifact_config_carries_the_artifact_ref_through() {
-            let document = OsArtifactRef { document_id: "doc-2".into(), schema: "draw.document".into() };
-            let config = app_artifact_config(&document, vec![], "actor-1");
-            assert_eq!(config.document_id, "doc-2");
-            assert_eq!(config.schema, "draw.document");
-        }
-    }
-    // #endregion host_runtime
-}
 
 #[cfg(feature = "os-host-full")]
 pub mod instance {
@@ -2546,7 +2439,7 @@ pub mod instance {
 
     // 🧷️ `OsAppInstance` is deleted — `workflow::WorkflowNode` (kernel crate) absorbs it entirely;
     // `WorkflowNode.id` IS the app-instance identity now (see the kernel crate's `🔖️InstanceIdentity`
-    // region doc). `OsArtifactRef` stays (still used generically by `host_runtime`'s document-open
+    // region doc). `OsArtifactRef` stays (still used generically by `ArtifactHost`'s document-open
     // sequence), just no longer nested inside a per-instance record here.
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -2884,7 +2777,7 @@ pub mod instance {
     /// @emoji 📎️ Looks up bundled fixture JSON by slug — the seed content for a freshly spawned app
     /// document. Replaces the old `OsSourceDocument.payloadRef = "fixture:…"` resolution: since app
     /// content no longer embeds in the os document, seeding now happens once, host-side, at
-    /// {@link OsArtifactRef} creation time (see `host_runtime`), not on every materialize/read.
+    /// {@link OsArtifactRef} creation time (see `ArtifactHost`), not on every materialize/read.
     pub fn os_fixture_json(slug: &str) -> Option<String> {
         os_fixture_json_registry().lock().ok().and_then(|registry| registry.get(slug).cloned())
     }
@@ -2950,7 +2843,7 @@ pub mod instance {
     /// {@link OsArtifactRef}, read host-side and passed in as `current_document_json`) — this function
     /// no longer resolves embedded/upstream source documents; that concept was deleted with
     /// `OsSourceDocument`. Cross-instance ("upstream") dataflow through workflow edges is deferred
-    /// (see `host_runtime` doc-comment) to a follow-up that reads the upstream app's live document.
+    /// (see `ArtifactHost` doc-comment) to a follow-up that reads the upstream app's live document.
     pub fn materialize_os_app_instance_document_json(current_document_json: &str, node_id: &str, bindings: &[OsParameterFieldBinding], parameters: &[OsParameter]) -> String {
         let snapshot: Value = serde_json::from_str(current_document_json).unwrap_or_else(|_| json!({}));
         let with_params = apply_parameter_values_to_snapshot(snapshot, bindings, parameters, node_id);
@@ -3812,6 +3705,45 @@ pub mod workflow {
         pub find_items_json: String,
     }
 
+    /// 🖼️ Presentation-only media projection; it does not define a persisted workflow codec.
+    fn workflow_media_contract_payload(contract: &MediaContract) -> Value {
+        let wire = match &contract.wire {
+            MediaWireFormat::Document { schema } => json!({ "kind": "document", "schema": schema }),
+            MediaWireFormat::Binary { format_kind } => json!({ "kind": "binary", "formatKind": format_kind }),
+        };
+        json!({
+            "kindId": contract.kind_id,
+            "mediaType": { "class": contract.media_type.class, "form": contract.media_type.form },
+            "wire": wire,
+            "conversion": contract.conversion.map(|(from, to)| [from, to]),
+        })
+    }
+
+    #[test]
+    fn workflow_media_contract_projection_matches_neutral_document_binary_and_conversion_cases() {
+        let fixture: Value = serde_json::from_str(include_str!("🧪️tests/🕸️media-projection/🧪️fixture/🔣️.json")).expect("neutral media presentation fixture");
+        let cases = fixture["cases"].as_array().expect("four vectors");
+        assert_eq!(cases.len(), 4);
+        for row in cases {
+            let input = &row["input"];
+            let contract = MediaContract {
+                kind_id: input["kindId"].as_str().unwrap().to_string(),
+                media_type: serde_json::from_value(input["mediaType"].clone()).expect("typed media type"),
+                wire: serde_json::from_value(input["wire"].clone()).expect("typed document or binary wire"),
+                conversion: serde_json::from_value(input["conversion"].clone()).expect("typed optional conversion"),
+            };
+            let graph = Workflow { schema: WORKFLOW_SCHEMA.into(), nodes: Vec::new(), edges: vec![WorkflowEdge {
+                id: row["id"].as_str().unwrap().to_string(), source_node_id: "source".into(), source_port_id: "out".into(),
+                target_node_id: "target".into(), target_port_id: "in".into(), contract,
+            }] };
+            let payload = os_workflow_to_node_graph_payload(&graph);
+            let edges: Value = serde_json::from_str(&payload.edges_json).expect("actual scene edge payload");
+            assert_eq!(edges.as_array().unwrap().len(), 1);
+            assert_eq!(edges[0]["contract"], row["expected"], "{}", row["id"]);
+            assert_eq!(edges[0]["isConversion"], row["isConversion"]);
+        }
+    }
+
     /// @emoji 🕸️ Serializes an OS workflow into generic node-graph scene payloads.
     ///
     /// 🚧️ TEMP(Wave 3): still emits JSON-string payloads (typed `NodeGraphScene` records land with
@@ -3856,12 +3788,7 @@ pub mod workflow {
                     "sourcePortId": edge.source_port_id,
                     "targetNodeId": edge.target_node_id,
                     "targetPortId": edge.target_port_id,
-                    // 🏷️ Data plumbing only (no renderer changes here) — lets a later ticket badge/dash
-                    // conversion edges without re-deriving the contract client-side. `MediaContract`
-                    // dropped `Serialize` (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
-                    // 26/09/02) — route through its `ToValue` impl and the permanent `DslValue` →
-                    // `serde_json::Value` bridge instead of deriving.
-                    "contract": serde_json::Value::from(edge.contract.to_value()),
+                    "contract": workflow_media_contract_payload(&edge.contract),
                     "isConversion": edge.contract.conversion.is_some(),
                 })
             })
@@ -4709,7 +4636,7 @@ pub mod codec_abi {
     };
 
     pub const OS_HOST_CODEC_SCHEMA_JSON: &str = include_str!("🧬️schema/🔣️.json");
-    pub const OS_HOST_CODEC_LEDGER_FIXTURE: &str = include_str!("🧪️fixtures/📊️.tsv");
+    pub const OS_HOST_CODEC_LEDGER_FIXTURE: &str = include_str!("🧫️fixtures/📊️.tsv");
     pub const OS_HOST_CODEC_MAX_INPUT_BYTES: usize = ABI_MAX_BODY_BYTES;
     pub const OS_HOST_CODEC_MAX_OUTPUT_BYTES: usize = ABI_MAX_BODY_BYTES;
     pub const OS_HOST_CODEC_MAX_KIND_COUNT: usize = 256;

@@ -2,7 +2,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../../📦️packages/🟦️typescript");
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 /** @emoji 🧪️ Vitest for `@semio-tech/framework-os-mcp` — in-source tests (`import.meta.vitest`) on
  * the pure surface in `../../🟦️.ts`, plus three real-process integration suites that spawn
@@ -14,14 +14,14 @@ export default defineConfig({
   root,
   resolve: {
     alias: {
-      "@semio-tech/framework-os-mcp": resolve(root, "../../../📦️packages/🟦️typescript/🧪️🧪️🏔️🦋️tests/🟦️.ts"),
+      "@semio-tech/framework-os-mcp": resolve(root, "./🟦️.ts"),
     },
   },
   test: {
     name: "@semio-tech/framework-os-mcp",
     mode: "test",
     environment: "node",
-    include: ["🧪️legacy-conformance.test.ts", "🧪️modern-era.test.ts", "🧪️hygiene.test.ts", "🧪️end-to-end.test.ts", "🧪️authenticated-hub-workspace.test.ts"],
+    include: ["🏛️legacy-conformance.test.ts", "🌅️modern-era.test.ts", "🧹️hygiene.test.ts", "🔄️end-to-end.test.ts", "🔐️authenticated-hub-workspace.test.ts"],
     coverage: { include: ["../../🟦️.ts"] },
     includeSource: ["../../🟦️.ts"],
     testTimeout: 30_000,

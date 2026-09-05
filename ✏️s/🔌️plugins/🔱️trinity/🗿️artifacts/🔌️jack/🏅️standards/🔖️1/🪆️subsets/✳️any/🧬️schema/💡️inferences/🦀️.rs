@@ -6,7 +6,7 @@
 //! (currently: `🧭topology/`, honestly derivable from this directed property port graph's own
 //! `nodes`/`edges` — the closest fit from the family root's "workflow/dag-shaped" category, this
 //! artifact being a directed node/edge graph with a `root_node_id`, not the "positioned" category
-//! (its `x`/`y` are already explicit fields, not something to re-derive); and `🎛flat-position/`,
+//! (its `x`/`y` are already explicit fields, not something to re-derive); and `🎛️flat-position/`,
 //! ported from the former `Graph::recompute_derived` — each node's flattened `(u, v)` position is
 //! honestly re-derivable from `nodes`/`edges`/`root_node_id` alone, so it moved out of the manifest's
 //! former `flatPosition` `"derived"` node property into this family instead).
@@ -21,7 +21,7 @@ use super::topology::{compute_topology, JackTopology};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a jack snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by `🧭topology/`; `flat_position`, backed by
-/// `🎛flat-position/`).
+/// `🎛️flat-position/`).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.trinity.jack.inference")]

@@ -52,13 +52,13 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// in call order: `io_registry::register()` → `.composers(...)` below, the same
 /// `standards::v_commonmark::engine::io_registry::entries()` this artifact's own root `io_registry`
 /// module already wraps (module path collapses the `subsets::any` folder level away — same shape as
-/// `💾️binary`/`📄️txt`/`🔣️json`, not `📰️xml`/`📊️csv`'s deeper `subsets::any::engine`);
+/// `💾️binary`/`🔤️txt`/`🔣️json`, not `📰️xml`/`📊️csv`'s deeper `subsets::any::engine`);
 /// `register_artifact_schema()`/`register_artifact_inferences()` → `.schema(...)`/`.inferences(...)`;
 /// `register_pilot_languages()` → `.languages(...)`, replicated verbatim below (same `OnceLock`-leak
 /// shape `🔋️energy`'s own `pilot_languages()` uses, since `dsl::LanguageSpec` isn't `const
 /// fn`-constructible); `register_document_codec` → `.document_codec_bare::<MdSnapshot,
 /// MdMutation>(...)`. This artifact's `register_pilot_languages()` doc already states
-/// `register_schema_spec` is "deliberately NOT called here" — so unlike `📄️txt`/`💾️binary` there is no
+/// `register_schema_spec` is "deliberately NOT called here" — so unlike `🔤️txt`/`💾️binary` there is no
 /// uncovered call left behind. `standards::v_commonmark::engine::register()` itself is left in place,
 /// now orphaned/uncalled — deleting it means editing `⚙️engine/`, off-limits here.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.

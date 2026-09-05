@@ -1,7 +1,0 @@
-syntax = "proto3";
-package semio.stdio_dwg.diff_text;
-message ValueList { repeated Value values = 1; }
-message Field { string name = 1; Value value = 2; }
-message Record { repeated Field fields = 1; }
-message Value { oneof value { string text = 1; sint64 integer = 2; double real = 3; bool boolean = 4; Record record = 5; ValueList list = 6; bool null_value = 7; } }
-message Artifact { string schema = 1; Record diff = 2; }

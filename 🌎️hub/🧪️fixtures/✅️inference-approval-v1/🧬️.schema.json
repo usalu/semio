@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.hub.inference-approval-fixture/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "maximumBytes", "request", "hostile"],
+  "properties": {
+    "schema": { "const": "semio.hub.inference-approval-fixture/v1" },
+    "maximumBytes": { "const": 1024 },
+    "request": { "$ref": "#/$defs/request" },
+    "hostile": {
+      "type": "array", "minItems": 14, "maxItems": 14, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["field", "value"],
+        "properties": {
+          "field": { "enum": ["schema", "version", "jobId", "proposalHash", "spaceId", "userId", "actor", "command", "mutationId", "frontier", "catalogExecutionGrant", "walWitness"] },
+          "value": { "anyOf": [{ "type": "string" }, { "type": "integer" }, { "type": "object" }, { "type": "boolean" }] }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "request": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema", "version", "jobId", "proposalHash"],
+      "properties": {
+        "schema": { "const": "semio.hub.inference-approval/v1" },
+        "version": { "const": 1 },
+        "jobId": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+        "proposalHash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    }
+  }
+}

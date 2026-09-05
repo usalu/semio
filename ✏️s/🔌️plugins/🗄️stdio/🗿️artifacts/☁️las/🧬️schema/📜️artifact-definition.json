@@ -48,7 +48,9 @@
       "status": "declared"
     }
   ],
-  "codecs": [],
+  "codecs": [
+    { "id": "s.stdio.las.standard.1-0.codec.native-document.v1", "status": "implemented", "from": "s.stdio.las.standard.1-0.dialect.source", "to": "s.stdio.las.standard.1-0.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.las.v1", "artifact_kind": "stdio.las", "document_schema": "stdio.las", "extension": "las", "pack_schema_hash": "1017f34238855d14c9d3a101bc57759bf369905c897d91db23e44bb1cc7ef199", "runtime_capability_id": "s.stdio.las.standard.1-0.codec.codec-stdio-las-extension-las.v1" } }
+  ],
   "mutations": [],
   "inferences": [],
   "resources": [
@@ -83,22 +85,22 @@
   ],
   "runtime_capabilities": [
     {
-      "id": "s.stdio.las.runtime.codec.codec-stdio-las-extension-las.v1",
+      "id": "s.stdio.las.standard.1-0.codec.codec-stdio-las-extension-las.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec:stdio.las|extension:las",
+      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.las:las|codec:stdio.las",
       "claims": [
         {
           "namespace": "codec",
           "value": "stdio.las"
         },
         {
-          "namespace": "extension",
-          "value": "las"
+          "namespace": "codec-extension",
+          "value": "9:stdio.las:las"
         }
       ]
     },
     {
-      "id": "s.stdio.las.runtime.composer.dialect-s-stdio-las-1-0.v1",
+      "id": "s.stdio.las.composer.dialect-s-stdio-las-1-0.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.las@1.0/*",
       "claims": [
@@ -109,7 +111,7 @@
       ]
     },
     {
-      "id": "s.stdio.las.runtime.grammar.grammar-stdio-las.v1",
+      "id": "s.stdio.las.grammar.grammar-stdio-las.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.las",
       "claims": [
@@ -120,7 +122,7 @@
       ]
     },
     {
-      "id": "s.stdio.las.runtime.grammar.grammar-stdio-las-diff.v1",
+      "id": "s.stdio.las.grammar.grammar-stdio-las-diff.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.las.diff",
       "claims": [
@@ -131,7 +133,7 @@
       ]
     },
     {
-      "id": "s.stdio.las.runtime.grammar.grammar-stdio-las-op.v1",
+      "id": "s.stdio.las.grammar.grammar-stdio-las-op.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.las.op",
       "claims": [
@@ -142,7 +144,7 @@
       ]
     },
     {
-      "id": "s.stdio.las.runtime.grammar.grammar-stdio-las-pack.v1",
+      "id": "s.stdio.las.grammar.grammar-stdio-las-pack.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.las.pack",
       "claims": [
@@ -153,7 +155,7 @@
       ]
     },
     {
-      "id": "s.stdio.las.runtime.grammar.grammar-stdio-las-spr.v1",
+      "id": "s.stdio.las.grammar.grammar-stdio-las-spr.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.las.spr",
       "claims": [
@@ -164,7 +166,7 @@
       ]
     },
     {
-      "id": "s.stdio.las.runtime.inference.schema-s-stdio-las-inference.v1",
+      "id": "s.stdio.las.inference.schema-s-stdio-las-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:s.stdio.las.inference",
       "claims": [
@@ -175,7 +177,7 @@
       ]
     },
     {
-      "id": "s.stdio.las.runtime.representation.mime-application-vnd-las-extension-las.v1",
+      "id": "s.stdio.las.standard.1-0.representation.mime-application-vnd-las-extension-las",
       "category": "representation",
       "descriptor": "runtime-capability:representation:mime:application/vnd.las|extension:.las",
       "claims": [
@@ -190,7 +192,7 @@
       ]
     },
     {
-      "id": "s.stdio.las.runtime.schema.schema-s-stdio-las.v1",
+      "id": "s.stdio.las.schema.schema-s-stdio-las.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.las",
       "claims": [

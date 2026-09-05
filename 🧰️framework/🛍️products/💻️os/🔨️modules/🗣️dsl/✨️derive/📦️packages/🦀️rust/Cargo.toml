@@ -18,7 +18,7 @@ syn = { version = "2.0", features = ["full", "extra-traits"] }
 quote = "1.0"
 proc-macro2 = "1.0"
 serde_json = "1.0"
-semio-framework-hash = { path = "../../../../../../../🔨️modules/🔢️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 
 [dev-dependencies]
 serde = { version = "1.0", features = ["derive"] }

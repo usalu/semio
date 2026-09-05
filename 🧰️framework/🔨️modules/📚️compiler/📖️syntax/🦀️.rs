@@ -4,7 +4,7 @@
 //! pre-scan lexer for extras outside `dsl_core`'s shared token alphabet, delegate every other run
 //! of characters to `os_dsl::lex`" pattern `dsl_grammar` and `mathematical_graph_dsl` already
 //! established — this EXTENDS the shared grammar infrastructure, it does not fork it. The
-//! normative spec ships alongside as `📖️math.grammar` (see `math_grammar_parses_under_dsl_grammar`
+//! normative spec ships alongside as `📖️.grammar.semio` (see `math_grammar_parses_under_dsl_grammar`
 //! in the `🧪️Tests` region, a dev-dependency-only check since `dsl_grammar`'s `Recognizer` matches
 //! `os_dsl::lex` tokens directly and can't see this crate's own pre-scanned extras).
 //!
@@ -722,11 +722,11 @@ mod tests {
     #[test]
     fn math_grammar_parses_under_dsl_grammar() {
         let source = include_str!("📖️.grammar.semio");
-        let parsed = crate::os_dsl::grammar::parse_grammar(source).expect("📖️math.grammar must parse under dsl_grammar's own parser");
+        let parsed = crate::os_dsl::grammar::parse_grammar(source).expect("📖️.grammar.semio must parse under dsl_grammar's own parser");
         assert_eq!(parsed.id, "math");
         assert_eq!(parsed.start, "formula");
         let printed = crate::os_dsl::grammar::print_grammar(&parsed);
-        let reparsed = crate::os_dsl::grammar::parse_grammar(&printed).expect("canonical print of 📖️math.grammar must reparse");
+        let reparsed = crate::os_dsl::grammar::parse_grammar(&printed).expect("canonical print of 📖️.grammar.semio must reparse");
         assert_eq!(reparsed, parsed);
     }
 }

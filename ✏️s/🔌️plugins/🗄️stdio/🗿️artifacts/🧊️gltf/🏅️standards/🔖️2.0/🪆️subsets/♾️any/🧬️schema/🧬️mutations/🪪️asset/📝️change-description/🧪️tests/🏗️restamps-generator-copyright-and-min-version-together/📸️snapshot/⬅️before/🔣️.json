@@ -1,0 +1,13 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0",
+      "generator": "old-exporter",
+      "copyright": "(c) 2025",
+      "minVersion": "2.0"
+    }
+  },
+  "buffers": [],
+  "sourceForm": "json"
+}

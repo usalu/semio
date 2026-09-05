@@ -45,7 +45,7 @@ pub fn gis3d_io() -> AppIo {
         ports: vec![gis3d_map_in_port(), gis3d_scene_out_port()],
         export_formats: Vec::new(),
         import_formats: Vec::new(),
-        artifact: semio_framework_plugin::ArtifactPresentation { id: "gis.terrain".into(), name: "GIS Terrain".into(), dimension: "3d".into(), component_kind: "gisterrain".into() },
+        artifact: semio_framework_plugin::ArtifactPresentation { id: crate::artifacts::gisterrain::GISTERRAIN_DIALECT.artifact_kind.into(), name: "GIS Terrain".into(), dimension: "3d".into(), component_kind: "gisterrain".into() },
     }
 }
 
@@ -58,7 +58,7 @@ pub fn gis3d_map_in_port() -> semio_framework_plugin::MediaPortSpec {
         label: "Map".into(),
         direction: semio_framework_plugin::MediaPortDirection::In,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
-        kind_id: Some("2d.map".into()),
+        kind_id: Some(crate::artifacts::gismap::GISMAP_DIALECT.artifact_kind.into()),
         required: false,
         multiplicity: semio_framework::PortMultiplicity::One,
     }
@@ -820,7 +820,7 @@ mod tests {
         assert!(definition.actions.iter().all(|action| action.semantics.execution.interactive_job == semio_framework::InteractiveJobClassification::Migrated));
         // 🧷️ gis3d declares no app panel tabs of its own; whatever is present comes from the framework.
         assert!(!definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref().is_some_and(|key| key.starts_with("gis3d.play."))), "gis3d declares no app panels");
-        assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "2d.map"));
+        assert!(definition.artifact_kinds.iter().any(|kind| kind.id == crate::artifacts::gismap::GISMAP_DIALECT.artifact_kind));
         // 🧱️ `3d.mesh` is NO LONGER independently registered here (ticket
         // `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` — duplicate `ArtifactKindSpec` deleted, see
         // `crate::artifacts::gisterrain::🦀️.rs`'s removal comment). `scene:out`'s
@@ -886,7 +886,7 @@ mod tests {
         let ports = io.all_ports();
         let map_in = ports.iter().find(|port| port.id == "map:in").expect("map:in declared");
         assert_eq!(map_in.direction, semio_framework_plugin::MediaPortDirection::In);
-        assert_eq!(map_in.kind_id.as_deref(), Some("2d.map"));
+        assert_eq!(map_in.kind_id.as_deref(), Some(crate::artifacts::gismap::GISMAP_DIALECT.artifact_kind));
         let scene_out = ports.iter().find(|port| port.id == "scene:out").expect("scene:out declared");
         assert_eq!(scene_out.direction, semio_framework_plugin::MediaPortDirection::Out);
         assert_eq!(scene_out.kind_id.as_deref(), Some("3d.mesh"));

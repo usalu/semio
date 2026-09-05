@@ -1,3 +1,0 @@
-; abnf s.stdio.semio.cad.inference
-document = payload
-payload = *OCTET

@@ -1,7 +1,0 @@
-syntax = "proto3";
-package semio.s_stdio_pdf_1_7_e.mutation.remove_launch_action;
-
-// Direct remove-launch-action protobuf payload.
-message RemoveLaunchActionMutation {
-  string target = 1;
-}

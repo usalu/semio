@@ -67,7 +67,7 @@ impl SchemaKind {
 /// *on* this kernel crate and builds as its own `[package.metadata.component]` WASM/WASI-P2
 /// component — a separate compiled unit and a separate runtime process/instance from `pack_cli`.
 /// `crate::os_dsl::registry`'s `SCHEMA_REGISTRY` is a process-global populated only by each app's
-/// own `register_schema_spec` call inside its own `register()` (see e.g. `📄️txt`'s
+/// own `register_schema_spec` call inside its own `register()` (see e.g. `🔤️txt`'s
 /// `register_schema_specs()`); since no app crate's code ever executes inside the `pack` binary's
 /// process, that registry is structurally unreachable and would always read empty here — wiring
 /// `resolve_schema` through it would be a dead branch, not a real fan-in. The real 49-kind

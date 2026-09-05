@@ -1,3 +1,0 @@
-syntax = "proto3";
-package stdio.gltf.mutation;
-message GltfCreateScenePayloadV1 { uint32 position = 1; }

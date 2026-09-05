@@ -1,0 +1,14 @@
+{
+  "schema": "dag.dag",
+  "content": {
+    "childId": "dag-content-seeded-fixture",
+    "target": {
+      "artifactId": "dag-content",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "graph"
+      }
+    }
+  }
+}

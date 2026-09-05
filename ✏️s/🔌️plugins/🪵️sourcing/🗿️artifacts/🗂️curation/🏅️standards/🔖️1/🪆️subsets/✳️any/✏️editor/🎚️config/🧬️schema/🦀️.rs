@@ -17,7 +17,7 @@ pub struct SourcingCurationConfig {
 //#region 🔖️AppSchemaDescriptor
 /// 📎 The curation app's config + presence schema facets — the open replacement for this app's entry
 /// in framework schema's closed `register_all_app_schema_descriptors()` catalog (see
-/// `🧰️framework/🔨️modules/🧬️schema/🦀️component.rs`, `s.sourcing.curation`). Returned, not
+/// `🧰️framework/🔨️modules/🧬️schema/⚛️component.rs`, `s.sourcing.curation`). Returned, not
 /// self-registered; `SourcingCurationApp::app_schema` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) hands it to `register_document_app` — app-scope
 /// config/presence schema is the one registration `ArtifactDeclaration` deliberately has no field

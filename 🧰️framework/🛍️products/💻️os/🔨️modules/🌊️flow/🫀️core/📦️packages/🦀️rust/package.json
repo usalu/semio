@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "../../pkg/flow_core.js",
-    "./pkg/flow_core.js": "../../pkg/flow_core.js"
+    ".": "../../🕸️bindings/flow_core.js",
+    "./pkg/flow_core.js": "../../🕸️bindings/flow_core.js"
   }
 }

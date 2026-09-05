@@ -7,7 +7,7 @@
 
 import { expect, test, type Page } from "@playwright/test";
 
-import { PLUGIN_BUILD_TARGETS, pluginModuleUrl, type PluginBuildTarget } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️plugins.ts";
+import { PLUGIN_BUILD_TARGETS, pluginModuleUrl, type PluginBuildTarget } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
 
 const PLUGINS_STORY_TITLE_ID = "🛠️framework🖥️os-plugins";
 const READY_TIMEOUT_MS = 60_000;
@@ -20,7 +20,7 @@ function significantConsoleErrors(messages: string[]): string[] {
 /** @emoji 🔍️ Same HEAD-probe `OsBootHost` (`.storybook/framework/os/index.tsx`) itself does — mirrored here
  * so the spec knows, per target, whether to expect the readiness beacon or the artifact-missing panel. */
 async function pluginArtifactAvailable(page: Page, target: PluginBuildTarget): Promise<boolean> {
-  const moduleUrl = pluginModuleUrl(target.pluginId, target.wasmOut);
+  const moduleUrl = pluginModuleUrl(target.pluginId);
   const res = await page.request.head(moduleUrl).catch(() => undefined);
   return !!res?.ok();
 }
@@ -62,7 +62,7 @@ for (const target of PLUGIN_BUILD_TARGETS) {
 
     const outcome = await waitForOsBeaconOrArtifactMissing(page, target.pluginId, expectArtifact);
     if (expectArtifact) {
-      expect(outcome, `${target.pluginId}: expected the shell to reach "ready" (had a prebuilt artifact at ${pluginModuleUrl(target.pluginId, target.wasmOut)})`).toBe("ready");
+      expect(outcome, `${target.pluginId}: expected the shell to reach "ready" (had a prebuilt artifact at ${pluginModuleUrl(target.pluginId)})`).toBe("ready");
     } else {
       expect(outcome).toBe("artifact-missing");
     }

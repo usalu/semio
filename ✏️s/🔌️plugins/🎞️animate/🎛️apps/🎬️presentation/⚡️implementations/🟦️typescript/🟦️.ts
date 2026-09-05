@@ -1302,7 +1302,7 @@ export function formatPresentationUrlHash(
 //#endregion 🔖️Resolve
 
 //#region 🔖️SlideFile
-/** @emoji 📄️ One slide module under `slide/<chapter>/<sequence>/<thought>/<slide>.ts`. */
+/** @emoji 📄️ One slide module under `🎞️slide/<chapter>/<sequence>/<thought>/<slide>.ts`. */
 export interface SlideFile extends ArtifactScope {
 	readonly order: number;
 	readonly arrangement: Arrangement;
@@ -1323,7 +1323,7 @@ export interface SlideFileModule {
 	readonly file: SlideFile;
 }
 
-/** @emoji 📁️ Parsed path segments for a thought template module (`slide/<chapter>/<sequence>/<thought>.ts`). */
+/** @emoji 📁️ Parsed path segments for a thought template module (`🎞️slide/<chapter>/<sequence>/<thought>.ts`). */
 export interface ParsedThoughtFilePath {
 	readonly chapter: string;
 	readonly sequence: string;
@@ -1362,15 +1362,15 @@ export function presentationSlideFilePath(
 	thought: string,
 	slide: string,
 ): string {
-	return `slide/${chapter}/${sequence}/${thought}/${slide}.ts`;
+	return `🎞️slide/${chapter}/${sequence}/${thought}/${slide}.ts`;
 }
 
 /** @emoji 📁️ Builds the canonical thought template path for one Gedanke bookmark name. */
 export function presentationThoughtFilePath(chapter: string, sequence: string, thought: string): string {
-	return `slide/${chapter}/${sequence}/${thought}.ts`;
+	return `🎞️slide/${chapter}/${sequence}/${thought}.ts`;
 }
 
-/** @emoji 📁️ Parses `slide/<chapter>/<sequence>/<thought>/<slide>.ts` from an import path. */
+/** @emoji 📁️ Parses `🎞️slide/<chapter>/<sequence>/<thought>/<slide>.ts` from an import path. */
 export function parsePresentationSlideFilePath(path: string): ParsedSlideFilePath | null {
 	const normalized = path.replace(/\\/g, "/");
 	const match = normalized.match(/(?:^|\/)slide\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)\.ts$/u);
@@ -1385,7 +1385,7 @@ export function parsePresentationSlideFilePath(path: string): ParsedSlideFilePat
 	};
 }
 
-/** @emoji 📁️ Parses `slide/<chapter>/<sequence>/<thought>.ts` from an import path. */
+/** @emoji 📁️ Parses `🎞️slide/<chapter>/<sequence>/<thought>.ts` from an import path. */
 export function parsePresentationThoughtFilePath(path: string): ParsedThoughtFilePath | null {
 	const normalized = path.replace(/\\/g, "/");
 	const match = normalized.match(/(?:^|\/)slide\/([^/]+)\/([^/]+)\/([^/]+)\.ts$/u);
@@ -1728,7 +1728,7 @@ function introEmbodiments(spec: IntroSpec): Embodiment[] {
 	];
 }
 
-/** @emoji 🎬️ Slide modules for the standard intro thought (`slide/<chapter>/<sequence>/<thought>/<slide>.ts`). */
+/** @emoji 🎬️ Slide modules for the standard intro thought (`🎞️slide/<chapter>/<sequence>/<thought>/<slide>.ts`). */
 export function introSlideFiles(spec: IntroSpec): readonly SlideFile[] {
 	const language = introBookmarkLanguage(spec.language);
 	const participants = introParticipants();
@@ -2051,7 +2051,7 @@ if (import.meta.vitest) {
 			const deck = loadPresentationFromSlideGlob(
 				{ id: "deck", name: "Deck", language: "de" },
 				{
-					"./slide/Hauptteil/Einführung/Einleitung/Titel.ts": {
+					"./🎞️slide/Hauptteil/🌷️Einführung/🪻️Einleitung/Titel.ts": {
 						default: {
 							order: 0,
 							participants: [{ id: "title" }],
@@ -2063,7 +2063,7 @@ if (import.meta.vitest) {
 							},
 						},
 					},
-					"./slide/Hauptteil/Einführung/Einleitung/Ziel.ts": {
+					"./🎞️slide/Hauptteil/🌷️Einführung/🪻️Einleitung/Ziel.ts": {
 						default: {
 							order: 1,
 							arrangement: {
@@ -2073,7 +2073,7 @@ if (import.meta.vitest) {
 							},
 						},
 					},
-					"./slide/Hauptteil/Einführung/Medien/🟦️Bauteilkatalog.ts": {
+					"./🎞️slide/Hauptteil/🌷️Einführung/Medien/🟦️Bauteilkatalog.ts": {
 						default: {
 							order: 0,
 							arrangement: {
@@ -2137,7 +2137,7 @@ if (import.meta.vitest) {
 			const deck = loadPresentationFromSlideGlob(
 				{ id: "deck", name: "Deck", language: "de" },
 				{
-					"./slide/Hauptteil/Einführung/🟦️Einleitung.ts": {
+					"./🎞️slide/Hauptteil/🌷️Einführung/🟦️Einleitung.ts": {
 						default: introThoughtFile({
 							language: "de",
 							title: { full: ["T"], short: "T" },

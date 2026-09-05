@@ -1,6 +1,0 @@
-dialect grammar stdio.avi.mutations
-root = document
-; protocol::OpText (../🦀️.rs): one compact single-line JSON object per op, tagged
-; by "mutation" (camelCase field names).
-document = json_line
-json_line = *(%x20-10FFFF)

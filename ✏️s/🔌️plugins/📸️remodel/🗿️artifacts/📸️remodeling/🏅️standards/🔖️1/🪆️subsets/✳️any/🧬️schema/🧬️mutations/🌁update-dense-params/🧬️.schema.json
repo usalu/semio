@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateDenseParams",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "params"
+  ],
+  "properties": {
+    "params": {
+      "title": "DenseParams",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "confidenceThreshold",
+        "maxPoints",
+        "minViewConsistency",
+        "resolution",
+        "windowRadiusPx"
+      ],
+      "properties": {
+        "resolution": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "windowRadiusPx": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minViewConsistency": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "confidenceThreshold": {
+          "type": "number"
+        },
+        "maxPoints": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

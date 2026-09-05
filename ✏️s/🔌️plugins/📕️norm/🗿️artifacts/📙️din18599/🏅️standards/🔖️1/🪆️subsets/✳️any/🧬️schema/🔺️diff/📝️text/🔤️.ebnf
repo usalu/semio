@@ -1,3 +1,0 @@
-(* ebnf norm.din18599.diff *)
-document = header, body ;
-header = 'schema', space, 'norm.din18599.diff', newline ;

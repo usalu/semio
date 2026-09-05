@@ -1,0 +1,14 @@
+# 🧬️ Fem2d mutation schema — artifact-lane fields only.
+
+type Fem2dMutation {
+  nodes: [FemNode!]! @state(class: ARTIFACT)
+  elements: [FemElement!]! @state(class: ARTIFACT)
+  regions: [FemRegion!]! @state(class: ARTIFACT)
+  materials: [FemMaterial!]! @state(class: ARTIFACT)
+  sections: [FemSection!]! @state(class: ARTIFACT)
+  supports: [FemSupport!]! @state(class: ARTIFACT)
+  loadCases: [FemLoadCase!]! @state(class: ARTIFACT)
+  combinations: [FemCombination!]! @state(class: ARTIFACT)
+  analysis: FemAnalysisSettings! @state(class: ARTIFACT)
+}
+

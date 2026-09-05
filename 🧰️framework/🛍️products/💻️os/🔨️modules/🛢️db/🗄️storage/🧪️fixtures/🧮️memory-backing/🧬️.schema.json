@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "maximumInlineBytes", "tables", "admission", "closeWhileAdmitted", "retry", "sequentialTasks"],
+  "properties": {
+    "schema": { "const": "semio.db.memory-backing/v1" },
+    "maximumInlineBytes": { "const": 16384 },
+    "closeWhileAdmitted": { "const": false },
+    "sequentialTasks": { "const": 128 },
+    "retry": {
+      "type": "object", "additionalProperties": false,
+      "required": ["maximumAttempts", "timerDelayMs", "terminalAfterQueueRelease"],
+      "properties": {
+        "maximumAttempts": { "const": 8 }, "timerDelayMs": { "const": 1 }, "terminalAfterQueueRelease": { "const": true }
+      }
+    },
+    "tables": {
+      "type": "array", "minItems": 8, "maxItems": 8, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["name", "slots"],
+        "properties": {
+          "name": { "enum": ["wal", "snapshots", "payloads", "index-runs", "leases", "operations", "retired-pages", "retired-wal"] },
+          "slots": { "const": 64 }
+        }
+      }
+    },
+    "admission": {
+      "type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["remaining", "accepted"],
+        "properties": {
+          "remaining": { "enum": ["exact", "one-short", "zero"] },
+          "accepted": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

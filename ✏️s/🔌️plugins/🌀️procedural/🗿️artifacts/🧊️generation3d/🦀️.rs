@@ -58,29 +58,29 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// 🧾️ Defines s.generation3d's immutable runtime capability leaves.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    ArtifactDefinition::new(ArtifactIdentity::parse("s.generation3d")?)
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.procedural.generation3d")?)
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.generation3d.schema.artifact")?, ArtifactCapabilityKind::schema())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation3d.schema.artifact")?, ArtifactCapabilityKind::schema())
                 .descriptor(b"s.procedural.generation3d")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.procedural.generation3d")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.generation3d.inference.artifact")?, ArtifactCapabilityKind::inference())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation3d.inference.artifact")?, ArtifactCapabilityKind::inference())
                 .descriptor(b"s.procedural.generation3d.inference")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.procedural.generation3d.inference")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.generation3d.composer.native")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.generation3d@1/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.generation3d@1/*")?)?,
+            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation3d.composer.native")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.procedural.generation3d@1/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.procedural.generation3d@1/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.generation3d.composer.las")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation3d.composer.las")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.las@1.0/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.las@1.0/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.generation3d.composer.ply")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation3d.composer.ply")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.ply@1.0/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.ply@1.0/*")?)?,
         )?
@@ -91,38 +91,38 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         // D3, a documented tie-break, not evidence-backed like the DWG↔mesh-bridge split below). Import
         // still works: `reads()` on this artifact's own native composer is unaffected by this removal.
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.generation3d.composer.dwg")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation3d.composer.dwg")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.dwg@ac1018/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.dwg@ac1018/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.generation3d.composer.stl")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation3d.composer.stl")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.stl@ascii/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.stl@ascii/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.generation3d.composer.gltf")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation3d.composer.gltf")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.gltf@2.0/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.gltf@2.0/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.generation3d.composer.obj")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation3d.composer.obj")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.obj@3.0/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.obj@3.0/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.generation3d.codec.document")?, ArtifactCapabilityKind::codec())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation3d.codec.document")?, ArtifactCapabilityKind::codec())
                 .descriptor(b"generation.3d:generation3d")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "generation.3d")?)?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "generation3d")?)?,
+                .claim(ArtifactIdentityClaim::codec_extension("generation.3d", "generation3d")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.generation3d.localization.en")?, ArtifactCapabilityKind::localization())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation3d.localization.en")?, ArtifactCapabilityKind::localization())
                 .descriptor(b"3D Generation")?
                 .localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "3D Generation")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.generation3d.localization.de")?, ArtifactCapabilityKind::localization())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.generation3d.localization.de")?, ArtifactCapabilityKind::localization())
                 .descriptor(b"3D Generierung")?
                 .localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "3D Generierung")?)?,
         )

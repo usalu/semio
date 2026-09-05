@@ -1,3 +1,0 @@
-; abnf norm.din4108.inference
-document = payload
-payload = *OCTET

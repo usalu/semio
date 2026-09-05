@@ -1,4 +1,0 @@
-module Stdio_dwg_mutations;
-type Document = unit {
-    payload: bytes &eod;
-};

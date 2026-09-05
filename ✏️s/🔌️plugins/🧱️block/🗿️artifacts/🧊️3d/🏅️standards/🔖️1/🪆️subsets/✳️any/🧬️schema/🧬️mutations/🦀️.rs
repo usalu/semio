@@ -23,7 +23,7 @@ pub type Block3dStore = store::ArtifactStore<Block3dSnapshot, Block3dMutation>;
 /// attribute/author add/remove, the world camera's pan/zoom, and the session meta description. The
 /// old whole-document-replace and no-op sentinel variants are gone — whole-document loads (examples,
 /// DSL text edit) now decompose into this vocabulary (see
-/// `🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs`'s `replace_document_operations`).
+/// `🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎬️set-active-example/🦀️.rs`'s `replace_document_operations`).
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum, dsl::Mutations)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
@@ -72,7 +72,7 @@ pub enum Block3dMutation {
 //#region 🏷️Kinds
 /// 🏷️ The kebab-case spelling of every [`Block3dMutation`] variant, in declaration order — the exact
 /// vocabulary the `block-3d-1-any` mutation catalog (`../../🔣️oracle.json`) declares and
-/// the `mutate-block-3d-1` exhaustive case measures itself against. The framework never parses Rust, so
+/// the `🧩️mutate-block-3d-1` exhaustive case measures itself against. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
 pub const KINDS: &[&str] = &[
     "rename-object-kind",
@@ -420,7 +420,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔮️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

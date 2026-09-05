@@ -1,0 +1,85 @@
+{
+  "schema": "semio.hub.trusted-stdio-gis-bootstrap/v1",
+  "profile": {
+    "id": "local-stdio-gis-open-v1",
+    "selectedClosure": [
+      { "pluginId": "gis", "packageId": "semio:gis", "version": "0.1.0" },
+      { "pluginId": "stdio", "packageId": "semio:stdio", "version": "0.1.0" }
+    ],
+    "selectedClosureSha256": "848e9d6c38a1b1202398214a9138e5e289ee5564bc0bd1fdf61d622c9d4f5588",
+    "packages": [
+      {
+        "pluginId": "gis",
+        "packageId": "semio:gis",
+        "version": "0.1.0",
+        "role": "plugin",
+        "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "componentBlake3": "1212121212121212121212121212121212121212121212121212121212121212",
+        "descriptorSha256": "1313131313131313131313131313131313131313131313131313131313131313",
+        "codecCount": 2,
+        "targetCount": 1
+      },
+      {
+        "pluginId": "stdio",
+        "packageId": "semio:stdio",
+        "version": "0.1.0",
+        "role": "plugin",
+        "componentSha256": "2121212121212121212121212121212121212121212121212121212121212121",
+        "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
+        "descriptorSha256": "2323232323232323232323232323232323232323232323232323232323232323",
+        "codecCount": 26,
+        "targetCount": 0
+      }
+    ],
+    "openTarget": {
+      "pluginId": "gis",
+      "artifactKind": "s.gis.gismap",
+      "artifactSchema": "gis.map",
+      "surfaceId": "s.gis.gismap@1/*#editor",
+      "appId": "s.gis.gismap@1/*#editor",
+      "windowKindId": "gis2d-main",
+      "role": "editor",
+      "rendererTarget": "wasm",
+      "parentDialect": { "artifactKind": "s.gis.gismap", "standard": "1", "subset": "*" },
+      "grant": { "read": true, "write": true, "observe": true }
+    },
+    "generationId": "7cf0515d5cb12f9404020fef548b46f6b0b3dca140d4e1f2b58329174a40ebef"
+  },
+  "sources": {
+    "stdioReceipts": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/📜️native-codec-factories.json",
+    "gisReceipts": "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json"
+  },
+  "limits": {
+    "descriptorBytes": 4194304,
+    "descriptorBytesPlusOne": 4194305,
+    "componentBytes": 67108864,
+    "ioChunkBytes": 65536,
+    "packageCount": 2,
+    "codecCount": 28,
+    "openTargetCount": 1
+  },
+  "framing": {
+    "closureDomain": "semio/hub/trusted-profile-selected-closure/v1\u0000",
+    "generationDomain": "semio/hub/trusted-profile-generation/v1\u0000",
+    "integerEndian": "big",
+    "lengthBytes": 8
+  },
+  "cancellationStages": ["build", "extract-core", "inspect-wit", "emit-descriptor", "stage-component", "stage-descriptor", "hash", "pre-publication"],
+  "hostile": ["stale-stdio-component", "stale-stdio-descriptor", "stale-stdio-codec", "wrong-stdio-version", "wrong-gis-version", "missing-map", "missing-terrain", "duplicate-terrain", "terrain-target", "non-wasm", "readonly-editor", "mixed-package", "closure-order", "path-escape", "path-collision", "descriptor-max-plus-one", "cancel-before-publication", "candidate-crash", "stale-plan-generation"],
+  "rotation": {
+    "initialGenerationId": "7cf0515d5cb12f9404020fef548b46f6b0b3dca140d4e1f2b58329174a40ebef",
+    "failedCandidateGenerationId": "f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1",
+    "currentAfterFailedCandidate": "7cf0515d5cb12f9404020fef548b46f6b0b3dca140d4e1f2b58329174a40ebef",
+    "nextGenerationId": "3434343434343434343434343434343434343434343434343434343434343434",
+    "stalePlan": {
+      "issuedGenerationId": "7cf0515d5cb12f9404020fef548b46f6b0b3dca140d4e1f2b58329174a40ebef",
+      "observedGenerationId": "3434343434343434343434343434343434343434343434343434343434343434",
+      "expected": "stale"
+    },
+    "freshPlan": {
+      "issuedGenerationId": "3434343434343434343434343434343434343434343434343434343434343434",
+      "observedGenerationId": "3434343434343434343434343434343434343434343434343434343434343434",
+      "expected": "accepted"
+    }
+  }
+}

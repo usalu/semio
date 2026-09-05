@@ -5,16 +5,24 @@
   "documentSchema": "s.home",
   "factory": "HomeRetainedCommandJobFactory",
   "limits": {
-    "rawBytes": 8192,
+    "rawBytes": 131072,
     "checkpointBytes": 512,
     "configValueBytes": 512,
-    "configBaseBytes": 512,
-    "commandStepBytes": 65536,
-    "storeStepBytes": 4096,
+    "configBaseBytes": 4194304,
+    "commandStepBytes": 16777216,
+    "storeStepBytes": 16777216,
     "workItems": 1,
     "preparationPhases": 3
   },
   "routes": [
+    {
+      "id": "applyDirectoryEventPage",
+      "disposition": "Migrated",
+      "lanes": [
+        "Config"
+      ],
+      "blocker": ""
+    },
     {
       "id": "createStudio",
       "disposition": "BatchOnlyPendingRewrite",

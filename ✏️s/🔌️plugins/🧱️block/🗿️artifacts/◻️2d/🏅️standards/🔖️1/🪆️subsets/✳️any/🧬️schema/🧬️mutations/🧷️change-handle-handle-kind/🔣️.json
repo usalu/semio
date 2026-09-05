@@ -5,7 +5,7 @@
   "displayName": "Change Handle Handle Kind",
   "emoji": "🧷️",
   "aggregateVariant": "ChangeHandleHandleKind",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-handle-handle-kind",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

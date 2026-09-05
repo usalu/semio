@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "owner": "✏️s/🔌️plugins/📸️remodeling/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗞️delete-asset",
+  "owner": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗞️delete-asset",
   "semanticKind": "delete-asset",
   "displayName": "Delete Asset",
   "emoji": "🗞️",
   "aggregateVariant": "DeleteAsset",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "delete-asset",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

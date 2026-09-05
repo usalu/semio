@@ -24,7 +24,7 @@ use protocol::{Mutation, MutationDiff, OpText};
 /// the derive but changes the Mutation enum's wire shape, which is out of scope here — `OpText`/
 /// `OpBinary` hand-rolled below instead, reusing `CsvDiff`'s `pub(crate)` grammar primitives.
 //#region 🔖️Leaves
-#[path = "📄set-snapshot/🦀️.rs"]
+#[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🧾set-has-header/🦀️.rs"]
 pub mod set_has_header;
@@ -32,7 +32,7 @@ pub mod set_has_header;
 pub mod insert_record;
 #[path = "📤remove-record/🦀️.rs"]
 pub mod remove_record;
-#[path = "✏set-field/🦀️.rs"]
+#[path = "✏️set-field/🦀️.rs"]
 pub mod set_field;
 //#endregion 🔖️Leaves
 
@@ -589,7 +589,7 @@ mod tests {
         let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
         assert_eq!(from_enum, KINDS, "KINDS must list every CsvMutation variant, in declaration order");
 
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔮️oracle/🔣️.json");
         let needle = "\"kinds\": [";
         let start = manifest.find(needle).expect("manifest declares a kinds array") + needle.len();
         let end = start + manifest[start..].find(']').expect("kinds array is closed");
@@ -609,7 +609,7 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/corrects-the-area-cell-and-quotes-it/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/🟠️corrects-the-area-cell-and-quotes-it/🦀️.rs"]
     mod tests_set_snapshot_corrects_the_area_cell_and_quotes_it;
 }
 //#endregion 🧪️FixtureTests

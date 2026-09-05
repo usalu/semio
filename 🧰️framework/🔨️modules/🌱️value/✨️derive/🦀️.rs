@@ -44,6 +44,8 @@
 //! `flatten` with `deny_unknown_fields` on the same struct is a `compile_error!`, matching serde's
 //! own restriction — the two are inherently at odds, since a flattened field's whole point is to
 //! absorb keys the container does not itself recognize.
+//! A missing `Option<T>` field decodes as `None` without requiring `#[value(default)]`, matching
+//! serde for both structs and named enum-variant payloads.
 //!
 //! `#[value(transparent)]` (container, struct-only): the struct must have exactly one field
 //! (named or unnamed) — the whole struct forwards straight to/from that field's own
@@ -370,6 +372,12 @@ struct NamedField {
     ident: syn::Ident,
     wire_name: String,
     attrs: FieldAttrs,
+    is_option: bool,
+}
+
+fn type_is_option(ty: &syn::Type) -> bool {
+    let syn::Type::Path(path) = ty else { return false };
+    path.qself.is_none() && path.path.segments.last().is_some_and(|segment| segment.ident == "Option")
 }
 
 fn named_fields(fields: &Fields, container: &ContainerAttrs) -> syn::Result<Vec<NamedField>> {
@@ -383,7 +391,7 @@ fn named_fields(fields: &Fields, container: &ContainerAttrs) -> syn::Result<Vec<
             let attrs = parse_field_attrs(&field.attrs)?;
             let ident = field.ident.clone().expect("named field");
             let wire_name = field_wire_name(&ident.to_string(), &attrs.rename, &container.rename_all);
-            Ok(NamedField { ident, wire_name, attrs })
+            Ok(NamedField { ident, wire_name, attrs, is_option: type_is_option(&field.ty) })
         })
         .collect::<syn::Result<_>>()?;
     // 🛡️ Serde itself rejects `flatten` alongside `deny_unknown_fields` on the same struct — a
@@ -494,6 +502,7 @@ fn from_value_struct_fields(fields: &[NamedField], container: &ContainerAttrs, v
                 quote! { #path() }
             }
             (FieldDefault::Bare, _) | (FieldDefault::None, true) => quote! { ::std::default::Default::default() },
+            (FieldDefault::None, false) if field.is_option => quote! { ::std::default::Default::default() },
             (FieldDefault::None, false) => quote! {
                 return Err(#value_crate::ValueError::new(format!("missing field `{}`", #wire_name)))
             },
@@ -602,6 +611,7 @@ fn variant_field_from_value_read(field: &syn::Field, field_attrs: &FieldAttrs, w
             quote! { #path() }
         }
         FieldDefault::Bare => quote! { ::std::default::Default::default() },
+        FieldDefault::None if type_is_option(&field.ty) => quote! { ::std::default::Default::default() },
         FieldDefault::None => quote! {
             return Err(#value_crate::ValueError::new(format!("missing field `{}`", #wire_name)))
         },

@@ -100,9 +100,9 @@ export const introSpec: IntroSpec = {
 //#endregion 🔖️Meta
 
 //#region 🔖️Catalogue
-export const ASSET_CATALOGUE = "/🖼️bauteilbörse.png";
+export const ASSET_CATALOGUE = "/♻️bauteilbörse.png";
 export const ASSET_VIDEO = "./🎥️bauen-mit-bestand.mp4";
-export const ASSET_THESIS_PDF = "./📄️bachelor-thesis-ueli-saluz.pdf";
+export const ASSET_THESIS_PDF = "./🎓️bachelor-thesis-ueli-saluz.pdf";
 export const ASSET_ZUKUNFT_BAU_ENTWERFEN_MIT_BESTAND = "/🌐️zukunft-bau-entwerfen-mit-bestand.html";
 
 export const CATALOGUE_PARTICIPANT = "catalogue";
@@ -120,7 +120,7 @@ export const CATALOGUE_EMBODIMENT_COL3_CROP = "catalogue-col3--crop";
 export const CATALOGUE_EMBODIMENT_COL3_LABEL = "catalogue-col3--label";
 export const ZUKUNFT_BAU_EMBODIMENT = "zukunft-bau-entwerfen-mit-bestand--iframe";
 
-/** @emoji 📐️ `🖼️bauteilbörse.png` pixel width÷height (1222×896). */
+/** @emoji 📐️ `♻️bauteilbörse.png` pixel width÷height (1222×896). */
 export const CATALOGUE_SOURCE_ASPECT = 1222 / 896;
 
 export const CATALOGUE_FRAME = {
@@ -420,15 +420,15 @@ export const BAUKOMPONENTEN_FRAME = { x: 0.04, y: 0.06, width: 0.92, height: 0.8
 export const BAUKOMPONENTEN_GAP = 0.012;
 
 export const BAUKOMPONENTEN_ITEMS = [
-  { id: "betondeckenplatten", src: "/🖼️bauteilbörse-betondeckenplatten.png", kind: "figure", alt: "Betondeckenplatten" },
-  { id: "gipsplatten", src: "/🖼️bauteilbörse-gipsplatten.png", kind: "figure", alt: "Gipsplatten" },
-  { id: "holzbalken-2", src: "/🖼️bauteilbörse-holzbalken-2.png", kind: "figure", alt: "Holzbalken" },
-  { id: "holzbalken", src: "/🖼️bauteilbörse-holzbalken.png", kind: "figure", alt: "Holzbalken" },
-  { id: "metallprofile", src: "/🖼️bauteilbörse-metallprofile.png", kind: "figure", alt: "Metallprofile" },
-  { id: "stahltragwerk", src: "./📄️bauteilbörse-stahltragwerk.pdf", kind: "pdf", alt: "Stahltragwerk" },
-  { id: "träger-hea", src: "/🖼️bauteilbörse-träger-hea.png", kind: "figure", alt: "Träger HEA" },
-  { id: "träger-ipe", src: "/🖼️bauteilbörse-träger-ipe.png", kind: "figure", alt: "Träger IPE" },
-  { id: "trennwand-glas", src: "/🖼️bauteilbörse-trennwand-glas.png", kind: "figure", alt: "Trennwand Glas" },
+  { id: "betondeckenplatten", src: "/🧱️bauteilbörse-betondeckenplatten.png", kind: "figure", alt: "Betondeckenplatten" },
+  { id: "gipsplatten", src: "/⬜️bauteilbörse-gipsplatten.png", kind: "figure", alt: "Gipsplatten" },
+  { id: "holzbalken-2", src: "/🪚️bauteilbörse-holzbalken-2.png", kind: "figure", alt: "Holzbalken" },
+  { id: "holzbalken", src: "/🌲️bauteilbörse-holzbalken.png", kind: "figure", alt: "Holzbalken" },
+  { id: "metallprofile", src: "/🔩️bauteilbörse-metallprofile.png", kind: "figure", alt: "Metallprofile" },
+  { id: "stahltragwerk", src: "./🏗️bauteilbörse-stahltragwerk.pdf", kind: "pdf", alt: "Stahltragwerk" },
+  { id: "träger-hea", src: "/🅰️bauteilbörse-träger-hea.png", kind: "figure", alt: "Träger HEA" },
+  { id: "träger-ipe", src: "/🏛️bauteilbörse-träger-ipe.png", kind: "figure", alt: "Träger IPE" },
+  { id: "trennwand-glas", src: "/🪟️bauteilbörse-trennwand-glas.png", kind: "figure", alt: "Trennwand Glas" },
 ] as const;
 
 /** @emoji 🧩️ Participants, embodiments, and grid dispositions for the Baukomponenten 3×3 slide. */
@@ -491,7 +491,7 @@ export function baukomponentenGridArtifacts(): {
 //#endregion 🔖️spec
 
 //#region 🔖️Deck
-const slideModuleLoaders = import.meta.glob<{ default: SlideFile }>("../../slide/**/*.ts");
+const slideModuleLoaders = import.meta.glob<{ default: SlideFile }>("../../🎞️slide/**/*.ts");
 const slideModules = Object.fromEntries(await Promise.all(Object.entries(slideModuleLoaders).map(async ([path, loadModule]) => [path, await loadModule()] as const))) as Record<string, { readonly default: SlideFile }>;
 const sourceDeck: Presentation = loadPresentationFromSlideGlob(presentationMeta, slideModules);
 
@@ -846,19 +846,19 @@ if (import.meta.vitest) {
         {
           slide: "Katalog",
           participantId: "entwurfswerkzeug-katalog",
-          src: "/🖼️entwurfswerkzeug-🖼️katalog.png",
+          src: "/📚️entwurfswerkzeug-katalog.png",
           sourceAspect: 688 / 1948,
         },
         {
           slide: "Filter",
           participantId: "entwurfswerkzeug-filter",
-          src: "/🖼️entwurfswerkzeug-filter.png",
+          src: "/🧮️entwurfswerkzeug-filter.png",
           sourceAspect: 674 / 1948,
         },
         {
           slide: "Detail",
           participantId: "entwurfswerkzeug-detail",
-          src: "/🖼️entwurfswerkzeug-detail.png",
+          src: "/🔍️entwurfswerkzeug-detail.png",
           sourceAspect: 674 / 1948,
         },
       ]) {
@@ -930,12 +930,12 @@ if (import.meta.vitest) {
       const figureEmbodiment = thought?.embodiments?.find((entry) => entry.id === "konnektivität-beispiel-3d--figure");
       expect(figureEmbodiment).toMatchObject({
         kind: "figure",
-        src: "/🖼️konnektivität-beispiel-3d.png",
+        src: "/🔗️konnektivität-beispiel-3d.png",
       });
       const tableEmbodiment = thought?.embodiments?.find((entry) => entry.id === "konnektivität-beispiel-tabelle--markdown");
       expect(tableEmbodiment).toMatchObject({
         kind: "markdown",
-        src: "/📄️konnektivität-beispiel-tabelle.md",
+        src: "/📊️konnektivität-beispiel-tabelle.md",
       });
     });
 
@@ -950,7 +950,7 @@ if (import.meta.vitest) {
       const embodiment = thought?.embodiments?.find((entry) => entry.id === "eingabeprozess-eingabearten--figure");
       expect(embodiment).toMatchObject({
         kind: "figure",
-        src: "/🖼️eingabeprozess-eingabearten.png",
+        src: "/🔢️eingabeprozess-eingabearten.png",
         alt: "Eingabearten im Eingabeprozess",
         sourceAspect: 3586 / 1346,
       });
@@ -970,7 +970,7 @@ if (import.meta.vitest) {
       const embodiment = thought?.embodiments?.find((entry) => entry.id === "eingabeprozess-eingabeoberfläche--figure");
       expect(embodiment).toMatchObject({
         kind: "figure",
-        src: "/🖼️eingabeprozess-eingabeoberfläche.png",
+        src: "/🖥️eingabeprozess-eingabeoberfläche.png",
         alt: "Eingabeoberfläche im Eingabeprozess",
         sourceAspect: 2130 / 1670,
       });
@@ -990,7 +990,7 @@ if (import.meta.vitest) {
       const embodiment = thought?.embodiments?.find((entry) => entry.id === "eingabeprozess-eingabeoberfläche-annotiert--figure");
       expect(embodiment).toMatchObject({
         kind: "figure",
-        src: "/🖼️eingabeprozess-eingabeoberfläche-annotiert.png",
+        src: "/🏷️eingabeprozess-eingabeoberfläche-annotiert.png",
         alt: "Annotierte Eingabeoberfläche im Eingabeprozess",
         sourceAspect: 746 / 659,
       });
@@ -1010,7 +1010,7 @@ if (import.meta.vitest) {
       const embodiment = thought?.embodiments?.find((entry) => entry.id === "eingabeprozess-manuelles-prüfen--figure");
       expect(embodiment).toMatchObject({
         kind: "figure",
-        src: "/🖼️eingabeprozess-formular.png",
+        src: "/📝️eingabeprozess-formular.png",
         alt: "Manuelles Prüfen im Eingabeprozess",
         sourceAspect: 860 / 1183,
       });
@@ -1028,9 +1028,9 @@ if (import.meta.vitest) {
       expect(slide?.arrangement.dispositions).toHaveLength(3);
       expect(slide?.arrangement.dispositions.map((disposition) => disposition.participantId)).toEqual(["import-besipiel-holzbalken", "import-besipiel-rippenplatte", "import-besipiel-träger-heb"]);
       for (const [index, item] of [
-        { id: "import-besipiel-holzbalken", src: "/🖼️bauteilbörse-holzbalken.png", alt: "Holzbalken" },
-        { id: "import-besipiel-rippenplatte", src: "/🖼️bauteilbörse-rippenplatte.png", alt: "Rippenplatte" },
-        { id: "import-besipiel-träger-heb", src: "/🖼️bauteilbörse-träger-heb.png", alt: "Träger HEB" },
+        { id: "import-besipiel-holzbalken", src: "/🌲️bauteilbörse-holzbalken.png", alt: "Holzbalken" },
+        { id: "import-besipiel-rippenplatte", src: "/🦴️bauteilbörse-rippenplatte.png", alt: "Rippenplatte" },
+        { id: "import-besipiel-träger-heb", src: "/🅱️bauteilbörse-träger-heb.png", alt: "Träger HEB" },
       ].entries()) {
         const disposition = slide?.arrangement.dispositions[index];
         expect(disposition?.embodimentId).toBe(`${item.id}--figure`);
@@ -1058,7 +1058,7 @@ if (import.meta.vitest) {
       const embodiment = thought?.embodiments?.find((entry) => entry.id === "eingabeprozess-import-verarbeitung--figure");
       expect(embodiment).toMatchObject({
         kind: "figure",
-        src: "/🖼️import-verarbeitung.png",
+        src: "/📥️import-verarbeitung.png",
         alt: "Import Verarbeitung im Eingabeprozess",
         sourceAspect: 1278 / 1288,
       });
@@ -1100,7 +1100,7 @@ if (import.meta.vitest) {
       const embodiment = thought?.embodiments?.find((entry) => entry.id === "typologien--figure");
       expect(embodiment).toMatchObject({
         kind: "figure",
-        src: "/🖼️typologien.png",
+        src: "/🧬️typologien.png",
         alt: "Typologien-Katalog",
         sourceAspect: 984 / 1448,
       });
@@ -1120,7 +1120,7 @@ if (import.meta.vitest) {
       const embodiment = thought?.embodiments?.find((entry) => entry.id === "typologien-baum--figure");
       expect(embodiment).toMatchObject({
         kind: "figure",
-        src: "/🖼️typologienbaum.png",
+        src: "/🌳️typologienbaum.png",
         alt: "Generator-Typologiebaum",
         sourceAspect: 1536 / 1024,
       });
@@ -1140,7 +1140,7 @@ if (import.meta.vitest) {
       const embodiment = thought?.embodiments?.find((entry) => entry.id === "typologien-katalog--figure");
       expect(embodiment).toMatchObject({
         kind: "figure",
-        src: "/🖼️katalog.png",
+        src: "/🗂️katalog.png",
         alt: "Typologien-Katalog",
         sourceAspect: 1264 / 713,
       });
@@ -1159,25 +1159,25 @@ if (import.meta.vitest) {
         {
           slide: "Überblick",
           participantId: "recherche-schweiz-überblick",
-          src: "/🖼️recherche-schweiz-überblick.png",
+          src: "/🗺️recherche-schweiz-überblick.png",
           sourceAspect: 1987 / 1015,
         },
         {
           slide: "Zoom In 1",
           participantId: "recherche-schweiz-zoom-in-1",
-          src: "/🖼️recherche-schweiz-zoom-in-1.png",
+          src: "/🔎️recherche-schweiz-zoom-in-1.png",
           sourceAspect: 1984 / 1014,
         },
         {
           slide: "Zoom In 2",
           participantId: "recherche-schweiz-zoom-in-2",
-          src: "/🖼️recherche-schweiz-zoom-in-2.png",
+          src: "/🔬️recherche-schweiz-zoom-in-2.png",
           sourceAspect: 1988 / 1018,
         },
         {
           slide: "Zoom In 3",
           participantId: "recherche-schweiz-zoom-in-3",
-          src: "/🖼️recherche-schweiz-zoom-in-3.png",
+          src: "/🎯️recherche-schweiz-zoom-in-3.png",
           sourceAspect: 1981 / 1017,
         },
       ]) {

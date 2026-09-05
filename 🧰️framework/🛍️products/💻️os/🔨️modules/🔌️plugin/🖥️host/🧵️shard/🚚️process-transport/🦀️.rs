@@ -691,7 +691,7 @@ mod tests {
     /// ```text
     /// CARGO_TARGET_DIR=<ticket>/🎯️target-p1 cargo component build -p semio-framework-os-scale-fixture \
     ///   --target wasm32-wasip2 --features component-guest
-    /// SEMIO_SCALE_FIXTURE_WASM=<ticket>/🎯️target-p1/wasm32-wasip2/debug/semio_framework_os_scale_fixture.wasm \
+    /// SEMIO_SCALE_FIXTURE_WASM=<ticket>/🎯️target-p1/wasm32-wasip2/wasm-dev/semio_framework_os_scale_fixture.wasm \
     ///   cargo test -p semio-framework-plugin-host --lib -- --ignored process_shard_kill_is_detected
     /// ```
     ///

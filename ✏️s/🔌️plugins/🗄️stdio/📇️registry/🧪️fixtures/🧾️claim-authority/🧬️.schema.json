@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.stdio.claim-authority/v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "claims",
+          "code"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "code": {
+            "enum": [
+              "accepted",
+              "artifact-definition.duplicate-claim"
+            ]
+          },
+          "claims": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "category",
+                "namespace",
+                "value"
+              ],
+              "properties": {
+                "category": {
+                  "enum": [
+                    "composer",
+                    "subset-validator",
+                    "codec"
+                  ]
+                },
+                "namespace": {
+                  "enum": [
+                    "dialect",
+                    "validated-dialect",
+                    "codec-extension"
+                  ]
+                },
+                "value": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "codecSchema": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "extension": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "category": {
+                        "const": "codec"
+                      }
+                    },
+                    "required": [
+                      "category"
+                    ]
+                  },
+                  "then": {
+                    "required": [
+                      "codecSchema",
+                      "extension"
+                    ],
+                    "properties": {
+                      "namespace": {
+                        "const": "codec-extension"
+                      },
+                      "codecSchema": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "extension": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  },
+                  "else": {
+                    "properties": {
+                      "codecSchema": false,
+                      "extension": false
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

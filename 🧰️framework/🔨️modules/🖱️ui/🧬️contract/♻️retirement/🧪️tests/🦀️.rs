@@ -1,7 +1,7 @@
 use super::*;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap()
 }
 
 fn value_handle(value: &UiValue) -> Option<UiCollectionHandle> {

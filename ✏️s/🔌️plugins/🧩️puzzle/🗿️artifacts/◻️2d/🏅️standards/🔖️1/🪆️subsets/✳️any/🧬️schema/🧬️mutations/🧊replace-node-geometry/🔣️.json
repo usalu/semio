@@ -5,7 +5,7 @@
   "displayName": "Replace Node Geometry",
   "emoji": "🧊",
   "aggregateVariant": "ReplaceNodeGeometry",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "replace-node-geometry",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

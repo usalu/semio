@@ -4,8 +4,6 @@
 use crate::artifacts::en1995::En1995Snapshot;
 use crate::artifacts::en1995::diff::En1995Diff;
 use crate::artifacts::en1995::mutations::En1995Mutation;
-use crate::artifacts::en1995::mutations::change_f_c_0_k::ChangeFC0K;
-
 //#region 🔖️ChangeFC0K
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

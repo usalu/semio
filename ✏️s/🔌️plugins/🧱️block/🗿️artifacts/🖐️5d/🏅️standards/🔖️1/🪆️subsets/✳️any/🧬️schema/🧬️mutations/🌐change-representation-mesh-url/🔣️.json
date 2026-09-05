@@ -5,7 +5,7 @@
   "displayName": "Change Representation Mesh Url",
   "emoji": "🌐",
   "aggregateVariant": "ChangeRepresentationMeshUrl",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-representation-mesh-url",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

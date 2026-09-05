@@ -68,7 +68,7 @@ impl FromValue for OrderedSet {
 /// alone would only cover THIS crate's own `🧪️tests/🦀️.rs` differential proof against real
 /// `serde_json` — a downstream crate's `#[cfg(test)]` build (e.g. `os-flow`'s test target) never
 /// activates a DEPENDENCY crate's own `#[cfg(test)]` code, yet `os-flow`'s `Widget::OutputPreview`/
-/// `FlowPreviewGui` (`💻️os/🔨️modules/🌊️flow/📄️artifact/🦀️.rs`) carry
+/// `FlowPreviewGui` (`💻️os/🔨️modules/🌊️flow/🗿️artifact/🦀️.rs`) carry
 /// `#[cfg_attr(test, derive(Serialize, Deserialize))]` over a field of this type: the derive macro
 /// requires the `OrderedSet: Serialize`/`Deserialize` bound to exist at THEIR compile time, even
 /// though it's never called at runtime (`ToValue`/`FromValue` is). So this also honors the

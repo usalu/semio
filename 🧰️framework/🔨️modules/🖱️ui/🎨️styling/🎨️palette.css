@@ -1,7 +1,7 @@
 /* Generated from framework/ui/styling/🔣️.json — run `bun ./📜️script.ts generate`. */
 @font-face {
   font-family: "Anta";
-  src: url("/asset/🔤️fonts/🔤️anta/🔤️latin.woff2") format("woff2");
+  src: url("/🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/🗜️compressed.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -9,7 +9,7 @@
 
 @font-face {
   font-family: "Anta Extended";
-  src: url("/asset/🔤️fonts/🔤️anta/🔤️latin-ext.woff2") format("woff2");
+  src: url("/🖼️assets/🔤️fonts/🚀️anta/➕️latin-ext/📖️regular/🗜️compressed.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -17,7 +17,7 @@
 
 @font-face {
   font-family: "Anta Math";
-  src: url("/asset/🔤️fonts/🔤️anta/🔤️math.woff2") format("woff2");
+  src: url("/🖼️assets/🔤️fonts/🚀️anta/🧮️math/📖️regular/🗜️compressed.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -25,7 +25,7 @@
 
 @font-face {
   font-family: "Anta Symbols";
-  src: url("/asset/🔤️fonts/🔤️anta/🔤️symbols.woff2") format("woff2");
+  src: url("/🖼️assets/🔤️fonts/🚀️anta/🔣️symbols/📖️regular/🗜️compressed.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -33,7 +33,7 @@
 
 @font-face {
   font-family: "Kelly Slab";
-  src: url("/asset/🔤️fonts/🔤️kelly-slab/🔤️latin.woff2") format("woff2");
+  src: url("/🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/🗜️compressed.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -41,7 +41,7 @@
 
 @font-face {
   font-family: "Kelly Slab Extended";
-  src: url("/asset/🔤️fonts/🔤️kelly-slab/🔤️latin-ext.woff2") format("woff2");
+  src: url("/🖼️assets/🔤️fonts/🧱️kelly-slab/➕️latin-ext/📖️regular/🗜️compressed.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -49,7 +49,7 @@
 
 @font-face {
   font-family: "Kelly Slab Cyrillic";
-  src: url("/asset/🔤️fonts/🔤️kelly-slab/🔤️cyrillic.woff2") format("woff2");
+  src: url("/🖼️assets/🔤️fonts/🧱️kelly-slab/🪆️cyrillic/📖️regular/🗜️compressed.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -57,7 +57,7 @@
 
 @font-face {
   font-family: "Share Tech Mono";
-  src: url("/asset/🔤️fonts/🔤️share-tech-mono/🔤️latin.woff2") format("woff2");
+  src: url("/🖼️assets/🔤️fonts/⌨️share-tech-mono/🏛️latin/📖️regular/🗜️compressed.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -65,7 +65,7 @@
 
 @font-face {
   font-family: "Noto Emoji";
-  src: url("/asset/🔤️fonts/😀️noto-emoji/🔤️emoji-400.woff2") format("woff2");
+  src: url("/🖼️assets/🔤️fonts/😀️noto-emoji/🌐️complete/📖️regular/🗜️compressed.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -73,7 +73,7 @@
 
 @font-face {
   font-family: "Noto Emoji 0";
-  src: url("/asset/🔤️fonts/😀️noto-emoji/🔤️0-400.woff2") format("woff2");
+  src: url("/🖼️assets/🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/🗜️compressed.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -81,7 +81,7 @@
 
 @font-face {
   font-family: "Noto Emoji 1";
-  src: url("/asset/🔤️fonts/😀️noto-emoji/🔤️1-400.woff2") format("woff2");
+  src: url("/🖼️assets/🔤️fonts/😀️noto-emoji/🚩️flags/📖️regular/🗜️compressed.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -89,7 +89,7 @@
 
 @font-face {
   font-family: "Noto Emoji 2";
-  src: url("/asset/🔤️fonts/😀️noto-emoji/🔤️2-400.woff2") format("woff2");
+  src: url("/🖼️assets/🔤️fonts/😀️noto-emoji/🔣️symbols/📖️regular/🗜️compressed.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -97,7 +97,7 @@
 
 @font-face {
   font-family: "Noto Emoji 3";
-  src: url("/asset/🔤️fonts/😀️noto-emoji/🔤️3-400.woff2") format("woff2");
+  src: url("/🖼️assets/🔤️fonts/😀️noto-emoji/🧰️objects/📖️regular/🗜️compressed.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -105,7 +105,7 @@
 
 @font-face {
   font-family: "Noto Emoji 4";
-  src: url("/asset/🔤️fonts/😀️noto-emoji/🔤️4-400.woff2") format("woff2");
+  src: url("/🖼️assets/🔤️fonts/😀️noto-emoji/🎯️activities/📖️regular/🗜️compressed.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -113,7 +113,7 @@
 
 @font-face {
   font-family: "Noto Emoji 5";
-  src: url("/asset/🔤️fonts/😀️noto-emoji/🔤️5-400.woff2") format("woff2");
+  src: url("/🖼️assets/🔤️fonts/😀️noto-emoji/🧳️travel/📖️regular/🗜️compressed.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -121,7 +121,7 @@
 
 @font-face {
   font-family: "Noto Emoji 6";
-  src: url("/asset/🔤️fonts/😀️noto-emoji/🔤️6-400.woff2") format("woff2");
+  src: url("/🖼️assets/🔤️fonts/😀️noto-emoji/🍽️food/📖️regular/🗜️compressed.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -129,7 +129,7 @@
 
 @font-face {
   font-family: "Noto Emoji 7";
-  src: url("/asset/🔤️fonts/😀️noto-emoji/🔤️7-400.woff2") format("woff2");
+  src: url("/🖼️assets/🔤️fonts/😀️noto-emoji/🌿️nature/📖️regular/🗜️compressed.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -137,7 +137,7 @@
 
 @font-face {
   font-family: "Noto Emoji 8";
-  src: url("/asset/🔤️fonts/😀️noto-emoji/🔤️8-400.woff2") format("woff2");
+  src: url("/🖼️assets/🔤️fonts/😀️noto-emoji/🧑️people/📖️regular/🗜️compressed.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -145,7 +145,7 @@
 
 @font-face {
   font-family: "Noto Emoji 9";
-  src: url("/asset/🔤️fonts/😀️noto-emoji/🔤️9-400.woff2") format("woff2");
+  src: url("/🖼️assets/🔤️fonts/😀️noto-emoji/😀️faces/📖️regular/🗜️compressed.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -153,7 +153,7 @@
 
 @font-face {
   font-family: "Noto Emoji 10";
-  src: url("/asset/🔤️fonts/😀️noto-emoji/🔤️10-400.woff2") format("woff2");
+  src: url("/🖼️assets/🔤️fonts/😀️noto-emoji/🔗️joined-forms/📖️regular/🗜️compressed.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -161,7 +161,7 @@
 
 @font-face {
   font-family: "Noto Emoji 11";
-  src: url("/asset/🔤️fonts/😀️noto-emoji/🔤️11-400.woff2") format("woff2");
+  src: url("/🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/📖️regular/🗜️compressed.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;

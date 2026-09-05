@@ -62,8 +62,8 @@ pub struct RemodelingFrameCursor {
 /// The live `engine::reconstruction::ReconstructionEngine` (now `crate::editor::remodeling::engine::reconstruction::ReconstructionEngine`) and the video-import blur-gate rolling
 /// window are deliberately NOT here: neither is `Clone + ToValue + FromValue` in a way that
 /// round-trips through a pure `&self` `handle()`. Both are rebuilt from already-persisted document
-/// state instead of carried as hidden interior-mutable scratch — see `🎮️commands/🚀️run-reconstruction`
-/// and `🎮️commands/📥️import-frame-payload` for how.
+/// state instead of carried as hidden interior-mutable scratch — see `🎮️commands/🏗️run-reconstruction`
+/// and `🎮️commands/🖼️import-frame-payload` for how.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]

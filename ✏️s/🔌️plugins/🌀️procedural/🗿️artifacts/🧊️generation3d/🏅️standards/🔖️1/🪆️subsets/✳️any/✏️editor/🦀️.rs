@@ -108,7 +108,7 @@ pub struct Generation3dPlayApp;
 fn parse_flow_camera_json(args: &dsl::DslValue) -> flow::CameraJson {
     if let Some(camera) = args.get("camera") {
         // 🌉️ `flow::CameraJson` derives `ToValue`/`FromValue` alongside its `Serialize`/
-        // `Deserialize` (see `🌊️flow/📄️artifact/🦀️.rs`), so this decodes straight off the
+        // `Deserialize` (see `🌊️flow/🗿️artifact/🦀️.rs`), so this decodes straight off the
         // first-party bridge — no `serde_json` involved.
         if let Ok(parsed) = dsl::from_dsl_value::<flow::CameraJson>(camera.clone()) {
             return parsed;
@@ -1636,7 +1636,7 @@ fn mesh_data_for_preview_handle(handle: &str, tolerance: f64, session: Option<&F
         if let Some(json) = session.preview_mesh_json(handle) {
             let has_error = dsl::json::parse(json).ok().is_some_and(|value| value.get("error").is_some());
             if !has_error {
-                // 🌉️ `MeshData` has its own first-party `FromValue` (`🔺️mesh-engine/🦀️.rs`) — decode
+                // 🌉️ `MeshData` has its own first-party `FromValue` (`🏗️mesh-engine/🦀️.rs`) — decode
                 // through the `pack::json`/`DslValue` bridge, no `serde_json` involved.
                 if let Ok(data) = dsl::json::from_json_str::<semio_framework_plugin::MeshData>(json) {
                     if mesh_has_preview_geometry(&data) {
@@ -2442,7 +2442,7 @@ mod tests {
 
     /// 🌉️ Decodes one preview mesh record's `data` field (a `pack::json`/`serde_json::Value` fragment
     /// off the wire) into `MeshData` through its first-party `FromValue` codec — `MeshData` no longer
-    /// derives `serde::Deserialize` in a non-`#[cfg(test)]` build of its own crate (`🔺️mesh-engine/🦀️.rs`'s
+    /// derives `serde::Deserialize` in a non-`#[cfg(test)]` build of its own crate (`🏗️mesh-engine/🦀️.rs`'s
     /// `#[cfg_attr(test, derive(Serialize, Deserialize))]` only activates inside that crate's OWN test
     /// build, never for a downstream consumer like this one), so `serde_json::from_value` cannot reach
     /// it here; round-trip through the wire text and `dsl::json::from_json_str` instead, exactly like

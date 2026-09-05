@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "owner": "✏️s/🔌️plugins/📸️remodeling/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌠update-feature-params",
+  "owner": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌠update-feature-params",
   "semanticKind": "update-feature-params",
   "displayName": "Update Feature Params",
   "emoji": "🌠",
   "aggregateVariant": "UpdateFeatureParams",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "update-feature-params",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

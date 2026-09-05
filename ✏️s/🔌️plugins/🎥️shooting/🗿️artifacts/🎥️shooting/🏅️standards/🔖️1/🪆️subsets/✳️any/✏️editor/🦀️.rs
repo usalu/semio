@@ -3,7 +3,7 @@
 //! the retired `🎛️apps/🎥️shooting/🦀️.rs`, `impl ArtifactApp` → `impl ArtifactEditor`.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
-//! `🎭️modes/*/🪟️windows/*`, chrome measures in those windows' `🎚️options/*`, panel trees in `📌️panels/*`,
+//! `🎭️modes/*/🪟️windows/*`, chrome measures in those windows' `☑️options/*`, panel trees in `📌️panels/*`,
 //! labels in `🦀️terminology.rs`, view state in `🦀️config.rs`, shared compute in the artifact's `⚙️engine`.
 //! This file is a routing table: `handle` → `ShootingCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
@@ -49,7 +49,7 @@ pub use scene_window::SHOOTING_PLAY_WINDOW_SCENE;
 
 //#region 🔖️Utilities
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
-/// (`🎚️options/*`, `📌️panels/*`) builds its `on_change`/item actions with.
+/// (`☑️options/*`, `📌️panels/*`) builds its `on_change`/item actions with.
 pub fn shooting_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     semio_framework_plugin::ActionFactory::new(SHOOTING_PLAY_CONTROLLER_ID).action(action, args)
 }

@@ -5,6 +5,38 @@
     "default": ["{workspaceRoot}/✏️s/🔌️plugins/🪐️space/**/*.rs", "{projectRoot}/**/*"]
   },
   "targets": {
+    "home-directory-event-page-owner-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts home-directory-event-page-owner-check"
+      }
+    },
+    "home-directory-event-page-owner-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts home-directory-event-page-owner-check --native"
+      }
+    },
+    "home-directory-projection-persistence-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts home-directory-projection-persistence-check"
+      }
+    },
+    "home-directory-projection-persistence-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts home-directory-projection-persistence-check --native"
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

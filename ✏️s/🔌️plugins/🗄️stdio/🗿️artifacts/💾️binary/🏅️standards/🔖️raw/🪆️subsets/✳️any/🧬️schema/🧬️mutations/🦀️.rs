@@ -9,13 +9,13 @@ use protocol::{OpBinary, OpText};
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.binary`.
 //#region 🔖️Leaves
-#[path = "📄set-snapshot/🦀️.rs"]
+#[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "✂replace-byte-range/🦀️.rs"]
+#[path = "✂️replace-byte-range/🦀️.rs"]
 pub mod replace_byte_range;
-#[path = "➕append-bytes/🦀️.rs"]
+#[path = "➕️append-bytes/🦀️.rs"]
 pub mod append_bytes;
-#[path = "🔪truncate-at/🦀️.rs"]
+#[path = "🔪️truncate-at/🦀️.rs"]
 pub mod truncate_at;
 //#endregion 🔖️Leaves
 
@@ -107,7 +107,7 @@ pub(crate) fn agg_inverse(this: &BinaryMutation, base: &BinarySnapshot) -> Vec<B
                 // 🧭️ Nothing was actually dropped (offset was already past the end), so there is
                 // no real forward step to undo — the same empty-inverse idiom the migrated `tiff`
                 // pilot uses for its own dropped-`NoMutation` fallback arms (`RemoveTileTags`'s
-                // "was already absent" case, `../../🖼️tiff/…/✳️baseline/🧬️schema/🧬️mutations/
+                // "was already absent" case, `../../🖼️tiff/…/🧱️baseline/🧬️schema/🧬️mutations/
                 // 🦀️.rs`), rather than reinstating a unit `NoMutation` variant the derive forbids.
                 return Vec::new();
             } else {
@@ -284,7 +284,7 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/rewrites-the-two-middle-bytes/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/🪡️rewrites-the-two-middle-bytes/🦀️.rs"]
     mod tests_set_snapshot_rewrites_the_two_middle_bytes;
 }
 //#endregion 🧪️FixtureTests

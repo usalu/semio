@@ -2,7 +2,7 @@
 // 💻️ .storybook/stories/framework/hosts/World3dHost.stories.tsx
 // Specs: Host the framework renderer's `World3dHost` — a pure `@react-three/fiber` + `@semio-tech/infinite-world-r3f`
 // component (`WorldCanvas`) that owns no WASM engine of its own, EXCEPT when `scene.terrainJson` is present:
-// it then mounts `WorldTerrainLayer`, which drives the real `framework/surface/terrain/rs` `TerrainSession`.
+// it then mounts `🗺️WorldTerrainLayer`, which drives the real `framework/surface/terrain/rs` `TerrainSession`.
 // Summary: `MinimalViewport` needs no wasm loader at all; `TerrainViewport` sets `parameters.wasm: ["terrain"]`
 // so `withWasm` gates first paint on `WASM_LOADERS.terrain` (see `.storybook/preview.tsx`) resolving.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -23,7 +23,7 @@ const MINIMAL_SCENE: World3dScene = {
   interactionJson: '{"activeUtility":"select"}',
 };
 
-/** ⛰️ Matches the `terrainJson` fixture in `framework/os/renderer/js/react/index.test.ts` ("accepts extended world 3d scene fields") — mounts `WorldTerrainLayer` internally, backed by the real `TerrainSession` WASM engine. */
+/** ⛰️ Matches the `terrainJson` fixture in `framework/os/renderer/js/react/index.test.ts` ("accepts extended world 3d scene fields") — mounts `🗺️WorldTerrainLayer` internally, backed by the real `TerrainSession` WASM engine. */
 const TERRAIN_SCENE: World3dScene = {
   ...MINIMAL_SCENE,
   terrainJson: JSON.stringify({
@@ -79,7 +79,7 @@ export const MinimalViewport: Story = {
   args: { scene: MINIMAL_SCENE, controllerId: "puzzle3d-play", surfaceId: "puzzle.3d.play.viewport" },
 };
 
-/** ⛰️ `terrainJson` present — mounts `WorldTerrainLayer` against the real `TerrainSession` WASM engine. */
+/** ⛰️ `terrainJson` present — mounts `🗺️WorldTerrainLayer` against the real `TerrainSession` WASM engine. */
 export const TerrainViewport: Story = {
   args: { scene: TERRAIN_SCENE, controllerId: "puzzle3d-play", surfaceId: "puzzle.3d.play.terrain" },
   parameters: { wasm: ["terrain"] },

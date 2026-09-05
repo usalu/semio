@@ -19,10 +19,11 @@ use crate::editor::block2d::modes::edit as edit_mode;
 use crate::editor::block2d::modes::edit::windows::board;
 use crate::editor::block2d::panels::{document as document_panel, inspection as inspection_panel};
 use crate::editor::block2d::terminology::block2d_labels;
-use semio_framework::{DomainTopology, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, InteractiveJobClassification, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode};
+use semio_framework::{DomainTopology, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, InteractiveJobClassification, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError, TopologyNode};
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionDescriptor, AppIo, ArtifactEditor, ArtifactKindSpec, ArtifactPresentation, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
+    ActionDescriptor, AppIo, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactPresentation, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
     MediaPortDirection, MediaPortSpec, MediaType, NoDraft, NoDraftMutation, PortMultiplicity, UiNode,
 };
 use dsl::os_pack::json::Value;
@@ -156,6 +157,229 @@ semio_framework_plugin::app_commands! {
 }
 //#endregion 🔖️Commands
 
+//#region 🧵️RetainedCommands
+/// 🧵️ Every `Block2dCommand` row, without exception — block2d declares no host-only/config-only verb,
+/// so the retained route table and `create_block2d_app`'s `Migrated` classification list are the same
+/// nine ids (pinned by `retained_route_dispositions_are_exact_and_exhaustive`).
+const BLOCK2D_RETAINED_TOOL_IDS: &[&str] = &["patchNodeKind", "addHandleKind", "removeHandleKind", "addHandle", "removeHandle", "addCompatibilityRule", "removeCompatibilityRule", "setActiveExample", "edit"];
+const BLOCK2D_RETAINED_PAYLOAD_SCHEMA: &str = "block.2d.tool-command.v1";
+const BLOCK2D_RETAINED_RAW_BYTES: usize = 65_536;
+const BLOCK2D_RETAINED_WORK_ITEMS: usize = 4_096;
+/// 🛣️ Publication lanes per route — every block2d handler emits `Emit::mutations(..)`/`Emit::default()`
+/// over `Block2dMutation` only (`🎮️commands/*/🦀️.rs`), never a `Block2dConfigMutation`, so every route
+/// publishes into the artifact lane and nothing else.
+const BLOCK2D_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "patchNodeKind", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addHandleKind", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "removeHandleKind", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addHandle", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "removeHandle", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addCompatibilityRule", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "removeCompatibilityRule", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "edit", lanes: &[ArtifactToolPublicationLane::Artifact] },
+];
+
+fn block2d_retained_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(BLOCK2D_RETAINED_RAW_BYTES, 4_096, 1, 262_144, 7_500)
+}
+
+fn block2d_retained_extent(command: &Block2dCommand, snapshot: &Block2dSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    if !BLOCK2D_RETAINED_TOOL_IDS.contains(&command.command_id()) {
+        return None;
+    }
+    let collections = [snapshot.handle_kinds.len(), snapshot.handles.len(), snapshot.compatibility.len(), snapshot.attributes.len(), snapshot.authors.len()];
+    let items = collections.into_iter().try_fold(1usize, |total, count| total.checked_add(count))?;
+    (items <= BLOCK2D_RETAINED_WORK_ITEMS).then_some(1)
+}
+
+fn block2d_retained_reduce(
+    command: &Block2dCommand,
+    snapshot: &Block2dSnapshot,
+    config: &Block2dConfig,
+    history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    operation: &AppOperationContext,
+) -> Result<Emit<Block2dMutation, Block2dConfigMutation, NoDraftMutation>, Fault> {
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+}
+
+struct Block2dRetainedCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl Block2dRetainedCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: BLOCK2D_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for Block2dRetainedCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<Block2dPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<Block2dPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
+    fn payload_schema_id(&self) -> &str { BLOCK2D_RETAINED_PAYLOAD_SCHEMA }
+    fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
+    fn execution_contract(&self) -> ToolExecutionContract { block2d_retained_contract() }
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> { Ok(ArtifactRetainedCommandJob::new(payload)) }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > BLOCK2D_RETAINED_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("Block2d retained command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for Block2dRetainedCommandJobFactory {
+    type Owner = EditorApp<Block2dPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = BLOCK2D_RETAINED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = BLOCK_2D_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = BLOCK2D_PUBLICATION_CONTRACTS;
+}
+//#endregion 🧵️RetainedCommands
+
+//#region 📬️StorePreparation
+struct Block2dStorePreparationFactory;
+
+struct Block2dStorePreparation {
+    base: Option<store::SnapshotRead<Block2dSnapshot>>,
+    mutation: Option<Block2dMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<Block2dSnapshot, Block2dMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<Block2dSnapshot, Block2dMutation> for Block2dStorePreparationFactory {
+    fn preflight(&self, _mutation: &Block2dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("Block2d Store preparation rejected its lane or description envelope".into());
+        }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+    }
+
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<Block2dSnapshot, Block2dMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Block2dSnapshot, Block2dMutation>>, store::ArtifactStoreOneItemPreparationRequest<Block2dSnapshot, Block2dMutation>> {
+        let item_count = request
+            .base
+            .get()
+            .handle_kinds
+            .len()
+            .saturating_add(request.base.get().handles.len())
+            .saturating_add(request.base.get().compatibility.len())
+            .saturating_add(request.base.get().attributes.len())
+            .saturating_add(request.base.get().authors.len());
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || item_count > BLOCK2D_RETAINED_WORK_ITEMS
+        {
+            return Err(request);
+        }
+        Ok(Box::new(Block2dStorePreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<Block2dSnapshot, Block2dMutation> for Block2dStorePreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        use protocol::{Mutation as _, MutationDiff as _};
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "Block2d preparation lost its exact base root".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "Block2d preparation lost its mutation owner".to_string())?;
+        let inverse = mutation.inverse(base.get());
+        let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "Block2d preparation lost its Store authority".to_string())?;
+        let id = format!("block2d-retained-{}", authority.next_sequence_number());
+        let edit = protocol::Edit {
+            id: id.clone(),
+            actor: Some(authority.actor().to_string()),
+            forwards: vec![mutation],
+            inverse,
+            mutation_meta: vec![protocol::MutationMeta {
+                mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+                dependencies: Vec::new(),
+                base_version: authority.base_applied_edit_count() as u64,
+                author_id: Some(protocol::ActorId(authority.actor().to_string())),
+                timestamp: authority.next_clock(),
+                undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+                payload_hash: None,
+                semantic_kind: None,
+                label: None,
+                group_id: None,
+                origin: Default::default(),
+            }],
+            description: self.description.take(),
+            coalesce_key: None,
+            sequence_number: authority.next_sequence_number(),
+            started_at: String::new(),
+            finished_at: None,
+        };
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Block2dSnapshot, Block2dMutation>> { self.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Block2dSnapshot, Block2dMutation>> { self.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.closing = true; }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() { return Err("Block2d preparation could not return its exact base root".into()); }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() { return Ok(store::SnapshotRetirementStep::Blocked); }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+//#endregion 📬️StorePreparation
+
 //#region 🔖️Block2dPlayApp
 /// 🧪️ B1: unit struct — the former `selected_ids` `RefCell` field now lives in
 /// `crate::editor::block2d::config::Block2dConfig`, written through `Block2dConfigMutation`s.
@@ -179,12 +403,68 @@ impl ArtifactEditor for Block2dPlayApp {
     const DIALECT: Dialect = crate::artifacts::block2d::BLOCK2D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = BLOCK_2D_SCHEMA;
 
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(std::sync::Arc::new(Block2dStorePreparationFactory))
+    }
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<Block2dPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.block.block2d@1/*#editor",
+        document_schema: "block.2d",
+        factory: "Block2dRetainedCommandJobFactory",
+        factory_type: Block2dRetainedCommandJobFactory,
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
+        tools: ["patchNodeKind", "addHandleKind", "removeHandleKind", "addHandle", "removeHandle", "addCompatibilityRule", "removeCompatibilityRule", "setActiveExample", "edit"]
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller_id = registry.controller_id().to_string();
+        registry.register(Block2dRetainedCommandJobFactory::new(&controller_id))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !BLOCK2D_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id || block2d_retained_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
+            return Err(Fault::from("block2d-retained-command-tool-mismatch"));
+        }
+        let tool_id = request.command.command_id();
+        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(BoundedArtifactCommandWork::new(tool_id, block2d_retained_reduce, block2d_retained_extent));
+        let operation_context = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            *request.command,
+            request.snapshot,
+            request.config,
+            request.history,
+            request.interaction_state,
+            request.interaction_hover,
+            operation_context,
+            request.completion,
+            Block2dCommand::command_id,
+            BLOCK2D_RETAINED_RAW_BYTES,
+            BLOCK2D_RETAINED_WORK_ITEMS,
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
+
     async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::block2d::config::schema::app_schema_descriptor())
     }
 
+    /// 📄️ Boots on the bundled `hexagonal-cut-concrete-forest-left` example document (the same DSL
+    /// `setActiveExample` parses), so every window renders real content instead of the all-`Default`
+    /// empty node kind — see `crate::artifacts::block2d::schema::default_block2d_snapshot`.
     async fn initial_snapshot() -> Block2dSnapshot {
-        crate::artifacts::block2d::schema::empty_block2d_snapshot()
+        crate::artifacts::block2d::schema::default_block2d_snapshot()
     }
 
     async fn io() -> Option<AppIo> {
@@ -333,15 +613,15 @@ pub fn create_block2d_app() -> semio_framework_plugin::AppDefinition {
             .mutation("removeCompatibilityRule", LocalizedLabel::native("Remove Compatibility Rule", "Kompatibilitätsregel entfernen"))
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
-            .action_interactive_job("patchNodeKind", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addHandleKind", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("removeHandleKind", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addHandle", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("removeHandle", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addCompatibilityRule", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("removeCompatibilityRule", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setActiveExample", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("edit", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("patchNodeKind", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addHandleKind", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeHandleKind", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addHandle", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeHandle", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addCompatibilityRule", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeCompatibilityRule", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+            .action_interactive_job("edit", InteractiveJobClassification::Migrated)
             .io(block2d_io())
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a
             // bare `AppDefinition`, not the old `App { definition, examples }` — there is no
@@ -399,6 +679,32 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     //#region 🔖️CommandSurface
+    /// ⚖️ LAW: block2d's retained route table, its publication contracts, its bounded-first-step proofs
+    /// and the manifest's `Migrated` classifications are the SAME nine ids — the exact join the
+    /// framework's `validate_tool_job_rows` demands (`interactive-job.catalog-authority` /
+    /// `interactive-job.catalog-incomplete`). Mirrors generation2d's
+    /// `retained_route_dispositions_are_exact_and_exhaustive`.
+    #[semio_framework_async_macros::async_test]
+    async fn retained_route_dispositions_are_exact_and_exhaustive() {
+        use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
+        assert_eq!(BLOCK2D_RETAINED_TOOL_IDS.len(), 9);
+        assert_eq!(<Block2dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 9);
+        assert_eq!(Block2dRetainedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 9);
+        assert_eq!(block2d_retained_contract().shape, ToolExecutionShape::BoundedFirstStep);
+        assert_eq!(block2d_retained_contract().cancellation, ToolCancellationPolicy::PerOperation);
+        for tool_id in BLOCK2D_RETAINED_TOOL_IDS {
+            let contract = Block2dRetainedCommandJobFactory::PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == *tool_id).unwrap_or_else(|| panic!("publication contract for {tool_id}"));
+            assert_eq!(contract.lanes, [ArtifactToolPublicationLane::Artifact].as_slice(), "every block2d handler emits document mutations only");
+        }
+        let definition = create_block2d_app();
+        let migrated: Vec<&str> = every_command().iter().map(Block2dCommand::command_id).collect();
+        assert_eq!(migrated.iter().copied().collect::<std::collections::BTreeSet<_>>(), BLOCK2D_RETAINED_TOOL_IDS.iter().copied().collect::<std::collections::BTreeSet<_>>());
+        for tool_id in BLOCK2D_RETAINED_TOOL_IDS {
+            let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("action {tool_id} declared"));
+            assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "{tool_id} must be UI-dispatchable");
+        }
+    }
+
     async fn every_command() -> Vec<Block2dCommand> {
         vec![
             Block2dCommand::PatchNodeKind(patch_node_kind::PatchNodeKind { field: "name".into(), value: "x".into() }),
@@ -483,7 +789,7 @@ mod tests {
         testkit::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {}));
         testkit::dispatch(&mut app, Block2dCommand::AddHandle(add_handle::AddHandle {}));
         let snapshot = app.snapshot().expect("snapshot");
-        let kind_id = snapshot.handle_kinds[0].id.clone();
+        let kind_id = snapshot.handles[0].handle_kind.clone();
         let handle_id = snapshot.handles[0].id.clone();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
@@ -522,14 +828,17 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn add_handle_kind_then_add_handle_then_remove_round_trips() {
         let mut app: Block2dApp = new_app();
+        let booted = app.snapshot().expect("snapshot");
+        let (kinds, handles) = (booted.handle_kinds.len(), booted.handles.len());
+        let booted_ids: Vec<String> = booted.handles.iter().map(|handle| handle.id.clone()).collect();
         testkit::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {}));
-        assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), 1);
+        assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), kinds + 1);
         testkit::dispatch(&mut app, Block2dCommand::AddHandle(add_handle::AddHandle {}));
         let projection = app.snapshot().expect("snapshot");
-        assert_eq!(projection.handles.len(), 1);
-        let handle_id = projection.handles[0].id.clone();
+        assert_eq!(projection.handles.len(), handles + 1);
+        let handle_id = projection.handles.iter().map(|handle| handle.id.clone()).find(|id| !booted_ids.contains(id)).expect("the added handle");
         testkit::dispatch(&mut app, Block2dCommand::RemoveHandle(remove_handle::RemoveHandle { id: handle_id }));
-        assert_eq!(app.snapshot().expect("snapshot").handles.len(), 0);
+        assert_eq!(app.snapshot().expect("snapshot").handles.len(), handles);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -537,6 +846,18 @@ mod tests {
         let mut app = new_app();
         testkit::dispatch(&mut app, Block2dCommand::PatchNodeKind(patch_node_kind::PatchNodeKind { field: "name".into(), value: "Renamed".into() }));
         assert_eq!(app.snapshot().expect("snapshot").node_kind.name, "Renamed");
+    }
+
+    /// 📄️ The app boots on a real document, so every window renders content before the first action.
+    #[semio_framework_async_macros::async_test]
+    async fn boots_on_the_forest_left_example_document() {
+        let mut app: Block2dApp = new_app();
+        let booted = app.snapshot().expect("snapshot");
+        assert_eq!(booted.node_kind.id, "Hexagonal Cut Concrete Forest Left");
+        assert_eq!(booted.handles.len(), 11);
+        assert!(!booted.handle_kinds.is_empty());
+        assert_ne!(booted, crate::artifacts::block2d::schema::empty_block2d_snapshot());
+        assert!(testkit::render(&mut app, board::BLOCK2D_BODY_BOARD).contains("Hexagonal Cut Concrete Forest Left"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -551,12 +872,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trips_through_the_wrapper() {
         let mut app = new_app();
+        let kinds = app.snapshot().expect("snapshot").handle_kinds.len();
         testkit::dispatch(&mut app, Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {}));
-        assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), 1);
+        assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), kinds + 1);
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
-        assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), 0);
+        assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), kinds);
         app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).expect("redo");
-        assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), 1);
+        assert_eq!(app.snapshot().expect("snapshot").handle_kinds.len(), kinds + 1);
     }
 
     /// 🌉️ `puzzle2d_manifest_fragment`'s new caller round-trips through the `"catalog:out"` media port.

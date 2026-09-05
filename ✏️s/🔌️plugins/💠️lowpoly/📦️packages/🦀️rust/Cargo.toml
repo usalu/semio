@@ -36,7 +36,7 @@ semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️
 serde.workspace = true
 serde_json.workspace = true
 base64_codec = { path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
-semio-framework-pixels = { path = "../../../../../🧰️framework/🔨️modules/🖼️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
+semio-framework-pixels = { path = "../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
 
 [features]
 # 🧪️ Optional: CAD fixture round-trip tests in `⚙️engine/🧵️media` (Wave 4 must keep CAD compilable).

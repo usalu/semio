@@ -9,7 +9,7 @@ use protocol::{OpBinary, OpText};
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.deflate`.
 //#region 🔖️Leaves
-#[path = "📄set-snapshot/🦀️.rs"]
+#[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🧮set-compression-params/🦀️.rs"]
 pub mod set_compression_params;
@@ -210,7 +210,7 @@ mod tests {
         let declared_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
         assert_eq!(variant_kinds, declared_kinds, "KINDS must list every DeflateMutation variant exactly once");
 
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔮️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }
@@ -219,10 +219,10 @@ mod tests {
 //#endregion Tests
 
 //#region 🧪️FixtureCases
-/// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
+/// 🧪️ Handcrafted `📸️set-snapshot` fixture cases, wired from this tree's own mutations root so
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📄set-snapshot/🧪️tests/raises-the-flevel-hint-and-extends-the-payload/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/🐼️raises-the-flevel-hint-and-extends-the-payload/🦀️.rs"]
 mod set_snapshot_raises_the_flevel_hint_and_extends_the_payload;
 //#endregion 🧪️FixtureCases

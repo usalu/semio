@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/en1994/inference.json",
+  "title": "En1994Inference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outline"],
+  "properties": {
+    "outline": { "$ref": "#/$defs/En1994Outline", "x-semio-derived": true }
+  },
+  "$defs": {
+    "En1994Outline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sectionOutline", "fieldCount", "entryCount"],
+      "properties": {
+        "sectionOutline": { "type": "array", "items": { "type": "string" } },
+        "fieldCount": { "type": "integer" },
+        "entryCount": { "type": "integer" }
+      }
+    }
+  }
+}

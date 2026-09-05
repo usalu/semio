@@ -1,0 +1,29 @@
+{
+  "workbook": {
+    "sheets": {
+      "modified": [
+        {
+          "key": "Sheet1",
+          "diff": {
+            "cells": {
+              "modified": [
+                {
+                  "key": [
+                    4,
+                    1
+                  ],
+                  "diff": {
+                    "value": {
+                      "kind": "formula",
+                      "expr": "SUM(B1:B3)"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

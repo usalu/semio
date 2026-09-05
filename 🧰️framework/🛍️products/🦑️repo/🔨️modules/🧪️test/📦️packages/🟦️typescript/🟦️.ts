@@ -11,6 +11,7 @@ import { createHash } from "node:crypto";
 import { constants, cpSync, existsSync, linkSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { type BreachRecord, TEST_LEVELS, type TestLevel, findRepoRoot, getRepoMetaDir, runProbe, testLevelBudgetMs } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { type Taxonomy, leadingEmojiIdentity, loadCatalogTaxonomy, mutationCatalogSourceOwner, mutationOwnerRelativePath, pathEmojiStatuteFindings } from "../../../📚️library/🔍️discovery/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔣️Contract
@@ -76,9 +77,10 @@ export const CORE_COMPARISON_PROFILES: readonly ComparisonProfileSpec[] = [
 type TestFileKind = Readonly<{ emoji: string; extensionChains: readonly string[] }>;
 type TestPathExclusion = Readonly<{ path: string; mode: "opaque"; reason: string }>;
 type TestLocation = Readonly<{ directoryPath: string; fileKindId: string }>;
+type MutationCatalogAuthority = Pick<Taxonomy, "mutationDomainOwners" | "mutationCatalogSourceOwners" | "pathEmojiPolicy">;
 
 /** 🗂️ Canonical v7 test taxonomy, mirrored from `🔣️taxonomy.json` so drift fails closed. */
-export type TestTaxonomy = Readonly<{
+export type TestTaxonomy = MutationCatalogAuthority & Readonly<{
   fileKinds: Readonly<Record<string, TestFileKind>>;
   pathExclusions: Readonly<Record<string, TestPathExclusion>>;
   testsDirName: string;
@@ -94,6 +96,7 @@ export type TestTaxonomy = Readonly<{
   testOracleRegistryLocation: TestLocation;
   testSchemaLocation: TestLocation;
   testContributionDirName: string;
+  testContributionDirectoryOverrides: Readonly<Record<string, string>>;
   testContributionFileKindId: string;
   /** 🔬️ Directory name of an owner's external measurement probes — test-owned by what it is. */
   testProbeDirName: string;
@@ -113,12 +116,26 @@ let taxonomyCache: { root: string; value: TestTaxonomy } | null = null;
 export function testTaxonomy(repoRoot: string): TestTaxonomy {
   if (taxonomyCache && taxonomyCache.root === repoRoot) return taxonomyCache.value;
   const parsed = JSON.parse(readFileSync(join(repoRoot, TAXONOMY_REL_PATH), "utf8")) as Record<string, unknown>;
-  const required = ["fileKinds", "pathExclusions", "testsDirName", "testFixturesDirName", "testFeatureFileKindId", "testCaseSlugPattern", "testAdapterFileKinds", "testImplementationIds", "testOutputCacheDirName", "testOutputMarkerFileKindId", "testOutputMarkerKind", "testOutputChildDirs", "testOracleRegistryLocation", "testSchemaLocation", "testContributionDirName", "testContributionFileKindId", "testProbeDirName", "testGeneratorDirName", "testBridgeDirName", "testDomainPath", "testPhases", "testLevellessPhases", "testMutationVocabularyDirName"];
+  const required = ["fileKinds", "pathExclusions", "testsDirName", "testFixturesDirName", "testFeatureFileKindId", "testCaseSlugPattern", "testAdapterFileKinds", "testImplementationIds", "testOutputCacheDirName", "testOutputMarkerFileKindId", "testOutputMarkerKind", "testOutputChildDirs", "testOracleRegistryLocation", "testSchemaLocation", "testContributionDirName", "testContributionDirectoryOverrides", "testContributionFileKindId", "testProbeDirName", "testGeneratorDirName", "testBridgeDirName", "testDomainPath", "testPhases", "testLevellessPhases", "testMutationVocabularyDirName"];
+  required.push("mutationDomainOwners", "mutationCatalogSourceOwners", "pathEmojiPolicy");
   const missing = required.filter((key) => parsed[key] === undefined);
   if (missing.length > 0) throw new Error(`🔣️taxonomy.json is missing the test contract keys: ${missing.join(", ")}`);
+  const overrides = parsed.testContributionDirectoryOverrides;
+  if (!overrides || typeof overrides !== "object" || Array.isArray(overrides) || Object.entries(overrides).some(([owner, name]) => (owner !== "." && (owner.includes("\\") || owner.split("/").some((segment) => !segment || segment === "." || segment === ".."))) || typeof name !== "string" || !name || /[\\/]/u.test(name) || name === "." || name === "..")) throw new Error("🔣️taxonomy.json testContributionDirectoryOverrides must map canonical repository-relative owners to single directory names");
   const value = Object.fromEntries(required.map((key) => [key, parsed[key]])) as unknown as TestTaxonomy;
   taxonomyCache = { root: repoRoot, value };
   return value;
+}
+
+/** 🧭️ Resolves the handpicked contribution directory for one exact repository-relative owner. */
+export function testContributionDirectoryName(taxonomy: TestTaxonomy, owner: string): string {
+  return Object.hasOwn(taxonomy.testContributionDirectoryOverrides, owner) ? taxonomy.testContributionDirectoryOverrides[owner]! : taxonomy.testContributionDirName;
+}
+
+/** 🔮️ Recognizes contribution ownership by exact ancestor scope, independently of manifest validity. */
+export function isTestContributionPath(taxonomy: TestTaxonomy, rel: string): boolean {
+  const segments = rel.split("/");
+  return segments.some((name, index) => name === testContributionDirectoryName(taxonomy, segments.slice(0, index).join("/") || "."));
 }
 
 /** 📄️ Resolves the taxonomy-ordered kind-only filename for a test contract. */
@@ -666,7 +683,7 @@ function ownerContainsProfile(owner: string, standardDirectoryName: string, subs
 }
 
 /** 🧾️ Validates the strict catalog record without consulting implementation source or runtime kinds. */
-export function mutationCatalogProblems(value: unknown, owner?: string): string[] {
+export function mutationCatalogProblems(value: unknown, owner?: string, taxonomy: MutationCatalogAuthority = loadCatalogTaxonomy()): string[] {
   if (!isPlainObject(value)) return ["catalog is not an object"];
   const problems: string[] = [];
   const allowed = new Set(["id", "capability", "standardDirectoryName", "subsetDirectoryName", "kinds", "vectors", "deferredKinds"]);
@@ -704,6 +721,10 @@ export function mutationCatalogProblems(value: unknown, owner?: string): string[
   }
   const mutationIds = new Set<string>();
   const mutationDirectories = new Set<string>();
+  const sourceOwner = owner === undefined ? undefined : mutationCatalogSourceOwner(owner, taxonomy);
+  if (sourceOwner === null) problems.push("catalog source ownership is invalid");
+  const mutationRoot = sourceOwner === undefined || sourceOwner === null ? null : `${sourceOwner}/🧬️schema/🧬️mutations`;
+  const grouped = mutationRoot !== null && Object.hasOwn(taxonomy.mutationDomainOwners, mutationRoot);
   for (const [vectorIndex, candidate] of value.vectors.entries()) {
     if (!isPlainObject(candidate)) {
       problems.push(`vectors[${vectorIndex}] is not an object`);
@@ -717,11 +738,18 @@ export function mutationCatalogProblems(value: unknown, owner?: string): string[
     if (mutationIds.has(mutationId)) problems.push(`vectors mutationId ${mutationId} is duplicated`);
     mutationIds.add(mutationId);
     if (sourceMutationDirectoryName.length === 0 || sourceMutationDirectoryName !== sourceMutationDirectoryName.normalize("NFC")) problems.push(`vectors[${vectorIndex}].sourceMutationDirectoryName must be non-empty NFC`);
-    if ((sourceMutationDirectoryName.match(/[a-z0-9][a-z0-9-]*$/)?.[0] ?? "") !== mutationId) problems.push(`vectors[${vectorIndex}].sourceMutationDirectoryName does not render mutationId ${mutationId}`);
     if (mutationDirectoryName.length === 0 || mutationDirectoryName !== mutationDirectoryName.normalize("NFC")) problems.push(`vectors[${vectorIndex}].mutationDirectoryName must be non-empty NFC`);
-    if ((mutationDirectoryName.match(/[a-z0-9][a-z0-9-]*$/)?.[0] ?? "") !== mutationId) problems.push(`vectors[${vectorIndex}].mutationDirectoryName does not render mutationId ${mutationId}`);
-    if (mutationDirectories.has(mutationDirectoryName)) problems.push(`vectors mutationDirectoryName ${mutationDirectoryName} is duplicated`);
-    mutationDirectories.add(mutationDirectoryName);
+    for (const [field, name] of Object.entries({ sourceMutationDirectoryName, mutationDirectoryName })) if (/[\\/]/u.test(name) || name === "." || name === "..") problems.push(`vectors[${vectorIndex}].${field} must be one basename`);
+    const registeredOwner = grouped ? mutationOwnerRelativePath(mutationRoot!, mutationId, taxonomy) : null;
+    if (grouped) {
+      if (registeredOwner === null || basename(registeredOwner) !== sourceMutationDirectoryName || basename(registeredOwner) !== mutationDirectoryName) problems.push(`vectors[${vectorIndex}] has no exact registered domain-operation owner for mutationId ${mutationId}`);
+    } else {
+      if ((sourceMutationDirectoryName.match(/[a-z0-9][a-z0-9-]*$/)?.[0] ?? "") !== mutationId) problems.push(`vectors[${vectorIndex}].sourceMutationDirectoryName does not render mutationId ${mutationId}`);
+      if ((mutationDirectoryName.match(/[a-z0-9][a-z0-9-]*$/)?.[0] ?? "") !== mutationId) problems.push(`vectors[${vectorIndex}].mutationDirectoryName does not render mutationId ${mutationId}`);
+    }
+    const directoryKey = registeredOwner ?? mutationDirectoryName;
+    if (mutationDirectories.has(directoryKey)) problems.push(`vectors mutationDirectoryName ${directoryKey} is duplicated`);
+    mutationDirectories.add(directoryKey);
     if (!Array.isArray(candidate.scenarios) || candidate.scenarios.length === 0) {
       problems.push(`vectors[${vectorIndex}].scenarios must be a non-empty array`);
       continue;
@@ -738,7 +766,7 @@ export function mutationCatalogProblems(value: unknown, owner?: string): string[
       if (!MUTATION_ID_RE.test(id)) problems.push(`vectors[${vectorIndex}].scenarios[${scenarioIndex}].id must be kebab-case`);
       if (scenarioIds.has(id)) problems.push(`vectors[${vectorIndex}] scenario id ${id} is duplicated`);
       scenarioIds.add(id);
-      if (directoryName !== `🧪️${id}`) problems.push(`vectors[${vectorIndex}].scenarios[${scenarioIndex}].directoryName must equal 🧪️${id}`);
+      if (leadingEmojiIdentity(directoryName).rest !== id || pathEmojiStatuteFindings([{ path: directoryName, nodeKind: "directory" }], taxonomy.pathEmojiPolicy.genericEmojiIdentities).length > 0 || /[\\/]/u.test(directoryName)) problems.push(`vectors[${vectorIndex}].scenarios[${scenarioIndex}].directoryName must be one canonical NFC test-case identity`);
       if (directoryName !== directoryName.normalize("NFC")) problems.push(`vectors[${vectorIndex}].scenarios[${scenarioIndex}].directoryName must be NFC`);
     }
   }
@@ -754,7 +782,7 @@ export function mutationCatalogProblems(value: unknown, owner?: string): string[
  * nothing. A malformed catalog is a contract BREACH, and a breach must be visible beside all the
  * others, not be the reason none of them can be seen.
  */
-function strictMutationCatalogs(value: unknown, owner: string, manifestPath: string, problems: string[]): MutationCatalog[] {
+function strictMutationCatalogs(value: unknown, owner: string, manifestPath: string, problems: string[], taxonomy: MutationCatalogAuthority): MutationCatalog[] {
   if (value === undefined) return [];
   if (!Array.isArray(value)) {
     problems.push("mutationCatalogs must be an array");
@@ -762,7 +790,7 @@ function strictMutationCatalogs(value: unknown, owner: string, manifestPath: str
   }
   const accepted: MutationCatalog[] = [];
   for (const [index, catalog] of value.entries()) {
-    const found = mutationCatalogProblems(catalog, owner);
+    const found = mutationCatalogProblems(catalog, owner, taxonomy);
     if (found.length > 0) {
       for (const problem of found) problems.push(`mutationCatalogs[${index}] ${problem}`);
       continue;
@@ -849,7 +877,7 @@ function readContribution(repoRoot: string, owner: string, manifestPath: string)
   // in at read time. Resolving it later against the process cwd would silently read the wrong bytes.
   const manifestDir = dirname(manifestPath);
   const problems: string[] = [];
-  const mutationCatalogs = strictMutationCatalogs(parsed.mutationCatalogs, owner, manifestPath, problems);
+  const mutationCatalogs = strictMutationCatalogs(parsed.mutationCatalogs, owner, manifestPath, problems, testTaxonomy(repoRoot));
   return {
     owner,
     manifestPath,
@@ -869,8 +897,8 @@ function readContribution(repoRoot: string, owner: string, manifestPath: string)
 }
 
 /**
- * 🧩️ Walks every non-excluded path for `<owner>/🔣️oracle.json`. Discovery is by
- * convention, so a new owner extends the platform by adding a file — never by editing the framework.
+ * 🧩️ Discovers each owner's contribution at its taxonomy-declared directory and JSON kind leaf.
+ * An owner-specific handpicked directory replaces the default only at that exact owner.
  */
 export function discoverTestContributions(repoRoot: string): TestContribution[] {
   const cached = contributionCache.get(repoRoot);
@@ -879,10 +907,10 @@ export function discoverTestContributions(repoRoot: string): TestContribution[] 
   const found: TestContribution[] = [];
   walkDirectories(repoRoot, (abs, rel) => {
     if (isExcludedTestPath(repoRoot, rel)) return "skip";
-    if (basename(abs) !== taxonomy.testContributionDirName) return "enter";
+    const owner = relative(repoRoot, dirname(abs)).split(sep).join("/") || ".";
+    if (basename(abs) !== testContributionDirectoryName(taxonomy, owner)) return "enter";
     const manifest = join(abs, testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId));
     if (existsSync(manifest)) {
-      const owner = relative(repoRoot, dirname(abs)).split(sep).join("/") || ".";
       const contribution = readContribution(repoRoot, owner, relative(repoRoot, manifest).split(sep).join("/"));
       if (contribution !== null) found.push(contribution);
     }
@@ -1255,7 +1283,7 @@ function projectUnder(spec: ComparisonProfileSpec, value: unknown): unknown {
  */
 export function compareProjections(profile: ComparisonProfile, oracle: unknown, subject: unknown, profiles: ReadonlyMap<string, ComparisonProfileSpec> = coreProfileTable()): ComparisonVerdict {
   const spec = profiles.get(profile);
-  if (spec === undefined) return { profile, equal: false, diffs: [{ path: "$", oracle: profile, subject: [...profiles.keys()].sort(), reason: `unknown comparison profile ${JSON.stringify(profile)} — register it in an owner's ${"🧪️oracle"} manifest` }] };
+  if (spec === undefined) return { profile, equal: false, diffs: [{ path: "$", oracle: profile, subject: [...profiles.keys()].sort(), reason: `unknown comparison profile ${JSON.stringify(profile)} — register it in an owner's declared oracle contribution manifest` }] };
   const diffs: ComparisonDiff[] = [];
   if (spec.bytes === true) {
     const left = typeof oracle === "string" ? oracle : JSON.stringify(oracle);
@@ -1413,43 +1441,40 @@ function bundleBreach(scope: string, state: "source" | "projected"): BreachRecor
  * projected bundle. Runtime mutation kinds are deliberately not consulted: they describe dispatch
  * capability, while vectors describe checked-in physical evidence.
  */
-export function mutationVectorRegistryBreaches(repoRoot: string, registry: OracleRegistry): BreachRecord[] {
+export function mutationVectorRegistryBreaches(repoRoot: string, registry: OracleRegistry, taxonomy: MutationCatalogAuthority = testTaxonomy(repoRoot)): BreachRecord[] {
   const breaches: BreachRecord[] = [];
+  const representedSource = new Set<string>(), representedProjected = new Set<string>();
+  const sweepRoots: { sourceMutationRoot: string; projectedProfileRoot: string; grouped: boolean }[] = [];
   for (const contribution of registry.contributions) {
-    // 🧾️The represented sets are OWNER-scoped, not catalog-scoped. An owner may declare several
-    // catalogs over ONE `🧬️mutations` tree — `🎚️config` declares three, for opening, merge-policy and
-    // identity — and a per-catalog sweep then reported every OTHER catalog's vectors as unregistered.
-    // Five real scenarios became ten spurious findings that way: the evidence was registered, just not
-    // by the catalog that happened to be walking.
-    const representedSource = new Set<string>();
-    const representedProjected = new Set<string>();
-    const sweepRoots: { sourceMutationRoot: string; projectedProfileRoot: string }[] = [];
     for (const catalog of contribution.mutationCatalogs) {
-      const profileProblems = mutationCatalogProblems(catalog, contribution.owner);
+      const profileProblems = mutationCatalogProblems(catalog, contribution.owner, taxonomy);
       for (const problem of profileProblems) breaches.push(breach("testing/contract", "mutation-vector-catalog-invalid", contribution.manifestPath, problem, "The physical vector registry is a strict owner-scoped contract.", "Correct the catalog record without aliases or optional legacy fields."));
       if (profileProblems.length > 0) continue;
       const markerIndex = contribution.owner.indexOf(PROFILE_MARKER);
-      const sourceMutationRoot = join(repoRoot, contribution.owner, "🧬️schema", "🧬️mutations");
-      // 🪆️A profile-less owner has no projected profile root to walk — its vectors live only in source
-      // state — so the projected half of the comparison is an empty set rather than a guessed path.
+      const sourceOwner = mutationCatalogSourceOwner(contribution.owner, taxonomy)!;
+      const relativeMutationRoot = `${sourceOwner}/🧬️schema/🧬️mutations`;
+      const sourceMutationRoot = join(repoRoot, relativeMutationRoot);
+      const grouped = Object.hasOwn(taxonomy.mutationDomainOwners, relativeMutationRoot);
       const projectedProfileRoot =
         markerIndex < 0
           ? join(repoRoot, contribution.owner, "🧪️tests", "🪆️")
           : join(repoRoot, contribution.owner.slice(0, markerIndex), "🧪️tests", `🪆️${(catalog.standardDirectoryName ?? "").slice("🔖️".length)}-${(catalog.subsetDirectoryName ?? "").slice("✳️".length)}`);
-      sweepRoots.push({ sourceMutationRoot, projectedProfileRoot });
+      sweepRoots.push({ sourceMutationRoot, projectedProfileRoot, grouped });
 
       for (const vector of catalog.vectors) {
-        const sourceTests = join(sourceMutationRoot, vector.sourceMutationDirectoryName, "🧪️tests");
-        const projectedMutation = join(projectedProfileRoot, vector.mutationDirectoryName);
+        const registeredOwner = grouped ? mutationOwnerRelativePath(relativeMutationRoot, vector.mutationId, taxonomy)! : null;
+        const sourceTests = join(sourceMutationRoot, registeredOwner ?? vector.sourceMutationDirectoryName, "🧪️tests");
+        const projectedMutation = join(projectedProfileRoot, registeredOwner ?? vector.mutationDirectoryName);
         const sourceScenarios = childDirectories(sourceTests);
         const projectedScenarios = childDirectories(projectedMutation);
         for (const scenario of vector.scenarios) {
-          const sourceKey = `${vector.sourceMutationDirectoryName}/${scenario.id}`;
-          const projectedKey = `${vector.mutationDirectoryName}/${scenario.directoryName}`;
-          const sourceAbs = join(sourceTests, scenario.id);
+          const sourceAbs = join(sourceTests, scenario.directoryName);
           const projectedAbs = join(projectedMutation, scenario.directoryName);
-          const sourceExists = sourceScenarios.includes(scenario.id);
+          const sourceKey = relative(repoRoot, sourceAbs).split(sep).join("/");
+          const projectedKey = relative(repoRoot, projectedAbs).split(sep).join("/");
+          const sourceExists = sourceScenarios.includes(scenario.directoryName);
           const projectedExists = projectedScenarios.includes(scenario.directoryName);
+          if (representedSource.has(sourceKey) || representedProjected.has(projectedKey)) breaches.push(breach("testing/contract", "mutation-vector-duplicate-owner", contribution.manifestPath, `Vector ${sourceKey} is claimed by more than one catalog`, "Every physical bundle has one exact catalog owner.", "Remove duplicate ownership declarations without changing the physical evidence."));
           if (sourceExists && projectedExists) {
             representedSource.add(sourceKey);
             representedProjected.add(projectedKey);
@@ -1470,8 +1495,9 @@ export function mutationVectorRegistryBreaches(repoRoot: string, registry: Oracl
           }
           if (vector.scenarios.length === 1 && sourceScenarios.length === 1 && projectedScenarios.length === 0) {
             const actual = sourceScenarios[0];
-            representedSource.add(`${vector.sourceMutationDirectoryName}/${actual}`);
-            breaches.push(breach("testing/contract", "mutation-vector-source-id-mismatch", `${contribution.owner}/🧬️schema/🧬️mutations/${vector.sourceMutationDirectoryName}/🧪️tests/${actual}`, `Source scenario ${actual} must be transactionally renamed to canonical id ${scenario.id}`, "The catalog stores the canonical post-projection identity; changing only the catalog would leave physical storage and its references stale.", "Apply the registered path projection and structured reference edits in one transaction."));
+            const actualPath = relative(repoRoot, join(sourceTests, actual)).split(sep).join("/");
+            representedSource.add(actualPath);
+            breaches.push(breach("testing/contract", "mutation-vector-source-id-mismatch", actualPath, `Source scenario ${actual} does not match declared directory ${scenario.directoryName}`, "Scenario IDs and handpicked physical directory names are distinct explicit fields.", "Repair the exact physical name and its incoming references together."));
             const finding = bundleBreach(join(sourceTests, actual), "source");
             if (finding) breaches.push(finding);
             continue;
@@ -1482,24 +1508,23 @@ export function mutationVectorRegistryBreaches(repoRoot: string, registry: Oracl
 
     }
 
-    // 🧾️One sweep per owner, after every catalog has contributed what it registers. Each physical root
-    // is visited once however many catalogs share it, so a scenario is reported as unregistered only
-    // when NO catalog of this owner claims it.
-    for (const root of new Map(sweepRoots.map((entry) => [entry.sourceMutationRoot, entry])).values()) {
-      for (const mutationDirectoryName of childDirectories(root.sourceMutationRoot)) {
-        const tests = join(root.sourceMutationRoot, mutationDirectoryName, "🧪️tests");
-        for (const scenario of childDirectories(tests)) {
-          const key = `${mutationDirectoryName}/${scenario}`;
-          if (!representedSource.has(key)) breaches.push(breach("testing/contract", "mutation-vector-unregistered", relative(repoRoot, join(tests, scenario)).split(sep).join("/"), `Physical source vector ${key} is not registered`, "Unregistered physical evidence cannot be projected or verified deterministically.", "Add its exact mutation and canonical scenario identity to vectors."));
-        }
+  }
+  for (const root of new Map(sweepRoots.map((entry) => [entry.sourceMutationRoot, entry])).values()) {
+    const mutationOwners = childDirectories(root.sourceMutationRoot).flatMap((name) => root.grouped ? childDirectories(join(root.sourceMutationRoot, name)).map((operation) => `${name}/${operation}`) : [name]);
+    for (const mutationDirectoryName of mutationOwners) {
+      const tests = join(root.sourceMutationRoot, mutationDirectoryName, "🧪️tests");
+      for (const scenario of childDirectories(tests)) {
+        const key = relative(repoRoot, join(tests, scenario)).split(sep).join("/");
+        if (!representedSource.has(key)) breaches.push(breach("testing/contract", "mutation-vector-unregistered", key, `Physical source vector ${key} is not registered`, "Unregistered physical evidence cannot be projected or verified deterministically.", "Add its exact mutation and canonical scenario identity to vectors."));
       }
     }
-    for (const root of new Map(sweepRoots.map((entry) => [entry.projectedProfileRoot, entry])).values()) {
-      for (const mutationDirectoryName of childDirectories(root.projectedProfileRoot)) {
-        for (const scenario of childDirectories(join(root.projectedProfileRoot, mutationDirectoryName))) {
-          const key = `${mutationDirectoryName}/${scenario}`;
-          if (!representedProjected.has(key)) breaches.push(breach("testing/contract", "mutation-vector-unregistered", relative(repoRoot, join(root.projectedProfileRoot, key)).split(sep).join("/"), `Physical projected vector ${key} is not registered`, "Unregistered physical evidence cannot be verified or rolled back deterministically.", "Add its exact mutation and canonical scenario identity to vectors."));
-        }
+  }
+  for (const root of new Map(sweepRoots.map((entry) => [entry.projectedProfileRoot, entry])).values()) {
+    const mutationOwners = childDirectories(root.projectedProfileRoot).flatMap((name) => root.grouped ? childDirectories(join(root.projectedProfileRoot, name)).map((operation) => `${name}/${operation}`) : [name]);
+    for (const mutationDirectoryName of mutationOwners) {
+      for (const scenario of childDirectories(join(root.projectedProfileRoot, mutationDirectoryName))) {
+        const key = relative(repoRoot, join(root.projectedProfileRoot, mutationDirectoryName, scenario)).split(sep).join("/");
+        if (!representedProjected.has(key)) breaches.push(breach("testing/contract", "mutation-vector-unregistered", key, `Physical projected vector ${key} is not registered`, "Unregistered physical evidence cannot be verified or rolled back deterministically.", "Add its exact mutation and canonical scenario identity to vectors."));
       }
     }
   }
@@ -1522,7 +1547,7 @@ export function mutationCoverageBreaches(discovered: DiscoveredCase, feature: Pa
   if (feature.mutationCatalog === null) return breaches;
   const catalog = registry.mutationCatalogs.find((entry) => entry.id === feature.mutationCatalog);
   if (catalog === undefined) {
-    breaches.push(breach("testing/contract", "unknown-mutation-catalog", discovered.featurePath, `Unknown mutation catalog @mutations-${feature.mutationCatalog}`, "A catalog is the declared vocabulary a feature is measured against; claiming one that is not declared measures the feature against nothing.", `Declare the catalog in the owner's ${"🧪️oracle"} contribution manifest.`));
+    breaches.push(breach("testing/contract", "unknown-mutation-catalog", discovered.featurePath, `Unknown mutation catalog @mutations-${feature.mutationCatalog}`, "A catalog is the declared vocabulary a feature is measured against; claiming one that is not declared measures the feature against nothing.", "Declare the catalog in the owner's taxonomy-declared oracle contribution manifest."));
     return breaches;
   }
   if (catalog.capability !== "" && feature.capability !== null && catalog.capability !== feature.capability) {
@@ -1558,8 +1583,8 @@ export function mutationCoverageBreaches(discovered: DiscoveredCase, feature: Pa
  * whenever the catalog's own contribution carries standards/subsets coordinates, so a bare
  * `@mutations-<id>` tag resolves to exactly one real, already-audited subset id; nothing here
  * re-derives it from an adapter import or a fixture URI, both of which name a real subset for a pure
- * container/round-trip case too (confirmed live: `gif/create-and-round-trip-gif`,
- * `jpg/create-and-read-jpeg` and `zip/create-and-edit-archive` each import exactly one subset's `io`
+ * container/round-trip case too (confirmed live: `gif/🐯️create-and-round-trip-gif`,
+ * `jpg/📖️create-and-read-jpeg` and `zip/✏️create-and-edit-archive` each import exactly one subset's `io`
  * while genuinely spanning or exceeding it) and would misfire on precisely the three cases C4 confirmed
  * must stay put. A catalog with no `subsetDirectoryName` — unprofiled, not a standards/subsets
  * vocabulary — yields no verdict rather than a guess, and a feature with no `@mutations-` tag at all
@@ -1607,7 +1632,7 @@ export function validateCaseContract(repoRoot: string, discovered: DiscoveredCas
   if (feature.capability === null) breaches.push(breach("testing/contract", "missing-capability", discovered.featurePath, "Feature is missing its @capability-<id> tag", "Every feature declares the capability it specifies so owners and implementations can be matched to it.", "Add a feature-level @capability-<id> tag."));
   const knownProfiles = profileTable(registry);
   if (feature.comparison === null) breaches.push(breach("testing/contract", "missing-comparison", discovered.featurePath, "Feature is missing a @comparison-<profile> tag", "Comparison belongs to an owned, tested profile — never to an adapter.", `Add one of ${[...knownProfiles.keys()].sort().join(", ")}.`));
-  else if (!knownProfiles.has(feature.comparison)) breaches.push(breach("testing/contract", "unknown-comparison", discovered.featurePath, `Unknown comparison profile @comparison-${feature.comparison}`, "A profile is either one of the framework's domain-neutral profiles or one an owner contributes through its 🧪️oracle manifest.", `Add it to this owner's 🔣️oracle.json, or use one of ${[...knownProfiles.keys()].sort().join(", ")}.`));
+  else if (!knownProfiles.has(feature.comparison)) breaches.push(breach("testing/contract", "unknown-comparison", discovered.featurePath, `Unknown comparison profile @comparison-${feature.comparison}`, "A profile is either one of the framework's domain-neutral profiles or one an owner contributes through its declared oracle manifest.", `Add it to this owner's oracle contribution manifest, or use one of ${[...knownProfiles.keys()].sort().join(", ")}.`));
   if (feature.oracle === null && feature.noOracleDecision === null) {
     breaches.push(breach("testing/oracle", "missing-oracle", discovered.featurePath, "Feature declares neither @oracle-<id> nor @no-oracle-<decision-id>", "A test without a reference implementation or an explicitly recorded no-oracle decision proves only that the code agrees with itself.", "Register an oracle in the oracle registry, or record an approved no-oracle decision."));
   }
@@ -1740,8 +1765,8 @@ export function oracleImportsInProduction(repoRoot: string): { path: string; ora
   // link a reference library on purpose; a scan that only knew the first reported the test platform's
   // own measurement tools as a production dependency on the library they exist to invoke.
   const taxonomy = testTaxonomy(repoRoot);
-  const testOwnedDirs = [taxonomy.testContributionDirName, taxonomy.testProbeDirName, taxonomy.testGeneratorDirName];
-  const inContributionDir = (rel: string): boolean => rel.split("/").some((segment) => testOwnedDirs.includes(segment));
+  const testOwnedDirs = [taxonomy.testProbeDirName, taxonomy.testGeneratorDirName];
+  const inContributionDir = (rel: string): boolean => isTestContributionPath(taxonomy, rel) || rel.split("/").some((segment) => testOwnedDirs.includes(segment));
   // 🚫️The repository's OWN meta directory — tickets, caches, notes, metrics — is never production
   // source. Walking into it reported a scratch file inside somebody's ticket folder as a production
   // import of a registered oracle, which is a finding about a scratch file, not about what ships.
@@ -1791,7 +1816,7 @@ export function oracleImportsInProduction(repoRoot: string): { path: string; ora
 export type MigrationBaseline = Readonly<{ schemaVersion: number; unmanagedTests: { total: number; byArea: Record<string, number> } }>;
 
 /** 🔒️ Repo-relative path of the ratchet, beside the dependency baseline: repository state, not module state. */
-export const MIGRATION_BASELINE_REL_PATH = "🔒️migration.json";
+export const MIGRATION_BASELINE_REL_PATH = "🚚️migration.json";
 
 /** 🔒️ Ordered migration ladder every owner walks; an owner advances only on machine-readable evidence. */
 export const MIGRATION_STATUSES = ["discovered", "surveyed", "contract-ready", "oracle-green", "subject-green", "parity-green", "coverage-green", "dependency-clean", "legacy-removed", "ci-enforced", "complete"] as const;
@@ -1864,7 +1889,7 @@ export function validateAllContracts(repoRoot: string, cases: readonly Discovere
       const claimed = registry.contributions.some((entry) => entry.owner === owner && entry.mutationCatalogs.length > 0);
       if (!claimed && mutationVocabularyRequiresCatalog(rel, featureOwners)) {
         const taxonomy = testTaxonomy(repoRoot);
-        breaches.push(breach("testing/contract", "unregistered-mutation-vocabulary", rel, `A mutation vocabulary is declared here but no catalog registers it`, "The completeness gate measures a feature against a declared catalog. A vocabulary with no catalog is not measured at all — it looks finished and is untested.", `Add a ${taxonomy.testContributionDirName}/${testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId)} beside it declaring a mutationCatalog, and a case that claims it.`));
+        breaches.push(breach("testing/contract", "unregistered-mutation-vocabulary", rel, `A mutation vocabulary is declared here but no catalog registers it`, "The completeness gate measures a feature against a declared catalog. A vocabulary with no catalog is not measured at all — it looks finished and is untested.", `Add a ${testContributionDirectoryName(taxonomy, owner)}/${testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId)} beside it declaring a mutationCatalog, and a case that claims it.`));
       }
       return "skip";
     });
@@ -1906,7 +1931,7 @@ export function validateAllContracts(repoRoot: string, cases: readonly Discovere
   for (const [area, count] of [...byArea].sort((a, b) => b[1] - a[1])) {
     const allowed = baseline.unmanagedTests.byArea[area] ?? 0;
     if (count <= allowed) continue;
-    breaches.push(breach("testing/discovery", "unmanaged-tests", area, `${count} executable test file(s) outside the canonical owner-root test tree, baseline allows ${allowed}`, "New tests belong in 🧪️tests/<case>/component.feature under their language-neutral owner. The legacy backlog is shrink-only.", `Move the behaviour into a case with one adapter per claimed implementation and delete the legacy test in the same change, or lower the baseline in 📇️registry/🔒️migration.json only when the count actually dropped.`));
+    breaches.push(breach("testing/discovery", "unmanaged-tests", area, `${count} executable test file(s) outside the canonical owner-root test tree, baseline allows ${allowed}`, "New tests belong in 🧪️tests/<case>/component.feature under their language-neutral owner. The legacy backlog is shrink-only.", `Move the behaviour into a case with one adapter per claimed implementation and delete the legacy test in the same change, or lower the baseline in 📇️registry/🚚️migration.json only when the count actually dropped.`));
   }
   return breaches;
 }
@@ -2201,14 +2226,14 @@ export function ratchetDependencies(baseline: readonly ClassifiedDependency[], c
  * the missing half.
  *
  * A declaration is TEST-OWNED when the file declaring it lives in a test-owned location — a case
- * directory, a `🧪️oracle` / `🔬️probes` / `🏭️generator` directory, the test domain itself, or the
+ * directory, an owner-declared oracle / probe / fixture-generator directory, the test domain itself, or the
  * repository's own meta directory. Everything else is production.
  */
 export function scanDeclaredDependencies(repoRoot: string, registry: OracleRegistry = loadOracleRegistry(repoRoot)): ClassifiedDependency[] {
   const taxonomy = testTaxonomy(repoRoot);
-  const testOwnedDirs = [taxonomy.testContributionDirName, taxonomy.testProbeDirName, taxonomy.testGeneratorDirName, taxonomy.testsDirName];
+  const testOwnedDirs = [taxonomy.testProbeDirName, taxonomy.testGeneratorDirName, taxonomy.testsDirName];
   const metaRoot = relative(repoRoot, getRepoMetaDir(repoRoot)).split(sep).join("/");
-  const isTestOwned = (rel: string): boolean => rel === metaRoot || rel.startsWith(`${metaRoot}/`) || rel === TEST_DOMAIN_REL_PATH || rel.startsWith(`${TEST_DOMAIN_REL_PATH}/`) || rel.split("/").some((segment) => testOwnedDirs.includes(segment));
+  const isTestOwned = (rel: string): boolean => rel === metaRoot || rel.startsWith(`${metaRoot}/`) || rel === TEST_DOMAIN_REL_PATH || rel.startsWith(`${TEST_DOMAIN_REL_PATH}/`) || isTestContributionPath(taxonomy, rel) || rel.split("/").some((segment) => testOwnedDirs.includes(segment));
   const registered = new Set(registry.oracles.flatMap((entry) => oraclePackages(entry)));
   const probePackages = new Set(registry.probes.map((probe) => probe.package));
 
@@ -5152,7 +5177,7 @@ export function reimplementationOracleBreaches(repoRoot: string, registry: Oracl
     const qualifying = contribution.oracles.filter((oracle) => isQualifyingOracleKind(oracle.kind));
     const implicable = qualifying.filter((oracle) => oracle.ecosystem === "rust");
     if (implicable.length === 0) continue;
-    const own = join(repoRoot, contribution.owner, "🧪️oracle", "🦀️.rs");
+    const own = join(repoRoot, dirname(contribution.manifestPath), "🦀️.rs");
     if (!existsSync(own)) continue;
     let text: string;
     try {

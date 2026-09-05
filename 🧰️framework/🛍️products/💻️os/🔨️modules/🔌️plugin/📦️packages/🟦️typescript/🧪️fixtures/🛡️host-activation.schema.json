@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Generated Actor Host Activation Isolation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["activations"],
+  "properties": {
+    "activations": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["actorId", "generation", "value"],
+        "properties": {
+          "actorId": { "type": "string", "minLength": 1 },
+          "generation": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+          "value": { "type": "string" }
+        }
+      }
+    }
+  }
+}

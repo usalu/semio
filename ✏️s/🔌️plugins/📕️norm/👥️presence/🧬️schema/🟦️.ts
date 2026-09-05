@@ -1,2 +1,2 @@
-/** 🧬️ NormPresence — empty: every norm family app keeps its only view state in its config (`selectedCheckIndex`); there is no separate shareable live surface to broadcast. Mirrors `NormPresence` in `../🦀️.rs`. */
-export interface NormPresence {}
+/** 🧬️ Framework-owned empty presence facet used by every norm editor. */
+export type NoPresence = Readonly<Record<string, never>>;

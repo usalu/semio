@@ -1,0 +1,335 @@
+{
+  "contractId": "semio.norm.surface-render/v1",
+  "rows": [
+    {
+      "variant": "din4108",
+      "role": "editor",
+      "appId": "s.norm.din4108@1/*#editor",
+      "bodyKeys": [
+        "norm.din4108.play.inputs",
+        "norm.din4108.play.results",
+        "norm.din4108.play.document",
+        "norm.din4108.play.catalogue",
+        "norm.din4108.play.inspection",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "din4108",
+      "role": "viewer",
+      "appId": "s.norm.din4108@1/*#viewer",
+      "bodyKeys": [
+        "framework.window.table",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "din16798",
+      "role": "editor",
+      "appId": "s.norm.din16798@1/*#editor",
+      "bodyKeys": [
+        "norm.din16798.play.inputs",
+        "norm.din16798.play.results",
+        "norm.din16798.play.document",
+        "norm.din16798.play.catalogue",
+        "norm.din16798.play.inspection",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "din16798",
+      "role": "viewer",
+      "appId": "s.norm.din16798@1/*#viewer",
+      "bodyKeys": [
+        "framework.window.table",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "din18599",
+      "role": "editor",
+      "appId": "s.norm.din18599@1/*#editor",
+      "bodyKeys": [
+        "norm.din18599.play.inputs",
+        "norm.din18599.play.results",
+        "norm.din18599.play.document",
+        "norm.din18599.play.catalogue",
+        "norm.din18599.play.inspection",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "din18599",
+      "role": "viewer",
+      "appId": "s.norm.din18599@1/*#viewer",
+      "bodyKeys": [
+        "framework.window.table",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "en1990",
+      "role": "editor",
+      "appId": "s.norm.en1990@1/*#editor",
+      "bodyKeys": [
+        "norm.en1990.play.inputs",
+        "norm.en1990.play.results",
+        "norm.en1990.play.document",
+        "norm.en1990.play.catalogue",
+        "norm.en1990.play.inspection",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "en1990",
+      "role": "viewer",
+      "appId": "s.norm.en1990@1/*#viewer",
+      "bodyKeys": [
+        "framework.window.table",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "en1991",
+      "role": "editor",
+      "appId": "s.norm.en1991@1/*#editor",
+      "bodyKeys": [
+        "norm.en1991.play.inputs",
+        "norm.en1991.play.results",
+        "norm.en1991.play.document",
+        "norm.en1991.play.catalogue",
+        "norm.en1991.play.inspection",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "en1991",
+      "role": "viewer",
+      "appId": "s.norm.en1991@1/*#viewer",
+      "bodyKeys": [
+        "framework.window.table",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "en1992",
+      "role": "editor",
+      "appId": "s.norm.en1992@1/*#editor",
+      "bodyKeys": [
+        "norm.en1992.play.inputs",
+        "norm.en1992.play.results",
+        "norm.en1992.play.document",
+        "norm.en1992.play.catalogue",
+        "norm.en1992.play.inspection",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "en1992",
+      "role": "viewer",
+      "appId": "s.norm.en1992@1/*#viewer",
+      "bodyKeys": [
+        "framework.window.table",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "en1993",
+      "role": "editor",
+      "appId": "s.norm.en1993@1/*#editor",
+      "bodyKeys": [
+        "norm.en1993.play.inputs",
+        "norm.en1993.play.results",
+        "norm.en1993.play.document",
+        "norm.en1993.play.catalogue",
+        "norm.en1993.play.inspection",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "en1993",
+      "role": "viewer",
+      "appId": "s.norm.en1993@1/*#viewer",
+      "bodyKeys": [
+        "framework.window.table",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "en1994",
+      "role": "editor",
+      "appId": "s.norm.en1994@1/*#editor",
+      "bodyKeys": [
+        "norm.en1994.play.inputs",
+        "norm.en1994.play.results",
+        "norm.en1994.play.document",
+        "norm.en1994.play.catalogue",
+        "norm.en1994.play.inspection",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "en1994",
+      "role": "viewer",
+      "appId": "s.norm.en1994@1/*#viewer",
+      "bodyKeys": [
+        "framework.window.table",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "en1995",
+      "role": "editor",
+      "appId": "s.norm.en1995@1/*#editor",
+      "bodyKeys": [
+        "norm.en1995.play.inputs",
+        "norm.en1995.play.results",
+        "norm.en1995.play.document",
+        "norm.en1995.play.catalogue",
+        "norm.en1995.play.inspection",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "en1995",
+      "role": "viewer",
+      "appId": "s.norm.en1995@1/*#viewer",
+      "bodyKeys": [
+        "framework.window.table",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "en1996",
+      "role": "editor",
+      "appId": "s.norm.en1996@1/*#editor",
+      "bodyKeys": [
+        "norm.en1996.play.inputs",
+        "norm.en1996.play.results",
+        "norm.en1996.play.document",
+        "norm.en1996.play.catalogue",
+        "norm.en1996.play.inspection",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "en1996",
+      "role": "viewer",
+      "appId": "s.norm.en1996@1/*#viewer",
+      "bodyKeys": [
+        "framework.window.table",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "en1997",
+      "role": "editor",
+      "appId": "s.norm.en1997@1/*#editor",
+      "bodyKeys": [
+        "norm.en1997.play.inputs",
+        "norm.en1997.play.results",
+        "norm.en1997.play.document",
+        "norm.en1997.play.catalogue",
+        "norm.en1997.play.inspection",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "en1997",
+      "role": "viewer",
+      "appId": "s.norm.en1997@1/*#viewer",
+      "bodyKeys": [
+        "framework.window.table",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "en1998",
+      "role": "editor",
+      "appId": "s.norm.en1998@1/*#editor",
+      "bodyKeys": [
+        "norm.en1998.play.inputs",
+        "norm.en1998.play.results",
+        "norm.en1998.play.document",
+        "norm.en1998.play.catalogue",
+        "norm.en1998.play.inspection",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "en1998",
+      "role": "viewer",
+      "appId": "s.norm.en1998@1/*#viewer",
+      "bodyKeys": [
+        "framework.window.table",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "en1999",
+      "role": "editor",
+      "appId": "s.norm.en1999@1/*#editor",
+      "bodyKeys": [
+        "norm.en1999.play.inputs",
+        "norm.en1999.play.results",
+        "norm.en1999.play.document",
+        "norm.en1999.play.catalogue",
+        "norm.en1999.play.inspection",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "en1999",
+      "role": "viewer",
+      "appId": "s.norm.en1999@1/*#viewer",
+      "bodyKeys": [
+        "framework.window.table",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "iso16757",
+      "role": "editor",
+      "appId": "s.norm.iso16757@1/*#editor",
+      "bodyKeys": [
+        "norm.iso16757.play.inputs",
+        "norm.iso16757.play.results",
+        "norm.iso16757.play.document",
+        "norm.iso16757.play.catalogue",
+        "norm.iso16757.play.inspection",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "iso16757",
+      "role": "viewer",
+      "appId": "s.norm.iso16757@1/*#viewer",
+      "bodyKeys": [
+        "framework.window.table",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "vdi3805",
+      "role": "editor",
+      "appId": "s.norm.vdi3805@1/*#editor",
+      "bodyKeys": [
+        "norm.vdi3805.play.inputs",
+        "norm.vdi3805.play.results",
+        "norm.vdi3805.play.document",
+        "norm.vdi3805.play.catalogue",
+        "norm.vdi3805.play.inspection",
+        "framework.body.history"
+      ]
+    },
+    {
+      "variant": "vdi3805",
+      "role": "viewer",
+      "appId": "s.norm.vdi3805@1/*#viewer",
+      "bodyKeys": [
+        "framework.window.table",
+        "framework.body.history"
+      ]
+    }
+  ]
+}

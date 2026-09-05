@@ -1,6 +1,0 @@
-# change-scene-extra-data mutation facet.
-input GltfChangeSceneExtraDataPayloadV1 {
-  scene: Int!
-  data: GltfDataPresenceInput!
-}
-type GltfChangeSceneExtraDataMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

@@ -1,5 +1,5 @@
 //! 🖊️ DXF R12 carrier — writer AND reader, both the `dxf` 0.6 crate, matching
-//! `dxf-crate-note-ink-reader` in `../../🔣️oracle.json`. Reproduces `NoteIntoDxf::serialize`'s
+//! `dxf-crate-note-ink-reader` in `../../../🔮️oracle/🔣️.json`. Reproduces `NoteIntoDxf::serialize`'s
 //! body exactly: only `Ink` blocks' raw `points.windows(2)` become `LINE` entities on layer `"0"` —
 //! no transform, no visibility filter, no width.
 
@@ -76,7 +76,7 @@ pub fn project_dxf_json(bytes: &[u8]) -> Result<Json, String> {
 }
 
 /// ⚖️ Set-equality over (start,end) pairs — entity ORDER is writer freedom, per
-/// `semantic-note-dxf-ink-v1`'s own `"arrays": "set"` declaration in `../../🔣️oracle.json`.
+/// `semantic-note-dxf-ink-v1`'s own `"arrays": "set"` declaration in `../../../🔮️oracle/🔣️.json`.
 pub fn compare_dxf(expected: &[u8], actual: &[u8]) -> Result<(bool, Vec<String>), String> {
     let e = project_dxf(expected)?;
     let a = project_dxf(actual)?;

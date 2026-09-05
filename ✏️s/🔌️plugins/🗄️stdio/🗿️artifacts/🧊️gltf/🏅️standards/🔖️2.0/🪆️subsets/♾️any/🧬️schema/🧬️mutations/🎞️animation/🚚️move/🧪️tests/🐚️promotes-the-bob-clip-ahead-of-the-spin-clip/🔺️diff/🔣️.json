@@ -1,0 +1,17 @@
+{
+  "id": "s.stdio.gltf.mutation.move-animation.v1",
+  "version": 1,
+  "touchedPaths": [
+    "document/animations/0",
+    "document/animations/1"
+  ],
+  "payload": {
+    "index": 0,
+    "position": 1
+  },
+  "operation": {
+    "kind": "move",
+    "index": 0,
+    "position": 1
+  }
+}

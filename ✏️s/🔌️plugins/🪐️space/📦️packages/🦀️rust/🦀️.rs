@@ -136,7 +136,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/💾️binary/🦀️.rs"]
                                     pub mod binary;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/bumps-the-catalog-generation-to-7/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-catalog-generation-to-7/🦀️.rs"]
                                     mod tests_bumps_the_catalog_generation_to_7;
                                     #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/📝️text/🦀️.rs"]
                                     pub mod text;
@@ -172,7 +172,7 @@ pub mod artifacts {
                                             pub mod v_utf_8 {
                                                 #[path = "."]
                                                 pub mod any {
-                                                    #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄️txt/🔖️utf-8/✳️any/🦀️.rs"]
+                                                    #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
                                                     mod component;
                                                     pub use component::*;
                                                 }
@@ -241,7 +241,7 @@ pub mod artifacts {
                                             pub mod v_utf_8 {
                                                 #[path = "."]
                                                 pub mod any {
-                                                    #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️txt/🔖️utf-8/✳️any/🦀️.rs"]
+                                                    #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
                                                     mod component;
                                                     pub use component::*;
                                                 }
@@ -416,7 +416,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/🧪️tests/appends-artifact-3-to-the-index/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/🧪️tests/🗿️appends-artifact-3-to-the-index/🦀️.rs"]
                                     mod tests_appends_artifact_3_to_the_index;
                                     #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/📝️text/🦀️.rs"]
                                     pub mod text;
@@ -433,7 +433,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/🧪️tests/removes-artifact-2-from-the-index/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/🧪️tests/🗿️removes-artifact-2-from-the-index/🦀️.rs"]
                                     mod tests_removes_artifact_2_from_the_index;
                                     #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/📝️text/🦀️.rs"]
                                     pub mod text;
@@ -450,7 +450,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-artifact/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-artifact/🧪️tests/renames-artifact-1/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-artifact/🧪️tests/🗿️renames-artifact-1/🦀️.rs"]
                                     mod tests_renames_artifact_1;
                                     #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-artifact/📝️text/🦀️.rs"]
                                     pub mod text;
@@ -467,7 +467,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/🧪️tests/stamps-artifact-1-with-a-new-editor/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/🧪️tests/🗿️stamps-artifact-1-with-a-new-editor/🦀️.rs"]
                                     mod tests_stamps_artifact_1_with_a_new_editor;
                                     #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/📝️text/🦀️.rs"]
                                     pub mod text;
@@ -534,19 +534,21 @@ pub mod editor {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏙️bind-space-file/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📬️apply-directory-event-page/🦀️.rs"]
+            pub mod apply_directory_event_page;
+            #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📎️bind-space-file/🦀️.rs"]
             pub mod bind_space_file;
-            #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏙️create-studio/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏗️create-studio/🦀️.rs"]
             pub mod create_studio;
             #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️delete-virtual-file-system-node/🦀️.rs"]
             pub mod delete_virtual_file_system_node;
-            #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️go-home/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏠️go-home/🦀️.rs"]
             pub mod go_home;
-            #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏙️import-space/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-space/🦀️.rs"]
             pub mod import_space;
-            #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️navigate-virtual-file-system-node/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️navigate-virtual-file-system-node/🦀️.rs"]
             pub mod navigate_virtual_file_system_node;
-            #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏙️open-space/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌌️open-space/🦀️.rs"]
             pub mod open_space;
             #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⚙️set-active-panel-tab/🦀️.rs"]
             pub mod set_active_panel_tab;
@@ -620,7 +622,7 @@ pub mod editor {
             pub mod fold_directory_events;
             #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💌invite-member/🦀️.rs"]
             pub mod invite_member;
-            #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📂open-artifact/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗿️open-artifact/🦀️.rs"]
             pub mod open_artifact;
             #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗃️open-artifact-with/🦀️.rs"]
             pub mod open_artifact_with;
@@ -790,45 +792,45 @@ pub mod engine {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🔢️add-parameter/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/➕️add-parameter/🦀️.rs"]
             pub mod add_parameter;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🔢️bind-parameter-field/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/🔗️bind-parameter-field/🦀️.rs"]
             pub mod bind_parameter_field;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🔍️close-focused-instance/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/❎️close-focused-instance/🦀️.rs"]
             pub mod close_focused_instance;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/💬️compiled-dag-engagement-input/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/⌨️compiled-dag-engagement-input/🦀️.rs"]
             pub mod compiled_dag_engagement_input;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/💬️compiled-dag-engagement-submit/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/📨️compiled-dag-engagement-submit/🦀️.rs"]
             pub mod compiled_dag_engagement_submit;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🔗️connect-media-ports/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/🔌️connect-media-ports/🦀️.rs"]
             pub mod connect_media_ports;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🧩️copy-app-instance/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/📋️copy-app-instance/🦀️.rs"]
             pub mod copy_app_instance;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🧩️delete-selection/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/🗑️delete-selection/🦀️.rs"]
             pub mod delete_selection;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🔗️disconnect-media-edge/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/✂️disconnect-media-edge/🦀️.rs"]
             pub mod disconnect_media_edge;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🧩️duplicate-app-instance/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/👯️duplicate-app-instance/🦀️.rs"]
             pub mod duplicate_app_instance;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🖼️export-media/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/📤️export-media/🦀️.rs"]
             pub mod export_media;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/💾️export-studio-dsl/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/📜️export-studio-dsl/🦀️.rs"]
             pub mod export_studio_dsl;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/💾️export-studio-pack/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/📦️export-studio-pack/🦀️.rs"]
             pub mod export_studio_pack;
             #[path = "../../⚙️engine/🪐️space/🎮️commands/🧭️go-home/🦀️.rs"]
             pub mod go_home;
             #[path = "../../⚙️engine/🪐️space/🎮️commands/🖼️import-media/🦀️.rs"]
             pub mod import_media;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🖼️import-media-payload/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/🧾️import-media-payload/🦀️.rs"]
             pub mod import_media_payload;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/💾️import-space-pack/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/📥️import-space-pack/🦀️.rs"]
             pub mod import_space_pack;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/💾️import-space-pack-payload/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/🧳️import-space-pack-payload/🦀️.rs"]
             pub mod import_space_pack_payload;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🧩️move-media-node/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/🚚️move-media-node/🦀️.rs"]
             pub mod move_media_node;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🧭️navigate-virtual-file-system-node/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/🗺️navigate-virtual-file-system-node/🦀️.rs"]
             pub mod navigate_virtual_file_system_node;
             #[path = "../../⚙️engine/🪐️space/🎮️commands/✏️node-graph-edit/🦀️.rs"]
             pub mod node_graph_edit;
@@ -836,39 +838,39 @@ pub mod engine {
             pub mod node_graph_viewport;
             #[path = "../../⚙️engine/🪐️space/🎮️commands/🔍️open-instance/🦀️.rs"]
             pub mod open_instance;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/💾️open-space/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/🚪️open-space/🦀️.rs"]
             pub mod open_space;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🧩️paste-app-instance/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/📌️paste-app-instance/🦀️.rs"]
             pub mod paste_app_instance;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🧩️patch-app-instances/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/🩺️patch-app-instances/🦀️.rs"]
             pub mod patch_app_instances;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🧩️patch-media-nodes/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/🔧️patch-media-nodes/🦀️.rs"]
             pub mod patch_media_nodes;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🔢️patch-parameter/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/🩹️patch-parameter/🦀️.rs"]
             pub mod patch_parameter;
             #[path = "../../⚙️engine/🪐️space/🎮️commands/👥️presence-heartbeat/🦀️.rs"]
             pub mod presence_heartbeat;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🧩️remove-app-instance/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/🚮️remove-app-instance/🦀️.rs"]
             pub mod remove_app_instance;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🔢️remove-parameter/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/➖️remove-parameter/🦀️.rs"]
             pub mod remove_parameter;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🧩️rename-app-instance/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/🏷️rename-app-instance/🦀️.rs"]
             pub mod rename_app_instance;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🧩️reorganize-workflow/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/🗂️reorganize-workflow/🦀️.rs"]
             pub mod reorganize_workflow;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/💾️set-active-example/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/🎬️set-active-example/🦀️.rs"]
             pub mod set_active_example;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🧭️set-active-panel-tab/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/⚙️set-active-panel-tab/🦀️.rs"]
             pub mod set_active_panel_tab;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🧭️set-app-registrations/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/📇️set-app-registrations/🦀️.rs"]
             pub mod set_app_registrations;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🧩️spawn-app/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/🚀️spawn-app/🦀️.rs"]
             pub mod spawn_app;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/🔢️unbind-parameter-field/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/🔓️unbind-parameter-field/🦀️.rs"]
             pub mod unbind_parameter_field;
             #[path = "../../⚙️engine/🪐️space/🎮️commands/💬️workflow-engagement-input/🦀️.rs"]
             pub mod workflow_engagement_input;
-            #[path = "../../⚙️engine/🪐️space/🎮️commands/💬️workflow-engagement-submit/🦀️.rs"]
+            #[path = "../../⚙️engine/🪐️space/🎮️commands/✅️workflow-engagement-submit/🦀️.rs"]
             pub mod workflow_engagement_submit;
         }
 

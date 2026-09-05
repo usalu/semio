@@ -12,7 +12,7 @@ const RASTER_PLAY_SURFACE_NAVIGATOR: &str = "raster.play.navigator";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-/// 🧱️ Stitched into the app manifest by `crate::editor::raster::create_raster_app`. No `🎚️options` node:
+/// 🧱️ Stitched into the app manifest by `crate::editor::raster::create_raster_app`. No `☑️options` node:
 /// the navigator has no live chrome measures of its own.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {

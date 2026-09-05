@@ -1,9 +1,0 @@
-dialect grammar
-grammar stdio.semio.cad.inference
-extension semio.cad.inference
-start document
-
-document = header body
-header = "schema" SP "s.stdio.semio.cad.inference" NL
-body = payload NL?
-payload = OCTET+

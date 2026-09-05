@@ -1,7 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/s.stdio.semio.mesh/diff/text.json",
-  "title": "Stdio_semio_mesh_diff_text",
-  "description": "Real hand-rolled DiffCodec text grammar: space-separated key=value tokens (meshes/materials/textures), each value a bracket-depth-aware [removed];[modified];[added] named triple.",
-  "type": "string",
-  "pattern": "^((meshes|materials|textures)=\\[[^;]*\\];\\[[^;]*\\];\\[[^;]*\\])?( (meshes|materials|textures)=\\[[^;]*\\];\\[[^;]*\\];\\[[^;]*\\])*$"
-}

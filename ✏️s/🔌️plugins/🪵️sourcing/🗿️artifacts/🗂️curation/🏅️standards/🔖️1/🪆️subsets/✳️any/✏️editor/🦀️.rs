@@ -1252,7 +1252,7 @@ mod tests {
     //#region 🧪️RetainedConfigOracle
     #[semio_framework_async_macros::async_test]
     async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners() {
-        let oracle: Vec<crate::artifacts::curation::ObjectKind> = serde_json::from_str(include_str!("../📚️examples/🎬️demo/🧪️expected-stock.json")).unwrap();
+        let oracle: Vec<crate::artifacts::curation::ObjectKind> = serde_json::from_str(include_str!("../📚️examples/🎬️demo/📦️expected-stock.json")).unwrap();
         for example_id in [DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID] {
             let mut app = crate::editor::sourcing::testkit::new_app().await;
             app.bind_instance_id(7).await;

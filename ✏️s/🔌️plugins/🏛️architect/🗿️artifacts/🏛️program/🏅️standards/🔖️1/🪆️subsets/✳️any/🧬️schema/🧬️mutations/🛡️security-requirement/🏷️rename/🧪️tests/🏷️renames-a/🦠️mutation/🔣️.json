@@ -1,0 +1,5 @@
+{
+  "mutation": "renameSecurityRequirement",
+  "id": "security-requirement-a",
+  "newName": "Renamed Security Requirement A"
+}

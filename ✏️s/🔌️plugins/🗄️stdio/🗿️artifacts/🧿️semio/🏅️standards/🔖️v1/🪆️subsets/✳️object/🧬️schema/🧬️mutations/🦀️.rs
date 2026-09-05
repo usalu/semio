@@ -41,7 +41,7 @@ pub enum SemioObjectMutation {
 
 /// 🏷️ Kebab-case spelling of every `SemioObjectMutation` variant, in declaration order — the
 /// vocabulary the `semio-v1-object` mutation catalog (`../../🔣️oracle.json`) declares
-/// and `mutate-semio-object`'s exhaustive test case measures itself against. `kinds_match_the_enum_
+/// and `🪁️mutate-semio-object`'s exhaustive test case measures itself against. `kinds_match_the_enum_
 /// and_the_catalog` below is what keeps this list honest against the enum, since the framework
 /// never parses Rust.
 pub const KINDS: &[&str] = &["move-object", "rotate-object", "scale-object", "create-brep", "delete-brep", "create-mesh", "delete-mesh", "create-properties", "delete-properties"];
@@ -59,7 +59,7 @@ pub fn apply_semio_object_mutation(snapshot: &mut SemioObjectSnapshot, mutation:
 
 /// ↩️ Computes `mutation`'s own inverse against `base` — a thin wrapper around
 /// `protocol::Mutation::inverse` so external Rust callers that cannot name this crate's private
-/// `protocol` extern-crate item (the `mutate-semio-object` test adapter, whose `inverse-<kind>` scenarios
+/// `protocol` extern-crate item (the `🪁️mutate-semio-object` test adapter, whose `inverse-<kind>` scenarios
 /// need a mutation's own computed inverse) can still reach the inverse law that
 /// [`apply_semio_object_mutation`] alone cannot. Same shape as `✳️kit`'s `inverse_semio_kit_mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -222,23 +222,23 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "🧱create-brep/🧪️tests/attaches-a-brep-child-to-an-object-that-has-none/🦀️.rs"]
+    #[path = "🧱create-brep/🧪️tests/🐺️attaches-a-brep-child-to-an-object-that-has-none/🦀️.rs"]
     mod tests_create_brep_attaches_a_brep_child_to_an_object_that_has_none;
-    #[path = "🕸️create-mesh/🧪️tests/attaches-a-mesh-child-to-an-object-that-has-none/🦀️.rs"]
+    #[path = "🕸️create-mesh/🧪️tests/🟢️attaches-a-mesh-child-to-an-object-that-has-none/🦀️.rs"]
     mod tests_create_mesh_attaches_a_mesh_child_to_an_object_that_has_none;
-    #[path = "🏷️create-properties/🧪️tests/attaches-a-properties-child-to-an-object-that-has-none/🦀️.rs"]
+    #[path = "🏷️create-properties/🧪️tests/🟢️attaches-a-properties-child-to-an-object-that-has-none/🦀️.rs"]
     mod tests_create_properties_attaches_a_properties_child_to_an_object_that_has_none;
-    #[path = "💥delete-brep/🧪️tests/detaches-the-brep-child-and-leaves-the-mesh-child-alone/🦀️.rs"]
+    #[path = "💥delete-brep/🧪️tests/🔮️detaches-the-brep-child-and-leaves-the-mesh-child-alone/🦀️.rs"]
     mod tests_delete_brep_detaches_the_brep_child_and_leaves_the_mesh_child_alone;
-    #[path = "🧨delete-mesh/🧪️tests/detaches-the-mesh-child-and-leaves-the-brep-child-alone/🦀️.rs"]
+    #[path = "🧨delete-mesh/🧪️tests/⚓️detaches-the-mesh-child-and-leaves-the-brep-child-alone/🦀️.rs"]
     mod tests_delete_mesh_detaches_the_mesh_child_and_leaves_the_brep_child_alone;
-    #[path = "🚫delete-properties/🧪️tests/detaches-the-properties-child-and-leaves-the-mesh-child-alone/🦀️.rs"]
+    #[path = "🚫delete-properties/🧪️tests/🐧️detaches-the-properties-child-and-leaves-the-mesh-child-alone/🦀️.rs"]
     mod tests_delete_properties_detaches_the_properties_child_and_leaves_the_mesh_child_alone;
-    #[path = "🚚move-object/🧪️tests/moves-the-object-to-a-new-translation/🦀️.rs"]
+    #[path = "🚚move-object/🧪️tests/🌷️moves-the-object-to-a-new-translation/🦀️.rs"]
     mod tests_move_object_moves_the_object_to_a_new_translation;
-    #[path = "🔄rotate-object/🧪️tests/rotates-the-object-a-half-turn-about-z/🦀️.rs"]
+    #[path = "🔄rotate-object/🧪️tests/🪄️rotates-the-object-a-half-turn-about-z/🦀️.rs"]
     mod tests_rotate_object_rotates_the_object_a_half_turn_about_z;
-    #[path = "📏scale-object/🧪️tests/scales-the-object-non-uniformly/🦀️.rs"]
+    #[path = "📏scale-object/🧪️tests/🐸️scales-the-object-non-uniformly/🦀️.rs"]
     mod tests_scale_object_scales_the_object_non_uniformly;
 }
 //#endregion 🧪️FixtureTests

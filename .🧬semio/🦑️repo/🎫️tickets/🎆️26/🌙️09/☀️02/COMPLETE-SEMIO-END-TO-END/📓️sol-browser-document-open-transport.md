@@ -2,31 +2,60 @@
 
 Date: 2026-09-04
 
-## Stable boundary
+## Implemented boundary
 
-The React OS backbone worker no longer requests a document SocketGrant with an empty legacy body. Every hub document dial now performs the authenticated D1 sequence `DocumentOpenIntentV1 -> DocumentOpenPlanV1 -> DocumentPlanSocketGrantIntentV1 -> SocketGrantReceiptV1`, then uses only the selected surface and the existing SocketGrant subprotocol to connect the credential-free WebSocket.
+The browser OS backbone owns every hub-bound document even when the optional Rust worker resolves. It performs the strict D1 sequence:
 
-The worker accepts the plan only when its exact space, document, requested surface, React renderer, artifact schema, and pack-schema hash agree with the opening request. Both JSON responses are streamed behind a 64 KiB Content-Length and incremental-read ceiling with fatal UTF-8 decoding and retained-byte wiping. The plan receipt is present only in the authenticated exchange body; it is absent from the socket URL, protocols, Hello, worker messages, and diagnostics. Cancellation after plan validation prevents the exchange, and the existing reconnect owner obtains a fresh plan and grant for every dial.
+1. authenticated `DocumentOpenIntentV1` POST to the exact scoped open-plan issuer;
+2. strict bounded `DocumentOpenPlanV1` validation;
+3. receipt-only `DocumentPlanSocketGrantIntentV1` POST;
+4. credential-free WebSocket dial with the returned SocketGrant subprotocol;
+5. activation only after an exact authenticated `Session.actor` match.
 
-The grant actor is pending authority, not readiness. A successful WebSocket upgrade and Welcome do not publish `socket-actor` and cannot activate plugin attachment. Only an exact authenticated `Session.actor` match publishes readiness. A mismatch clears the pending/current actor, leaves readiness false, emits a typed terminal failure, and closes the socket with policy violation. ShellHost rejects its readiness waiter on that failure, so plugin attachment cannot race ahead of Session.
+The plan must equal a caller-supplied, locally verified installed target across every package field (`pluginId`, `packageId`, version, component SHA-256, component BLAKE3, descriptor-byte SHA-256), artifact field (kind, schema, pack-schema hash), and surface field (surface, app, window kind, role, renderer). Missing installed authority terminates before the first issuer request and clears the ShellHost readiness waiter. A mismatched Session clears pending/current actor state, emits a typed failure, and closes with policy violation.
 
-## Language-neutral contract
+Both issuer responses are streamed behind exact Content-Length and incremental 64 KiB ceilings, fatal UTF-8 decoding, and retained-byte wiping. Cancellation between issue and exchange prevents the exchange. Receipt/grant/session credentials are absent from URL, Hello, ordinary worker messages, and bounded diagnostics.
 
-`🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/📄️browser-document-open-v1.schema.json` and its adjacent JSON fixture describe the exact Unicode paths, plan, receipt exchange, SocketGrant, authoritative Hello fields, 64 KiB response limit, forbidden credential fragments, and eight hostile outcomes. The schema is strict at every public object, including the catalog/package/artifact/surface/grant, checkpoint frontier, and exactly one session/share revalidation generation.
+Browser artifact state, execution-owner state, and BroadcastChannel ownership now use the canonical UTF-8 scope key `v1:<space-bytes>:<document-bytes>:<space><document>`. Local documents use the disjoint `local:v1:<document-bytes>:<document>` namespace. A bare close/send cannot select between two hub spaces with the same document id, so it fails closed instead of crossing authority.
 
-The independent Bun oracle uses Ajv 2020 plus Node URL/Buffer primitives and does not import the production plan parser. It proves three encoded paths, plan authority, the typed receipt-only exchange, credential-free socket/Hello material, all eight hostile vectors, and six forbidden credential fragments.
+## Neutral contract and independent oracle
 
-## Runtime evidence
+The adjacent strict JSON Schema and fixture at `🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/📄️browser-document-open-v1.*` define:
 
-- Session `9548`: registered Nx `@semio-tech/framework-os:test-quick` focused packet, exit 0, one file, 3 passed and 230 skipped. The laws cover exact D1 sequencing, matching-Session readiness, mismatched-Session terminal clearing, max+1 rejection, cancellation before exchange, and redaction.
-- Session `37124`: real headless Chromium loaded the production Vite worker and crossed the production private browser relay to an independent authenticated contract authority. Runtime output was `chromium-worker=1 authenticated-open=1 receipt-exchange=1 credential-free-websocket=1 authoritative-tag7=1 matched-session-activation=1 fragment-cleared=1 passed`. The later Nx stage was externally blocked by a transient duplicate renderer project path; no browser assertion failed.
-- Server lane session `95998`, owned independently by the issuer/consume implementation: registered server gate exit 0 with eight exact Rust laws and six independent consume vectors. Focused session `095981` proved descriptor/catalog-generation/directory/checkpoint revalidation before Welcome and during live authority.
-- Final registered browser gate session `35692`: active at report draft time after Ajv/independent oracle `hostile=8`, real Chromium runtime, and focused worker 3/3 all passed; the ticket-local Cargo target is compiling the eight exact server laws.
+- Unicode authority scopes and their independent UTF-8-length-prefixed keys;
+- the complete installed package/artifact/surface target;
+- exact issuer/exchange/socket paths and authoritative Hello;
+- 64 KiB response ceiling and credential-redaction fragments;
+- twenty hostile vectors, including every installed-target equality class, wrong scope/schema/surface, max+1, cancellation, URL redaction, and Session mismatch.
 
-Earlier runtime reds are retained as diagnostic history, not passes. Session `8612` exposed an initialization-order request before proof installation. Session `2101` then localized expiry of the intentionally 15-second proof and 30-second fixture plan during cold Vite graph construction. The permanent runtime now loads the browser graph before beginning the actual bounded proof/plan epoch on the same loopback relay binding; it does not widen production deadlines.
+The Bun oracle uses Ajv 2020, Node `Buffer.byteLength`, and Node URL behavior. It does not import the production target comparator or runtime-key helper. Current output is:
 
-## Ownership and qualifications
+`browser-document-open-oracle: ajv=1 paths=3 installed-target=1 scope-keys=2 authority=1 exchange=1 websocket=1 rust-worker-bypass=denied hostile=20 bound=65536 redaction=6 passed`
 
-The uncached permanent gate is `os-hub:browser-document-open-check`, owned by the existing hub `📜️script.ts`, declared in the hub `📋️project.json`, and launch-seeded as `⚖️gate🌐️document-open-browser🌎️hub` at order `411.1095`. Generated launch freshness and the final registered terminal remain to be recorded after session `35692` completes.
+## Runtime and law evidence
 
-This boundary proves the browser D1 transport and the current server issuer/consume subset. It does not claim native/WGPU document opening, production OIDC, initial artifact creation, or release-wide readiness. Ordinary usable document opening remains contingent on the hub publishing a nonempty verified openable catalog and the remaining master-plan prerequisites.
+- Session `55814`: current server registered script terminal, exit 0. Eight exact default-feature issuer/ledger/exchange/consume laws completed; the final consume-revalidation law passed 1/1.
+- Session `73369`: final-source canonical root-routed focused Nx packet, exit 0, one file, 6 passed and 230 skipped. This includes D1 ownership with a resolved Rust worker, same-document/two-space runtime isolation plus local discrimination, exact installed-target equality, issue/exchange/socket sequencing, Session-gated activation, max+1/cancellation/redaction, and missing-installed-target zero-effect rejection.
+- Session `88223`: broad OS quick packet reached 235/236. All 40 backbone laws passed; the sole red was the unrelated concurrently moved workflow-pack fixture inventory (`expected >=5, received 0`). This is broad qualified evidence, not a full-suite pass.
+- Session `32220`: independent oracle and production Vite/Chromium browser runtime were green. Runtime output was `chromium-worker=1 authenticated-open=1 receipt-exchange=1 credential-free-websocket=1 authoritative-tag7=1 pre-session-activation=0 matched-session-activation=1 fragment-cleared=1 passed`. The wrapper later exited 1 when its first server law returned Cargo status 101 during concurrent server edits.
+- Sessions `64576` and `24870`: the exact server catalog law passed 1/1 both with the ordinary environment and with the registered server script's `RUST_MIN_STACK` environment. Registered sessions `91552` and `92200` had already passed the independent oracle, Chromium runtime and 6/6 browser laws before Cargo returned status 101 during concurrent native/plugin compilation. Those ambiguous tails are not counted.
+- Session `3993`: the final uncontended registered target again passed the independent oracle, Chromium runtime, and all 6 browser laws. Its server-law preflight then stopped before selecting any server assertion because the current FEM dependency chain referenced the nonexistent doubled path `.../plugin/📦️📦️packages/🦀️rust/Cargo.toml`. The target therefore exited 1 and is recorded as a qualified browser boundary with an external workspace-manifest blocker, not a complete-wrapper pass.
+- Server lane session `95998` and focused session `095981`, owned by the issuer/consume implementation, were independently reported green: eight exact server laws, six consume vectors, and stale descriptor/catalog-generation/directory/checkpoint revalidation before Welcome and on live authority ticks.
+
+Earlier sessions `52675`, `35692`, `37124`, `2101`, and `8612` record superseded versions of the same boundary. They are not counted as final-source acceptance.
+
+## Permanent ownership
+
+The uncached target is `os-hub:browser-document-open-check`, declared in the hub `📋️project.json` and implemented only in the existing hub `📜️script.ts`. Launch seed entry `⚖️gate🌐️document-open-browser🌎️hub` uses the canonical root router:
+
+`bun ./📜️script.ts nx run os-hub:browser-document-open-check --skip-nx-cache`
+
+Session `85875` regenerated the plugin/launch catalog and exited 0. Session `72405` independently confirmed the generated catalog and launch bytes are fresh. Seed and generated launch both contain the same canonical root-routed browser command adjacent to the native gate.
+
+After the final terminal was captured, the validated 3.7 GiB ticket-local `browser-document-open-sol-target` compiler tree was deleted. Sibling generated targets and concurrent reports were preserved.
+
+## Explicit real-hub blocker
+
+This is a synthetic-browser plus real-server-law boundary, not a real-hub browser success claim. Current production startup calls `linked_native_codec_bindings()`, whose implementation is still `Vec::new()`. Consequently configured trusted-catalog loading has no linked first-party codec binding, `artifact_authority` cannot become a usable verified open-target authority, and `open_plan_ready` remains false in an ordinary hub.
+
+No fake binding, unsigned target, environment bypass, direct SocketGrant fallback, or production OIDC claim was added. A real browser-to-real-hub success journey remains blocked on the P0 first-party codec binding/catalog bootstrap. The browser side now fails closed until that producer supplies the complete verified installed target.

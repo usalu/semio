@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://framework/plugin/artifact-command-checkpoint/v3",
+  "type": "object",
+  "required": ["$schema", "format", "version", "maximumBytes", "headerBytes", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "const": "../🧬️schema/📸️artifact-command-checkpoint.schema.json" },
+    "format": { "const": "ARC1" },
+    "version": { "const": 3 },
+    "maximumBytes": { "const": 512 },
+    "headerBytes": { "const": 48 },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": ["name", "workPhase", "rawPageCursor", "rawBytes", "workProgress", "contextDigest", "workspaceIdentity", "workState", "outcome"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "workPhase": { "type": "boolean" },
+          "rawPageCursor": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+          "rawBytes": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+          "workProgress": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+          "contextDigest": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+          "workspaceIdentity": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+          "workState": {
+            "oneOf": [
+              {
+                "type": "object",
+                "required": ["bytes"],
+                "additionalProperties": false,
+                "properties": {
+                  "bytes": {
+                    "type": "array",
+                    "maxItems": 465,
+                    "items": { "type": "integer", "minimum": 0, "maximum": 255 }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": ["fill", "length"],
+                "additionalProperties": false,
+                "properties": {
+                  "fill": { "type": "integer", "minimum": 0, "maximum": 255 },
+                  "length": { "type": "integer", "minimum": 0, "maximum": 465 }
+                }
+              }
+            ]
+          },
+          "outcome": { "enum": ["ok", "capacityError"] }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": { "outcome": { "const": "ok" } },
+              "required": ["outcome"]
+            },
+            "then": {
+              "properties": {
+                "workState": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "required": ["bytes"],
+                      "properties": { "bytes": { "type": "array", "maxItems": 464 } }
+                    },
+                    {
+                      "type": "object",
+                      "required": ["fill", "length"],
+                      "properties": {
+                        "fill": {},
+                        "length": { "type": "integer", "maximum": 464 }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "workState": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "required": ["bytes"],
+                      "properties": { "bytes": { "type": "array", "minItems": 465, "maxItems": 465 } }
+                    },
+                    {
+                      "type": "object",
+                      "required": ["fill", "length"],
+                      "properties": {
+                        "fill": {},
+                        "length": { "const": 465 }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

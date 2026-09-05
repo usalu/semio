@@ -77,10 +77,8 @@ impl Default for GisMapArtifact {
 }
 
 impl GisMapArtifact {
-    /// 📸️ Persisted subset. `drawing`/`value` are always re-derived (never carried verbatim off
-    /// `self`) via `gis_map_snapshot_with_derived_children` so they can never drift from what
-    /// `positions`/`routes`/`regions` actually contain; `image` carries straight through (real, but
-    /// not derivable from anything this plugin owns — see the field's own doc comment).
+    /// 📸️ Persisted subset with stable drawing/value member coordinates; their content is emitted
+    /// as typed child work while `image` carries straight through.
     pub fn to_snapshot(&self) -> GisMapSnapshot {
         gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: self.positions.clone(), routes: self.routes.clone(), regions: self.regions.clone(), image: self.image.clone(), ..Default::default() })
     }
@@ -202,7 +200,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for GisMapAnalyzerAnalysis {
         type Parts = GisMapParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.gismap", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.gis.gismap", standard: StandardId("1"), subset: SubsetId("*") };
 
         fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
@@ -383,10 +381,10 @@ fn feature_lon_lat(data: &dsl::DslValue) -> Option<(f64, f64)> {
     Some((lon, lat))
 }
 
-/// 〰️ Reads a `{ points: [[lon, lat], …] }` vertex chain off a route/region feature's payload.
+/// 〰️ Reads a `{ points: [[lon, lat], …] }` route or `{ ring: [[lon, lat], …] }` region chain.
 fn feature_line(data: &dsl::DslValue) -> Option<Vec<SemioPoint2>> {
     let value = dsl_to_value(data);
-    let points = value.get("points").and_then(Value::as_array)?;
+    let points = value.get("points").or_else(|| value.get("ring")).and_then(Value::as_array)?;
     let vertices: Vec<SemioPoint2> = points
         .iter()
         .filter_map(|entry| {

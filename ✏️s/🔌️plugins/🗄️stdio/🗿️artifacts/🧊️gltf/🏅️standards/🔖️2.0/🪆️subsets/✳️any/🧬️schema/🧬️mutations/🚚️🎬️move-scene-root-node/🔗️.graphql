@@ -1,7 +1,0 @@
-# move-scene-root-node mutation facet.
-input GltfMoveSceneRootNodePayloadV1 {
-  scene: Int!
-  node: Int!
-  position: Int!
-}
-type GltfMoveSceneRootNodeMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

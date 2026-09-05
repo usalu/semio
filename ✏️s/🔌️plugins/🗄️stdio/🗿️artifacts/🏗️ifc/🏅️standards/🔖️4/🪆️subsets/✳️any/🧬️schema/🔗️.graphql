@@ -1,5 +1,0 @@
-# 🧬️ IfcArtifact
-type IfcArtifact {
-  schema: String! @state(class: ARTIFACT)
-  PLACEHOLDER_TEXT_COLON String! @state(class: ARTIFACT)
-}

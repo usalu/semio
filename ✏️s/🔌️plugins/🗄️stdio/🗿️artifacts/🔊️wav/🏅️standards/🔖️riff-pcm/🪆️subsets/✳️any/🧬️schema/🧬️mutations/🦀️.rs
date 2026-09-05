@@ -8,13 +8,13 @@ use protocol::{OpBinary, OpText};
 
 //#region 🔖️Mutation
 //#region 🔖️Leaves
-#[path = "📄set-snapshot/🦀️.rs"]
+#[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🎚set-fmt/🦀️.rs"]
+#[path = "🎚️set-fmt/🦀️.rs"]
 pub mod set_fmt;
-#[path = "🔊set-data/🦀️.rs"]
+#[path = "🔊️set-data/🦀️.rs"]
 pub mod set_data;
-#[path = "📎set-other-chunks/🦀️.rs"]
+#[path = "📎️set-other-chunks/🦀️.rs"]
 pub mod set_other_chunks;
 //#endregion 🔖️Leaves
 
@@ -181,7 +181,7 @@ mod tests {
     /// declares `no-mutation`, the identity scenario the `🥒️.feature` still exercises against the
     /// independent oracle even though `NoMutation` is no longer an enum variant (`no` is not an
     /// approved semantic verb for `#[derive(dsl::Mutations)]`) — the same split
-    /// `mutate-mp3-mpeg1-layer3`'s own `kinds_match_the_committed_catalog` makes for its sibling
+    /// `🎛️mutate-mp3-mpeg1-layer3`'s own `kinds_match_the_committed_catalog` makes for its sibling
     /// vocabulary.
     #[semio_framework_async_macros::async_test]
     async fn kinds_matches_enum_variants_and_manifest() {
@@ -193,7 +193,7 @@ mod tests {
         from_const.sort_unstable();
         assert_eq!(from_const, from_enum, "KINDS must name exactly the enum's variants");
 
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔮️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "the oracle catalog manifest must declare kind {kind:?}");
         }
@@ -220,10 +220,10 @@ mod tests {
 //#endregion 🔖️Tests
 
 //#region 🧪️FixtureCases
-/// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
+/// 🧪️ Handcrafted `📸️set-snapshot` fixture cases, wired from this tree's own mutations root so
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📄set-snapshot/🧪️tests/resamples-to-16-khz-and-doubles-the-pcm16-amplitude/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/🔊️resamples-to-16-khz-and-doubles-the-pcm16-amplitude/🦀️.rs"]
 mod set_snapshot_resamples_to_16_khz_and_doubles_the_pcm16_amplitude;
 //#endregion 🧪️FixtureCases

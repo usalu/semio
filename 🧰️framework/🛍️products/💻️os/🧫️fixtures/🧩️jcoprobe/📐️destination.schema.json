@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "packageId", "semanticOwnerRoot", "packageRoot", "cargoManifestPath", "cargoLockPath", "componentPath", "witPath", "adapterPath"],
+  "properties": {
+    "kind": { "const": "jco-canonical-package-v1" },
+    "packageId": { "const": "jcoprobe-guest" },
+    "semanticOwnerRoot": { "const": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest" },
+    "packageRoot": { "const": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust" },
+    "cargoManifestPath": { "const": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.toml" },
+    "cargoLockPath": { "const": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock" },
+    "componentPath": { "const": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/🧩️component/🦀️.rs" },
+    "witPath": { "const": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/🧬️schema/📜️world.wit" },
+    "adapterPath": { "const": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs" }
+  }
+}

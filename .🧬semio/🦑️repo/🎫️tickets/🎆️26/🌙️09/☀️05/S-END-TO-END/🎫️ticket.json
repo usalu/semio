@@ -1,0 +1,10 @@
+{
+  "title": "S End To End",
+  "emoji": "🖥️",
+  "status": "open",
+  "description": "Get s (the semio OS shell under ✏️s with every registered plugin, app and artifact) working end to end: the registered launch targets boot the React and WGPU shells, the complete plugin catalog loads without hardcoded identities, every declared app and artifact opens and renders non-empty content with live mutations, and the registered collaboration/browser/native smoke gates pass with current runtime evidence. Coordinated from Claude Fable 5.1 with Opus 5 implementers and Sonnet 5 read-only explorers alongside the concurrent COMPLETE-SEMIO-END-TO-END fleet.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "2b78f0cf-ec36-4c47-9869-b75d7b31d161"
+  ]
+}

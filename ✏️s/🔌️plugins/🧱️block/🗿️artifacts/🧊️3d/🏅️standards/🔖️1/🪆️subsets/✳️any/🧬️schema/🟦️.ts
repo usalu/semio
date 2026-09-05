@@ -7,7 +7,7 @@ import type { Block3dBrushPreview, Block3dVortexKindExtra, Block3dVortexTemplate
 export interface ArtifactDialect { artifactKind: string; standard: string; subset: string; }
 
 /** 🎯️ What a child handle points at — verified against the real fixture
- * `…/🙅remove-author/🧪️tests/uncredits-ada/📸️snapshot/⬅️before/🔣️.json`'s `catalog.target`
+ * `…/🙅remove-author/🧪️tests/✏️uncredits-ada/📸️snapshot/⬅️before/🔣️.json`'s `catalog.target`
  * (NOT a plain string, unlike some sibling plugins' unverified `ArtifactChildHandle` stubs). */
 export interface ArtifactChildTarget { artifactId: string; dialect: ArtifactDialect; }
 

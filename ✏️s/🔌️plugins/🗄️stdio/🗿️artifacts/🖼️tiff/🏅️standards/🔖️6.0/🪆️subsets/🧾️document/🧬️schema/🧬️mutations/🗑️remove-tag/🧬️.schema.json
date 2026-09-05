@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ifdIndex",
+    "tag"
+  ],
+  "properties": {
+    "ifdIndex": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "tag": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    }
+  },
+  "$defs": {
+    "TiffByteOrder": {
+      "type": "string",
+      "enum": [
+        "littleEndian",
+        "bigEndian"
+      ]
+    },
+    "TiffFieldType": {
+      "type": "string",
+      "enum": [
+        "byte",
+        "ascii",
+        "short",
+        "long",
+        "rational",
+        "sByte",
+        "undefined",
+        "sShort",
+        "sLong",
+        "sRational",
+        "float",
+        "double"
+      ],
+      "description": "TIFF6 §2 Table 2 — the 12 real IFD entry field types."
+    },
+    "TiffValues": {
+      "type": "object",
+      "description": "Adjacently-tagged (kind/value) typed union — `value`'s real shape depends on `kind` (number[] for most, string for ascii, [number,number][] for rational/sRational).",
+      "required": [
+        "kind",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/TiffFieldType"
+        },
+        "value": {}
+      }
+    },
+    "TiffTag": {
+      "type": "object",
+      "description": "One IFD entry — a weak value (whole-value replaced in diffs).",
+      "required": [
+        "tag",
+        "kind",
+        "values"
+      ],
+      "properties": {
+        "tag": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "kind": {
+          "$ref": "#/$defs/TiffFieldType"
+        },
+        "values": {
+          "$ref": "#/$defs/TiffValues"
+        }
+      }
+    },
+    "TiffIfd": {
+      "type": "object",
+      "description": "One Image File Directory — tag-id-keyed entries (TIFF requires ascending-tag-order) plus this directory's own raster as RAW STRIP BYTES. Empty for IFD 0, whose raster is the snapshot's own canonical RGBA `pixels`, and for a metadata-only directory.",
+      "required": [
+        "entries",
+        "pixels"
+      ],
+      "properties": {
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TiffTag"
+          }
+        },
+        "pixels": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    }
+  },
+  "title": "RemoveTagMutation"
+}

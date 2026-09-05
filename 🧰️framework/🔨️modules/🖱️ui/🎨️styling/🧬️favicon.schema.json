@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "version", "svg", "ico"],
+  "properties": {
+    "$schema": { "const": "./🧬️favicon.schema.json" },
+    "version": { "const": 1 },
+    "svg": { "const": "🛡️favicon.svg" },
+    "ico": { "const": "🔖️favicon.ico" }
+  }
+}

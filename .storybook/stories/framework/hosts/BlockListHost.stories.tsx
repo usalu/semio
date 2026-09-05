@@ -1,9 +1,9 @@
 // #region 🧲️Header
 // 💻️ .storybook/stories/framework/hosts/BlockListHost.stories.tsx
-// Specs: Host the framework renderer's `BlockListHost` with zero WASM engine — the Blockly-like step/block
+// Specs: Host the framework renderer's `🧩️BlockListHost` with zero WASM engine — the Blockly-like step/block
 // editor is pure `dnd-kit` + declarative JSON, so a story-local reducer round-trips `addStep`/`removeStep`/
 // `moveStep`/`addBlock`/`removeBlock`/`moveBlock` for real.
-// Summary: `reduceStoryBlockListAction` mirrors `BlockListHost`'s dispatched actions (`framework/os/renderer/js/react/index.tsx`).
+// Summary: `reduceStoryBlockListAction` mirrors `🧩️BlockListHost`'s dispatched actions (`framework/os/renderer/js/react/index.tsx`).
 // Clicking a palette entry's `addBlock` (no `stepId` — `PalettePanel`'s click handler only ever sends `{ kind }`)
 // targets the *last* step, matching the only sane host-app default when the plugin protocol itself doesn't say which step.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -42,7 +42,7 @@ function storyPaletteLabel(palette: readonly StoryPaletteEntry[], kind: string):
   return palette.find((entry) => entry.blockKind === kind)?.label ?? kind;
 }
 
-/** @emoji 🧩️ Story-local mirror of the `addStep`/`removeStep`/`moveStep`/`addBlock`/`removeBlock`/`moveBlock` handling a real host app performs against `BlockListHost`'s dispatched actions (`dispatchBlockListAction`). */
+/** @emoji 🧩️ Story-local mirror of the `addStep`/`removeStep`/`moveStep`/`addBlock`/`removeBlock`/`moveBlock` handling a real host app performs against `🧩️BlockListHost`'s dispatched actions (`dispatchBlockListAction`). */
 function reduceStoryBlockListAction(state: StoryBlockListState, descriptor: ActionDescriptor): StoryBlockListState {
   const args = (descriptor.args ?? {}) as Record<string, unknown>;
   switch (descriptor.action) {
@@ -134,7 +134,7 @@ function BlockListStoryHost({ initialSteps }: { readonly initialSteps: readonly 
   );
 }
 
-/** @emoji 🕳️ `BlockListHost` with an absent `blockList` scene — exercises the `emptyLabel` fallback path with zero fixture setup. */
+/** @emoji 🕳️ `🧩️BlockListHost` with an absent `blockList` scene — exercises the `emptyLabel` fallback path with zero fixture setup. */
 function BlockListStoryEmptyHost(): ReactElement {
   const node: UiComponentSceneNode = { type: "componentScene", surfaceId: "block-list.story.empty", controllerId: STORY_BLOCK_LIST_CONTROLLER_ID, componentKind: "block-list" };
   return (

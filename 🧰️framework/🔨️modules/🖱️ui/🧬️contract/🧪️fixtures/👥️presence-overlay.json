@@ -1,0 +1,8 @@
+{
+  "cases": [
+    { "name": "selected", "update": { "surface": "document", "nodeKey": "item:根,1", "own": { "selected": true }, "ttlMs": 1000 }, "expected": { "selected": true, "hovered": false, "previewed": false } },
+    { "name": "hover-replaces-selection", "update": { "surface": "document", "nodeKey": "item:根,1", "own": { "hovered": true }, "ttlMs": 1000 }, "expected": { "selected": false, "hovered": true, "previewed": false } },
+    { "name": "preview", "update": { "surface": "document", "nodeKey": "item:根,1", "own": { "previewed": true }, "ttlMs": 1000 }, "expected": { "selected": false, "hovered": false, "previewed": true } },
+    { "name": "clear", "update": { "surface": "document", "nodeKey": "item:根,1", "own": {}, "ttlMs": 1000 }, "expected": { "selected": false, "hovered": false, "previewed": false } }
+  ]
+}

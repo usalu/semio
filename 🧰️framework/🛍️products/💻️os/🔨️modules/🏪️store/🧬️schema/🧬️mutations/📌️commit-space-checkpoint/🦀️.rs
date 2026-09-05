@@ -2,16 +2,11 @@
 use super::super::{RemoveSpaceCheckpoint, SpaceHistoryMutation};
 use super::super::{SpaceCheckpoint, SpaceHistoryDiff, SpaceHistorySnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-/// @emoji 📌️ serde stays TEST-ONLY: feeds `SpaceHistoryMutation`'s own `cfg_attr(test)` oracle
-/// derive (its sibling `serde_json` differential test). Production never serializes through serde.
+/// 📌️ Commits one canonical space checkpoint and its exact member pins.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CommitSpaceCheckpoint {
     pub checkpoint: SpaceCheckpoint,

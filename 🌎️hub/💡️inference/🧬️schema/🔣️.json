@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:hub:inference-job:v1",
+  "$ref": "#/$defs/request",
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+    "serverId": { "type": "string", "minLength": 1, "maxLength": 96, "pattern": "^[A-Za-z0-9._:-]+$" },
+    "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "safeInteger": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "version", "requestId", "serviceId", "policyVersion", "lifetimeMs"],
+      "properties": {
+        "schema": { "const": "semio.hub.inference-request/v1" },
+        "version": { "const": 1 },
+        "requestId": { "$ref": "#/$defs/id" },
+        "serviceId": { "const": "s.gis.gismap.inference" },
+        "policyVersion": { "const": 1 },
+        "lifetimeMs": { "type": "integer", "minimum": 1, "maximum": 120000 }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["request", "userId", "sessionId", "authorizationGeneration", "spaceId", "documentId", "descriptorDigest", "binding", "headOrdinal", "headEditId", "lastCommitSeq", "chainHash", "inputHash"],
+      "properties": {
+        "request": { "$ref": "#/$defs/request" },
+        "userId": { "$ref": "#/$defs/serverId" },
+        "sessionId": { "$ref": "#/$defs/serverId" },
+        "spaceId": { "$ref": "#/$defs/serverId" },
+        "documentId": { "$ref": "#/$defs/serverId" },
+        "authorizationGeneration": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "descriptorDigest": { "$ref": "#/$defs/hash" },
+        "binding": { "$ref": "#/$defs/binding" },
+        "chainHash": { "$ref": "#/$defs/hash" },
+        "inputHash": { "$ref": "#/$defs/hash" },
+        "headOrdinal": { "$ref": "#/$defs/safeInteger" },
+        "headEditId": { "type": "string", "maxLength": 96, "pattern": "^[A-Za-z0-9._:-]*$" },
+        "lastCommitSeq": { "$ref": "#/$defs/safeInteger" }
+      },
+      "if": { "properties": { "headEditId": { "const": "" } }, "required": ["headEditId"] },
+      "then": { "properties": { "headOrdinal": { "const": 0 } } }
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["digest", "catalogGenerationId", "packageId", "packageVersion", "componentSha256", "componentBlake3", "artifactKind", "documentSchema", "parentDialect", "surfaceId", "grantedMode", "serviceId", "serviceVersion", "algorithmVersion"],
+      "properties": {
+        "digest": { "$ref": "#/$defs/hash" },
+        "catalogGenerationId": { "$ref": "#/$defs/hash" },
+        "packageId": { "const": "semio:gis" },
+        "packageVersion": { "$ref": "#/$defs/serverId" },
+        "componentSha256": { "$ref": "#/$defs/hash" },
+        "componentBlake3": { "$ref": "#/$defs/hash" },
+        "artifactKind": { "const": "s.gis.gismap" },
+        "documentSchema": { "const": "gis.map" },
+        "parentDialect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["artifactKind", "standard", "subset"],
+          "properties": { "artifactKind": { "const": "s.gis.gismap" }, "standard": { "const": "1" }, "subset": { "const": "*" } }
+        },
+        "surfaceId": { "const": "s.gis.gismap@1/*#editor" },
+        "grantedMode": { "const": "read-write-observe" },
+        "serviceId": { "const": "s.gis.gismap.inference" },
+        "serviceVersion": { "const": 1 },
+        "algorithmVersion": { "const": 1 }
+      }
+    },
+    "jobState": { "enum": ["accepted", "running", "succeeded", "failed", "cancelled"] },
+    "proposalState": { "enum": ["none", "offered", "approved", "stale", "cancelled"] }
+  }
+}

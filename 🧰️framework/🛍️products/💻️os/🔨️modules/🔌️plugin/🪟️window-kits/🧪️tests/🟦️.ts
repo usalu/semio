@@ -16,9 +16,9 @@ export default {
     // `includeSource` — listing a file in both keys double-collects it (📌️important.md rule 18).
     include: [],
     coverage: {
-      include: ["📝️text/🟦️.ts", "📊️table/🟦️.ts", "🌳️tree/🟦️.ts", "🖼️image/🟦️.ts", "🧊️mesh/🟦️.ts", "📄️document/🟦️.ts", "🎬️media/🟦️.ts"],
+      include: ["📝️text/🟦️.ts", "📊️table/🟦️.ts", "🌳️tree/🟦️.ts", "🖼️image/🟦️.ts", "🧊️mesh/🟦️.ts", "📃️document/🟦️.ts", "🎬️media/🟦️.ts"],
     },
-    includeSource: ["📝️text/🟦️.ts", "📊️table/🟦️.ts", "🌳️tree/🟦️.ts", "🖼️image/🟦️.ts", "🧊️mesh/🟦️.ts", "📄️document/🟦️.ts", "🎬️media/🟦️.ts"],
+    includeSource: ["📝️text/🟦️.ts", "📊️table/🟦️.ts", "🌳️tree/🟦️.ts", "🖼️image/🟦️.ts", "🧊️mesh/🟦️.ts", "📃️document/🟦️.ts", "🎬️media/🟦️.ts"],
     passWithNoTests: false,
   },
 };

@@ -76,7 +76,7 @@ pub enum En1997Mutation {
 
 /// 🏷️ Every declared kind of [`En1997Mutation`], in `#[derive(dsl::Mutations)]`'s own declaration
 /// order and spelling — the list `../../🔣️oracle.json` publishes as the `en1997-1-any`
-/// mutation catalog and `../../../../../🧪️tests/mutate-en1997-1` registers its scenarios from. The
+/// mutation catalog and `../../../../../🧪️tests/🐨️mutate-en1997-1` registers its scenarios from. The
 /// test platform never parses Rust, so [`kinds_catalog::kinds_match_the_enum_and_the_catalog`] below
 /// is what keeps the enum, this const and the committed manifest from drifting apart.
 pub const KINDS: &[&str] = &[
@@ -258,49 +258,49 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "🌿change-alpha-s/🧪️tests/lowers-the-shaft-resistance-factor-to-0-5/🦀️.rs"]
+    #[path = "🌿change-alpha-s/🧪️tests/🚀️lowers-the-shaft-resistance-factor-to-0-5/🦀️.rs"]
     mod tests_change_alpha_s_lowers_the_shaft_resistance_factor_to_0_5;
-    #[path = "🛏️change-annex/🧪️tests/switches-from-the-german-na-to-the-recommended-en-annex/🦀️.rs"]
+    #[path = "🛏️change-annex/🧪️tests/🟪️switches-from-the-german-na-to-the-recommended-en-annex/🦀️.rs"]
     mod tests_change_annex_switches_from_the_german_na_to_the_recommended_en_annex;
-    #[path = "🧹change-bm/🧪️tests/widens-the-footing-to-2-5-m/🦀️.rs"]
+    #[path = "🧹change-bm/🧪️tests/🚀️widens-the-footing-to-2-5-m/🦀️.rs"]
     mod tests_change_bm_widens_the_footing_to_2_5_m;
-    #[path = "🧽change-c-kpa/🧪️tests/gives-the-drained-sand-12-5-kpa-of-effective-cohesion/🦀️.rs"]
+    #[path = "🧽change-c-kpa/🧪️tests/🍋️gives-the-drained-sand-12-5-kpa-of-effective-cohesion/🦀️.rs"]
     mod tests_change_c_kpa_gives_the_drained_sand_12_5_kpa_of_effective_cohesion;
-    #[path = "🛋️change-design-approach/🧪️tests/switches-from-design-approach-1-to-design-approach-2/🦀️.rs"]
+    #[path = "🛋️change-design-approach/🧪️tests/🌵️switches-from-design-approach-1-to-design-approach-2/🦀️.rs"]
     mod tests_change_design_approach_switches_from_design_approach_1_to_design_approach_2;
-    #[path = "🧺change-dfm/🧪️tests/deepens-the-founding-level-to-2-m/🦀️.rs"]
+    #[path = "🧺change-dfm/🧪️tests/🌲️deepens-the-founding-level-to-2-m/🦀️.rs"]
     mod tests_change_dfm_deepens_the_founding_level_to_2_m;
-    #[path = "🪑change-es-mpa/🧪️tests/stiffens-the-soil-modulus-to-45-mpa/🦀️.rs"]
+    #[path = "🪑change-es-mpa/🧪️tests/🌻️stiffens-the-soil-modulus-to-45-mpa/🦀️.rs"]
     mod tests_change_es_mpa_stiffens_the_soil_modulus_to_45_mpa;
-    #[path = "🧴change-footing-area-m2/🧪️tests/enlarges-the-footing-area-to-6-25-m2/🦀️.rs"]
+    #[path = "🧴change-footing-area-m2/🧪️tests/🛸️enlarges-the-footing-area-to-6-25-m2/🦀️.rs"]
     mod tests_change_footing_area_m2_enlarges_the_footing_area_to_6_25_m2;
-    #[path = "🪠change-gamma-kn-m3/🧪️tests/raises-the-soil-unit-weight-to-20-kn-m3/🦀️.rs"]
+    #[path = "🪠change-gamma-kn-m3/🧪️tests/🟩️raises-the-soil-unit-weight-to-20-kn-m3/🦀️.rs"]
     mod tests_change_gamma_kn_m3_raises_the_soil_unit_weight_to_20_kn_m3;
-    #[path = "🪥change-h-ed-kn/🧪️tests/raises-the-design-horizontal-load-to-120-kn/🦀️.rs"]
+    #[path = "🪥change-h-ed-kn/🧪️tests/🔮️raises-the-design-horizontal-load-to-120-kn/🦀️.rs"]
     mod tests_change_h_ed_kn_raises_the_design_horizontal_load_to_120_kn;
-    #[path = "🛁change-n-pile-ed-kn/🧪️tests/raises-the-design-pile-axial-load-to-1200-kn/🦀️.rs"]
+    #[path = "🛁change-n-pile-ed-kn/🧪️tests/🟢️raises-the-design-pile-axial-load-to-1200-kn/🦀️.rs"]
     mod tests_change_n_pile_ed_kn_raises_the_design_pile_axial_load_to_1200_kn;
-    #[path = "🪞change-nu/🧪️tests/raises-poissons-ratio-to-0-375/🦀️.rs"]
+    #[path = "🪞change-nu/🧪️tests/🌱️raises-poissons-ratio-to-0-375/🦀️.rs"]
     mod tests_change_nu_raises_poissons_ratio_to_0_375;
-    #[path = "🧼change-phi-deg/🧪️tests/raises-the-friction-angle-to-35-degrees/🦀️.rs"]
+    #[path = "🧼change-phi-deg/🧪️tests/🌲️raises-the-friction-angle-to-35-degrees/🦀️.rs"]
     mod tests_change_phi_deg_raises_the_friction_angle_to_35_degrees;
-    #[path = "🌳change-pile-base-area-m2/🧪️tests/doubles-the-pile-base-area-to-0-5-m2/🦀️.rs"]
+    #[path = "🌳change-pile-base-area-m2/🧪️tests/🔮️doubles-the-pile-base-area-to-0-5-m2/🦀️.rs"]
     mod tests_change_pile_base_area_m2_doubles_the_pile_base_area_to_0_5_m2;
-    #[path = "🍀change-pile-dm/🧪️tests/enlarges-the-pile-diameter-to-0-75-m/🦀️.rs"]
+    #[path = "🍀change-pile-dm/🧪️tests/🔮️enlarges-the-pile-diameter-to-0-75-m/🦀️.rs"]
     mod tests_change_pile_dm_enlarges_the_pile_diameter_to_0_75_m;
-    #[path = "🌵change-pile-lm/🧪️tests/lengthens-the-pile-to-15-m/🦀️.rs"]
+    #[path = "🌵change-pile-lm/🧪️tests/🔮️lengthens-the-pile-to-15-m/🦀️.rs"]
     mod tests_change_pile_lm_lengthens_the_pile_to_15_m;
-    #[path = "🌲change-pile-n-profiles/🧪️tests/adds-a-third-investigated-ground-profile/🦀️.rs"]
+    #[path = "🌲change-pile-n-profiles/🧪️tests/🛟️adds-a-third-investigated-ground-profile/🦀️.rs"]
     mod tests_change_pile_n_profiles_adds_a_third_investigated_ground_profile;
-    #[path = "🌴change-qb-kpa/🧪️tests/raises-the-unit-base-resistance-to-3200-kpa/🦀️.rs"]
+    #[path = "🌴change-qb-kpa/🧪️tests/🟩️raises-the-unit-base-resistance-to-3200-kpa/🦀️.rs"]
     mod tests_change_qb_kpa_raises_the_unit_base_resistance_to_3200_kpa;
-    #[path = "🌾change-qs-kpa/🧪️tests/raises-the-unit-shaft-resistance-to-120-kpa/🦀️.rs"]
+    #[path = "🌾change-qs-kpa/🧪️tests/🐞️raises-the-unit-shaft-resistance-to-120-kpa/🦀️.rs"]
     mod tests_change_qs_kpa_raises_the_unit_shaft_resistance_to_120_kpa;
-    #[path = "🚿change-settlement-limit-mm/🧪️tests/relaxes-the-settlement-limit-to-40-mm/🦀️.rs"]
+    #[path = "🚿change-settlement-limit-mm/🧪️tests/🌵️relaxes-the-settlement-limit-to-40-mm/🦀️.rs"]
     mod tests_change_settlement_limit_mm_relaxes_the_settlement_limit_to_40_mm;
-    #[path = "🪒change-v-ed-kn/🧪️tests/raises-the-design-vertical-load-to-750-kn/🦀️.rs"]
+    #[path = "🪒change-v-ed-kn/🧪️tests/🌻️raises-the-design-vertical-load-to-750-kn/🦀️.rs"]
     mod tests_change_v_ed_kn_raises_the_design_vertical_load_to_750_kn;
-    #[path = "🍁change-z-investigated-m/🧪️tests/deepens-the-investigated-depth-to-12-m/🦀️.rs"]
+    #[path = "🍁change-z-investigated-m/🧪️tests/🌾️deepens-the-investigated-depth-to-12-m/🦀️.rs"]
     mod tests_change_z_investigated_m_deepens_the_investigated_depth_to_12_m;
 }
 //#endregion 🧪️FixtureTests
@@ -310,7 +310,7 @@ mod fixture_tests {
 /// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) JSON
 /// projection — the exact shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️.json`
 /// specification vectors carry — into a real [`En1997Mutation`]. The generated test host of
-/// `../../../../../🧪️tests/mutate-en1997-1` links only this crate, so `serde_json` is unreachable
+/// `../../../../../🧪️tests/🐨️mutate-en1997-1` links only this crate, so `serde_json` is unreachable
 /// from that adapter and the bridge belongs here rather than there.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_en1997_mutation_json(text: &str) -> Result<En1997Mutation, String> {
@@ -330,7 +330,7 @@ pub fn apply_en1997_mutation(base: &En1997Snapshot, mutation: &En1997Mutation) -
 }
 
 /// ↩️ This mutation's own computed inverse against `base` — the metamorphic property
-/// `mutate-en1997-1`'s `inverse-<kind>` scenarios assert, exposed under a name the test adapter can
+/// `🐨️mutate-en1997-1`'s `inverse-<kind>` scenarios assert, exposed under a name the test adapter can
 /// reach without naming `protocol::Mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_en1997_mutation(mutation: &En1997Mutation, base: &En1997Snapshot) -> Vec<En1997Mutation> {
@@ -355,7 +355,7 @@ mod kinds_catalog {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔮️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

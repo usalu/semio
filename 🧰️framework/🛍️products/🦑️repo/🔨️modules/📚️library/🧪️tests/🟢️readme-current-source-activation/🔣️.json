@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "contract": "reviewed-readme-source-activation-v1",
+  "scope": "isolated-retained-loader-and-planner",
+  "execution": {
+    "packageName": "@semio-tech/repo-lib",
+    "packageCommand": "nx run @semio-tech/repo-lib:test-readme-current-source-activation",
+    "target": "test-readme-current-source-activation",
+    "command": "bun ./📜️script.ts test readme-current-source-activation",
+    "route": "readme-current-source-activation",
+    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️readme-current-source-activation.ts",
+    "launchName": "🧹clean🧩️taxonomy🟢️readme-current-source-activation",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-readme-current-source-activation --skip-nx-cache",
+    "launchGroup": "4_gate",
+    "launchOrder": 410.204
+  },
+  "contractId": "readme-license-owner-leaves-v1",
+  "revisionId": "testing-readme-protocol-v2-reviewed",
+  "revisionInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔣️readme-current-source-revision.json",
+  "revisionInputSha256": "1dbd35594578a7e2ed00707686263004872c4b925e895b066d8f04ff4693ac58",
+  "taxonomyPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+  "catalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️readme-license-owner-authority.json",
+  "catalogSha256": "051394741822e92d51f3bda15ce64d84c236582c6927335c9c5e0ac3c18a1da4",
+  "catalogCaseIndex": 31,
+  "baseline": {
+    "commit": "9f449b10659b95148c8bcb3f91ce583bf7446973",
+    "blob": "97c9cd961ac67eb875f714da1a17a8d2121446dc",
+    "sha256": "f35bd37e2fb97b232b310eec053d0d93b23b9561eab17f583dd4e35c8756c804",
+    "size": 7205,
+    "mode": 420
+  },
+  "expectedRevisionDigest": "caeba50b0dfd5e9ba64ed054789c36907be89579205257e4147bd264b5715ae3",
+  "shippedPublication": {
+    "revisionPointer": [
+      "semanticOwnedFileProjectionContracts",
+      "readme-license-owner-leaves-v1",
+      "currentSourceRevisions"
+    ],
+    "evidence": [
+      {
+        "id": "readme-current-source-revision-input",
+        "inputRole": "revision",
+        "schemaVersion": 1,
+        "coordinates": [
+          {
+            "pointer": "/revisions/testing-readme-protocol-v2-reviewed/sourcePath",
+            "kind": "source"
+          },
+          {
+            "pointer": "/cases/8/changes/0/value/sourcePath",
+            "kind": "source"
+          }
+        ]
+      },
+      {
+        "id": "readme-reviewed-expectation-input",
+        "inputRole": "reviewed-expectation",
+        "schemaVersion": 1,
+        "coordinates": [
+          {
+            "pointer": "/documents/readme",
+            "kind": "source"
+          }
+        ]
+      }
+    ],
+    "sourceReadPolicy": "retained-reviewed-inputs-only",
+    "expectedFrozenDocuments": 2,
+    "expectedFrozenSelectors": 3
+  },
+  "runParent": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️readme-current-plan-readiness/📓️activation/🧾️runs",
+  "unregisteredPath": "🧪️tests/📝️unregistered.md",
+  "generatorIsolation": {
+    "contractId": "plugin-registry",
+    "removeField": "inputDiscovery",
+    "inputPatterns": ["🧪️tests/🔣️unrelated-producer.json"],
+    "reason": "This initial packet proves exact owner admission and planning, not registry output generation. No producer is invoked and production generator contracts are unchanged."
+  },
+  "laws": {
+    "catalog": "Load and retain the original forty catalog rows and bytes; never mutate a catalog row to make a current source match.",
+    "revision": "Only the exact registered raw source at row31 selects one reviewed current tuple and demands its expectation evidence.",
+    "lineage": "Read the exact Git commit:path identity and immutable blob independently; matching expectation strings is not provenance.",
+    "plan": "Derive an explicit sourceAuthority with the pure revision digest and exactly schema/catalog/expectation full regular-file tuples.",
+    "canonical": "A separately prepared canonical state admits current bytes without demanding absent or retired expectation bytes; source/destination coexistence still rejects.",
+    "isolation": "Every filesystem mutation belongs to one validated fresh ticket run owner; no production move, producer execution, apply, cleanup or broad scan."
+  },
+  "cases": [
+    { "id": "current-raw-source", "layout": "raw", "source": "current", "expectation": "exact", "sourceMode": 420, "destination": "absent", "expected": "revised-move" },
+    { "id": "old-baseline-source-rejected", "layout": "raw", "source": "baseline", "expectation": "exact", "sourceMode": 420, "destination": "absent", "expected": "authority-problem" },
+    { "id": "changed-current-source-rejected", "layout": "raw", "source": "changed", "expectation": "exact", "sourceMode": 420, "destination": "absent", "expected": "authority-problem" },
+    { "id": "changed-current-source-mode-rejected", "layout": "raw", "source": "current", "expectation": "exact", "sourceMode": 384, "destination": "absent", "expected": "authority-problem" },
+    { "id": "symlink-current-source-rejected", "layout": "raw", "source": "symlink", "expectation": "exact", "sourceMode": 420, "destination": "absent", "expected": "authority-problem" },
+    { "id": "missing-expectation-rejected", "layout": "raw", "source": "current", "expectation": "missing", "sourceMode": 420, "destination": "absent", "expected": "authority-problem" },
+    { "id": "stale-expectation-rejected", "layout": "raw", "source": "current", "expectation": "changed", "sourceMode": 420, "destination": "absent", "expected": "authority-problem" },
+    { "id": "changed-expectation-mode-rejected", "layout": "raw", "source": "current", "expectation": "mode", "sourceMode": 420, "destination": "absent", "expected": "authority-problem" },
+    { "id": "symlink-expectation-rejected", "layout": "raw", "source": "current", "expectation": "symlink", "sourceMode": 420, "destination": "absent", "expected": "authority-problem" },
+    { "id": "symlink-expectation-parent-rejected", "layout": "raw", "source": "current", "expectation": "parent-symlink", "sourceMode": 420, "destination": "absent", "expected": "authority-problem" },
+    { "id": "source-destination-coexistence-rejected", "layout": "raw", "source": "current", "expectation": "exact", "sourceMode": 420, "destination": "exact", "expected": "authority-problem" },
+    { "id": "folded-destination-occupancy-rejected", "layout": "raw", "source": "current", "expectation": "exact", "sourceMode": 420, "destination": "folded", "expected": "authority-problem" },
+    { "id": "canonical-without-retired-expectation", "layout": "canonical", "source": "current", "expectation": "missing", "sourceMode": 420, "destination": "absent", "expected": "empty-plan" },
+    { "id": "canonical-with-edited-body", "layout": "canonical", "source": "changed", "expectation": "missing", "sourceMode": 420, "destination": "absent", "expected": "empty-plan" },
+    { "id": "canonical-with-post-edit-expectation", "layout": "canonical", "source": "current", "expectation": "post-edit", "sourceMode": 420, "destination": "absent", "expected": "empty-plan" },
+    { "id": "canonical-does-not-demand-symlink-expectation", "layout": "canonical", "source": "current", "expectation": "symlink", "sourceMode": 420, "destination": "absent", "expected": "empty-plan" },
+    { "id": "unregistered-without-expectation", "layout": "unregistered", "source": "current", "expectation": "missing", "sourceMode": 420, "destination": "absent", "expected": "empty-plan" },
+    { "id": "unregistered-does-not-demand-stale-expectation", "layout": "unregistered", "source": "current", "expectation": "changed", "sourceMode": 420, "destination": "absent", "expected": "empty-plan" },
+    { "id": "missing-catalog-raw-source-rejected", "layout": "raw", "source": "current", "expectation": "missing", "sourceMode": 420, "destination": "absent", "catalog": "missing", "expected": "authority-problem" },
+    { "id": "missing-catalog-canonical-scope", "layout": "canonical", "source": "current", "expectation": "missing", "sourceMode": 420, "destination": "absent", "catalog": "missing", "expected": "empty-plan" },
+    { "id": "missing-catalog-unrelated-scope", "layout": "unregistered", "source": "current", "expectation": "symlink", "sourceMode": 420, "destination": "absent", "catalog": "missing", "expected": "empty-plan" }
+  ],
+  "driftCases": [
+    { "id": "schema-selected-tuple-changed-after-inventory", "target": "schema", "expected": "reject" },
+    { "id": "catalog-bytes-changed-after-inventory", "target": "catalog", "expected": "reject" },
+    { "id": "expectation-bytes-changed-after-inventory", "target": "expectation", "expected": "reject" },
+    { "id": "source-bytes-changed-after-inventory", "target": "source", "expected": "reject" },
+    { "id": "schema-format-snapshot-refreshed-after-inventory", "target": "schema-format", "expected": "fresh-schema" },
+    { "id": "inventory-source-tuple-forgery-rejected", "target": "inventory", "expected": "reject" }
+  ],
+  "frozenBindingCases": [
+    { "id": "exact-schema-raw-binding", "change": "none", "frozen": true },
+    { "id": "changed-schema-buffer", "change": "buffer", "frozen": false },
+    { "id": "mismatched-catalog-owner", "change": "owner", "frozen": false },
+    { "id": "mismatched-catalog-baseline", "change": "baseline", "frozen": false },
+    { "id": "unowned-sourcePath-property", "change": "unowned", "frozen": false }
+  ],
+  "schemaSnapshotCases": [
+    { "id": "one-captured-byte-buffer", "state": "exact", "accepted": true },
+    { "id": "missing-schema-snapshot", "state": "missing", "accepted": false },
+    { "id": "lossy-schema-snapshot", "state": "lossy", "accepted": false }
+  ],
+  "catalogCases": [
+    { "id": "exact-original-catalog", "state": "exact", "accepted": true },
+    { "id": "stale-catalog-bytes", "state": "changed", "accepted": false },
+    { "id": "changed-catalog-mode", "state": "mode", "accepted": false },
+    { "id": "symlink-catalog-file", "state": "symlink", "accepted": false },
+    { "id": "symlink-catalog-parent", "state": "parent-symlink", "accepted": false }
+  ]
+}

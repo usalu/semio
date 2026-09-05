@@ -1,8 +1,8 @@
 //! ✏️ Puzzle 5d play app — the `edit` mode: the 3D-first 60/40 split layout over the two window
 //! kinds, plus the engagement HUD builder both windows share (it only differs by which window id it
 //! binds its input/abort actions to). The Utility Options every window exposes for the shared
-//! brush/fill utilities live in `🎚️options/*`; genuinely per-window chrome lives under that window's
-//! own `🎚️options/`.
+//! brush/fill utilities live in `☑️options/*`; genuinely per-window chrome lives under that window's
+//! own `☑️options/`.
 
 use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;

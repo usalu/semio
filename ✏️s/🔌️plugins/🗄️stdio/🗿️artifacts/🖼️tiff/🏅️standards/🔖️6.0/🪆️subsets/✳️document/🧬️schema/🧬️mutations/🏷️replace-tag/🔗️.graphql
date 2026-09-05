@@ -1,3 +1,0 @@
-# 🧬️ replace-tag/ReplaceTag
-scalar ReplaceTagMutationValue
-input ReplaceTagMutation { ifdIndex: Int! tag: Int! kind: ReplaceTagMutationValue! values: ReplaceTagMutationValue! }

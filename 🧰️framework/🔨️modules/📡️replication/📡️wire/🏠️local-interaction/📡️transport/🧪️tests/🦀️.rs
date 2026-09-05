@@ -1,7 +1,7 @@
 //! 🧪️ Exact shared query wire vectors and strict malformed/authority preservation laws.
 use super::*;
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixtures/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap() }
 fn unhex(value: &str) -> Vec<u8> { value.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect() }
 fn authority() -> LocalInteractionQueryToken {
     LocalInteractionQueryToken { request_id: 13, query_generation: 41, identity: LocalInteractionIdentity { app_instance_id: 7, generation: 9_007_199_254_740_993, revision: [0x11; 32], document_revision: [0x22; 32], topology_revision: [0x33; 32] }, ordinal: 2 }

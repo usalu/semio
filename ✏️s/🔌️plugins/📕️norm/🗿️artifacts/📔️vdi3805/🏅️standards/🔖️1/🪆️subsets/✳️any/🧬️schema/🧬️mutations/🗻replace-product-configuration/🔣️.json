@@ -5,7 +5,7 @@
   "displayName": "Replace Product Configuration",
   "emoji": "🗻",
   "aggregateVariant": "ReplaceProductConfiguration",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

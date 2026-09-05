@@ -124,7 +124,7 @@ pub fn writer_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
         mutations: schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
-            graphql: include_str!("🧬️mutations/🔗️.graphql"),
+            graphql: include_str!("🧬️mutations/🕸️.graphql"),
             json_schema: include_str!("🧬️mutations/🔣️.json"),
             proto: include_str!("🧬️mutations/🛰️.proto"),
         },

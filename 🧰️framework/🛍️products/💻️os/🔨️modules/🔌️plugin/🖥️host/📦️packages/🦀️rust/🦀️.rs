@@ -22,7 +22,7 @@ pub use component::*;
 /// in that file). The test uses a narrow owned WIT source inspector and adds no external parser to
 /// the test graph.
 #[cfg(test)]
-#[path = "../../🧪️schema-parity/🦀️.rs"]
+#[path = "../../🪞️schema-parity/🦀️.rs"]
 mod schema_parity;
 
 /// 🎚️ Mounts the OS config schema and every direct semantic mutation leaf. `#[path = "."]` keeps

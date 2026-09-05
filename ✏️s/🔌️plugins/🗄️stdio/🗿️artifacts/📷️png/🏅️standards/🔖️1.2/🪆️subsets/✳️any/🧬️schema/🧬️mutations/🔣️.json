@@ -14,7 +14,7 @@
           "const": "change-header"
         },
         "payload": {
-          "$ref": "📐️change-header/🔣️.schema.json"
+          "$ref": "📐️change-header/🧬️.schema.json"
         }
       }
     },
@@ -30,7 +30,7 @@
           "const": "replace-palette"
         },
         "payload": {
-          "$ref": "🎨️replace-palette/🔣️.schema.json"
+          "$ref": "🎨️replace-palette/🧬️.schema.json"
         }
       }
     },
@@ -46,7 +46,7 @@
           "const": "change-transparency"
         },
         "payload": {
-          "$ref": "👁️change-transparency/🔣️.schema.json"
+          "$ref": "👁️change-transparency/🧬️.schema.json"
         }
       }
     },
@@ -62,7 +62,7 @@
           "const": "change-gamma"
         },
         "payload": {
-          "$ref": "🌗️change-gamma/🔣️.schema.json"
+          "$ref": "🌗️change-gamma/🧬️.schema.json"
         }
       }
     },
@@ -78,7 +78,7 @@
           "const": "change-chromaticities"
         },
         "payload": {
-          "$ref": "🌈️change-chromaticities/🔣️.schema.json"
+          "$ref": "🌈️change-chromaticities/🧬️.schema.json"
         }
       }
     },
@@ -94,7 +94,7 @@
           "const": "change-srgb-intent"
         },
         "payload": {
-          "$ref": "🖌️change-srgb-intent/🔣️.schema.json"
+          "$ref": "🖌️change-srgb-intent/🧬️.schema.json"
         }
       }
     },
@@ -110,7 +110,7 @@
           "const": "change-physical-dims"
         },
         "payload": {
-          "$ref": "📏️change-physical-dims/🔣️.schema.json"
+          "$ref": "📏️change-physical-dims/🧬️.schema.json"
         }
       }
     },
@@ -126,7 +126,7 @@
           "const": "change-timestamp"
         },
         "payload": {
-          "$ref": "🕰️change-timestamp/🔣️.schema.json"
+          "$ref": "🕰️change-timestamp/🧬️.schema.json"
         }
       }
     },
@@ -142,7 +142,7 @@
           "const": "change-background"
         },
         "payload": {
-          "$ref": "🖼️change-background/🔣️.schema.json"
+          "$ref": "🖼️change-background/🧬️.schema.json"
         }
       }
     },
@@ -158,7 +158,7 @@
           "const": "insert-text-chunk"
         },
         "payload": {
-          "$ref": "📥️insert-text-chunk/🔣️.schema.json"
+          "$ref": "📥️insert-text-chunk/🧬️.schema.json"
         }
       }
     },
@@ -174,7 +174,7 @@
           "const": "remove-text-chunk"
         },
         "payload": {
-          "$ref": "🗑️remove-text-chunk/🔣️.schema.json"
+          "$ref": "🗑️remove-text-chunk/🧬️.schema.json"
         }
       }
     },
@@ -190,7 +190,7 @@
           "const": "replace-text-chunk"
         },
         "payload": {
-          "$ref": "✏️replace-text-chunk/🔣️.schema.json"
+          "$ref": "✏️replace-text-chunk/🧬️.schema.json"
         }
       }
     },
@@ -206,7 +206,7 @@
           "const": "replace-pixels"
         },
         "payload": {
-          "$ref": "🟪️replace-pixels/🔣️.schema.json"
+          "$ref": "🔲️replace-pixels/🧬️.schema.json"
         }
       }
     },
@@ -222,7 +222,7 @@
           "const": "insert-unknown-chunk"
         },
         "payload": {
-          "$ref": "📦️insert-unknown-chunk/🔣️.schema.json"
+          "$ref": "📦️insert-unknown-chunk/🧬️.schema.json"
         }
       }
     },
@@ -238,7 +238,7 @@
           "const": "remove-unknown-chunk"
         },
         "payload": {
-          "$ref": "📤️remove-unknown-chunk/🔣️.schema.json"
+          "$ref": "📤️remove-unknown-chunk/🧬️.schema.json"
         }
       }
     }

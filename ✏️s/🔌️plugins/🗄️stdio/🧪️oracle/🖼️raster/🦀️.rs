@@ -111,7 +111,7 @@ fn rgba_from(buffer: &[u8], color: png::ColorType, palette: Option<&[u8]>, trans
 /// 🧵️ GIF §24.e's four-pass row order for an image `height` rows tall — every 8th row from 0, then
 /// every 8th from 4, then every 4th from 2, then every 2nd from 1.
 ///
-/// Shared by BOTH GIF standards' subset oracles (`🗿️artifacts/🎞️gif/🏅️standards/🔖️87a` and `🔖️89a`):
+/// Shared by BOTH GIF standards' subset oracles (`🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a` and `9️⃣89a`):
 /// interlacing is defined identically in GIF87a §20 and GIF89a §20, so this is one grammar rule,
 /// not two, and copying it into both subsets would be the copy this platform exists to prevent.
 pub fn gif_interlace_row_order(height: usize) -> Vec<usize> {

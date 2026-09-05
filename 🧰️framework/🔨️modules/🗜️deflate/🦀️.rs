@@ -690,7 +690,7 @@ mod tests {
 
     #[test]
     fn accepts_a_short_final_huffman_tail() {
-        let fixture = include_str!("🧪️tests/🔣️deflate-tail-cases.json");
+        let fixture = include_str!("🧪️tests/🏁️deflate-tail-cases.json");
         let file: TailCorpusFile = serde_json::from_str(fixture).expect("valid DEFLATE tail fixture");
         assert_eq!(file.cases.len(), 1, "expected one fixed-EOB tail vector");
         for case in file.cases {
@@ -771,7 +771,7 @@ mod tests {
 
     #[test]
     fn ours_inflates_miniz_oxide_output_and_vice_versa() {
-        let raw = include_str!("🧪️tests/🔣️deflate-corpus.json");
+        let raw = include_str!("🧪️tests/🧪️deflate-corpus.json");
         let file: CorpusFile = serde_json::from_str(raw).expect("valid deflate corpus fixture");
         assert!(file.cases.len() >= 8, "expected a real length sweep");
         for case in &file.cases {

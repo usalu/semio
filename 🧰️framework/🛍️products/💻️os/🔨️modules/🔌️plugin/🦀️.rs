@@ -2,8 +2,12 @@
 
 //#region 📄️DeclarationFixtureMutationMount
 #[cfg(test)]
-#[path = "🧪️tests/📄️declaration-channels/🦀️.rs"]
+#[path = "🧪️tests/🛰️declaration-channels/🦀️.rs"]
 mod declaration_fixture_mutations;
+
+#[cfg(test)]
+#[path = "🧪️tests/🌲️fixture-projection/🦀️.rs"]
+mod fixture_projection_retirement_tests;
 //#endregion 📄️DeclarationFixtureMutationMount
 
 /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1 + §4): a wasm32-wasip2
@@ -223,19 +227,27 @@ pub mod describe;
 #[path = "🧵️retained-command/🦀️.rs"]
 pub mod retained_command;
 
+#[path = "👥️presence/♻️retirement/🦀️.rs"]
+mod presence_retirement;
+pub use presence_retirement::{NoPresenceRetirementFactory, PresenceStoreOwnedDisposer};
+
+#[path = "🫧️transient/♻️retirement/🦀️.rs"]
+mod transient_retirement;
+pub use transient_retirement::NoTransientStoreDisposer;
+
 #[path = "🕹️interaction/🦀️.rs"]
 pub(crate) mod local_interaction;
 
 #[cfg(test)]
-#[path = "🧪️tests/🧬️publication-fixtures/🦀️.rs"]
+#[path = "🧪️tests/📢️publication-fixtures/🦀️.rs"]
 pub(crate) mod publication_fixture;
 
 #[cfg(test)]
-#[path = "🧪️tests/🧬️test-app-mutations/🦀️.rs"]
+#[path = "🧪️tests/🖥️test-app-mutations/🦀️.rs"]
 pub(crate) mod test_app_mutation_fixture;
 
 #[cfg(test)]
-#[path = "🧪️tests/🧬️contributed-mutation-wire/🦀️.rs"]
+#[path = "🧪️tests/📡️contributed-mutation-wire/🦀️.rs"]
 pub(crate) mod contributed_mutation_wire;
 
 #[path = "."]
@@ -337,7 +349,7 @@ pub mod app {
 
     /// 🎬️ Encodes a typed product scene behind the semantic surface contract.
     pub fn scene_surface<T: semio_framework_ui_scene::SceneDoc>(id: &str, kind: SurfaceKind, scene: &T) -> UiAssemblyResult<BuiltNode> {
-        let props = semio_framework_ui_scene::encode(kind, scene).map_err(|error| PluginAssemblyError::new("ui.fixed-capacity", format!("fixed UI admission failed at scene-surface.encode: {error}")))?;
+        let props = semio_framework_ui_scene::encode(kind, scene).map_err(|error| ui_assembly_error_because("scene-surface.encode", error))?;
         ui::surface(props).try_id(id).map_err(|_| ui_assembly_error("scene-surface.id"))?.try_build().map_err(|_| ui_assembly_error("scene-surface.build"))
     }
 
@@ -359,6 +371,14 @@ pub mod app {
 
     fn ui_assembly_error(stage: &'static str) -> PluginAssemblyError {
         PluginAssemblyError::new("ui.fixed-capacity", format!("fixed UI admission failed at {stage}"))
+    }
+
+    /// 🩺️ [[ui_assembly_error]] with the refusing cause preserved. `SurfaceEncodeError` already
+    /// distinguishes a pack failure from a payload-capacity overflow from a schema overflow, and
+    /// discarding it leaves every fixed-capacity refusal reporting the same stage name — indistinguishable
+    /// at runtime and unactionable in a browser console.
+    fn ui_assembly_error_because(stage: &'static str, cause: impl std::fmt::Display) -> PluginAssemblyError {
+        PluginAssemblyError::new("ui.fixed-capacity", format!("fixed UI admission failed at {stage}: {cause}"))
     }
 
     fn ui_label<T: TryInto<Label>>(value: T, stage: &'static str) -> UiAssemblyResult<Label> {
@@ -2094,6 +2114,15 @@ pub mod app {
 
     impl std::error::Error for PluginAssemblyError {}
 
+    /// 🪪️ Admits one canonical artifact root owned by this exact plugin identity.
+    pub(crate) fn preflight_artifact_identity(plugin_id: &str, kind: &str) -> Result<(), PluginAssemblyError> {
+        let canonical = ArtifactKindId::parse(kind).map_err(|_| PluginAssemblyError::new("plugin-assembly.artifact-kind", "artifact identity must use canonical s.<plugin>.<artifact> grammar"))?;
+        if canonical.plugin() != plugin_id {
+            return Err(PluginAssemblyError::new("plugin-assembly.artifact-owner", "artifact identity is not owned by the declaring plugin"));
+        }
+        Ok(())
+    }
+
     /// 🪪️ Canonical, dot-delimited identity with explicit hierarchy.
     #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct ArtifactIdentity {
@@ -2350,6 +2379,11 @@ pub mod app {
             Self("dialect".into())
         }
 
+        /// 🧾️ Exact dialect validation authority, distinct from dialect composition authority.
+        pub fn validated_dialect() -> Self {
+            Self("validated-dialect".into())
+        }
+
         /// 🗜️ Codec identity namespace.
         pub fn codec() -> Self {
             Self("codec".into())
@@ -2389,6 +2423,14 @@ pub mod app {
     }
 
     impl ArtifactIdentityClaim {
+        /// 🗜️ Binds an exact extension to one codec schema using unambiguous UTF-8 length framing.
+        pub fn codec_extension(schema: &str, extension: &str) -> Result<Self, ArtifactDefinitionError> {
+            if schema.trim().is_empty() || extension.trim().is_empty() {
+                return Err(ArtifactDefinitionError::new("artifact-definition.claim", "codec extension authority requires a schema and extension"));
+            }
+            Self::new(ArtifactIdentityNamespace::parse("codec-extension")?, format!("{}:{schema}:{extension}", schema.len()))
+        }
+
         /// 🏗️ Creates a non-empty claim; caller-selectable namespaces keep this contract open.
         pub fn new(namespace: ArtifactIdentityNamespace, value: impl Into<String>) -> Result<Self, ArtifactDefinitionError> {
             let value = value.into();
@@ -3206,7 +3248,7 @@ pub mod app {
                     &self.definition,
                     &mut self.definition_error,
                     ArtifactCapabilityKind::subset_validator(),
-                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), ArtifactDialect::from(entry.dialect).to_coordinate()).map(|claim| vec![claim]),
+                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::validated_dialect(), ArtifactDialect::from(entry.dialect).to_coordinate()).map(|claim| vec![claim]),
                 );
                 self.subset_validators.push(entry);
             }
@@ -3237,7 +3279,7 @@ pub mod app {
             let codec = DocumentCodecSpec::of::<A>().await;
             let namespace_codec = ArtifactIdentityNamespace::codec();
             let claims = match ArtifactIdentityClaim::new(namespace_codec, codec.schema.clone()) {
-                Ok(schema) => match ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension.clone()) {
+                Ok(schema) => match ArtifactIdentityClaim::codec_extension(&codec.schema, codec.extension) {
                     Ok(extension) => Ok(vec![schema, extension]),
                     Err(error) => Err(error),
                 },
@@ -3271,7 +3313,7 @@ pub mod app {
             let codec = DocumentCodecSpec::bare::<Snapshot, Mutation>(schema);
             let namespace_codec = ArtifactIdentityNamespace::codec();
             let claims = match ArtifactIdentityClaim::new(namespace_codec, codec.schema.clone()) {
-                Ok(schema) => match ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension.clone()) {
+                Ok(schema) => match ArtifactIdentityClaim::codec_extension(&codec.schema, codec.extension) {
                     Ok(extension) => Ok(vec![schema, extension]),
                     Err(error) => Err(error),
                 },
@@ -3293,8 +3335,8 @@ pub mod app {
         /// with the `#[derive(ArtifactSchema)]`-emitted impl the composition runtime actually reads,
         /// so there is deliberately no other setter).
         pub fn composition<Snapshot: ::semio_framework_schema::ArtifactCompositionFields>(mut self) -> Self {
-            self.child_slots = resolve_ready(Snapshot::child_slots());
-            self.link_slots = resolve_ready(Snapshot::link_slots());
+            self.child_slots = Snapshot::child_slots();
+            self.link_slots = Snapshot::link_slots();
             self
         }
 
@@ -3434,7 +3476,7 @@ pub mod app {
             rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::representation(), claims));
         }
         for entry in subset_validators {
-            rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::subset_validator(), vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), ArtifactDialect::from(entry.dialect).to_coordinate())?]));
+            rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::subset_validator(), vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::validated_dialect(), ArtifactDialect::from(entry.dialect).to_coordinate())?]));
         }
         for spec in languages {
             rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::grammar(), vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::grammar(), spec.id)?]));
@@ -3442,7 +3484,7 @@ pub mod app {
         for codec in document_codecs {
             rows.push(ArtifactRuntimeCapabilityRequirement::new(
                 ArtifactCapabilityKind::codec(),
-                vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), codec.schema.clone())?, ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension)?],
+                vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), codec.schema.clone())?, ArtifactIdentityClaim::codec_extension(&codec.schema, codec.extension)?],
             ));
         }
         Ok(rows)
@@ -3472,12 +3514,8 @@ pub mod app {
 
         /// 🛡️ Validates this declaration into one plugin-owned registry without side effects.
         pub(crate) fn preflight(&self, plugin_id: &str, definitions: &mut ArtifactDefinitionRegistry) -> Result<(), PluginAssemblyError> {
+            preflight_artifact_identity(plugin_id, &self.kind)?;
             self.register_definitions(definitions).map_err(PluginAssemblyError::definition)?;
-            if let Ok(canonical) = ArtifactKindId::parse(&self.kind) {
-                if canonical.plugin() != plugin_id {
-                    return Err(PluginAssemblyError::new("plugin-assembly.artifact-owner", format!("plugin {plugin_id:?} does not own artifact {:?}", self.kind)));
-                }
-            }
             for entry in &self.composers {
                 if entry.writes.artifact_kind != self.kind && !entry.reads.iter().any(|dialect| dialect.artifact_kind == self.kind) {
                     return Err(PluginAssemblyError::new("plugin-assembly.composer-owner", format!("composer for {:?} neither reads nor writes that artifact", self.kind)));
@@ -6659,6 +6697,45 @@ pub mod app {
         use super::{register_framework_reserved_factories, ActionMeta, App, AppActionRegistry, ArtifactApp, ArtifactToolFactoryRegistry, PluginApp, VcsArtifactApp};
         use store::{Backbone, BackboneMessage, MemoryBackbone};
 
+        pub const FIXTURE_TREE_MAX_DEPTH: usize = 64;
+        pub const FIXTURE_TREE_MAX_NODES: usize = semio_framework_ui_contract::UI_BUILT_CHILD_RETIRE_SLOTS;
+        pub const FIXTURE_TREE_RETIRE_STEPS: usize = FIXTURE_TREE_MAX_NODES * (semio_framework_ui_contract::UI_BUILT_CHILDREN_MAX + 1);
+
+        fn project_fixture_node(node: &super::BuiltNode, remaining: &mut usize, depth: usize) -> Result<serde_json::Value, &'static str> {
+            if depth >= FIXTURE_TREE_MAX_DEPTH || *remaining == 0 { return Err("tree-limit"); }
+            *remaining -= 1;
+            if !node.rejected_children.is_empty() { return Err("rejected-children"); }
+            let component = serde_json::to_value(&node.component).map_err(|_| "component-json")?;
+            if component["type"].as_str().is_none() { return Err("component-type"); }
+            let mut children = Vec::with_capacity(node.children.len());
+            for (index, child) in node.children.iter().enumerate() {
+                if node.children.iter().take(index).any(|previous| previous.key == child.key) { return Err("duplicate-key"); }
+                children.push(project_fixture_node(child, remaining, depth + 1)?);
+            }
+            Ok(serde_json::json!({ "key": node.key.as_str(), "component": component, "children": children }))
+        }
+
+        /// 🖼️ Observes fixture keys/components/children and retires that exact tree before any outcome; not a wire codec.
+        pub fn project_and_retire_fixture_tree(tree: super::ComponentTree) -> Result<String, &'static str> {
+            observe_and_retire_fixture_tree(tree, |root| {
+                let mut remaining = FIXTURE_TREE_MAX_NODES;
+                project_fixture_node(root, &mut remaining, 0).and_then(|value| serde_json::to_string(&value).map_err(|_| "projection-json"))
+            })
+        }
+
+        pub(crate) fn observe_and_retire_fixture_tree<R>(tree: super::ComponentTree, project: impl FnOnce(&super::BuiltNode) -> R) -> R {
+            let projected = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| project(&tree.root)));
+            let mut retirement = semio_framework_ui_contract::BuiltTreeRetirement::new(tree.root);
+            while !retirement.terminal_is_empty() {
+                let step = retirement.close_step(1, 4096).expect("fixture's exact built-tree retirement remains valid");
+                if !step.progressed { std::thread::yield_now(); }
+            }
+            match projected {
+                Ok(result) => result,
+                Err(panic) => std::panic::resume_unwind(panic),
+            }
+        }
+
         /// 🧪️ Mounts the production shared reserved-action factories on an isolated harness bus.
         pub fn register_framework_reserved_action_factories<A: ArtifactApp>(bus: &semio_framework::ActionBus, controller_id: &str) -> Result<(), super::Fault> {
             let mut registry = ArtifactToolFactoryRegistry::<A>::new(bus, controller_id);
@@ -6712,6 +6789,7 @@ pub mod app {
                 if app.close_terminal_is_empty() { return; }
                 match app.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("registered fixture close") {
                     super::PluginCloseStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES),
+                    super::PluginCloseStep::AwaitingInput { reason } => panic!("registered fixture close awaited input: {reason}"),
                     super::PluginCloseStep::Blocked { reason } => panic!("registered fixture close blocked: {reason}"),
                     super::PluginCloseStep::Complete => break,
                 }
@@ -7023,7 +7101,7 @@ pub mod app {
             }
             let expected_surface_ids: Vec<String> = declaration.standards.iter().flat_map(|standard| standard.subsets.iter()).flat_map(|subset| [subset.editor.definition.id.clone(), subset.viewer.definition.id.clone()]).collect();
 
-            let plugin = super::Plugin::builder(plugin_id).label(plugin_id).version("0.0.1").declare_artifact(declaration).try_build().expect("a well-formed declaration tree must register");
+            let plugin = super::Plugin::builder(plugin_id).label(plugin_id).version("0.0.1").package_id(format!("semio:{plugin_id}")).declare_artifact(declaration).try_build().expect("a well-formed declaration tree must register");
 
             for id in &expected_schema_ids {
                 assert!(::semio_framework_schema::artifact_schema_descriptor_registered(id), "schema descriptor {id:?} must be registered");
@@ -7052,7 +7130,7 @@ pub mod app {
         pub async fn assert_declaration_registration_is_atomic<PA: super::PluginApp>(plugin_id: &str, invalid: declarations::ArtifactDeclaration<PA>) {
             let schema_count_before = ::semio_framework_schema::with_artifact_schema_registry(|registry| registry.len());
             let io_count_before = semio_framework::io::io_mechanism::io_entries().len();
-            let result = super::Plugin::builder(plugin_id).label(plugin_id).version("0.0.1").declare_artifact(invalid).try_build();
+            let result = super::Plugin::builder(plugin_id).label(plugin_id).version("0.0.1").package_id(format!("semio:{plugin_id}")).declare_artifact(invalid).try_build();
             assert!(result.is_err(), "a declaration that fails preflight must not build a plugin");
             assert_eq!(::semio_framework_schema::with_artifact_schema_registry(|registry| registry.len()), schema_count_before, "schema registry must be unchanged after a rejected declaration");
             assert_eq!(semio_framework::io::io_mechanism::io_entries().len(), io_count_before, "io registry must be unchanged after a rejected declaration");
@@ -8470,12 +8548,15 @@ pub mod app {
             Err(plugin_sdk_fault("fixed immutable child-content root is saturated"))
         }
 
-        fn insert_entry(&self, entry: ChildContentEntry) -> Result<Self, Fault> {
+        fn admit_member(&self, slot: &str, child_id: &str) -> Result<usize, Fault> {
+            match self.root.as_deref() {
+                Some(root) => Self::locate(root, slot, child_id).map(|location| match location { Ok(index) | Err(index) => index }),
+                None => Self::hash(slot, child_id),
+            }
+        }
+
+        fn insert_entry_admitted(&self, index: usize, entry: ChildContentEntry) -> Self {
             let root = self.root.as_deref().cloned().unwrap_or_default();
-            let location = Self::locate(&root, &entry.slot, &entry.child_id)?;
-            let index = match location {
-                Ok(index) | Err(index) => index,
-            };
             let page_index = index / CHILD_CONTENT_PAGE_SLOTS;
             let entry_index = index % CHILD_CONTENT_PAGE_SLOTS;
             let mut next = root;
@@ -8484,7 +8565,7 @@ pub mod app {
             page.entries[entry_index] = Some(std::sync::Arc::new(entry));
             next.pages[page_index] = Some(std::sync::Arc::new(page));
             next.len += usize::from(added);
-            Ok(Self { root: Some(std::sync::Arc::new(next)) })
+            Self { root: Some(std::sync::Arc::new(next)) }
         }
 
         fn find(&self, slot: &str, child_id: &str) -> Result<Option<&ChildContentEntry>, Fault> {
@@ -8586,12 +8667,14 @@ pub mod app {
         }
 
         async fn with_member<M: SpaceMember>(&self, slot: &str, child_id: &str, dialect: &ArtifactDialect, member: &M) -> Result<Self, Fault> {
-            if let Some(root) = self.root.as_deref() {
-                let _ = Self::locate(root, slot, child_id)?;
-            } else {
-                let _ = Self::hash(slot, child_id)?;
-            }
-            self.insert_entry(ChildContentEntry { slot: slot.to_string(), child_id: child_id.to_string(), dialect: dialect.clone(), revision: member.content_revision().await, snapshot: member.snapshot_read_erased().await.map_err(plugin_sdk_fault)? })
+            let index = self.admit_member(slot, child_id)?;
+            self.capture_member_admitted(index, slot, child_id, dialect, member).await
+        }
+
+        async fn capture_member_admitted<M: SpaceMember>(&self, index: usize, slot: &str, child_id: &str, dialect: &ArtifactDialect, member: &M) -> Result<Self, Fault> {
+            let revision = member.content_revision().await;
+            let snapshot = member.snapshot_read_erased().await.map_err(plugin_sdk_fault)?;
+            Ok(self.insert_entry_admitted(index, ChildContentEntry { slot: slot.to_string(), child_id: child_id.to_string(), dialect: dialect.clone(), revision, snapshot }))
         }
 
         /// 🧬️ Fixed-size, restart-stable identity paired with the captured child snapshot.
@@ -8773,8 +8856,29 @@ pub mod app {
         }
     }
 
+    #[cfg(test)]
+    pub(super) struct ChildAdmissionTestState {
+        pub(super) children_empty: bool,
+        pub(super) generation: u64,
+        pub(super) abort_generation: u64,
+        pub(super) abort_empty: bool,
+        pub(super) requested_abort_retained: bool,
+        pub(super) content_empty: bool,
+        pub(super) roots_retiring_empty: bool,
+    }
+
     struct ChildMemberRetirement<M> {
         entry: std::mem::ManuallyDrop<Option<ChildMemberEntry<M>>>,
+    }
+
+    struct ChildStoreAdmission {
+        key: (String, String),
+        expected: ArtifactRef,
+        owner: store::OwnerRef,
+        member: ChildMemberAdmission,
+        graph: store::OwnsAdmission,
+        root_index: usize,
+        generation: u64,
     }
 
     impl<M: SpaceMember> ChildMemberRetirement<M> {
@@ -9885,9 +9989,9 @@ pub mod app {
         OnlyMutations,
     }
 
-    /// @emoji ⏪️ A stored, replayable inverse for a `View`/`Shell`-kind command — the memory-only
+    /// @emoji ⏪️ A stored, replayable inverse for a `View`/`🐚️Shell`-kind command — the memory-only
     /// counterpart to a VCS edit's `Mutation::inverse`. `action_id` is a plugin action id (`View` rows —
-    /// replayed locally via `dispatch_action`) or a shell command id (`Shell` rows — bubbled out as
+    /// replayed locally via `dispatch_action`) or a shell command id (`🐚️Shell` rows — bubbled out as
     /// `Effect::ReplayShellCommand` since the plugin has no access to shell-owned state). Never
     /// persisted: it lives only on the in-memory `CommandLogEntry`/`CommandView`.
     #[derive(Clone, Debug, PartialEq)]
@@ -9926,11 +10030,11 @@ pub mod app {
         /// folded — a group dispatch always issues a plain `Apply`, see `Emit::child_emits`'s own doc
         /// comment), so it needs no "latest" reduction on the `CommandView` side.
         pub child_edit_ids: Vec<String>,
-        /// @emoji 🔢️ How many consecutive identical `View`/`Shell` dispatches folded into this one row —
+        /// @emoji 🔢️ How many consecutive identical `View`/`🐚️Shell` dispatches folded into this one row —
         /// see `VcsArtifactApp::record_command`. Always `1` for `Mutation`/`History`/`Clipboard` entries
         /// and for anything carrying an `edit_id`, which never fold.
         pub count: u32,
-        /// @emoji ⏪️ A real inverse for a `Shell`-kind row with neither `edit_id` nor `config_edit_ids`
+        /// @emoji ⏪️ A real inverse for a `🐚️Shell`-kind row with neither `edit_id` nor `config_edit_ids`
         /// (`noteShellCommand`-authored — shell-owned state this plugin cannot touch itself) — see
         /// `InverseAction`. `None` means this row has no working inverse (not just unauthored/foreign).
         pub inverse: Option<InverseAction>,
@@ -10317,7 +10421,7 @@ pub mod app {
     }
 
     impl ChildEmit {
-        fn close_one(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
+        pub(crate) fn close_one(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
             if maximum_items == 0 {
                 return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
             }
@@ -10390,6 +10494,18 @@ pub mod app {
     }
 
     impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, DraftMutation> {
+        /// 🧹️ Retires at most one bounded child-emission step while the concrete app keeps ownership of its typed lanes.
+        pub fn close_child_one(&mut self, maximum_items: usize, maximum_bytes: usize) -> Option<PluginCloseStep> {
+            let child = self.child_emits.last_mut()?;
+            let step = child.close_one(maximum_items, maximum_bytes);
+            if step == PluginCloseStep::Complete {
+                self.child_emits.pop();
+                Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+            } else {
+                Some(step)
+            }
+        }
+
         /// @emoji ✏️ A document-operation emission carrying `artifact_mutations` and nothing else.
         pub fn mutations(artifact_mutations: Vec<Mutation>) -> Self {
             Self { artifact_mutations, ..Default::default() }
@@ -10949,7 +11065,7 @@ pub mod app {
     /// # 🔖️UtilityPreviewContract
     /// The formalized actions-vs-utilities contract:
     /// - **Actions** are non-interactive: they carry optional declared `ActionArgDef`s, stage in the
-    ///   renderer, and execute once. `Mutation`-kind actions emit operations; `View`/`Shell`-kind actions must
+    ///   renderer, and execute once. `Mutation`-kind actions emit operations; `View`/`🐚️Shell`-kind actions must
     ///   emit **zero** operations ({@link VcsArtifactApp} enforces this — a View/Shell action returning operations is a
     ///   hard error).
     /// - **Utilities** are interactive live-preview pointer modes. Exactly one utility is active per window kind;
@@ -10965,6 +11081,12 @@ pub mod app {
     /// - The pointer vocabulary (`canvasPointerDown/Move/Up`, `worldPointerDown/Move/Up`,
     ///   `paintStrokeBegin/End`) are `View`-kind internal action ids driving the above.
     pub trait ArtifactApp: Default + Send + 'static {
+        /// 🪪️ Exact author-owned coordinate stamped into every document envelope.
+        const DIALECT: Dialect;
+        /// 🧩️ Projects actual loaded child references; an undeclared owner grants no restore authority.
+        fn child_restore_projection(_snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+            Err(plugin_sdk_fault("app did not declare a loaded-parent child projection"))
+        }
         /// @emoji 🪪 Stable app id — prefer this over `app_id(&self)` on the path to receiverless ZSTs.
         /// For a hand-written direct `ArtifactApp` impl this IS the real canonical id. `EditorApp<E>`/
         /// `ViewerApp<V>` cannot follow suit — `surface_app_id` is only knowable at runtime from
@@ -11215,7 +11337,7 @@ pub mod app {
             engines: &EngineHandles,
         ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault>;
         /// @emoji 🏷️ `command`'s action/command id string — used for command-log labeling and
-        /// `AppActionRegistry` kind-discipline lookup (`View`/`Shell`-kind must not emit
+        /// `AppActionRegistry` kind-discipline lookup (`View`/`🐚️Shell`-kind must not emit
         /// `artifact_mutations`; `VcsArtifactApp::dispatch_typed_command_inner` enforces this when the
         /// registry has a matching declaration). Default: `"typed-command"` for every command (correct but
         /// generic — an app that wants per-command labels/kind-discipline overrides this to match the id
@@ -11575,6 +11697,7 @@ pub mod app {
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum PluginCloseStep {
         Pending { released_items: usize, released_bytes: usize },
+        AwaitingInput { reason: &'static str },
         Blocked { reason: &'static str },
         Complete,
     }
@@ -11612,6 +11735,9 @@ pub mod app {
         async fn advance_typed_operation_publication(&mut self) -> Result<(), Fault>;
         /// 🔁️ Keeps admitted work live through worker preparation, publication, ACK, and retirement.
         fn has_pending_typed_operations(&self) -> bool;
+        /// ▶️ Distinguishes retained operation ownership from work that can advance without
+        /// another host input. A presented result page remains pending but is not runnable until ACK.
+        fn has_runnable_typed_operations(&self) -> bool;
         /// 📖️ Captures exact current local roots into the app's single ACK-owned query slot.
         fn begin_local_interaction_query(&mut self, request_id: u64, _query_generation: u64) -> Option<protocol::LocalInteractionQueryReply> {
             Some(protocol::LocalInteractionQueryReply::Rejected { request_id, code: protocol::LocalInteractionQueryRejection::Closed })
@@ -12482,7 +12608,7 @@ pub mod app {
         G: ArtifactOwnedToolJobFactory<Owner = A>,
         W: ArtifactApp,
     {
-        let fixture: Value = serde_json::from_str(include_str!("🧪️tool-factory-proof.json")).expect("language-neutral factory join fixture");
+        let fixture: Value = serde_json::from_str(include_str!("🔬️tool-factory-proof.json")).expect("language-neutral factory join fixture");
         let bus = semio_framework::ActionBus::new();
         let empty_bus = semio_framework::ActionBus::new();
         let contract = semio_framework::ToolJobFactory::execution_contract(&factory);
@@ -13194,6 +13320,18 @@ pub mod app {
         }
     }
 
+    pub struct ArtifactToolCompletionRejection<A: ArtifactApp> {
+        pub emit: Result<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, Fault>,
+        pub ephemeral: EphemeralEmit<A>,
+        pub fault: Fault,
+    }
+
+    impl<A: ArtifactApp> std::fmt::Debug for ArtifactToolCompletionRejection<A> {
+        fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            formatter.debug_struct("ArtifactToolCompletionRejection").field("fault", &self.fault).finish_non_exhaustive()
+        }
+    }
+
     impl<A: ArtifactApp> ArtifactToolCompletion<A> {
         pub(crate) fn new() -> Self {
             Self { inner: std::sync::Arc::new(std::sync::Mutex::new(None)) }
@@ -13203,13 +13341,36 @@ pub mod app {
             std::sync::Arc::strong_count(&self.inner) > 1
         }
 
-        pub fn complete(&self, emit: Result<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, Fault>, ephemeral: EphemeralEmit<A>) -> Result<(), Fault> {
-            let mut value = self.inner.try_lock().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-completion-busy"), "media completion authority is busy or poisoned"))?;
+        pub fn complete(
+            &self,
+            emit: Result<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, Fault>,
+            ephemeral: EphemeralEmit<A>,
+        ) -> Result<(), ArtifactToolCompletionRejection<A>> {
+            let mut value = match self.inner.try_lock() {
+                Ok(value) => value,
+                Err(_) => {
+                    return Err(ArtifactToolCompletionRejection {
+                        emit,
+                        ephemeral,
+                        fault: Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-completion-busy"), "media completion authority is busy or poisoned"),
+                    });
+                }
+            };
             if value.is_some() {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.duplicate-output"), "app-owned tool job attempted to complete more than once"));
+                return Err(ArtifactToolCompletionRejection {
+                    emit,
+                    ephemeral,
+                    fault: Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.duplicate-output"), "app-owned tool job attempted to complete more than once"),
+                });
             }
             *value = Some(ArtifactToolCompletionValue::Emit(emit.map_err(ArtifactBoundedToolFault::from_fault), ephemeral));
             Ok(())
+        }
+
+        #[cfg(test)]
+        pub(crate) fn with_busy_test_lock<R>(&self, test: impl FnOnce() -> R) -> R {
+            let _guard = self.inner.lock().expect("completion test lock");
+            test()
         }
 
         pub fn complete_download(&self, download: Result<ArtifactDownloadOutput, Fault>, ephemeral: EphemeralEmit<A>) -> Result<(), Fault> {
@@ -13566,7 +13727,7 @@ pub mod app {
             };
             match authority.close_step(maximum_items, maximum_bytes) {
                 Ok(PluginCloseStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                Ok(PluginCloseStep::Blocked { .. }) | Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+                Ok(PluginCloseStep::AwaitingInput { .. } | PluginCloseStep::Blocked { .. }) | Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
                 Ok(PluginCloseStep::Complete) if authority.terminal_is_empty() => {
                     if maximum_items == 0 {
                         return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
@@ -14086,7 +14247,7 @@ pub mod app {
         fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
             match ArtifactReservedToolJob::close_step(self, maximum_items, maximum_bytes) {
                 Ok(PluginCloseStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                Ok(PluginCloseStep::Blocked { .. }) | Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+                Ok(PluginCloseStep::AwaitingInput { .. } | PluginCloseStep::Blocked { .. }) | Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
                 Ok(PluginCloseStep::Complete) => semio_framework_job::InteractiveJobCloseStep::Complete,
             }
         }
@@ -15765,7 +15926,7 @@ pub mod app {
     }
 
     /// 🫧️ Yields one mounted plugin-job transition back to the host executor.
-    async fn plugin_job_yield_once() {
+    pub(crate) async fn plugin_job_yield_once() {
         let mut yielded = false;
         std::future::poll_fn(move |cx| {
             if yielded {
@@ -15957,6 +16118,127 @@ pub mod app {
         Transient(store::ArtifactEphemeralOneItemPublication<A::Transient, A::TransientMutation>),
     }
 
+    #[derive(Clone, Debug, PartialEq, Eq, ToValue)]
+    #[value(rename_all = "camelCase")]
+    struct ChildPublicationResultV1 {
+        invocation_id: String,
+        committed_members: usize,
+        child_content_generation: u64,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum PendingChildGroupPublicationPhase {
+        Ready,
+        Dispatching,
+        Committed,
+        Acknowledged,
+        Faulted,
+        Closing,
+    }
+
+    struct PendingChildGroupPublication<A: ArtifactApp> {
+        artifact_mutations: Vec<A::Mutation>,
+        child_emits: Vec<ChildEmit>,
+        description: Option<String>,
+        receipt: Option<ChildPublicationResultV1>,
+        fault: Option<ArtifactBoundedToolFault>,
+        phase: PendingChildGroupPublicationPhase,
+    }
+
+    impl<A: ArtifactApp> PendingChildGroupPublication<A> {
+        fn new(artifact_mutations: Vec<A::Mutation>, child_emits: Vec<ChildEmit>, description: Option<String>) -> Result<Self, Fault> {
+            if child_emits.is_empty() {
+                return Err(plugin_sdk_fault("retained child-group publication requires at least one exact child output"));
+            }
+            Ok(Self { artifact_mutations, child_emits, description, receipt: None, fault: None, phase: PendingChildGroupPublicationPhase::Ready })
+        }
+
+        fn begin_dispatch(&mut self) -> Result<(), Fault> {
+            if self.phase != PendingChildGroupPublicationPhase::Ready {
+                return Err(plugin_sdk_fault("retained child-group publication lost its single dispatch authority"));
+            }
+            self.phase = PendingChildGroupPublicationPhase::Dispatching;
+            Ok(())
+        }
+
+        fn commit(&mut self, receipt: ChildPublicationResultV1) -> Result<(), Fault> {
+            if self.phase != PendingChildGroupPublicationPhase::Dispatching || self.receipt.is_some() || self.fault.is_some() {
+                return Err(plugin_sdk_fault("retained child-group publication attempted a duplicate commit"));
+            }
+            self.receipt = Some(receipt);
+            self.phase = PendingChildGroupPublicationPhase::Committed;
+            Ok(())
+        }
+
+        fn reject(&mut self, fault: Fault) {
+            self.fault = Some(ArtifactBoundedToolFault::from_fault(fault));
+            self.phase = PendingChildGroupPublicationPhase::Faulted;
+        }
+
+        fn reject_and_fault(&mut self, fault: Fault) -> Fault {
+            self.reject(fault);
+            self.fault().expect("rejected child publication retains one bounded fault")
+        }
+
+        fn fault(&self) -> Option<Fault> {
+            self.fault.as_ref().map(|fault| ArtifactBoundedToolFault { bytes: fault.bytes, len: fault.len }.into_fault())
+        }
+
+        fn acknowledge(&mut self) -> bool {
+            if self.phase != PendingChildGroupPublicationPhase::Committed {
+                return false;
+            }
+            self.phase = PendingChildGroupPublicationPhase::Acknowledged;
+            true
+        }
+
+        fn begin_close(&mut self) {
+            self.phase = PendingChildGroupPublicationPhase::Closing;
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
+            self.phase = PendingChildGroupPublicationPhase::Closing;
+            if let Some(child) = self.child_emits.last_mut() {
+                let step = child.close_one(maximum_items, maximum_bytes);
+                if step == PluginCloseStep::Complete {
+                    self.child_emits.pop();
+                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                }
+                return step;
+            }
+            if maximum_items != 0 && self.artifact_mutations.pop().is_some() {
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if let Some(description) = self.description.as_mut().filter(|value| !value.is_empty()) {
+                return MountedTypedCommandFullOperation::<A>::retire_string_scalar(description, maximum_bytes).expect("nonempty child-group description");
+            }
+            if self.description.take().is_some() {
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if let Some(receipt) = self.receipt.as_mut() {
+                if !receipt.invocation_id.is_empty() {
+                    return MountedTypedCommandFullOperation::<A>::retire_string_scalar(&mut receipt.invocation_id, maximum_bytes).expect("nonempty child-group invocation id");
+                }
+            }
+            if maximum_items != 0 && self.receipt.take().is_some() {
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if maximum_items != 0 && self.fault.take().is_some() {
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            PluginCloseStep::Complete
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.phase == PendingChildGroupPublicationPhase::Closing
+                && self.artifact_mutations.is_empty()
+                && self.child_emits.is_empty()
+                && self.description.is_none()
+                && self.receipt.is_none()
+                && self.fault.is_none()
+        }
+    }
+
     impl<A: ArtifactApp> PendingArtifactStorePublication<A> {
         fn acknowledge(&mut self) -> bool {
             match self {
@@ -16022,6 +16304,9 @@ pub mod app {
         terminal_seen: bool,
         publication: Option<ArtifactToolCompletionValue<A>>,
         pending_artifact_publication: Option<PendingArtifactStorePublication<A>>,
+        pending_child_publication: Option<PendingChildGroupPublication<A>>,
+        captured_child_content: Option<std::sync::Arc<ChildContentView>>,
+        captured_child_content_generation: u64,
         result_page: Option<TypedOperationResultPage>,
         result_page_presented: bool,
         result_sequence: u32,
@@ -16043,7 +16328,7 @@ pub mod app {
                 }
                 return Ok(match step {
                     semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
-                    semio_framework_job::InteractiveJobCloseStep::Blocked => PluginCloseStep::Blocked { reason: "typed operation rejected-session close is blocked" },
+                    semio_framework_job::InteractiveJobCloseStep::Blocked => PluginCloseStep::AwaitingInput { reason: "typed operation rejected-session close awaits its worker handback" },
                     semio_framework_job::InteractiveJobCloseStep::Complete => PluginCloseStep::Pending { released_items: 1, released_bytes: 0 },
                 });
             }
@@ -16060,7 +16345,7 @@ pub mod app {
                 if self.terminal_seen {
                     session.begin_close();
                 } else if session.resume().is_err() {
-                    return Ok(PluginCloseStep::Blocked { reason: "typed operation outcome handback is contended" });
+                    return Ok(PluginCloseStep::AwaitingInput { reason: "typed operation outcome handback awaits its worker session" });
                 }
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
@@ -16073,7 +16358,7 @@ pub mod app {
                 }
                 return Ok(match step {
                     semio_framework_job::WorkerJobCloseStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
-                    semio_framework_job::WorkerJobCloseStep::Blocked => PluginCloseStep::Blocked { reason: "typed operation mounted session close is blocked" },
+                    semio_framework_job::WorkerJobCloseStep::Blocked => PluginCloseStep::AwaitingInput { reason: "typed operation mounted session close awaits its worker handback" },
                     semio_framework_job::WorkerJobCloseStep::Complete => PluginCloseStep::Pending { released_items: 1, released_bytes: 0 },
                 });
             }
@@ -16093,7 +16378,15 @@ pub mod app {
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
                 Ok(semio_framework_job::WorkerJobPoll::Submitted | semio_framework_job::WorkerJobPoll::Rejected) => Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
-                Ok(_) | Err(_) => Ok(PluginCloseStep::Blocked { reason: "typed operation mounted worker is quiet or contended" }),
+                Ok(_) => Ok(PluginCloseStep::AwaitingInput { reason: "typed operation mounted worker awaits its next outcome" }),
+                Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(semio_framework_job::WorkerJobSubmitFault::Contention(_)))
+                | Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(semio_framework_job::WorkerJobSubmitFault::Pool(
+                    semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated,
+                )))
+                | Err(semio_framework_job::MountedWorkerJobPumpFault::Take(semio_framework_job::WorkerJobTakeFault::Pending)) => {
+                    Ok(PluginCloseStep::AwaitingInput { reason: "typed operation mounted worker awaits transient scheduler authority" })
+                }
+                Err(_) => Ok(PluginCloseStep::Blocked { reason: "typed operation mounted worker failed to make structural progress" }),
             }
         }
 
@@ -16127,27 +16420,27 @@ pub mod app {
             if let Some(pending) = self.pending_artifact_publication.as_mut() {
                 pending.begin_close();
             }
+            if let Some(pending) = self.pending_child_publication.as_mut() {
+                pending.begin_close();
+            }
             self.ui_pending = false;
             self.queue_page(TypedOperationResultPage::try_new(self.next_token(), TypedOperationResultLane::Fault, b"typed-operation cancelled before its next publication unit")?)?;
             Ok(true)
         }
 
         fn take_result_page(&mut self) -> Option<TypedOperationResultPage> {
-            let page = self.result_page.as_mut()?;
             if self.result_page_presented {
-                if page.token.attempt >= TYPED_OPERATION_MAXIMUM_RETRIES {
-                    page.token.attempt = page.token.attempt.saturating_add(1);
-                    page.lane = TypedOperationResultLane::Fault;
-                    page.bytes = [0; TYPED_OPERATION_RESULT_PAGE_BYTES];
-                    let detail = b"typed-operation result ACK retry authority exhausted";
-                    page.bytes[..detail.len()].copy_from_slice(detail);
-                    page.len = detail.len();
-                } else {
-                    page.token.attempt += 1;
-                }
+                return None;
             }
             self.result_page_presented = true;
-            Some(page.clone())
+            self.result_page.clone()
+        }
+
+        fn has_runnable_work(&self) -> bool {
+            match self.stage {
+                MountedTypedCommandFullOperationStage::Worker | MountedTypedCommandFullOperationStage::Publishing | MountedTypedCommandFullOperationStage::Retiring => true,
+                MountedTypedCommandFullOperationStage::AwaitingAck => !self.result_page_presented,
+            }
         }
 
         fn acknowledge_result_page(&mut self, token: TypedOperationResultToken) -> Result<bool, Fault> {
@@ -16160,6 +16453,9 @@ pub mod app {
                 && !self.pending_artifact_publication.as_mut().is_some_and(PendingArtifactStorePublication::acknowledge)
             {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.artifact-publication-ack"), "artifact-store result ACK lost its exact pending publication authority"));
+            }
+            if lane == TypedOperationResultLane::Child && !self.pending_child_publication.as_mut().is_some_and(PendingChildGroupPublication::acknowledge) {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-publication-ack"), "child-group result ACK lost its exact committed publication authority"));
             }
             self.result_page = None;
             self.result_page_presented = false;
@@ -16203,6 +16499,18 @@ pub mod app {
                     store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "artifact-store publication close is blocked" },
                     store::SnapshotRetirementStep::Complete => unreachable!("handled terminal artifact-store publication"),
                 });
+            }
+            if let Some(pending) = self.pending_child_publication.as_mut() {
+                pending.begin_close();
+                let step = pending.close_step(maximum_items, maximum_bytes);
+                if step == PluginCloseStep::Complete {
+                    if !pending.terminal_is_empty() {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-publication-terminal"), "child-group publication reported complete without terminal emptiness"));
+                    }
+                    self.pending_child_publication = None;
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                return Ok(step);
             }
             if let Some(publication) = self.publication.as_mut() {
                 match publication {
@@ -16298,6 +16606,9 @@ pub mod app {
             if self.output_chunks.take().is_some() || self.completion.take().is_some() {
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
+            if self.captured_child_content.take().is_some() {
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
             if let Some(mut lease) = self.cancellation_lease.take() {
                 lease.finish_in_place();
                 drop(lease);
@@ -16313,6 +16624,8 @@ pub mod app {
                 && self.terminal_outcome.is_none()
                 && self.publication.is_none()
                 && self.pending_artifact_publication.is_none()
+                && self.pending_child_publication.is_none()
+                && self.captured_child_content.is_none()
                 && self.result_page.is_none()
                 && self.raw_input.is_none()
                 && self.output_chunks.is_none()
@@ -16569,8 +16882,10 @@ pub mod app {
                     let Some(output) = self.output.as_ref() else { return self.fault(cx, b"typed command exposure port was lost") };
                     let Some(emit) = self.emit.take() else { return self.fault(cx, b"typed command emit owner was lost") };
                     let Some(ephemeral) = self.ephemeral.take() else { return self.fault(cx, b"typed command ephemeral owner was lost") };
-                    if let Err(fault) = output.complete(emit, ephemeral) {
-                        drop(fault);
+                    if let Err(rejected) = output.complete(emit, ephemeral) {
+                        self.emit = Some(rejected.emit);
+                        self.ephemeral = Some(rejected.ephemeral);
+                        drop(rejected.fault);
                         return self.fault(cx, b"typed command completion port rejected its single assignment");
                     }
                     self.phase = TypedCommandFullOperationPhase::Complete;
@@ -16602,6 +16917,13 @@ pub mod app {
                 return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
             }
             if let Some(emit) = self.emit.as_mut().and_then(|emit| emit.as_mut().ok()) {
+                if let Some(step) = emit.close_child_one(maximum_items, maximum_bytes) {
+                    return match step {
+                        PluginCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                        PluginCloseStep::Blocked { .. } | PluginCloseStep::AwaitingInput { .. } => semio_framework_job::InteractiveJobCloseStep::Blocked,
+                        PluginCloseStep::Complete => unreachable!("child close helper consumes completed children"),
+                    };
+                }
                 if let Some(description) = emit.description.as_mut().filter(|value| !value.is_empty()) {
                     let released_bytes = description.chars().next_back().map(char::len_utf8).expect("nonempty typed command description");
                     if maximum_bytes < released_bytes {
@@ -16796,7 +17118,7 @@ pub mod app {
 
     #[cfg(test)]
     pub(crate) async fn test_retained_keyed_dispatch<A: ArtifactApp + Default>(registry: AppActionRegistry, command: fn(&str, i32) -> A::Command, mutation: fn(i32) -> A::Mutation, observe: fn(&A::Snapshot) -> i32, clock: Option<fn() -> Option<u64>>) {
-        let fixture: Value = serde_json::from_str(include_str!("🧪️tool-latest-wins-integration.json")).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!("🔗️tool-latest-wins-integration.json")).unwrap();
         let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1)));
         for case in fixture["cases"].as_array().unwrap() {
             let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry.clone()).await;
@@ -16855,6 +17177,7 @@ pub mod app {
                 match app.close_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap() {
                     PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES); }
                     PluginCloseStep::Complete => break,
+                    PluginCloseStep::AwaitingInput { reason } => panic!("registered keyed dispatch close awaited input: {reason}"),
                     PluginCloseStep::Blocked { .. } => {}
                 }
                 plugin_job_yield_once().await;
@@ -16936,7 +17259,7 @@ pub mod app {
         use super::*;
         use crate::publication_fixture::{ChangePublicationPresence, PublicationPresence, PublicationPresenceMutation};
 
-        const FIXTURE: &str = include_str!("🧵️retained-command/🧪️full-operation/🧪️fixture/🔣️.json");
+        const FIXTURE: &str = include_str!("🧵️retained-command/🔄️full-operation/🧪️fixture/🔣️.json");
 
         #[derive(Clone, Copy, Debug, PartialEq, Eq)]
         struct TypedCommandCensusDecision {
@@ -17182,7 +17505,7 @@ pub mod app {
         }
 
         pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
-            let fixture: Value = serde_json::from_str(include_str!("🧪️tool-latest-wins.json")).expect("language-neutral cancellation boundaries");
+            let fixture: Value = serde_json::from_str(include_str!("🥇️tool-latest-wins.json")).expect("language-neutral cancellation boundaries");
             let grant = store::ArtifactStoreOneItemGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_bytes: fixture["maximumBytes"].as_u64().unwrap() as usize };
             assert_eq!(grant.maximum_items, 1);
             assert_eq!(grant.maximum_bytes, TYPED_OPERATION_RESULT_PAGE_BYTES);
@@ -17199,7 +17522,8 @@ pub mod app {
                     artifact_generation: operation.generation.0, config_generation: 0, draft_generation: 0, presence_generation: 0, transient_generation: 0,
                     contract: semio_framework::ToolExecutionContract::resumable(4_096, 4, 1, 4_096, 7_500, 1, 1), publication_lanes: &[ArtifactToolPublicationLane::Presence],
                     session: None, session_rejected: None, completion: None, raw_input: None, output_chunks: None, cancellation_lease: Some(lease),
-                    terminal_outcome: None, terminal_seen: true, publication: Some(ArtifactToolCompletionValue::Emit(Ok(Emit::default()), EphemeralEmit::default())), pending_artifact_publication: None, result_page: None,
+                    terminal_outcome: None, terminal_seen: true, publication: Some(ArtifactToolCompletionValue::Emit(Ok(Emit::default()), EphemeralEmit::default())), pending_artifact_publication: None,
+                    pending_child_publication: None, captured_child_content: Some(std::sync::Arc::new(ChildContentView::EMPTY)), captured_child_content_generation: 0, result_page: None,
                     result_page_presented: false, result_sequence: 0, publication_attempt: 0, ui_pending: true, stage: MountedTypedCommandFullOperationStage::Publishing,
                 };
                 if boundary != "producer" {
@@ -17243,6 +17567,7 @@ pub mod app {
                     match mounted.retirement_step(grant.maximum_items, grant.maximum_bytes).unwrap() {
                         PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES); }
                         PluginCloseStep::Complete => break,
+                        PluginCloseStep::AwaitingInput { reason } => panic!("cancelled exact publication close awaited input: {reason}"),
                         PluginCloseStep::Blocked { reason } => panic!("cancelled exact publication close blocked: {reason}"),
                     }
                 }
@@ -17254,6 +17579,7 @@ pub mod app {
                     match app.close_step(grant.maximum_items, grant.maximum_bytes).unwrap() {
                         PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES); }
                         PluginCloseStep::Complete => break,
+                        PluginCloseStep::AwaitingInput { reason } => panic!("cancelled publication app close awaited input: {reason}"),
                         PluginCloseStep::Blocked { reason } => panic!("cancelled publication app close blocked: {reason}"),
                     }
                 }
@@ -17308,6 +17634,7 @@ pub mod app {
                 match copy.advance(parts, 1, TYPED_OPERATION_RESULT_PAGE_BYTES) {
                     PluginCloseStep::Complete => return copy.take_key().unwrap(),
                     PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= 4_096); }
+                    PluginCloseStep::AwaitingInput { reason } => panic!("full-domain key awaited input: {reason}"),
                     PluginCloseStep::Blocked { reason } => panic!("full-domain key blocked: {reason}"),
                 }
             }
@@ -17315,9 +17642,9 @@ pub mod app {
         }
 
         pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(factory: &dyn store::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>, mutation: fn() -> A::Mutation, observe: fn(&A::Snapshot) -> i32) {
-            let fixture: Value = serde_json::from_str(include_str!("🧪️tool-latest-wins.json")).unwrap();
+            let fixture: Value = serde_json::from_str(include_str!("🥇️tool-latest-wins.json")).unwrap();
             for case in fixture["publicationCases"].as_array().unwrap() {
-                for exhaust_ack in [false, true] {
+                for delayed_ack in [false, true] {
                     let boundary = case["cancelAt"].as_str().unwrap();
                     let mut app = VcsArtifactApp::<A>::new(A::default()).await;
                     let before = app.store.snapshot_root();
@@ -17331,6 +17658,7 @@ pub mod app {
                         contract: semio_framework::ToolExecutionContract::resumable(4_096, 4, 1, 4_096, 7_500, 1, 1), publication_lanes: &[ArtifactToolPublicationLane::Artifact],
                         session: None, session_rejected: None, completion: None, raw_input: None, output_chunks: None, cancellation_lease: Some(lease), terminal_outcome: None,
                         terminal_seen: true, publication: Some(ArtifactToolCompletionValue::Emit(Ok(Emit::default()), EphemeralEmit::default())), pending_artifact_publication: None,
+                        pending_child_publication: None, captured_child_content: Some(std::sync::Arc::new(ChildContentView::EMPTY)), captured_child_content_generation: 0,
                         result_page: None, result_page_presented: false, result_sequence: 0, publication_attempt: 0, ui_pending: true, stage: MountedTypedCommandFullOperationStage::Publishing,
                     };
                     if boundary != "producer" {
@@ -17352,31 +17680,44 @@ pub mod app {
                         assert_eq!(pending.phase(), target);
                     }
                     mounted.cancellation_lease.as_ref().unwrap().cancel();
-                    if boundary == "awaitingAck" && !exhaust_ack {
+                    if boundary == "awaitingAck" {
                         let receipt = mounted.result_page.as_ref().unwrap().clone();
                         assert!(!mounted.reject_cancelled_publication().unwrap());
                         assert_eq!(mounted.result_page.as_ref().unwrap().bytes(), receipt.bytes());
-                        assert!(mounted.acknowledge_result_page(receipt.token).unwrap());
+                        if delayed_ack {
+                            let presented = mounted.take_result_page().unwrap();
+                            assert_eq!(presented.token.attempt, fixture["resultAck"]["attempt"].as_u64().unwrap() as u8);
+                            assert!(!mounted.has_runnable_work());
+                            for _ in 0..fixture["resultAck"]["preAckPolls"].as_u64().unwrap() { assert!(mounted.take_result_page().is_none()); }
+                            assert!(mounted.acknowledge_result_page(presented.token).unwrap());
+                        } else {
+                            assert!(mounted.acknowledge_result_page(receipt.token).unwrap());
+                        }
                     }
-                    if boundary != "awaitingAck" || !exhaust_ack { app.publish_mounted_typed_operation_unit(&mut mounted).unwrap(); }
-                    let token = if exhaust_ack {
-                        let first = mounted.take_result_page().unwrap();
-                        let mut final_page = first.clone();
-                        for _ in 0..TYPED_OPERATION_MAXIMUM_RETRIES { final_page = mounted.take_result_page().unwrap(); }
-                        assert_eq!(final_page.lane, TypedOperationResultLane::Fault);
-                        assert!(!mounted.acknowledge_result_page(first.token).unwrap());
-                        final_page.token
-                    } else { mounted.result_page.as_ref().unwrap().token };
+                    app.publish_mounted_typed_operation_unit(&mut mounted).unwrap();
+                    let final_page = if delayed_ack {
+                        let presented = mounted.take_result_page().unwrap();
+                        let mut deliveries = 1;
+                        for _ in 0..fixture["resultAck"]["preAckPolls"].as_u64().unwrap() { deliveries += usize::from(mounted.take_result_page().is_some()); }
+                        assert_eq!(deliveries, fixture["resultAck"]["deliveries"].as_u64().unwrap() as usize);
+                        assert_eq!(presented.token.attempt, fixture["resultAck"]["attempt"].as_u64().unwrap() as u8);
+                        assert!(!mounted.has_runnable_work());
+                        presented
+                    } else {
+                        mounted.result_page.as_ref().unwrap().clone()
+                    };
+                    assert_eq!(final_page.lane, TypedOperationResultLane::Fault);
                     let committed = case["committed"].as_bool().unwrap();
                     let actual = serde_json::json!({ "count": observe(&app.store.snapshot_root()), "generation": app.store.generation_now() - generation, "sameRoot": std::sync::Arc::ptr_eq(&before, &app.store.snapshot_root()) });
                     let expected = serde_json::json!({ "count": if committed { 42 } else { 0 }, "generation": u64::from(committed), "sameRoot": !committed });
-                    assert_eq!(actual, expected, "{boundary}, exhausted ACK={exhaust_ack}");
-                    assert!(mounted.acknowledge_result_page(token).unwrap());
+                    assert_eq!(actual, expected, "{boundary}, delayed ACK={delayed_ack}");
+                    assert!(mounted.acknowledge_result_page(final_page.token).unwrap());
                     for _ in 0..100_000 {
                         if mounted.terminal_is_empty() { break; }
                         match mounted.retirement_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap() {
                             PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES); }
                             PluginCloseStep::Complete => {},
+                            PluginCloseStep::AwaitingInput { reason } => panic!("document cancellation close awaited input: {reason}"),
                             PluginCloseStep::Blocked { reason } => panic!("document cancellation close blocked: {reason}"),
                         }
                     }
@@ -17387,18 +17728,19 @@ pub mod app {
                         match app.close_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap() {
                             PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES); }
                             PluginCloseStep::Complete => {},
+                            PluginCloseStep::AwaitingInput { reason } => panic!("document cancellation app close awaited input: {reason}"),
                             PluginCloseStep::Blocked { reason } => panic!("document cancellation app close blocked: {reason}"),
                         }
                     }
                     assert!(app.close_terminal_is_empty());
-                    eprintln!("[DEBUG] real mounted Document publication {boundary}, exhausted ACK={exhaust_ack}: count/revision/root retained and close terminal");
+                    eprintln!("[DEBUG] real mounted Document publication {boundary}, delayed ACK={delayed_ack}: count/revision/root retained and close terminal");
                 }
             }
         }
 
         #[test]
         fn retained_latest_wins_full_domain_exact_keys_match_serde_oracle_and_retire() {
-            let fixture: Value = serde_json::from_str(include_str!("🧪️tool-latest-wins.json")).unwrap();
+            let fixture: Value = serde_json::from_str(include_str!("🥇️tool-latest-wins.json")).unwrap();
             let first = &fixture["first"];
             assert_eq!(first["target"].as_str().unwrap().len(), 8_192);
             for case in fixture["cases"].as_array().unwrap() {
@@ -17427,6 +17769,7 @@ pub mod app {
                     match registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES) {
                         PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES); }
                         PluginCloseStep::Complete => {},
+                        PluginCloseStep::AwaitingInput { reason } => panic!("exact key comparison awaited input: {reason}"),
                         PluginCloseStep::Blocked { reason } => panic!("exact key comparison blocked: {reason}"),
                     }
                 }
@@ -17442,6 +17785,7 @@ pub mod app {
                     match registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES) {
                         PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES); }
                         PluginCloseStep::Complete => {},
+                        PluginCloseStep::AwaitingInput { reason } => panic!("exact key close awaited input: {reason}"),
                         PluginCloseStep::Blocked { reason } => panic!("exact key close blocked: {reason}"),
                     }
                 }
@@ -17473,7 +17817,7 @@ pub mod app {
 
         #[test]
         fn retained_latest_wins_contended_finish_is_deferred_and_cannot_release_replacement() {
-            let fixture: Value = serde_json::from_str(include_str!("🧪️tool-latest-wins-integration.json")).unwrap();
+            let fixture: Value = serde_json::from_str(include_str!("🔗️tool-latest-wins-integration.json")).unwrap();
             let cancellations = ToolCancellationHandle::default();
             let key = ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: semio_framework_job::allocate_operation_id(), base_revision: semio_framework_job::RevisionId(1), generation: semio_framework_job::Generation(0) };
             let lease = cancellations.begin_keyed(key.clone()).unwrap();
@@ -17496,7 +17840,7 @@ pub mod app {
 
         #[test]
         fn retained_latest_wins_rebase_rebinds_exact_registered_cancellation_authority() {
-            let fixture: Value = serde_json::from_str(include_str!("🧪️tool-latest-wins-integration.json")).unwrap();
+            let fixture: Value = serde_json::from_str(include_str!("🔗️tool-latest-wins-integration.json")).unwrap();
             let cancellations = ToolCancellationHandle::default();
             let old = ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: semio_framework_job::allocate_operation_id(), base_revision: semio_framework_job::RevisionId(1), generation: semio_framework_job::Generation(fixture["rebase"]["beforeGeneration"].as_u64().unwrap()) };
             let fresh = ToolOperationKey { base_revision: semio_framework_job::RevisionId(2), generation: semio_framework_job::Generation(fixture["rebase"]["afterGeneration"].as_u64().unwrap()), ..old.clone() };
@@ -17515,7 +17859,7 @@ pub mod app {
 
         #[test]
         fn retained_latest_wins_full_registry_reclaims_completed_targets_before_admission() {
-            let fixture: Value = serde_json::from_str(include_str!("🧪️tool-latest-wins-integration.json")).unwrap();
+            let fixture: Value = serde_json::from_str(include_str!("🔗️tool-latest-wins-integration.json")).unwrap();
             let cancellations = ToolCancellationHandle::default();
             let mut registry = ToolLatestWinsRegistry::new();
             let count = fixture["reclamation"]["sequentialCompletedTargets"].as_u64().unwrap();
@@ -17533,6 +17877,7 @@ pub mod app {
                     match registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES) {
                         PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES); }
                         PluginCloseStep::Complete => {}
+                        PluginCloseStep::AwaitingInput { reason } => panic!("full-map retained admission awaited input: {reason}"),
                         PluginCloseStep::Blocked { reason } => panic!("full-map retained admission blocked: {reason}"),
                     }
                 }
@@ -17551,7 +17896,7 @@ pub mod app {
         }
 
         pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
-            let fixture: Value = serde_json::from_str(include_str!("🧪️tool-latest-wins-integration.json")).unwrap();
+            let fixture: Value = serde_json::from_str(include_str!("🔗️tool-latest-wins-integration.json")).unwrap();
             let mut app = VcsArtifactApp::<A>::new(A::default()).await;
             let first = fixture["slotReservation"]["firstOperation"].as_u64().unwrap();
             let collision = fixture["slotReservation"]["collidingOperation"].as_u64().unwrap();
@@ -17571,6 +17916,7 @@ pub mod app {
                     contract: semio_framework::ToolExecutionContract::resumable(4_096, 4, 1, 4_096, 7_500, 1, 1), publication_lanes: &[ArtifactToolPublicationLane::Presence],
                     session: None, session_rejected: None, completion: None, raw_input: None, output_chunks: None, cancellation_lease: Some(lease),
                     terminal_outcome: None, terminal_seen: true, publication: Some(ArtifactToolCompletionValue::Emit(Ok(Emit::default()), EphemeralEmit::default())), pending_artifact_publication: pending,
+                    pending_child_publication: None, captured_child_content: Some(std::sync::Arc::new(ChildContentView::EMPTY)), captured_child_content_generation: 0,
                     result_page: None, result_page_presented: false, result_sequence: 0, publication_attempt: 0, ui_pending: false,
                     stage: if id == 1 { MountedTypedCommandFullOperationStage::Worker } else { MountedTypedCommandFullOperationStage::Publishing },
                 });
@@ -17583,7 +17929,31 @@ pub mod app {
             assert_eq!(app.tool_operations.get(1).unwrap().stage, MountedTypedCommandFullOperationStage::Worker);
             assert!(app.take_typed_operation_result_page(7).is_none());
             assert!(app.take_typed_operation_result_page(7).is_some());
+            for id in 3..=ARTIFACT_LIVE_OUTPUT_SLOTS as u64 {
+                let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(id), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(0), 17);
+                let page = TypedOperationResultPage::try_new(TypedOperationResultToken { receiver: 7, operation: id, generation: 0, sequence: 0, attempt: 1 }, TypedOperationResultLane::Terminal, b"presented ACK waiter").unwrap();
+                app.tool_operations.insert_admitted(id, MountedTypedCommandFullOperation::<A> {
+                    verb: String::new(), meta: ActionMeta { actor: String::new(), instance_id: 7 }, operation, canonical_revision: revision,
+                    artifact_generation: 0, config_generation: 0, draft_generation: 0, presence_generation: 0, transient_generation: 0,
+                    contract: semio_framework::ToolExecutionContract::resumable(4_096, 4, 1, 4_096, 7_500, 1, 1), publication_lanes: &[],
+                    session: None, session_rejected: None, completion: None, raw_input: None, output_chunks: None, cancellation_lease: None,
+                    terminal_outcome: None, terminal_seen: true, publication: None, pending_artifact_publication: None, pending_child_publication: None,
+                    captured_child_content: Some(std::sync::Arc::new(ChildContentView::EMPTY)), captured_child_content_generation: 0,
+                    result_page: Some(page), result_page_presented: true, result_sequence: 0, publication_attempt: 0, ui_pending: false,
+                    stage: MountedTypedCommandFullOperationStage::AwaitingAck,
+                });
+            }
             app.tool_operations.get_mut(1).unwrap().stage = MountedTypedCommandFullOperationStage::Retiring;
+            assert!(app.tool_operations.get(1).unwrap().publication.is_some());
+            app.maintenance_stage = 0;
+            app.maintenance_tool_cursor = 2;
+            assert_eq!(app.maintenance_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap(), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            assert!(app.tool_operations.get(1).unwrap().publication.is_none());
+            assert_eq!(app.tool_operations.get(2).unwrap().stage, MountedTypedCommandFullOperationStage::AwaitingAck);
+            assert!(app.tool_operations.get(2).unwrap().result_page_presented);
+            for id in 3..=ARTIFACT_LIVE_OUTPUT_SLOTS as u64 {
+                drop(app.tool_operations.remove(id).expect("remove synthetic presented ACK waiter"));
+            }
             let cancellation_state = app.tool_cancellations.state.clone();
             let lock = cancellation_state.lock().unwrap();
             for _ in 0..64 {
@@ -17607,6 +17977,7 @@ pub mod app {
                 match app.close_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap() {
                     PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES); }
                     PluginCloseStep::Complete => break,
+                    PluginCloseStep::AwaitingInput { reason } => panic!("fairness fixture close awaited input: {reason}"),
                     PluginCloseStep::Blocked { reason } => panic!("fairness fixture close blocked: {reason}"),
                 }
             }
@@ -17784,7 +18155,7 @@ pub mod app {
 
         #[test]
         fn retained_child_wire_rejection_retires_nested_owners_under_the_production_grant() {
-            let fixture: serde_json::Value = serde_json::from_str(include_str!("../🏪️store/🧪️member-publication.json")).expect("retained child fixture");
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("../🏪️store/📢️member-publication.json")).expect("retained child fixture");
             let row = &fixture["orderedMembers"][0];
             let mut wire = row["wire"].as_str().unwrap().as_bytes().to_vec();
             wire.resize(wire.len() + row["paddingBytes"].as_u64().unwrap() as usize, b' ');
@@ -17805,6 +18176,7 @@ pub mod app {
                         complete = true;
                         break;
                     }
+                    PluginCloseStep::AwaitingInput { reason } => panic!("admitted child wire awaited input: {reason}"),
                     PluginCloseStep::Blocked { .. } => panic!("admitted child wire must retire under the maximum production grant"),
                 }
             }
@@ -17815,18 +18187,24 @@ pub mod app {
         }
 
         #[test]
-        fn typed_child_publication_never_enters_the_monolithic_group_fallback() {
+        fn typed_child_publication_has_one_retained_async_group_owner_and_never_clone_publishes() {
             let source = include_str!("🦀️.rs");
-            let start = source.rfind("fn publish_mounted_typed_operation_unit(").expect("mounted typed publisher");
-            let end = source[start..].find("fn require_tool_operation_authority(").map(|offset| start + offset).expect("typed publisher end");
-            let publisher = &source[start..end];
-            for forbidden in ["dispatch_emit_group(", "child_emits.last().cloned()", "vec![child.clone()]"] {
-                assert!(!publisher.contains(forbidden), "unbounded Child publication shortcut: {forbidden}");
+            let child_start = source.rfind("async fn publish_mounted_typed_child_operation_unit(").expect("retained child publisher");
+            let child_end = source[child_start..].find("fn publish_mounted_typed_operation_unit(").map(|offset| child_start + offset).expect("retained child publisher end");
+            let child_publisher = &source[child_start..child_end];
+            for retained_seam in ["PendingChildGroupPublicationPhase::Ready", "captured_child_content_generation", "captured.identity_digest()", "try_claim_publication", "begin_dispatch", "&pending.child_emits", "dispatch_emit_group(", "TypedOperationResultLane::Child"] {
+                assert!(child_publisher.contains(retained_seam), "retained Child publication lost its exact owner seam: {retained_seam}");
             }
-            let child_gate = publisher.find("if !emit.child_emits.is_empty()").expect("group authority fail-closed gate");
-            let artifact_apply = publisher.find("if let Some(mutation) = emit.artifact_mutations.pop()").expect("first durable publication");
-            assert!(child_gate < artifact_apply, "unsupported children cannot leave a partially published parent mutation");
-            assert!(source.contains("ArtifactToolPublicationLane::Child => Some(\"child retained group publication\")"));
+            for forbidden in ["child_emits.last().cloned()", "vec![child.clone()]", "for child in pending.child_emits.clone()"] {
+                assert!(!child_publisher.contains(forbidden), "retained Child publication restored clone-then-publish: {forbidden}");
+            }
+            let publisher_start = child_end;
+            let publisher_end = source[publisher_start..].find("fn require_tool_operation_authority(").map(|offset| publisher_start + offset).expect("typed publisher end");
+            let publisher = &source[publisher_start..publisher_end];
+            let parent_guard = publisher.find("if emit.child_emits.is_empty()").expect("parent publication group guard");
+            let retained_install = publisher.find("PendingChildGroupPublication::new(").expect("retained child owner install");
+            assert!(parent_guard < retained_install, "parent mutations must remain group-owned whenever Child output is present");
+            assert!(source.contains("ArtifactToolPublicationLane::Child => None"));
         }
 
         #[test]
@@ -18425,6 +18803,7 @@ pub mod app {
             match disposer.close_step(store, maximum_items.min(1), maximum_bytes)? {
                 PluginCloseStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= maximum_bytes => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                 PluginCloseStep::Pending { .. } => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-close-over-budget"), "retained replacement store exceeded its exact close grant")),
+                PluginCloseStep::AwaitingInput { .. } => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-close-awaiting-input"), "retained replacement store disposer requested application input during close")),
                 step @ PluginCloseStep::Blocked { .. } => Ok(step),
                 PluginCloseStep::Complete if disposer.terminal_is_empty(store) => {
                     drop(self.retained_disposer.take());
@@ -18464,7 +18843,7 @@ pub mod app {
 
     impl<A: ArtifactApp> store::ArtifactEnvelopeCompletedRecordTarget<A::Snapshot, A::Mutation> for ArtifactStoreReplacementAdmissionTarget<'_, A> {
         fn try_adopt_completed(&mut self, envelope: ArtifactEnvelope<A::Snapshot, A::Mutation>) -> Result<(), ArtifactEnvelope<A::Snapshot, A::Mutation>> {
-            if !self.jobs.can_insert(self.operation.0) {
+            if envelope.schema != A::DOCUMENT_SCHEMA || envelope.dialect != Some(A::DIALECT.into()) || !self.jobs.can_insert(self.operation.0) {
                 return Err(envelope);
             }
             let job = A::build_document_store_initialization_job(envelope, self.operation, self.generation)?;
@@ -18672,6 +19051,9 @@ pub mod app {
         pub(crate) child_content_root: std::mem::ManuallyDrop<ChildContentView>,
         child_content_generation: u64,
         pub(crate) child_content_retirements: ArtifactFixedRegistry<ChildContentRetirement>,
+        child_admission_abort_retirements: ArtifactFixedRegistry<ChildMemberRetirement<M>>,
+        child_admission_abort_generation: u64,
+        child_admission_abort_cursor: usize,
         /// 📌️ Checkout pins for children that were NOT open when a checkpoint cascade ran. Draining
         /// this on `open_child` is what keeps a lazily-adopted child from silently sitting at head
         /// while the rest of the composition sits at a pinned checkpoint — the alternative (dropping
@@ -18968,7 +19350,7 @@ pub mod app {
         }
 
         async fn validate_framework_reserved_commit(&self, verb: &str, permit: &FrameworkReservedCommitPermit) -> Result<(), Fault> {
-            if permit.is_cancelled().await {
+            if permit.lease.is_cancelled().await {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{verb}' was cancelled before commit")));
             }
             let live_revision_bytes = self.store.content_revision();
@@ -19095,7 +19477,8 @@ pub mod app {
         /// 🫂️ Activates an app controller against Platform's injected shared production registry.
         pub async fn with_registry_on_bus(app: A, registry: AppActionRegistry, tool_jobs: semio_framework::ActionBus) -> Self {
             let app_id = app.instance_id().await.to_string();
-            let envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, &app_id, A::initial_snapshot().await, None);
+            let mut envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, &app_id, A::initial_snapshot().await, None);
+            envelope.dialect = Some(A::DIALECT.into());
             let config_id = format!("{}-config", app_id);
             let config_envelope = create_config_envelope::<A::Config, A::ConfigMutation>(A::config_schema().await, &config_id, A::initial_config().await, None);
             let draft_id = format!("{}-draft", app_id);
@@ -19145,7 +19528,7 @@ pub mod app {
                     ArtifactToolPublicationLane::Draft if draft_one_item_factory.is_none() => Some("draft"),
                     ArtifactToolPublicationLane::Presence if presence_one_item_factory.is_none() || presence_local_root_retirement_factory.is_none() => Some("presence"),
                     ArtifactToolPublicationLane::Transient if transient_one_item_factory.is_none() || transient_local_root_retirement_factory.is_none() => Some("transient"),
-                    ArtifactToolPublicationLane::Child => Some("child retained group publication"),
+                    ArtifactToolPublicationLane::Child => None,
                     ArtifactToolPublicationLane::HostOnly
                     | ArtifactToolPublicationLane::Artifact
                     | ArtifactToolPublicationLane::Config
@@ -19312,6 +19695,9 @@ pub mod app {
                 child_content_root: std::mem::ManuallyDrop::new(ChildContentView::EMPTY),
                 child_content_generation: 0,
                 child_content_retirements: ArtifactFixedRegistry::new(),
+                child_admission_abort_retirements: ArtifactFixedRegistry::new(),
+                child_admission_abort_generation: 0,
+                child_admission_abort_cursor: 0,
                 pending_child_pins: Vec::new(),
                 composition: CompositionCoordinator::new().await,
                 interaction_store,
@@ -19845,43 +20231,133 @@ pub mod app {
             Ok(())
         }
 
-        /// 🌱️ Opens an already-persisted child store for `slot`/`child_id` via `M::open` (this
-        /// composition's own `store::MemberFactory` impl — see `store::space_members!`), keyed by
-        /// `dialect.artifact_kind`. `envelope_pack` is the child's own full envelope pack
-        /// (`MemberFactory::open`'s contract — it self-describes id/history, unlike `create`'s bare
-        /// `initial_pack`); the caller supplies `dialect` regardless, since `SpaceMember` has no
-        /// dialect getter to read it back out (see the `children` field's own doc comment).
-        /// Also seeds the ownership edge into `self.composition`'s graph immediately, since
-        /// `dispatch_group`'s phase 1 ownership check (`CompositionGraph::owner_of`) is fail-closed —
-        /// a child dispatched against before being registered here (or absorbed from a genesis
-        /// `GroupReceipt`, see `dispatch_emit_group`) is rejected as an `OwnershipViolation`, not
-        /// silently accepted.
+        async fn admit_child_member(&mut self, slot: String, child_id: String, dialect: ArtifactDialect) -> Result<ChildStoreAdmission, Fault> {
+            let root_index = self.child_content_root.admit_member(&slot, &child_id)?;
+            let parent_dialect: ArtifactDialect = A::DIALECT.into();
+            if self.store.envelope().dialect.as_ref() != Some(&parent_dialect) {
+                return Err(plugin_sdk_fault("owned member admission requires the parent's exact declared dialect"));
+            }
+            let generation = self.admit_child_content_publication()?;
+            let parent_id = self.store.envelope().id.clone();
+            let graph = self.composition.graph_mut().await.admit_owns(&parent_id, &slot, &child_id).await.map_err(plugin_sdk_fault)?;
+            let expected = ArtifactRef { artifact_id: child_id.clone(), dialect };
+            let owner = store::OwnerRef { parent: ArtifactRef { artifact_id: parent_id, dialect: parent_dialect }, slot: slot.clone(), child_id: child_id.clone() };
+            let key = (slot, child_id);
+            let member = self.children.admit(&key)?;
+            Ok(ChildStoreAdmission { key, expected, owner, member, graph, root_index, generation })
+        }
+
+        async fn prepare_child_member(&self, admission: &ChildStoreAdmission, member: &mut M, restored: bool) -> Result<(ChildContentView, Option<usize>), Fault> {
+            let owner = member.owner_ref();
+            if member.artifact_ref().as_ref() != Some(&admission.expected) || (owner.as_ref() != Some(&admission.owner) && (restored || owner.is_some())) {
+                return Err(plugin_sdk_fault("child member does not match its exact admitted identity and ownership"));
+            }
+            let pin_index = self.pending_child_pins.iter().position(|pin| pin.child_ref.artifact_id == admission.expected.artifact_id);
+            if let Some(index) = pin_index {
+                if !restored {
+                    return Err(plugin_sdk_fault("direct child registration cannot consume a queued restore checkpoint"));
+                }
+                let pin = &self.pending_child_pins[index];
+                if pin.child_ref != admission.expected {
+                    return Err(plugin_sdk_fault("pending child checkpoint belongs to a different exact dialect"));
+                }
+                let alternative = member.current_alternative_id().await.ok_or_else(|| plugin_sdk_fault("pending child checkpoint has no live alternative authority"))?;
+                member.checkout(&pin.checkpoint_id, &alternative).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
+            }
+            let root = self.child_content_root.capture_member_admitted(admission.root_index, &admission.key.0, &admission.key.1, &admission.expected.dialect, member).await?;
+            Ok((root, pin_index))
+        }
+
+        async fn commit_child_member(&mut self, admission: ChildStoreAdmission, mut member: M, root: ChildContentView, pin_index: Option<usize>) {
+            member.set_owner(Some(admission.owner)).await;
+            self.composition.graph_mut().await.commit_owns_admitted(admission.graph);
+            self.children.insert_admitted(admission.member, admission.key, (admission.expected.dialect, member));
+            let previous = std::mem::replace(&mut *self.child_content_root, root);
+            if !previous.is_empty() {
+                self.child_content_retirements.insert_admitted(admission.generation, ChildContentRetirement::new(previous, false));
+            }
+            self.child_content_generation = admission.generation;
+            if let Some(index) = pin_index {
+                self.pending_child_pins.remove(index);
+            }
+        }
+
+        #[cfg(test)]
+        pub(super) fn test_child_admission_state(&self, abort_generation: u64) -> ChildAdmissionTestState {
+            ChildAdmissionTestState {
+                children_empty: self.children.is_empty(),
+                generation: self.child_content_generation,
+                abort_generation: self.child_admission_abort_generation,
+                abort_empty: self.child_admission_abort_retirements.is_empty(),
+                requested_abort_retained: self.child_admission_abort_retirements.get(abort_generation).is_some(),
+                content_empty: self.child_content_root.is_empty(),
+                roots_retiring_empty: self.child_content_retirements.is_empty(),
+            }
+        }
+
+        fn child_admission_abort_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            let Some((index, generation)) = self.child_admission_abort_retirements.next_id_from(self.child_admission_abort_cursor) else {
+                return Ok(PluginCloseStep::Complete);
+            };
+            self.child_admission_abort_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+            let retirement = self.child_admission_abort_retirements.get_mut(generation).expect("exact failed-child retirement remains admitted");
+            let step = retirement.close_step(maximum_items.min(1), maximum_bytes)?;
+            if step == PluginCloseStep::Complete {
+                assert!(retirement.terminal_is_empty(), "failed child reports its exact terminal-empty witness");
+                drop(self.child_admission_abort_retirements.remove(generation));
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            Ok(step)
+        }
+
+        fn validate_parent_child_restore(&self, slot: &str, expected: &ArtifactRef) -> Result<(), Fault> {
+            let parent_dialect: ArtifactDialect = A::DIALECT.into();
+            if self.store.envelope().dialect.as_ref() != Some(&parent_dialect) {
+                return Err(plugin_sdk_fault("child restore requires the parent's exact declared dialect"));
+            }
+            if !A::child_restore_projection(self.store.snapshot_ref())?.admits_member(slot, expected) {
+                return Err(plugin_sdk_fault("child restore is not declared by the loaded parent snapshot"));
+            }
+            Ok(())
+        }
+
+        /// 🌱️ Restores one exact owned member and publishes its graph, map and snapshot together.
         pub async fn open_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault> {
-            let publication_generation = self.admit_child_content_publication()?;
             let slot = slot.into();
             let child_id = child_id.into();
-            ChildContentView::hash(&slot, &child_id)?;
-            let key = (slot.clone(), child_id.clone());
-            let admission = self.children.admit(&key)?;
-            let mut member = match M::open(&dialect.artifact_kind, envelope_pack).await {
+            let expected = ArtifactRef { artifact_id: child_id.clone(), dialect: dialect.clone() };
+            self.validate_parent_child_restore(&slot, &expected)?;
+            let parent_generation = self.store.generation_now();
+            let abort_generation = self.child_admission_abort_generation.checked_add(1).ok_or_else(|| plugin_sdk_fault("failed child retirement generation exhausted"))?;
+            if !self.child_admission_abort_retirements.can_insert(abort_generation) {
+                return Err(plugin_sdk_fault("failed child retirement authority is saturated"));
+            }
+            let admission = self.admit_child_member(slot, child_id, dialect).await?;
+            let mut member = match M::open(&admission.expected, Some(&admission.owner), envelope_pack).await {
                 Ok(member) => member,
                 Err(error) => {
-                    assert!(self.children.cancel_admission(&admission), "failed child open retains its exact admission until cancellation");
+                    assert!(self.children.cancel_admission(&admission.member), "failed child open retains its exact admission until cancellation");
                     return Err(plugin_sdk_fault(error.to_string()));
                 }
             };
-            // 📌️ Drain any checkout pin this child missed by not being open at cascade time.
-            if let Some(index) = self.pending_child_pins.iter().position(|pin| pin.child_ref.artifact_id == child_id) {
-                let pin = self.pending_child_pins.remove(index);
-                let alternative_id = member.current_alternative_id().await.unwrap_or_default();
-                let _ = member.checkout(&pin.checkpoint_id, &alternative_id).await;
-            }
-            let publication_slot = slot.clone();
-            let publication_child_id = child_id.clone();
-            self.children.insert_admitted(admission, (slot, child_id), (dialect, member));
-            let parent_id = self.store.envelope().id.clone();
-            self.composition.graph_mut().await.insert_owns(&parent_id, &publication_slot, &publication_child_id).await.map_err(plugin_sdk_fault)?;
-            self.publish_child_content_member(publication_generation, &publication_slot, &publication_child_id).await?;
+            let prepared = if self.store.generation_now() != parent_generation {
+                Err(plugin_sdk_fault("loaded parent changed during child restore"))
+            } else {
+                match self.validate_parent_child_restore(&admission.key.0, &admission.expected) {
+                    Ok(()) => self.prepare_child_member(&admission, &mut member, true).await,
+                    Err(fault) => Err(fault),
+                }
+            };
+            let (root, pin_index) = match prepared {
+                Ok(prepared) => prepared,
+                Err(fault) => {
+                    assert!(self.children.cancel_admission(&admission.member), "failed child preparation returns its exact map admission");
+                    self.child_admission_abort_retirements.insert_admitted(abort_generation, ChildMemberRetirement::new((admission.key, (admission.expected.dialect, member))));
+                    self.child_admission_abort_generation = abort_generation;
+                    return Err(fault);
+                }
+            };
+            self.commit_child_member(admission, member, root, pin_index).await;
             Ok(())
         }
 
@@ -19902,33 +20378,19 @@ pub mod app {
         /// `self.children` but absent from the graph is rejected as an `OwnershipViolation` the first
         /// time anything dispatches against it. Registering in one place and validating from the other
         /// is precisely the inconsistency this seeds away.
-        pub async fn register_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: ArtifactDialect, member: M) -> Result<(), ChildMemberRegistrationError<M>> {
-            let slot = slot.into();
-            let child_id = child_id.into();
-            if let Err(fault) = ChildContentView::hash(&slot, &child_id) {
-                return Err(ChildMemberRegistrationError { member: Some(member), fault });
-            }
-            let key = (slot.clone(), child_id.clone());
-            let admission = match self.children.admit(&key) {
+        pub async fn register_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: ArtifactDialect, mut member: M) -> Result<(), ChildMemberRegistrationError<M>> {
+            let admission = match self.admit_child_member(slot.into(), child_id.into(), dialect).await {
                 Ok(admission) => admission,
                 Err(fault) => return Err(ChildMemberRegistrationError { member: Some(member), fault }),
             };
-            let publication_generation = match self.admit_child_content_publication() {
-                Ok(generation) => generation,
+            let (root, pin_index) = match self.prepare_child_member(&admission, &mut member, false).await {
+                Ok(prepared) => prepared,
                 Err(fault) => {
-                    assert!(self.children.cancel_admission(&admission), "rejected child publication returns its exact reserved slot");
+                    assert!(self.children.cancel_admission(&admission.member), "failed child preparation returns its exact map admission");
                     return Err(ChildMemberRegistrationError { member: Some(member), fault });
                 }
             };
-            let parent_id = self.store.envelope().id.clone();
-            if let Err(error) = self.composition.graph_mut().await.insert_owns(&parent_id, &slot, &child_id).await {
-                assert!(self.children.cancel_admission(&admission), "rejected child graph edge returns its exact reserved slot");
-                return Err(ChildMemberRegistrationError { member: Some(member), fault: plugin_sdk_fault(error) });
-            }
-            let publication_slot = slot.clone();
-            let publication_child_id = child_id.clone();
-            self.children.insert_admitted(admission, (slot, child_id), (dialect, member));
-            self.publish_child_content_member(publication_generation, &publication_slot, &publication_child_id).await.map_err(|fault| ChildMemberRegistrationError { member: None, fault })?;
+            self.commit_child_member(admission, member, root, pin_index).await;
             Ok(())
         }
 
@@ -20065,7 +20527,7 @@ pub mod app {
 
         /// @emoji 🧾️ Appends one entry to the session command log. `timestamp: None` stamps "now"
         /// (live dispatch); `Some(..)` preserves an edit's original `started_at` (backfill). Always a
-        /// fresh row (`count: 1`) — folding consecutive `View`/`Shell` dispatches is `record_command`'s job.
+        /// fresh row (`count: 1`) — folding consecutive `View`/`🐚️Shell` dispatches is `record_command`'s job.
         async fn push_log_entry(&mut self, action_id: &str, label: String, kind: ActionKind, edit_id: Option<String>, config_edit_id: Option<String>, timestamp: Option<String>, inverse: Option<InverseAction>) {
             self.next_command_seq += 1;
             self.command_log.push(CommandLogEntry {
@@ -20085,7 +20547,7 @@ pub mod app {
         }
 
         /// @emoji 🧾️ The single entry point every live dispatch logs through (`push_log_entry` remains for
-        /// backfill, which never folds). Consecutive `View`/`Shell` dispatches of the SAME `(action_id,
+        /// backfill, which never folds). Consecutive `View`/`🐚️Shell` dispatches of the SAME `(action_id,
         /// kind)` with no `edit_id` fold into one row — its `count` increments and its `label`/`timestamp`
         /// refresh, but its ORIGINAL `seq` is kept so the panel's tree-item id stays stable across
         /// re-renders. `Mutation`/`History`/`Clipboard` entries and anything with an `edit_id` never fold.
@@ -20184,7 +20646,7 @@ pub mod app {
                 // ⏪️ Three disjoint ways a row earns "inverse": document edit-linked (applied +
                 // locally authored), config edit-linked (same, on the config store — B1's replacement
                 // for the old memory-only "View"-kind inverse), or memory-only (a stored
-                // `InverseAction`, the remaining `Shell`-kind `noteShellCommand` path).
+                // `InverseAction`, the remaining `🐚️Shell`-kind `noteShellCommand` path).
                 let revertible = (applied && edit.is_some_and(|edit| edit.actor.is_none() || edit.actor.as_deref() == local_actor))
                     || (config_applied && config_edit.is_some_and(|edit| edit.actor.is_none() || edit.actor.as_deref() == config_local_actor))
                     || entry.inverse.is_some();
@@ -20597,7 +21059,7 @@ pub mod app {
             // path below. See that method's own doc comment for why the two paths stay genuinely
             // separate rather than being unified into one (the group protocol has no `AmendLast`).
             if !child_emits.is_empty() {
-                return self.dispatch_emit_group(verb, artifact_mutations, child_emits, description, effects, events, ui_scope, config_edit_id, meta).await;
+                return self.dispatch_emit_group(verb, &artifact_mutations, &child_emits, &description, effects, events, ui_scope, config_edit_id, meta).await;
             }
 
             if artifact_mutations.is_empty() {
@@ -20712,16 +21174,17 @@ pub mod app {
         async fn dispatch_emit_group(
             &mut self,
             verb: &str,
-            artifact_mutations: Vec<A::Mutation>,
-            child_emits: Vec<ChildEmit>,
-            description: Option<String>,
+            artifact_mutations: &[A::Mutation],
+            child_emits: &[ChildEmit],
+            description: &Option<String>,
             effects: Vec<Effect>,
             events: Vec<AppEvent>,
             ui_scope: semio_framework::kernel::UiDirtyScope,
             config_edit_id: Option<String>,
             meta: &ActionMeta,
         ) -> Result<InvocationResult, Fault> {
-            self.admit_child_content_publication_span(child_emits.len())?;
+            let touched_child_count = child_emits.iter().filter(|child| !child.ops.is_empty()).count();
+            let child_publication_generation = (touched_child_count != 0).then(|| self.admit_child_content_publication()).transpose()?;
             let parent_id = self.store.envelope().id.clone();
             // 🚧️ `ArtifactEnvelope.dialect` stays `Option<ArtifactDialect>` per B2's own DEFERRED
             // scope decision (`📓️wave1-reports/b2-store-composition-report.md`) — this fallback (a
@@ -20729,7 +21192,10 @@ pub mod app {
             // when no real dialect was ever threaded through `create_document_envelope`, and only
             // matters for the OWNERSHIP-GRAPH bookkeeping `dispatch_group` needs a real `ArtifactRef`
             // for, not for any wire/codec decision.
-            let parent_dialect = self.store.envelope().dialect.clone().unwrap_or_else(|| ArtifactDialect { artifact_kind: A::DOCUMENT_SCHEMA.to_string(), standard: "native".to_string(), subset: "*".to_string() });
+            let parent_dialect: ArtifactDialect = A::DIALECT.into();
+            if self.store.envelope().dialect.as_ref() != Some(&parent_dialect) {
+                return Err(plugin_sdk_fault("composition requires the parent's exact declared dialect"));
+            }
             let parent_ref = ArtifactRef { artifact_id: parent_id.clone(), dialect: parent_dialect };
             let mut parent_ops: Vec<Vec<u8>> = Vec::with_capacity(artifact_mutations.len());
             for op in artifact_mutations.iter() {
@@ -20739,7 +21205,7 @@ pub mod app {
             self.store.set_local_actor_id(Some(meta.actor.clone())).map_err(|error| error.into_fault())?;
             let mut seen_keys = ::std::collections::HashSet::with_capacity(child_emits.len());
             let mut child_ptrs: Vec<(*mut M, ChildDispatch)> = Vec::with_capacity(child_emits.len());
-            for child_emit in &child_emits {
+            for child_emit in child_emits {
                 let key = (child_emit.slot.clone(), child_emit.child_id.clone());
                 if !seen_keys.insert(key.clone()) {
                     return Err(plugin_sdk_fault(format!("dispatch_emit: verb {verb:?} emitted duplicate ChildEmit for slot {:?} child {:?}", child_emit.slot, child_emit.child_id)));
@@ -20754,13 +21220,15 @@ pub mod app {
             // 🛡️ Keys are unique and `self.children` is not resized until after `dispatch_group`, so
             // these entry pointers stay valid and non-aliasing for the simultaneous child borrows
             // `dispatch_group` requires.
+            let child_refs: Vec<ArtifactRef> = child_ptrs.iter().map(|(_, dispatch)| dispatch.child.clone()).collect();
+            let child_member_ptrs: Vec<*mut M> = child_ptrs.iter().map(|(member, _)| *member).collect();
             let mut dispatches: Vec<(&mut M, ChildDispatch)> = child_ptrs.into_iter().map(|(ptr, dispatch)| (unsafe { &mut *ptr }, dispatch)).collect();
 
             // 🎛️ `meta.actor`/`description` are honored; `coalesce_key` is intentionally dropped here
             // — `GroupMeta.coalesce_key` is accepted-but-not-wired by `dispatch_group` itself today
             // (per B2's own scoping note: `SpaceMember` has no object-safe `AmendLast` seam yet), and
             // this whole branch is already documented as never coalescing.
-            let group_meta = GroupMeta { actor: Some(meta.actor.clone()), description: description.clone(), coalesce_key: None };
+            let group_meta = GroupMeta { actor: Some(meta.actor.clone()), description: (*description).clone(), coalesce_key: None };
             // 🎯️ RESOLVED (was BLOCKED — see `📓️terra-dedyn-fw-os-spacemember-report.md` §dispatch_group,
             // and `📓️terra-dispatch-group-split-report.md` for the fix): `store::CompositionCoordinator::
             // dispatch_group<Mp: SpaceMember, Mc: SpaceMember + MemberFactory>` now takes SEPARATE type
@@ -20771,9 +21239,34 @@ pub mod app {
             let receipt = self.composition.dispatch_group(&parent_ref, &mut self.store, &mut dispatches, parent_ops, Vec::new(), group_meta).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
             drop(dispatches);
             self.cache = None;
-            for child_emit in child_emits.iter() {
-                let publication_generation = self.admit_child_content_publication()?;
-                self.publish_child_content_member(publication_generation, &child_emit.slot, &child_emit.child_id).await?;
+            if let Some(publication_generation) = child_publication_generation {
+                let mut next = ChildContentView::clone(&self.child_content_root);
+                for child_emit in child_emits.iter().filter(|child| !child.ops.is_empty()) {
+                    let captured = match self.children.get(&(child_emit.slot.clone(), child_emit.child_id.clone())) {
+                        Some((dialect, member)) => next.with_member(&child_emit.slot, &child_emit.child_id, dialect, member).await,
+                        None => Err(plugin_sdk_fault("committed child group lost its exact live member before immutable-root capture")),
+                    };
+                    match captured {
+                        Ok(captured) => next = captured,
+                        Err(fault) => {
+                            if !next.is_empty() {
+                                self.child_content_retirements.insert_admitted(publication_generation, ChildContentRetirement::new(next, false));
+                            }
+                            let mut members: Vec<(&ArtifactRef, &mut M)> = child_refs.iter().zip(child_member_ptrs.iter().copied()).map(|(reference, member)| (reference, unsafe { &mut *member })).collect();
+                            let compensation = CompositionCoordinator::undo_group(&parent_ref, &mut self.store, &mut members, &receipt.invocation_id).await;
+                            drop(members);
+                            if compensation.undone.len() != receipt.member_edits.len() {
+                                return Err(plugin_sdk_fault(format!("child root capture failed ({}) and group compensation moved {}/{} members", fault.message, compensation.undone.len(), receipt.member_edits.len())));
+                            }
+                            return Err(fault);
+                        }
+                    }
+                }
+                let previous = std::mem::replace(&mut *self.child_content_root, next);
+                if !previous.is_empty() {
+                    self.child_content_retirements.insert_admitted(publication_generation, ChildContentRetirement::new(previous, false));
+                }
+                self.child_content_generation = publication_generation;
             }
 
             // 🌱️ Absorb any freshly-created children into the live map — extracted into its own
@@ -20879,7 +21372,7 @@ pub mod app {
             // `config_edit_ids` precedent (see `CommandLogEntry::child_edit_ids`'s own doc comment).
             let parent_edit_id = receipt.member_edits.iter().find(|(reference, _)| reference.artifact_id == parent_id).map(|(_, edit_id)| edit_id.clone());
             let kind = self.registry.get(verb).await.map(|def| def.kind).unwrap_or(ActionKind::Mutation);
-            self.record_command(verb, kind, description, parent_edit_id, config_edit_id, None).await;
+            self.record_command(verb, kind, (*description).clone(), parent_edit_id, config_edit_id, None).await;
             if let Some(last) = self.command_log.last_mut() {
                 last.child_edit_ids = child_edit_ids;
             }
@@ -20933,7 +21426,10 @@ pub mod app {
         async fn dispatch_group_history_action(&mut self, action: &str, group_id: &str, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             self.admit_child_content_publication_span(self.children.len())?;
             let parent_id = self.store.envelope().id.clone();
-            let parent_dialect = self.store.envelope().dialect.clone().unwrap_or_else(|| ArtifactDialect { artifact_kind: A::DOCUMENT_SCHEMA.to_string(), standard: "native".to_string(), subset: "*".to_string() });
+            let parent_dialect: ArtifactDialect = A::DIALECT.into();
+            if self.store.envelope().dialect.as_ref() != Some(&parent_dialect) {
+                return Err(plugin_sdk_fault("composition history requires the parent's exact declared dialect"));
+            }
             let parent_ref = ArtifactRef { artifact_id: parent_id.clone(), dialect: parent_dialect };
             // 🪞️ Two SEPARATE passes over `self.children` (an immutable key/dialect snapshot, then
             // `values_mut()`) rather than repeated `get_mut` calls in a loop — `HashMap` iteration
@@ -21175,7 +21671,7 @@ pub mod app {
             state.hover = self.interaction_hover.clone();
             self.validate_framework_reserved_commit(action, permit).await?;
             self.revalidate_and_persist_interaction_state(state, meta).await?;
-            if permit.is_cancelled().await {
+            if permit.lease.is_cancelled().await {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{action}' was cancelled before interaction publication")));
             }
             self.record_command(action, ActionKind::Interaction, None, None, None, None).await;
@@ -21667,7 +22163,7 @@ pub mod app {
         }
 
         async fn commit_framework_history_route(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit) -> Result<InvocationResult, Fault> {
-            if permit.is_cancelled().await {
+            if permit.lease.is_cancelled().await {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{action}' was cancelled at commit")));
             }
             if action == "undo" || action == "redo" {
@@ -21964,7 +22460,11 @@ pub mod app {
             }
             let mut mounted =
                 self.tool_operations.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.publication-authority"), "typed-operation publication owner changed before one-unit transfer"))?;
-            let outcome = self.publish_mounted_typed_operation_unit(&mut mounted);
+            let outcome = if mounted.pending_child_publication.is_some() {
+                self.publish_mounted_typed_child_operation_unit(&mut mounted).await
+            } else {
+                self.publish_mounted_typed_operation_unit(&mut mounted)
+            };
             if let Err(fault) = outcome {
                 mounted.publication_attempt = mounted.publication_attempt.saturating_add(1);
                 if mounted.publication_attempt > TYPED_OPERATION_MAXIMUM_RETRIES {
@@ -22015,7 +22515,8 @@ pub mod app {
                     artifact_generation: pending.operation.generation.0, config_generation: 0, draft_generation: 0, presence_generation: 0, transient_generation: 0,
                     contract: semio_framework::ToolExecutionContract::resumable(4_096, 4, 1, 4_096, 7_500, 1, 1), publication_lanes: &[],
                     session: None, session_rejected: None, completion: None, raw_input: None, output_chunks: None, cancellation_lease: pending.lease.take(),
-                    terminal_outcome: None, terminal_seen: true, publication: None, pending_artifact_publication: None, result_page: None, result_page_presented: false,
+                    terminal_outcome: None, terminal_seen: true, publication: None, pending_artifact_publication: None,
+                    pending_child_publication: None, captured_child_content: Some(std::sync::Arc::new(ChildContentView::EMPTY)), captured_child_content_generation: 0, result_page: None, result_page_presented: false,
                     result_sequence: 0, publication_attempt: 0, ui_pending: false, stage: MountedTypedCommandFullOperationStage::Publishing,
                 };
                 mounted.queue_page(TypedOperationResultPage::try_new(mounted.next_token(), TypedOperationResultLane::Fault, b"latest-wins command admission cancelled or rejected before worker publication")?)?;
@@ -22094,6 +22595,140 @@ pub mod app {
             let copy = pending.key_copy.as_mut().expect("retained exact key byte cursor");
             if copy.advance(parts, 1, TYPED_OPERATION_RESULT_PAGE_BYTES) == PluginCloseStep::Complete { pending.key = copy.take_key(); }
             Ok(false)
+        }
+
+        async fn publish_mounted_typed_child_operation_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>) -> Result<(), Fault> {
+            let Some(mut pending) = mounted.pending_child_publication.take() else {
+                return Err(plugin_sdk_fault("typed-operation child publication lost its retained owner"));
+            };
+            match pending.phase {
+                PendingChildGroupPublicationPhase::Acknowledged | PendingChildGroupPublicationPhase::Closing => {
+                    pending.begin_close();
+                    let step = pending.close_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES);
+                    if step == PluginCloseStep::Complete {
+                        if !pending.terminal_is_empty() {
+                            mounted.pending_child_publication = Some(pending);
+                            return Err(plugin_sdk_fault("typed-operation child publication closed without terminal emptiness"));
+                        }
+                    } else {
+                        mounted.pending_child_publication = Some(pending);
+                    }
+                    return Ok(());
+                }
+                PendingChildGroupPublicationPhase::Committed => {
+                    let receipt = pending.receipt.clone().ok_or_else(|| plugin_sdk_fault("committed child publication lost its exact result receipt"))?;
+                    mounted.pending_child_publication = Some(pending);
+                    return mounted.queue_page(TypedOperationResultPage::try_serialize(mounted.next_token(), TypedOperationResultLane::Child, &receipt)?);
+                }
+                PendingChildGroupPublicationPhase::Faulted => {
+                    let fault = pending.fault().unwrap_or_else(|| plugin_sdk_fault("typed-operation child publication fault lost its bounded detail"));
+                    mounted.pending_child_publication = Some(pending);
+                    return Err(fault);
+                }
+                PendingChildGroupPublicationPhase::Ready => {}
+                PendingChildGroupPublicationPhase::Dispatching => {
+                    mounted.pending_child_publication = Some(pending);
+                    return Err(plugin_sdk_fault("typed-operation child publication re-entered a non-dispatchable phase"));
+                }
+            }
+            let Some(_permit) = mounted.cancellation_lease.as_ref().and_then(ToolCancellationLease::try_claim_publication) else {
+                let fault = pending.reject_and_fault(plugin_sdk_fault("typed-operation child publication claim is cancelled or occupied"));
+                mounted.pending_child_publication = Some(pending);
+                return Err(fault);
+            };
+            let live_revision = self.store.content_revision_now();
+            let live_generation = self.store.generation_now();
+            let Some(captured) = mounted.captured_child_content.as_ref() else {
+                let fault = pending.reject_and_fault(plugin_sdk_fault("typed-operation child publication lost its captured immutable root"));
+                mounted.pending_child_publication = Some(pending);
+                return Err(fault);
+            };
+            let parent_fresh = typed_operation_document_is_fresh(&mounted.operation, mounted.canonical_revision, live_revision, live_generation);
+            let child_root_fresh = mounted.captured_child_content_generation == self.child_content_generation && captured.identity_digest() == self.child_content_root.identity_digest();
+            if !parent_fresh || !child_root_fresh {
+                let fault = pending.reject_and_fault(plugin_sdk_fault("typed-operation child publication rejected stale parent or child immutable roots"));
+                mounted.pending_child_publication = Some(pending);
+                return Err(fault);
+            }
+            let mut seen = HashSet::with_capacity(pending.child_emits.len());
+            for child in &pending.child_emits {
+                if !seen.insert((child.slot.clone(), child.child_id.clone())) {
+                    let fault = pending.reject_and_fault(plugin_sdk_fault("typed-operation child publication contains a duplicate exact target"));
+                    mounted.pending_child_publication = Some(pending);
+                    return Err(fault);
+                }
+                let expected_revision = match captured.revision(&child.slot, &child.child_id) {
+                    Ok(revision) => revision,
+                    Err(error) => {
+                        let fault = pending.reject_and_fault(error);
+                        mounted.pending_child_publication = Some(pending);
+                        return Err(fault);
+                    }
+                };
+                let Some(expected_dialect) = captured.dialect(&child.slot, &child.child_id) else {
+                    let fault = pending.reject_and_fault(plugin_sdk_fault("typed-operation child publication target is absent from its captured root"));
+                    mounted.pending_child_publication = Some(pending);
+                    return Err(fault);
+                };
+                let Some((live_dialect, member)) = self.children.get(&(child.slot.clone(), child.child_id.clone())) else {
+                    let fault = pending.reject_and_fault(plugin_sdk_fault("typed-operation child publication target is absent from the live member registry"));
+                    mounted.pending_child_publication = Some(pending);
+                    return Err(fault);
+                };
+                if *live_dialect != expected_dialect || member.content_revision().await != expected_revision {
+                    let fault = pending.reject_and_fault(plugin_sdk_fault("typed-operation child publication rejected stale member identity, dialect, or revision"));
+                    mounted.pending_child_publication = Some(pending);
+                    return Err(fault);
+                }
+            }
+            if mounted.cancellation_lease.as_ref().expect("claimed child publication retains its cancellation lease").is_cancelled().await {
+                let fault = pending.reject_and_fault(plugin_sdk_fault("typed-operation child publication was cancelled before group linearization"));
+                mounted.pending_child_publication = Some(pending);
+                return Err(fault);
+            }
+            if let Err(error) = pending.begin_dispatch() {
+                let fault = pending.reject_and_fault(error);
+                mounted.pending_child_publication = Some(pending);
+                return Err(fault);
+            }
+            let result = self
+                .dispatch_emit_group(
+                    &mounted.verb,
+                    &pending.artifact_mutations,
+                    &pending.child_emits,
+                    &pending.description,
+                    Vec::new(),
+                    Vec::new(),
+                    semio_framework::kernel::UiDirtyScope::None,
+                    None,
+                    &mounted.meta,
+                )
+                .await;
+            match result {
+                Ok(result) => {
+                    mounted.artifact_generation = self.store.generation_now();
+                    mounted.canonical_revision = self.store.content_revision_now();
+                    mounted.operation.base_revision = semio_framework_job::RevisionId(u64::from_be_bytes(mounted.canonical_revision[..8].try_into().expect("revision lane width")));
+                    mounted.operation.generation = semio_framework_job::Generation(mounted.artifact_generation);
+                    let receipt = ChildPublicationResultV1 {
+                        invocation_id: result.inverse_group.invocation_id.0,
+                        committed_members: result.inverse_group.member_edits.len(),
+                        child_content_generation: self.child_content_generation,
+                    };
+                    if let Err(error) = pending.commit(receipt.clone()) {
+                        let fault = pending.reject_and_fault(error);
+                        mounted.pending_child_publication = Some(pending);
+                        return Err(fault);
+                    }
+                    mounted.pending_child_publication = Some(pending);
+                    mounted.queue_page(TypedOperationResultPage::try_serialize(mounted.next_token(), TypedOperationResultLane::Child, &receipt)?)
+                }
+                Err(fault) => {
+                    let fault = pending.reject_and_fault(fault);
+                    mounted.pending_child_publication = Some(pending);
+                    Err(fault)
+                }
+            }
         }
 
         fn publish_mounted_typed_operation_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>) -> Result<(), Fault> {
@@ -22267,9 +22902,6 @@ pub mod app {
                     }
                 }
                 ArtifactToolCompletionValue::Emit(Ok(emit), ephemeral) => {
-                    if !emit.child_emits.is_empty() {
-                        return Err(plugin_sdk_fault("typed-operation child output requires retained all-member preparation, grouped history/log sealing, and atomic child-root publication"));
-                    }
                     if (!emit.artifact_mutations.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Artifact))
                         || (!emit.config_mutations.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Config))
                         || (!emit.draft_mutations.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Draft))
@@ -22279,29 +22911,32 @@ pub mod app {
                     {
                         return Err(plugin_sdk_fault("typed-operation emitted a store lane absent from its exact factory publication contract"));
                     }
-                    if let Some(mutation) = emit.artifact_mutations.pop() {
-                        match self.store.begin_apply_one(
-                            mounted.operation.operation,
-                            mounted.artifact_generation,
-                            mounted.canonical_revision,
-                            mounted.meta.actor.clone(),
-                            mutation,
-                            emit.description.take(),
-                            store::HistoryLane::Document,
-                            self.artifact_one_item_factory.as_deref(),
-                        ) {
-                            Ok(publication) => {
-                                mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Artifact(publication));
-                                return Ok(());
-                            }
-                            Err(rejected) => {
-                                let (reason, mutation, description) = rejected.into_owners();
-                                emit.artifact_mutations.push(mutation);
-                                emit.description = description;
-                                return Err(plugin_sdk_fault(reason));
+                    if emit.child_emits.is_empty() {
+                        if let Some(mutation) = emit.artifact_mutations.pop() {
+                            match self.store.begin_apply_one(
+                                mounted.operation.operation,
+                                mounted.artifact_generation,
+                                mounted.canonical_revision,
+                                mounted.meta.actor.clone(),
+                                mutation,
+                                emit.description.take(),
+                                store::HistoryLane::Document,
+                                self.artifact_one_item_factory.as_deref(),
+                            ) {
+                                Ok(publication) => {
+                                    mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Artifact(publication));
+                                    return Ok(());
+                                }
+                                Err(rejected) => {
+                                    let (reason, mutation, description) = rejected.into_owners();
+                                    emit.artifact_mutations.push(mutation);
+                                    emit.description = description;
+                                    return Err(plugin_sdk_fault(reason));
+                                }
                             }
                         }
-                    } else if let Some(mutation) = emit.config_mutations.pop() {
+                    }
+                    if let Some(mutation) = emit.config_mutations.pop() {
                         let revision = self.config_store.content_revision_now();
                         match self.config_store.begin_apply_one(mounted.operation.operation, mounted.config_generation, revision, mounted.meta.actor.clone(), mutation, None, store::HistoryLane::Document, self.config_one_item_factory.as_deref()) {
                             Ok(publication) => {
@@ -22351,6 +22986,16 @@ pub mod app {
                                 return Err(plugin_sdk_fault(reason));
                             }
                         }
+                    } else if !emit.child_emits.is_empty() {
+                        if mounted.pending_child_publication.is_some() {
+                            return Err(plugin_sdk_fault("typed-operation retained more than one child-group publication owner"));
+                        }
+                        mounted.pending_child_publication = Some(PendingChildGroupPublication::new(
+                            std::mem::take(&mut emit.artifact_mutations),
+                            std::mem::take(&mut emit.child_emits),
+                            emit.description.take(),
+                        )?);
+                        return Ok(());
                     } else if let Some(effect) = emit.effects.pop() {
                         if let Err(effect) = self.typed_effect_outbox.push(effect) {
                             emit.effects.push(effect);
@@ -22615,6 +23260,9 @@ pub mod app {
                     terminal_seen: false,
                     publication: None,
                     pending_artifact_publication: None,
+                    pending_child_publication: None,
+                    captured_child_content: Some(std::sync::Arc::clone(&children)),
+                    captured_child_content_generation: self.child_content_generation,
                     result_page: None,
                     result_page_presented: false,
                     result_sequence: 0,
@@ -23035,6 +23683,13 @@ pub mod app {
                 && self.app_tool_registrations.is_empty()
                 && self.tool_job_controller_id.is_empty()
         }
+
+        #[cfg(test)]
+        pub(crate) fn typed_operation_result_state_for_test(&self, operation_id: u64) -> Option<(TypedOperationResultToken, TypedOperationResultLane, bool, bool)> {
+            let operation = self.tool_operations.get(operation_id)?;
+            let page = operation.result_page.as_ref()?;
+            Some((page.token, page.lane, operation.result_page_presented, operation.has_runnable_work()))
+        }
     }
 
     impl<A: ArtifactApp, M: SpaceMember + MemberFactory> Drop for VcsArtifactApp<A, M> {
@@ -23288,6 +23943,9 @@ pub mod app {
                     return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                 }
                 return Ok(step);
+            }
+            if !self.child_admission_abort_retirements.is_empty() {
+                return self.child_admission_abort_step(maximum_items, maximum_bytes);
             }
             if !self.child_content_retirements.is_empty() {
                 let Some((index, generation)) = self.child_content_retirements.next_id_from(self.close_child_root_cursor) else {
@@ -23578,6 +24236,7 @@ pub mod app {
                 && self.segmented_closures.is_empty()
                 && self.child_content_retirements.is_empty()
                 && self.close_child_member.is_none()
+                && self.child_admission_abort_retirements.is_empty()
                 && self.children.is_empty()
                 && self.peer_roster_publications.is_empty()
                 && self.peer_roster_outcomes.is_empty()
@@ -23605,6 +24264,7 @@ pub mod app {
                 && self.segmented_closures.is_empty()
                 && self.snapshot_retirements.is_empty()
                 && self.child_content_retirements.is_empty()
+                && self.child_admission_abort_retirements.is_empty()
                 && self.peer_roster_publications.is_empty()
                 && self.peer_presence_retirements.is_empty()
                 && self.presence_peer_retirements.is_empty()
@@ -23624,11 +24284,33 @@ pub mod app {
                 return pump.drive(|| store.take_returned_snapshot_read_retirement().map_err(|error| error.into_fault()), maximum_items, maximum_bytes);
             }
             let stage = self.maintenance_stage;
-            self.maintenance_stage = (self.maintenance_stage + 1) % 20;
+            self.maintenance_stage = (self.maintenance_stage + 1) % 21;
             match stage {
                 0 => {
-                    let Some((index, operation_id)) = self.tool_operations.next_id_from(self.maintenance_tool_cursor) else {
-                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    let mut selected = None;
+                    let mut occupied = false;
+                    let mut every_operation_awaits_presented_ack = true;
+                    for offset in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
+                        let index = (self.maintenance_tool_cursor + offset) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                        let Some((operation_id, operation)) = self.tool_operations.entry(index) else { continue };
+                        occupied = true;
+                        match operation.stage {
+                            MountedTypedCommandFullOperationStage::Worker | MountedTypedCommandFullOperationStage::Retiring => {
+                                selected = Some((index, *operation_id));
+                                break;
+                            }
+                            MountedTypedCommandFullOperationStage::AwaitingAck if operation.result_page_presented => {}
+                            MountedTypedCommandFullOperationStage::Publishing | MountedTypedCommandFullOperationStage::AwaitingAck => {
+                                every_operation_awaits_presented_ack = false;
+                            }
+                        }
+                    }
+                    let Some((index, operation_id)) = selected else {
+                        return Ok(if occupied && every_operation_awaits_presented_ack {
+                            PluginCloseStep::AwaitingInput { reason: "every typed operation awaits its exact presented host result ACK" }
+                        } else {
+                            PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }
+                        });
                     };
                     self.maintenance_tool_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
                     let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(
@@ -23639,7 +24321,12 @@ pub mod app {
                         .tool_operations
                         .get_mut(operation_id)
                         .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-tool-authority"), "typed operation authority changed during one fixed maintenance step"))?;
-                    let step = if operation.stage == MountedTypedCommandFullOperationStage::Retiring { operation.retirement_step(maximum_items.min(1), maximum_bytes)? } else { operation.drive_worker_step(&pool)? };
+                    let step = match operation.stage {
+                        MountedTypedCommandFullOperationStage::Retiring => operation.retirement_step(maximum_items.min(1), maximum_bytes)?,
+                        MountedTypedCommandFullOperationStage::Worker => operation.drive_worker_step(&pool)?,
+                        MountedTypedCommandFullOperationStage::Publishing => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
+                        MountedTypedCommandFullOperationStage::AwaitingAck => PluginCloseStep::AwaitingInput { reason: "typed operation awaits its exact host result ACK" },
+                    };
                     if step == PluginCloseStep::Complete {
                         if !self.tool_operations.get_mut(operation_id).is_some_and(|operation| operation.terminal_is_empty()) {
                             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-terminal"), "typed operation reported Complete without exact terminal emptiness"));
@@ -23982,6 +24669,7 @@ pub mod app {
                     store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "presence local returned owner is held" },
                     store::SnapshotRetirementStep::Complete => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
                 }),
+                20 => self.child_admission_abort_step(maximum_items.min(1), maximum_bytes),
                 _ => unreachable!("fixed maintenance stage"),
             }
         }
@@ -24034,6 +24722,15 @@ pub mod app {
 
         fn has_pending_typed_operations(&self) -> bool {
             !self.tool_operations.is_empty() || !self.latest_wins_commands.is_empty() || self.typed_effect_outbox.len() != 0 || self.typed_event_outbox.len() != 0 || self.typed_ui_outbox.len() != 0 || self.local_interaction_query.as_ref().is_some_and(|query| query.has_pending_work())
+        }
+
+        fn has_runnable_typed_operations(&self) -> bool {
+            (0..ARTIFACT_LIVE_OUTPUT_SLOTS).any(|index| self.tool_operations.entry(index).is_some_and(|(_, operation)| operation.has_runnable_work()))
+                || !self.latest_wins_commands.is_empty()
+                || self.typed_effect_outbox.len() != 0
+                || self.typed_event_outbox.len() != 0
+                || self.typed_ui_outbox.len() != 0
+                || self.local_interaction_query.as_ref().is_some_and(|query| query.has_pending_work())
         }
 
         fn begin_local_interaction_query(&mut self, request_id: u64, query_generation: u64) -> Option<protocol::LocalInteractionQueryReply> {
@@ -25070,7 +25767,7 @@ pub mod app {
                 newline_gates_json: None,
                 rename_json: None,
             };
-            let props = semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &scene).map_err(|_| ui_assembly_error("text-window.scene"))?;
+            let props = semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &scene).map_err(|error| ui_assembly_error_because("text-window.scene", error))?;
             let builder = ui::surface(props);
             builder.try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("text-window.id"))?.try_build().map_err(|_| ui_assembly_error("text-window.build"))
         }
@@ -25107,7 +25804,7 @@ pub mod app {
             // `base` constructor is now the E6 sync-by-decree shape (no suspension point) — the
             // OUTER `build_table_scene` (unmoved, `ui_wgpu::wgpu`) stays a real `async fn`.
             let scene = semio_framework_ui_scene::TableScene::base(columns_json, rows_json);
-            let props = semio_framework_ui_scene::encode(SurfaceKind::Table, &scene).map_err(|_| ui_assembly_error("table-window.scene"))?;
+            let props = semio_framework_ui_scene::encode(SurfaceKind::Table, &scene).map_err(|error| ui_assembly_error_because("table-window.scene", error))?;
             let builder = ui::surface(props);
             builder.try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("table-window.id"))?.try_build().map_err(|_| ui_assembly_error("table-window.build"))
         }
@@ -25144,7 +25841,7 @@ pub mod app {
 
     /// 🆔️ One identified, actionable row for `TableWindowKit::render_rows` — `id` reaches the React DOM
     /// as `data-row-id` (`Table/component.tsx`'s `getRowId` reads `row.id`) and the wgpu hit-target as
-    /// `"{surfaceId}.row.{id}"` (`Scenes/component.rs`'s `render_table` reads the same `row.get("id")`);
+    /// `"{surfaceId}.row.{id}"` (`🎞️Scenes/component.rs`'s `render_table` reads the same `row.get("id")`);
     /// `cells` are plain text, positional to `TableRowsView::columns`; `actions` render as one trailing
     /// "actions" column of row buttons.
     #[derive(Debug, PartialEq)]
@@ -25511,7 +26208,7 @@ pub mod app {
         fn render(view: &MeshView) -> UiAssemblyResult<BuiltNode> {
             let sun_config = crate::world3d_host::WorldSunConfig::default();
             let scene = crate::world3d_host::world3d_scene(view.camera_json.clone(), view.meshes_json.clone(), view.instances_json.clone(), view.selection_json.clone(), &sun_config);
-            let props = semio_framework_ui_scene::encode(SurfaceKind::World3d, &scene).map_err(|_| ui_assembly_error("mesh-window.scene"))?;
+            let props = semio_framework_ui_scene::encode(SurfaceKind::World3d, &scene).map_err(|error| ui_assembly_error_because("mesh-window.scene", error))?;
             let builder = ui::surface(props);
             builder.try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("mesh-window.id"))?.try_build().map_err(|_| ui_assembly_error("mesh-window.build"))
         }
@@ -25890,6 +26587,10 @@ pub mod app {
         /// 🎭️ Always `Editor` in practice — defaulted so implementors never restate it.
         const ROLE: AppRole = AppRole::Editor;
         const DIALECT: Dialect;
+        /// 🧬️ Supplies the editor's bounded projection of real parent child fields.
+        fn child_restore_projection(_snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+            Err(plugin_sdk_fault("editor did not declare a loaded-parent child projection"))
+        }
         const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = false;
         /// @emoji 📜️ Stable document schema id — prefer this over `document_schema(&self)`.
         const DOCUMENT_SCHEMA: &'static str;
@@ -26232,9 +26933,42 @@ pub mod app {
     /// edits an `ArtifactEditor` made) but `handle` returns `ViewEmit`, which cannot structurally
     /// carry an artifact or draft mutation. `ViewerApp<V>` below is the sole `ArtifactApp` implementor.
     pub trait ArtifactViewer: Default + Send + 'static {
+        /// 🛂️ Viewers explicitly declare every nontrivial store owner; absent authority fails closed.
+        fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+            None
+        }
+
+        fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+            None
+        }
+
+        fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+            None
+        }
+
+        fn build_config_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+            None
+        }
+
+        fn build_presence_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+            None
+        }
+
+        fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+            None
+        }
+
+        fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+            None
+        }
+
         /// 🎭️ Always `Viewer` in practice — defaulted so implementors never restate it.
         const ROLE: AppRole = AppRole::Viewer;
         const DIALECT: Dialect;
+        /// 🪟️ Supplies the viewer's bounded projection of real parent child fields.
+        fn child_restore_projection(_snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+            Err(plugin_sdk_fault("viewer did not declare a loaded-parent child projection"))
+        }
         const DOCUMENT_SCHEMA: &'static str;
         type Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
         /// 📜️ Decode-only — never constructed by `handle`, but the store's op log must still decode
@@ -26454,6 +27188,10 @@ pub mod app {
     }
 
     impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
+        const DIALECT: Dialect = E::DIALECT;
+        fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+            E::child_restore_projection(snapshot)
+        }
         const APP_ID: &'static str = "surface";
         const ROLE: AppRole = E::ROLE;
         const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = E::REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY;
@@ -26718,6 +27456,46 @@ pub mod app {
     }
 
     impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
+        fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+            V::build_document_store_owners()
+        }
+
+        fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+            V::build_config_store_owners()
+        }
+
+        fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+            V::build_document_store_disposer()
+        }
+
+        fn build_config_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+            V::build_config_store_disposer()
+        }
+
+        fn build_presence_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+            V::build_presence_store_disposer()
+        }
+
+        fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+            V::build_transient_store_disposer()
+        }
+
+        fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+            V::build_presence_peer_retirement_factory()
+        }
+
+        fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+            Some(bounded_document_store_owners::<NoDraft, NoDraftMutation>())
+        }
+
+        fn build_draft_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+            Some(bounded_document_store_disposer::<NoDraft, NoDraftMutation>())
+        }
+
+        const DIALECT: Dialect = V::DIALECT;
+        fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+            V::child_restore_projection(snapshot)
+        }
         const APP_ID: &'static str = "surface";
         const ROLE: AppRole = V::ROLE;
         const DOCUMENT_SCHEMA: &'static str = V::DOCUMENT_SCHEMA;
@@ -27264,7 +28042,7 @@ pub mod app {
         /// preflights+commits in one call — see the W1-C report's "atomicity" section for why holding
         /// an outer guard across THAT call would deadlock the process-wide assembly mutex, and why this
         /// function therefore never holds one while any io call could happen).
-        pub(crate) fn preflight_artifact_declarations<PA: PluginApp>(declarations: &[ArtifactDeclaration<PA>]) -> Result<(), PluginAssemblyError> {
+        pub(crate) fn preflight_artifact_declarations<PA: PluginApp>(plugin_id: &str, declarations: &[ArtifactDeclaration<PA>]) -> Result<(), PluginAssemblyError> {
             let mut schemas = Vec::new();
             let mut inferences = Vec::new();
             let mut inference_services = Vec::new();
@@ -27272,9 +28050,14 @@ pub mod app {
             let mut codecs: Vec<store::ArtifactCodec> = Vec::new();
             let mut format_rows = Vec::new();
             for artifact in declarations {
+                preflight_artifact_identity(plugin_id, artifact.kind.as_str())?;
                 for standard in &artifact.standards {
                     format_rows.push(format_descriptor_of(artifact, standard));
                     for subset in &standard.subsets {
+                        preflight_artifact_identity(plugin_id, subset.dialect.artifact_kind)?;
+                        if subset.dialect.artifact_kind != artifact.kind.as_str() {
+                            return Err(PluginAssemblyError::new("plugin-assembly.declaration-dialect", "subset dialect must belong to the exact declared artifact root"));
+                        }
                         schemas.push(subset.schema.descriptor.clone());
                         inferences.extend(subset.schema.inferences.iter().cloned());
                         inference_services.extend(subset.schema.inference_services.iter().copied());
@@ -27342,8 +28125,8 @@ pub mod app {
         /// guard (dropped before the next step), then one `io_register` call per subset (each
         /// independently atomic — see `preflight_artifact_declarations`'s doc for why these cannot
         /// share a guard with each other or with the codec/format step).
-        pub(crate) fn commit_artifact_declarations<PA: PluginApp>(declarations: Vec<ArtifactDeclaration<PA>>) -> Result<DeclaredRegistration<PA>, PluginAssemblyError> {
-            preflight_artifact_declarations(&declarations)?;
+        pub(crate) fn commit_artifact_declarations<PA: PluginApp>(plugin_id: &str, declarations: Vec<ArtifactDeclaration<PA>>) -> Result<(), PluginAssemblyError> {
+            preflight_artifact_declarations(plugin_id, &declarations)?;
 
             let mut schemas = Vec::new();
             let mut inferences = Vec::new();
@@ -27352,9 +28135,6 @@ pub mod app {
             let mut codecs: Vec<store::ArtifactCodec> = Vec::new();
             let mut format_rows = Vec::new();
             let mut io_batches: Vec<&'static [semio_framework::io::io_mechanism::IoEntry]> = Vec::new();
-            let mut app_defs: Vec<(App, AppFactory<PA>)> = Vec::new();
-            let mut app_schema_descriptors = Vec::new();
-            let mut capabilities = Vec::new();
 
             for artifact in &declarations {
                 for standard in &artifact.standards {
@@ -27370,13 +28150,6 @@ pub mod app {
                         codecs.push(subset.io.native.codec.clone());
                         io_batches.push(subset.io.entries);
 
-                        for surface in [&subset.editor, &subset.viewer] {
-                            let definition = surface.definition.clone();
-                            let examples = if surface.definition.role == AppRole::Editor { subset.examples.iter().map(ExampleDefinition::from).collect() } else { Vec::new() };
-                            app_defs.push((App { definition: definition.clone(), examples }, (definition, surface.factory)));
-                            app_schema_descriptors.push(surface.app_schema);
-                            capabilities.extend(capability_rows_for(surface));
-                        }
                     }
                 }
             }
@@ -27394,7 +28167,26 @@ pub mod app {
                 semio_framework::io::io_mechanism::io_register(batch).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-io", error.to_string()))?;
             }
 
-            Ok(DeclaredRegistration { app_defs, app_schema_descriptors, capabilities })
+            Ok(())
+        }
+
+        /// 🪞️ Projects app definitions without publishing any registry entry.
+        pub(crate) fn project_artifact_declarations<PA: PluginApp>(declarations: &[ArtifactDeclaration<PA>]) -> DeclaredRegistration<PA> {
+            let mut result = DeclaredRegistration { app_defs: Vec::new(), app_schema_descriptors: Vec::new(), capabilities: Vec::new() };
+            for artifact in declarations {
+                for standard in &artifact.standards {
+                    for subset in &standard.subsets {
+                        for surface in [&subset.editor, &subset.viewer] {
+                            let definition = surface.definition.clone();
+                            let examples = if surface.definition.role == AppRole::Editor { subset.examples.iter().map(ExampleDefinition::from).collect() } else { Vec::new() };
+                            result.app_defs.push((App { definition: definition.clone(), examples }, (definition, surface.factory)));
+                            result.app_schema_descriptors.push(surface.app_schema);
+                            result.capabilities.extend(capability_rows_for(surface));
+                        }
+                    }
+                }
+            }
+            result
         }
         //#endregion 🔖️Registration
 
@@ -27749,7 +28541,7 @@ pub mod app {
 
             #[semio_framework_async_macros::async_test]
             async fn declaring_registers_schema_io_and_surfaces() {
-                testkit::assert_declaration_tree_registers_all("w1c-fixture-registers-all", build_declaration()).await;
+                testkit::assert_declaration_tree_registers_all("testkit", build_declaration()).await;
             }
 
             #[semio_framework_async_macros::async_test]
@@ -27765,7 +28557,7 @@ pub mod app {
                 let mut conflicting = schema_descriptor("s.testkit.w1c-fixture@1/*");
                 conflicting.artifact.rust = "// a different, conflicting facet body";
                 invalid.standards[1].subsets[0].schema.descriptor = conflicting;
-                testkit::assert_declaration_registration_is_atomic("w1c-fixture-atomic", invalid).await;
+                testkit::assert_declaration_registration_is_atomic("testkit", invalid).await;
             }
 
             #[semio_framework_async_macros::async_test]
@@ -27781,7 +28573,7 @@ pub mod app {
 
             #[semio_framework_async_macros::async_test]
             async fn io_route_finds_the_conformance_profile_hop() {
-                let _plugin = Plugin::<FixtureApps>::builder("w1c-fixture-route").label("w1c-fixture-route").version("0.0.1").declare_artifact(build_declaration()).try_build().expect("fixture declares cleanly");
+                let _plugin = Plugin::<FixtureApps>::builder("testkit").label("w1c-fixture-route").version("0.0.1").package_id("semio:testkit").declare_artifact(build_declaration()).try_build().expect("fixture declares cleanly");
                 let route = semio_framework::io::io_mechanism::io_route(&ArtifactDialect::from(STD1_ANY_DIALECT), &ArtifactDialect::from(STD1_STRICT_DIALECT), 3).await.expect("a route from the base subset into its conformance profile must exist");
                 assert_eq!(route.value.hops.len(), 1, "the profile hop is direct");
 
@@ -27899,8 +28691,10 @@ pub mod plugin_runtime {
         maintenance_stalled_steps: AtomicU32,
         #[cfg(target_arch = "wasm32")]
         maintenance_probe_turns: AtomicU64,
-        #[cfg(target_arch = "wasm32")]
+        #[cfg(any(test, target_arch = "wasm32"))]
         maintenance_probe_entries: AtomicU64,
+        #[cfg(test)]
+        maintenance_probe_input_waits: AtomicU64,
     }
 
     impl<PA: PluginApp> RuntimeAppCell<PA> {
@@ -27914,8 +28708,10 @@ pub mod plugin_runtime {
                 maintenance_stalled_steps: AtomicU32::new(0),
                 #[cfg(target_arch = "wasm32")]
                 maintenance_probe_turns: AtomicU64::new(0),
-                #[cfg(target_arch = "wasm32")]
+                #[cfg(any(test, target_arch = "wasm32"))]
                 maintenance_probe_entries: AtomicU64::new(0),
+                #[cfg(test)]
+                maintenance_probe_input_waits: AtomicU64::new(0),
             }
         }
     }
@@ -28459,7 +29255,7 @@ pub mod plugin_runtime {
     /// `describe::describe_plugin()` needs that have no home on `PluginManifest`
     /// (`🛂️manifest/🦀️.rs`) — adding them there would require literal-updating every
     /// `PluginManifest { .. }` construction site in the tree, including several outside this
-    /// packet's owned paths (`🔌️plugin/🖥️host/🦀️.rs`, `📺️renderer/…/Shell/🎯️targets/🧊️wgpu/🦀️.rs`,
+    /// packet's owned paths (`🔌️plugin/🖥️host/🦀️.rs`, `📺️renderer/…/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`,
     /// `🌉️mcp/🧫️fixtures/🦀️.rs`). `PluginBuilder::try_build()` (`🏗️builder/🦀️.rs`,
     /// this packet's own owned path) installs one of these at the exact moment it also constructs
     /// `Plugin` — from the SAME builder fields, in the SAME call — so this is a second output of one
@@ -28787,6 +29583,8 @@ pub mod plugin_runtime {
                 }
             };
             cx.consume_fuel(1);
+            #[cfg(any(test, target_arch = "wasm32"))]
+            cell.maintenance_probe_entries.fetch_add(1, Ordering::Relaxed);
             match instance.app.maintenance_step(1, RUNTIME_CLOSE_BYTES_PER_STEP) {
                 Ok(progress @ crate::app::PluginCloseStep::Pending { released_items, released_bytes }) if released_items <= 1 && released_bytes <= RUNTIME_CLOSE_BYTES_PER_STEP => {
                     self.progress = Some(progress);
@@ -28799,6 +29597,10 @@ pub mod plugin_runtime {
                     semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin live cleanup step exceeded its exact item or byte contract") })
                 }
                 Ok(progress @ crate::app::PluginCloseStep::Blocked { .. }) => {
+                    self.progress = Some(progress);
+                    semio_framework_job::StepOutcome::Yield
+                }
+                Ok(progress @ crate::app::PluginCloseStep::AwaitingInput { .. }) => {
                     self.progress = Some(progress);
                     semio_framework_job::StepOutcome::Yield
                 }
@@ -28838,6 +29640,10 @@ pub mod plugin_runtime {
         if contended {
             return RUNTIME_MAINTENANCE_READY;
         }
+        if matches!(progress, Some(crate::app::PluginCloseStep::AwaitingInput { .. })) {
+            stalled_steps.store(0, Ordering::SeqCst);
+            return RUNTIME_MAINTENANCE_READY;
+        }
         let zero_progress = matches!(progress, Some(crate::app::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 } | crate::app::PluginCloseStep::Blocked { .. }));
         if !zero_progress {
             stalled_steps.store(0, Ordering::SeqCst);
@@ -28857,8 +29663,6 @@ pub mod plugin_runtime {
         if cell.maintenance_status.compare_exchange(RUNTIME_MAINTENANCE_QUEUED, RUNTIME_MAINTENANCE_RUNNING, Ordering::SeqCst, Ordering::SeqCst).is_err() {
             return;
         }
-        #[cfg(target_arch = "wasm32")]
-        cell.maintenance_probe_entries.store(cell.maintenance_probe_entries.load(Ordering::Relaxed).saturating_add(1), Ordering::Relaxed);
         let Ok(clock) = clock else { cell.maintenance_status.store(RUNTIME_MAINTENANCE_FAULT, Ordering::SeqCst); return };
         let status = match cell.maintenance_pump.try_lock() {
             Ok(mut pump) => runtime_live_cleanup_pump_one(cell, generation, &mut pump),
@@ -28934,6 +29738,10 @@ pub mod plugin_runtime {
         if !session.checkout_outcome() { return RUNTIME_MAINTENANCE_FAULT; }
         let Some(job) = session.checked_out_job_mut() else { return RUNTIME_MAINTENANCE_FAULT };
         pump.pending_status = runtime_live_cleanup_nonterminal_status(job.contended, job.progress, &cell.maintenance_stalled_steps);
+        #[cfg(test)]
+        if matches!(job.progress, Some(crate::app::PluginCloseStep::AwaitingInput { .. })) {
+            cell.maintenance_probe_input_waits.fetch_add(1, Ordering::SeqCst);
+        }
         let Some(outcome) = session.take_outcome() else { return RUNTIME_MAINTENANCE_FAULT };
         pump.terminal = outcome.is_terminal();
         let faulted = matches!(outcome, semio_framework_job::StepOutcome::Fault(_) | semio_framework_job::StepOutcome::Cancelled);
@@ -29034,6 +29842,9 @@ pub mod plugin_runtime {
                 }
                 Ok(progress @ crate::app::PluginCloseStep::Blocked { reason }) => {
                     self.progress = Some(progress);
+                    semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, reason.as_bytes()) })
+                }
+                Ok(crate::app::PluginCloseStep::AwaitingInput { reason }) => {
                     semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, reason.as_bytes()) })
                 }
                 Ok(crate::app::PluginCloseStep::Complete) => {
@@ -29302,6 +30113,16 @@ pub mod plugin_runtime {
             }
             assert_eq!(runtime_live_cleanup_nonterminal_status(false, blocked, &stalled), RUNTIME_MAINTENANCE_FAULT);
             assert_eq!(stalled.load(Ordering::SeqCst), RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT);
+        }
+
+        #[test]
+        fn exact_host_input_wait_resets_structural_live_cleanup_stall_credit() {
+            let stalled = AtomicU32::new(RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT - 1);
+            let awaiting_input = Some(crate::app::PluginCloseStep::AwaitingInput { reason: "typed operation awaits its exact host result ACK" });
+            for _ in 0..1_024 {
+                assert_eq!(runtime_live_cleanup_nonterminal_status(false, awaiting_input, &stalled), RUNTIME_MAINTENANCE_READY);
+            }
+            assert_eq!(stalled.load(Ordering::SeqCst), 0);
         }
 
         #[test]
@@ -30436,7 +31257,7 @@ pub mod plugin_runtime {
 
         async fn replay(effect: Effect) -> (String, Value) {
             let Effect::ReplayShellCommand { action_id, args: Some(args) } = effect else { panic!("expected a shell command relay") };
-            (action_id, from_dsl_value(args).expect("relay arguments decode"))
+            (action_id, serde_json::Value::from(args))
         }
 
         #[semio_framework_async_macros::async_test]
@@ -30633,7 +31454,7 @@ pub mod plugin_runtime {
             first.get_or_insert(index);
             cursor = (index + 1) % PLUGIN_RUNTIME_INSTANCE_SLOTS;
             match cell.instance.try_lock() {
-                Ok(instance) if instance.app.has_pending_typed_operations() => return Ok((Some((index, id)), true)),
+                Ok(instance) if instance.app.has_runnable_typed_operations() => return Ok((Some((index, id)), true)),
                 Ok(_) => {}
                 Err(std::sync::TryLockError::WouldBlock) => contended = true,
                 Err(std::sync::TryLockError::Poisoned(_)) => return Err(plugin_internal_fault(format!("runtime operation authority is poisoned for instance {id}"))),
@@ -30754,7 +31575,7 @@ pub mod plugin_runtime {
     /// `seq` — the reply IS the next `UiPatch` revision bump the caller's own `dirty_render` pass
     /// produces this same turn, already acknowledged by the existing `PatchAck` event; `intent.seq`
     /// is the dedupe/log key a caller may record, not an `in_reply_to`. A per-intent `Fault` (e.g. an
-    /// `ActionId.version` mismatch, or a `View`/`Shell`-kind action returning operations) rides
+    /// `ActionId.version` mismatch, or a `View`/`🐚️Shell`-kind action returning operations) rides
     /// `AppFrame::Error` — never silently dropped, never a hard stop for the remaining intents in the
     /// same batch.
     pub async fn plugin_dispatch_intents<PA: PluginApp, const N: usize>(runtime: &PluginRuntime<PA>, instance_id: u32, intents: &ui_contract::UiFixedList<ui_contract::UiIntent, N>) -> Result<PluginExchangeOutput, Fault> {
@@ -32250,7 +33071,7 @@ pub mod plugin_runtime {
         use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, CommandDefinition, MediaForm, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
         use semio_framework_job::InteractiveJob as _;
         mod local_interaction_dispatch {
-            include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🕹️interaction/📡️live/🧪️dispatchcomponent.rs"));
+            include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/🦀️.rs"));
         }
         /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): this module names every other type
         /// explicitly (no `use super::*;`), so the `🕹️IntentDispatchTests` fixture needs its own
@@ -32259,7 +33080,8 @@ pub mod plugin_runtime {
         use serde::{Deserialize, Serialize};
         use serde_json::json;
         use std::collections::BTreeMap;
-        use store::SpaceMember;
+        use store::{MemberFactory, SpaceMember};
+        use store::os_io::ArtifactRef;
         use store::{ArtifactPack, EngineHandles};
         use store::{Backbone, BackboneMessage, MemoryBackbone};
         use ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY;
@@ -32552,6 +33374,30 @@ pub mod plugin_runtime {
             cursor: u8,
         }
 
+        struct TestRetainedChildCommandWork {
+            emit: Option<Emit<TestMutation, TestConfigMutation, NoDraftMutation>>,
+        }
+
+        impl crate::retained_command::ArtifactCommandWork<TestApp> for TestRetainedChildCommandWork {
+            fn tool_id(&self) -> &'static str { TEST_RETAINED_COMMAND_TOOL }
+
+            fn extent(&self, _command: &TestCommand, _snapshot: &TestSnapshot, _interaction: &protocol::InteractionState, _context: Option<&crate::app::ArtifactOwnedToolJobContext<TestApp>>) -> Option<usize> { Some(1) }
+
+            fn step(
+                &mut self,
+                _command: &TestCommand,
+                _snapshot: &TestSnapshot,
+                _config: &TestConfig,
+                _history: &HistoryView,
+                _interaction: &protocol::InteractionState,
+                _hover: &InteractionHoverState,
+                _context: Option<&crate::app::ArtifactOwnedToolJobContext<TestApp>>,
+                _operation: &crate::app::AppOperationContext,
+            ) -> Result<crate::retained_command::ArtifactCommandWorkStep<TestApp>, Fault> {
+                self.emit.take().map(crate::retained_command::ArtifactCommandWorkStep::Complete).ok_or_else(|| Fault::from("test-retained-child-work-repeated"))
+            }
+        }
+
         impl crate::retained_command::ArtifactCommandWork<TestApp> for TestRetainedCommandWork {
             fn tool_id(&self) -> &'static str {
                 TEST_RETAINED_COMMAND_TOOL
@@ -32700,6 +33546,27 @@ pub mod plugin_runtime {
             .expect("test retained command payload")
         }
 
+        async fn test_retained_child_command_payload(
+            completion: crate::app::ArtifactToolCompletion<TestApp>,
+            emit: Emit<TestMutation, TestConfigMutation, NoDraftMutation>,
+        ) -> crate::retained_command::ArtifactRetainedCommandPayload<TestApp> {
+            crate::retained_command::ArtifactRetainedCommandPayload::try_new(
+                TestCommand::SetLabel { value: "wire".into() },
+                std::sync::Arc::new(TestSnapshot::default()),
+                std::sync::Arc::new(TestConfig::default()),
+                std::sync::Arc::new(HistoryView::empty()),
+                std::sync::Arc::new(protocol::InteractionState::default()),
+                std::sync::Arc::new(InteractionHoverState::new()),
+                crate::app::AppOperationContext { app_instance_id: 7, parent_document_id: "test-document".into(), operation_id: 42, generation: 3, canonical_base_revision: [5; 32] },
+                completion,
+                test_retained_command_id,
+                TEST_RETAINED_COMMAND_RAW_BYTES,
+                1,
+                Box::new(TestRetainedChildCommandWork { emit: Some(emit) }),
+            )
+            .expect("test retained child command payload")
+        }
+
         fn test_retained_wire_input(bus: &semio_framework::ActionBus, bytes: &[u8]) -> (semio_framework::ToolWireAdmission, semio_framework::action_bus::RetainedToolWireInput) {
             let (admission, mut input) = bus.begin_exact_wire(TEST_RETAINED_COMMAND_CONTROLLER, TEST_RETAINED_COMMAND_TOOL, TEST_RETAINED_COMMAND_SCHEMA, bytes.len()).expect("test retained command admission");
             for page in bytes.chunks(semio_framework::action_bus::TOOL_WIRE_PAGE_BYTES) {
@@ -32748,11 +33615,11 @@ pub mod plugin_runtime {
                     }
                     "paste" => {
                         let Some(args) = args else { return Emit::default() };
-                        let Some(fragment) = args.get("fragment").and_then(|value| serde_json::from_value::<ClipboardFragment>(value.clone()).ok()) else { return Emit::default() };
+                        let Some(fragment) = args.get("fragment").and_then(|value| serde_json::from_value::<ClipboardFragment>(value.clone().into()).ok()) else { return Emit::default() };
                         if fragment.media_type != (MediaType { class: MediaClass::Data, form: MediaForm::Value }) {
                             return Emit::default();
                         }
-                        let placement = serde_json::from_value::<PastePlacement>(args).unwrap_or_default();
+                        let placement = serde_json::from_value::<PastePlacement>(args.into()).unwrap_or_default();
                         let value = match placement.anchor {
                             PasteAnchor::Original => fragment.dsl_text,
                             anchor => format!("{}-{anchor:?}", fragment.dsl_text),
@@ -32886,6 +33753,7 @@ pub mod plugin_runtime {
         //#endregion 🧹️PublicationLaneFixtureOwners
 
         impl<const RETAINED: bool> ArtifactApp for TestApp<RETAINED> {
+            const DIALECT: Dialect = TEST_APP_DIALECT;
             fn bounded_first_step_tool_proofs() -> Vec<ArtifactBoundedFirstStepProof> { test_restart_proofs::<RETAINED>() }
 
             fn register_tool_job_factories(registry: &mut crate::app::ArtifactToolFactoryRegistry<'_, Self>) -> Result<(), Fault> { test_restart_register::<RETAINED>(registry) }
@@ -33040,7 +33908,7 @@ pub mod plugin_runtime {
                     TestCommand::AmendLabel { value } => Ok(Emit::amend(vec![TestMutation::SetLabel(SetLabel { value: value.clone() })], "label")),
                     TestCommand::CommitLabel { value } => Ok(Emit::commit(vec![TestMutation::SetLabel(SetLabel { value: value.clone() })], "commit label")),
                     TestCommand::BadView => Ok(Emit::mutations(vec![TestMutation::SetCount(SetCount { value: 99 })])),
-                    TestCommand::SetActiveUtility { utility_id } => Ok(Emit::event(AppEvent { kind: "active-utility".into(), payload: dsl::to_dsl_value(&json!({ "utilityId": utility_id.clone() })).unwrap_or(dsl::DslValue::Null) })),
+                    TestCommand::SetActiveUtility { utility_id } => Ok(Emit::event(AppEvent { kind: "active-utility".into(), payload: json!({ "utilityId": utility_id.clone() }).into() })),
                     TestCommand::Select { id } => Ok(Emit::config(vec![ChangeTestConfigSelection { selected: id.clone() }.into()])),
                     TestCommand::Navigate => Ok(Emit::effect(Effect::Navigate { uri: "semio://home".into() })),
                     TestCommand::NoopMutation => Ok(Emit::default()),
@@ -33191,8 +34059,15 @@ pub mod plugin_runtime {
                     self.page += 1;
                     return semio_framework_job::StepOutcome::Yield;
                 }
-                let TestCommand::CompositeEdit { child_value, .. } = self.command.as_deref().unwrap() else { panic!("exact keyed fixture command"); };
-                self.completion.as_ref().unwrap().complete(Ok(Emit::mutations(vec![TestMutation::SetCount(SetCount { value: self.base_count + child_value })])), EphemeralEmit::default()).expect("one exact keyed completion");
+                let TestCommand::CompositeEdit { slot, child_id, child_value } = self.command.as_deref().unwrap() else { panic!("exact keyed fixture command"); };
+                let child_emits = (!slot.is_empty()).then(|| ChildEmit::of::<TestSnapshot, _>(slot.clone(), child_id.clone(), vec![TestMutation::SetCount(SetCount { value: *child_value })])).into_iter().collect();
+                let emit = Emit {
+                    artifact_mutations: vec![TestMutation::SetCount(SetCount { value: self.base_count + child_value })],
+                    child_emits,
+                    description: Some("retained composite edit".into()),
+                    ..Default::default()
+                };
+                self.completion.as_ref().unwrap().complete(Ok(emit), EphemeralEmit::default()).expect("one exact keyed completion");
                 semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
                     state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
                     output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
@@ -33214,6 +34089,7 @@ pub mod plugin_runtime {
                 if let Some(command) = self.command.as_mut() {
                     match KeyedTestCommandDisposer.close_step(command, 1, maximum_bytes).unwrap() {
                         PluginCloseStep::Pending { released_items, released_bytes } => return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                        PluginCloseStep::AwaitingInput { .. } => return semio_framework_job::InteractiveJobCloseStep::Blocked,
                         PluginCloseStep::Blocked { .. } => return semio_framework_job::InteractiveJobCloseStep::Blocked,
                         PluginCloseStep::Complete => { assert!(KeyedTestCommandDisposer.terminal_is_empty(command)); self.command = None; return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }; }
                     }
@@ -33246,7 +34122,7 @@ pub mod plugin_runtime {
             type Owner = KeyedTestApp;
             const TOOL_IDS: &'static [&'static str] = &["compositeEdit"];
             const DOCUMENT_SCHEMA: &'static str = KeyedTestApp::DOCUMENT_SCHEMA;
-            const PUBLICATION_CONTRACTS: &'static [crate::app::ArtifactToolPublicationContract] = &[crate::app::ArtifactToolPublicationContract { tool_id: "compositeEdit", lanes: &[crate::app::ArtifactToolPublicationLane::Artifact] }];
+            const PUBLICATION_CONTRACTS: &'static [crate::app::ArtifactToolPublicationContract] = &[crate::app::ArtifactToolPublicationContract { tool_id: "compositeEdit", lanes: &[crate::app::ArtifactToolPublicationLane::Artifact, crate::app::ArtifactToolPublicationLane::Child] }];
             fn latest_wins_target(command: &TestCommand) -> Option<&str> { match command { TestCommand::CompositeEdit { child_id, .. } => Some(child_id), _ => None } }
             fn build_latest_wins_command_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<TestCommand>>> { Some(Box::new(KeyedTestCommandDisposer)) }
         }
@@ -33255,6 +34131,7 @@ pub mod plugin_runtime {
         //#endregion 🧹️KeyedNoStateFixtureOwners
 
         impl ArtifactApp for KeyedTestApp {
+            const DIALECT: Dialect = Dialect { artifact_kind: "s.test.keyed", standard: StandardId("1"), subset: SubsetId::ANY };
             const APP_ID: &'static str = "s.test.keyed@1/*#editor";
             const DOCUMENT_SCHEMA: &'static str = "semio.test/v1";
             type Snapshot = TestSnapshot;
@@ -33450,6 +34327,122 @@ pub mod plugin_runtime {
             assert!(runtime.close_quarantine.borrow().get(id).is_none());
             assert!(retired.upgrade().is_none());
         }
+
+        #[semio_framework_async_macros::async_test]
+        async fn retained_child_group_publishes_one_acknowledged_parent_child_gesture_and_retires() {
+            let id = 41;
+            let mut app = VcsArtifactApp::<KeyedTestApp, TestMembers>::with_registry(KeyedTestApp, keyed_test_registry().await).await;
+            app.bind_instance_id(id).await;
+            let mut child = new_test_child("child-1").await.expect("construct child");
+            let TestMembers::Child(child_store) = &mut child;
+            child_store.install_member_store_owners_exact(<TestSnapshot as store::MemberStoreOwner<TestMutation>>::member_store_owners());
+            app.register_child("slot", "child-1", test_child_dialect().await, child).await.expect("register child");
+            app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 9 }, &ActionMeta { actor: "fixture".into(), instance_id: id }).await.expect("admit retained child gesture");
+
+            let runtime = super::PluginRuntime::new();
+            let cell = std::sync::Arc::new(super::RuntimeAppCell::new(crate::app::AppInstance { id, app }));
+            runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
+            let acknowledgement_fixture: serde_json::Value = serde_json::from_str(include_str!("🥇️tool-latest-wins.json")).expect("language-neutral result ACK fixture");
+            let mut lanes = Vec::new();
+            for turn in 0..100_000 {
+                if let Err(error) = super::plugin_step_live_cleanup(&runtime) {
+                    let pump = cell.maintenance_pump.lock().expect("failed maintenance pump");
+                    panic!("[DEBUG] {error:?}: turn={turn} status={} generation={} stalled={} entries={} session={} outcome={} rejected={} terminal={} pending={} closing={} faulted={}", cell.maintenance_status.load(std::sync::atomic::Ordering::SeqCst), cell.maintenance_generation.load(std::sync::atomic::Ordering::SeqCst), cell.maintenance_stalled_steps.load(std::sync::atomic::Ordering::SeqCst), cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed), pump.session.is_some(), pump.outcome.is_some(), pump.rejected.is_some(), pump.terminal, pump.pending_status, pump.closing, pump.faulted);
+                }
+                let (output, mut more) = super::plugin_continue_typed_operations(&runtime).await.expect("drive one production publication turn");
+                if let Some((receiver, output)) = output {
+                    assert_eq!(receiver, id);
+                    if let Some(page) = output.typed_operation_result {
+                        assert_ne!(page.lane, TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
+                        lanes.push(page.lane);
+                        if page.lane == TypedOperationResultLane::Child {
+                            assert_eq!(page.token.attempt, acknowledgement_fixture["resultAck"]["attempt"].as_u64().unwrap() as u8);
+                            let delayed_token = page.token;
+                            {
+                                let active = cell.instance.lock().expect("delayed ACK retained app");
+                                assert!(active.app.has_pending_typed_operations());
+                                assert_eq!(active.app.typed_operation_result_state_for_test(delayed_token.operation), Some((delayed_token, TypedOperationResultLane::Child, true, false)));
+                            }
+                            let maintenance_entries_before = cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed);
+                            let pre_ack_polls = acknowledgement_fixture["resultAck"]["preAckPolls"].as_u64().unwrap();
+                            for poll in 1..=pre_ack_polls {
+                                let expected_entries = maintenance_entries_before + poll;
+                                for _ in 0..100_000 {
+                                    super::plugin_step_live_cleanup(&runtime).expect("delayed renderer ACK remains valid maintenance input wait");
+                                    crate::app::plugin_job_yield_once().await;
+                                    if cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed) >= expected_entries { break; }
+                                }
+                                assert!(cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed) >= expected_entries, "production maintenance callback must execute before counting one delayed ACK poll");
+                                let (output, _) = super::plugin_continue_typed_operations(&runtime).await.expect("delayed renderer ACK does not fault continuation");
+                                assert!(output.as_ref().and_then(|(_, output)| output.typed_operation_result.as_ref()).is_none(), "presented result page must not be republished before an explicit retry deadline");
+                            }
+                            assert!(cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed) >= maintenance_entries_before + pre_ack_polls);
+                            let input_waits_before_alignment = cell.maintenance_probe_input_waits.load(std::sync::atomic::Ordering::SeqCst);
+                            for _ in 0..100_000 {
+                                super::plugin_step_live_cleanup(&runtime).expect("reach one processed exact ACK-wait maintenance stage");
+                                crate::app::plugin_job_yield_once().await;
+                                if cell.maintenance_probe_input_waits.load(std::sync::atomic::Ordering::SeqCst) > input_waits_before_alignment
+                                    && cell.maintenance_status.load(std::sync::atomic::Ordering::SeqCst) == super::RUNTIME_MAINTENANCE_READY
+                                    && cell.maintenance_stalled_steps.load(std::sync::atomic::Ordering::SeqCst) == 0
+                                {
+                                    break;
+                                }
+                            }
+                            assert!(cell.maintenance_probe_input_waits.load(std::sync::atomic::Ordering::SeqCst) > input_waits_before_alignment, "maintenance must process the presented result as an external input wait");
+                            {
+                                let active = cell.instance.lock().expect("stable delayed ACK retained app");
+                                assert_eq!(active.app.typed_operation_result_state_for_test(delayed_token.operation), Some((delayed_token, TypedOperationResultLane::Child, true, false)));
+                            }
+                            assert_eq!(cell.maintenance_stalled_steps.load(std::sync::atomic::Ordering::SeqCst), 0);
+                            super::plugin_acknowledge_typed_operation_result(&runtime, delayed_token).await.expect("delayed exact retained result ACK");
+                            more = true;
+                        } else {
+                            super::plugin_acknowledge_typed_operation_result(&runtime, page.token).await.expect("ack exact retained result");
+                            more = true;
+                        }
+                    }
+                }
+                if !more {
+                    assert!(lanes.contains(&TypedOperationResultLane::Terminal), "runtime retired before its terminal page");
+                    eprintln!("[DEBUG] retained Child runtime published every host lane and retired after {turn} turns");
+                    break;
+                }
+                crate::app::plugin_job_yield_once().await;
+            }
+            assert!(lanes.contains(&TypedOperationResultLane::Child));
+            assert!(lanes.contains(&TypedOperationResultLane::Terminal));
+            {
+                let mut active = cell.instance.lock().expect("live runtime app");
+                assert!(!active.app.has_pending_typed_operations());
+                assert_eq!(active.app.snapshot().expect("parent snapshot").count, 9);
+                let (_, child) = active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("live child");
+                let TestMembers::Child(child) = child;
+                assert_eq!(child.snapshot().expect("child snapshot").count, 9);
+
+                active.app.dispatch_action("undo", None, &ActionMeta { actor: "fixture".into(), instance_id: id }).await.expect("undo retained group");
+                assert_eq!(active.app.snapshot().expect("undone parent snapshot").count, 0);
+                let (_, child) = active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("undone child");
+                let TestMembers::Child(child) = child;
+                assert_eq!(child.snapshot().expect("undone child snapshot").count, 0);
+
+                active.app.dispatch_action("redo", None, &ActionMeta { actor: "fixture".into(), instance_id: id }).await.expect("redo retained group");
+                assert_eq!(active.app.snapshot().expect("redone parent snapshot").count, 9);
+                let (_, child) = active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("redone child");
+                let TestMembers::Child(child) = child;
+                assert_eq!(child.snapshot().expect("redone child snapshot").count, 9);
+            }
+            let retired = std::sync::Arc::downgrade(&cell);
+            drop(cell);
+            super::plugin_destroy_app(&runtime, id).await.expect("begin runtime destroy");
+            for _ in 0..100_000 {
+                super::plugin_step_close_cleanup(&runtime).expect("drive exact runtime close");
+                if runtime.close_quarantine.borrow().get(id).is_none() { break; }
+                std::thread::yield_now();
+            }
+            assert!(runtime.close_quarantine.borrow().get(id).is_none());
+            assert!(retired.upgrade().is_none());
+            eprintln!("[DEBUG] retained Child publication emitted Child+Terminal ACK pages, moved one parent-child undo group, and retired every owner");
+        }
         //#endregion 🗝️RegisteredKeyedDispatchFixture
 
         use crate::__semio_dispatch_PluginApp;
@@ -33466,6 +34459,7 @@ pub mod plugin_runtime {
         struct CopyDrawApp;
 
         impl ArtifactApp for CopyDrawApp {
+            const DIALECT: Dialect = Dialect { artifact_kind: "s.draw.draw", standard: StandardId("1"), subset: SubsetId::ANY };
             const APP_ID: &'static str = "s.draw.draw@1/*#editor";
             const DOCUMENT_SCHEMA: &'static str = "draw.document";
             type Snapshot = TestSnapshot;
@@ -33698,7 +34692,7 @@ pub mod plugin_runtime {
         }
 
         #[semio_framework_async_macros::async_test]
-        async fn retained_latest_wins_real_document_publication_cancellation_and_exhausted_ack_close() {
+        async fn retained_latest_wins_real_document_publication_cancellation_and_delayed_ack_close() {
             crate::app::test_retained_document_cancellation::<TestApp>(&TestCountOneItemPreparationFactory, || TestMutation::SetCount(SetCount { value: 42 }), |snapshot| snapshot.count).await;
         }
 
@@ -34153,6 +35147,106 @@ pub mod plugin_runtime {
         }
 
         #[semio_framework_async_macros::async_test]
+        async fn retained_command_child_emit_prepublication_close_and_rejected_handoff_are_bounded() {
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("🧵️retained-command/🧪️fixtures/🧩️child-prepublication-close.json")).expect("language-neutral child close fixture");
+            let expected_ids = fixture["children"].as_array().expect("child close fixture rows").iter().map(|child| child["childId"].as_str().unwrap().to_string()).collect::<Vec<_>>();
+            let expected_order = fixture["expectedRetirementOrder"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect::<Vec<_>>();
+            let build_emit = || {
+                let children = fixture["children"].as_array().unwrap().iter().enumerate().map(|(index, child)| {
+                    let emitted = ChildEmit::of::<TestSnapshot, _>(
+                        child["slot"].as_str().unwrap(),
+                        child["childId"].as_str().unwrap(),
+                        vec![TestMutation::SetCount(SetCount { value: index as i32 + 1 })],
+                    );
+                    assert!(emitted.ops.iter().all(|op| !op.is_empty()), "real composite mutation owns nonempty encoded bytes");
+                    emitted
+                }).collect();
+                Emit { artifact_mutations: vec![TestMutation::SetCount(SetCount { value: 7 })], child_emits: children, ..Default::default() }
+            };
+            let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(42), semio_framework_job::RevisionId(2), semio_framework_job::Generation(3), 5);
+            let drive_to_publish = |job: &mut crate::retained_command::ArtifactRetainedCommandJob<TestApp>, sequence: &mut u64| {
+                for expected_stage in ["preflight", "work"] {
+                    let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), sequence);
+                    match job.step(&mut context) {
+                        semio_framework_job::StepOutcome::PreviewReady(mut payload) => test_close_retained_payload(&mut payload),
+                        _ => panic!("retained child job failed at {expected_stage}"),
+                    }
+                }
+            };
+            let close_and_observe = |job: &mut crate::retained_command::ArtifactRetainedCommandJob<TestApp>| {
+                let initial = job.test_pending_emit_shape().expect("pre-publication emit owner");
+                assert_eq!(initial, (2, 1, expected_ids.clone()));
+                job.begin_close();
+                assert_eq!(job.close_step(0, fixture["maximumBytes"].as_u64().unwrap() as usize), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                assert_eq!(job.test_pending_emit_shape(), Some(initial.clone()), "zero item grant preserves the exact emit owner");
+                assert_eq!(job.close_step(1, 0), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }, "empty reserved raw allocation retires before produced output");
+                assert_eq!(job.test_pending_emit_shape(), Some(initial.clone()), "raw allocation retirement preserves the exact emit owner");
+                assert_eq!(job.close_step(1, 0), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                assert_eq!(job.test_pending_emit_shape(), Some(initial), "zero byte grant preserves the exact child payload");
+                let mut retired = Vec::new();
+                let mut prior_children = expected_ids.len();
+                for _ in 0..10_000 {
+                    let step = job.close_step(fixture["maximumItems"].as_u64().unwrap() as usize, fixture["maximumBytes"].as_u64().unwrap() as usize);
+                    if let semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } = step {
+                        assert!(released_items <= 1 && released_bytes <= 4);
+                    }
+                    if let Some((children, parents, _)) = job.test_pending_emit_shape() {
+                        assert_eq!(parents, 1, "parent lane remains owned until every child is terminal");
+                        if children < prior_children {
+                            retired.push(fixture["children"][prior_children - 1]["id"].as_str().unwrap());
+                            prior_children = children;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                assert_eq!(retired, expected_order);
+                for _ in 0..128 {
+                    if job.terminal_is_empty() { break; }
+                    let _ = job.close_step(1, 4_096);
+                }
+                assert!(job.terminal_is_empty());
+            };
+
+            let direct_completion = crate::app::ArtifactToolCompletion::<TestApp>::new();
+            let _direct_consumer = direct_completion.clone();
+            let mut direct = crate::retained_command::ArtifactRetainedCommandJob::new(test_retained_child_command_payload(direct_completion, build_emit()).await);
+            let mut sequence = 0;
+            drive_to_publish(&mut direct, &mut sequence);
+            close_and_observe(&mut direct);
+
+            let duplicate_completion = crate::app::ArtifactToolCompletion::<TestApp>::new();
+            let duplicate_consumer = duplicate_completion.clone();
+            duplicate_completion.complete(Ok(Emit::default()), EphemeralEmit::default()).expect("prefill completion once");
+            let mut duplicate = crate::retained_command::ArtifactRetainedCommandJob::new(test_retained_child_command_payload(duplicate_completion, build_emit()).await);
+            drive_to_publish(&mut duplicate, &mut sequence);
+            let mut duplicate_context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+            match duplicate.step(&mut duplicate_context) {
+                semio_framework_job::StepOutcome::Fault(mut fault) => test_close_retained_payload(&mut fault.detail),
+                _ => panic!("duplicate completion must reject the handoff"),
+            }
+            assert!(duplicate.test_pending_emit_shape().is_some(), "duplicate rejection returns the exact emit owner");
+            close_and_observe(&mut duplicate);
+            let (existing, _) = duplicate_consumer.take_emit().expect("prefilled completion remains readable").expect("prefilled completion remains assigned");
+            assert!(existing.expect("prefilled completion remains successful").child_emits.is_empty());
+
+            let busy_completion = crate::app::ArtifactToolCompletion::<TestApp>::new();
+            let busy_consumer = busy_completion.clone();
+            let mut busy = crate::retained_command::ArtifactRetainedCommandJob::new(test_retained_child_command_payload(busy_completion.clone(), build_emit()).await);
+            drive_to_publish(&mut busy, &mut sequence);
+            busy_completion.with_busy_test_lock(|| {
+                let mut busy_context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+                match busy.step(&mut busy_context) {
+                    semio_framework_job::StepOutcome::Fault(mut fault) => test_close_retained_payload(&mut fault.detail),
+                    _ => panic!("busy completion must reject the handoff"),
+                }
+            });
+            assert!(busy.test_pending_emit_shape().is_some(), "busy rejection returns the exact emit owner");
+            close_and_observe(&mut busy);
+            assert!(busy_consumer.take_emit().expect("busy completion remains readable").is_none(), "busy completion remains untouched");
+        }
+
+        #[semio_framework_async_macros::async_test]
         async fn unproved_command_fails_before_an_overrun_reducer_can_start() {
             let mut app = contract_app_under_test().await;
             let error = app.dispatch_typed(TestCommand::WatchdogOverrun, &meta()).await.expect_err("an unproved operation must fail before an over-budget reducer starts");
@@ -34590,8 +35684,8 @@ pub mod plugin_runtime {
         /// match-delegation over ONE variant, replacing the old `Box<dyn SpaceMember>` erasure (see
         /// `📓️terra-dedyn-fw-os-spacemember-report.md`).
         store::space_members! {
-            pub enum TestMembers {
-                Child("s.test.child", "semio.test/v1") => store::ArtifactStore<TestSnapshot, TestMutation>,
+            pub enum TestMembers, TestMembersOpen {
+                Child("s.test.child", "native", "*", "semio.test/v1") => (TestSnapshot, TestMutation),
             }
         }
 
@@ -34602,7 +35696,8 @@ pub mod plugin_runtime {
         /// `TestApp` itself uses, so a "child" here is just a second, independently-owned instance
         /// of the identical document shape.
         async fn new_test_child(id: &str) -> Result<TestMembers, store::VcsError> {
-            let envelope = store::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None);
+            let mut envelope = store::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None);
+            envelope.dialect = Some(test_child_dialect().await);
             Ok(TestMembers::Child(store::ArtifactStore::new(envelope).await?))
         }
 
@@ -34640,18 +35735,6 @@ pub mod plugin_runtime {
             }
         }
 
-        struct TestStoreOwnedDisposer;
-
-        impl store::ArtifactStoreOwnedDisposer<TestSnapshot, TestMutation> for TestStoreOwnedDisposer {
-            fn close_step(&mut self, _store: &mut store::ArtifactStoreCloseView<'_, TestSnapshot, TestMutation>, _maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
-                Ok(store::SnapshotRetirementStep::Blocked)
-            }
-
-            fn terminal_is_empty(&self, _store: &store::ArtifactStore<TestSnapshot, TestMutation>) -> bool {
-                false
-            }
-        }
-
         struct TestOwnedValueRetirement<T: Send + 'static>(Option<T>);
 
         impl<T: Send + 'static> store::ErasedSnapshotRetirement for TestOwnedValueRetirement<T> {
@@ -34679,12 +35762,14 @@ pub mod plugin_runtime {
         }
 
         impl store::MemberStoreOwner<TestMutation> for TestSnapshot {
+            type SnapshotOpen = store::UnsupportedMemberSnapshotOpen<Self>;
+
             fn member_store_owners() -> store::MemberStoreOwners<Self, TestMutation> {
                 store::MemberStoreOwners::new(
                     std::sync::Arc::new(TestSnapshotRetirementFactory { lie_about_terminal: false }),
                     std::sync::Arc::new(TestOwnedValueRetirementFactory::<TestSnapshot>(std::marker::PhantomData)),
                     std::sync::Arc::new(TestOwnedValueRetirementFactory::<TestMutation>(std::marker::PhantomData)),
-                    Box::new(TestStoreOwnedDisposer),
+                    Box::new(store::ArtifactStoreCursorDisposer::<TestSnapshot, TestMutation>::new()),
                 )
             }
         }
@@ -34696,6 +35781,122 @@ pub mod plugin_runtime {
 
         async fn test_child_dialect() -> store::os_io::ArtifactDialect {
             store::os_io::ArtifactDialect { artifact_kind: "s.test.child".into(), standard: "native".into(), subset: "*".into() }
+        }
+
+        fn close_member_admission_fixture(member: &mut TestMembers) {
+            for _ in 0..65_536 {
+                match member.close_owned_step(1, 4096).expect("member closes under its exact grant") {
+                    store::SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 4096),
+                    store::SnapshotRetirementStep::Blocked => panic!("fixture member has no external owner"),
+                    store::SnapshotRetirementStep::Complete => {
+                        assert!(member.close_owned_terminal_is_empty());
+                        return;
+                    }
+                }
+            }
+            panic!("member admission fixture did not close");
+        }
+
+        fn close_member_admission_app<A: ArtifactApp>(app: &mut VcsArtifactApp<A, TestMembers>) {
+            for _ in 0..100_000 {
+                match app.close_step(1, 4096).expect("app closes under its exact grant") {
+                    PluginCloseStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 4096),
+                    PluginCloseStep::AwaitingInput { reason } => panic!("fixture app close awaited input: {reason}"),
+                    PluginCloseStep::Blocked { reason } => panic!("fixture app has no external owner: {reason}"),
+                    PluginCloseStep::Complete => {
+                        assert!(app.close_terminal_is_empty());
+                        return;
+                    }
+                }
+            }
+            panic!("member admission app did not close");
+        }
+
+        include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🧩️composition/🦀️.rs"));
+
+        #[semio_framework_async_macros::async_test]
+        async fn member_factory_closed_dialect_open_failure_retains_pin_and_drains_exact_member() {
+            let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default()).await;
+            let dialect = test_child_dialect().await;
+            let expected = ArtifactRef { artifact_id: "child-1".into(), dialect: dialect.clone() };
+            app.pending_child_pins.push(vcs::CompositionPin { child_ref: expected.clone(), checkpoint_id: "missing-checkpoint".into() });
+            let parent = ArtifactRef { artifact_id: app.store.envelope().id.clone(), dialect: ComposedParentApp::<true>::DIALECT.into() };
+            assert_eq!(app.store.envelope().dialect.as_ref(), Some(&parent.dialect));
+            assert!(app.open_child("slot", "child-1", dialect.clone(), &[]).await.is_err());
+            assert!(app.test_child_admission_state(1).children_empty && app.test_child_admission_state(1).content_empty && app.test_child_admission_state(1).abort_empty);
+            assert_eq!(app.test_child_admission_state(1).generation, 0);
+            let mut persisted = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack()).await.unwrap();
+            persisted.set_owner(Some(store::OwnerRef { parent, slot: "slot".into(), child_id: "child-1".into() })).await;
+            let packed = persisted.envelope_pack_bytes().await.expect("persist exact owned child");
+            close_member_admission_fixture(&mut persisted);
+            assert!(app.open_child("slot", "child-1", dialect, &packed).await.is_err());
+            assert!(app.test_child_admission_state(1).children_empty && app.test_child_admission_state(1).content_empty && app.test_child_admission_state(1).roots_retiring_empty);
+            assert_eq!(app.test_child_admission_state(1).generation, 0);
+            assert_eq!(app.pending_child_pins.len(), 1);
+            assert_eq!(app.pending_child_pins[0].checkpoint_id, "missing-checkpoint");
+            assert!(app.composition.graph_mut().await.owner_of("child-1").await.is_none());
+            assert_eq!(app.test_child_admission_state(1).abort_generation, 1);
+            assert!(app.test_child_admission_state(1).requested_abort_retained);
+            for _ in 0..65_536 {
+                app.maintenance_stage = 20;
+                match app.maintenance_step(1, 4096).expect("live failed-member cleanup") {
+                    PluginCloseStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 4096),
+                    PluginCloseStep::AwaitingInput { reason } => panic!("failed member cleanup awaited input: {reason}"),
+                    PluginCloseStep::Blocked { reason } => panic!("failed member must have a real cleanup owner: {reason}"),
+                    PluginCloseStep::Complete => {}
+                }
+                if app.test_child_admission_state(1).abort_empty { break; }
+            }
+            assert!(app.test_child_admission_state(1).abort_empty);
+            app.maintenance_stage = 20;
+            assert_eq!(app.maintenance_step(1, 4096).unwrap(), PluginCloseStep::Complete);
+            close_member_admission_app(&mut app);
+            eprintln!("[DEBUG] child open: factory rejection is pure; checkpoint rejection retains its pin and closes exactly one admitted member");
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn member_factory_closed_dialect_register_rejects_pin_without_mutating_member() {
+            let mut app = VcsArtifactApp::<TestApp, TestMembers>::new(TestApp::<false>::default()).await;
+            let dialect = test_child_dialect().await;
+            let expected = ArtifactRef { artifact_id: "child-1".into(), dialect: dialect.clone() };
+            app.pending_child_pins.push(vcs::CompositionPin { child_ref: expected.clone(), checkpoint_id: "missing-checkpoint".into() });
+            let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack()).await.unwrap();
+            let before = member.envelope_pack_bytes().await.unwrap();
+            let error = app.register_child("slot", "child-1", dialect, member).await.expect_err("direct transfer must not apply a deferred restore pin");
+            let mut returned = error.member.expect("exact caller member returned");
+            assert_eq!(returned.envelope_pack_bytes().await.unwrap(), before);
+            assert_eq!(returned.artifact_ref().as_ref(), Some(&expected));
+            assert!(returned.owner_ref().is_none());
+            assert!(app.test_child_admission_state(1).children_empty && app.test_child_admission_state(1).content_empty && app.test_child_admission_state(1).abort_empty);
+            assert_eq!(app.test_child_admission_state(1).generation, 0);
+            assert_eq!(app.pending_child_pins.len(), 1);
+            assert!(app.composition.graph_mut().await.owner_of("child-1").await.is_none());
+            close_member_admission_fixture(&mut returned);
+            close_member_admission_app(&mut app);
+            eprintln!("[DEBUG] direct child registration: queued pin rejection returns the byte-identical caller member without publication");
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn member_factory_closed_dialect_fresh_register_and_restore_publish_exact_parent_owner() {
+            let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default()).await;
+            let dialect = test_child_dialect().await;
+            let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack()).await.unwrap();
+            app.register_child("slot", "child-1", dialect.clone(), member).await.expect("pure fresh member is adopted");
+            assert_eq!(app.test_child_admission_state(1).generation, 1);
+            let owner = store::OwnerRef { parent: ArtifactRef { artifact_id: app.store.envelope().id.clone(), dialect: ComposedParentApp::<true>::DIALECT.into() }, slot: "slot".into(), child_id: "child-1".into() };
+            let member = app.child_store("slot", "child-1").await.unwrap();
+            assert_eq!(member.owner_ref(), Some(owner.clone()));
+            let packed = member.envelope_pack_bytes().await.unwrap();
+            let mut restored = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default()).await;
+            restored.open_child("slot", "child-1", dialect, &packed).await.expect("fresh factory restores exact parent owner");
+            assert_eq!(restored.test_child_admission_state(1).generation, 1);
+            assert_eq!(restored.child_store("slot", "child-1").await.unwrap().owner_ref(), Some(owner.clone()));
+            assert_eq!(restored.composition.graph_mut().await.owner_of("child-1").await, Some(owner.parent.artifact_id.as_str()));
+            assert_eq!(restored.composition.graph_mut().await.slot_of("child-1").await, Some("slot"));
+            assert!(restored.child_content_root.typed_read::<TestSnapshot>("slot", "child-1").is_ok());
+            close_member_admission_app(&mut restored);
+            close_member_admission_app(&mut app);
+            eprintln!("[DEBUG] owned child publication: fresh registration and independent restore each publish one exact parent/slot/member root");
         }
 
         #[semio_framework_async_macros::async_test]
@@ -35660,7 +36861,7 @@ pub mod plugin_runtime {
             let result = app.dispatch_typed(TestCommand::SetActiveUtility { utility_id: "brush".into() }, &meta()).await.expect("setActiveUtility is a valid View command");
             assert!(result.mutations.is_empty(), "utility switching must not create history");
             let event = result.events.iter().find(|event| event.kind == "active-utility").expect("echoed active utility");
-            assert_eq!(event.payload, dsl::to_dsl_value(&json!({ "utilityId": "brush" })).unwrap());
+            assert_eq!(event.payload, dsl::DslValue::from(json!({ "utilityId": "brush" })));
         }
 
         #[semio_framework_async_macros::async_test]
@@ -36741,7 +37942,7 @@ pub mod world3d_host {
 
     /// 🥽️ One `{ id, data }` scene entry for a built-in mesh kind. `MeshData` carries a first-party
     /// `From<MeshData> for store::json::Value` and no production serde impl
-    /// (`🔨️modules/🔺️mesh-engine/🦀️.rs`), so the whole scene payload is built and printed with
+    /// (`🔨️modules/🏗️mesh-engine/🦀️.rs`), so the whole scene payload is built and printed with
     /// `store::json`.
     fn world3d_mesh_kind_entry(kind: &str) -> store::json::Value {
         store::json::object([("id".to_string(), store::json::Value::String(kind.to_string())), ("data".to_string(), store::json::Value::from(mesh_from_kind(kind)))])
@@ -37529,7 +38730,7 @@ mod derived_artifact_children_tests {
     struct ChildrenTestSnapshot;
 
     #[derive(Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
-    struct ChildrenTestDiff;
+    struct ChildrenTestDiff {}
 
     impl protocol::MutationDiff<ChildrenTestSnapshot> for ChildrenTestDiff {
         fn apply(&self, snapshot: &ChildrenTestSnapshot) -> protocol::MutationApplyResult<ChildrenTestSnapshot> {
@@ -37541,7 +38742,7 @@ mod derived_artifact_children_tests {
     //#region 🧬️ChildrenMutationRoster
     mod mutations {
         use super::{ChildrenTestDiff, ChildrenTestSnapshot};
-        include!("🧪️tests/🧬️children-fixture/🧬️mutations/🦀️.rs");
+        include!("🧪️tests/🧒️children-fixture/🧬️mutations/🦀️.rs");
     }
     use mutations::ChildrenTestMutation;
     //#endregion 🧬️ChildrenMutationRoster

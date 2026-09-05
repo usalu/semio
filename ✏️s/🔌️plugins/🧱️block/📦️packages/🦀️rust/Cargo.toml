@@ -45,9 +45,7 @@ ports = { react = 6026, wgpu = 6126 }
 kind = "mesh-collection"
 route = "/mesh"
 app = "s.block.block3d@1/*#editor"
-roots = ["🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation", "♻️mit-bestand/🖼️asset/🏚️abbau-aufbau"]
-placeholder = "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧊️placeholder.glb"
-filter_from_examples = true
+catalog = "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

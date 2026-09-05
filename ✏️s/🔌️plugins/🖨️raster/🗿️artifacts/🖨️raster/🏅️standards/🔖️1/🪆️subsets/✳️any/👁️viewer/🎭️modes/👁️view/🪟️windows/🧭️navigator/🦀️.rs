@@ -1,6 +1,6 @@
 //! 🧭️ Raster viewer — the Navigator window: a read-only minimap of the same composited document the
 //! Composite window shows. The editor's own navigator window (`✏️editor/…/🪟️windows/🧭️navigator`) has
-//! no `🎚️options`/utilities/interactions scoped to it — a purely read-only minimap already, ported here
+//! no `☑️options`/utilities/interactions scoped to it — a purely read-only minimap already, ported here
 //! rather than dropped (this file imports nothing from the sibling editor surface,
 //! `policyViewerPurityBreaches` forbids it outright). Reuses `ImageWindowKit::render` (contract §2.6)
 //! for the actual pixel payload, under its own distinct window kind id (`ImageWindowKit::window_kind()`

@@ -9,7 +9,7 @@
 import * as React from "react";
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { styleVariants } from "../../🔨️modules/🏷️style-variants/🟦️.ts";
+import { styleVariants } from "../../🔨️modules/🧬️style-variants/🟦️.ts";
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { ControlHotkeyBadge } from "../../🔨️modules/⌨️control-hotkey-presentation/🟦️.tsx";
 import { chromeControlGroupClass, chromeControlItemClass, chromeControlItemOnClass } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️.ts";

@@ -376,6 +376,11 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         self.phase = ArtifactRetainedCommandPhase::Fault;
         StepOutcome::Fault(JobFault { detail: Self::retained_payload(cx, JobPayloadStream::Fault, bytes) })
     }
+
+    #[cfg(test)]
+    pub(crate) fn test_pending_emit_shape(&self) -> Option<(usize, usize, Vec<String>)> {
+        self.emit.as_ref().map(|emit| (emit.child_emits.len(), emit.artifact_mutations.len(), emit.child_emits.iter().map(|child| child.child_id.clone()).collect()))
+    }
 }
 
 impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
@@ -510,7 +515,10 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
                 }
                 let Some(emit) = self.emit.take() else { return self.fault(cx, b"retained command result owner is absent") };
                 let Some(ephemeral) = self.ephemeral.take() else { return self.fault(cx, b"retained command ephemeral result owner is absent") };
-                if completion.complete(Ok(emit), ephemeral).is_err() {
+                if let Err(rejected) = completion.complete(Ok(emit), ephemeral) {
+                    self.emit = rejected.emit.ok();
+                    self.ephemeral = Some(rejected.ephemeral);
+                    drop(rejected.fault);
                     return self.fault(cx, b"retained command result publication was rejected");
                 }
                 self.phase = ArtifactRetainedCommandPhase::Complete;
@@ -594,6 +602,15 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
                 }
             };
         }
+        if let Some(emit) = self.emit.as_mut() {
+            if let Some(step) = emit.close_child_one(maximum_items, maximum_bytes) {
+                return match step {
+                    crate::app::PluginCloseStep::Pending { released_items, released_bytes } => InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                    crate::app::PluginCloseStep::Blocked { .. } | crate::app::PluginCloseStep::AwaitingInput { .. } => InteractiveJobCloseStep::Blocked,
+                    crate::app::PluginCloseStep::Complete => unreachable!("child close helper consumes completed children"),
+                };
+            }
+        }
         retire_one!(emit);
         retire_one!(ephemeral);
         if let Some(work) = self.work.as_mut() {
@@ -653,7 +670,7 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
 
 #[cfg(test)]
 pub(crate) fn test_raw_allocation_close<A: ArtifactApp>() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️raw-allocation-close.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🚪️raw-allocation-close.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let mut raw = Vec::with_capacity(case["capacity"].as_u64().unwrap() as usize);
         raw.resize(case["initializedBytes"].as_u64().unwrap() as usize, 42);
@@ -687,7 +704,7 @@ pub(crate) fn test_raw_allocation_close<A: ArtifactApp>() {
 mod tests {
     use super::*;
 
-    const CHECKPOINT_FIXTURE_JSON: &str = include_str!("🧪️fixtures/🔣️artifact-command-checkpoint.json");
+    const CHECKPOINT_FIXTURE_JSON: &str = include_str!("🧪️fixtures/📸️artifact-command-checkpoint.json");
 
     #[derive(serde::Deserialize)]
     #[serde(rename_all = "camelCase")]

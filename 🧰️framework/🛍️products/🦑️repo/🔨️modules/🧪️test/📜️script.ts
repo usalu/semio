@@ -14,7 +14,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { basename, delimiter, join, relative, sep } from "node:path";
-import { type BreachRecord, type TestLevel, Script, ScriptRouter, TEST_LEVELS, formatBreachReport, getRepoMetaDir, resolveTestLevel, runBundleScriptMain, runProbe, testLevelBudgetMs } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { type BreachRecord, type TestLevel, Script, ScriptRouter, TEST_LEVELS, formatBreachReport, getRepoMetaDir, resolveTestLevel, runBundleScriptMain, runProbe, testLevelBudgetMs, runCmd, orchestratorBudgetOpts } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import {
   type ClassifiedDependency,
   type CoverageMetrics,
@@ -578,7 +578,7 @@ function materializeTypescriptHost(repoRoot: string, discovered: DiscoveredCase,
   const problems = contributedOraclePackages(repoRoot, discovered, "typescript")
     .filter((entry) => entry.path === undefined && !resolvesFromRepoRoot(repoRoot, entry.package))
     .map((entry) => `${discovered.caseDir}: declared typescript oracle package ${entry.package} does not resolve from the repository's node_modules — add it to the root manifest and install it`);
-  return { command: "bun", args: [join(repoRoot, DOMAIN_REL, "🏃️host", "🟦️.ts"), "--plan", planPath, "--out", outPath, "--adapter", join(repoRoot, discovered.adapters.typescript!)], cwd: repoRoot, env: process.env, hostDir: null, problems };
+  return { command: "bun", args: [join(repoRoot, DOMAIN_REL, "🖥️host", "🟦️.ts"), "--plan", planPath, "--out", outPath, "--adapter", join(repoRoot, discovered.adapters.typescript!)], cwd: repoRoot, env: process.env, hostDir: null, problems };
 }
 
 /** 🟦️ Whether a bare specifier resolves from the repository root — the same lookup the host will do. */
@@ -615,7 +615,7 @@ function materializeDotnetHost(repoRoot: string, discovered: DiscoveredCase, rol
       "  <ItemGroup>",
       `    <Compile Include="${adapterAbs}" />`,
       '    <Compile Include="Program.cs" />',
-      `    <ProjectReference Include="${join(repoRoot, DOTNET_PACKAGE_REL, "Semio.Repo.Test.csproj")}" />`,
+      `    <ProjectReference Include="${join(repoRoot, DOTNET_PACKAGE_REL, "🧪️Semio.Repo.Test.csproj")}" />`,
       "  </ItemGroup>",
       "</Project>",
       "",
@@ -951,6 +951,14 @@ class DependencyScript extends Script {
 /** 📈️ The non-aggregate gates: scenario, implementation, parity, oracle and per-implementation source
  * coverage. Reads the last run's metrics rather than re-running it, so a gate can never be satisfied
  * by a run that never happened. */
+/** 🧭️ Explicit full-fleet DSL conformance; never part of focused kernel test routing. */
+class DslScript extends Script {
+  run(segments: string[]): void {
+    const { level, rest } = resolveTestLevel(segments);
+    runCmd("bun", ["nx", "run", "@semio-tech/dsl-fixture-sweep-rs:test", "--skip-nx-cache", "--", level, ...rest], { cwd: this.root, ...orchestratorBudgetOpts() });
+  }
+}
+
 class MetricsScript extends Script {
   run(segments: string[]): void {
     const metricsPath = join(reportsDir(this.repoRoot), "📈️metrics.json");
@@ -1514,7 +1522,7 @@ export function policy(): BreachRecord[] {
   const repoRoot = join(import.meta.dir, "..", "..", "..", "..", "..");
   const breaches: BreachRecord[] = [];
   for (const name of readdirSync(import.meta.dir)) {
-    if (!["🧬️schema", "📇️registry", "📦️packages", "🧫️fixtures", "🧪️tests", "🧬️protocol", "🏃️runner", "🔮️oracle", "📜️script.ts", "📋️project.json", "🟨️.mjs", "AGENTS.md", "README.md", "node_modules"].includes(name)) {
+    if (!["🧬️schema", "📇️registry", "📦️packages", "🧫️fixtures", "🧪️tests", "📡️protocol", "🏃️runner", "🔮️oracle", "📜️script.ts", "📋️project.json", "🟨️.mjs", "AGENTS.md", "README.md", "node_modules"].includes(name)) {
       breaches.push({ id: "unknown-domain-child", kind: "testing/taxonomy", scope: `${DOMAIN_REL}/${name}`, summary: `Unexpected child ${name} in the testing domain root`, priority: "medium", reason: "The testing domain root holds its schema, registry, packages, fixtures, self-tests and routers — nothing else.", solution: "Move it into the owning child directory, or delete it." });
     }
   }
@@ -1529,6 +1537,7 @@ export const policyFile = "📦️packages/🟦️typescript/🟦️.ts";
 //#region 🚪️Entry
 const router = new ScriptRouter(import.meta.dir)
   .register("discover", DiscoverScript)
+  .register("dsl", DslScript)
   .register("contract", ContractScript)
   .register("oracle", OracleScript)
   .register("subject", SubjectScript)

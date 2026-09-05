@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "file_description"
+  ],
+  "properties": {
+    "file_description": {
+      "$ref": "#/$defs/StepFileDescription"
+    }
+  },
+  "$defs": {
+    "StepFileDescription": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "description": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "implementationLevel": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "title": "SetFileDescription"
+}

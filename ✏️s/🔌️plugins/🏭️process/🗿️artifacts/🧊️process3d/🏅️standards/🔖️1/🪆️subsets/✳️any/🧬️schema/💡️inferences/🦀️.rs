@@ -131,7 +131,7 @@ impl ProcessKernelReplay {
         Self { kernel: Brep::new(), tables: ProcessKernelMemo { memo: HashMap::new() }, stock_signature: 0 }
     }
 
-    /// 🔩 Immutable kernel access — `tessellate`/`volume`/`kind` take `&self`.
+    /// 🔩 Immutable kernel access — `tessellate`/`🟫️volume`/`kind` take `&self`.
     pub fn kernel(&self) -> &Brep {
         &self.kernel
     }

@@ -1,5 +1,5 @@
 //#region 🧬️ProjectionContract
-import catalog from "./🔣️catalog.json" with { type: "json" };
+import catalog from "./📇️catalog.json" with { type: "json" };
 import { NumericIndex, type NumericIndexEdit, type NumericIndexGrant, type NumericIndexReader } from "../../../../../🌱️value/🗂️ordered/🔢️numeric/🟦️.ts";
 import { OwnedUiSceneDocument, type OwnedUiSceneReader, type OwnedUiSceneValue } from "../🟦️.ts";
 import type { RetainedUiWireStep } from "../../📦️wire/🟦️.ts";

@@ -1,4 +1,0 @@
-module Stdio_dwg_diff;
-type Document = unit {
-    payload: bytes &eod;
-};

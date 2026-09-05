@@ -1,0 +1,6 @@
+{
+  "$schema": "./🧬️.schema.json", "contract": "semio.flow.surface-owners/v1",
+  "package": "semio:flow", "roles": ["editor", "viewer"],
+  "members": "s.stdio.semio@v1/flow", "items": 1, "byteGrants": [1, 64, 4096],
+  "maximumSteps": 100000, "expected": { "factories": 2, "complete": true, "terminalEmpty": true }
+}

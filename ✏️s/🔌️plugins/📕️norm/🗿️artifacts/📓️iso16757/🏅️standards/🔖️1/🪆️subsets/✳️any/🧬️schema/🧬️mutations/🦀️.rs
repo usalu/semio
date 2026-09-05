@@ -16,7 +16,7 @@
 //!
 //! Every triad leaf is mounted directly as a `mutations`-sibling module in `🦀️.rs` (this lane's
 //! agent owns `🦀️.rs`, so no self-wiring `#[path = "."]` blocks are needed for the TRIADS — the orphaned
-//! `📄set-snapshot` stub is deleted along with its dangling glue mount).
+//! `🟤️set-snapshot` stub is deleted along with its dangling glue mount).
 
 use crate::artifacts::iso16757::{Iso16757Diff, Iso16757Snapshot};
 
@@ -76,7 +76,7 @@ pub enum Iso16757Mutation {
 
 /// 🏷️ Every declared kind of [`Iso16757Mutation`], in `#[derive(dsl::Mutations)]`'s own declaration
 /// order and spelling — the list `../../🔣️oracle.json` publishes as the `iso16757-1-any`
-/// mutation catalog and `../../../../../🧪️tests/mutate-iso16757-1` registers its scenarios from. The
+/// mutation catalog and `../../../../../🧪️tests/🚀️mutate-iso16757-1` registers its scenarios from. The
 /// test platform never parses Rust, so [`kinds_catalog::kinds_match_the_enum_and_the_catalog`] below
 /// is what keeps the enum, this const and the committed manifest from drifting apart.
 pub const KINDS: &[&str] = &[
@@ -378,47 +378,47 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "🛁add-selection-constraint/🧪️tests/appends-a-width-under-800-constraint/🦀️.rs"]
+    #[path = "🛁add-selection-constraint/🧪️tests/🍊️appends-a-width-under-800-constraint/🦀️.rs"]
     mod tests_add_selection_constraint_appends_a_width_under_800_constraint;
-    #[path = "🍃change-exchange-process/🧪️tests/advances-the-exchange-stage-to-determine-product/🦀️.rs"]
+    #[path = "🍃change-exchange-process/🧪️tests/📅️advances-the-exchange-stage-to-determine-product/🦀️.rs"]
     mod tests_change_exchange_process_advances_the_exchange_stage_to_determine_product;
-    #[path = "🌱change-part-number-input/🧪️tests/raises-the-height-part-number-input-to-750/🦀️.rs"]
+    #[path = "🌱change-part-number-input/🧪️tests/🔢️raises-the-height-part-number-input-to-750/🦀️.rs"]
     mod tests_change_part_number_input_raises_the_height_part_number_input_to_750;
-    #[path = "🌴change-selection-class/🧪️tests/retargets-the-selection-at-the-towel-radiator-class/🦀️.rs"]
+    #[path = "🌴change-selection-class/🧪️tests/🔮️retargets-the-selection-at-the-towel-radiator-class/🦀️.rs"]
     mod tests_change_selection_class_retargets_the_selection_at_the_towel_radiator_class;
-    #[path = "🌼change-selection-series/🧪️tests/narrows-the-selection-to-the-pr-plus-series/🦀️.rs"]
+    #[path = "🌼change-selection-series/🧪️tests/🐸️narrows-the-selection-to-the-pr-plus-series/🦀️.rs"]
     mod tests_change_selection_series_narrows_the_selection_to_the_pr_plus_series;
-    #[path = "🍁create-product/🧪️tests/appends-a-pr900-product-to-the-existing-series/🦀️.rs"]
+    #[path = "🍁create-product/🧪️tests/🟤️appends-a-pr900-product-to-the-existing-series/🦀️.rs"]
     mod tests_create_product_appends_a_pr900_product_to_the_existing_series;
-    #[path = "🍀create-product-group/🧪️tests/appends-a-towel-radiators-group/🦀️.rs"]
+    #[path = "🍀create-product-group/🧪️tests/🍀️appends-a-towel-radiators-group/🦀️.rs"]
     mod tests_create_product_group_appends_a_towel_radiators_group;
-    #[path = "🌾create-property-definition/🧪️tests/appends-a-selection-scoped-length-property/🦀️.rs"]
+    #[path = "🌾create-property-definition/🧪️tests/🔭️appends-a-selection-scoped-length-property/🦀️.rs"]
     mod tests_create_property_definition_appends_a_selection_scoped_length_property;
-    #[path = "🌵create-subject/🧪️tests/appends-a-towel-radiator-subject-under-the-radiator-parent/🦀️.rs"]
+    #[path = "🌵create-subject/🧪️tests/🏔️appends-a-towel-radiator-subject-under-the-radiator-parent/🦀️.rs"]
     mod tests_create_subject_appends_a_towel_radiator_subject_under_the_radiator_parent;
-    #[path = "🌹delete-product-group/🧪️tests/removes-the-radiators-group-and-strands-its-class/🦀️.rs"]
+    #[path = "🌹delete-product-group/🧪️tests/🚫️removes-the-radiators-group-and-strands-its-class/🦀️.rs"]
     mod tests_delete_product_group_removes_the_radiators_group_and_strands_its_class;
-    #[path = "🌸delete-product/🧪️tests/removes-the-pr600-product-from-the-catalogue/🦀️.rs"]
+    #[path = "🌸delete-product/🧪️tests/🚫️removes-the-pr600-product-from-the-catalogue/🦀️.rs"]
     mod tests_delete_product_removes_the_pr600_product_from_the_catalogue;
-    #[path = "🌺delete-property-definition/🧪️tests/removes-the-height-property-definition/🦀️.rs"]
+    #[path = "🌺delete-property-definition/🧪️tests/🚫️removes-the-height-property-definition/🦀️.rs"]
     mod tests_delete_property_definition_removes_the_height_property_definition;
-    #[path = "🌻delete-subject/🧪️tests/removes-the-radiator-subject-from-the-dictionary/🦀️.rs"]
+    #[path = "🌻delete-subject/🧪️tests/🚫️removes-the-radiator-subject-from-the-dictionary/🦀️.rs"]
     mod tests_delete_subject_removes_the_radiator_subject_from_the_dictionary;
-    #[path = "🌿remove-part-number-input/🧪️tests/drops-the-length-part-number-input/🦀️.rs"]
+    #[path = "🌿remove-part-number-input/🧪️tests/🔢️drops-the-length-part-number-input/🦀️.rs"]
     mod tests_remove_part_number_input_drops_the_length_part_number_input;
-    #[path = "🛋️remove-selection-constraint/🧪️tests/drops-the-trailing-length-constraint/🦀️.rs"]
+    #[path = "🛋️remove-selection-constraint/🧪️tests/🟫️drops-the-trailing-length-constraint/🦀️.rs"]
     mod tests_remove_selection_constraint_drops_the_trailing_length_constraint;
-    #[path = "🌲rename-catalogue/🧪️tests/restamps-the-catalogue-as-the-2026-edition/🦀️.rs"]
+    #[path = "🌲rename-catalogue/🧪️tests/📇️restamps-the-catalogue-as-the-2026-edition/🦀️.rs"]
     mod tests_rename_catalogue_restamps_the_catalogue_as_the_2026_edition;
-    #[path = "🌳rename-manufacturer/🧪️tests/adds-the-ag-suffix-to-the-manufacturer/🦀️.rs"]
+    #[path = "🌳rename-manufacturer/🧪️tests/🎨️adds-the-ag-suffix-to-the-manufacturer/🦀️.rs"]
     mod tests_rename_manufacturer_adds_the_ag_suffix_to_the_manufacturer;
-    #[path = "🚿rename-product-group/🧪️tests/renames-the-radiators-group-to-panel-radiators/🦀️.rs"]
+    #[path = "🚿rename-product-group/🧪️tests/✏️renames-the-radiators-group-to-panel-radiators/🦀️.rs"]
     mod tests_rename_product_group_renames_the_radiators_group_to_panel_radiators;
-    #[path = "🛏️rename-product/🧪️tests/renames-pr600-to-the-compact-variant-name/🦀️.rs"]
+    #[path = "🛏️rename-product/🧪️tests/✏️renames-pr600-to-the-compact-variant-name/🦀️.rs"]
     mod tests_rename_product_renames_pr600_to_the_compact_variant_name;
-    #[path = "🍂replace-part-number-rule/🧪️tests/swaps-the-literal-rule-for-a-height-driven-script/🦀️.rs"]
+    #[path = "🍂replace-part-number-rule/🧪️tests/🐯️swaps-the-literal-rule-for-a-height-driven-script/🦀️.rs"]
     mod tests_replace_part_number_rule_swaps_the_literal_rule_for_a_height_driven_script;
-    #[path = "🌷update-script-limits/🧪️tests/doubles-the-step-budget-and-quintuples-the-timeout/🦀️.rs"]
+    #[path = "🌷update-script-limits/🧪️tests/🖱️doubles-the-step-budget-and-quintuples-the-timeout/🦀️.rs"]
     mod tests_update_script_limits_doubles_the_step_budget_and_quintuples_the_timeout;
 }
 //#endregion 🧪️FixtureTests
@@ -428,7 +428,7 @@ mod fixture_tests {
 /// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) JSON
 /// projection — the exact shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️.json`
 /// specification vectors carry — into a real [`Iso16757Mutation`]. The generated test host of
-/// `../../../../../🧪️tests/mutate-iso16757-1` links only this crate, so `serde_json` is unreachable
+/// `../../../../../🧪️tests/🚀️mutate-iso16757-1` links only this crate, so `serde_json` is unreachable
 /// from that adapter and the bridge belongs here rather than there.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_iso16757_mutation_json(text: &str) -> Result<Iso16757Mutation, String> {
@@ -448,7 +448,7 @@ pub fn apply_iso16757_mutation(base: &Iso16757Snapshot, mutation: &Iso16757Mutat
 }
 
 /// ↩️ This mutation's own computed inverse against `base` — the metamorphic property
-/// `mutate-iso16757-1`'s `inverse-<kind>` scenarios assert, exposed under a name the test adapter can
+/// `🚀️mutate-iso16757-1`'s `inverse-<kind>` scenarios assert, exposed under a name the test adapter can
 /// reach without naming `protocol::Mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_iso16757_mutation(mutation: &Iso16757Mutation, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
@@ -473,7 +473,7 @@ mod kinds_catalog {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔮️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

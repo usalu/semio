@@ -1,5 +1,0 @@
-{
-  "mutation": "updateLayerTransform",
-  "layerId": "shape-a",
-  "transform": { "x": 24.0, "y": -8.0, "scaleX": 2.0, "scaleY": 1.5, "rotation": 0.0 }
-}

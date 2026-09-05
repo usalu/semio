@@ -5,7 +5,7 @@
   "displayName": "Remove Object Vortex",
   "emoji": "➖",
   "aggregateVariant": "RemoveObjectVortex",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "remove-object-vortex",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

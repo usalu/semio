@@ -1,4 +1,0 @@
-# 🪧️ Direct set-display-doc-title GraphQL payload.
-input SetDisplayDocTitleMutationInput {
-  display: Boolean!
-}

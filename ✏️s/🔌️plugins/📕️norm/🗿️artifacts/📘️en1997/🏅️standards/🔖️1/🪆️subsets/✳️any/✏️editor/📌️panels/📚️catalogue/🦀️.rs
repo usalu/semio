@@ -17,7 +17,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render() -> UiNode {
+pub fn render() -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     crate::app_surface::render_catalogue(crate::editor::en1997::LABEL)
 }
 //#endregion 🔖️Render

@@ -1,0 +1,1233 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution. `s.remodeling.remodeling` is a semio-NATIVE artifact carried in `.dsl.semio`/`.pack.semio`, so no third party can serve as its reference — see the noOracleDecision below.",
+  "oracles": [
+    {
+      "id": "remodeling-1-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "capabilities": [
+        "remodeling-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "🐍️ No third-party library reads or writes s.remodeling.remodeling's .dsl.semio carrier or its own document shape -- COLMAP/OpenMVG/Meshroom, LAS/LAZ and PLY libraries were surveyed and declined because this artifact is a reconstruction JOB document (streams, calibrations, GCPs, eight parameter blocks, engine results) not a point cloud or mesh file; a reader of their output would be judging a different artifact. The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../../../🧪️tests/mutate-remodeling-1/🐍️component.py, covering 34 of this vocabulary's 35 kinds (commit-reconstruction excluded -- its diff reads process-global staging state a static fixture cannot carry, exactly as the Rust adapter already treats it specially), written from this subset's own committed ../🧬️schema/🔣️.json document shape, each kind's own committed (before, mutation, after) leaf fixture, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's verb table. It imports nothing from the Rust it judges and transliterates none of it -- create-asset's minted childId is an unspecified Rust DefaultHasher digest, compared only for shape (documented honestly, not fabricated); delete-stream's inverse independently derives full cascade restoration (stream plus every severed GCP observation) from taxonomy.md rule 5, which production's own single-step inverse does not attempt. All 34 kinds' forward and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan -- all 68 passed on the first run.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.remodeling.remodeling",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "COLMAP / OpenMVG / Meshroom (SfM pipeline outputs)",
+              "reason": "These read/write point clouds, camera poses and meshes but have no notion of a reconstruction JOB document -- streams, calibrations, GCPs and eight typed parameter blocks bundled with engine results -- which is what this artifact actually is; a reader of their output would be judging a different artifact entirely."
+            },
+            {
+              "package": "LAS/LAZ point cloud libraries (laspy, PDAL)",
+              "reason": "Point-cloud-only formats; this artifact is a pipeline JOB document that happens to carry point buffers as ONE of many typed sections, not a point cloud file."
+            },
+            {
+              "package": "PLY mesh libraries (plyfile, open3d)",
+              "reason": "Mesh-only formats; same structural mismatch as LAS -- no notion of streams/calibration/GCPs/params/job stage."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md; ../🧬️schema/🔣️.json; each mutation's own 🧬️.schema.json and ↩️inverse/🦀️.rs (read for convention only, not transliterated)",
+        "fixtureCoverage": {
+          "vectors": 34,
+          "capabilitiesCovered": [
+            "remodeling-1-mutate"
+          ]
+        }
+      }
+    }
+  ],
+  "noOracleDecisions": [
+    {
+      "id": "remodeling-mutation-semantics",
+      "capabilities": [],
+      "rationale": "A reader of COLMAP, LAS or PLY output would be judging a DIFFERENT ARTIFACT: `s.remodeling.remodeling` is a reconstruction JOB — streams, calibrations, ground control points, the eight parameter blocks a pipeline runs under and the engine-owned results — not a point cloud or a mesh, and nothing outside this repository reads `.dsl.semio`. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-cad-1`, whose document is likewise nothing but child handles and reference lists, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the thirty-five committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is `mutate-cad-1`: a job document is a register of typed records under a handful of parameter blocks, which is the shape rule 2 and rule 1 already describe.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows. AND, SEPARATELY, `identity-round-trip` WOULD STILL BE REFUSED. This subset's committed snapshot text grammar is the repository-wide PLACEHOLDER: its whole body is `payload = OCTET+` and its header production declares `\"schema\" SP \"stdio.json\"`, which the committed artifact contradicts on its own first line. A second reader cannot parse what no document describes — the finding `mutate-iso16757-1`, `mutate-vdi3805-1`, `mutate-program-1` and `mutate-writer-1` all report against their own subsets.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen.\n\n[C2 2026-09-02] Narrowed `capabilities` to remove 'remodeling-1-mutate': a mutation manifest already requires an external-oracle discharge for this capability (tracked honestly as `missing-external-oracle`), so a no-oracle decision claiming the same capability made that gap invisible to `no-oracle-covers-mutation` without discharging it. The rationale above is kept verbatim as the record of what was actually investigated; only the claim is withdrawn. See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️c2-native-artifact-oracles.md.\n\n[E1 2026-09-02] The asset:// fixture-declaration blocker named above is now resolved (this feature's Examples now carry declared asset:// fixtures) and a Python second implementation is registered as oracle 'remodeling-1-python-independent' (kind verified-native-second-implementation). Capabilities stay empty ([]) — this entry is kept, not deleted, as the honest record of what was investigated on the carrier side; the mutation-semantics gap it used to name is now discharged by the registered oracle instead. See $TICKET/📓️e1-remodel-shooting-layout.md.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "remodeling-1-any",
+      "capability": "remodeling-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "add-gcp-observation",
+          "sourceMutationDirectoryName": "🔎add-gcp-observation",
+          "mutationDirectoryName": "🔎add-gcp-observation",
+          "scenarios": [
+            {
+              "id": "adds-the-first-observation-to-gcp-ridge",
+            "directoryName": "🟧️adds-the-first-observation-to-gcp-ridge"
+            }
+          ]
+        },
+        {
+          "mutationId": "add-stream-frame",
+          "sourceMutationDirectoryName": "➕add-stream-frame",
+          "mutationDirectoryName": "➕add-stream-frame",
+          "scenarios": [
+            {
+              "id": "appends-a-third-frame-to-stream-a",
+            "directoryName": "🍐️appends-a-third-frame-to-stream-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-stream-sync",
+          "sourceMutationDirectoryName": "⏱️change-stream-sync",
+          "mutationDirectoryName": "⏱️change-stream-sync",
+          "scenarios": [
+            {
+              "id": "shifts-stream-a-sync-offset-to-minus-seven-and-a-half",
+            "directoryName": "🔄️shifts-stream-a-sync-offset-to-minus-seven-and-a-half"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-asset",
+          "sourceMutationDirectoryName": "🧷create-asset",
+          "mutationDirectoryName": "🧷create-asset",
+          "scenarios": [
+            {
+              "id": "stores-a-new-jpeg-frame-asset",
+            "directoryName": "🖼️stores-a-new-jpeg-frame-asset"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-camera-calibration",
+          "sourceMutationDirectoryName": "🔭create-camera-calibration",
+          "mutationDirectoryName": "🔭create-camera-calibration",
+          "scenarios": [
+            {
+              "id": "adds-the-cam-c-fisheye-calibration",
+            "directoryName": "⛵️adds-the-cam-c-fisheye-calibration"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-gcp",
+          "sourceMutationDirectoryName": "🧿create-gcp",
+          "mutationDirectoryName": "🧿create-gcp",
+          "scenarios": [
+            {
+              "id": "adds-gcp-tower-with-one-observation",
+            "directoryName": "🟨️adds-gcp-tower-with-one-observation"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-rig-extrinsic",
+          "sourceMutationDirectoryName": "⛓️create-rig-extrinsic",
+          "mutationDirectoryName": "⛓️create-rig-extrinsic",
+          "scenarios": [
+            {
+              "id": "adds-a-rig-extrinsic-for-cam-b",
+            "directoryName": "🟢️adds-a-rig-extrinsic-for-cam-b"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-stream",
+          "sourceMutationDirectoryName": "🌱create-stream",
+          "mutationDirectoryName": "🌱create-stream",
+          "scenarios": [
+            {
+              "id": "adds-stream-c-bound-to-cam-b",
+            "directoryName": "🍎️adds-stream-c-bound-to-cam-b"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-asset",
+          "sourceMutationDirectoryName": "🗞️delete-asset",
+          "mutationDirectoryName": "🗞️delete-asset",
+          "scenarios": [
+            {
+              "id": "removes-asset-a-and-reports-its-stale-references",
+            "directoryName": "🖼️removes-asset-a-and-reports-its-stale-references"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-camera-calibration",
+          "sourceMutationDirectoryName": "🚫delete-camera-calibration",
+          "mutationDirectoryName": "🚫delete-camera-calibration",
+          "scenarios": [
+            {
+              "id": "removes-the-cam-b-calibration",
+            "directoryName": "🚫️removes-the-cam-b-calibration"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-gcp",
+          "sourceMutationDirectoryName": "🚮delete-gcp",
+          "mutationDirectoryName": "🚮delete-gcp",
+          "scenarios": [
+            {
+              "id": "removes-gcp-corner-and-cascades-its-observation",
+            "directoryName": "🚫️removes-gcp-corner-and-cascades-its-observation"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-rig-extrinsic",
+          "sourceMutationDirectoryName": "✂️delete-rig-extrinsic",
+          "mutationDirectoryName": "✂️delete-rig-extrinsic",
+          "scenarios": [
+            {
+              "id": "drops-the-cam-a-rig-extrinsic",
+            "directoryName": "🟩️drops-the-cam-a-rig-extrinsic"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-stream",
+          "sourceMutationDirectoryName": "🪓delete-stream",
+          "mutationDirectoryName": "🪓delete-stream",
+          "scenarios": [
+            {
+              "id": "removes-stream-b-and-cascades-its-gcp-observation",
+            "directoryName": "🚫️removes-stream-b-and-cascades-its-gcp-observation"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-gcp-observation",
+          "sourceMutationDirectoryName": "🚷remove-gcp-observation",
+          "mutationDirectoryName": "🚷remove-gcp-observation",
+          "scenarios": [
+            {
+              "id": "removes-the-only-observation-of-gcp-corner",
+            "directoryName": "🚫️removes-the-only-observation-of-gcp-corner"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-stream-frame",
+          "sourceMutationDirectoryName": "➖remove-stream-frame",
+          "mutationDirectoryName": "➖remove-stream-frame",
+          "scenarios": [
+            {
+              "id": "removes-the-last-frame-of-stream-a",
+            "directoryName": "🚫️removes-the-last-frame-of-stream-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-dense",
+          "sourceMutationDirectoryName": "☁️replace-dense",
+          "mutationDirectoryName": "☁️replace-dense",
+          "scenarios": [
+            {
+              "id": "swaps-in-a-two-point-classified-dense-cloud",
+            "directoryName": "🦅️swaps-in-a-two-point-classified-dense-cloud"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-geo-products",
+          "sourceMutationDirectoryName": "🗾replace-geo-products",
+          "mutationDirectoryName": "🗾replace-geo-products",
+          "scenarios": [
+            {
+              "id": "adds-the-dtm-and-ortho-rasters",
+            "directoryName": "🟣️adds-the-dtm-and-ortho-rasters"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-job",
+          "sourceMutationDirectoryName": "🏗️replace-job",
+          "mutationDirectoryName": "🏗️replace-job",
+          "scenarios": [
+            {
+              "id": "advances-the-job-to-texturing",
+            "directoryName": "🔤️advances-the-job-to-texturing"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-mesh-result",
+          "sourceMutationDirectoryName": "🧱replace-mesh-result",
+          "mutationDirectoryName": "🧱replace-mesh-result",
+          "scenarios": [
+            {
+              "id": "swaps-in-an-imported-untextured-mesh",
+            "directoryName": "🔤️swaps-in-an-imported-untextured-mesh"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-qc",
+          "sourceMutationDirectoryName": "🧾replace-qc",
+          "mutationDirectoryName": "🧾replace-qc",
+          "scenarios": [
+            {
+              "id": "records-a-qc-report-carrying-a-watertight-summary",
+            "directoryName": "📓️records-a-qc-report-carrying-a-watertight-summary"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-sparse",
+          "sourceMutationDirectoryName": "⭐replace-sparse",
+          "mutationDirectoryName": "⭐replace-sparse",
+          "scenarios": [
+            {
+              "id": "swaps-in-an-uncolored-four-point-sparse-cloud",
+            "directoryName": "🧿️swaps-in-an-uncolored-four-point-sparse-cloud"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-stream-source",
+          "sourceMutationDirectoryName": "🔁replace-stream-source",
+          "mutationDirectoryName": "🔁replace-stream-source",
+          "scenarios": [
+            {
+              "id": "clears-the-video-source-of-stream-a",
+            "directoryName": "🍎️clears-the-video-source-of-stream-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-tracks",
+          "sourceMutationDirectoryName": "🚂replace-tracks",
+          "mutationDirectoryName": "🚂replace-tracks",
+          "scenarios": [
+            {
+              "id": "replaces-the-moving-track-with-two-static-tracks",
+            "directoryName": "🪻️replaces-the-moving-track-with-two-static-tracks"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-trajectory",
+          "sourceMutationDirectoryName": "🛣️replace-trajectory",
+          "mutationDirectoryName": "🛣️replace-trajectory",
+          "scenarios": [
+            {
+              "id": "clears-the-camera-trajectory",
+            "directoryName": "🍐️clears-the-camera-trajectory"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-camera-calibration",
+          "sourceMutationDirectoryName": "🛠️update-camera-calibration",
+          "mutationDirectoryName": "🛠️update-camera-calibration",
+          "scenarios": [
+            {
+              "id": "refines-the-cam-a-focal-length-and-rms",
+            "directoryName": "🔮️refines-the-cam-a-focal-length-and-rms"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-dense-params",
+          "sourceMutationDirectoryName": "🌁update-dense-params",
+          "mutationDirectoryName": "🌁update-dense-params",
+          "scenarios": [
+            {
+              "id": "raises-the-dense-resolution-and-confidence-gate",
+            "directoryName": "🌲️raises-the-dense-resolution-and-confidence-gate"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-feature-params",
+          "sourceMutationDirectoryName": "🌠update-feature-params",
+          "mutationDirectoryName": "🌠update-feature-params",
+          "scenarios": [
+            {
+              "id": "switches-the-detector-to-akaze",
+            "directoryName": "🦀️switches-the-detector-to-akaze"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-geo-params",
+          "sourceMutationDirectoryName": "🌐update-geo-params",
+          "mutationDirectoryName": "🌐update-geo-params",
+          "scenarios": [
+            {
+              "id": "enables-georeferencing-with-an-origin",
+            "directoryName": "🟨️enables-georeferencing-with-an-origin"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-ingest-params",
+          "sourceMutationDirectoryName": "🥣update-ingest-params",
+          "mutationDirectoryName": "🥣update-ingest-params",
+          "scenarios": [
+            {
+              "id": "tightens-the-ingest-sharpness-gate",
+            "directoryName": "🔴️tightens-the-ingest-sharpness-gate"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-match-params",
+          "sourceMutationDirectoryName": "🪢update-match-params",
+          "mutationDirectoryName": "🪢update-match-params",
+          "scenarios": [
+            {
+              "id": "switches-the-matcher-to-a-kd-tree",
+            "directoryName": "🌳️switches-the-matcher-to-a-kd-tree"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-mesh-params",
+          "sourceMutationDirectoryName": "🕸️update-mesh-params",
+          "mutationDirectoryName": "🕸️update-mesh-params",
+          "scenarios": [
+            {
+              "id": "doubles-the-texture-size-and-drops-the-watertight-guarantee",
+            "directoryName": "🔤️doubles-the-texture-size-and-drops-the-watertight-guarantee"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-motion-params",
+          "sourceMutationDirectoryName": "🏎️update-motion-params",
+          "mutationDirectoryName": "🏎️update-motion-params",
+          "scenarios": [
+            {
+              "id": "enables-motion-tracking",
+            "directoryName": "🟪️enables-motion-tracking"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-rig-extrinsic",
+          "sourceMutationDirectoryName": "🔩update-rig-extrinsic",
+          "mutationDirectoryName": "🔩update-rig-extrinsic",
+          "scenarios": [
+            {
+              "id": "retunes-the-cam-a-rig-translation",
+            "directoryName": "⚪️retunes-the-cam-a-rig-translation"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-sfm-params",
+          "sourceMutationDirectoryName": "🧮update-sfm-params",
+          "mutationDirectoryName": "🧮update-sfm-params",
+          "scenarios": [
+            {
+              "id": "switches-the-robust-loss-to-cauchy",
+            "directoryName": "🎯️switches-the-robust-loss-to-cauchy"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "create-stream",
+        "delete-stream",
+        "change-stream-sync",
+        "add-stream-frame",
+        "remove-stream-frame",
+        "replace-stream-source",
+        "create-asset",
+        "delete-asset",
+        "create-camera-calibration",
+        "update-camera-calibration",
+        "delete-camera-calibration",
+        "create-rig-extrinsic",
+        "delete-rig-extrinsic",
+        "update-rig-extrinsic",
+        "create-gcp",
+        "delete-gcp",
+        "add-gcp-observation",
+        "remove-gcp-observation",
+        "update-ingest-params",
+        "update-feature-params",
+        "update-match-params",
+        "update-sfm-params",
+        "update-dense-params",
+        "update-mesh-params",
+        "update-motion-params",
+        "update-geo-params",
+        "replace-job",
+        "replace-sparse",
+        "replace-dense",
+        "replace-mesh-result",
+        "replace-trajectory",
+        "replace-tracks",
+        "replace-geo-products",
+        "replace-qc",
+        "commit-reconstruction"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.remodeling.remodeling",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "add-gcp-observation",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-gcp-observation",
+            "bridgeVersion": 1,
+            "variant": "AddGcpObservation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "add-stream-frame",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-stream-frame",
+            "bridgeVersion": 1,
+            "variant": "AddStreamFrame"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-stream-sync",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-stream-sync",
+            "bridgeVersion": 1,
+            "variant": "ChangeStreamSync"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "commit-reconstruction",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "commit-reconstruction",
+            "bridgeVersion": 1,
+            "variant": "ReconstructionAssetCommit"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-asset",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-asset",
+            "bridgeVersion": 1,
+            "variant": "CreateAsset"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-camera-calibration",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-camera-calibration",
+            "bridgeVersion": 1,
+            "variant": "CreateCameraCalibration"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-gcp",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-gcp",
+            "bridgeVersion": 1,
+            "variant": "CreateGcp"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-rig-extrinsic",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-rig-extrinsic",
+            "bridgeVersion": 1,
+            "variant": "CreateRigExtrinsic"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-stream",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-stream",
+            "bridgeVersion": 1,
+            "variant": "CreateStream"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-asset",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-asset",
+            "bridgeVersion": 1,
+            "variant": "DeleteAsset"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-camera-calibration",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-camera-calibration",
+            "bridgeVersion": 1,
+            "variant": "DeleteCameraCalibration"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-gcp",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-gcp",
+            "bridgeVersion": 1,
+            "variant": "DeleteGcp"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-rig-extrinsic",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-rig-extrinsic",
+            "bridgeVersion": 1,
+            "variant": "DeleteRigExtrinsic"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-stream",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-stream",
+            "bridgeVersion": 1,
+            "variant": "DeleteStream"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-gcp-observation",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-gcp-observation",
+            "bridgeVersion": 1,
+            "variant": "RemoveGcpObservation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-stream-frame",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-stream-frame",
+            "bridgeVersion": 1,
+            "variant": "RemoveStreamFrame"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "replace-dense",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-dense",
+            "bridgeVersion": 1,
+            "variant": "ReplaceDense"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "replace-geo-products",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-geo-products",
+            "bridgeVersion": 1,
+            "variant": "ReplaceGeoProducts"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "replace-job",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-job",
+            "bridgeVersion": 1,
+            "variant": "ReplaceJob"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "replace-mesh-result",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-mesh-result",
+            "bridgeVersion": 1,
+            "variant": "ReplaceMeshResult"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "replace-qc",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-qc",
+            "bridgeVersion": 1,
+            "variant": "ReplaceQc"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "replace-sparse",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-sparse",
+            "bridgeVersion": 1,
+            "variant": "ReplaceSparse"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "replace-stream-source",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-stream-source",
+            "bridgeVersion": 1,
+            "variant": "ReplaceStreamSource"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "replace-tracks",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-tracks",
+            "bridgeVersion": 1,
+            "variant": "ReplaceTracks"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "replace-trajectory",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-trajectory",
+            "bridgeVersion": 1,
+            "variant": "ReplaceTrajectory"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "update-camera-calibration",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-camera-calibration",
+            "bridgeVersion": 1,
+            "variant": "UpdateCameraCalibration"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "update-dense-params",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-dense-params",
+            "bridgeVersion": 1,
+            "variant": "UpdateDenseParams"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "update-feature-params",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-feature-params",
+            "bridgeVersion": 1,
+            "variant": "UpdateFeatureParams"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "update-geo-params",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-geo-params",
+            "bridgeVersion": 1,
+            "variant": "UpdateGeoParams"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "update-ingest-params",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-ingest-params",
+            "bridgeVersion": 1,
+            "variant": "UpdateIngestParams"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "update-match-params",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-match-params",
+            "bridgeVersion": 1,
+            "variant": "UpdateMatchParams"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "update-mesh-params",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-mesh-params",
+            "bridgeVersion": 1,
+            "variant": "UpdateMeshParams"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "update-motion-params",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-motion-params",
+            "bridgeVersion": 1,
+            "variant": "UpdateMotionParams"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "update-rig-extrinsic",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-rig-extrinsic",
+            "bridgeVersion": 1,
+            "variant": "UpdateRigExtrinsic"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "update-sfm-params",
+          "capability": "remodeling-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-sfm-params",
+            "bridgeVersion": 1,
+            "variant": "UpdateSfmParams"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "remodeling-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "commit-reconstruction-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.remodeling.remodeling",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "commit-reconstruction",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🏁️commit-reconstruction/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:536361f105ce7e545369063fe155d9dd39ee3edc9988da41f5dc236e9946b6f1",
+          "bytes": 5348
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🏁️commit-reconstruction/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:cbeb214bbdad4e66625e78e461fa7f55ab736835be15443d34b391a3dd1b4d21",
+          "bytes": 7110
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "remodeling-carrier",
+      "notes": "CommitReconstruction{job,sparse,trajectory,mesh,geo,qc,assets} finalizes the whole reconstruction job atomically. Both snapshots are built from this subset's own already-committed, fully-realistic RemodelingSnapshot (the delete-asset case's before-fixture — same streams/cameras/gcps/job/results shape used throughout this artifact's other 40 mutation vectors); `before` backdates job.stage/progress and nulls the not-yet-finalized trajectory/mesh/geo/qc sub-results, `after` is the genuine already-committed completed state."
+    }
+  ]
+}

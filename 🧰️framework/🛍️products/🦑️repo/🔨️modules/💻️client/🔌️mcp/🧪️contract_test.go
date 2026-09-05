@@ -53,7 +53,7 @@ type entrypointContractFixture struct {
 }
 
 func TestRepositoryEntrypointContract(t *testing.T) {
-	data, err := os.ReadFile("🧫️fixtures/entrypoint-contract.json")
+	data, err := os.ReadFile("🧫️fixtures/🚪️entrypoint-contract.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -140,7 +140,7 @@ func TestRepositoryEntrypointContract(t *testing.T) {
 }
 
 func TestG2CanonicalGoldenVectors(t *testing.T) {
-	data, err := os.ReadFile("🧫️fixtures/g2-contract.json")
+	data, err := os.ReadFile("🧫️fixtures/2️⃣g2-contract.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -226,7 +226,7 @@ func TestG2ProductionOwnedRuntimePipe(t *testing.T) {
 }
 
 func TestG2ProductionComponentRejectsDirectDelegationMutation(t *testing.T) {
-	source, err := os.ReadFile("🐹️component.go")
+	source, err := os.ReadFile("🧩️component.go")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -243,7 +243,7 @@ func TestG2ProductionComponentRejectsDirectDelegationMutation(t *testing.T) {
 }
 
 func TestG2TransportRejectsBusyBranchMutation(t *testing.T) {
-	source, err := os.ReadFile("🐹️transport.go")
+	source, err := os.ReadFile("🚚️transport.go")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,0 +1,51 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.bmp/diff.json",
+  "title": "BmpDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "headerSize": { "type": "integer", "minimum": 0 },
+    "width": { "type": "integer", "minimum": 0 },
+    "height": { "type": "integer", "minimum": 0 },
+    "rowOrder": { "$ref": "https://semio.tech/schema/s.stdio.bmp/snapshot.json#/$defs/BmpRowOrder" },
+    "planes": { "type": "integer", "minimum": 0 },
+    "bitsPerPixel": { "type": "integer", "minimum": 0 },
+    "compression": { "type": "integer", "minimum": 0 },
+    "imageSize": { "type": "integer", "minimum": 0 },
+    "xPixelsPerMeter": { "type": "integer" },
+    "yPixelsPerMeter": { "type": "integer" },
+    "colorsUsed": { "type": "integer", "minimum": 0 },
+    "colorsImportant": { "type": "integer", "minimum": 0 },
+    "palette": { "$ref": "#/$defs/BmpPaletteDiff" },
+    "pixels": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
+  },
+  "$defs": {
+    "BmpPaletteModified": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "entry"],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0 },
+        "entry": { "$ref": "https://semio.tech/schema/s.stdio.bmp/snapshot.json#/$defs/BmpPaletteEntry" }
+      }
+    },
+    "BmpPaletteAdded": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "entry"],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0 },
+        "entry": { "$ref": "https://semio.tech/schema/s.stdio.bmp/snapshot.json#/$defs/BmpPaletteEntry" }
+      }
+    },
+    "BmpPaletteDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "modified": { "type": "array", "items": { "$ref": "#/$defs/BmpPaletteModified" } },
+        "added": { "type": "array", "items": { "$ref": "#/$defs/BmpPaletteAdded" } }
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "cases": [
+    {"name":"platform-value","pairs":[["🐧️linux","linux"]],"input":"process.platform === \"🐧️linux\"","expected":"process.platform === \"linux\""},
+    {"name":"preserve-other-agent-code","pairs":[["🧪️🧪️🏔️🦋️tests","🧪️tests"]],"input":"await otherAgentFix();\nconst tests = \"../🧪️🧪️🏔️🦋️tests/🟦️.ts\";","expected":"await otherAgentFix();\nconst tests = \"../🧪️tests/🟦️.ts\";"},
+    {"name":"longest-non-cascading","pairs":[["🧬️🧬️schema","🧬️schema"],["🧬️schema","schema"]],"input":"\"🧬️🧬️schema\"","expected":"\"🧬️schema\""},
+    {"name":"unrelated-emoji","pairs":[["🐧️linux","linux"]],"input":"const mascot = \"🐧️\"; const os = \"linux\";","expected":"const mascot = \"🐧️\"; const os = \"linux\";"}
+  ]
+}

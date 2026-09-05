@@ -5,7 +5,7 @@
   "displayName": "Change Footing Area M2",
   "emoji": "🧴",
   "aggregateVariant": "ChangeFootingAreaM2",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

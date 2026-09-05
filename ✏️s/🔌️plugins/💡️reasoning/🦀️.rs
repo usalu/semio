@@ -18,9 +18,10 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `.handler(…)` and no `🧩️extensions/` dir anywhere in this crate, so `Isolated` (the SDK default)
 /// is honest.
 pub async fn plugin() -> Result<Plugin<ReasoningApps>, semio_framework_plugin::PluginAssemblyError> {
-    Plugin::<ReasoningApps>::builder("reasoning-mindmap")
+    Plugin::<ReasoningApps>::builder("reasoning")
         .label("Mindmap")
         .version("0.1.0")
+        .package_id("semio:reasoning")
         .declare_artifact(crate::artifacts::wires::artifact())
         .editor_mutation_roster::<crate::editor::wires::ReasoningWiresPlayApp>()
         .viewer_mutation_roster::<crate::viewer::wires::WiresViewer>()

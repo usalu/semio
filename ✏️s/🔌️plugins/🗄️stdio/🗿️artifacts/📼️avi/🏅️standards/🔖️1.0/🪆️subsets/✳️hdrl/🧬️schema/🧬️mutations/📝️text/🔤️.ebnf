@@ -1,3 +1,0 @@
-(* stdio.avi op text form — one compact single-line JSON object per op *)
-document = json_line ;
-json_line = { any_char_except_newline } ;

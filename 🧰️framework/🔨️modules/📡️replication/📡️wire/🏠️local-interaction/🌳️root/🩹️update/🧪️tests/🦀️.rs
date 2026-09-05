@@ -2,8 +2,8 @@ use super::*;
 use crate::value::ordered::Grant;
 use std::sync::Arc;
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap() }
-fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../../../🧪️fixtures/🏠️local-interaction/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap() }
+fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../../../🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap() }
 fn grant(bytes: usize) -> Grant { Grant { maximum_items: 1, maximum_bytes: bytes } }
 fn account(step: LocalInteractionUpdateStep, bytes: usize) -> usize {
     match step {

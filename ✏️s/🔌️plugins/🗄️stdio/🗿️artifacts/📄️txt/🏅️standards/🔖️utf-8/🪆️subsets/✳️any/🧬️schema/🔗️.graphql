@@ -1,7 +1,0 @@
-# 🧬️ TxtArtifact
-type TxtArtifact {
-  schema: String! @state(class: ARTIFACT)
-  lines: [String!]! @state(class: ARTIFACT)
-  trailingNewline: Boolean! @state(class: ARTIFACT)
-  lineEnding: LineEnding! @state(class: ARTIFACT)
-}

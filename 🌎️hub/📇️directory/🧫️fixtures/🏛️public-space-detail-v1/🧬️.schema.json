@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.hub.public-space-detail-v1.fixture/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "positives", "forbiddenPublicKeys", "hostileMutations", "rawPublicEvent"],
+  "properties": {
+    "schema": { "const": "semio.hub.public-space-detail-v1.fixture/v1" },
+    "positives": {
+      "type": "object", "additionalProperties": false,
+      "required": ["anonymous", "publicNonmember", "member", "author"],
+      "properties": {
+        "anonymous": { "$ref": "#/$defs/publicDetail" },
+        "publicNonmember": { "$ref": "#/$defs/publicDetail" },
+        "member": { "$ref": "#/$defs/memberDetail" },
+        "author": { "$ref": "#/$defs/authorDetail" }
+      }
+    },
+    "forbiddenPublicKeys": { "type": "array", "minItems": 21, "maxItems": 21, "uniqueItems": true, "items": { "type": "string" } },
+    "hostileMutations": { "type": "array", "minItems": 21, "maxItems": 21, "items": { "$ref": "#/$defs/mutation" } },
+    "rawPublicEvent": { "type": "object" }
+  },
+  "$defs": {
+    "owner": { "type": "object", "additionalProperties": false, "required": ["pluginId", "packageId", "version", "packageHash"], "properties": { "pluginId": { "type": "string" }, "packageId": { "type": "string" }, "version": { "type": "string" }, "packageHash": { "type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$" } } },
+    "publicSpace": { "type": "object", "additionalProperties": false, "required": ["id", "name", "kind", "visibility", "memberCount", "documentCount", "createdAtMs", "updatedAtMs"], "properties": { "id": { "type": "string" }, "name": { "type": "string" }, "kind": { "enum": ["atelier", "studio", "archive"] }, "visibility": { "const": "public" }, "memberCount": { "type": "integer", "minimum": 0 }, "documentCount": { "type": "integer", "minimum": 0 }, "createdAtMs": { "type": "integer" }, "updatedAtMs": { "type": "integer" } } },
+    "memberSpace": { "type": "object", "additionalProperties": false, "required": ["id", "name", "kind", "visibility", "ownerUserId", "role", "memberCount", "documentCount", "activeConnections", "createdAtMs", "updatedAtMs"], "properties": { "id": { "type": "string" }, "name": { "type": "string" }, "kind": { "enum": ["atelier", "studio", "archive"] }, "visibility": { "enum": ["private", "public"] }, "ownerUserId": { "type": "string" }, "role": { "enum": ["author", "spectator"] }, "memberCount": { "type": "integer", "minimum": 0 }, "documentCount": { "type": "integer", "minimum": 0 }, "activeConnections": { "type": "integer", "minimum": 0 }, "createdAtMs": { "type": "integer" }, "updatedAtMs": { "type": "integer" } } },
+    "publicDocument": { "type": "object", "additionalProperties": false, "required": ["documentId", "artifactKind", "artifactSchema", "owner", "packSchemaHash"], "properties": { "documentId": { "type": "string" }, "artifactKind": { "type": "string" }, "artifactSchema": { "type": "string" }, "owner": { "$ref": "#/$defs/owner" }, "packSchemaHash": { "type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$" } } },
+    "frontier": { "type": "object", "additionalProperties": false, "required": ["headSeq", "commitSeq", "epoch"], "properties": { "headSeq": { "type": "integer", "minimum": 0 }, "commitSeq": { "type": "integer", "minimum": 0 }, "epoch": { "type": "integer", "minimum": 0 } } },
+    "descriptor": { "type": "object", "additionalProperties": false, "required": ["spaceId", "documentId", "artifactKind", "artifactSchema", "owner", "packSchemaHash", "bootstrapVersion", "bootstrapFrontier", "bootstrapSnapshotHash"], "properties": { "spaceId": { "type": "string" }, "documentId": { "type": "string" }, "artifactKind": { "type": "string" }, "artifactSchema": { "type": "string" }, "owner": { "$ref": "#/$defs/owner" }, "packSchemaHash": { "type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$" }, "bootstrapVersion": { "type": "integer", "minimum": 1 }, "bootstrapFrontier": { "$ref": "#/$defs/frontier" }, "bootstrapSnapshotHash": { "type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$" } } },
+    "document": { "type": "object", "additionalProperties": false, "required": ["descriptor", "headSeq", "commitSeq", "epoch"], "properties": { "descriptor": { "$ref": "#/$defs/descriptor" }, "headSeq": { "type": "integer", "minimum": 0 }, "commitSeq": { "type": "integer", "minimum": 0 }, "epoch": { "type": "integer", "minimum": 0 } } },
+    "member": { "type": "object", "additionalProperties": false, "required": ["userId", "email", "displayName", "role"], "properties": { "userId": { "type": "string" }, "email": { "type": "string" }, "displayName": { "type": "string" }, "role": { "enum": ["author", "spectator"] } } },
+    "invite": { "type": "object", "additionalProperties": false, "required": ["id", "spaceId", "role", "createdAtMs", "expiresAtMs", "revoked"], "properties": { "id": { "type": "string" }, "spaceId": { "type": "string" }, "role": { "enum": ["author", "spectator"] }, "createdAtMs": { "type": "integer" }, "expiresAtMs": { "type": "integer" }, "revoked": { "type": "boolean" } } },
+    "publicDetail": { "type": "object", "additionalProperties": false, "required": ["access", "space", "documents"], "properties": { "access": { "const": "public" }, "space": { "$ref": "#/$defs/publicSpace" }, "documents": { "type": "array", "items": { "$ref": "#/$defs/publicDocument" } } } },
+    "memberDetail": { "type": "object", "additionalProperties": false, "required": ["access", "space", "members", "documents"], "properties": { "access": { "const": "member" }, "space": { "allOf": [{ "$ref": "#/$defs/memberSpace" }, { "type": "object", "properties": { "role": { "const": "spectator" } } }] }, "members": { "type": "array", "items": { "$ref": "#/$defs/member" } }, "documents": { "type": "array", "items": { "$ref": "#/$defs/document" } } } },
+    "authorDetail": { "type": "object", "additionalProperties": false, "required": ["access", "space", "members", "documents", "invites"], "properties": { "access": { "const": "author" }, "space": { "allOf": [{ "$ref": "#/$defs/memberSpace" }, { "type": "object", "properties": { "role": { "const": "author" } } }] }, "members": { "type": "array", "items": { "$ref": "#/$defs/member" } }, "documents": { "type": "array", "items": { "$ref": "#/$defs/document" } }, "invites": { "type": "array", "items": { "$ref": "#/$defs/invite" } } } },
+    "mutation": { "type": "object", "additionalProperties": false, "required": ["name", "path", "value"], "properties": { "name": { "type": "string" }, "path": { "type": "array", "minItems": 1, "items": { "anyOf": [{ "type": "string" }, { "type": "integer", "minimum": 0 }] } }, "value": true } }
+  }
+}

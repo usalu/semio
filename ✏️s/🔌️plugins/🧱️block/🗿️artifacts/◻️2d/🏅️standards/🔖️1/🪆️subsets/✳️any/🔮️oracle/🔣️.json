@@ -1,0 +1,894 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution. `s.block.block2d` is a semio-NATIVE KIND DEFINITION — one node kind's identity and presentation, the handle kinds it declares, the handles on its rim, the compatibility relation between those kinds, its attributes, authors, camera and metadata. No symbol- or component-library format models that and none reads `.dsl.semio`, so the reference is a SECOND IMPLEMENTATION in Python written from this subset's committed schemas, grammar and specification vectors.",
+  "oracles": [
+    {
+      "id": "block-2d-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "version": "",
+      "capabilities": [
+        "block-2d-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "A second implementation of the `s.block.block2d` node-kind document and all twenty-six typed mutations, in Python, at `../../../../../🧪️tests/mutate-block-2d-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json` (the ten members), `../🧬️schema/🧬️mutations/🔣️.json` and `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` (the twenty-six verbs and their argument lists), and the twenty-six committed `(before, mutation, after, outcome)` specification vectors — which give the internally tagged wire form of each verb and the two things only they state: that `update-presentation` REBUILDS the presentation from its six arguments and drops every member whose argument is null, and that an `author` keeps only the members it was given. It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: a symbol- or component-library format such as KiCad, Modelica or IFC's property sets carries pins or ports but has no notion of a kind-level compatibility relation between handle kinds, of a rim angle in radians, or of the presentation variant this vocabulary switches with one verb, and none of them reads this carrier. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `block-2d-1-mutate`'s external-oracle requirement for its 26-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 26 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.block.2d",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "KiCad-Modelica-IFC",
+              "reason": "a symbol- or component-library format such as KiCad, Modelica or IFC's property sets carries pins or ports but has no notion of a kind-level compatibility relation between handle kinds, of a rim angle in radians, or of the presentation variant this vocabulary switches with one verb, and none of them"
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": "../🧬️schema/📸️snapshot/🔣️.json; ../🧬️schema/🧬️mutations/🔣️.json; ../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio; 🔒️dependencies.json",
+        "fixtureCoverage": {
+          "vectors": 26,
+          "capabilitiesCovered": [
+            "block-2d-1-mutate"
+          ]
+        }
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "block-2d-1-any",
+      "capability": "block-2d-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "add-attribute",
+          "sourceMutationDirectoryName": "🧩️add-attribute",
+          "mutationDirectoryName": "🧩️add-attribute",
+          "scenarios": [
+            {
+              "id": "adds-pressure-attribute",
+              "directoryName": "🧪️adds-pressure-attribute"
+            }
+          ]
+        },
+        {
+          "mutationId": "add-author",
+          "sourceMutationDirectoryName": "👤️add-author",
+          "mutationDirectoryName": "👤️add-author",
+          "scenarios": [
+            {
+              "id": "credits-bo",
+              "directoryName": "🧪️credits-bo"
+            }
+          ]
+        },
+        {
+          "mutationId": "add-compatibility-rule",
+          "sourceMutationDirectoryName": "➕️add-compatibility-rule",
+          "mutationDirectoryName": "➕️add-compatibility-rule",
+          "scenarios": [
+            {
+              "id": "allows-signal-to-power",
+              "directoryName": "🧪️allows-signal-to-power"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-handle-handle-kind",
+          "sourceMutationDirectoryName": "🧷️change-handle-handle-kind",
+          "mutationDirectoryName": "🧷️change-handle-handle-kind",
+          "scenarios": [
+            {
+              "id": "rekinds-in-handle-as-power",
+              "directoryName": "🧪️rekinds-in-handle-as-power"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-handle-kind-color",
+          "sourceMutationDirectoryName": "🎨️change-handle-kind-color",
+          "mutationDirectoryName": "🎨️change-handle-kind-color",
+          "scenarios": [
+            {
+              "id": "recolors-power-handle-kind",
+              "directoryName": "🧪️recolors-power-handle-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-handle-kind-default-wire-kind",
+          "sourceMutationDirectoryName": "🔌️change-handle-kind-default-wire-kind",
+          "mutationDirectoryName": "🔌️change-handle-kind-default-wire-kind",
+          "scenarios": [
+            {
+              "id": "swaps-power-default-wire-kind",
+              "directoryName": "🧪️swaps-power-default-wire-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-handle-kind-label",
+          "sourceMutationDirectoryName": "🔖️change-handle-kind-label",
+          "mutationDirectoryName": "✏️🏷️change-handle-kind-label",
+          "scenarios": [
+            {
+              "id": "relabels-power-handle-kind",
+              "directoryName": "🧪️relabels-power-handle-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-meta-description",
+          "sourceMutationDirectoryName": "💬️change-meta-description",
+          "mutationDirectoryName": "💬️change-meta-description",
+          "scenarios": [
+            {
+              "id": "rewrites-session-notes",
+              "directoryName": "🧪️rewrites-session-notes"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-kind-description",
+          "sourceMutationDirectoryName": "📃️change-node-kind-description",
+          "mutationDirectoryName": "📃️change-node-kind-description",
+          "scenarios": [
+            {
+              "id": "rewrites-node-kind-description",
+              "directoryName": "🧪️rewrites-node-kind-description"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-kind-icon",
+          "sourceMutationDirectoryName": "🖼️change-node-kind-icon",
+          "mutationDirectoryName": "🖼️change-node-kind-icon",
+          "scenarios": [
+            {
+              "id": "repoints-node-kind-icon",
+              "directoryName": "🧪️repoints-node-kind-icon"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-kind-label",
+          "sourceMutationDirectoryName": "🏷️change-node-kind-label",
+          "mutationDirectoryName": "🏷️change-node-kind-label",
+          "scenarios": [
+            {
+              "id": "relabels-node-kind",
+              "directoryName": "🧪️relabels-node-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-kind-unit",
+          "sourceMutationDirectoryName": "📐️change-node-kind-unit",
+          "mutationDirectoryName": "📐️change-node-kind-unit",
+          "scenarios": [
+            {
+              "id": "switches-unit-to-metre",
+              "directoryName": "🧪️switches-unit-to-metre"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-kind-variant",
+          "sourceMutationDirectoryName": "🔀️change-node-kind-variant",
+          "mutationDirectoryName": "🔀️change-node-kind-variant",
+          "scenarios": [
+            {
+              "id": "switches-variant-to-b",
+              "directoryName": "🧪️switches-variant-to-b"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-handle",
+          "sourceMutationDirectoryName": "🌿️create-handle",
+          "mutationDirectoryName": "🌿️create-handle",
+          "scenarios": [
+            {
+              "id": "appends-out-handle",
+              "directoryName": "🧪️appends-out-handle"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-handle-kind",
+          "sourceMutationDirectoryName": "🌱️create-handle-kind",
+          "mutationDirectoryName": "🌱️create-handle-kind",
+          "scenarios": [
+            {
+              "id": "appends-ground-handle-kind",
+              "directoryName": "🧪️appends-ground-handle-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-handle",
+          "sourceMutationDirectoryName": "❌️delete-handle",
+          "mutationDirectoryName": "❌️delete-handle",
+          "scenarios": [
+            {
+              "id": "removes-in-handle",
+              "directoryName": "🧪️removes-in-handle"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-handle-kind",
+          "sourceMutationDirectoryName": "🗑️delete-handle-kind",
+          "mutationDirectoryName": "🗑️delete-handle-kind",
+          "scenarios": [
+            {
+              "id": "removes-power-handle-kind",
+              "directoryName": "🧪️removes-power-handle-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-camera2d",
+          "sourceMutationDirectoryName": "🎥️move-camera2d",
+          "mutationDirectoryName": "🎥️move-camera2d",
+          "scenarios": [
+            {
+              "id": "pans-camera",
+              "directoryName": "🧪️pans-camera"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-handle",
+          "sourceMutationDirectoryName": "📍️move-handle",
+          "mutationDirectoryName": "📍️move-handle",
+          "scenarios": [
+            {
+              "id": "swings-in-handle-along-the-rim",
+              "directoryName": "🧪️swings-in-handle-along-the-rim"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-attribute",
+          "sourceMutationDirectoryName": "🚫️remove-attribute",
+          "mutationDirectoryName": "🚫️remove-attribute",
+          "scenarios": [
+            {
+              "id": "drops-material-attribute",
+              "directoryName": "🧪️drops-material-attribute"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-author",
+          "sourceMutationDirectoryName": "🚷️remove-author",
+          "mutationDirectoryName": "🚷️remove-author",
+          "scenarios": [
+            {
+              "id": "uncredits-ada",
+              "directoryName": "🧪️uncredits-ada"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-compatibility-rule",
+          "sourceMutationDirectoryName": "➖️remove-compatibility-rule",
+          "mutationDirectoryName": "➖️remove-compatibility-rule",
+          "scenarios": [
+            {
+              "id": "revokes-signal-to-signal",
+              "directoryName": "🧪️revokes-signal-to-signal"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-handle-kind",
+          "sourceMutationDirectoryName": "✒️rename-handle-kind",
+          "mutationDirectoryName": "✒️rename-handle-kind",
+          "scenarios": [
+            {
+              "id": "renames-power-to-mains",
+              "directoryName": "🧪️renames-power-to-mains"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-node-kind",
+          "sourceMutationDirectoryName": "✏️rename-node-kind",
+          "mutationDirectoryName": "✏️rename-node-kind",
+          "scenarios": [
+            {
+              "id": "renames-node-kind-to-gate",
+              "directoryName": "🧪️renames-node-kind-to-gate"
+            }
+          ]
+        },
+        {
+          "mutationId": "scale-camera2d",
+          "sourceMutationDirectoryName": "🔍️scale-camera2d",
+          "mutationDirectoryName": "🔍️scale-camera2d",
+          "scenarios": [
+            {
+              "id": "zooms-camera-in",
+              "directoryName": "🧪️zooms-camera-in"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-presentation",
+          "sourceMutationDirectoryName": "🖌️update-presentation",
+          "mutationDirectoryName": "🖌️update-presentation",
+          "scenarios": [
+            {
+              "id": "circle-to-rectangle",
+              "directoryName": "🧪️circle-to-rectangle"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "rename-node-kind",
+        "change-node-kind-label",
+        "change-node-kind-variant",
+        "change-node-kind-description",
+        "change-node-kind-icon",
+        "change-node-kind-unit",
+        "update-presentation",
+        "create-handle-kind",
+        "delete-handle-kind",
+        "rename-handle-kind",
+        "change-handle-kind-label",
+        "change-handle-kind-color",
+        "change-handle-kind-default-wire-kind",
+        "create-handle",
+        "delete-handle",
+        "move-handle",
+        "change-handle-handle-kind",
+        "add-compatibility-rule",
+        "remove-compatibility-rule",
+        "add-attribute",
+        "remove-attribute",
+        "add-author",
+        "remove-author",
+        "move-camera2d",
+        "scale-camera2d",
+        "change-meta-description"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.block.2d",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "add-attribute",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-attribute",
+            "bridgeVersion": 1,
+            "variant": "AddAttribute"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "add-author",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-author",
+            "bridgeVersion": 1,
+            "variant": "AddAuthor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "add-compatibility-rule",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-compatibility-rule",
+            "bridgeVersion": 1,
+            "variant": "AddCompatibilityRule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-handle-handle-kind",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-handle-handle-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangeHandleHandleKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-handle-kind-color",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-handle-kind-color",
+            "bridgeVersion": 1,
+            "variant": "ChangeHandleKindColor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-handle-kind-default-wire-kind",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-handle-kind-default-wire-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangeHandleKindDefaultWireKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-handle-kind-label",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-handle-kind-label",
+            "bridgeVersion": 1,
+            "variant": "ChangeHandleKindLabel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-meta-description",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-meta-description",
+            "bridgeVersion": 1,
+            "variant": "ChangeMetaDescription"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-node-kind-description",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-kind-description",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeKindDescription"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-node-kind-icon",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-kind-icon",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeKindIcon"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-node-kind-label",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-kind-label",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeKindLabel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-node-kind-unit",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-kind-unit",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeKindUnit"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-node-kind-variant",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-kind-variant",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeKindVariant"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-handle",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-handle",
+            "bridgeVersion": 1,
+            "variant": "CreateHandle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-handle-kind",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-handle-kind",
+            "bridgeVersion": 1,
+            "variant": "CreateHandleKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-handle",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-handle",
+            "bridgeVersion": 1,
+            "variant": "DeleteHandle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-handle-kind",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-handle-kind",
+            "bridgeVersion": 1,
+            "variant": "DeleteHandleKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "move-camera2d",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-camera2d",
+            "bridgeVersion": 1,
+            "variant": "MoveCamera2d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "move-handle",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-handle",
+            "bridgeVersion": 1,
+            "variant": "MoveHandle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-attribute",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-attribute",
+            "bridgeVersion": 1,
+            "variant": "RemoveAttribute"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-author",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-author",
+            "bridgeVersion": 1,
+            "variant": "RemoveAuthor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-compatibility-rule",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-compatibility-rule",
+            "bridgeVersion": 1,
+            "variant": "RemoveCompatibilityRule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "rename-handle-kind",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-handle-kind",
+            "bridgeVersion": 1,
+            "variant": "RenameHandleKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "rename-node-kind",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-node-kind",
+            "bridgeVersion": 1,
+            "variant": "RenameNodeKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "scale-camera2d",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "scale-camera2d",
+            "bridgeVersion": 1,
+            "variant": "ScaleCamera2d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "update-presentation",
+          "capability": "block-2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-presentation",
+            "bridgeVersion": 1,
+            "variant": "UpdatePresentation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

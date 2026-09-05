@@ -1,0 +1,22 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/din18599/inference.json",
+  "title": "Din18599Inference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outline"],
+  "properties": {
+    "outline": { "$ref": "#/$defs/Din18599Outline", "x-semio-derived": true }
+  },
+  "$defs": {
+    "Din18599Outline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sectionOutline", "fieldCount", "entryCount"],
+      "properties": {
+        "sectionOutline": { "type": "array", "items": { "type": "string" } },
+        "fieldCount": { "type": "integer" },
+        "entryCount": { "type": "integer" }
+      }
+    }
+  }
+}

@@ -1,9 +1,0 @@
-(* ebnf stdio.las snapshot: preamble line + lowercase-hex body of the real LAS binary buffer
-   (2 hex digits per byte, whitespace between pairs is insignificant and stripped on parse).
-   See the binary facet's component.ksy/component.protocol.semio for the real header+VLR+
-   point-record byte layout this hex payload decodes to. *)
-document  = preamble , newline , hex-body ;
-preamble  = "semio" , SP , "stdio.las" , SP , "v" , digit+ ;
-hex-body  = { hex-pair | SP | newline } ;
-hex-pair  = hex-digit , hex-digit ;
-hex-digit = "0".."9" | "a".."f" ;

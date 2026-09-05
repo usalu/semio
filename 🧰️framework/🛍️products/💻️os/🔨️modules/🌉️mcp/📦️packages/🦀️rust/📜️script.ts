@@ -2,9 +2,12 @@
 /** 🌉️ `@semio-tech/framework-os-mcp-rs` task router: `bun ./📜️script.ts <build|check|test|dev>`. */
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { deepStrictEqual } from "node:assert";
+import Ajv2020 from "ajv/dist/2020.js";
 import {
   BundleScript,
   ScriptRouter,
+  buildBudgetMs,
   orchestratorBudgetOpts,
   resolveTestLevel,
   runBundleScriptMain,
@@ -108,9 +111,101 @@ class CanonicalPairCheckScript extends BundleScript {
   }
 }
 
+/** 🗺️ Independently validates the committed GIS roster without granting execution authority. */
+class InferenceDiscoveryOracleScript extends BundleScript {
+  run(): void {
+    const identityRoot = join(this.repoRoot, "✏️s", "🔌️plugins", "🌍️gis", "🧪️fixtures", "🪪️artifact-identity");
+    const identity = JSON.parse(readFileSync(join(identityRoot, "🔣️.json"), "utf8"));
+    const validateIdentity = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(identityRoot, "🧬️.schema.json"), "utf8")));
+    if (!validateIdentity(identity)) throw new Error(`invalid GIS identity fixture: ${JSON.stringify(validateIdentity.errors)}`);
+    const kinds = new Set<string>();
+    for (const artifact of identity.artifacts) {
+      const segments = artifact.kind.split(".");
+      if (segments.length !== 3 || segments[0] !== "s" || segments[1] !== identity.pluginId || kinds.has(artifact.kind)) throw new Error("GIS artifact identity must have one exact plugin owner");
+      kinds.add(artifact.kind);
+      if (artifact.nativeDialect !== `${artifact.kind}@1/*` || artifact.documentSchema !== (segments[2] === "gismap" ? "gis.map" : "gis.terrain")) throw new Error("GIS native identity and payload schema were conflated");
+      if (artifact.extension !== segments[2] || artifact.codecExtension !== `${Buffer.byteLength(artifact.documentSchema, "utf8")}:${artifact.documentSchema}:${artifact.extension}`) throw new Error("GIS codec extension must bind its exact payload schema");
+    }
+    for (const kind of identity.hostileKinds) {
+      const candidate = structuredClone(identity);
+      candidate.artifacts[0].kind = kind;
+      if (validateIdentity(candidate)) throw new Error(`GIS identity oracle admitted ${kind}`);
+    }
+    console.log(`gis-artifact-identity-oracle: canonical=${kinds.size} hostile=${identity.hostileKinds.length}; native assembly still requires Rust law`);
+    const controlRoot = join(this.repoRoot, "✏️s", "🔌️plugins", "🌍️gis", "🧪️fixtures", "💡️inference-control");
+    const control = JSON.parse(readFileSync(join(controlRoot, "🔣️.json"), "utf8"));
+    const validateControl = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(controlRoot, "🧬️.schema.json"), "utf8")));
+    if (!validateControl(control)) throw new Error(`invalid GIS control fixture: ${JSON.stringify(validateControl.errors)}`);
+    const checkpoints = [0, 1];
+    const coordinates: number[][] = [];
+    let work = 1;
+    const scan = (value: any): void => {
+      checkpoints.push(++work);
+      if (Array.isArray(value)) {
+        if (value.length === 2 && value.every((item) => typeof item === "number")) coordinates.push(value);
+        else value.forEach(scan);
+      } else if (value !== null && typeof value === "object") {
+        if (typeof value.lon === "number" && typeof value.lat === "number") coordinates.push([value.lon, value.lat]);
+        Object.values(value).forEach(scan);
+      }
+    };
+    for (const feature of [...control.snapshot.positions, ...control.snapshot.routes, ...control.snapshot.regions]) scan(feature.data);
+    checkpoints.push(work);
+    deepStrictEqual(checkpoints, control.checkpoints);
+    deepStrictEqual({ positionCount: control.snapshot.positions.length, routeCount: control.snapshot.routes.length, regionCount: control.snapshot.regions.length, bounds: {
+      lonMin: Math.min(...coordinates.map(([lon]) => lon!)), lonMax: Math.max(...coordinates.map(([lon]) => lon!)), latMin: Math.min(...coordinates.map(([, lat]) => lat!)), latMax: Math.max(...coordinates.map(([, lat]) => lat!)),
+    } }, control.expected);
+    for (const interruption of control.interruptions) {
+      if (checkpoints.indexOf(interruption.at) + 1 !== interruption.calls) throw new Error(`control does not stop at first interruption ${interruption.name}`);
+    }
+    const { lonMin, lonMax, latMin, latMax } = control.expected.bounds;
+    deepStrictEqual(control.proposal, { CreateRegion: { index: control.snapshot.regions.length, item: { id: `inference-${control.proposalJobId}`, data: { kind: "inference-bounds", ring: [[lonMin, latMin], [lonMax, latMin], [lonMax, latMax], [lonMin, latMax], [lonMin, latMin]] } } } });
+    console.log(`gis-inference-control-oracle: checkpoints=${checkpoints.length} interruptions=${control.interruptions.length} typed-proposal=1; no hub execution claim`);
+    const fixtureRoot = join(this.root, "..", "..", "💡️inference", "🧪️fixtures", "🗺️gis-discovery");
+    const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8"));
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+    if (!validate(fixture.expected)) throw new Error(`invalid neutral GIS roster: ${JSON.stringify(validate.errors)}`);
+    for (const hostile of fixture.hostile) {
+      const candidate = structuredClone(fixture.expected);
+      if (hostile.operation === "remove") candidate.declared = [];
+      else if (hostile.operation === "duplicate") candidate.declared.push(structuredClone(candidate.declared[0]));
+      else candidate.declared[0][hostile.field] = hostile.value;
+      if (validate(candidate)) throw new Error(`GIS discovery oracle admitted ${hostile.name}`);
+    }
+    const descriptor = JSON.parse(readFileSync(join(this.repoRoot, "✏️s", "🔌️plugins", "🌍️gis", "🔣️.json"), "utf8"));
+    const contributions = descriptor.contributions;
+    const declared = [...(contributions.inferenceServices ?? []), ...(contributions.artifactContributions ?? []).flatMap((row: { inferences?: unknown[] }) => row.inferences ?? [])];
+    const actual = { declared };
+    if (!validate(actual)) throw new Error(`committed GIS descriptor discovery drift: ${JSON.stringify(validate.errors)}`);
+    deepStrictEqual(actual, fixture.expected);
+    console.log(`gis-inference-discovery-oracle: exact=1 hostile=${fixture.hostile.length} execution-authority=0`);
+  }
+}
+
+/** 🌉️ Proves the literal neutral trace through the registered MCP discovery tool. */
+class InferenceDiscoveryCheckScript extends BundleScript {
+  run(): void {
+    runCmd("bun", ["./📜️script.ts", "inference-discovery-oracle"], { cwd: this.root, budgetMs: 60_000 });
+    const packets = [
+      { root: this.root, suffix: "gis_inference_discovery_reads_committed_descriptor_through_registered_mcp_tool_without_execution_authority" },
+      { root: join(this.repoRoot, "✏️s", "🔌️plugins", "🌍️gis", "📦️packages", "🦀️rust"), suffix: "gis_component_assembly_declares_exact_package_identity_before_descriptor_emission" },
+      { root: join(this.repoRoot, "✏️s", "🔌️plugins", "🌍️gis", "📦️packages", "🦀️rust"), suffix: "gis_native_controlled_inference_executes_literal_progress_cancel_and_deadline_trace" },
+    ];
+    for (const packet of packets) {
+      const listed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", "--lib", packet.suffix, "--", "--list"], { cwd: packet.root, budgetMs: buildBudgetMs() });
+      const matches = listed.stdout.split("\n").filter((line) => line.endsWith(": test")).map((line) => line.slice(0, -6)).filter((name) => name.endsWith(packet.suffix));
+      if (listed.status !== 0 || matches.length !== 1) throw new Error(`GIS discovery exact-one preflight failed ${packet.suffix}: status=${listed.status} matches=${matches.length} diagnostic=${listed.stderr.slice(-4000)}`);
+      runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", matches[0]!, "--", "--exact", "--test-threads=1"], packet.root);
+    }
+    runCargo(["check", "--manifest-path", "Cargo.toml", "--all-features"], this.root);
+    console.log("gis-inference-discovery-check: committed descriptor, exact MCP tool trace, all-feature compile; no execution claim");
+  }
+}
+
 /** ▶️ `bun ./📜️script.ts dev [-- stdio [flags...]]` — boots the real stdio server for local/manual
  *  smoke testing (`printf '<json-rpc line>' | bun ./📜️script.ts dev -- stdio | ...`). Defaults to
- *  `stdio` when no mode is given, matching `📦️bin.rs`'s own default-less argv contract. */
+ *  `stdio` when no mode is given, matching `🚀️bin.rs`'s own default-less argv contract. */
 class DevScript extends BundleScript {
   run(segments: string[]): void {
     const args = segments.length > 0 ? segments : ["stdio"];
@@ -118,6 +213,6 @@ class DevScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("check", CheckScript).register("test", TestScript).register("canonical-pair-check", CanonicalPairCheckScript).register("dev", DevScript);
+const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("check", CheckScript).register("test", TestScript).register("canonical-pair-check", CanonicalPairCheckScript).register("inference-discovery-oracle", InferenceDiscoveryOracleScript).register("inference-discovery-check", InferenceDiscoveryCheckScript).register("dev", DevScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "check" });

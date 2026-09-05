@@ -1,0 +1,67 @@
+{
+  "schema": "semio.flow.retained-snapshot-lifecycle/v1",
+  "request": {
+    "artifactId": "flow-member",
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "flow",
+    "identityBytes": 30
+  },
+  "admission": [
+    {
+      "id": "live",
+      "state": "admitted",
+      "subset": "flow",
+      "reason": null
+    },
+    {
+      "id": "unadmitted",
+      "state": "unadmitted",
+      "subset": "flow",
+      "reason": "unsealed"
+    },
+    {
+      "id": "closing",
+      "state": "closing",
+      "subset": "flow",
+      "reason": "stale"
+    },
+    {
+      "id": "retired",
+      "state": "retired",
+      "subset": "flow",
+      "reason": "stale"
+    },
+    {
+      "id": "foreign",
+      "state": "admitted",
+      "subset": "text",
+      "reason": "identity"
+    }
+  ],
+  "multiPage": {
+    "source": "unicode",
+    "nodeIndex": 0,
+    "labelScalar": "🧬",
+    "labelRepeats": 1024,
+    "wireBytes": 4249,
+    "inputBytes": 4252,
+    "inputPages": 2,
+    "snapshotRetiredBytes": 4190,
+    "totalRetiredBytes": 8472
+  },
+  "retirementGrants": [
+    [
+      1
+    ],
+    [
+      7
+    ],
+    [
+      1,
+      3,
+      4096,
+      2
+    ]
+  ]
+}

@@ -1,0 +1,6 @@
+(* Direct text registry; payload productions are owned by each leaf. *)
+mutation = opcode, { " ", argument } ;
+opcode = "change-header-fields" | "insert-palette-entry" | "remove-palette-entry" | "replace-palette-entry" | "replace-pixel-data" ;
+argument = name, "=", value ;
+name = letter, { letter | digit | "-" } ;
+value = character, { character } ;

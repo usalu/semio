@@ -1,0 +1,3 @@
+(* ebnf s.stdio.semio.animation.inference *)
+document = header, body ;
+header = 'schema', space, 's.stdio.semio.animation.inference', newline ;

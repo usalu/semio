@@ -1,0 +1,412 @@
+{
+  "schema": "spatial.interaction",
+  "id": "entity.createAnchor",
+  "version": "1.0.0",
+  "label": "CreateAnchor",
+  "key": "cr",
+  "interaction": {
+    "spatialGroundPick": false,
+    "pickDisabledStates": ["committed"],
+    "groundPointerMoveStates": ["placeAnchor"],
+    "heightDragStates": [],
+    "verticalRodStates": [],
+    "heightConfirmState": null
+  },
+  "guards": [
+    {
+      "name": "selectionHasPoint",
+      "expr": {
+        "kind": "exists",
+        "target": {
+          "root": "event",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "point"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "hasHostAndHitPoint",
+      "expr": {
+        "kind": "all",
+        "args": [
+          {
+            "kind": "exists",
+            "target": {
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "hostKind"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "exists",
+            "target": {
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "hostId"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "exists",
+            "target": {
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "hitPoint"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "machine": {
+    "initial": "selectHost",
+    "states": [
+      {
+        "name": "selectHost",
+        "selection": {
+          "accept": ["vertex", "edge", "wire", "face", "solid"],
+          "multiple": false,
+          "prompt": "Pick anchor host"
+        },
+        "on": [
+          {
+            "event": "selection.changed",
+            "transitions": [
+              {
+                "target": "committed",
+                "guard": "selectionHasPoint",
+                "key": "i",
+                "label": "Create anchor",
+                "effects": [
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "hostKind"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "targets"
+                        },
+                        {
+                          "kind": "index",
+                          "index": 0
+                        },
+                        {
+                          "kind": "field",
+                          "name": "kind"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "hostId"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "targets"
+                        },
+                        {
+                          "kind": "index",
+                          "index": 0
+                        },
+                        {
+                          "kind": "field",
+                          "name": "id"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "hitPoint"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "target": "placeAnchor",
+                "key": "i",
+                "label": "Select host",
+                "effects": [
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "hostKind"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "targets"
+                        },
+                        {
+                          "kind": "index",
+                          "index": 0
+                        },
+                        {
+                          "kind": "field",
+                          "name": "kind"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "hostId"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "targets"
+                        },
+                        {
+                          "kind": "index",
+                          "index": 0
+                        },
+                        {
+                          "kind": "field",
+                          "name": "id"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "selectHost",
+                "key": "x",
+                "label": "Cancel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "placeAnchor",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "pointer.down",
+            "transitions": [
+              {
+                "target": "committed",
+                "key": "Enter",
+                "label": "Place anchor",
+                "effects": [
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "hitPoint"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "selectHost",
+                "key": "x",
+                "label": "Cancel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "committed",
+        "final": true
+      }
+    ]
+  },
+  "display": {
+    "states": [
+      {
+        "state": "placeAnchor",
+        "items": [
+          {
+            "kind": "point",
+            "id": "cursor",
+            "role": "cursor",
+            "position": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "cursor"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "commit": {
+    "when": "hasHostAndHitPoint",
+    "fromStates": ["committed"],
+    "operation": {
+      "kind": "action",
+      "action": "entity.createAnchor",
+      "params": {
+        "hostKind": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "hostKind"
+            }
+          ]
+        },
+        "hostId": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "hostId"
+            }
+          ]
+        },
+        "hitPoint": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "hitPoint"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

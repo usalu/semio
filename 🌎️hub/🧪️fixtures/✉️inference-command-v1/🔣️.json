@@ -1,0 +1,28 @@
+{
+  "schema": "semio.hub.inference-command-fixture/v1",
+  "authority": "canonical-envelope-only-not-gis-execution",
+  "limits": { "commandBytes": 8192, "textBytes": 256, "dependencyCount": 64, "payloadBytes": 4096, "integerMaximum": 9007199254740991 },
+  "source": "../🧾️inference-wal-proof-v1/🔣️.json",
+  "vectors": [
+    { "name": "canonical-complete-envelope", "change": "none", "expected": "canonical" },
+    { "name": "trailing-byte-after-hlc", "change": "trailing", "expected": "rejected" },
+    { "name": "truncated-hlc", "change": "truncated", "expected": "rejected" },
+    { "name": "total-max-plus-one-before-decode", "change": "oversize", "expected": "rejected" },
+    { "name": "nonminimal-varint", "change": "overlong-varint", "expected": "rejected" },
+    { "name": "overflow-varint", "change": "overflow-varint", "expected": "rejected" },
+    { "name": "text-max-plus-one", "change": "text-max-plus-one", "expected": "rejected" },
+    { "name": "malformed-utf8", "change": "invalid-utf8", "expected": "rejected" },
+    { "name": "control-character-in-actor", "change": "control-text", "expected": "rejected" },
+    { "name": "empty-diff-schema", "change": "empty-schema", "expected": "rejected" },
+    { "name": "dependency-count-before-allocation", "change": "dependency-max-plus-one", "expected": "rejected" },
+    { "name": "duplicate-dependency", "change": "duplicate-dependency", "expected": "rejected" },
+    { "name": "diff-payload-max-plus-one", "change": "diff-max-plus-one", "expected": "rejected" },
+    { "name": "inverse-payload-max-plus-one", "change": "inverse-max-plus-one", "expected": "rejected" },
+    { "name": "hlc-actor-safe-integer-max-plus-one", "change": "hlc-actor-max-plus-one", "expected": "rejected" },
+    { "name": "hlc-time-safe-integer-max-plus-one", "change": "hlc-time-max-plus-one", "expected": "rejected" },
+    { "name": "hlc-logical-safe-integer-max-plus-one", "change": "hlc-logical-max-plus-one", "expected": "rejected" },
+    { "name": "canonical-but-another-actor", "change": "different-actor", "expected": "identity-denied" },
+    { "name": "canonical-but-another-space", "change": "different-scope", "expected": "identity-denied" },
+    { "name": "canonical-but-another-mutation", "change": "different-mutation", "expected": "identity-denied" }
+  ]
+}

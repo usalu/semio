@@ -5,7 +5,7 @@
   "displayName": "Change Imported Features",
   "emoji": "📥",
   "aggregateVariant": "ChangeImportedFeatures",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-imported-features",
   "binaryTag": 1,
   "invertibility": "explicit-mutation",

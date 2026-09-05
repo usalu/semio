@@ -1,0 +1,8 @@
+/** 🦠️ unbind-primitive-indices: cohesive atomic mesh mutation. */
+import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
+import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
+export const GltfUnbindPrimitiveIndicesDescriptor = { id: 's.stdio.gltf.mutation.unbind-primitive-indices.v1', version: 1, kind: 'unbind', touchedPaths: ["document/meshes/*/primitives/*/indices"], referencePolicy: 'clears only the optional indices relationship' } as const;
+export interface GltfUnbindPrimitiveIndicesPayload { mesh: number; primitive: number }
+export type GltfUnbindPrimitiveIndicesResult = GltfLeafResult;
+export const validateGltfUnbindPrimitiveIndices = (payload: GltfUnbindPrimitiveIndicesPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const mesh = itemIndex(payload.mesh, base.document.meshes.length, 'document/meshes'); if (mesh) return mesh; const primitive = itemIndex(payload.primitive, base.document.meshes[payload.mesh]!.primitives.length, `document/meshes/${payload.mesh}/primitives`); if (primitive) return primitive; if (base.document.meshes[payload.mesh]!.primitives[payload.primitive]!.indices === undefined) return reject('gltf.mutation.relation-absent', 'document/meshes/primitives/indices', 'primitive has no indices'); return undefined; };
+export const applyGltfUnbindPrimitiveIndices = (base: GltfSnapshot, payload: GltfUnbindPrimitiveIndicesPayload): GltfUnbindPrimitiveIndicesResult => run(base, payload, validateGltfUnbindPrimitiveIndices, (next, payload) => { next.document.meshes[payload.mesh]!.primitives[payload.primitive]!.indices = undefined; }, GltfUnbindPrimitiveIndicesDescriptor.touchedPaths);

@@ -1,4 +1,0 @@
-module Stdio_docx_mutations;
-type Document = unit {
-    payload: bytes &eod;
-};

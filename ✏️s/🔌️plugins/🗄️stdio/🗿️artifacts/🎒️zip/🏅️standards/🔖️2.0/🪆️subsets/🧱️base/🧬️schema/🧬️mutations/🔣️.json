@@ -1,0 +1,30 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.zip/mutation.json",
+  "title": "ZipMutation",
+  "$defs": {
+    "ZipEntry": {
+      "type": "object",
+      "required": ["name", "data"],
+      "properties": {
+        "name": { "type": "string" },
+        "data": { "type": "array", "items": { "type": "integer" } }
+      },
+      "additionalProperties": false
+    }
+  },
+  "type": "object",
+  "required": ["mutation"],
+  "properties": {
+    "mutation": {
+      "type": "string",
+      "enum": ["setSnapshot", "setArchiveComment", "addEntry", "removeEntry", "renameEntry", "setEntryData"]
+    },
+    "snapshot": { "type": "object" },
+    "comment": { "type": "string" },
+    "entry": { "$ref": "#/$defs/ZipEntry" },
+    "name": { "type": "string" },
+    "newName": { "type": "string" },
+    "data": { "type": "array", "items": { "type": "integer" } }
+  },
+  "additionalProperties": false
+}

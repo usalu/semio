@@ -176,7 +176,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for Iso16757AnalyzerAnalysis {
         type Parts = Iso16757Parts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.iso16757", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.norm.iso16757", standard: StandardId("1"), subset: SubsetId("*") };
 
         fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium

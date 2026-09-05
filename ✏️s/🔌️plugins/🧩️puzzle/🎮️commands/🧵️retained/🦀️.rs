@@ -2,7 +2,7 @@
 
 use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, Operation, RetainedJobPayload, StepContext, StepOutcome};
-use semio_framework_plugin::app::{ArtifactToolCompletion, EphemeralEmit, InteractionHoverState};
+use semio_framework_plugin::app::{ArtifactToolCompletion, ArtifactToolCompletionRejection, EphemeralEmit, InteractionHoverState};
 use semio_framework_plugin::{ArtifactApp, Emit, Fault, ToolJobFactoryError};
 use std::sync::Arc;
 
@@ -307,6 +307,7 @@ pub struct RetainedPuzzleCommandJob<A: ArtifactApp> {
     checkpoint_pending: bool,
     restore_target: Option<PuzzleCommandCheckpointState>,
     emit: Option<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>,
+    pending_completion_rejection: Option<ArtifactToolCompletionRejection<A>>,
     phase: PuzzleCommandPhase,
     closing: bool,
 }
@@ -394,6 +395,7 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
             checkpoint_pending: false,
             restore_target: None,
             emit: None,
+            pending_completion_rejection: None,
             phase,
             closing: false,
         }
@@ -583,7 +585,8 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
                     return self.fault(cx, b"puzzle command completion consumer is absent");
                 }
                 let Some(emit) = self.emit.take() else { return self.fault(cx, b"puzzle command result owner is absent") };
-                if completion.complete(Ok(emit), EphemeralEmit::default()).is_err() {
+                if let Err(rejected) = completion.complete(Ok(emit), EphemeralEmit::default()) {
+                    self.pending_completion_rejection = Some(rejected);
                     return self.fault(cx, b"puzzle command result publication was rejected");
                 }
                 self.phase = PuzzleCommandPhase::Complete;
@@ -655,6 +658,22 @@ impl<A: ArtifactApp> InteractiveJob for RetainedPuzzleCommandJob<A> {
             }
             return step;
         }
+        if let Some(rejected) = self.pending_completion_rejection.as_mut() {
+            if let Ok(emit) = rejected.emit.as_mut() {
+                if let Some(step) = emit.close_child_one(maximum_items, maximum_bytes) {
+                    return match step {
+                        semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes } => InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                        semio_framework_plugin::PluginCloseStep::Blocked { .. } | semio_framework_plugin::PluginCloseStep::AwaitingInput { .. } => InteractiveJobCloseStep::Blocked,
+                        semio_framework_plugin::PluginCloseStep::Complete => unreachable!("child close helper consumes completed children"),
+                    };
+                }
+            }
+            if maximum_items == 0 {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.pending_completion_rejection = None;
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
         if let Some(checkpoint) = self.checkpoint_input.as_mut() {
             if maximum_items == 0 {
                 return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
@@ -717,6 +736,7 @@ impl<A: ArtifactApp> InteractiveJob for RetainedPuzzleCommandJob<A> {
             && self.raw_len == 0
             && self.raw_input.is_none()
             && self.checkpoint_input.is_none()
+            && self.pending_completion_rejection.is_none()
             && self.emit.is_none()
             && self.work.is_none()
             && self.command.is_none()
@@ -805,6 +825,17 @@ mod tests {
         assert!(source.contains("self.raw_input.is_none()"));
         assert!(source.contains("self.checkpoint_input.is_none()"));
         assert!(source.contains("self.restore_target = None;"));
+    }
+
+    #[test]
+    fn completion_rejection_is_retained_and_child_closed_before_typed_puzzle_owners() {
+        let source = include_str!("🦀️.rs");
+        let retained = source.find("self.pending_completion_rejection = Some(rejected)").expect("returned completion rejection owner");
+        let close = source.find("emit.close_child_one(maximum_items, maximum_bytes)").expect("bounded child-first rejection closer");
+        let work = source[close..].find("if let Some(work) = self.work.as_mut()").map(|offset| close + offset).expect("ordinary work owner close");
+        assert!(retained < close && close < work);
+        assert!(source.contains("&& self.pending_completion_rejection.is_none()"));
+        assert!(!source.contains("completion.complete(Ok(emit), EphemeralEmit::default()).is_err()"));
     }
 
     #[test]
@@ -965,11 +996,11 @@ mod tests {
     #[test]
     fn language_neutral_fixtures_match_production_catalogs_through_the_owned_oracle() {
         assert_fixture(
-            include_str!("../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️retained-jobs/🔣️.json"),
+            include_str!("../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🗄️retained-jobs/🔣️.json"),
             expected("puzzle2d", "puzzle.2d.fixture", crate::editor::puzzle2d::PUZZLE2D_RETAINED_TOOL_IDS),
         );
         assert_fixture(
-            include_str!("../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️retained-jobs/🔣️.json"),
+            include_str!("../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🗄️retained-jobs/🔣️.json"),
             expected("puzzle3d", "puzzle.3d.fixture", crate::editor::puzzle3d::PUZZLE3D_RETAINED_TOOL_IDS),
         );
         assert_fixture(
@@ -980,7 +1011,7 @@ mod tests {
 
     #[test]
     fn hostile_fixture_mutations_change_the_oracle_result_or_fail_closed() {
-        let fixture = include_str!("../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️retained-jobs/🔣️.json");
+        let fixture = include_str!("../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🗄️retained-jobs/🔣️.json");
         let oracle = SerdeJsonFixtureOracle;
         let baseline = oracle.evaluate(fixture).expect("baseline");
         for mutated in [

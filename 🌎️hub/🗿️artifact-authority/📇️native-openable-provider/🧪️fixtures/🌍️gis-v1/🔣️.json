@@ -1,0 +1,15 @@
+{
+  "schema": "semio.hub.gis-native-provider-selection/v1",
+  "packageVersion": "0.1.0",
+  "codecCount": 2,
+  "cases": [
+    { "name": "exact GIS package", "pluginId": "gis", "packageId": "semio:gis", "version": "0.1.0", "cancelled": false, "nowMs": 0, "deadlineMs": 1000, "accepted": true },
+    { "name": "cross-package owner", "pluginId": "gis", "packageId": "semio:stdio", "version": "0.1.0", "cancelled": false, "nowMs": 0, "deadlineMs": 1000, "accepted": false },
+    { "name": "cross-plugin owner", "pluginId": "stdio", "packageId": "semio:gis", "version": "0.1.0", "cancelled": false, "nowMs": 0, "deadlineMs": 1000, "accepted": false },
+    { "name": "different compiled version", "pluginId": "gis", "packageId": "semio:gis", "version": "0.2.0", "cancelled": false, "nowMs": 0, "deadlineMs": 1000, "accepted": false },
+    { "name": "unknown native provider", "pluginId": "foreign", "packageId": "semio:foreign", "version": "0.1.0", "cancelled": false, "nowMs": 0, "deadlineMs": 1000, "accepted": false },
+    { "name": "cancelled before preview", "pluginId": "gis", "packageId": "semio:gis", "version": "0.1.0", "cancelled": true, "nowMs": 0, "deadlineMs": 1000, "accepted": false },
+    { "name": "deadline at preview", "pluginId": "gis", "packageId": "semio:gis", "version": "0.1.0", "cancelled": false, "nowMs": 1000, "deadlineMs": 1000, "accepted": false },
+    { "name": "deadline before preview", "pluginId": "gis", "packageId": "semio:gis", "version": "0.1.0", "cancelled": false, "nowMs": 1001, "deadlineMs": 1000, "accepted": false }
+  ]
+}

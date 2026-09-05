@@ -14,7 +14,7 @@ string single raw
 # `[Content_Types].xml`, `_rels/.rels` (+ `xl/_rels/workbook.xml.rels`), this format's own
 # `xl/workbook.xml` (sheet list), `xl/worksheets/sheetN.xml` ((row,col)-keyed cells), and
 # `xl/sharedStrings.xml` -- restated from docx's own just-landed FG-wave grammar
-# (`📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️base/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`,
+# (`📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`,
 # cited verbatim wherever the shape is OPC-universal) since cross-artifact `use` does not resolve
 # at walk time (`📖️grammar-recipe.md` §2.1/§3) -- the SAME honest-restatement precedent every OPC
 # family member has used since zip's own P2 pilot. Unmodeled parts (styles, themes, calc chain, …)

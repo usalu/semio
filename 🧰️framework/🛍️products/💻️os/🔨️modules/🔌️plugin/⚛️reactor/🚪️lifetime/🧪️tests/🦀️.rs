@@ -13,7 +13,7 @@ impl GuestLifetimeOwner for Owner {
     }
 }
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap() }
 
 fn open() -> ActorInstanceOpenRequest {
     let fixture = fixture();

@@ -30,7 +30,7 @@ pub fn inverse_vcs_mutation(snapshot: &VcsSnapshot, mutation: &VcsDemoMutation) 
 /// 📥️ Decodes this facet's internally-tagged (`{"mutation": "addTag", …}`, camelCase payload
 /// fields) JSON projection — exactly the shape the committed
 /// `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` specification vectors carry — into a real
-/// [`VcsDemoMutation`]. The `mutate-vcs-1` adapter cannot reach `serde_json` (the generated test
+/// [`VcsDemoMutation`]. The `🌲️mutate-vcs-1` adapter cannot reach `serde_json` (the generated test
 /// host links only `semio-repo-test-host` and this crate) and cannot name this crate's private
 /// `protocol`/`store` extern-crate aliases either, so the bridge belongs here rather than there.
 pub fn decode_vcs_mutation_json(text: &str) -> Result<VcsDemoMutation, String> {
@@ -63,7 +63,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     fn vcs_demo_mutation_round_trips_store() {
-        let mut store = store::ArtifactStore::<VcsSnapshot, VcsDemoMutation>::new(store::create_document_envelope("vcs.document", "vcs", empty_vcs_snapshot(), None)).expect("valid artifact store fixture");
+        let mut store = store::ArtifactStore::<VcsSnapshot, VcsDemoMutation>::new(store::create_document_envelope("vcs.vcs", "vcs", empty_vcs_snapshot(), None)).expect("valid artifact store fixture");
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![change_counter(3)], description: None }).expect("apply");
         assert_eq!(store.snapshot().expect("snapshot").counter, 3);
     }
@@ -127,7 +127,7 @@ mod tests {
     /// 🏷️ The three declarations of this vocabulary — the enum, [`KINDS`] and the committed
     /// catalog — must agree, in spelling AND in order. The framework never parses Rust, so without
     /// this test `KINDS` could drift from the enum and the catalog could keep measuring
-    /// `mutate-vcs-1` against a vocabulary the artifact no longer has.
+    /// `🌲️mutate-vcs-1` against a vocabulary the artifact no longer has.
     #[test]
     fn kinds_match_the_enum_and_the_catalog() {
         let descriptors = VcsDemoMutation::kinds();
@@ -135,7 +135,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔮️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

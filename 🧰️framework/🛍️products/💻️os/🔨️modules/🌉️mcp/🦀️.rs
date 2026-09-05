@@ -667,7 +667,7 @@ fn server_for_workspace_options(principal: AgentPrincipal, audit: std::sync::Arc
 //#endregion 🔖️WorkspaceOptions
 
 //#region 🔖️StdioEntrypoint
-/// ⚙️ Options `📦️bin.rs`'s `stdio` subcommand parses off argv (`semio-os-mcp stdio [--folder <dir>]
+/// ⚙️ Options `🚀️bin.rs`'s `stdio` subcommand parses off argv (`semio-os-mcp stdio [--folder <dir>]
 /// [--hub <url> --space <id>] [--principal <id>] [--scopes a,b]`).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct StdioOptions {
@@ -698,7 +698,7 @@ pub fn run_stdio(options: StdioOptions) -> Result<(), GatewayError> {
 //#endregion 🔖️StdioEntrypoint
 
 //#region 🔖️HttpEntrypoint
-/// ⚙️ Options `📦️bin.rs`'s `http` subcommand parses off argv (`semio-os-mcp http [--port <p>]
+/// ⚙️ Options `🚀️bin.rs`'s `http` subcommand parses off argv (`semio-os-mcp http [--port <p>]
 /// [--bind <addr>] [--folder <dir>] [--hub <url> --space <id>] [--principal <id>] [--scopes a,b]
 /// [--audit-dir <dir>] [--allow-origin <origin>]…`). HTTP and bridge admission are both authorized
 /// by the protected process-entry credential and never by argv, URL, environment, or disk state.

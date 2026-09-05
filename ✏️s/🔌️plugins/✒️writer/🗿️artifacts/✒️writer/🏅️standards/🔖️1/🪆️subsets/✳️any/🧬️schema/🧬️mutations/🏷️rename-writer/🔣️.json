@@ -5,7 +5,7 @@
   "displayName": "Rename Writer",
   "emoji": "🏷️",
   "aggregateVariant": "RenameWriter",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "rename-writer",
   "binaryTag": 0,
   "invertibility": "explicit-mutation",

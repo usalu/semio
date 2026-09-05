@@ -5,7 +5,7 @@
   "displayName": "Delete Energy Model",
   "emoji": "🔌",
   "aggregateVariant": "DeleteEnergyModel",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "delete-energy-model",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

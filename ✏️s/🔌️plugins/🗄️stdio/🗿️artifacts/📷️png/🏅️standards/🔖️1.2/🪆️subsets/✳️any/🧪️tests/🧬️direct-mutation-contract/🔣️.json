@@ -11,7 +11,7 @@
       "requiredFiles": [
         "🦀️.rs",
         "🔣️.json",
-        "🔣️.schema.json",
+        "🧬️.schema.json",
         "🟦️.ts",
         "🔗️.graphql",
         "🛰️.proto",
@@ -29,7 +29,7 @@
       "requiredFiles": [
         "🦀️.rs",
         "🔣️.json",
-        "🔣️.schema.json",
+        "🧬️.schema.json",
         "🟦️.ts",
         "🔗️.graphql",
         "🛰️.proto",
@@ -47,7 +47,7 @@
       "requiredFiles": [
         "🦀️.rs",
         "🔣️.json",
-        "🔣️.schema.json",
+        "🧬️.schema.json",
         "🟦️.ts",
         "🔗️.graphql",
         "🛰️.proto",
@@ -65,7 +65,7 @@
       "requiredFiles": [
         "🦀️.rs",
         "🔣️.json",
-        "🔣️.schema.json",
+        "🧬️.schema.json",
         "🟦️.ts",
         "🔗️.graphql",
         "🛰️.proto",
@@ -83,7 +83,7 @@
       "requiredFiles": [
         "🦀️.rs",
         "🔣️.json",
-        "🔣️.schema.json",
+        "🧬️.schema.json",
         "🟦️.ts",
         "🔗️.graphql",
         "🛰️.proto",
@@ -101,7 +101,7 @@
       "requiredFiles": [
         "🦀️.rs",
         "🔣️.json",
-        "🔣️.schema.json",
+        "🧬️.schema.json",
         "🟦️.ts",
         "🔗️.graphql",
         "🛰️.proto",
@@ -119,7 +119,7 @@
       "requiredFiles": [
         "🦀️.rs",
         "🔣️.json",
-        "🔣️.schema.json",
+        "🧬️.schema.json",
         "🟦️.ts",
         "🔗️.graphql",
         "🛰️.proto",
@@ -137,7 +137,7 @@
       "requiredFiles": [
         "🦀️.rs",
         "🔣️.json",
-        "🔣️.schema.json",
+        "🧬️.schema.json",
         "🟦️.ts",
         "🔗️.graphql",
         "🛰️.proto",
@@ -155,7 +155,7 @@
       "requiredFiles": [
         "🦀️.rs",
         "🔣️.json",
-        "🔣️.schema.json",
+        "🧬️.schema.json",
         "🟦️.ts",
         "🔗️.graphql",
         "🛰️.proto",
@@ -173,7 +173,7 @@
       "requiredFiles": [
         "🦀️.rs",
         "🔣️.json",
-        "🔣️.schema.json",
+        "🧬️.schema.json",
         "🟦️.ts",
         "🔗️.graphql",
         "🛰️.proto",
@@ -191,7 +191,7 @@
       "requiredFiles": [
         "🦀️.rs",
         "🔣️.json",
-        "🔣️.schema.json",
+        "🧬️.schema.json",
         "🟦️.ts",
         "🔗️.graphql",
         "🛰️.proto",
@@ -209,7 +209,7 @@
       "requiredFiles": [
         "🦀️.rs",
         "🔣️.json",
-        "🔣️.schema.json",
+        "🧬️.schema.json",
         "🟦️.ts",
         "🔗️.graphql",
         "🛰️.proto",
@@ -221,13 +221,13 @@
     {
       "kind": "replace-pixels",
       "variant": "ReplacePixels",
-      "directory": "🟪️replace-pixels",
+      "directory": "🔲️replace-pixels",
       "textOpcode": "replace-pixels",
       "binaryTag": 14,
       "requiredFiles": [
         "🦀️.rs",
         "🔣️.json",
-        "🔣️.schema.json",
+        "🧬️.schema.json",
         "🟦️.ts",
         "🔗️.graphql",
         "🛰️.proto",
@@ -245,7 +245,7 @@
       "requiredFiles": [
         "🦀️.rs",
         "🔣️.json",
-        "🔣️.schema.json",
+        "🧬️.schema.json",
         "🟦️.ts",
         "🔗️.graphql",
         "🛰️.proto",
@@ -263,7 +263,7 @@
       "requiredFiles": [
         "🦀️.rs",
         "🔣️.json",
-        "🔣️.schema.json",
+        "🧬️.schema.json",
         "🟦️.ts",
         "🔗️.graphql",
         "🛰️.proto",

@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "contractId", "sourceContractId", "subsetSegments", "leaf", "customContent", "customMode", "directoryMode", "surfaceLayout", "subsetLayout", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contractId": { "const": "artifact-empty-facet-authoring-v1" },
+    "sourceContractId": { "const": "artifact-empty-facet-primary-markdown-v1" },
+    "subsetSegments": { "const": ["✏️s", "🔌️plugins", "🔋️energy", "🗿️artifacts", "🔋️model", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any"] },
+    "leaf": { "const": "📝️.md" },
+    "customContent": { "type": "string", "minLength": 1 },
+    "customMode": { "const": 416 },
+    "directoryMode": { "const": 488 },
+    "surfaceLayout": { "type": "array", "minItems": 19, "maxItems": 19, "uniqueItems": true, "items": { "$ref": "#/definitions/leafPath" } },
+    "subsetLayout": { "type": "array", "minItems": 17, "maxItems": 17, "uniqueItems": true, "items": { "$ref": "#/definitions/leafPath" } },
+    "cases": {
+      "type": "array", "minItems": 30, "maxItems": 30, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["id", "producer", "setup", "role", "expected"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^(surface|subset)-[a-z-]+$" },
+          "producer": { "enum": ["surface", "subset"] },
+          "setup": { "enum": ["valid", "custom", "dry-run", "missing-subset", "missing-schema", "wrong-owner", "invalid-role", "missing-standard", "leaf-link", "dangling-leaf-link", "leaf-directory", "facet-link", "empty-facet-link", "late-regular", "late-link", "late-directory", "changed-parent"] },
+          "role": { "enum": ["viewer", "editor", "unregistered"] },
+          "expected": { "enum": ["created", "preserved", "preview", "rejected"] }
+        },
+        "allOf": [
+          { "if": { "properties": { "setup": { "const": "valid" } } }, "then": { "properties": { "expected": { "const": "created" } } } },
+          { "if": { "properties": { "setup": { "enum": ["custom", "late-regular"] } } }, "then": { "properties": { "expected": { "const": "preserved" } } } },
+          { "if": { "properties": { "setup": { "const": "dry-run" } } }, "then": { "properties": { "expected": { "const": "preview" } } } },
+          { "if": { "properties": { "setup": { "not": { "enum": ["valid", "custom", "dry-run", "late-regular"] } } } }, "then": { "properties": { "expected": { "const": "rejected" } } } }
+        ]
+      }
+    }
+  },
+  "definitions": { "leafPath": { "type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*\\\\)(?:.*/)?(?:📝️\\.md|🦀️\\.rs|🟦️\\.ts)$" } }
+}

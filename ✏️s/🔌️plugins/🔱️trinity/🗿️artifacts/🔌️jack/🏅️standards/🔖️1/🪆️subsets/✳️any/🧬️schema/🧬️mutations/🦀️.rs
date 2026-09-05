@@ -61,7 +61,7 @@ mod structural_correspondence_tests {
             assert!(!source.contains(concat!("::", "mutation")), "direct owner {directory} must not route through a nested mutation module");
             assert_eq!(descriptor["semanticKind"], kind);
             assert_eq!(descriptor["aggregateVariant"], aggregate_variant);
-            assert_eq!(descriptor["payloadSchema"], "🔣️.schema.json");
+            assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
             assert_eq!(descriptor["textOpcode"], kind);
             assert_eq!(descriptor["binaryTag"], binary_tag);
             assert_eq!(descriptor["invertibility"], "explicit-mutation");
@@ -70,7 +70,7 @@ mod structural_correspondence_tests {
             assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]));
             assert!(descriptor["owner"].as_str().expect("descriptor owner").ends_with(&format!("/🧬️mutations/{directory}")));
             assert!(!descriptor["outcomeClasses"].as_array().expect("descriptor outcome classes").is_empty());
-            let payload_schema_source = std::fs::read_to_string(owner.join("🔣️.schema.json")).expect("direct JSON payload schema");
+            let payload_schema_source = std::fs::read_to_string(owner.join("🧬️.schema.json")).expect("direct JSON payload schema");
             let payload_schema: pack::JsonValue = pack::parse_json(&payload_schema_source).expect("direct payload schema must be valid JSON");
             assert_eq!(payload_schema["title"], aggregate_variant);
             {
@@ -98,9 +98,9 @@ mod structural_correspondence_tests {
         {
             let kind = "create-edge";
             let aggregate_variant = "CreateEdge";
-            let directory = "🔗️create-edge";
+            let directory = "🌉️create-edge";
             let binary_tag = 2;
-            let owner = mutation_root.join("🔗️create-edge");
+            let owner = mutation_root.join("🌉️create-edge");
             let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
             let descriptor_source = std::fs::read_to_string(owner.join("🔣️.json")).expect("direct language-neutral descriptor");
             let descriptor: pack::JsonValue = pack::parse_json(&descriptor_source).expect("direct descriptor must be valid JSON");
@@ -109,7 +109,7 @@ mod structural_correspondence_tests {
             assert!(!source.contains(concat!("::", "mutation")), "direct owner {directory} must not route through a nested mutation module");
             assert_eq!(descriptor["semanticKind"], kind);
             assert_eq!(descriptor["aggregateVariant"], aggregate_variant);
-            assert_eq!(descriptor["payloadSchema"], "🔣️.schema.json");
+            assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
             assert_eq!(descriptor["textOpcode"], kind);
             assert_eq!(descriptor["binaryTag"], binary_tag);
             assert_eq!(descriptor["invertibility"], "explicit-mutation");
@@ -118,7 +118,7 @@ mod structural_correspondence_tests {
             assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]));
             assert!(descriptor["owner"].as_str().expect("descriptor owner").ends_with(&format!("/🧬️mutations/{directory}")));
             assert!(!descriptor["outcomeClasses"].as_array().expect("descriptor outcome classes").is_empty());
-            let payload_schema_source = std::fs::read_to_string(owner.join("🔣️.schema.json")).expect("direct JSON payload schema");
+            let payload_schema_source = std::fs::read_to_string(owner.join("🧬️.schema.json")).expect("direct JSON payload schema");
             let payload_schema: pack::JsonValue = pack::parse_json(&payload_schema_source).expect("direct payload schema must be valid JSON");
             assert_eq!(payload_schema["title"], aggregate_variant);
             {
@@ -157,7 +157,7 @@ mod structural_correspondence_tests {
             assert!(!source.contains(concat!("::", "mutation")), "direct owner {directory} must not route through a nested mutation module");
             assert_eq!(descriptor["semanticKind"], kind);
             assert_eq!(descriptor["aggregateVariant"], aggregate_variant);
-            assert_eq!(descriptor["payloadSchema"], "🔣️.schema.json");
+            assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
             assert_eq!(descriptor["textOpcode"], kind);
             assert_eq!(descriptor["binaryTag"], binary_tag);
             assert_eq!(descriptor["invertibility"], "explicit-mutation");
@@ -166,7 +166,7 @@ mod structural_correspondence_tests {
             assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]));
             assert!(descriptor["owner"].as_str().expect("descriptor owner").ends_with(&format!("/🧬️mutations/{directory}")));
             assert!(!descriptor["outcomeClasses"].as_array().expect("descriptor outcome classes").is_empty());
-            let payload_schema_source = std::fs::read_to_string(owner.join("🔣️.schema.json")).expect("direct JSON payload schema");
+            let payload_schema_source = std::fs::read_to_string(owner.join("🧬️.schema.json")).expect("direct JSON payload schema");
             let payload_schema: pack::JsonValue = pack::parse_json(&payload_schema_source).expect("direct payload schema must be valid JSON");
             assert_eq!(payload_schema["title"], aggregate_variant);
             {
@@ -205,7 +205,7 @@ mod structural_correspondence_tests {
             assert!(!source.contains(concat!("::", "mutation")), "direct owner {directory} must not route through a nested mutation module");
             assert_eq!(descriptor["semanticKind"], kind);
             assert_eq!(descriptor["aggregateVariant"], aggregate_variant);
-            assert_eq!(descriptor["payloadSchema"], "🔣️.schema.json");
+            assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
             assert_eq!(descriptor["textOpcode"], kind);
             assert_eq!(descriptor["binaryTag"], binary_tag);
             assert_eq!(descriptor["invertibility"], "explicit-mutation");
@@ -214,7 +214,7 @@ mod structural_correspondence_tests {
             assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]));
             assert!(descriptor["owner"].as_str().expect("descriptor owner").ends_with(&format!("/🧬️mutations/{directory}")));
             assert!(!descriptor["outcomeClasses"].as_array().expect("descriptor outcome classes").is_empty());
-            let payload_schema_source = std::fs::read_to_string(owner.join("🔣️.schema.json")).expect("direct JSON payload schema");
+            let payload_schema_source = std::fs::read_to_string(owner.join("🧬️.schema.json")).expect("direct JSON payload schema");
             let payload_schema: pack::JsonValue = pack::parse_json(&payload_schema_source).expect("direct payload schema must be valid JSON");
             assert_eq!(payload_schema["title"], aggregate_variant);
             {
@@ -253,7 +253,7 @@ mod structural_correspondence_tests {
             assert!(!source.contains(concat!("::", "mutation")), "direct owner {directory} must not route through a nested mutation module");
             assert_eq!(descriptor["semanticKind"], kind);
             assert_eq!(descriptor["aggregateVariant"], aggregate_variant);
-            assert_eq!(descriptor["payloadSchema"], "🔣️.schema.json");
+            assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
             assert_eq!(descriptor["textOpcode"], kind);
             assert_eq!(descriptor["binaryTag"], binary_tag);
             assert_eq!(descriptor["invertibility"], "explicit-mutation");
@@ -262,7 +262,7 @@ mod structural_correspondence_tests {
             assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]));
             assert!(descriptor["owner"].as_str().expect("descriptor owner").ends_with(&format!("/🧬️mutations/{directory}")));
             assert!(!descriptor["outcomeClasses"].as_array().expect("descriptor outcome classes").is_empty());
-            let payload_schema_source = std::fs::read_to_string(owner.join("🔣️.schema.json")).expect("direct JSON payload schema");
+            let payload_schema_source = std::fs::read_to_string(owner.join("🧬️.schema.json")).expect("direct JSON payload schema");
             let payload_schema: pack::JsonValue = pack::parse_json(&payload_schema_source).expect("direct payload schema must be valid JSON");
             assert_eq!(payload_schema["title"], aggregate_variant);
             {
@@ -301,7 +301,7 @@ mod structural_correspondence_tests {
             assert!(!source.contains(concat!("::", "mutation")), "direct owner {directory} must not route through a nested mutation module");
             assert_eq!(descriptor["semanticKind"], kind);
             assert_eq!(descriptor["aggregateVariant"], aggregate_variant);
-            assert_eq!(descriptor["payloadSchema"], "🔣️.schema.json");
+            assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
             assert_eq!(descriptor["textOpcode"], kind);
             assert_eq!(descriptor["binaryTag"], binary_tag);
             assert_eq!(descriptor["invertibility"], "explicit-mutation");
@@ -310,7 +310,7 @@ mod structural_correspondence_tests {
             assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]));
             assert!(descriptor["owner"].as_str().expect("descriptor owner").ends_with(&format!("/🧬️mutations/{directory}")));
             assert!(!descriptor["outcomeClasses"].as_array().expect("descriptor outcome classes").is_empty());
-            let payload_schema_source = std::fs::read_to_string(owner.join("🔣️.schema.json")).expect("direct JSON payload schema");
+            let payload_schema_source = std::fs::read_to_string(owner.join("🧬️.schema.json")).expect("direct JSON payload schema");
             let payload_schema: pack::JsonValue = pack::parse_json(&payload_schema_source).expect("direct payload schema must be valid JSON");
             assert_eq!(payload_schema["title"], aggregate_variant);
             {
@@ -349,7 +349,7 @@ mod structural_correspondence_tests {
             assert!(!source.contains(concat!("::", "mutation")), "direct owner {directory} must not route through a nested mutation module");
             assert_eq!(descriptor["semanticKind"], kind);
             assert_eq!(descriptor["aggregateVariant"], aggregate_variant);
-            assert_eq!(descriptor["payloadSchema"], "🔣️.schema.json");
+            assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
             assert_eq!(descriptor["textOpcode"], kind);
             assert_eq!(descriptor["binaryTag"], binary_tag);
             assert_eq!(descriptor["invertibility"], "explicit-mutation");
@@ -358,7 +358,7 @@ mod structural_correspondence_tests {
             assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]));
             assert!(descriptor["owner"].as_str().expect("descriptor owner").ends_with(&format!("/🧬️mutations/{directory}")));
             assert!(!descriptor["outcomeClasses"].as_array().expect("descriptor outcome classes").is_empty());
-            let payload_schema_source = std::fs::read_to_string(owner.join("🔣️.schema.json")).expect("direct JSON payload schema");
+            let payload_schema_source = std::fs::read_to_string(owner.join("🧬️.schema.json")).expect("direct JSON payload schema");
             let payload_schema: pack::JsonValue = pack::parse_json(&payload_schema_source).expect("direct payload schema must be valid JSON");
             assert_eq!(payload_schema["title"], aggregate_variant);
             {
@@ -397,7 +397,7 @@ mod structural_correspondence_tests {
             assert!(!source.contains(concat!("::", "mutation")), "direct owner {directory} must not route through a nested mutation module");
             assert_eq!(descriptor["semanticKind"], kind);
             assert_eq!(descriptor["aggregateVariant"], aggregate_variant);
-            assert_eq!(descriptor["payloadSchema"], "🔣️.schema.json");
+            assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
             assert_eq!(descriptor["textOpcode"], kind);
             assert_eq!(descriptor["binaryTag"], binary_tag);
             assert_eq!(descriptor["invertibility"], "explicit-mutation");
@@ -406,7 +406,7 @@ mod structural_correspondence_tests {
             assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]));
             assert!(descriptor["owner"].as_str().expect("descriptor owner").ends_with(&format!("/🧬️mutations/{directory}")));
             assert!(!descriptor["outcomeClasses"].as_array().expect("descriptor outcome classes").is_empty());
-            let payload_schema_source = std::fs::read_to_string(owner.join("🔣️.schema.json")).expect("direct JSON payload schema");
+            let payload_schema_source = std::fs::read_to_string(owner.join("🧬️.schema.json")).expect("direct JSON payload schema");
             let payload_schema: pack::JsonValue = pack::parse_json(&payload_schema_source).expect("direct payload schema must be valid JSON");
             assert_eq!(payload_schema["title"], aggregate_variant);
             {

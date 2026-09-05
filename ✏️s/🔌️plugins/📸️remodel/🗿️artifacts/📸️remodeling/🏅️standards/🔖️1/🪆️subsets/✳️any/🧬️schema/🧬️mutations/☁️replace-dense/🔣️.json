@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "owner": "✏️s/🔌️plugins/📸️remodeling/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☁️replace-dense",
+  "owner": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☁️replace-dense",
   "semanticKind": "replace-dense",
   "displayName": "Replace Dense",
   "emoji": "☁️",
   "aggregateVariant": "ReplaceDense",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "replace-dense",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

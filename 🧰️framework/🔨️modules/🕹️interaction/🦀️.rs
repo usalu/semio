@@ -4,7 +4,7 @@
 //! 🧬️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (crate-layering blocker fix): the
 //! pure, render-independent hover/selection state machine (`next_selection`/`next_hover`/
 //! `validate_state`), its runtime/topology state, and the `PresenceInteraction` broadcast payload
-//! moved DOWN into `semio-framework-os-kernel` (`🛍️products/💻️os/🔨️modules/📡️spr/📡️wire/🦀️.rs`,
+//! now live in `semio-framework-replication` (`🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️.rs`,
 //! `🔖️Interaction` region) so kernel-side code (`store`, `sync`, wire codec) can name
 //! `InteractionState`/`PresenceInteraction` without a `semio-framework` → os-kernel → `semio-framework`
 //! cargo cycle (`semio-framework` depends on the kernel crate, never the reverse). `HierarchyProvider`/

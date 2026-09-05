@@ -1,0 +1,20 @@
+{
+  "schema": "spatial.action",
+  "id": "command.addSelection",
+  "version": "1.0.0",
+  "label": "AddSelection",
+  "steps": [
+    {
+      "operation": "kernel.call",
+      "function": "spatial.action.capability",
+      "assignTo": "result"
+    },
+    {
+      "operation": "return",
+      "result": {
+        "kind": "var",
+        "name": "result"
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "schema": "semio.gis.native-codec-receipts/v1",
+  "pluginId": "gis",
+  "packageId": "semio:gis",
+  "packageVersion": "0.1.0",
+  "receipts": [
+    {
+      "factoryId": "gis.gismap.v1",
+      "kind": "s.gis.gismap",
+      "schema": "gis.map",
+      "extension": "gismap",
+      "capability": "s.gis.gismap.codec.document",
+      "protocolPath": "🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocolBytes": 337,
+      "protocolSha256": "c0570280e7cae9b73a7ad3974379b41a066d2081395f96ed63e7adb9ce0e4c53"
+    },
+    {
+      "factoryId": "gis.gisterrain.v1",
+      "kind": "s.gis.gisterrain",
+      "schema": "gis.terrain",
+      "extension": "gisterrain",
+      "capability": "s.gis.gisterrain.codec.document",
+      "protocolPath": "🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocolBytes": 345,
+      "protocolSha256": "ac3f653f904ef8675fae602e6c784ea50b222c9220402bc7f5b83196fbdbf984"
+    }
+  ],
+  "hostile": ["missing", "duplicate", "foreign-package", "wrong-version", "bare-kind", "wrong-schema", "wrong-extension", "zero-hash"]
+}

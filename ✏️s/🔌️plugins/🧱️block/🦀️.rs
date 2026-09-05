@@ -205,6 +205,7 @@ pub fn plugin() -> Result<Plugin<BlockApps>, semio_framework_plugin::PluginAssem
     Plugin::<BlockApps>::builder("block")
         .label("Block")
         .version("0.1.0")
+        .package_id("semio:block")
         .declare_artifact(crate::artifacts::block2d::artifact())
         .declare_artifact(crate::artifacts::block3d::artifact())
         .declare_artifact(crate::artifacts::block5d::artifact())

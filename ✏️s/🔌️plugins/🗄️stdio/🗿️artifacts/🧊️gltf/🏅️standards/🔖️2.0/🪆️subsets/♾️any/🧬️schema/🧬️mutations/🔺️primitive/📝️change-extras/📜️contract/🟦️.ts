@@ -1,0 +1,6 @@
+/** 🧪️ Focused change-primitive-extra-data mutation-law probe. */
+import type { GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
+import { applyGltfChangePrimitiveExtraData, type GltfChangePrimitiveExtraDataPayload } from './🟦️';
+import { deriveGltfChangePrimitiveExtraDataDiff } from './🟦️';
+import { deriveGltfChangePrimitiveExtraDataInverse } from './🟦️';
+export const assertGltfChangePrimitiveExtraDataLaws = (base: GltfSnapshot, payload: GltfChangePrimitiveExtraDataPayload) => { const applied = applyGltfChangePrimitiveExtraData(base, payload); if (!applied.accepted) return applied; const replay = applyGltfChangePrimitiveExtraData(base, payload); const direct = deriveGltfChangePrimitiveExtraDataDiff(base, payload); const undo = deriveGltfChangePrimitiveExtraDataInverse(base, payload); if (!replay.accepted || !direct.accepted || !undo.accepted || JSON.stringify(applied.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(applied.diff) !== JSON.stringify(replay.diff) || JSON.stringify(applied.touchedPaths) !== JSON.stringify(undo.touchedPaths)) throw new Error('change-primitive-extra-data violates replay, direct-diff, or undo determinism'); return { applied, direct, undo }; };

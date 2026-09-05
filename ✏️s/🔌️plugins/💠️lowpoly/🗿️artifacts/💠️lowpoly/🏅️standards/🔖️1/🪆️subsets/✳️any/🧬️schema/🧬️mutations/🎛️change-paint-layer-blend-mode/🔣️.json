@@ -5,7 +5,7 @@
   "displayName": "Change Paint Layer Blend Mode",
   "emoji": "🎛️",
   "aggregateVariant": "ChangePaintLayerBlendMode",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

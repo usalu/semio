@@ -7,7 +7,7 @@ import Ajv from "ajv";
 //#region 🧪️WireRetirement
 export function testWireRetirementFixture():void {
   const fixture=JSON.parse(readFileSync(new URL("./🧪️fixture/🔣️.json",import.meta.url),"utf8"));
-  const validate=new Ajv({strict:true,allErrors:true}).compile(JSON.parse(readFileSync(new URL("./🧪️fixture/🔣️.schema.json",import.meta.url),"utf8")));
+  const validate=new Ajv({strict:true,allErrors:true}).compile(JSON.parse(readFileSync(new URL("./🧪️fixture/🧬️.schema.json",import.meta.url),"utf8")));
   assert.ok(validate(fixture),JSON.stringify(validate.errors));assert.equal(new Set(fixture.cases.map((row:any)=>row.id)).size,5);
   const wire=Buffer.alloc(8);wire.writeBigUInt64LE(42n);assert.equal(wire.toString("hex"),fixture.shortClose.wireHex);
   let remaining=wire;let shortReleased=0;

@@ -1,0 +1,12 @@
+{
+  "$id": "https://semio.tech/schema/stdio.avi.diff.json",
+  "title": "AviDiff",
+  "description": "Sparse per-field diff: mainHeader whole-replace, streams/unknownChunks index-keyed collection triples.",
+  "type": "object",
+  "properties": {
+    "mainHeader": { "type": "object" },
+    "streams": { "type": "object", "properties": { "removed": { "type": "array" }, "modified": { "type": "array" }, "added": { "type": "array" } } },
+    "idx1Present": { "type": "boolean" },
+    "unknownChunks": { "type": "object", "properties": { "removed": { "type": "array" }, "modified": { "type": "array" }, "added": { "type": "array" } } }
+  }
+}

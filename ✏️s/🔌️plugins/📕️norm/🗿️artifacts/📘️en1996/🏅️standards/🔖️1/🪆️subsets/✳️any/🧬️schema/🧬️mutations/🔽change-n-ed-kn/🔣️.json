@@ -5,7 +5,7 @@
   "displayName": "Change N Ed Kn",
   "emoji": "🔽",
   "aggregateVariant": "ChangeNEdKn",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

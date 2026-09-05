@@ -1,7 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/s.stdio.semio.mesh/snapshot/text.json",
-  "title": "Stdio_semio_mesh_snapshot_dsl_text",
-  "description": "s.stdio.semio.mesh DSL text representation: preamble line + whitespace-tolerant ASCII hex dump of SemioMeshSnapshot's own JSON bytes.",
-  "type": "string",
-  "pattern": "^semio stdio\\.semio\\.mesh\\.dsl v1\\n([0-9a-fA-F\\s]*)$"
-}

@@ -536,27 +536,27 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.layout.standard.v1", "standard", "1", &[], None),
-        ("s.layout.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.layout.schema.artifact", "schema", "s.layout.layout", &[("schema", "s.layout.layout")], None),
-        ("s.layout.inference.artifact", "inference", "s.layout.layout.inference", &[("schema", "s.layout.layout.inference")], None),
+        ("s.layout.layout.standard.v1", "standard", "1", &[], None),
+        ("s.layout.layout.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.layout.layout.schema.artifact", "schema", "s.layout.layout", &[("schema", "s.layout.layout")], None),
+        ("s.layout.layout.inference.artifact", "inference", "s.layout.layout.inference", &[("schema", "s.layout.layout.inference")], None),
         // 🐛️ D2-capability-claim-repairs: `io_registry::entries()` registers THREE composer rows, not
         // two — the two below plus `composer_entry_of::<LayoutAnyComposer>()` (`🚪️io/🦀️.rs`),
         // whose `writes` is this artifact's own native dialect (`LAYOUT_DIALECT`, `s.layout@1/*`), the
         // same gap class `🗒️note` hit first (see that file's own `definition()` doc comment).
-        ("s.layout.composer.layout", "composer", "s.layout@1/*", &[("dialect", "s.layout@1/*")], None),
-        ("s.layout.composer.svg", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
-        ("s.layout.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.layout.grammar.document", "grammar", "layout.document", &[("grammar", "layout.document")], None),
-        ("s.layout.grammar.op", "grammar", "layout.op", &[("grammar", "layout.op")], None),
-        ("s.layout.grammar.diff", "grammar", "layout.diff", &[("grammar", "layout.diff")], None),
-        ("s.layout.grammar.pack", "grammar", "layout.pack", &[("grammar", "layout.pack")], None),
-        ("s.layout.grammar.spr", "grammar", "layout.spr", &[("grammar", "layout.spr")], None),
-        ("s.layout.codec.document.v1", "codec", "layout.layout:layout", &[("codec", "layout.layout"), ("extension", "layout")], None),
-        ("s.layout.localization.en", "localization", "Layout", &[], Some(("en", "Layout"))),
-        ("s.layout.localization.de", "localization", "Layout", &[], Some(("de", "Layout"))),
+        ("s.layout.layout.composer.layout", "composer", "s.layout.layout@1/*", &[("dialect", "s.layout.layout@1/*")], None),
+        ("s.layout.layout.composer.svg", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
+        ("s.layout.layout.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.layout.layout.grammar.document", "grammar", "layout.document", &[("grammar", "layout.document")], None),
+        ("s.layout.layout.grammar.op", "grammar", "layout.op", &[("grammar", "layout.op")], None),
+        ("s.layout.layout.grammar.diff", "grammar", "layout.diff", &[("grammar", "layout.diff")], None),
+        ("s.layout.layout.grammar.pack", "grammar", "layout.pack", &[("grammar", "layout.pack")], None),
+        ("s.layout.layout.grammar.spr", "grammar", "layout.spr", &[("grammar", "layout.spr")], None),
+        ("s.layout.layout.codec.document.v1", "codec", "layout.layout:layout", &[("codec", "layout.layout"), ("codec-extension", "13:layout.layout:layout")], None),
+        ("s.layout.layout.localization.en", "localization", "Layout", &[], Some(("en", "Layout"))),
+        ("s.layout.layout.localization.de", "localization", "Layout", &[], Some(("de", "Layout"))),
     ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.layout")?);
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.layout.layout")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
         for (namespace, value) in *claims {

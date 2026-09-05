@@ -156,7 +156,9 @@ where
     let scope = protocol::MutationLeafSourceScope {
         workspace_token: provenance.workspace_token,
         mutation_root,
+        owner_layout: protocol::MutationOwnerLayout::Flat,
         taxonomy_path: provenance.taxonomy_path,
+        mutation_payload_facet: "🦠️mutation",
         source_filename: "🦀️.rs",
         descriptor_filename: "🔣️.json",
     };

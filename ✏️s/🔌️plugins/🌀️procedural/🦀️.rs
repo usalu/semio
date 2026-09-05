@@ -251,6 +251,7 @@ pub fn plugin() -> Result<Plugin<ProceduralApps>, semio_framework_plugin::Plugin
     Plugin::<ProceduralApps>::builder("procedural")
         .label("Procedural")
         .version("0.1.0")
+        .package_id("semio:procedural")
         .routed_inference(crate::artifacts::assembly::standards::v1::subsets::any::schema::inferences::assembly_inference_metadata())
         .artifact(crate::artifacts::generation2d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .artifact(crate::artifacts::generation3d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)

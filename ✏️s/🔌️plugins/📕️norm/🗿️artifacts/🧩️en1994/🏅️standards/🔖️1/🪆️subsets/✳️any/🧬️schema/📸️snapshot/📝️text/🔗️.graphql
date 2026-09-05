@@ -1,0 +1,3 @@
+# norm.en1994.snapshot text grammar schema
+scalar Bytes
+type Document { schema: String! payload: String! }

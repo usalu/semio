@@ -5,7 +5,7 @@
   "displayName": "Resize Vortex",
   "emoji": "📏",
   "aggregateVariant": "ResizeVortex",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "resize-vortex",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

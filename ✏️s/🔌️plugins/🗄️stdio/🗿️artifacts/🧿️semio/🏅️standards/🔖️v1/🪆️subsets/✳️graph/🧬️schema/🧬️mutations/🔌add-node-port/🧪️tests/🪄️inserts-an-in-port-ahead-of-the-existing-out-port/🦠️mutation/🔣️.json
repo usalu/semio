@@ -1,0 +1,12 @@
+{
+  "AddNodePort": {
+    "node_id": {
+      "value": "a"
+    },
+    "index": 0,
+    "port": {
+      "name": "reset",
+      "kind": "in"
+    }
+  }
+}

@@ -1,0 +1,3 @@
+; abnf stdio.stl mutations
+document = payload
+payload = *OCTET

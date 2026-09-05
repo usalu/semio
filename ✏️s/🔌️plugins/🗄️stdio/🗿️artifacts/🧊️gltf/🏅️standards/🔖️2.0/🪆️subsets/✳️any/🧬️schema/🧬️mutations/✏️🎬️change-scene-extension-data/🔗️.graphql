@@ -1,6 +1,0 @@
-# change-scene-extension-data mutation facet.
-input GltfChangeSceneExtensionDataPayloadV1 {
-  scene: Int!
-  data: GltfDataPresenceInput!
-}
-type GltfChangeSceneExtensionDataMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

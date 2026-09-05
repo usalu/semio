@@ -273,24 +273,24 @@ pub fn diff_replace_flow(path: &Path) -> ProcedureDiff {
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.procedure.standard.v1", "standard", "1", &[], None),
-        ("s.procedure.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.procedure.schema.artifact", "schema", "s.imperative.procedure", &[("schema", "s.imperative.procedure")], None),
-        ("s.procedure.inference.artifact", "inference", "s.imperative.procedure.inference", &[("schema", "s.imperative.procedure.inference")], None),
-        ("s.procedure.composer.native", "composer", "s.procedure@1/*", &[("dialect", "s.procedure@1/*")], None),
-        ("s.procedure.composer.csv", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None),
-        ("s.procedure.composer.md", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
-        ("s.procedure.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.procedure.grammar.document", "grammar", "procedure.document", &[("grammar", "procedure.document")], None),
-        ("s.procedure.grammar.op", "grammar", "imperative.procedure.op", &[("grammar", "imperative.procedure.op")], None),
-        ("s.procedure.grammar.diff", "grammar", "imperative.procedure.diff", &[("grammar", "imperative.procedure.diff")], None),
-        ("s.procedure.grammar.pack", "grammar", "procedure.pack", &[("grammar", "procedure.pack")], None),
-        ("s.procedure.grammar.spr", "grammar", "procedure.spr", &[("grammar", "procedure.spr")], None),
-        ("s.procedure.codec.document.v1", "codec", "procedure.document/v1:procedure", &[("codec", "procedure.document/v1"), ("extension", "procedure")], None),
-        ("s.procedure.localization.en", "localization", "Procedure", &[], Some(("en", "Procedure"))),
-        ("s.procedure.localization.de", "localization", "Prozedur", &[], Some(("de", "Prozedur"))),
+        ("s.imperative.procedure.standard.v1", "standard", "1", &[], None),
+        ("s.imperative.procedure.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.imperative.procedure.schema.artifact", "schema", "s.imperative.procedure", &[("schema", "s.imperative.procedure")], None),
+        ("s.imperative.procedure.inference.artifact", "inference", "s.imperative.procedure.inference", &[("schema", "s.imperative.procedure.inference")], None),
+        ("s.imperative.procedure.composer.native", "composer", "s.imperative.procedure@1/*", &[("dialect", "s.imperative.procedure@1/*")], None),
+        ("s.imperative.procedure.composer.csv", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None),
+        ("s.imperative.procedure.composer.md", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
+        ("s.imperative.procedure.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.imperative.procedure.grammar.document", "grammar", "procedure.document", &[("grammar", "procedure.document")], None),
+        ("s.imperative.procedure.grammar.op", "grammar", "imperative.procedure.op", &[("grammar", "imperative.procedure.op")], None),
+        ("s.imperative.procedure.grammar.diff", "grammar", "imperative.procedure.diff", &[("grammar", "imperative.procedure.diff")], None),
+        ("s.imperative.procedure.grammar.pack", "grammar", "procedure.pack", &[("grammar", "procedure.pack")], None),
+        ("s.imperative.procedure.grammar.spr", "grammar", "procedure.spr", &[("grammar", "procedure.spr")], None),
+        ("s.imperative.procedure.codec.document.v1", "codec", "procedure.document/v1:procedure", &[("codec", "procedure.document/v1"), ("codec-extension", "21:procedure.document/v1:procedure")], None),
+        ("s.imperative.procedure.localization.en", "localization", "Procedure", &[], Some(("en", "Procedure"))),
+        ("s.imperative.procedure.localization.de", "localization", "Prozedur", &[], Some(("de", "Prozedur"))),
     ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.procedure")?);
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.imperative.procedure")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
         for (namespace, value) in *claims {

@@ -1,6 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/stdio.svg/diff/text.svg",
-  "title": "SvgDiffText",
-  "description": "Structured tagged/hex text emitted by SvgDiff::print_diff.",
-  "type": "string"
-}

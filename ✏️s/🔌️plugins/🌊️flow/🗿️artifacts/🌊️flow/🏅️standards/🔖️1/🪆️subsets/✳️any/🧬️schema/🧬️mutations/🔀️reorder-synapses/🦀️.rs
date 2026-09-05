@@ -8,8 +8,6 @@ use protocol::{MutationKind, SemanticDescriptor};
 //#region 🔀️ReorderSynapses
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ReorderSynapses {
     pub id: String,

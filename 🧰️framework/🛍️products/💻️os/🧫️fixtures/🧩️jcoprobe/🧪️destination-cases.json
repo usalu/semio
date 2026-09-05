@@ -1,0 +1,13 @@
+{
+  "invalid": [
+    { "id": "unregistered-kind", "field": "kind", "value": "jco-package-v2" },
+    { "id": "wrong-package", "field": "packageId", "value": "wgpu-renderer" },
+    { "id": "historical-owner", "field": "semanticOwnerRoot", "value": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest" },
+    { "id": "component-adapter-collision", "field": "componentPath", "valueFrom": "adapterPath" },
+    { "id": "lock-manifest-collision", "field": "cargoLockPath", "valueFrom": "cargoManifestPath" },
+    { "id": "path-traversal", "field": "witPath", "value": "../📜️world.wit" },
+    { "id": "extra-authority", "field": "fallback", "value": true },
+    { "id": "missing-lock", "field": "cargoLockPath", "remove": true },
+    { "id": "stacked-adapter", "field": "adapterPath", "value": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/📚️library/🦀️🧬️.rs" }
+  ]
+}

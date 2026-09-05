@@ -248,7 +248,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for En1995AnalyzerAnalysis {
         type Parts = En1995Parts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.en1995", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.norm.en1995", standard: StandardId("1"), subset: SubsetId("*") };
 
         fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium

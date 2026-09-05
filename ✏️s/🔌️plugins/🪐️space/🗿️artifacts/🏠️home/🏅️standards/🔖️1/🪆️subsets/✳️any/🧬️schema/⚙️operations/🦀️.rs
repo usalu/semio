@@ -69,7 +69,7 @@ mod tests {
 
 //#region 🔖️Kinds
 /// 🏷️ Kebab-case spelling of every `SHomeMutation` variant, in declaration order — the vocabulary the `s-home-1-any` mutation catalog
-/// (`../../🔣️oracle.json`) declares and the `mutate-s-home-1` exhaustive test case measures
+/// (`../../🔣️oracle.json`) declares and the `🌵️mutate-s-home-1` exhaustive test case measures
 /// itself against. The framework never parses Rust, so `kinds_match_the_enum_and_the_catalog` below is
 /// what keeps this list honest in both directions.
 pub const KINDS: &[&str] = &["change-catalog-generation"];
@@ -139,7 +139,7 @@ mod kinds_conformance {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔮️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

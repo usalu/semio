@@ -1,7 +1,0 @@
-syntax = "proto3";
-package semio.s_stdio_pdf_1_7_e.mutation.remove_javascript_action;
-
-// Direct remove-javascript-action protobuf payload.
-message RemoveJavascriptActionMutation {
-  string script = 1;
-}

@@ -1,0 +1,138 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/en1994/mutation.json",
+  "title": "En1994Mutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "annex",
+    "mEdKnm",
+    "vEdKn",
+    "mPla",
+    "mPlRd",
+    "eta",
+    "vLRd",
+    "insulationThicknessMm",
+    "fireRating",
+    "deckType",
+    "deltaSigmaMpa",
+    "fatigueDetail",
+    "dMm",
+    "hScMm",
+    "fCkMpa",
+    "fUMpa",
+    "eCmMpa",
+    "vEdPerStudKn",
+    "spanM",
+    "fYMpa",
+    "nCyclesStud",
+    "deltaTauStudMpa"
+  ],
+  "properties": {
+    "annex": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "mEdKnm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "vEdKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "mPla": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "mPlRd": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "eta": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "vLRd": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "insulationThicknessMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "fireRating": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "deckType": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "deltaSigmaMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "fatigueDetail": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "dMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "hScMm": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "fCkMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "fUMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "eCmMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "vEdPerStudKn": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "spanM": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "fYMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "nCyclesStud": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "deltaTauStudMpa": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    }
+  }
+}

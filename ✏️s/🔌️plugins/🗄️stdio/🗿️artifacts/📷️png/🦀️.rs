@@ -53,7 +53,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// this file's own shadowing `io_registry` module below (repo-wide "silent rebind" hazard this
 /// ticket tracks — that module returns `&[&ComposerEntry]`, a different type, and is left in place
 /// as orphaned dead code, matching `🔋️model`'s own precedent for its orphaned wrapper). Unlike
-/// `🖼️tiff`/`📷️jpg`/`🎨️svg`, png's `register()` never registered a subset validator (no baseline
+/// `🖼️tiff`/`📸️jpg`/`🎨️svg`, png's `register()` never registered a subset validator (no baseline
 /// subset here) and never called `register_schema_specs()` — nothing left uncovered. `⚙️engine`
 /// itself is untouched — this only REFERENCES what it already exposes.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.

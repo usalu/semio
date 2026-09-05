@@ -1,0 +1,6 @@
+# reorder-node-children mutation facet.
+input GltfReorderNodeChildrenPayloadV1 {
+  parent: Int!
+  order: [Int!]!
+}
+type GltfReorderNodeChildrenMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

@@ -1,8 +1,8 @@
 use super::*;
 use crate::value::ordered::Grant;
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap() }
-fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../../🧪️fixtures/🏠️local-interaction/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap() }
+fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap() }
 
 fn drain(mut owner: LocalInteractionRootRetirement, bytes: usize) -> usize {
     assert_eq!(owner.advance(Grant { maximum_items: 0, maximum_bytes: bytes }), LocalInteractionRootStep::Blocked);

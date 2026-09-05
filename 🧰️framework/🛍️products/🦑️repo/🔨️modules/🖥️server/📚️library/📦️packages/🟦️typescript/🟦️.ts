@@ -15,7 +15,7 @@ import {
   type OwnedServerJob,
   type OwnedServerRequest,
   type OwnedServerResponse,
-} from "../../../🎛️coordinator/📦️packages/🟦️typescript/🟦️server-implementations.ts";
+} from "../../../🎛️coordinator/📦️packages/🟦️typescript/🖥️server-implementations.ts";
 // #endregion 🔌️Adapters
 
 // #region 🔖️db

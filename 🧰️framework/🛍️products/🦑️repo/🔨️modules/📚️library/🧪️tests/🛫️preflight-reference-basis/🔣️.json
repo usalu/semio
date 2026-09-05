@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "contract": "preflight-reference-basis-v1",
+  "semantics": {
+    "lifetime": "one-fresh-apply-preflight",
+    "shared": ["candidate-identities", "known-path-identities", "coordinate-roots"],
+    "queryLocal": ["target-index", "ignored-roots", "physical-node-read", "reference-projection", "tokens", "frozen-coordinate-validation", "ordered-results"],
+    "finalWitness": ["fresh-membership", "actual-observed-git-markers", "physical-kind-mode-bytes", "cancellation"],
+    "finalBoundary": "after-canonical-attempt-publication-before-staging",
+    "ownedPublicationExclusion": "exact-existing-transaction-root-only",
+    "opaqueRoots": ["compose", "temp/compose"]
+  },
+  "fixture": {
+    "files": {
+      "consumer.json": "[\"pkg/alpha.ts\",\"pkg/alphabet.ts\",\"pkg/shared.ts\",\"other/shared.ts\"]\n",
+      "ignored/consumer.json": "[\"pkg/alpha.ts\",\"pkg/shared.ts\"]\n",
+      "nested/consumer.json": "[\"local.ts\",\"../pkg/alpha.ts\"]\n",
+      "frozen.json": "[\"pkg/alpha.ts\"]\n",
+      "plan.json": "[\"pkg/alpha.ts\"]\n",
+      "binary.bin": "pkg/alpha.ts",
+      "pkg/alpha.ts": "export {};\n",
+      "pkg/alphabet.ts": "export {};\n",
+      "pkg/shared.ts": "export {};\n",
+      "other/shared.ts": "export {};\n",
+      "nested/local.ts": "export {};\n"
+    },
+    "transactionRoot": "ticket/transactions/owned",
+    "ticketDir": "ticket",
+    "frozenPaths": ["frozen.json"],
+    "planAuthorityPath": "plan.json",
+    "coordinateRoots": ["nested"]
+  },
+  "queries": [
+    { "id": "alpha-with-ignored-owner", "targets": ["pkg/alpha.ts"], "ignored": ["ignored"], "expected": ["text\u0000consumer.json\u0000pkg/alpha.ts", "text\u0000nested/consumer.json\u0000pkg/alpha.ts"] },
+    { "id": "overlapping-stem-is-independent", "targets": ["pkg/alphabet.ts"], "ignored": [], "expected": ["text\u0000consumer.json\u0000pkg/alphabet.ts"] },
+    { "id": "equal-basename-distinct-owners", "targets": ["other/shared.ts", "pkg/shared.ts"], "ignored": [], "expected": ["text\u0000consumer.json\u0000other/shared.ts", "text\u0000consumer.json\u0000pkg/shared.ts", "text\u0000ignored/consumer.json\u0000pkg/shared.ts"] },
+    { "id": "nested-coordinate-owner", "targets": ["nested/local.ts"], "ignored": [], "expected": ["text\u0000nested/consumer.json\u0000nested/local.ts"] },
+    { "id": "ignored-target-is-query-local", "targets": ["pkg/alpha.ts"], "ignored": ["consumer.json", "nested"], "expected": ["text\u0000ignored/consumer.json\u0000pkg/alpha.ts"] }
+  ],
+  "mutations": [
+    { "id": "added-candidate", "kind": "add", "path": "late.json", "content": "[\"pkg/alpha.ts\"]", "error": "candidate membership changed" },
+    { "id": "removed-candidate", "kind": "remove", "path": "consumer.json", "error": "candidate membership changed" },
+    { "id": "deleted-file-retains-index-membership", "kind": "physical-remove", "path": "consumer.json", "error": "node changed: consumer.json" },
+    { "id": "late-reference-in-existing-file", "kind": "content", "path": "consumer.json", "content": "[\"new/late.ts\"]", "error": "node changed: consumer.json" },
+    { "id": "mode-change", "kind": "mode", "path": "consumer.json", "mode": 384, "error": "node changed: consumer.json" },
+    { "id": "file-becomes-symlink", "kind": "symlink", "path": "consumer.json", "target": "outside.json", "error": "node changed: consumer.json" },
+    { "id": "fake-marker-appears", "kind": "marker", "path": "pkg/.git", "content": "not a repository\n", "error": "marker witness changed" },
+    { "id": "nested-marker-replaced", "kind": "marker-replace", "path": "nested/.git", "error": "marker witness changed" },
+    { "id": "same-content-marker-file-replaced", "kind": "marker-file-replace", "path": "nested/.git", "error": "marker witness changed" },
+    { "id": "exact-owned-journal-publication", "kind": "add", "path": "ticket/transactions/owned/attempt/journal.json", "content": "[\"pkg/alpha.ts\"]", "error": null },
+    { "id": "neighbor-ticket-is-not-owned", "kind": "add", "path": "ticket/transactions/foreign/journal.json", "content": "[\"pkg/alpha.ts\"]", "error": "candidate membership changed" }
+  ],
+  "markerBytesCases": [
+    { "id": "distinct-invalid-utf8", "initial": [128], "changed": [129], "decodedEqual": true, "error": "marker witness changed" }
+  ],
+  "physicalCases": [
+    { "id": "unchanged-rollback", "mutation": "none", "error": "Injected taxonomy failure at after-embedded-root-staging", "staged": true },
+    { "id": "late-new-consumer", "mutation": "add", "error": "candidate membership changed", "staged": false },
+    { "id": "late-existing-consumer", "mutation": "content", "error": "node changed: external.json", "staged": false },
+    { "id": "late-fake-marker", "mutation": "marker", "error": "marker witness changed", "staged": false }
+  ],
+  "execution": {
+    "target": "test-preflight-reference-basis",
+    "command": "bun ./📜️script.ts test preflight-reference-basis",
+    "launchName": "🧹clean🧩️taxonomy🛫️preflight-reference-basis",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-preflight-reference-basis --skip-nx-cache",
+    "launchGroup": "4_gate",
+    "launchOrder": 410.16
+  },
+  "caseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "targets", "ignored", "expected"],
+    "properties": {
+      "id": { "type": "string", "minLength": 1 },
+      "targets": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+      "ignored": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+      "expected": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^text\\u0000" } }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "documents": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🌐️.html",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️multi-shell-harness/🌐️.html"
+  ],
+  "requests": [
+    { "target": "/🛡️favicon.svg", "kind": "svg" },
+    { "target": "/%F0%9F%9B%A1%EF%B8%8Ffavicon.svg?cache=1", "kind": "svg" },
+    { "target": "/🔖️favicon.ico", "kind": "ico" },
+    { "target": "/%F0%9F%94%96%EF%B8%8Ffavicon.ico", "kind": "ico" },
+    { "target": "/favicon.svg", "kind": null },
+    { "target": "/🖼️favicon.ico", "kind": null },
+    { "target": "/favicon.ico", "kind": null },
+    { "target": "/🛡favicon.svg", "kind": null },
+    { "target": "/🔖favicon.ico", "kind": null },
+    { "target": "/%25F0%259F%259B%25A1%25EF%25B8%258Ffavicon.svg", "kind": null },
+    { "target": "/%E0%A4%A", "kind": null },
+    { "target": "/%2F🛡️favicon.svg", "kind": null },
+    { "target": "/🛡️favicon.svg/extra", "kind": null }
+  ]
+}

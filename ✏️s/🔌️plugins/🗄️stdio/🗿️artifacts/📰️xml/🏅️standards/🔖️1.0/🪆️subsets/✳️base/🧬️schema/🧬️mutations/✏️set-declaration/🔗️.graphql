@@ -1,2 +1,0 @@
-# 🧬 set-declaration/SetDeclaration
-input SetDeclarationPayload { declaration: MutationPayload }

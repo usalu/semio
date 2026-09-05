@@ -1,0 +1,70 @@
+{
+  "contractId": "semio.member-dialect-admission/v1",
+  "publicRestoreCases": [
+    { "id": "restore-absent-real-parent-child", "parentHasChild": false, "slot": "slot", "childId": "child-1", "accepted": false },
+    { "id": "restore-exact-real-parent-child", "parentHasChild": true, "slot": "slot", "childId": "child-1", "accepted": true },
+    { "id": "restore-wrong-parent-slot", "parentHasChild": true, "slot": "other", "childId": "child-1", "accepted": false },
+    { "id": "restore-unlisted-parent-child", "parentHasChild": true, "slot": "slot", "childId": "child-2", "accepted": false }
+  ],
+  "projectionSlots": [
+    { "name": "single", "kind": "s.test.member", "many": false },
+    { "name": "many", "kind": "s.test.member", "many": true },
+    { "name": "other", "kind": "s.test.member", "many": false }
+  ],
+  "projectionCases": [
+    { "id": "projection-leaf-empty", "parent": [], "incoming": [], "projected": true, "accepted": true },
+    { "id": "projection-exact", "parent": [{ "slot": "single", "childId": "a", "artifactId": "a", "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }], "incoming": [{ "slot": "single", "childId": "a", "artifactId": "a", "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }], "projected": true, "accepted": true },
+    { "id": "projection-missing-child", "parent": [{ "slot": "single", "childId": "a", "artifactId": "a", "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }], "incoming": [], "projected": true, "accepted": false },
+    { "id": "projection-extra-child", "parent": [], "incoming": [{ "slot": "single", "childId": "a", "artifactId": "a", "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }], "projected": true, "accepted": false },
+    { "id": "projection-wrong-slot", "parent": [{ "slot": "single", "childId": "a", "artifactId": "a", "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }], "incoming": [{ "slot": "other", "childId": "a", "artifactId": "a", "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }], "projected": true, "accepted": false },
+    { "id": "projection-wrong-subset", "parent": [{ "slot": "single", "childId": "a", "artifactId": "a", "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }], "incoming": [{ "slot": "single", "childId": "a", "artifactId": "a", "artifactKind": "s.test.member", "standard": "v1", "subset": "second" }], "projected": true, "accepted": false },
+    { "id": "projection-wrong-standard", "parent": [{ "slot": "single", "childId": "a", "artifactId": "a", "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }], "incoming": [{ "slot": "single", "childId": "a", "artifactId": "a", "artifactKind": "s.test.member", "standard": "v2", "subset": "first" }], "projected": true, "accepted": false },
+    { "id": "projection-duplicate-incoming", "parent": [{ "slot": "single", "childId": "a", "artifactId": "a", "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }], "incoming": [{ "slot": "single", "childId": "a", "artifactId": "a", "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }, { "slot": "single", "childId": "a", "artifactId": "a", "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }], "projected": true, "accepted": false },
+    { "id": "projection-unknown-parent-slot", "parent": [{ "slot": "unknown", "childId": "a", "artifactId": "a", "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }], "incoming": [], "projected": false, "accepted": false },
+    { "id": "projection-invalid-parent-kind", "parent": [{ "slot": "single", "childId": "a", "artifactId": "a", "artifactKind": "s.other.member", "standard": "v1", "subset": "first" }], "incoming": [], "projected": false, "accepted": false },
+    { "id": "projection-parent-id-substitution", "parent": [{ "slot": "single", "childId": "a", "artifactId": "b", "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }], "incoming": [], "projected": false, "accepted": false },
+    { "id": "projection-singular-cardinality", "parent": [{ "slot": "single", "childId": "a", "artifactId": "a", "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }, { "slot": "single", "childId": "b", "artifactId": "b", "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }], "incoming": [], "projected": false, "accepted": false },
+    { "id": "projection-child-in-two-slots", "parent": [{ "slot": "single", "childId": "a", "artifactId": "a", "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }, { "slot": "other", "childId": "a", "artifactId": "a", "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }], "incoming": [], "projected": false, "accepted": false },
+    { "id": "projection-empty-coordinate", "parent": [{ "slot": "single", "childId": "a", "artifactId": "a", "artifactKind": "s.test.member", "standard": "", "subset": "first" }], "incoming": [], "projected": false, "accepted": false },
+    { "id": "projection-collection-reordered", "parent": [{ "slot": "many", "childId": "a", "artifactId": "a", "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }, { "slot": "many", "childId": "b", "artifactId": "b", "artifactKind": "s.test.member", "standard": "v1", "subset": "second" }], "incoming": [{ "slot": "many", "childId": "b", "artifactId": "b", "artifactKind": "s.test.member", "standard": "v1", "subset": "second" }, { "slot": "many", "childId": "a", "artifactId": "a", "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }], "projected": true, "accepted": true }
+  ],
+  "graphCases": [
+    { "id": "graph-fresh", "edges": [], "candidate": { "parent": "parent", "slot": "content", "child": "child" }, "accepted": true, "inserted": true, "syncAccepted": true },
+    { "id": "graph-exact-repeat", "edges": [{ "parent": "parent", "slot": "content", "child": "child" }], "candidate": { "parent": "parent", "slot": "content", "child": "child" }, "accepted": true, "inserted": false, "syncAccepted": true },
+    { "id": "graph-same-child-other-slot", "edges": [{ "parent": "parent", "slot": "content", "child": "child" }], "candidate": { "parent": "parent", "slot": "other", "child": "child" }, "accepted": false, "inserted": false, "syncAccepted": true },
+    { "id": "graph-foreign-parent", "edges": [{ "parent": "parent", "slot": "content", "child": "child" }], "candidate": { "parent": "foreign", "slot": "content", "child": "child" }, "accepted": false, "inserted": false, "syncAccepted": false },
+    { "id": "graph-self-cycle", "edges": [], "candidate": { "parent": "parent", "slot": "content", "child": "parent" }, "accepted": false, "inserted": false, "syncAccepted": false },
+    { "id": "graph-ancestor-cycle", "edges": [{ "parent": "parent", "slot": "content", "child": "child" }, { "parent": "child", "slot": "nested", "child": "grandchild" }], "candidate": { "parent": "grandchild", "slot": "cycle", "child": "parent" }, "accepted": false, "inserted": false, "syncAccepted": false },
+    { "id": "graph-second-child-same-slot", "edges": [{ "parent": "parent", "slot": "content", "child": "child" }], "candidate": { "parent": "parent", "slot": "content", "child": "sibling" }, "accepted": true, "inserted": true, "syncAccepted": true }
+  ],
+  "bindings": [
+    { "variant": "First", "schema": "demo/v1", "dialect": { "artifactKind": "s.test.member", "standard": "v1", "subset": "first" } },
+    { "variant": "Second", "schema": "demo/v1", "dialect": { "artifactKind": "s.test.member", "standard": "v1", "subset": "second" } }
+  ],
+  "identityCases": [
+    { "id": "owned-exact", "expectedOwned": true, "persistedId": "child-1", "persistedOwner": { "parentId": "parent-1", "parentDialect": "s.test.parent@v1/*", "slot": "content", "childId": "child-1" }, "accepted": true },
+    { "id": "standalone-exact", "expectedOwned": false, "persistedId": "child-1", "persistedOwner": null, "accepted": true },
+    { "id": "envelope-id-mismatch", "expectedOwned": true, "persistedId": "child-other", "persistedOwner": { "parentId": "parent-1", "parentDialect": "s.test.parent@v1/*", "slot": "content", "childId": "child-1" }, "accepted": false },
+    { "id": "owner-id-mismatch", "expectedOwned": true, "persistedId": "child-1", "persistedOwner": { "parentId": "parent-1", "parentDialect": "s.test.parent@v1/*", "slot": "content", "childId": "child-other" }, "accepted": false },
+    { "id": "owner-parent-mismatch", "expectedOwned": true, "persistedId": "child-1", "persistedOwner": { "parentId": "parent-other", "parentDialect": "s.test.parent@v1/*", "slot": "content", "childId": "child-1" }, "accepted": false },
+    { "id": "owner-parent-dialect-mismatch", "expectedOwned": true, "persistedId": "child-1", "persistedOwner": { "parentId": "parent-1", "parentDialect": "s.test.parent@v2/*", "slot": "content", "childId": "child-1" }, "accepted": false },
+    { "id": "owner-slot-mismatch", "expectedOwned": true, "persistedId": "child-1", "persistedOwner": { "parentId": "parent-1", "parentDialect": "s.test.parent@v1/*", "slot": "other", "childId": "child-1" }, "accepted": false },
+    { "id": "root-cannot-substitute-owned-child", "expectedOwned": true, "persistedId": "child-1", "persistedOwner": null, "accepted": false },
+    { "id": "owned-child-cannot-substitute-standalone", "expectedOwned": false, "persistedId": "child-1", "persistedOwner": { "parentId": "parent-1", "parentDialect": "s.test.parent@v1/*", "slot": "content", "childId": "child-1" }, "accepted": false }
+  ],
+  "cases": [
+    { "id": "create-first", "operation": "create", "requested": { "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }, "accepted": true, "variant": "First" },
+    { "id": "create-second-same-kind", "operation": "create", "requested": { "artifactKind": "s.test.member", "standard": "v1", "subset": "second" }, "accepted": true, "variant": "Second" },
+    { "id": "create-wrong-kind", "operation": "create", "requested": { "artifactKind": "s.other.member", "standard": "v1", "subset": "first" }, "accepted": false, "variant": null },
+    { "id": "create-wrong-standard", "operation": "create", "requested": { "artifactKind": "s.test.member", "standard": "1", "subset": "first" }, "accepted": false, "variant": null },
+    { "id": "create-wrong-subset", "operation": "create", "requested": { "artifactKind": "s.test.member", "standard": "v1", "subset": "unknown" }, "accepted": false, "variant": null },
+    { "id": "open-first", "operation": "open", "requested": { "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }, "persisted": { "schema": "demo/v1", "dialect": { "artifactKind": "s.test.member", "standard": "v1", "subset": "first" } }, "accepted": true, "variant": "First" },
+    { "id": "open-second", "operation": "open", "requested": { "artifactKind": "s.test.member", "standard": "v1", "subset": "second" }, "persisted": { "schema": "demo/v1", "dialect": { "artifactKind": "s.test.member", "standard": "v1", "subset": "second" } }, "accepted": true, "variant": "Second" },
+    { "id": "open-subset-mismatch", "operation": "open", "requested": { "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }, "persisted": { "schema": "demo/v1", "dialect": { "artifactKind": "s.test.member", "standard": "v1", "subset": "second" } }, "accepted": false, "variant": null },
+    { "id": "open-kind-mismatch", "operation": "open", "requested": { "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }, "persisted": { "schema": "demo/v1", "dialect": { "artifactKind": "s.other.member", "standard": "v1", "subset": "first" } }, "accepted": false, "variant": null },
+    { "id": "open-standard-mismatch", "operation": "open", "requested": { "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }, "persisted": { "schema": "demo/v1", "dialect": { "artifactKind": "s.test.member", "standard": "2", "subset": "first" } }, "accepted": false, "variant": null },
+    { "id": "open-schema-mismatch", "operation": "open", "requested": { "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }, "persisted": { "schema": "foreign/v1", "dialect": { "artifactKind": "s.test.member", "standard": "v1", "subset": "first" } }, "accepted": false, "variant": null },
+    { "id": "open-missing-dialect", "operation": "open", "requested": { "artifactKind": "s.test.member", "standard": "v1", "subset": "first" }, "persisted": { "schema": "demo/v1", "dialect": null }, "accepted": false, "variant": null },
+    { "id": "open-unregistered-request", "operation": "open", "requested": { "artifactKind": "s.other.member", "standard": "v1", "subset": "first" }, "persisted": { "schema": "demo/v1", "dialect": { "artifactKind": "s.test.member", "standard": "v1", "subset": "first" } }, "accepted": false, "variant": null }
+  ]
+}

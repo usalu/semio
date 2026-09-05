@@ -40,15 +40,35 @@
       "id": "s.stdio.xml.standard.1-0.representation.document",
       "standard": "s.stdio.xml.standard.1-0",
       "representation": "document",
-      "mimes": ["application/xml"],
-      "extensions": [".xml"],
+      "mimes": [
+        "application/xml"
+      ],
+      "extensions": [
+        ".xml"
+      ],
       "is_binary": false,
       "aliases": [],
       "neutral": true,
       "status": "declared"
     }
   ],
-  "codecs": [],
+  "codecs": [
+    {
+      "id": "s.stdio.xml.standard.1-0.codec.native-document.v1",
+      "status": "implemented",
+      "from": "s.stdio.xml.standard.1-0.dialect.source",
+      "to": "s.stdio.xml.standard.1-0.dialect.source",
+      "executable_registration": true,
+      "native_factory": {
+        "factory_id": "stdio.native.xml.v1",
+        "artifact_kind": "stdio.xml",
+        "document_schema": "stdio.xml",
+        "extension": "xml",
+        "pack_schema_hash": "874b28c8d55ae58982a4556ae5e01cfb3c70b69648b094b2920b34b742d06e08",
+        "runtime_capability_id": "s.stdio.xml.standard.1-0.codec.codec-stdio-xml-extension-xml.v1"
+      }
+    }
+  ],
   "mutations": [],
   "inferences": [],
   "resources": [
@@ -83,22 +103,22 @@
   ],
   "runtime_capabilities": [
     {
-      "id": "s.stdio.xml.runtime.codec.codec-stdio-xml-extension-xml.v1",
+      "id": "s.stdio.xml.standard.1-0.codec.codec-stdio-xml-extension-xml.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec:stdio.xml|extension:xml",
+      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.xml:xml|codec:stdio.xml",
       "claims": [
         {
           "namespace": "codec",
           "value": "stdio.xml"
         },
         {
-          "namespace": "extension",
-          "value": "xml"
+          "namespace": "codec-extension",
+          "value": "9:stdio.xml:xml"
         }
       ]
     },
     {
-      "id": "s.stdio.xml.runtime.composer.dialect-s-stdio-xml-1-0.v1",
+      "id": "s.stdio.xml.composer.dialect-s-stdio-xml-1-0.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.xml@1.0/*",
       "claims": [
@@ -109,7 +129,7 @@
       ]
     },
     {
-      "id": "s.stdio.xml.runtime.composer.dialect-s-stdio-xml-1-0-valid.v1",
+      "id": "s.stdio.xml.composer.dialect-s-stdio-xml-1-0-valid.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.xml@1.0/valid",
       "claims": [
@@ -120,7 +140,7 @@
       ]
     },
     {
-      "id": "s.stdio.xml.runtime.grammar.grammar-stdio-xml.v1",
+      "id": "s.stdio.xml.grammar.grammar-stdio-xml.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.xml",
       "claims": [
@@ -131,7 +151,7 @@
       ]
     },
     {
-      "id": "s.stdio.xml.runtime.grammar.grammar-stdio-xml-diff.v1",
+      "id": "s.stdio.xml.grammar.grammar-stdio-xml-diff.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.xml.diff",
       "claims": [
@@ -142,7 +162,7 @@
       ]
     },
     {
-      "id": "s.stdio.xml.runtime.grammar.grammar-stdio-xml-op.v1",
+      "id": "s.stdio.xml.grammar.grammar-stdio-xml-op.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.xml.op",
       "claims": [
@@ -153,7 +173,7 @@
       ]
     },
     {
-      "id": "s.stdio.xml.runtime.grammar.grammar-stdio-xml-pack.v1",
+      "id": "s.stdio.xml.grammar.grammar-stdio-xml-pack.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.xml.pack",
       "claims": [
@@ -164,7 +184,7 @@
       ]
     },
     {
-      "id": "s.stdio.xml.runtime.grammar.grammar-stdio-xml-spr.v1",
+      "id": "s.stdio.xml.grammar.grammar-stdio-xml-spr.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.xml.spr",
       "claims": [
@@ -175,7 +195,7 @@
       ]
     },
     {
-      "id": "s.stdio.xml.runtime.inference.schema-s-stdio-xml-inference.v1",
+      "id": "s.stdio.xml.inference.schema-s-stdio-xml-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:s.stdio.xml.inference",
       "claims": [
@@ -186,7 +206,7 @@
       ]
     },
     {
-      "id": "s.stdio.xml.runtime.representation.mime-application-xml-extension-xml.v1",
+      "id": "s.stdio.xml.standard.1-0.representation.mime-application-xml-extension-xml",
       "category": "representation",
       "descriptor": "runtime-capability:representation:mime:application/xml|extension:.xml",
       "claims": [
@@ -201,7 +221,7 @@
       ]
     },
     {
-      "id": "s.stdio.xml.runtime.schema.schema-s-stdio-xml.v1",
+      "id": "s.stdio.xml.schema.schema-s-stdio-xml.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.xml",
       "claims": [
@@ -212,12 +232,12 @@
       ]
     },
     {
-      "id": "s.stdio.xml.runtime.subset-validator.dialect-s-stdio-xml-1-0-valid.v1",
+      "id": "s.stdio.xml.subset-validator.validated-dialect-s-stdio-xml-1-0-valid.v1",
       "category": "subset-validator",
-      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.xml@1.0/valid",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.xml@1.0/valid",
       "claims": [
         {
-          "namespace": "dialect",
+          "namespace": "validated-dialect",
           "value": "s.stdio.xml@1.0/valid"
         }
       ]

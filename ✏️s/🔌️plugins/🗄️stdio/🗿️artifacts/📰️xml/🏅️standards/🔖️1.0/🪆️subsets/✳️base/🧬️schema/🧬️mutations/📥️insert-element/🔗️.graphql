@@ -1,2 +1,0 @@
-# 🧬 insert-element/InsertElement
-input InsertElementPayload { path: [Int!]! index: Int! node: MutationPayload! }

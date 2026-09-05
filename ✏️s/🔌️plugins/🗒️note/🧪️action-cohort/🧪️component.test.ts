@@ -8,7 +8,7 @@ type Fixture = { routeCount: number; retainedRoutes: string[]; frameworkOwnedRou
 const root = resolve(import.meta.dir, "..");
 const sourcePath = resolve(root, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
 const retainedPath = resolve(root, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🦀️.rs");
-const schemaPath = resolve(import.meta.dir, "🔣️.schema.json");
+const schemaPath = resolve(import.meta.dir, "🧬️.schema.json");
 const fixturePath = resolve(import.meta.dir, "🔣️.json");
 
 const exact = (left: string[], right: string[]) => new Set(left).size === left.length && new Set(right).size === right.length && JSON.stringify([...left].sort()) === JSON.stringify([...right].sort());
@@ -53,7 +53,7 @@ test("Note source and fixture have one exact hostile census", async () => {
 test("hostile source rejects global ids, copied digests, and scan-then-monolith shells", async () => {
   const source = await Bun.file(sourcePath).text();
   const retainedSource = await Bun.file(retainedPath).text();
-  const schemaSource = await Bun.file(resolve(root, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs")).text();
+  const schemaSource = await Bun.file(resolve(root, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs")).text();
   expect(source).not.toContain("BoundedArtifactCommandWork");
   expect(retainedSource).not.toContain("BoundedArtifactCommandWork");
   expect(`${source}\n${retainedSource}`).not.toContain("semio_framework_hash");

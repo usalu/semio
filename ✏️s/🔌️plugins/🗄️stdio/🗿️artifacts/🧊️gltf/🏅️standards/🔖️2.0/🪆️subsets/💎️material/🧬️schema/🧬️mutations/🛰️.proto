@@ -1,0 +1,43 @@
+syntax = "proto3";
+package stdio.gltf.mutation.material;
+import "💎️material/🌫️change-alpha/🛰️.proto";
+import "💎️material/🪞️change-sides/🛰️.proto";
+import "🖼️image/🌱️create/🛰️.proto";
+import "💎️material/🌱️create/🛰️.proto";
+import "🎛️sampler/🌱️create/🛰️.proto";
+import "🎨️texture/🌱️create/🛰️.proto";
+import "🖼️image/🗑️delete/🛰️.proto";
+import "💎️material/🗑️delete/🛰️.proto";
+import "🎛️sampler/🗑️delete/🛰️.proto";
+import "🎨️texture/🗑️delete/🛰️.proto";
+import "🖼️image/🚚️move/🛰️.proto";
+import "💎️material/🚚️move/🛰️.proto";
+import "🎛️sampler/🚚️move/🛰️.proto";
+import "🎨️texture/🚚️move/🛰️.proto";
+import "🖼️image/🔀️reorder/🛰️.proto";
+import "💎️material/🔀️reorder/🛰️.proto";
+import "🎛️sampler/🔀️reorder/🛰️.proto";
+import "🎨️texture/🔀️reorder/🛰️.proto";
+
+message GltfMaterialMutation {
+  oneof mutation {
+    GltfChangeMaterialAlphaModeMutationV1 change_material_alpha_mode = 1;
+    GltfChangeMaterialDoubleSidedMutationV1 change_material_double_sided = 2;
+    GltfCreateImagePayloadV1 create_image = 3;
+    GltfCreateMaterialPayloadV1 create_material = 4;
+    GltfCreateSamplerPayloadV1 create_sampler = 5;
+    GltfCreateTexturePayloadV1 create_texture = 6;
+    GltfDeleteImagePayloadV1 delete_image = 7;
+    GltfDeleteMaterialPayloadV1 delete_material = 8;
+    GltfDeleteSamplerPayloadV1 delete_sampler = 9;
+    GltfDeleteTexturePayloadV1 delete_texture = 10;
+    GltfMoveImagePayloadV1 move_image = 11;
+    GltfMoveMaterialPayloadV1 move_material = 12;
+    GltfMoveSamplerPayloadV1 move_sampler = 13;
+    GltfMoveTexturePayloadV1 move_texture = 14;
+    GltfReorderImagesPayloadV1 reorder_images = 15;
+    GltfReorderMaterialsPayloadV1 reorder_materials = 16;
+    GltfReorderSamplersPayloadV1 reorder_samplers = 17;
+    GltfReorderTexturesPayloadV1 reorder_textures = 18;
+  }
+}

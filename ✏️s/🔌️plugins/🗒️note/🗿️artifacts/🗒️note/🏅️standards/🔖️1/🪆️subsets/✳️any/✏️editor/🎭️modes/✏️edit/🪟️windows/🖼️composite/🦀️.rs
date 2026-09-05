@@ -37,7 +37,7 @@ pub async fn definition() -> WindowKindDefinition {
     }
 }
 
-/// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
+/// 🎚️ The live chrome measures for this window, collected from its `☑️options/*` components.
 pub async fn window_measures(document: &NoteSnapshot, camera: &NoteCamera, labels: &NotePlayLabels) -> Vec<WindowMeasure> {
     vec![
         options::camera::measure(camera, labels),

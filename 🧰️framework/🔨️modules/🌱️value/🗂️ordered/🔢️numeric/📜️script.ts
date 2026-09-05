@@ -8,10 +8,10 @@ import { enableMapSet, produce } from "immer";
 import ts from "typescript";
 import { BundleScript, ScriptRouter, runBundleScriptMain } from "@semio-tech/repo-lib";
 import { NumericIndex, type NumericIndexEdit, type NumericIndexRetirement } from "./🟦️.ts";
-import fixture from "./🧪️fixtures/🔣️numeric-index.json";
-import schema from "./🧪️fixtures/🔣️numeric-index.schema.json";
-import referenceFixture from "./🧪️fixtures/🔣️references.json";
-import referenceSchema from "./🧪️fixtures/🔣️references.schema.json";
+import fixture from "./🧪️fixtures/🔢️numeric-index.json";
+import schema from "./🧪️fixtures/🧬️numeric-index.schema.json";
+import referenceFixture from "./🧪️fixtures/🔗️references.json";
+import referenceSchema from "./🧪️fixtures/🛡️references.schema.json";
 
 function close<V>(owner: NumericIndexRetirement<V>, bytes: number, retired: V[]): void {
   for (let turns = 0; turns < 100_000; turns++) {
@@ -174,7 +174,7 @@ function stressLaws(): number {
 
 function nativeStripOnlyLaws(): { laws: number; operations: number; cancellations: number; concurrency: number } {
   const sourceUrl = new URL("./🟦️.ts", import.meta.url).href;
-  const fixtureUrl = new URL("./🧪️fixtures/🔣️numeric-index.json", import.meta.url).href;
+  const fixtureUrl = new URL("./🧪️fixtures/🔢️numeric-index.json", import.meta.url).href;
   const program = `
     import assert from "node:assert/strict";
     import { readFileSync } from "node:fs";

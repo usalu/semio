@@ -1,0 +1,11 @@
+{
+  "artifact": "s.norm.en1998",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained en1998 1"
+    }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.norm.en1998@1` is this plugin's own self-contained Eurocode EN 1998 seismic-design document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (change-seismic-zone, change-ground-type, change-importance-class, change-structural-system, change-t1-s, change-mass-t, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
+}

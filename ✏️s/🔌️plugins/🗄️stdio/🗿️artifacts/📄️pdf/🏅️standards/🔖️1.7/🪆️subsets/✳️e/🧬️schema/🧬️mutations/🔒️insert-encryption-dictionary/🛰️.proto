@@ -1,8 +1,0 @@
-syntax = "proto3";
-package semio.s_stdio_pdf_1_7_e.mutation.insert_encryption_dictionary;
-
-// Direct insert-encryption-dictionary protobuf payload.
-message InsertEncryptionDictionaryMutation {
-  uint64 version = 1;
-  uint64 revision = 2;
-}

@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "contract": {
+    "topLevelViolations": "unordered-unique-full-identity-set",
+    "publishedViolations": "utf8-lexicographic",
+    "identityFields": ["path", "code", "severity", "message"],
+    "metadata": "preserve",
+    "entryRecords": "preserve",
+    "nestedArrayOrder": "preserve",
+    "publishedDescriptors": "utf8-owner-then-part",
+    "inventoryCanonicalDigest": "published-reconstructed-inventory"
+  },
+  "violationSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["path", "code", "severity", "message"],
+    "properties": {
+      "path": { "type": "string" },
+      "code": { "type": "string" },
+      "severity": { "enum": ["error", "warning"] },
+      "message": { "type": "string" }
+    }
+  },
+  "cases": [
+    {
+      "id": "path-case",
+      "rows": [
+        { "path": "fixture/a", "code": "same", "severity": "error", "message": "same" },
+        { "path": "fixture/B", "code": "same", "severity": "error", "message": "same" }
+      ],
+      "publishedOrder": [1, 0]
+    },
+    {
+      "id": "code-case",
+      "rows": [
+        { "path": "fixture/same", "code": "a", "severity": "error", "message": "same" },
+        { "path": "fixture/same", "code": "B", "severity": "error", "message": "same" }
+      ],
+      "publishedOrder": [1, 0]
+    },
+    {
+      "id": "message-case",
+      "rows": [
+        { "path": "fixture/same", "code": "same", "severity": "error", "message": "a" },
+        { "path": "fixture/same", "code": "same", "severity": "error", "message": "B" }
+      ],
+      "publishedOrder": [1, 0]
+    },
+    {
+      "id": "severity-before-message",
+      "rows": [
+        { "path": "fixture/same", "code": "same", "severity": "warning", "message": "a" },
+        { "path": "fixture/same", "code": "same", "severity": "error", "message": "z" }
+      ],
+      "publishedOrder": [1, 0]
+    },
+    {
+      "id": "unicode-path",
+      "rows": [
+        { "path": "fixture/é", "code": "same", "severity": "error", "message": "same" },
+        { "path": "fixture/z", "code": "same", "severity": "error", "message": "same" }
+      ],
+      "publishedOrder": [1, 0]
+    }
+  ],
+  "orderedOwners": ["owner/B", "owner/a"],
+  "orderedCoordinateHistory": [{ "path": "fixture/z" }, { "path": "fixture/a" }],
+  "rejections": ["missing", "extra", "changed-path", "changed-code", "changed-severity", "changed-message", "duplicate"],
+  "artifactRejections": ["missing-payload", "extra-payload", "changed-entry", "changed-metadata", "duplicate-source", "duplicate-descriptor", "wrong-count", "wrong-ledger", "noncanonical-manifest"],
+  "execution": {
+    "target": "test-inventory-artifact-shards",
+    "command": "bun ./📜️script.ts test inventory-artifact-shards",
+    "launchName": "🧹clean🧩️taxonomy💠️inventory-artifact-shards",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-inventory-artifact-shards --skip-nx-cache",
+    "group": "4_gate",
+    "order": 410.1
+  }
+}

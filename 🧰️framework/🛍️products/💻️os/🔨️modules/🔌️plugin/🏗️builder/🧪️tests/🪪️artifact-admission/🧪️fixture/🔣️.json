@@ -1,0 +1,361 @@
+{
+  "schema": "semio.plugin.artifact-admission/v1",
+  "cases": [
+    {
+      "id": "artifact-owned",
+      "plugin": "owner",
+      "package": "semio:owner",
+      "channel": "artifact",
+      "kind": "s.owner.document",
+      "code": "accepted"
+    },
+    {
+      "id": "artifact-foreign",
+      "plugin": "owner",
+      "package": "semio:owner",
+      "channel": "artifact",
+      "kind": "s.other.document",
+      "code": "plugin-assembly.artifact-owner"
+    },
+    {
+      "id": "definition-owned",
+      "plugin": "owner",
+      "package": "semio:owner",
+      "channel": "definition",
+      "kind": "s.owner.document",
+      "code": "accepted"
+    },
+    {
+      "id": "definition-foreign",
+      "plugin": "owner",
+      "package": "semio:owner",
+      "channel": "definition",
+      "kind": "s.other.document",
+      "code": "plugin-assembly.artifact-owner"
+    },
+    {
+      "id": "tree-owned",
+      "plugin": "owner",
+      "package": "semio:owner",
+      "channel": "tree",
+      "kind": "s.owner.document",
+      "code": "accepted"
+    },
+    {
+      "id": "tree-foreign",
+      "plugin": "owner",
+      "package": "semio:owner",
+      "channel": "tree",
+      "kind": "s.other.document",
+      "code": "plugin-assembly.artifact-owner"
+    },
+    {
+      "id": "short",
+      "plugin": "owner",
+      "package": "semio:owner",
+      "channel": "definition",
+      "kind": "s.fixture",
+      "code": "plugin-assembly.artifact-kind"
+    },
+    {
+      "id": "deep",
+      "plugin": "owner",
+      "package": "semio:owner",
+      "channel": "definition",
+      "kind": "s.owner.document.extra",
+      "code": "plugin-assembly.artifact-kind"
+    },
+    {
+      "id": "uppercase",
+      "plugin": "owner",
+      "package": "semio:owner",
+      "channel": "definition",
+      "kind": "s.Owner.document",
+      "code": "plugin-assembly.artifact-kind"
+    },
+    {
+      "id": "unicode",
+      "plugin": "owner",
+      "package": "semio:owner",
+      "channel": "definition",
+      "kind": "s.öwner.document",
+      "code": "plugin-assembly.artifact-kind"
+    },
+    {
+      "id": "empty-segment",
+      "plugin": "owner",
+      "package": "semio:owner",
+      "channel": "definition",
+      "kind": "s..document",
+      "code": "plugin-assembly.artifact-kind"
+    },
+    {
+      "id": "double-hyphen",
+      "plugin": "owner",
+      "package": "semio:owner",
+      "channel": "definition",
+      "kind": "s.owner.doc--name",
+      "code": "plugin-assembly.artifact-kind"
+    },
+    {
+      "id": "leading-hyphen",
+      "plugin": "owner",
+      "package": "semio:owner",
+      "channel": "definition",
+      "kind": "s.owner.-document",
+      "code": "plugin-assembly.artifact-kind"
+    },
+    {
+      "id": "stdio-artifact",
+      "plugin": "stdio",
+      "package": "semio:stdio",
+      "channel": "artifact",
+      "kind": "s.stdio.json",
+      "code": "accepted"
+    },
+    {
+      "id": "stdio-definition",
+      "plugin": "stdio",
+      "package": "semio:stdio",
+      "channel": "definition",
+      "kind": "s.stdio.json",
+      "code": "accepted"
+    }
+  ],
+  "firstParty": [
+    {
+      "plugin": "animate",
+      "kind": "s.animate.presentation",
+      "definition": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🎞️animate/🦀️.rs"
+    },
+    {
+      "plugin": "architect",
+      "kind": "s.architect.program",
+      "definition": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🏛️architect/🦀️.rs"
+    },
+    {
+      "plugin": "block",
+      "kind": "s.block.block2d",
+      "definition": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🧱️block/🦀️.rs"
+    },
+    {
+      "plugin": "block",
+      "kind": "s.block.block3d",
+      "definition": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🧱️block/🦀️.rs"
+    },
+    {
+      "plugin": "block",
+      "kind": "s.block.block5d",
+      "definition": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🧱️block/🦀️.rs"
+    },
+    {
+      "plugin": "cad",
+      "kind": "s.cad.cad",
+      "definition": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️.rs",
+      "root": "✏️s/🔌️plugins/📐️cad/🦀️.rs"
+    },
+    {
+      "plugin": "dag",
+      "kind": "s.dag.dag",
+      "definition": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🕸️dag/🦀️.rs"
+    },
+    {
+      "plugin": "demonstrator",
+      "kind": "s.demonstrator.playground",
+      "definition": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🎪️demonstrator/🪪️manifest/🎪️demonstrator/🦀️.rs"
+    },
+    {
+      "plugin": "draw",
+      "kind": "s.draw.drawing",
+      "definition": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🖍️draw/🦀️.rs"
+    },
+    {
+      "plugin": "energy",
+      "kind": "s.energy.model",
+      "definition": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🔋️energy/🦀️.rs"
+    },
+    {
+      "plugin": "fem",
+      "kind": "s.fem.fem2d",
+      "definition": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🏗️fem/🦀️.rs"
+    },
+    {
+      "plugin": "fem",
+      "kind": "s.fem.fem3d",
+      "definition": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🏗️fem/🦀️.rs"
+    },
+    {
+      "plugin": "flow",
+      "kind": "s.flow.flow",
+      "definition": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🌊️flow/🦀️.rs"
+    },
+    {
+      "plugin": "forms",
+      "kind": "s.forms.forms",
+      "definition": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🦀️.rs",
+      "root": "✏️s/🔌️plugins/📋️forms/🦀️.rs"
+    },
+    {
+      "plugin": "imperative",
+      "kind": "s.imperative.procedure",
+      "definition": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🦀️.rs",
+      "root": "✏️s/🔌️plugins/📜️imperative/🦀️.rs"
+    },
+    {
+      "plugin": "layout",
+      "kind": "s.layout.layout",
+      "definition": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs",
+      "root": "✏️s/🔌️plugins/📏️layout/🦀️.rs"
+    },
+    {
+      "plugin": "lowpoly",
+      "kind": "s.lowpoly.lowpoly",
+      "definition": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️.rs",
+      "root": "✏️s/🔌️plugins/💠️lowpoly/🦀️.rs"
+    },
+    {
+      "plugin": "mathematical",
+      "kind": "s.mathematical.equation",
+      "definition": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🦀️.rs",
+      "root": "✏️s/🔌️plugins/➗️mathematical/🦀️.rs"
+    },
+    {
+      "plugin": "note",
+      "kind": "s.note.note",
+      "definition": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🗒️note/🦀️.rs"
+    },
+    {
+      "plugin": "playbook",
+      "kind": "s.playbook.playbook",
+      "definition": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs",
+      "root": "✏️s/🔌️plugins/📖️playbook/🦀️.rs"
+    },
+    {
+      "plugin": "procedural",
+      "kind": "s.procedural.assembly",
+      "definition": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🌀️procedural/🦀️.rs"
+    },
+    {
+      "plugin": "procedural",
+      "kind": "s.procedural.generation2d",
+      "definition": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🌀️procedural/🦀️.rs"
+    },
+    {
+      "plugin": "procedural",
+      "kind": "s.procedural.generation3d",
+      "definition": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🌀️procedural/🦀️.rs"
+    },
+    {
+      "plugin": "process",
+      "kind": "s.process.process3d",
+      "definition": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🏭️process/🦀️.rs"
+    },
+    {
+      "plugin": "puzzle",
+      "kind": "s.puzzle.puzzle2d",
+      "definition": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🧩️puzzle/🦀️.rs"
+    },
+    {
+      "plugin": "puzzle",
+      "kind": "s.puzzle.puzzle3d",
+      "definition": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🧩️puzzle/🦀️.rs"
+    },
+    {
+      "plugin": "puzzle",
+      "kind": "s.puzzle.puzzle5d",
+      "definition": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🧩️puzzle/🦀️.rs"
+    },
+    {
+      "plugin": "raster",
+      "kind": "s.raster.raster",
+      "definition": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🖨️raster/🦀️.rs"
+    },
+    {
+      "plugin": "reasoning",
+      "kind": "s.reasoning.wires",
+      "definition": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🦀️.rs",
+      "root": "✏️s/🔌️plugins/💡️reasoning/🦀️.rs"
+    },
+    {
+      "plugin": "remodel",
+      "kind": "s.remodel.remodeling",
+      "definition": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "root": "✏️s/🔌️plugins/📸️remodel/🦀️.rs"
+    },
+    {
+      "plugin": "sequence",
+      "kind": "s.sequence.sequence",
+      "definition": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🎬️sequence/🦀️.rs"
+    },
+    {
+      "plugin": "shooting",
+      "kind": "s.shooting.shooting",
+      "definition": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🎥️shooting/🦀️.rs"
+    },
+    {
+      "plugin": "sourcing",
+      "kind": "s.sourcing.curation",
+      "definition": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🪵️sourcing/🦀️.rs"
+    },
+    {
+      "plugin": "space",
+      "kind": "s.space.home",
+      "definition": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🪐️space/🦀️.rs"
+    },
+    {
+      "plugin": "space",
+      "kind": "s.space.space",
+      "definition": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🪐️space/🦀️.rs"
+    },
+    {
+      "plugin": "trinity",
+      "kind": "s.trinity.jack",
+      "definition": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🔱️trinity/🦀️.rs"
+    },
+    {
+      "plugin": "trinity",
+      "kind": "s.trinity.rewriting",
+      "definition": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🔱️trinity/🦀️.rs"
+    },
+    {
+      "plugin": "vcs",
+      "kind": "s.vcs.vcs",
+      "definition": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🦀️.rs",
+      "root": "✏️s/🔌️plugins/🌿️vcs/🦀️.rs"
+    },
+    {
+      "plugin": "writer",
+      "kind": "s.writer.writer",
+      "definition": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🦀️.rs",
+      "root": "✏️s/🔌️plugins/✒️writer/🦀️.rs"
+    }
+  ]
+}

@@ -1,3 +1,0 @@
-# norm.en1991.mutations text grammar schema
-scalar Bytes
-type Document { schema: String! payload: String! }

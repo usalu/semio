@@ -5,7 +5,7 @@
   "displayName": "Delete Curated Item",
   "emoji": "🗑️",
   "aggregateVariant": "DeleteCuratedItem",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "delete-curated-item",
   "binaryTag": 1,
   "invertibility": "explicit-mutation",

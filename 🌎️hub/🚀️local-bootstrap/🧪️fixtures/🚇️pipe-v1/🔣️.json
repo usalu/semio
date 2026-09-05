@@ -1,0 +1,157 @@
+{
+  "limits": {
+    "frameBytesMax": 16384,
+    "frameBytesMaxPlusOne": 16385,
+    "outstandingRequestsMax": 8,
+    "profilesMax": 8,
+    "deviceIdentityBytesMax": 128,
+    "clientTtlSeconds": 900,
+    "exchangeDeadlineMs": 15000,
+    "readinessDeadlineMs": 30000
+  },
+  "channelKey": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "initialize": {
+    "schema": "semio.hub.local-bootstrap/v1",
+    "kind": "initialize",
+    "runId": "00112233445566778899aabbccddeeff",
+    "channelKey": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+    "profiles": [
+      {
+        "profileId": "developer",
+        "subject": "local-developer-01",
+        "displayName": "Local Developer",
+        "allowedClientClasses": ["native", "mcp", "react-relay"]
+      },
+      {
+        "profileId": "administrator",
+        "subject": "local-administrator-01",
+        "displayName": "Local Administrator",
+        "allowedClientClasses": ["native", "admin-relay"]
+      }
+    ]
+  },
+  "helloWithoutProof": {
+    "schema": "semio.hub.local-bootstrap/v1",
+    "kind": "hello",
+    "runId": "00112233445566778899aabbccddeeff",
+    "sequence": 1,
+    "exchangeId": "102132435465768798a9bacbdcedfe0f",
+    "issuedAt": 1700000000000,
+    "expiresAt": 1700000015000,
+    "launcherNonce": "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"
+  },
+  "hello": {
+    "schema": "semio.hub.local-bootstrap/v1",
+    "kind": "hello",
+    "runId": "00112233445566778899aabbccddeeff",
+    "sequence": 1,
+    "exchangeId": "102132435465768798a9bacbdcedfe0f",
+    "issuedAt": 1700000000000,
+    "expiresAt": 1700000015000,
+    "launcherNonce": "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f",
+    "proof": "079b613ee78f07614846ab03615dc9df317071949a8de681494eabc96267ac05"
+  },
+  "issueWithoutProof": {
+    "schema": "semio.hub.local-bootstrap/v1",
+    "kind": "issue",
+    "runId": "00112233445566778899aabbccddeeff",
+    "sequence": 2,
+    "exchangeId": "ffeeddccbbaa99887766554433221100",
+    "issuedAt": 1700000000100,
+    "expiresAt": 1700000015100,
+    "profileId": "developer",
+    "deviceInstanceId": "native-fixture-device",
+    "clientClass": "native"
+  },
+  "issue": {
+    "schema": "semio.hub.local-bootstrap/v1",
+    "kind": "issue",
+    "runId": "00112233445566778899aabbccddeeff",
+    "sequence": 2,
+    "exchangeId": "ffeeddccbbaa99887766554433221100",
+    "issuedAt": 1700000000100,
+    "expiresAt": 1700000015100,
+    "profileId": "developer",
+    "deviceInstanceId": "native-fixture-device",
+    "clientClass": "native",
+    "proof": "18e9abd86f08d6d16563e7a5eed225cb1fb6c2ae7e7e38ab6d9d116b9c4c9814"
+  },
+  "credentialWithoutProof": {
+    "schema": "semio.hub.local-credential-envelope/v1",
+    "runId": "00112233445566778899aabbccddeeff",
+    "sequence": 2,
+    "exchangeId": "ffeeddccbbaa99887766554433221100",
+    "issuedAt": 1700000000200,
+    "expiresAt": 1700000900200,
+    "profileId": "developer",
+    "clientClass": "native",
+    "sessionId": "session-fixture",
+    "sessionKind": "development-local",
+    "authorizationGeneration": 1,
+    "capability": "session.v1.00112233445566778899aabbccddeeff.000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+  },
+  "credential": {
+    "schema": "semio.hub.local-credential-envelope/v1",
+    "runId": "00112233445566778899aabbccddeeff",
+    "sequence": 2,
+    "exchangeId": "ffeeddccbbaa99887766554433221100",
+    "issuedAt": 1700000000200,
+    "expiresAt": 1700000900200,
+    "profileId": "developer",
+    "clientClass": "native",
+    "sessionId": "session-fixture",
+    "sessionKind": "development-local",
+    "authorizationGeneration": 1,
+    "capability": "session.v1.00112233445566778899aabbccddeeff.000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+    "proof": "ac9d07307ff952a2c12323a05161c4d561f73dcf4c0a558d92c7311688b0cd45"
+  },
+  "ready": {
+    "schema": "semio.hub.readiness/v1",
+    "status": "ready",
+    "runId": "00112233445566778899aabbccddeeff",
+    "mode": "development",
+    "bindScope": "loopback",
+    "authentication": { "kind": "local-bootstrap-pipe-v1", "bootstrapReady": true, "publicSessionIssuance": false },
+    "directory": { "ready": true },
+    "storage": { "ready": true },
+    "artifactAuthority": { "ready": true },
+    "adminAssets": { "ready": true },
+    "features": { "openPlan": false, "rebootstrap": true, "mcpWorkspace": false, "inference": false }
+  },
+  "bootstrapReadyButArtifactUnavailable": {
+    "schema": "semio.hub.readiness/v1",
+    "status": "not-ready",
+    "runId": "00112233445566778899aabbccddeeff",
+    "mode": "development",
+    "bindScope": "loopback",
+    "authentication": { "kind": "local-bootstrap-pipe-v1", "bootstrapReady": true, "publicSessionIssuance": false },
+    "directory": { "ready": true },
+    "storage": { "ready": true },
+    "artifactAuthority": { "ready": false },
+    "adminAssets": { "ready": true },
+    "features": { "openPlan": false, "rebootstrap": true, "mcpWorkspace": false, "inference": false }
+  },
+  "notReady": {
+    "schema": "semio.hub.readiness/v1",
+    "status": "not-ready",
+    "runId": "00112233445566778899aabbccddeeff",
+    "mode": "development",
+    "bindScope": "loopback",
+    "authentication": { "kind": "local-bootstrap-pipe-v1", "bootstrapReady": false, "publicSessionIssuance": false },
+    "directory": { "ready": false },
+    "storage": { "ready": false },
+    "artifactAuthority": { "ready": false },
+    "adminAssets": { "ready": false },
+    "features": { "openPlan": false, "rebootstrap": true, "mcpWorkspace": false, "inference": false }
+  },
+  "hostile": {
+    "wrongProof": "f79b613ee78f07614846ab03615dc9df317071949a8de681494eabc96267ac05",
+    "wrongRunId": "10112233445566778899aabbccddeeff",
+    "replayedSequence": 1,
+    "wrongProfileId": "unknown",
+    "wrongClientClass": "admin-relay",
+    "expiredAt": 1699999999999,
+    "truncatedFrameHex": "000001267b",
+    "expectedPublicMintStatus": 404
+  }
+}

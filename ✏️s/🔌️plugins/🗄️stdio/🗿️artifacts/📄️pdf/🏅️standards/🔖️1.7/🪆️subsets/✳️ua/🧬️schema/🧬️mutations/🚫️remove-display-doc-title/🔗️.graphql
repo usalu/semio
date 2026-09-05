@@ -1,4 +1,0 @@
-# 🚫️ Direct remove-display-doc-title GraphQL payload.
-input RemoveDisplayDocTitleMutationInput {
-  _unit: Boolean
-}

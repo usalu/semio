@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.hub.inference-command-fixture/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "authority", "limits", "source", "vectors"],
+  "properties": {
+    "schema": { "const": "semio.hub.inference-command-fixture/v1" },
+    "authority": { "const": "canonical-envelope-only-not-gis-execution" },
+    "source": { "const": "../🧾️inference-wal-proof-v1/🔣️.json" },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commandBytes", "textBytes", "dependencyCount", "payloadBytes", "integerMaximum"],
+      "properties": {
+        "commandBytes": { "const": 8192 },
+        "textBytes": { "const": 256 },
+        "dependencyCount": { "const": 64 },
+        "payloadBytes": { "const": 4096 },
+        "integerMaximum": { "const": 9007199254740991 }
+      }
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 20,
+      "maxItems": 20,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "change", "expected"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "change": { "enum": ["none", "trailing", "truncated", "oversize", "overlong-varint", "overflow-varint", "text-max-plus-one", "invalid-utf8", "control-text", "empty-schema", "dependency-max-plus-one", "duplicate-dependency", "diff-max-plus-one", "inverse-max-plus-one", "hlc-actor-max-plus-one", "hlc-time-max-plus-one", "hlc-logical-max-plus-one", "different-actor", "different-scope", "different-mutation"] },
+          "expected": { "enum": ["canonical", "rejected", "identity-denied"] }
+        }
+      }
+    }
+  }
+}

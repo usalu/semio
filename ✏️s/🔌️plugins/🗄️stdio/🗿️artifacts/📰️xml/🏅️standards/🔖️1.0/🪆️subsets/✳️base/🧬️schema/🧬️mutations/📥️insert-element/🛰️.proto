@@ -1,4 +1,0 @@
-syntax = "proto3";
-package stdio.xml.mutation;
-// insert-element/InsertElement
-message InsertElementPayload { bytes path = 1; uint64 index = 2; bytes node = 3; }

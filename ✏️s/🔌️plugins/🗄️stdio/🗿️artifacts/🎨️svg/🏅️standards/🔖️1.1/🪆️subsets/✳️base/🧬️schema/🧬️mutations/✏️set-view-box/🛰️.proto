@@ -1,4 +1,0 @@
-syntax = "proto3";
-package stdio.svg.mutation;
-// set-view-box/SetViewBox
-message SetViewBoxPayload { bytes path = 1; bytes view_box = 2; }

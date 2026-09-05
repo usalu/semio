@@ -23,9 +23,9 @@ import {
   resolveMetabolismIconSvgFromTheme,
   type MetabolismIconName,
 } from "@semio-tech/assets";
-import { uiSpacingLen } from "../🪵️Tree/🟦️.tsx";
+import { uiSpacingLen } from "../🌳️Tree/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { type UiLabel } from "../🏷️UiLabel/🟦️.tsx";
+import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 export type { IconName };
 // #endregion 🔌️Adapters
 

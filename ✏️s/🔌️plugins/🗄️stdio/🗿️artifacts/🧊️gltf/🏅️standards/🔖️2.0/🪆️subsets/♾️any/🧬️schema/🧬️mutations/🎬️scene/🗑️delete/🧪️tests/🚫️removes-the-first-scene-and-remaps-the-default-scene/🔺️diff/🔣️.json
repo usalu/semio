@@ -1,0 +1,14 @@
+{
+  "id": "s.stdio.gltf.mutation.delete-scene.v1",
+  "version": 1,
+  "phase": "diff",
+  "touchedPaths": [
+    "document/scenes/0",
+    "document/scene"
+  ],
+  "index": 0,
+  "deletedScene": {
+    "name": "a"
+  },
+  "defaultSceneAfter": 0
+}

@@ -36,7 +36,7 @@ pub struct GisMapSnapshot {
     #[value(default)]
     pub regions: Vec<MapFeature>,
     /// 🕸️ Composed `s.stdio.semio.drawing` child — see `crate::artifacts::gismap::🦀️.rs`'s
-    /// `🔖️Composition` region for the full design (derived, re-minted on every edit).
+    /// `🔖️Composition` region for the full stable-member design.
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.drawing")]
     pub drawing: GisMapDrawingChild,
@@ -52,9 +52,8 @@ pub struct GisMapSnapshot {
     pub value: GisMapValueChild,
 }
 
-/// 🧮️ The exact content-key string every composed child's handle hashes — `positions`/`routes`/
-/// `regions`, JSON-serialized (features already `Serialize`); kept as one function so `Default` and
-/// `gis_map_snapshot_with_derived_children` can never disagree on what determines the handles.
+/// 🧮️ A deterministic descriptor key retained for content comparison; child membership does not
+/// derive identity from this value.
 pub(crate) fn gis_map_content_key(positions: &[MapFeature], routes: &[MapFeature], regions: &[MapFeature]) -> String {
     dsl::os_pack::json::to_json_string(&(positions.to_vec(), routes.to_vec(), regions.to_vec()))
 }

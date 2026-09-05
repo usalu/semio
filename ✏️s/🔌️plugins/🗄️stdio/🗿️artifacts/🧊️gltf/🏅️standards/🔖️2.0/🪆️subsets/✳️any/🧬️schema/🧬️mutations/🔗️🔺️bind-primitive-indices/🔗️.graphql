@@ -1,7 +1,0 @@
-# bind-primitive-indices mutation facet.
-input GltfBindPrimitiveIndicesPayloadV1 {
-  mesh: Int!
-  primitive: Int!
-  accessor: Int!
-}
-type GltfBindPrimitiveIndicesMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

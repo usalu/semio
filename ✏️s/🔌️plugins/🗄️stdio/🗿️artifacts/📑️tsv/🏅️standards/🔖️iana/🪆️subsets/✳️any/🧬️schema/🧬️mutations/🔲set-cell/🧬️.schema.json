@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SetCellMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["rowIndex", "fieldIndex", "value"],
+  "properties": {
+    "rowIndex": { "type": "integer", "minimum": 0 },
+    "fieldIndex": { "type": "integer", "minimum": 0 },
+    "value": { "type": "string" }
+  }
+}

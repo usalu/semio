@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schemas/hub/trusted-stdio-gis-bootstrap-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "profile", "sources", "limits", "framing", "cancellationStages", "hostile", "rotation"],
+  "properties": {
+    "schema": { "const": "semio.hub.trusted-stdio-gis-bootstrap/v1" },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "selectedClosure", "selectedClosureSha256", "packages", "openTarget", "generationId"],
+      "properties": {
+        "id": { "const": "local-stdio-gis-open-v1" },
+        "selectedClosure": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "prefixItems": [
+            { "$ref": "#/$defs/gisIdentity" },
+            { "$ref": "#/$defs/stdioIdentity" }
+          ],
+          "items": false
+        },
+        "selectedClosureSha256": { "$ref": "#/$defs/digest" },
+        "packages": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/package" }
+        },
+        "openTarget": { "$ref": "#/$defs/openTarget" },
+        "generationId": { "$ref": "#/$defs/digest" }
+      }
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stdioReceipts", "gisReceipts"],
+      "properties": {
+        "stdioReceipts": { "$ref": "#/$defs/relativePath" },
+        "gisReceipts": { "$ref": "#/$defs/relativePath" }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["descriptorBytes", "descriptorBytesPlusOne", "componentBytes", "ioChunkBytes", "packageCount", "codecCount", "openTargetCount"],
+      "properties": {
+        "descriptorBytes": { "const": 4194304 },
+        "descriptorBytesPlusOne": { "const": 4194305 },
+        "componentBytes": { "const": 67108864 },
+        "ioChunkBytes": { "const": 65536 },
+        "packageCount": { "const": 2 },
+        "codecCount": { "const": 28 },
+        "openTargetCount": { "const": 1 }
+      }
+    },
+    "framing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["closureDomain", "generationDomain", "integerEndian", "lengthBytes"],
+      "properties": {
+        "closureDomain": { "const": "semio/hub/trusted-profile-selected-closure/v1\u0000" },
+        "generationDomain": { "const": "semio/hub/trusted-profile-generation/v1\u0000" },
+        "integerEndian": { "const": "big" },
+        "lengthBytes": { "const": 8 }
+      }
+    },
+    "cancellationStages": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": { "enum": ["build", "extract-core", "inspect-wit", "emit-descriptor", "stage-component", "stage-descriptor", "hash", "pre-publication"] }
+    },
+    "hostile": {
+      "type": "array",
+      "minItems": 15,
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": { "enum": ["stale-stdio-component", "stale-stdio-descriptor", "stale-stdio-codec", "wrong-stdio-version", "wrong-gis-version", "missing-map", "missing-terrain", "duplicate-terrain", "terrain-target", "non-wasm", "readonly-editor", "mixed-package", "closure-order", "path-escape", "path-collision", "descriptor-max-plus-one", "cancel-before-publication", "candidate-crash", "stale-plan-generation"] }
+    },
+    "rotation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["initialGenerationId", "failedCandidateGenerationId", "currentAfterFailedCandidate", "nextGenerationId", "stalePlan", "freshPlan"],
+      "properties": {
+        "initialGenerationId": { "$ref": "#/$defs/digest" },
+        "failedCandidateGenerationId": { "$ref": "#/$defs/digest" },
+        "currentAfterFailedCandidate": { "$ref": "#/$defs/digest" },
+        "nextGenerationId": { "$ref": "#/$defs/digest" },
+        "stalePlan": { "$ref": "#/$defs/rotationCase" },
+        "freshPlan": { "$ref": "#/$defs/rotationCase" }
+      }
+    }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$" },
+    "relativePath": { "type": "string", "minLength": 1, "maxLength": 1024, "pattern": "^(?!/)(?![A-Za-z]:[\\\\/])(?!.*(?:^|[\\\\/])\\.\\.(?:[\\\\/]|$)).+$" },
+    "rotationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["issuedGenerationId", "observedGenerationId", "expected"],
+      "properties": {
+        "issuedGenerationId": { "$ref": "#/$defs/digest" },
+        "observedGenerationId": { "$ref": "#/$defs/digest" },
+        "expected": { "enum": ["accepted", "stale"] }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pluginId", "packageId", "version"],
+      "properties": {
+        "pluginId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "packageId": { "type": "string", "pattern": "^semio:[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "version": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "gisIdentity": { "allOf": [{ "$ref": "#/$defs/identity" }, { "type": "object", "properties": { "pluginId": { "const": "gis" }, "packageId": { "const": "semio:gis" } } }] },
+    "stdioIdentity": { "allOf": [{ "$ref": "#/$defs/identity" }, { "type": "object", "properties": { "pluginId": { "const": "stdio" }, "packageId": { "const": "semio:stdio" } } }] },
+    "package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pluginId", "packageId", "version", "role", "componentSha256", "componentBlake3", "descriptorSha256", "codecCount", "targetCount"],
+      "properties": {
+        "pluginId": { "enum": ["gis", "stdio"] },
+        "packageId": { "enum": ["semio:gis", "semio:stdio"] },
+        "version": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "role": { "const": "plugin" },
+        "componentSha256": { "$ref": "#/$defs/digest" },
+        "componentBlake3": { "$ref": "#/$defs/digest" },
+        "descriptorSha256": { "$ref": "#/$defs/digest" },
+        "codecCount": { "enum": [2, 26] },
+        "targetCount": { "enum": [0, 1] }
+      }
+    },
+    "openTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pluginId", "artifactKind", "artifactSchema", "surfaceId", "appId", "windowKindId", "role", "rendererTarget", "parentDialect", "grant"],
+      "properties": {
+        "pluginId": { "const": "gis" },
+        "artifactKind": { "const": "s.gis.gismap" },
+        "artifactSchema": { "const": "gis.map" },
+        "surfaceId": { "const": "s.gis.gismap@1/*#editor" },
+        "appId": { "const": "s.gis.gismap@1/*#editor" },
+        "windowKindId": { "const": "gis2d-main" },
+        "role": { "const": "editor" },
+        "rendererTarget": { "const": "wasm" },
+        "parentDialect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["artifactKind", "standard", "subset"],
+          "properties": { "artifactKind": { "const": "s.gis.gismap" }, "standard": { "const": "1" }, "subset": { "const": "*" } }
+        },
+        "grant": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["read", "write", "observe"],
+          "properties": { "read": { "const": true }, "write": { "const": true }, "observe": { "const": true } }
+        }
+      }
+    }
+  }
+}

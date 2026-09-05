@@ -1,0 +1,7 @@
+{
+  "contractId": "semio.fixture.projection-retirement/v1",
+  "cases": ["success", "rejection", "panic"],
+  "reservedPages": 384,
+  "foreign": { "foreign": ["Grüße 🌊"] },
+  "terminalBeforeOutcome": true
+}

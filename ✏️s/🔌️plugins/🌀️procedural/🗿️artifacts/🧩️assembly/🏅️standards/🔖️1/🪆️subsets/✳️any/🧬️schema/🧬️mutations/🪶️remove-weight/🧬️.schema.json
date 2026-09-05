@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RemoveWeight",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "moduleId"
+  ],
+  "properties": {
+    "moduleId": {
+      "type": "string"
+    }
+  }
+}

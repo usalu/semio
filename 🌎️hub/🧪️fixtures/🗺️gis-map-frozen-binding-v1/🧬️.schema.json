@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:hub:gis-map-frozen-binding-fixture:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "binding", "expectedDigest", "hostile"],
+  "properties": {
+    "schema": { "const": "semio.hub.gis-map-frozen-binding-fixture/v1" },
+    "binding": { "$ref": "#/$defs/binding" },
+    "expectedDigest": { "$ref": "#/$defs/digest" },
+    "hostile": {
+      "type": "array",
+      "minItems": 24,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "path", "value", "accepted"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 96 },
+          "path": { "type": "array", "minItems": 1, "maxItems": 4, "items": { "type": "string", "minLength": 1, "maxLength": 64 } },
+          "value": {},
+          "accepted": { "const": false }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["catalogGenerationId", "package", "artifact", "parentDialect", "surface", "grant", "service", "nativeExecutable"],
+      "properties": {
+        "catalogGenerationId": { "$ref": "#/$defs/digest" },
+        "package": {
+          "type": "object", "additionalProperties": false,
+          "required": ["pluginId", "packageId", "version", "componentSha256", "componentBlake3", "descriptorByteSha256"],
+          "properties": {
+            "pluginId": { "const": "gis" }, "packageId": { "const": "semio:gis" }, "version": { "const": "0.1.0" },
+            "componentSha256": { "$ref": "#/$defs/digest" }, "componentBlake3": { "$ref": "#/$defs/digest" }, "descriptorByteSha256": { "$ref": "#/$defs/digest" }
+          }
+        },
+        "artifact": {
+          "type": "object", "additionalProperties": false,
+          "required": ["kind", "schema", "packSchemaHash"],
+          "properties": { "kind": { "const": "s.gis.gismap" }, "schema": { "const": "gis.map" }, "packSchemaHash": { "$ref": "#/$defs/digest" } }
+        },
+        "parentDialect": {
+          "type": "object", "additionalProperties": false,
+          "required": ["artifactKind", "standard", "subset"],
+          "properties": { "artifactKind": { "const": "s.gis.gismap" }, "standard": { "const": "1" }, "subset": { "const": "*" } }
+        },
+        "surface": {
+          "type": "object", "additionalProperties": false,
+          "required": ["surfaceId", "appId", "windowKindId", "role", "rendererTarget"],
+          "properties": {
+            "surfaceId": { "const": "s.gis.gismap@1/*#editor" }, "appId": { "const": "s.gis.gismap@1/*#editor" },
+            "windowKindId": { "const": "gis2d-main" }, "role": { "const": "editor" }, "rendererTarget": { "enum": ["react", "wgpu", "wasm"] }
+          }
+        },
+        "grant": {
+          "type": "object", "additionalProperties": false,
+          "required": ["read", "write", "observe"],
+          "properties": { "read": { "const": true }, "write": { "const": true }, "observe": { "const": true } }
+        },
+        "service": {
+          "type": "object", "additionalProperties": false,
+          "required": ["owner", "contributor", "artifactKind", "artifactSchema", "artifactSchemaVersion", "documentSchema", "documentSchemaVersion", "inferenceSchema", "inferenceSchemaVersion", "algorithmVersion", "policyVersion", "dependsOn"],
+          "properties": {
+            "owner": { "const": "gis" }, "contributor": { "const": "gis" }, "artifactKind": { "const": "s.gis.gismap" },
+            "artifactSchema": { "const": "s.gis.gismap" }, "artifactSchemaVersion": { "const": 1 }, "documentSchema": { "const": "gis.map" },
+            "documentSchemaVersion": { "const": 1 }, "inferenceSchema": { "const": "s.gis.gismap.inference" }, "inferenceSchemaVersion": { "const": 1 },
+            "algorithmVersion": { "const": 1 }, "policyVersion": { "const": 1 }, "dependsOn": { "type": "array", "maxItems": 0 }
+          }
+        },
+        "nativeExecutable": { "const": "semio_s_plugin_gis::gis_map_inference_service" }
+      }
+    }
+  }
+}

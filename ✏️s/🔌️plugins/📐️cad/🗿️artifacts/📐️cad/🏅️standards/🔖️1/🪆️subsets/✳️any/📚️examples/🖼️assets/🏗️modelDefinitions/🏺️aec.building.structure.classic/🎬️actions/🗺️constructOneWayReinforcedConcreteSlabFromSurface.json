@@ -1,0 +1,20 @@
+{
+  "schema": "spatial.action",
+  "id": "structure.structure.constructOneWayReinforcedConcreteSlabFromSurface",
+  "version": "1.0.0",
+  "label": "Construct One Way Reinforced Concrete Slab From Surface",
+  "steps": [
+    {
+      "operation": "kernel.call",
+      "function": "spatial.action.capability",
+      "assignTo": "result"
+    },
+    {
+      "operation": "return",
+      "result": {
+        "kind": "var",
+        "name": "result"
+      }
+    }
+  ]
+}

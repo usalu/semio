@@ -10,7 +10,7 @@
 
 import { Canvas, Panel, PanelChromeTabBar, Footer, HorizontalWindows, Layout, Navbar, singleTreeLeaf, Window, navbarFillItem } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "../../🧪️🐨️story.ts";
+import type { Meta, StoryObj } from "../../🧪️story.ts";
 import { useState, type ComponentType } from "react";
 
 // 🔷️#region 🪨️Layout

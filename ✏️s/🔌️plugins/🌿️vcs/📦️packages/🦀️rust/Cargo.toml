@@ -22,6 +22,10 @@ ports = { react = 6075, wgpu = 6175 }
 crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
+[[test]]
+name = "native_openable_identity"
+path = "🧪️tests/🪪️native-openable-identity/🦀️.rs"
+
 [dependencies]
 semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }

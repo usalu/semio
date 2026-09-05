@@ -1,0 +1,535 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/stdio/gltf/2.0/mutation/scene",
+  "title": "glTF Scene Mutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "bind-default-scene"
+        },
+        "payload": {
+          "$ref": "🏠️default-scene/🔗️bind/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "bind-node-camera"
+        },
+        "payload": {
+          "$ref": "📷️node-camera/🔗️bind/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "bind-node-child"
+        },
+        "payload": {
+          "$ref": "🌿️node-child/🔗️bind/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "bind-node-mesh"
+        },
+        "payload": {
+          "$ref": "🏗️node-mesh/🔗️bind/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "bind-node-skin"
+        },
+        "payload": {
+          "$ref": "🩻️node-skin/🔗️bind/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "bind-scene-root-node"
+        },
+        "payload": {
+          "$ref": "🌲️scene-root/🔗️bind/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-node-extension-data"
+        },
+        "payload": {
+          "$ref": "🌳️node/🧩️change-extensions/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-node-extra-data"
+        },
+        "payload": {
+          "$ref": "🌳️node/📝️change-extras/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-node-morph-weights"
+        },
+        "payload": {
+          "$ref": "🌳️node/⚖️change-weights/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-node-name"
+        },
+        "payload": {
+          "$ref": "🌳️node/🏷️rename/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-scene-extension-data"
+        },
+        "payload": {
+          "$ref": "🎬️scene/🧩️change-extensions/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-scene-extra-data"
+        },
+        "payload": {
+          "$ref": "🎬️scene/📝️change-extras/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-scene-name"
+        },
+        "payload": {
+          "$ref": "🎬️scene/🏷️rename/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "create-node"
+        },
+        "payload": {
+          "$ref": "🌳️node/🌱️create/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "create-scene"
+        },
+        "payload": {
+          "$ref": "🎬️scene/🌱️create/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "delete-node"
+        },
+        "payload": {
+          "$ref": "🌳️node/🗑️delete/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "delete-scene"
+        },
+        "payload": {
+          "$ref": "🎬️scene/🗑️delete/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "move-node"
+        },
+        "payload": {
+          "$ref": "🌳️node/🚚️move/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "move-node-child"
+        },
+        "payload": {
+          "$ref": "🌿️node-child/🚚️move/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "move-scene"
+        },
+        "payload": {
+          "$ref": "🎬️scene/🚚️move/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "move-scene-root-node"
+        },
+        "payload": {
+          "$ref": "🌲️scene-root/🚚️move/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorder-node-children"
+        },
+        "payload": {
+          "$ref": "🌿️node-child/🔀️reorder/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorder-nodes"
+        },
+        "payload": {
+          "$ref": "🌳️node/🔀️reorder/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorder-scene-root-nodes"
+        },
+        "payload": {
+          "$ref": "🌲️scene-root/🔀️reorder/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorder-scenes"
+        },
+        "payload": {
+          "$ref": "🎬️scene/🔀️reorder/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "move-node-parent"
+        },
+        "payload": {
+          "$ref": "🌳️node/🌿️reparent/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-node-transform"
+        },
+        "payload": {
+          "$ref": "🌳️node/📐️transform/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "unbind-default-scene"
+        },
+        "payload": {
+          "$ref": "🏠️default-scene/✂️unbind/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "unbind-node-camera"
+        },
+        "payload": {
+          "$ref": "📷️node-camera/✂️unbind/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "unbind-node-child"
+        },
+        "payload": {
+          "$ref": "🌿️node-child/✂️unbind/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "unbind-node-mesh"
+        },
+        "payload": {
+          "$ref": "🏗️node-mesh/✂️unbind/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "unbind-node-skin"
+        },
+        "payload": {
+          "$ref": "🩻️node-skin/✂️unbind/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "unbind-scene-root-node"
+        },
+        "payload": {
+          "$ref": "🌲️scene-root/✂️unbind/🧬️.schema.json"
+        }
+      }
+    }
+  ]
+}

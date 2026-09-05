@@ -1,0 +1,413 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own mutation-catalog contribution to the repository test platform -- registers the scene slice of the glTF 2.0 mutation vocabulary (moved here from the artifact-level ♾️any catalog by shard A6, ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). The shared whole-document io/oracle/generator machinery, and every mutation's own manifest/fixture record, stay centralized at the artifact's ♾️any substrate; this file exists so the scene vocabulary directory has a claiming catalog of its own, per `unregistered-mutation-vocabulary`.",
+  "mutationCatalogs": [
+    {
+      "id": "gltf-2-0-scene",
+      "capability": "gltf-2-0-mutate",
+      "standardDirectoryName": "🔖️2.0",
+      "subsetDirectoryName": "🎬️scene",
+      "vectors": [
+        {
+          "mutationId": "bind-default-scene",
+          "sourceMutationDirectoryName": "🔗️bind",
+          "mutationDirectoryName": "🔗️bind",
+          "scenarios": [
+            {
+              "id": "moves-the-default-scene-pointer-to-the-second-scene",
+              "directoryName": "🧪️moves-the-default-scene-pointer-to-the-second-scene"
+            }
+          ]
+        },
+        {
+          "mutationId": "bind-node-camera",
+          "sourceMutationDirectoryName": "🔗️bind",
+          "mutationDirectoryName": "🔗️bind",
+          "scenarios": [
+            {
+              "id": "binds-the-perspective-camera-to-the-eye-node",
+              "directoryName": "🧪️binds-the-perspective-camera-to-the-eye-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "bind-node-child",
+          "sourceMutationDirectoryName": "🔗️bind",
+          "mutationDirectoryName": "🔗️bind",
+          "scenarios": [
+            {
+              "id": "adopts-the-child-node-under-the-parent-node",
+              "directoryName": "🧪️adopts-the-child-node-under-the-parent-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "bind-node-mesh",
+          "sourceMutationDirectoryName": "🔗️bind",
+          "mutationDirectoryName": "🔗️bind",
+          "scenarios": [
+            {
+              "id": "binds-the-hull-mesh-to-the-body-node",
+              "directoryName": "🧪️binds-the-hull-mesh-to-the-body-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "bind-node-skin",
+          "sourceMutationDirectoryName": "🔗️bind",
+          "mutationDirectoryName": "🔗️bind",
+          "scenarios": [
+            {
+              "id": "binds-the-jointed-skin-to-the-rig-node",
+              "directoryName": "🧪️binds-the-jointed-skin-to-the-rig-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "bind-scene-root-node",
+          "sourceMutationDirectoryName": "🔗️bind",
+          "mutationDirectoryName": "🔗️bind",
+          "scenarios": [
+            {
+              "id": "promotes-the-root-node-into-the-main-scene",
+              "directoryName": "🧪️promotes-the-root-node-into-the-main-scene"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-extension-data",
+          "sourceMutationDirectoryName": "🧩️change-extensions",
+          "mutationDirectoryName": "🧩️change-extensions",
+          "scenarios": [
+            {
+              "id": "attaches-a-punctual-light-extension-to-the-root-node",
+              "directoryName": "🧪️attaches-a-punctual-light-extension-to-the-root-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-extra-data",
+          "sourceMutationDirectoryName": "📝️change-extras",
+          "mutationDirectoryName": "📝️change-extras",
+          "scenarios": [
+            {
+              "id": "attaches-a-unit-extras-object-to-the-root-node",
+              "directoryName": "🧪️attaches-a-unit-extras-object-to-the-root-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-morph-weights",
+          "sourceMutationDirectoryName": "⚖️change-weights",
+          "mutationDirectoryName": "⚖️change-weights",
+          "scenarios": [
+            {
+              "id": "sets-the-node-morph-weights-to-a-half-and-a-quarter",
+              "directoryName": "🧪️sets-the-node-morph-weights-to-a-half-and-a-quarter"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-name",
+          "sourceMutationDirectoryName": "🏷️rename",
+          "mutationDirectoryName": "🏷️rename",
+          "scenarios": [
+            {
+              "id": "renames-the-root-node-to-pivot",
+              "directoryName": "🧪️renames-the-root-node-to-pivot"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-scene-extension-data",
+          "sourceMutationDirectoryName": "🧩️change-extensions",
+          "mutationDirectoryName": "🧩️change-extensions",
+          "scenarios": [
+            {
+              "id": "attaches-an-xmp-extension-object-to-the-main-scene",
+              "directoryName": "🧪️attaches-an-xmp-extension-object-to-the-main-scene"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-scene-extra-data",
+          "sourceMutationDirectoryName": "📝️change-extras",
+          "mutationDirectoryName": "📝️change-extras",
+          "scenarios": [
+            {
+              "id": "attaches-a-units-extras-object-to-the-main-scene",
+              "directoryName": "🧪️attaches-a-units-extras-object-to-the-main-scene"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-scene-name",
+          "sourceMutationDirectoryName": "🏷️rename",
+          "mutationDirectoryName": "🏷️rename",
+          "scenarios": [
+            {
+              "id": "renames-the-main-scene-to-alternate",
+              "directoryName": "🧪️renames-the-main-scene-to-alternate"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-node",
+          "sourceMutationDirectoryName": "🌱️create",
+          "mutationDirectoryName": "🌱️create",
+          "scenarios": [
+            {
+              "id": "inserts-an-empty-node-ahead-of-the-root-node",
+              "directoryName": "🧪️inserts-an-empty-node-ahead-of-the-root-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-scene",
+          "sourceMutationDirectoryName": "🌱️create",
+          "mutationDirectoryName": "🌱️create",
+          "scenarios": [
+            {
+              "id": "inserts-an-empty-scene-ahead-of-the-default-scene",
+              "directoryName": "🧪️inserts-an-empty-scene-ahead-of-the-default-scene"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-node",
+          "sourceMutationDirectoryName": "🗑️delete",
+          "mutationDirectoryName": "🗑️delete",
+          "scenarios": [
+            {
+              "id": "removes-the-root-node-and-drops-it-from-the-scene",
+              "directoryName": "🧪️removes-the-root-node-and-drops-it-from-the-scene"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-scene",
+          "sourceMutationDirectoryName": "🗑️delete",
+          "mutationDirectoryName": "🗑️delete",
+          "scenarios": [
+            {
+              "id": "removes-the-first-scene-and-remaps-the-default-scene",
+              "directoryName": "🧪️removes-the-first-scene-and-remaps-the-default-scene"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-node",
+          "sourceMutationDirectoryName": "🚚️move",
+          "mutationDirectoryName": "🚚️move",
+          "scenarios": [
+            {
+              "id": "swaps-the-two-scene-root-nodes",
+              "directoryName": "🧪️swaps-the-two-scene-root-nodes"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-node-child",
+          "sourceMutationDirectoryName": "🚚️move",
+          "mutationDirectoryName": "🚚️move",
+          "scenarios": [
+            {
+              "id": "refuses-a-move-whose-destination-is-the-childs-current-slot",
+              "directoryName": "🧪️refuses-a-move-whose-destination-is-the-childs-current-slot"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-scene",
+          "sourceMutationDirectoryName": "🚚️move",
+          "mutationDirectoryName": "🚚️move",
+          "scenarios": [
+            {
+              "id": "demotes-the-first-scene-and-slides-the-default-pointer",
+              "directoryName": "🧪️demotes-the-first-scene-and-slides-the-default-pointer"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-scene-root-node",
+          "sourceMutationDirectoryName": "🚚️move",
+          "mutationDirectoryName": "🚚️move",
+          "scenarios": [
+            {
+              "id": "refuses-to-move-a-node-that-is-not-a-root-of-the-scene",
+              "directoryName": "🧪️refuses-to-move-a-node-that-is-not-a-root-of-the-scene"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-node-children",
+          "sourceMutationDirectoryName": "🔀️reorder",
+          "mutationDirectoryName": "🔀️reorder",
+          "scenarios": [
+            {
+              "id": "refuses-an-order-that-repeats-the-same-child-twice",
+              "directoryName": "🧪️refuses-an-order-that-repeats-the-same-child-twice"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-nodes",
+          "sourceMutationDirectoryName": "🔀️reorder",
+          "mutationDirectoryName": "🔀️reorder",
+          "scenarios": [
+            {
+              "id": "flips-the-two-nodes-and-renumbers-the-scene-roots",
+              "directoryName": "🧪️flips-the-two-nodes-and-renumbers-the-scene-roots"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-scene-root-nodes",
+          "sourceMutationDirectoryName": "🔀️reorder",
+          "mutationDirectoryName": "🔀️reorder",
+          "scenarios": [
+            {
+              "id": "refuses-a-scene-index-past-the-end-of-the-scene-list",
+              "directoryName": "🧪️refuses-a-scene-index-past-the-end-of-the-scene-list"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-scenes",
+          "sourceMutationDirectoryName": "🔀️reorder",
+          "mutationDirectoryName": "🔀️reorder",
+          "scenarios": [
+            {
+              "id": "flips-the-two-scenes-and-remaps-the-default-pointer",
+              "directoryName": "🧪️flips-the-two-scenes-and-remaps-the-default-pointer"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-node-parent",
+          "sourceMutationDirectoryName": "🌿️reparent",
+          "mutationDirectoryName": "🌿️reparent",
+          "scenarios": [
+            {
+              "id": "adopts-the-second-scene-root-under-the-first-node",
+              "directoryName": "🧪️adopts-the-second-scene-root-under-the-first-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-transform",
+          "sourceMutationDirectoryName": "📐️transform",
+          "mutationDirectoryName": "📐️transform",
+          "scenarios": [
+            {
+              "id": "replaces-a-translation-with-a-scaled-trs-transform",
+              "directoryName": "🧪️replaces-a-translation-with-a-scaled-trs-transform"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-default-scene",
+          "sourceMutationDirectoryName": "✂️unbind",
+          "mutationDirectoryName": "✂️unbind",
+          "scenarios": [
+            {
+              "id": "clears-the-default-scene-pointer",
+              "directoryName": "🧪️clears-the-default-scene-pointer"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-node-camera",
+          "sourceMutationDirectoryName": "✂️unbind",
+          "mutationDirectoryName": "✂️unbind",
+          "scenarios": [
+            {
+              "id": "clears-the-camera-binding-on-the-eye-node",
+              "directoryName": "🧪️clears-the-camera-binding-on-the-eye-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-node-child",
+          "sourceMutationDirectoryName": "✂️unbind",
+          "mutationDirectoryName": "✂️unbind",
+          "scenarios": [
+            {
+              "id": "releases-the-child-node-from-the-parent-node",
+              "directoryName": "🧪️releases-the-child-node-from-the-parent-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-node-mesh",
+          "sourceMutationDirectoryName": "✂️unbind",
+          "mutationDirectoryName": "✂️unbind",
+          "scenarios": [
+            {
+              "id": "clears-the-mesh-binding-on-the-body-node",
+              "directoryName": "🧪️clears-the-mesh-binding-on-the-body-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-node-skin",
+          "sourceMutationDirectoryName": "✂️unbind",
+          "mutationDirectoryName": "✂️unbind",
+          "scenarios": [
+            {
+              "id": "clears-the-skin-binding-on-the-rig-node",
+              "directoryName": "🧪️clears-the-skin-binding-on-the-rig-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-scene-root-node",
+          "sourceMutationDirectoryName": "✂️unbind",
+          "mutationDirectoryName": "✂️unbind",
+          "scenarios": [
+            {
+              "id": "demotes-the-root-node-out-of-the-main-scene",
+              "directoryName": "🧪️demotes-the-root-node-out-of-the-main-scene"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "bind-default-scene",
+        "bind-node-camera",
+        "bind-node-child",
+        "bind-node-mesh",
+        "bind-node-skin",
+        "bind-scene-root-node",
+        "change-node-extension-data",
+        "change-node-extra-data",
+        "change-node-morph-weights",
+        "change-node-name",
+        "change-node-transform",
+        "change-scene-extension-data",
+        "change-scene-extra-data",
+        "change-scene-name",
+        "create-node",
+        "create-scene",
+        "delete-node",
+        "delete-scene",
+        "move-node",
+        "move-node-child",
+        "move-node-parent",
+        "move-scene",
+        "move-scene-root-node",
+        "reorder-node-children",
+        "reorder-nodes",
+        "reorder-scene-root-nodes",
+        "reorder-scenes",
+        "unbind-default-scene",
+        "unbind-node-camera",
+        "unbind-node-child",
+        "unbind-node-mesh",
+        "unbind-node-skin",
+        "unbind-scene-root-node"
+      ]
+    }
+  ]
+}

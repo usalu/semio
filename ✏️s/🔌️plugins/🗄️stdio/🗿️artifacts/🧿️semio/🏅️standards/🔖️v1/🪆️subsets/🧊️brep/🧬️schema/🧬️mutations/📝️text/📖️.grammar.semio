@@ -1,0 +1,61 @@
+dialect grammar
+grammar semio.brep.mutations
+extension semio
+start op
+
+# DKM brep-vocabulary wave: real one-line `OpText::print_op`/`parse_op` shape emitted by
+# `🧬️mutations/🦀️.rs` (`print_brep_mutation`/`parse_brep_mutation`) — "keyword arg=value
+# ..." (space-separated; space is lexer trivia at this dialect level). Every keyword/field-name
+# token below is copied verbatim from the real `format!(...)` call sites in that file's
+# `print_brep_mutation`, not invented. Replaces the prior whole-enum, whole-document-replace-shaped
+# alternation with SMO's approved 13-verb vocabulary (`📌️important.md`):
+# create/delete-{vertex,edge,face,shell,solid}, replace-{curve,surface}, move-vertex.
+# `create-loop`/`delete-loop` are deliberately absent — see the sibling `🦀️.rs` module doc
+# comment for why.
+op = create-vertex | delete-vertex | create-edge | delete-edge | create-face | delete-face | create-shell | delete-shell | create-solid | delete-solid | replace-curve | replace-surface | move-vertex
+
+create-vertex = "create-vertex" "id" "=" hex "point" "=" point3
+delete-vertex = "delete-vertex" "id" "=" hex
+create-edge = "create-edge" "id" "=" hex "start" "=" hex "end" "=" hex "curve" "=" curve
+delete-edge = "delete-edge" "id" "=" hex
+create-face = "create-face" "id" "=" hex "outer" "=" hex "inner" "=" hex-list "surface" "=" surface "orientation" "=" bool
+delete-face = "delete-face" "id" "=" hex
+create-shell = "create-shell" "id" "=" hex "faces" "=" shell-face-list
+delete-shell = "delete-shell" "id" "=" hex
+create-solid = "create-solid" "id" "=" hex "shells" "=" solid-shell-list
+delete-solid = "delete-solid" "id" "=" hex
+replace-curve = "replace-curve" "edge" "=" hex "curve" "=" curve
+replace-surface = "replace-surface" "face" "=" hex "surface" "=" surface
+move-vertex = "move-vertex" "id" "=" hex "point" "=" point3
+
+# `enc_shell_face`/`enc_solid_shell`/`enc_curve`/`enc_surface` — the same full-VALUE codecs
+# `📸️snapshot/📝️text/📖️.grammar.semio` declares (restated here so this leaf grammar is
+# self-contained, matching the repo's existing per-facet convention).
+shell-face = "[" hex "," bool "]"
+shell-face-list = "[" shell-face-items? "]"
+shell-face-items = shell-face {"," shell-face}*
+solid-shell = "[" hex "," bool "]"
+solid-shell-list = "[" solid-shell-items? "]"
+solid-shell-items = solid-shell {"," solid-shell}*
+hex-list = "[" hex-items? "]"
+hex-items = hex {"," hex}*
+
+curve = "L" "[" point3 "," point3 "]" | "C" "[" point3 "," point3 "," number "]" | "E" "[" point3 "," point3 "," number "," number "]" | "N" "[" point3-list "," number-list "," number "," number-list "]"
+surface = "P" "[" point3 "," point3 "]" | "C" "[" point3 "," point3 "," number "]" | "O" "[" point3 "," point3 "," number "," number "]" | "S" "[" point3 "," number "]" | "T" "[" point3 "," point3 "," number "," number "]" | "N" "[" point3-list "," number-list "," number "," number "," number "," number "," number-list "," number-list "]"
+
+point3 = "[" number "," number "," number "]"
+point3-list = "[" point3-items? "]"
+point3-items = point3 {"," point3}*
+number-list = "[" number-items? "]"
+number-items = number {"," number}*
+bool = "0" | "1"
+
+number = INT | FLOAT
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO — a run of lowercase hex digits (`enc_str`/`hex_encode`'s own alphabet), incl. the
+# empty string. `Symbol::Ref` already falls back from "no production of this name" to "macro of
+# this name", so referencing `hex` with no matching production routes here automatically. A
+# hand-rolled `{INT|IDENT}*` production would be wrong: it never backtracks and would silently
+# swallow the next literal keyword token (e.g. `id=<hex> point=<point3>` — the literal `point`
+# tokenizes as a plain `IDENT`, exactly like a stray hex letter run would).

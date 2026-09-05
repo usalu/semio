@@ -5,7 +5,7 @@
   "displayName": "Change Rule Layout Point",
   "emoji": "📐️",
   "aggregateVariant": "ChangeRuleLayoutPoint",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-rule-layout-point",
   "binaryTag": 5,
   "invertibility": "explicit-mutation",

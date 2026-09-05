@@ -1,0 +1,19 @@
+{
+  "beforeFixtureJson": "{\"schema\":\"trinity.graph\",\"name\":\"capsule-stack\"}",
+  "lhsJson": "{\"pattern\":{\"var\":\"c\",\"kind\":\"Piece\"}}",
+  "rhsJson": "{\"set\":[{\"var\":\"c\",\"prop\":\"label\",\"value\":\"$caption\"}]}",
+  "parameterBindings": {
+    "caption": "Capsule",
+    "repeat": 4.0
+  },
+  "ruleLayout": {
+    "c": {
+      "x": 12.0,
+      "y": -8.0
+    },
+    "shaft": {
+      "x": 0.0,
+      "y": 0.0
+    }
+  }
+}

@@ -212,26 +212,26 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.rewriting.standard.v1", "standard", "1", &[], None),
-        ("s.rewriting.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.rewriting.schema.artifact", "schema", "s.trinity.rewriting", &[("schema", "s.trinity.rewriting")], None),
-        ("s.rewriting.inference.artifact", "inference", "s.trinity.rewriting.inference", &[("schema", "s.trinity.rewriting.inference")], None),
-        ("s.rewriting.composer.native", "composer", "s.rewriting@1/*", &[("dialect", "s.rewriting@1/*")], None),
-        ("s.rewriting.composer.format-1", "composer", "s.stdio.txt@utf-8/*", &[("dialect", "s.stdio.txt@utf-8/*")], None),
-        ("s.rewriting.composer.format-2", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
-        ("s.rewriting.composer.format-3", "composer", "s.stdio.docx@ecma-376/*", &[("dialect", "s.stdio.docx@ecma-376/*")], None),
-        ("s.rewriting.composer.format-4", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
-        ("s.rewriting.composer.format-5", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.rewriting.grammar.1", "grammar", "rewriting.document", &[("grammar", "rewriting.document")], None),
-        ("s.rewriting.grammar.2", "grammar", "rewriting.op", &[("grammar", "rewriting.op")], None),
-        ("s.rewriting.grammar.3", "grammar", "rewriting.diff", &[("grammar", "rewriting.diff")], None),
-        ("s.rewriting.grammar.4", "grammar", "rewriting.pack", &[("grammar", "rewriting.pack")], None),
-        ("s.rewriting.grammar.5", "grammar", "rewriting.spr", &[("grammar", "rewriting.spr")], None),
-        ("s.rewriting.codec.document-1", "codec", "trinity.rewrite.rule:rewriting", &[("codec", "trinity.rewrite.rule"), ("extension", "rewriting")], None),
-        ("s.rewriting.localization.en", "localization", "Rewriting", &[], Some(("en", "Rewriting"))),
-        ("s.rewriting.localization.de", "localization", "Umschreiben", &[], Some(("de", "Umschreiben"))),
+        ("s.trinity.rewriting.standard.v1", "standard", "1", &[], None),
+        ("s.trinity.rewriting.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.trinity.rewriting.schema.artifact", "schema", "s.trinity.rewriting", &[("schema", "s.trinity.rewriting")], None),
+        ("s.trinity.rewriting.inference.artifact", "inference", "s.trinity.rewriting.inference", &[("schema", "s.trinity.rewriting.inference")], None),
+        ("s.trinity.rewriting.composer.native", "composer", "s.trinity.rewriting@1/*", &[("dialect", "s.trinity.rewriting@1/*")], None),
+        ("s.trinity.rewriting.composer.format-1", "composer", "s.stdio.txt@utf-8/*", &[("dialect", "s.stdio.txt@utf-8/*")], None),
+        ("s.trinity.rewriting.composer.format-2", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
+        ("s.trinity.rewriting.composer.format-3", "composer", "s.stdio.docx@ecma-376/*", &[("dialect", "s.stdio.docx@ecma-376/*")], None),
+        ("s.trinity.rewriting.composer.format-4", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
+        ("s.trinity.rewriting.composer.format-5", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.trinity.rewriting.grammar.1", "grammar", "rewriting.document", &[("grammar", "rewriting.document")], None),
+        ("s.trinity.rewriting.grammar.2", "grammar", "rewriting.op", &[("grammar", "rewriting.op")], None),
+        ("s.trinity.rewriting.grammar.3", "grammar", "rewriting.diff", &[("grammar", "rewriting.diff")], None),
+        ("s.trinity.rewriting.grammar.4", "grammar", "rewriting.pack", &[("grammar", "rewriting.pack")], None),
+        ("s.trinity.rewriting.grammar.5", "grammar", "rewriting.spr", &[("grammar", "rewriting.spr")], None),
+        ("s.trinity.rewriting.codec.document-1", "codec", "trinity.rewrite.rule:rewriting", &[("codec", "trinity.rewrite.rule"), ("codec-extension", "20:trinity.rewrite.rule:rewriting")], None),
+        ("s.trinity.rewriting.localization.en", "localization", "Rewriting", &[], Some(("en", "Rewriting"))),
+        ("s.trinity.rewriting.localization.de", "localization", "Umschreiben", &[], Some(("de", "Umschreiben"))),
     ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.rewriting")?);
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.trinity.rewriting")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
         for (namespace, value) in *claims {

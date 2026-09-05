@@ -1,0 +1,9 @@
+dialect grammar
+grammar stdio.step.inference
+extension step.inference
+start document
+
+document = header body
+header = "schema" SP "s.stdio.step.inference" NL
+body = payload NL?
+payload = OCTET+

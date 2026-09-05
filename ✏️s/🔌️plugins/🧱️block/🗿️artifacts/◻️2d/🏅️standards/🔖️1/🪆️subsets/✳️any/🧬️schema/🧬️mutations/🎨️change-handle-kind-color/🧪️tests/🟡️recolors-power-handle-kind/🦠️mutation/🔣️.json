@@ -1,0 +1,5 @@
+{
+  "mutation": "changeHandleKindColor",
+  "id": "hk-power",
+  "newColor": "#101010"
+}

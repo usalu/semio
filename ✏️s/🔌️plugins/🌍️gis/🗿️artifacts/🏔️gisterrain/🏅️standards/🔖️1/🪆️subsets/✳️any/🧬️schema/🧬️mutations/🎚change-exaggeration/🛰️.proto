@@ -1,6 +1,0 @@
-syntax = "proto3";
-package semio.s.gis.gisterrain.mutation;
-
-message ChangeExaggeration {
-  double new_exaggeration = 1;
-}

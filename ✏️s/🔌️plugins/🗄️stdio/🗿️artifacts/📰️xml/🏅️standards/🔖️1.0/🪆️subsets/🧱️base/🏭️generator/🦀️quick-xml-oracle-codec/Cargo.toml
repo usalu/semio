@@ -1,0 +1,16 @@
+# 🧭️ Own workspace root, exactly like the sibling riff-avi-codec's own Cargo.toml
+# (../../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🏭️generator/🦀️riff-avi-codec/Cargo.toml)
+# — never joins the repository's root workspace or its Cargo.lock.
+[workspace]
+
+[package]
+name = "quick-xml-oracle-codec"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+quick-xml = "0.42"
+
+[[bin]]
+name = "quick-xml-oracle-codec"
+path = "src/main.rs"

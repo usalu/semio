@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "streams": [
+    { "source": "dev", "watchUrl": "/services/catalog-feed" },
+    { "source": "extension", "watchUrl": "https://peer.example.test/available?kind=extension" }
+  ]
+}

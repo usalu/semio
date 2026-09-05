@@ -1,0 +1,36 @@
+{
+  "schema": "spatial.action",
+  "id": "selection.invert",
+  "version": "1.0.0",
+  "label": "InvertSelection",
+  "steps": [
+    {
+      "operation": "kernel.call",
+      "function": "spatial.selection.apply",
+      "args": {
+        "operation": {
+          "kind": "const",
+          "value": "invert"
+        },
+        "seedTargets": {
+          "kind": "path",
+          "root": "params",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "seedTargets"
+            }
+          ]
+        }
+      },
+      "assignTo": "result"
+    },
+    {
+      "operation": "return",
+      "result": {
+        "kind": "var",
+        "name": "result"
+      }
+    }
+  ]
+}

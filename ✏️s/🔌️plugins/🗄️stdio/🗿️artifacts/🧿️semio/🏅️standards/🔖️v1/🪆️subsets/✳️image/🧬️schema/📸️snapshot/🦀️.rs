@@ -102,7 +102,7 @@ impl Default for SemioImageSnapshot {
 /// style as this subset's own `🔺️diff`/`🧬️mutations` facets (`GifDiff`/`SvgDiff`/`DocxDiff`'s
 /// established hand-rolled convention), duplicated here (not imported from `schema::diff`) to keep
 /// `snapshot` — the base type `diff`/`mutations` both depend ON — free of a reverse dependency on
-/// either sibling facet (same rationale `✳️flow`'s/`✳️mesh`'s own pilots document).
+/// either sibling facet (same rationale `✳️flow`'s/`🔺️mesh`'s own pilots document).
 ///
 /// 🧩️ The `#[derive(dsl::DslArtifact)]` path was tried first per this ticket's brief. It is
 /// blocked here: `SemioImageSnapshot.icc: Option<Vec<u8>>` is a BARE `Option<T>` field directly on
@@ -284,7 +284,7 @@ fn parse_image_snapshot_body(body: &str) -> Result<SemioImageSnapshot, String> {
 
 //#region 🔖️BinaryPrimitives
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
-/// `store::ByteReader`, same helpers `✳️flow`'s/`✳️mesh`'s own upgraded `ArtifactPack` uses)
+/// `store::ByteReader`, same helpers `✳️flow`'s/`🔺️mesh`'s own upgraded `ArtifactPack` uses)
 /// backing the real `ArtifactPack` below — replaces the old `serde_json::to_vec`-in-envelope
 /// shortcut.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -446,7 +446,7 @@ impl store::ArtifactPack for SemioImageSnapshot {
 //#region 🌉️ExternalCodecBridge
 /// 📥️ Parses this subset's own committed `.dsl.semio` text into a real [`SemioImageSnapshot`] — a
 /// thin wrapper over `store::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
-/// crate's private `store` extern-crate item (the `mutate-semio-image` test adapter, whose
+/// crate's private `store` extern-crate item (the `🖼️mutate-semio-image` test adapter, whose
 /// `identity-round-trip` scenario reads the REAL committed `📚️examples/🖼️swatch` artifact rather than
 /// a JSON transcription of it) can still drive the same codec production does. Same shape and same
 /// rationale as `✳️flow`'s own bridge.

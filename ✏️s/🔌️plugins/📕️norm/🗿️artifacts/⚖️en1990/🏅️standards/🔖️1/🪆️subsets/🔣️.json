@@ -1,0 +1,37 @@
+{
+  "artifact": "s.norm.en1990",
+  "standard": "1",
+  "subsets": {
+    "combination": {
+      "name": "The EN 1990 load-combination record itself — the scalar design values (change-permanent-action, change-resistance, change-consequence-class, change-seismic-action, set-snapshot) that this basis-of-design document carries as ONE-per-document fields, never a repeating entry.",
+      "kind": "owning",
+      "ioFidelity": "canonical",
+      "import": [
+        "s.norm.en1990"
+      ],
+      "export": [
+        "s.norm.en1990"
+      ],
+      "inferences": [
+        "outline"
+      ],
+      "examples": [
+        "high-consequence-office"
+      ]
+    },
+    "variable-actions": {
+      "name": "The `qK` register — the repeating, positionally-addressed collection of variable-action entries (insert-variable-action, remove-variable-action, reorder-variable-actions, change-variable-action-category, change-variable-action-value) that combine into the permanent action to produce a design value. Unlike `combination`'s scalar fields this is a genuine array with insert/remove/reorder semantics, so it is the smallest owner for these five mutations rather than the document as a whole.",
+      "kind": "owning",
+      "ioFidelity": "canonical",
+      "import": [
+        "s.norm.en1990"
+      ],
+      "export": [
+        "s.norm.en1990"
+      ],
+      "examples": [
+        "high-consequence-office"
+      ]
+    }
+  }
+}

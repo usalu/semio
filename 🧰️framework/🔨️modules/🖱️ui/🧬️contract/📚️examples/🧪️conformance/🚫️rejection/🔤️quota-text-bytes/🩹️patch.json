@@ -1,0 +1,15 @@
+{
+  "surface": "conformance.rejection",
+  "baseRevision": 0,
+  "revision": 1,
+  "ops": [
+    {
+      "type": "setComponent",
+      "id": 0,
+      "component": {
+        "type": "text",
+        "value": "way too long"
+      }
+    }
+  ]
+}

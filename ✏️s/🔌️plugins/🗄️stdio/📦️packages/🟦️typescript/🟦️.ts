@@ -1,7 +1,7 @@
 /** 🗄️ Stdio plugin TypeScript facade. */
 
 export * as binary from "../../🗿️artifacts/💾️binary/🟦️.ts";
-export * as txt from "../../🗿️artifacts/📄️txt/🟦️.ts";
+export * as txt from "../../🗿️artifacts/🔤️txt/🟦️.ts";
 export * as json from "../../🗿️artifacts/🔣️json/🟦️.ts";
 export * as xml from "../../🗿️artifacts/📰️xml/🟦️.ts";
 export * as csv from "../../🗿️artifacts/📊️csv/🟦️.ts";
@@ -13,17 +13,17 @@ export * as ifc from "../../🗿️artifacts/🏗️ifc/🟦️.ts";
 export * as las from "../../🗿️artifacts/☁️las/🟦️.ts";
 export * as gltf from "../../🗿️artifacts/🧊️gltf/🟦️.ts";
 export * as obj from "../../🗿️artifacts/🧊️obj/🟦️.ts";
-export * as stl from "../../🗿️artifacts/🟪️stl/🟦️.ts";
-export * as ply from "../../🗿️artifacts/☁️ply/🟦️.ts";
+export * as stl from "../../🗿️artifacts/🔺️stl/🟦️.ts";
+export * as ply from "../../🗿️artifacts/🧱️ply/🟦️.ts";
 export * as dwg from "../../🗿️artifacts/🖊️dwg/🟦️.ts";
 export * as dxf from "../../🗿️artifacts/🖊️dxf/🟦️.ts";
 export * as svg from "../../🗿️artifacts/🎨️svg/🟦️.ts";
-export * as bmp from "../../🗿️artifacts/🖼️bmp/🟦️.ts";
+export * as bmp from "../../🗿️artifacts/🪟️bmp/🟦️.ts";
 export * as png from "../../🗿️artifacts/📷️png/🟦️.ts";
-export * as jpg from "../../🗿️artifacts/📷️jpg/🟦️.ts";
+export * as jpg from "../../🗿️artifacts/📸️jpg/🟦️.ts";
 export * as gif from "../../🗿️artifacts/🎞️gif/🟦️.ts";
 export * as tiff from "../../🗿️artifacts/🖼️tiff/🟦️.ts";
-export * as pdf from "../../🗿️artifacts/📄️pdf/🟦️.ts";
+export * as pdf from "../../🗿️artifacts/🌳️pdf/🟦️.ts";
 export * as docx from "../../🗿️artifacts/📜️docx/🟦️.ts";
 export * as pptx from "../../🗿️artifacts/🎞️pptx/🟦️.ts";
 export * as xlsx from "../../🗿️artifacts/📕️xlsx/🟦️.ts";

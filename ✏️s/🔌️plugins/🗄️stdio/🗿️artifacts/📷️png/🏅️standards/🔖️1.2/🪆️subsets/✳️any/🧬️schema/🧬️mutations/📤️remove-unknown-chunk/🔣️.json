@@ -5,7 +5,7 @@
   "displayName": "Remove Unknown Chunk",
   "emoji": "📤️",
   "aggregateVariant": "RemoveUnknownChunk",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "remove-unknown-chunk",
   "binaryTag": 16,
   "invertibility": "explicit-mutation",

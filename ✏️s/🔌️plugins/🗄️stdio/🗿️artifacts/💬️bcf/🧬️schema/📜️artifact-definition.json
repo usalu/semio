@@ -49,7 +49,9 @@
       "status": "declared"
     }
   ],
-  "codecs": [],
+  "codecs": [
+    { "id": "s.stdio.bcf.standard.2-1.codec.native-document.v1", "status": "implemented", "from": "s.stdio.bcf.standard.2-1.dialect.source", "to": "s.stdio.bcf.standard.2-1.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.bcf.v1", "artifact_kind": "stdio.bcf", "document_schema": "stdio.bcf", "extension": "bcf", "pack_schema_hash": "1465da1dff96abd6a625ded26f479c7fa37c4740b79f1817856a30b3cd7a7a22", "runtime_capability_id": "s.stdio.bcf.standard.2-1.codec.codec-stdio-bcf-extension-bcf.v1" } }
+  ],
   "mutations": [],
   "inferences": [],
   "resources": [
@@ -84,22 +86,22 @@
   ],
   "runtime_capabilities": [
     {
-      "id": "s.stdio.bcf.runtime.codec.codec-stdio-bcf-extension-bcf.v1",
+      "id": "s.stdio.bcf.standard.2-1.codec.codec-stdio-bcf-extension-bcf.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec:stdio.bcf|extension:bcf",
+      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.bcf:bcf|codec:stdio.bcf",
       "claims": [
         {
           "namespace": "codec",
           "value": "stdio.bcf"
         },
         {
-          "namespace": "extension",
-          "value": "bcf"
+          "namespace": "codec-extension",
+          "value": "9:stdio.bcf:bcf"
         }
       ]
     },
     {
-      "id": "s.stdio.bcf.runtime.composer.dialect-s-stdio-bcf-2-1.v1",
+      "id": "s.stdio.bcf.composer.dialect-s-stdio-bcf-2-1.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.bcf@2.1/*",
       "claims": [
@@ -110,7 +112,7 @@
       ]
     },
     {
-      "id": "s.stdio.bcf.runtime.grammar.grammar-stdio-bcf.v1",
+      "id": "s.stdio.bcf.grammar.grammar-stdio-bcf.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.bcf",
       "claims": [
@@ -121,7 +123,7 @@
       ]
     },
     {
-      "id": "s.stdio.bcf.runtime.grammar.grammar-stdio-bcf-diff.v1",
+      "id": "s.stdio.bcf.grammar.grammar-stdio-bcf-diff.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.bcf.diff",
       "claims": [
@@ -132,7 +134,7 @@
       ]
     },
     {
-      "id": "s.stdio.bcf.runtime.grammar.grammar-stdio-bcf-op.v1",
+      "id": "s.stdio.bcf.grammar.grammar-stdio-bcf-op.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.bcf.op",
       "claims": [
@@ -143,7 +145,7 @@
       ]
     },
     {
-      "id": "s.stdio.bcf.runtime.grammar.grammar-stdio-bcf-pack.v1",
+      "id": "s.stdio.bcf.grammar.grammar-stdio-bcf-pack.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.bcf.pack",
       "claims": [
@@ -154,7 +156,7 @@
       ]
     },
     {
-      "id": "s.stdio.bcf.runtime.grammar.grammar-stdio-bcf-spr.v1",
+      "id": "s.stdio.bcf.grammar.grammar-stdio-bcf-spr.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.bcf.spr",
       "claims": [
@@ -165,7 +167,7 @@
       ]
     },
     {
-      "id": "s.stdio.bcf.runtime.inference.schema-s-stdio-bcf-inference.v1",
+      "id": "s.stdio.bcf.inference.schema-s-stdio-bcf-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:s.stdio.bcf.inference",
       "claims": [
@@ -176,7 +178,7 @@
       ]
     },
     {
-      "id": "s.stdio.bcf.runtime.representation.mime-application-vnd-bcf-xml-extension-bcf.v1",
+      "id": "s.stdio.bcf.standard.2-1.representation.mime-application-vnd-bcf-xml-extension-bcf",
       "category": "representation",
       "descriptor": "runtime-capability:representation:mime:application/vnd.bcf+xml|extension:.bcf",
       "claims": [
@@ -191,7 +193,7 @@
       ]
     },
     {
-      "id": "s.stdio.bcf.runtime.schema.schema-s-stdio-bcf.v1",
+      "id": "s.stdio.bcf.schema.schema-s-stdio-bcf.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.bcf",
       "claims": [

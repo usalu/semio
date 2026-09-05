@@ -1,0 +1,17 @@
+{
+  "id": "s.stdio.gltf.mutation.delete-animation.v1",
+  "version": 1,
+  "touchedPaths": [
+    "document/animations/1"
+  ],
+  "payload": {
+    "index": 1
+  },
+  "operation": {
+    "kind": "delete",
+    "index": 1,
+    "removed": {
+      "name": "bob"
+    }
+  }
+}

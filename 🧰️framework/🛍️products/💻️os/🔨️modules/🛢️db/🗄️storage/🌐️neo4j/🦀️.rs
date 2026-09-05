@@ -1014,7 +1014,7 @@ impl Neo4jStorage {
     async fn execute(&self, task: DbIoTask) -> Result<DbIoResult, DbError> {
         let mut operation = submit_db_io_task(self.worker_pool.as_ref(), task).map_err(|(error, _)| error)?;
         operation.start_async_native_on_lane_io().await?;
-        operation.await.map_err(crate::db_storage::DbIoFault::into_db_error)?.into_result()
+        operation.finish().await
     }
 
     pub async fn close(&self) -> Result<(), DbError> {

@@ -1,0 +1,33 @@
+dialect grammar
+grammar protocol
+start file
+
+file = header body*
+header = dialect-line? "protocol" IDENT version-line schema-line start-line use-line* framing-line
+dialect-line = "dialect" "protocol"
+version-line = "version" INT
+schema-line = "schema" IDENT
+start-line = "start" IDENT
+use-line = "use" IDENT
+framing-line = "framing" framing-mode
+framing-mode = "magic" INT | "record" | "chunked"
+body = header-block | field-line | segment-block | record-block | struct-block | enum-block | footer-block | chain-block
+header-block = "header" "fixed" INT
+field-line = "field" IDENT prim
+segment-block = "segment" IDENT prim | "segment" IDENT kind-clause? group
+kind-clause = "kind" EQUALS INT
+record-block = "record" IDENT tag-clause? field-pair*
+tag-clause = "tag" EQUALS INT
+field-pair = IDENT prim
+struct-block = "struct" IDENT group
+enum-block = "enum" IDENT enum-group
+enum-group = "{" enum-variant {enum-variant}* "}"
+enum-variant = IDENT EQUALS INT
+footer-block = "footer" "fixed" INT
+chain-block = "chain" IDENT? prim
+group = "{" field-pair {field-pair}* "}"
+prim = "u8" | "u16" | "u32" | "u64" | "i32" | "i64" | "f32" | "f64" | "varint" | "zigzag" | "bytes" | "utf8" | "tag" | fixed-prim | array-prim | ref-prim | "varint" "bytes"
+fixed-prim = "fixed" INT | "Fixed" "(" INT ")"
+array-prim = "array" prim | "Array" "(" prim "," count ")"
+ref-prim = "Ref" "(" IDENT ")"
+count = "Varint" | "Fixed" "(" INT ")" | "Field" "(" IDENT ")" | INT

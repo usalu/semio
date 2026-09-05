@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:gis:artifact-identity:v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "pluginId", "packageId", "artifacts", "hostileKinds"],
+  "properties": {
+    "schema": { "const": "semio.gis.artifact-identity/v1" },
+    "pluginId": { "const": "gis" },
+    "packageId": { "const": "semio:gis" },
+    "artifacts": {
+      "type": "array", "minItems": 2, "maxItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["kind", "nativeDialect", "documentSchema", "extension", "codecExtension", "roles"],
+        "properties": {
+          "kind": { "enum": ["s.gis.gismap", "s.gis.gisterrain"] },
+          "nativeDialect": { "enum": ["s.gis.gismap@1/*", "s.gis.gisterrain@1/*"] },
+          "documentSchema": { "enum": ["gis.map", "gis.terrain"] },
+          "extension": { "enum": ["gismap", "gisterrain"] },
+          "codecExtension": { "enum": ["7:gis.map:gismap", "11:gis.terrain:gisterrain"] },
+          "roles": { "const": ["editor", "viewer"] }
+        }
+      }
+    },
+    "hostileKinds": { "const": ["s.gismap", "s.gisterrain", "s.foreign.gismap", "gis.gismap", "s.gis.gismap.extra"] }
+  }
+}

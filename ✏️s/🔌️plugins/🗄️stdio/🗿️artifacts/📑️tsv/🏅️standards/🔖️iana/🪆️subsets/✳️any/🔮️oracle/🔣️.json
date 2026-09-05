@@ -1,0 +1,457 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ TSV IANA/✳️any's own contribution to the repository test platform — its mutation oracle registration and its declared mutation vocabulary (wave 7, ticket 26/08/23/END-TO-END-TESTING-REFACTOR). Discovered by convention alongside ✏️s/🔌️plugins/🗄️stdio's own top-level manifest; merged into one registry, no central edit required. Reuses the already-linked `csv` crate (the shared stdio manifest's `csv` entry covers RFC 4180 creation only, capability `tabular-csv`; this subset registers its own id for `tsv-iana-mutate` instead of reusing that entry, which would fail the contract's oracle-capability-mismatch check), reconfigured for IANA TSV: tab delimiter, no quoting at all (`QuoteStyle::Never` on write, `quoting(false)` on read) — TSV has no escaping mechanism, unlike RFC 4180 CSV.",
+  "oracles": [
+    {
+      "id": "tsv-iana-mutate",
+      "ecosystem": "rust",
+      "package": "csv",
+      "version": "1",
+      "capabilities": [
+        "tsv-iana-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-tabular-mutate-v1"
+      ],
+      "license": "MIT OR Unlicense",
+      "testOnly": true,
+      "homepage": "https://github.com/BurntSushi/rust-csv",
+      "rationale": "The same reference reader/writer of the Rust ecosystem the shared `csv` entry already uses for RFC 4180, reconfigured here for IANA text/tab-separated-values: tab delimiter, quoting disabled entirely on both read and write. IANA TSV (https://www.iana.org/assignments/media-types/text/tab-separated-values) draws no header/data distinction and has no quoting/escaping mechanism, so a field can never legally carry a literal tab or newline byte; this subset's real fixture was checked for both at derivation time and carries neither. Drives every declared `TsvMutation` kind independently of this repository's own byte-exact split/rejoin codec, including the two real serialization concerns this subset's vocabulary makes substantive: `set-trailing-newline` and `set-line-ending` genuinely add/remove/rewrite bytes, so `semantic-tabular-mutate-v1` keeps both fields live in the comparison instead of ignoring them the way the base `semantic-tabular-v1` profile does for RFC 4180's writer-freedom equivalents.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "csv",
+        "implementation": "csv Rust RFC 4180 reader/writer",
+        "version": "1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "tsv-iana-any",
+      "capability": "tsv-iana-mutate",
+      "standardDirectoryName": "🔖️iana",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📸️set-snapshot",
+          "mutationDirectoryName": "📸️set-snapshot",
+          "scenarios": [
+            {
+              "id": "renames-the-alpha-row-and-switches-to-crlf",
+              "directoryName": "✏️renames-the-alpha-row-and-switches-to-crlf"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "set-snapshot",
+        "set-trailing-newline",
+        "set-line-ending",
+        "insert-row",
+        "remove-row",
+        "set-cell"
+      ]
+    }
+  ],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-tabular-mutate-v1",
+      "description": "TSV tables compared by the full record grid PLUS the trailing-newline and line-ending choices as normative fields. Differs from the base `semantic-tabular-v1` profile only in that `trailingNewline` and `lineTerminator` are NOT ignored: this subset's vocabulary declares `set-trailing-newline` and `set-line-ending` as real mutation kinds that genuinely rewrite bytes (IANA TSV has no header/data distinction to make substantive the way RFC 4180's `has_header` convention does, so its own real serialization concerns fill that role instead), and they have to actually participate in the comparison or those scenarios are no-ops.",
+      "ignoreKeys": [
+        "byteLength"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.tsv",
+      "standard": "iana",
+      "subset": "any",
+      "standardDirectoryName": "🔖️iana",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "insert-row",
+          "capability": "tsv-iana-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-row",
+            "bridgeVersion": 1,
+            "variant": "InsertRow"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tsv-iana-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-row",
+          "capability": "tsv-iana-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-row",
+            "bridgeVersion": 1,
+            "variant": "RemoveRow"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tsv-iana-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-cell",
+          "capability": "tsv-iana-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-cell",
+            "bridgeVersion": 1,
+            "variant": "SetCell"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tsv-iana-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-line-ending",
+          "capability": "tsv-iana-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-line-ending",
+            "bridgeVersion": 1,
+            "variant": "SetLineEnding"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tsv-iana-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "tsv-iana-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tsv-iana-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-trailing-newline",
+          "capability": "tsv-iana-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-trailing-newline",
+            "bridgeVersion": 1,
+            "variant": "SetTrailingNewline"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tsv-iana-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-row-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.tsv",
+        "standard": "iana",
+        "subset": "any"
+      },
+      "mutation": "insert-row",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📥️insert-row/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:16f1e8cccccf2d76b93a6694ad492ae0c67ba54912faec89c8b95e584d863b76",
+          "bytes": 173
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📥️insert-row/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:18e5088acb92f3b857022562f46dac813c18e5e7eb219625dcca4a3645aa6722",
+          "bytes": 212
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "tsv-carrier",
+      "notes": "InsertRow{index:2,row:[\"2\",\"gadget\"]} appends a real tab-separated data row."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-row-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.tsv",
+        "standard": "iana",
+        "subset": "any"
+      },
+      "mutation": "remove-row",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🗑️remove-row/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:16f1e8cccccf2d76b93a6694ad492ae0c67ba54912faec89c8b95e584d863b76",
+          "bytes": 173
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🗑️remove-row/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:89f948c87cbe87aa467a7d434bcff6cd0bda419b2c0c807f53d58a5ee9a956f6",
+          "bytes": 134
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "tsv-carrier",
+      "notes": "RemoveRow{index:1} drops the data row, leaving the header."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.tsv",
+        "standard": "iana",
+        "subset": "any"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📸️set-snapshot/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:16f1e8cccccf2d76b93a6694ad492ae0c67ba54912faec89c8b95e584d863b76",
+          "bytes": 173
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📸️set-snapshot/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:86f9fe2f2dbc9dbb7418927618b0fb6c456eea6ba049b7eb4643ca6e4966e072",
+          "bytes": 181
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "tsv-carrier",
+      "notes": "SetSnapshot replaces the whole TsvSnapshot with a different, equally well-formed one."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-line-ending-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.tsv",
+        "standard": "iana",
+        "subset": "any"
+      },
+      "mutation": "set-line-ending",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🔚️set-line-ending/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:16f1e8cccccf2d76b93a6694ad492ae0c67ba54912faec89c8b95e584d863b76",
+          "bytes": 173
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🔚️set-line-ending/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d5c0f14b503c3e1fb5b2e939ed745810e28cf0bf025561eb7e74e2b4a05c92ea",
+          "bytes": 175
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "tsv-carrier",
+      "notes": "SetLineEnding{lineEnding:crLf} switches the declared newline style, IANA TSV's own inherited text-line convention."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-trailing-newline-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.tsv",
+        "standard": "iana",
+        "subset": "any"
+      },
+      "mutation": "set-trailing-newline",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/↩️set-trailing-newline/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:16f1e8cccccf2d76b93a6694ad492ae0c67ba54912faec89c8b95e584d863b76",
+          "bytes": 173
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/↩️set-trailing-newline/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:71965e2981e6fc14974b4bffc5f872f874fcd726c8c79e15e38404a165e52ed6",
+          "bytes": 174
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "tsv-carrier",
+      "notes": "SetTrailingNewline{trailingNewline:false} drops the final trailing newline."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-cell-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.tsv",
+        "standard": "iana",
+        "subset": "any"
+      },
+      "mutation": "set-cell",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🔲️set-cell/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:16f1e8cccccf2d76b93a6694ad492ae0c67ba54912faec89c8b95e584d863b76",
+          "bytes": 173
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🔲️set-cell/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:86f9fe2f2dbc9dbb7418927618b0fb6c456eea6ba049b7eb4643ca6e4966e072",
+          "bytes": 181
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "tsv-carrier",
+      "notes": "SetCell{rowIndex:1,fieldIndex:1,value:\"renamed-widget\"} overwrites one cell in place."
+    }
+  ]
+}

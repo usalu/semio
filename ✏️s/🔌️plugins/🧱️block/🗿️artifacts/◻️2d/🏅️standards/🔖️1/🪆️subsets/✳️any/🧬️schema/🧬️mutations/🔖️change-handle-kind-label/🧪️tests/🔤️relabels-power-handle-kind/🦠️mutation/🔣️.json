@@ -1,0 +1,5 @@
+{
+  "mutation": "changeHandleKindLabel",
+  "id": "hk-power",
+  "newLabel": "Mains Power"
+}

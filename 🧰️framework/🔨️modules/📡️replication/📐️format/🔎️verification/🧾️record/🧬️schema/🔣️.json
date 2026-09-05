@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "grants", "headerHex", "cases"],
+  "properties": {
+    "schema": { "const": "semio.spr.retained-record-observation/v1" },
+    "grants": { "const": [1, 7, 4096] },
+    "headerHex": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "cases": { "type": "array", "minItems": 11, "maxItems": 11, "items": { "$ref": "#/$defs/case" } }
+  },
+  "$defs": {
+    "offset": { "type": "integer", "minimum": 32, "maximum": 4096 },
+    "observation": {
+      "type": ["object", "null"], "additionalProperties": false,
+      "required": ["frameStart", "payloadStart", "payloadEnd", "frameEnd", "kind", "flags", "rawBytes"],
+      "properties": {
+        "frameStart": { "const": 32 }, "payloadStart": { "$ref": "#/$defs/offset" }, "payloadEnd": { "$ref": "#/$defs/offset" }, "frameEnd": { "$ref": "#/$defs/offset" },
+        "kind": { "type": "integer", "minimum": 0, "maximum": 255 }, "flags": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "rawBytes": { "type": ["integer", "null"], "minimum": 0, "maximum": 1048576 }
+      }
+    },
+    "case": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "kind", "flags", "rawHex", "payloadHex", "repeat", "at", "cancel", "corruptCrc", "error", "observation"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]+$" },
+        "kind": { "type": "integer", "minimum": 0, "maximum": 255 }, "flags": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "rawHex": { "type": "string", "pattern": "^(?:[a-f0-9]{2})*$", "maxLength": 20 },
+        "payloadHex": { "type": "string", "pattern": "^(?:[a-f0-9]{2})*$", "maxLength": 128 },
+        "repeat": { "type": "integer", "minimum": 0, "maximum": 128 },
+        "at": { "$ref": "#/$defs/offset" }, "cancel": { "type": "boolean" }, "corruptCrc": { "type": "boolean" },
+        "error": { "enum": [null, "frame", "cancelled"] }, "observation": { "$ref": "#/$defs/observation" }
+      }
+    }
+  }
+}

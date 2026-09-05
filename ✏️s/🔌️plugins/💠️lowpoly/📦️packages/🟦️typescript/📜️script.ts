@@ -61,7 +61,7 @@ const reject = (condition: boolean, message: string): void => {
 class TestScript extends BundleScript {
   run(): void {
     const root = resolve(import.meta.dir, "../..");
-    const schema = JSON.parse(readFileSync(resolve(root, "🧪️interactive-job/🔣️.schema.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(resolve(root, "🧪️interactive-job/🧬️.schema.json"), "utf8"));
     const fixture = JSON.parse(readFileSync(resolve(root, "🧪️interactive-job/🔣️.json"), "utf8")) as Fixture;
     const source = readFileSync(resolve(root, "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), "utf8");
     const schemaSource = readFileSync(resolve(root, "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"), "utf8");

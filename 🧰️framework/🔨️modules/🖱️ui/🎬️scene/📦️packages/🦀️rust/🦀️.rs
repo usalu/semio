@@ -17,17 +17,17 @@
 //! 3. **Sync by decree (ruling E6).** Frame construction and payload encoding are plain `fn` here,
 //!    same as `ui_contract`/`ui_runtime`/`ui_render` — async lives only at the outer boundaries.
 
-#[path = "🦀️math.rs"]
+#[path = "📐️math.rs"]
 pub mod math;
-#[path = "🦀️pack.rs"]
+#[path = "📦️pack.rs"]
 pub mod pack;
-#[path = "🦀️scenes.rs"]
+#[path = "🎬️scenes.rs"]
 mod scenes;
-#[path = "🦀️canvas2d_snapshot.rs"]
+#[path = "🖼️canvas2d_snapshot.rs"]
 mod canvas2d_snapshot;
-#[path = "🦀️surface.rs"]
+#[path = "🌉️surface.rs"]
 mod surface;
-#[path = "🦀️world3d_snapshot.rs"]
+#[path = "🌍️world3d_snapshot.rs"]
 mod world3d_snapshot;
 
 pub use scenes::*;

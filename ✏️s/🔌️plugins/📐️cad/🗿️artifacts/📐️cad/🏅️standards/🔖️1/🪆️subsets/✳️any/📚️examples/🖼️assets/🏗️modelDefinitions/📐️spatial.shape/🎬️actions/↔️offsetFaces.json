@@ -1,0 +1,20 @@
+{
+  "schema": "spatial.action",
+  "id": "feature.offsetFaces",
+  "version": "1.0.0",
+  "label": "OffsetFaces",
+  "steps": [
+    {
+      "operation": "kernel.call",
+      "function": "spatial.action.capability",
+      "assignTo": "result"
+    },
+    {
+      "operation": "return",
+      "result": {
+        "kind": "var",
+        "name": "result"
+      }
+    }
+  ]
+}

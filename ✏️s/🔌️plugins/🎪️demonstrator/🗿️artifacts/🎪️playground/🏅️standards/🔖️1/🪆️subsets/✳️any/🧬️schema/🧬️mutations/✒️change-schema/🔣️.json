@@ -5,7 +5,7 @@
   "displayName": "Change Schema",
   "emoji": "✒️",
   "aggregateVariant": "ChangeSchema",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-schema",
   "binaryTag": 0,
   "invertibility": "self",

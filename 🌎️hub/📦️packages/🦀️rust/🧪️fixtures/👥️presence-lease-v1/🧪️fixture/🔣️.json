@@ -1,0 +1,94 @@
+{
+  "schema": "semio.hub.presence-lease/v1",
+  "limits": { "ttlMs": 15000, "maximumItems": 64, "maximumEntryBytes": 4096, "maximumBytes": 262144 },
+  "vectors": [
+    {
+      "name": "exact-deadline-expiry-keeps-socket-live",
+      "operations": [
+        { "kind": "install", "scope": "space-a/document-a", "actor": "actor-z", "liveId": "live-a", "nowMs": 0 },
+        { "kind": "refresh", "scope": "space-a/document-a", "actor": "actor-z", "liveId": "live-a", "nowMs": 0, "peerTag": "opaque-z", "peerBytes": 8 },
+        { "kind": "tick", "scope": "space-a/document-a", "actor": "actor-z", "liveId": "live-a", "nowMs": 14999 },
+        { "kind": "tick", "scope": "space-a/document-a", "actor": "actor-z", "liveId": "live-a", "nowMs": 15000 }
+      ],
+      "expected": { "outcomes": ["no-change", "published", "no-change", "published"], "fanoutCount": 2, "final": [{ "scope": "space-a/document-a", "count": 0, "bytes": 0, "actors": [] }], "socketStillLive": true, "durableWrites": 0, "directoryRecipients": ["member"] }
+    },
+    {
+      "name": "equal-heartbeat-refreshes-deadline-without-fanout",
+      "operations": [
+        { "kind": "install", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-a", "nowMs": 0 },
+        { "kind": "refresh", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-a", "nowMs": 0, "peerTag": "same", "peerBytes": 4 },
+        { "kind": "refresh", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-a", "nowMs": 5000, "peerTag": "same", "peerBytes": 4 },
+        { "kind": "tick", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-a", "nowMs": 19999 },
+        { "kind": "tick", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-a", "nowMs": 20000 }
+      ],
+      "expected": { "outcomes": ["no-change", "published", "no-change", "no-change", "published"], "fanoutCount": 2, "final": [{ "scope": "space-a/document-a", "count": 0, "bytes": 0, "actors": [] }], "socketStillLive": true, "durableWrites": 0, "directoryRecipients": ["member"] }
+    },
+    {
+      "name": "reconnect-replaces-and-stale-live-is-immune",
+      "operations": [
+        { "kind": "install", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-a", "nowMs": 0 },
+        { "kind": "refresh", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-a", "nowMs": 0, "peerTag": "a", "peerBytes": 1 },
+        { "kind": "install", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-b", "nowMs": 1 },
+        { "kind": "refresh", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-a", "nowMs": 2, "peerTag": "stale", "peerBytes": 5 },
+        { "kind": "tick", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-a", "nowMs": 20000 },
+        { "kind": "close", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-a", "nowMs": 20001 },
+        { "kind": "refresh", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-b", "nowMs": 20002, "peerTag": "b", "peerBytes": 1 }
+      ],
+      "expected": { "outcomes": ["no-change", "published", "published", "no-change", "no-change", "no-change", "published"], "fanoutCount": 3, "final": [{ "scope": "space-a/document-a", "count": 1, "bytes": 1, "actors": ["actor-a"] }], "socketStillLive": true, "durableWrites": 0, "directoryRecipients": ["member"] }
+    },
+    {
+      "name": "current-live-expires-revives-and-closes",
+      "operations": [
+        { "kind": "install", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-b", "nowMs": 0 },
+        { "kind": "refresh", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-b", "nowMs": 0, "peerTag": "b", "peerBytes": 1 },
+        { "kind": "tick", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-b", "nowMs": 15000 },
+        { "kind": "refresh", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-a", "nowMs": 15001, "peerTag": "stale", "peerBytes": 5 },
+        { "kind": "refresh", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-b", "nowMs": 15002, "peerTag": "b2", "peerBytes": 2 },
+        { "kind": "close", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-b", "nowMs": 15003 }
+      ],
+      "expected": { "outcomes": ["no-change", "published", "published", "no-change", "published", "published"], "fanoutCount": 4, "final": [{ "scope": "space-a/document-a", "count": 0, "bytes": 0, "actors": [] }], "socketStillLive": false, "durableWrites": 0, "directoryRecipients": ["member"] }
+    },
+    {
+      "name": "same-actor-is-independent-across-document-scopes",
+      "operations": [
+        { "kind": "install", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-a", "nowMs": 0 },
+        { "kind": "install", "scope": "space-b/document-a", "actor": "actor-a", "liveId": "live-b", "nowMs": 0 },
+        { "kind": "refresh", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-a", "nowMs": 0, "peerTag": "one", "peerBytes": 3 },
+        { "kind": "refresh", "scope": "space-b/document-a", "actor": "actor-a", "liveId": "live-b", "nowMs": 0, "peerTag": "two-two", "peerBytes": 7 },
+        { "kind": "close", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-a", "nowMs": 1 }
+      ],
+      "expected": { "outcomes": ["no-change", "no-change", "published", "published", "published"], "fanoutCount": 3, "final": [{ "scope": "space-a/document-a", "count": 0, "bytes": 0, "actors": [] }, { "scope": "space-b/document-a", "count": 1, "bytes": 7, "actors": ["actor-a"] }], "socketStillLive": true, "durableWrites": 0, "directoryRecipients": ["member"] }
+    },
+    {
+      "name": "shared-roster-item-and-entry-bounds-reject-before-refresh",
+      "operations": [
+        { "kind": "fill", "scope": "space-a/document-a", "count": 64, "peerBytes": 4096, "nowMs": 0 },
+        { "kind": "install", "scope": "space-a/document-a", "actor": "actor-z", "liveId": "live-z", "nowMs": 1 },
+        { "kind": "refresh", "scope": "space-a/document-a", "actor": "actor-z", "liveId": "live-z", "nowMs": 2, "peerTag": "valid", "peerBytes": 1 },
+        { "kind": "refresh", "scope": "space-a/document-a", "actor": "actor-z", "liveId": "live-z", "nowMs": 3, "peerTag": "oversized", "peerBytes": 4097 },
+        { "kind": "close", "scope": "space-a/document-a", "actor": "actor-000", "liveId": "fill-000", "nowMs": 4 },
+        { "kind": "refresh", "scope": "space-a/document-a", "actor": "actor-z", "liveId": "live-z", "nowMs": 5, "peerTag": "valid", "peerBytes": 1 }
+      ],
+      "expected": { "outcomes": ["no-change", "no-change", "rejected", "rejected", "published", "published"], "fanoutCount": 2, "final": [{ "scope": "space-a/document-a", "count": 64, "bytes": 258049, "actors": [] }], "socketStillLive": true, "durableWrites": 0, "directoryRecipients": ["member"] }
+    },
+    {
+      "name": "roster-order-is-server-actor-order-not-peer-content",
+      "operations": [
+        { "kind": "install", "scope": "space-a/document-a", "actor": "actor-z", "liveId": "live-z", "nowMs": 0 },
+        { "kind": "install", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-a", "nowMs": 0 },
+        { "kind": "refresh", "scope": "space-a/document-a", "actor": "actor-z", "liveId": "live-z", "nowMs": 0, "peerTag": "aaa-opaque", "peerBytes": 10 },
+        { "kind": "refresh", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-a", "nowMs": 0, "peerTag": "zzz-opaque", "peerBytes": 10 }
+      ],
+      "expected": { "outcomes": ["no-change", "no-change", "published", "published"], "fanoutCount": 2, "final": [{ "scope": "space-a/document-a", "count": 2, "bytes": 20, "actors": ["actor-a", "actor-z"] }], "socketStillLive": true, "durableWrites": 0, "directoryRecipients": ["member"] }
+    },
+    {
+      "name": "restart-is-empty-and-outsider-has-no-directory-presence",
+      "operations": [
+        { "kind": "install", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-a", "nowMs": 0 },
+        { "kind": "refresh", "scope": "space-a/document-a", "actor": "actor-a", "liveId": "live-a", "nowMs": 0, "peerTag": "opaque", "peerBytes": 6 },
+        { "kind": "restart" }
+      ],
+      "expected": { "outcomes": ["no-change", "published", "restarted"], "fanoutCount": 1, "final": [{ "scope": "space-a/document-a", "count": 0, "bytes": 0, "actors": [] }], "socketStillLive": false, "durableWrites": 0, "directoryRecipients": [] }
+    }
+  ]
+}

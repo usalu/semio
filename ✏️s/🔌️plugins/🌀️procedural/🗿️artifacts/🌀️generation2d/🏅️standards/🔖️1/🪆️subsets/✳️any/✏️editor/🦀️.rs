@@ -816,20 +816,20 @@ pub(crate) mod testkit {
 
     pub type Generation2dApp = VcsArtifactApp<EditorApp<Generation2dPlayApp>>;
 
-    pub fn app() -> Generation2dApp {
-        new_app::<EditorApp<Generation2dPlayApp>>()
+    pub async fn app() -> Generation2dApp {
+        new_app::<EditorApp<Generation2dPlayApp>>().await
     }
 
-    pub fn app_with_registry() -> Generation2dApp {
-        new_app_with_registry::<EditorApp<Generation2dPlayApp>>(generation2d_manifest_for_testkit)
+    pub async fn app_with_registry() -> Generation2dApp {
+        new_app_with_registry::<EditorApp<Generation2dPlayApp>>(generation2d_manifest_for_testkit).await
     }
 
-    pub fn dispatch(app: &mut Generation2dApp, command: Generation2dCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+    pub async fn dispatch(app: &mut Generation2dApp, command: Generation2dCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
     }
 
-    pub fn render(app: &mut Generation2dApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+    pub async fn render(app: &mut Generation2dApp, body_key: &str) -> String {
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
     }
 
     /// ✏️ Adapts `create_generation2d_app`'s `AppDefinition` (contract §2.4) into the `App {
@@ -1151,29 +1151,29 @@ mod tests {
     //#endregion 🔖️ManifestSanity
 
     //#region 🔖️CrossCutting
-    #[test]
-    fn declared_actions_bridge_to_commands() {
-        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<Generation2dPlayApp>>(crate::editor::generation2d::testkit::generation2d_manifest_for_testkit);
+    #[semio_framework_async_macros::async_test]
+    async fn declared_actions_bridge_to_commands() {
+        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<Generation2dPlayApp>>(crate::editor::generation2d::testkit::generation2d_manifest_for_testkit).await;
     }
 
-    #[test]
-    fn add_widget_materializes_declared_kind_default_into_an_operation() {
-        let mut app = app_with_registry();
+    #[semio_framework_async_macros::async_test]
+    async fn add_widget_materializes_declared_kind_default_into_an_operation() {
+        let mut app = app_with_registry().await;
         let before = app.snapshot().expect("snapshot").fixture.widgets.len();
-        app.dispatch_typed(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None }), &semio_framework_plugin::testkit::meta("local")).expect("add widget");
+        app.dispatch_typed(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None }), &semio_framework_plugin::testkit::meta("local")).await.expect("add widget");
         assert_eq!(app.snapshot().expect("snapshot").fixture.widgets.len(), before + 1);
     }
 
-    #[test]
-    fn add_widget_undo_redo_round_trip() {
-        let mut app = app();
+    #[semio_framework_async_macros::async_test]
+    async fn add_widget_undo_redo_round_trip() {
+        let mut app = app().await;
         let before = app.snapshot().expect("snapshot").fixture.widgets.len();
-        assert_undo_redo_round_trip(&mut app, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: None, y: None }), |app| app.snapshot().expect("snapshot").fixture.widgets.len(), before, before + 1);
+        assert_undo_redo_round_trip(&mut app, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: None, y: None }), |app| app.snapshot().expect("snapshot").fixture.widgets.len(), before, before + 1).await;
     }
 
-    #[test]
-    fn two_instances_converge_disjoint_widget_moves() {
-        let widgets: Vec<String> = app().snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::artifacts::generation2d::widget_id(widget).to_string()).collect();
+    #[semio_framework_async_macros::async_test]
+    async fn two_instances_converge_disjoint_widget_moves() {
+        let widgets: Vec<String> = app().await.snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::artifacts::generation2d::widget_id(widget).to_string()).collect();
         assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
         let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
         semio_framework_plugin::testkit::assert_two_instances_converge::<semio_framework_plugin::EditorApp<Generation2dPlayApp>, (Option<f64>, Option<f64>)>(
@@ -1184,14 +1184,15 @@ mod tests {
                 let layout = &app.snapshot().expect("snapshot").fixture.layout;
                 (layout.get(&w0).map(|entry| entry.x), layout.get(&w1).map(|entry| entry.x))
             },
-        );
+        )
+        .await;
     }
 
-    #[test]
-    fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
+    #[semio_framework_async_macros::async_test]
+    async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::generation2d::testkit::render;
-        let mut app = app();
-        assert!(render(&mut app, "generation2d.play.nope").contains("Unknown body"));
+        let mut app = app().await;
+        assert!(render(&mut app, "generation2d.play.nope").await.contains("Unknown body"));
     }
     //#endregion 🔖️CrossCutting
 
@@ -1202,36 +1203,36 @@ mod tests {
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM, same discovered gap as `render`), so the
     /// destructive `delete-selection` row — conditioned on a real selection — never appears; this test
     /// now only pins the disclosure budget.
-    #[test]
-    fn context_menu_stays_within_disclosure_budget() {
-        let mut app = app_with_registry();
+    #[semio_framework_async_macros::async_test]
+    async fn context_menu_stays_within_disclosure_budget() {
+        let mut app = app_with_registry().await;
         let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
-        let items = app.context_menu(&request);
+        let items = app.context_menu(&request).await;
         assert!(items.len() <= 9, "top-level menu rows (leaves + groups + separator) must stay within disclosure budget, got {}", items.len());
         assert!(items.iter().all(|item| item.id != "delete-selection"), "no interaction data at context_menu time means delete-selection cannot appear");
     }
     //#endregion 🔖️ContextMenuTests
 
     //#region 🔖️PortTests
-    #[test]
-    fn export_drawing_out_returns_vector_media() {
-        let mut app = app();
+    #[semio_framework_async_macros::async_test]
+    async fn export_drawing_out_returns_vector_media() {
+        let mut app = app().await;
         let media = semio_framework_plugin::resolve_ready(app.export_media("drawing:out")).expect("export drawing:out");
         assert_eq!(media.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Vector });
     }
 
-    #[test]
-    fn export_document_out_returns_flow_media() {
-        let mut app = app();
+    #[semio_framework_async_macros::async_test]
+    async fn export_document_out_returns_flow_media() {
+        let mut app = app().await;
         let media = semio_framework_plugin::resolve_ready(app.export_media("document:out")).expect("export document:out");
         assert_eq!(media.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Flow });
         assert!(matches!(media.payload, semio_framework_plugin::MediaPayload::Structured { schema, .. } if schema == GENERATION_2D_SCHEMA));
     }
 
-    #[test]
-    fn import_params_in_patches_matching_input_slider() {
-        let mut app = app();
-        app.dispatch_typed(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None }), &semio_framework_plugin::testkit::meta("local")).expect("add slider");
+    #[semio_framework_async_macros::async_test]
+    async fn import_params_in_patches_matching_input_slider() {
+        let mut app = app().await;
+        app.dispatch_typed(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None }), &semio_framework_plugin::testkit::meta("local")).await.expect("add slider");
         let slider_id = app
             .snapshot()
             .expect("snapshot")
@@ -1247,7 +1248,7 @@ mod tests {
             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
             payload: semio_framework_plugin::MediaPayload::Structured { schema: "params".into(), json: serde_json::json!({ slider_id.clone(): 42.0 }).to_string() },
         };
-        app.import_media("params:in", &media, &semio_framework_plugin::testkit::meta("local")).expect("import params");
+        app.import_media("params:in", &media, &semio_framework_plugin::testkit::meta("local")).await.expect("import params");
         let value = app.snapshot().expect("snapshot").fixture.widgets.iter().find_map(|widget| match widget {
             Widget::InputSlider { id, value, .. } if id == &slider_id => Some(*value),
             _ => None,

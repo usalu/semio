@@ -63,7 +63,7 @@ fn role_name(role: AppRole) -> &'static str {
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/unpins-the-cad-editor-and-keeps-the-viewer-pin/🦀️.rs"]
+#[path = "🧪️tests/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🦀️.rs"]
 mod tests_unpins_the_cad_editor_and_keeps_the_viewer_pin;
 
 #[cfg(test)]

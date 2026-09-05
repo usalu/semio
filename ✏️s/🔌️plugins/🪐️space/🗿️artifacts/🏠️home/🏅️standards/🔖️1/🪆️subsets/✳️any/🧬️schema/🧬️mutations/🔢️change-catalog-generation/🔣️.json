@@ -5,7 +5,7 @@
   "displayName": "Change Catalog Generation",
   "emoji": "🔢️",
   "aggregateVariant": "ChangeCatalogGeneration",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-catalog-generation",
   "binaryTag": 0,
   "invertibility": "explicit-mutation",

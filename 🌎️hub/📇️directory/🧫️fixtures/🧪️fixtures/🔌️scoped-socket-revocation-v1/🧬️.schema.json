@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.hub.directory-scoped-socket-revocation/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "limits", "scope", "vectors", "clientCloses"],
+  "properties": {
+    "schema": { "const": "semio.hub.directory-scoped-socket-revocation/v1" },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identifierBytes", "grantRequestBytes", "authorizationDeadlineMs"],
+      "properties": {
+        "identifierBytes": { "const": 4096 },
+        "grantRequestBytes": { "const": 256 },
+        "authorizationDeadlineMs": { "const": 2000 }
+      }
+    },
+    "scope": { "$ref": "#/$defs/scope" },
+    "vectors": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 32,
+      "items": { "$ref": "#/$defs/vector" }
+    },
+    "clientCloses": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "terminal", "reconnect"],
+        "properties": {
+          "code": { "type": ["integer", "null"] },
+          "terminal": { "type": "boolean" },
+          "reconnect": { "type": "boolean" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._:-]+$" },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spaceId", "documentId"],
+      "properties": {
+        "spaceId": { "$ref": "#/$defs/identifier" },
+        "documentId": { "$ref": "#/$defs/identifier" }
+      }
+    },
+    "vector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "grantScope", "urlScope", "binding", "descriptor", "live", "message", "gateWinner", "expected", "closeCode", "cursorAdvance", "textFrames"],
+      "properties": {
+        "name": { "$ref": "#/$defs/identifier" },
+        "grantScope": { "$ref": "#/$defs/scope" },
+        "urlScope": { "$ref": "#/$defs/scope" },
+        "binding": { "enum": ["active", "unauthorized", "unavailable"] },
+        "descriptor": { "type": "boolean" },
+        "live": { "type": "boolean" },
+        "message": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["class", "scope"],
+          "properties": {
+            "class": { "enum": ["document-announced", "checkpoint", "retention", "rebootstrap", "member-removed", "heartbeat", "presence", "connection", "user-created", "unknown"] },
+            "scope": { "anyOf": [{ "$ref": "#/$defs/scope" }, { "type": "null" }] }
+          }
+        },
+        "gateWinner": { "enum": ["send", "removal", "neither"] },
+        "expected": { "enum": ["deliver", "skip-unrelated", "close-unauthorized", "close-unavailable", "deny-before-upgrade"] },
+        "closeCode": { "type": ["integer", "null"] },
+        "cursorAdvance": { "type": "boolean" },
+        "textFrames": { "type": "integer", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}

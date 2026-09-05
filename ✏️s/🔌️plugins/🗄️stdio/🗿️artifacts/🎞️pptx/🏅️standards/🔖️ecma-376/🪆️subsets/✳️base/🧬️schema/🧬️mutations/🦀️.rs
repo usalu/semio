@@ -23,7 +23,7 @@ use protocol::{Mutation, OpText};
 /// `SvgMutation::InsertElement`'s `node: XmlNode` blocker). `OpText`/`OpBinary` hand-rolled below,
 /// reusing `PptxDiff`'s `pub(crate)` grammar primitives.
 //#region 🔖️Leaves
-#[path = "📄set-snapshot/🦀️.rs"]
+#[path = "🟤️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "➕insert-slide/🦀️.rs"]
 pub mod insert_slide;
@@ -48,7 +48,7 @@ pub mod set_shape_position;
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum PptxMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
-    /// ➕️ Inserts `slide` at `index` (FINAL state).
+    /// ➕️ Inserts `🎞️slide` at `index` (FINAL state).
     InsertSlide(insert_slide::InsertSlide),
     /// ➖️ Removes the slide at `index` (BASE-state index).
     RemoveSlide(remove_slide::RemoveSlide),
@@ -888,7 +888,7 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/retitles-and-lowers-the-title-placeholder/🦀️.rs"]
+    #[path = "🟤️set-snapshot/🧪️tests/🛟️retitles-and-lowers-the-title-placeholder/🦀️.rs"]
     mod tests_set_snapshot_retitles_and_lowers_the_title_placeholder;
 }
 //#endregion 🧪️FixtureTests

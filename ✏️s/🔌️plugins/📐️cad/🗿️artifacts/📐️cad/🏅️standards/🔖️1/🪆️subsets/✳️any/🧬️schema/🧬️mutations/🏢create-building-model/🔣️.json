@@ -5,7 +5,7 @@
   "displayName": "Create Building Model",
   "emoji": "🏢",
   "aggregateVariant": "CreateBuildingModel",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "create-building-model",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

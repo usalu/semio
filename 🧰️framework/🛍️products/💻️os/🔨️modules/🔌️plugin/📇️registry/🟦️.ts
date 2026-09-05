@@ -1,14 +1,14 @@
 // #region 🗂️PluginCatalog
 /** @emoji 🗂️ `@semio-tech/framework-os` plugin package — builds the framework kernel's injected
  * `PluginCatalog` from this product's generated plugin/playground registry output
- * (`📇️registry/🤖️generated/🟦️plugins.ts` + `🤖️generated/🟦️playgrounds.ts`). This is the ONE place in
+ * (`📇️registry/🤖️generated/🧩️plugins.ts` + `🤖️generated/🎮️playgrounds.ts`). This is the ONE place in
  * the codebase allowed to import that generated output on the kernel's behalf — the generic
  * `🧰️framework/🔨️modules/🎠️kernel/🟦️.ts` module must never import a specific product's build
  * artifacts directly; every caller of its `PluginCatalog`-taking resolvers imports `PLUGIN_CATALOG`
  * (or calls `buildPluginCatalog()`) from here instead. */
 import type { PlaygroundCatalogTarget, PluginCatalog, PluginCatalogTarget } from "@semio-tech/framework";
-import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS, extensionModuleUrl, pluginModuleUrl } from "./🤖️generated/🟦️plugins.ts";
-import { PLAYGROUND_BUILD_TARGETS } from "./🤖️generated/🟦️playgrounds.ts";
+import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS, extensionModuleUrl, pluginModuleUrl } from "./🤖️generated/🧩️plugins.ts";
+import { PLAYGROUND_BUILD_TARGETS } from "./🤖️generated/🎮️playgrounds.ts";
 
 function toCatalogTarget(target: {
   readonly pluginId: string;

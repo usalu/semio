@@ -1,0 +1,9 @@
+dialect grammar
+grammar en1998.snapshot
+extension en1998
+start document
+
+document = header body
+header = "schema" SP "norm.en1998.snapshot" NL
+body = payload NL?
+payload = OCTET+

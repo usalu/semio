@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplaceSection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newSection"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newSection": {
+      "title": "FemSection",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "area",
+        "id",
+        "iy",
+        "iz",
+        "j",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "area": {
+          "type": "number"
+        },
+        "iy": {
+          "type": "number"
+        },
+        "iz": {
+          "type": "number"
+        },
+        "j": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

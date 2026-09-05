@@ -16,7 +16,7 @@ path = "🦀️.rs"
 
 [[bin]]
 name = "os-hub"
-path = "📦️bin.rs"
+path = "🚀️bin.rs"
 
 [features]
 default = ["sqlite"]
@@ -35,16 +35,19 @@ serde_json.workspace = true
 tokio = { workspace = true, features = ["full"] }
 futures = "0.3"
 semio-framework-async = { workspace = true }
-semio-framework-hash = { path = "../../../🧰️framework/🔨️modules/🔢️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-s-plugin-stdio = { path = "../../../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-gis = { path = "../../../✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust", default-features = false }
 semio-framework-plugin-host = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../🧰️framework/📦️packages/🦀️rust" }
+semio-framework-plugin.workspace = true
 protocol = { path = "../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 # 📇️ `os_directory` is hub domain vocabulary still mounted in the os kernel; Wave 3 relocates it here.
 directory = { path = "../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 db = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db" }
 
 # 🔌️ Directory backend drivers — optional, enabled only by this crate's same-named feature (see
-# `[features]` above and `connect_db`/`connect_directory` in `📦️bin.rs`).
+# `[features]` above and `connect_db`/`connect_directory` in `🚀️bin.rs`).
 rusqlite = { version = "0.38.0", features = ["bundled"], optional = true }
 sqlx_core = { package = "sqlx-core", version = "0.8", features = ["_rt-tokio", "_tls-rustls-ring-webpki", "json"], optional = true }
 sqlx_postgres = { package = "sqlx-postgres", version = "0.8", features = ["uuid", "json"], optional = true }

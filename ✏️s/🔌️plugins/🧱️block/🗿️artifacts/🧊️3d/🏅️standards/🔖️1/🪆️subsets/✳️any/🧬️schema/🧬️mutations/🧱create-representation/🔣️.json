@@ -5,7 +5,7 @@
   "displayName": "Create Representation",
   "emoji": "🧱",
   "aggregateVariant": "CreateRepresentation",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "create-representation",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,5 +1,0 @@
-{
-  "mutation": "replaceLayerStroke",
-  "layerId": "shape-a",
-  "stroke": { "color": [0.0, 0.0, 0.0, 1.0], "width": 2.0, "cap": "round", "join": "bevel", "dash": [4.0, 2.0] }
-}

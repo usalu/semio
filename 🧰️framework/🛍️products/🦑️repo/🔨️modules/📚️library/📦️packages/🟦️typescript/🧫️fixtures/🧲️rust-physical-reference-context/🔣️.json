@@ -1,0 +1,1078 @@
+{
+  "schemaVersion": 1,
+  "contract": "rust-physical-reference-context-v1",
+  "joinArguments": {
+    "contract": "rust-standard-string-collection-join-v1",
+    "ownership": "source-local-standard-vec-with-string-elements-and-no-shadow-or-escape",
+    "retention": {
+      "parentSegments": [
+        "📓️rust-join-provenance",
+        "🧪️runs"
+      ],
+      "disposition": "retain-all-until-reviewed"
+    },
+    "cases": [
+      {"id":"same-file-parent-glob","source":"mod tests { use super::*; fn check() { let mut failures = Vec::new(); failures.push(format!(\"a\")); failures.join(\"\\n\"); } }","expected":[],"allArguments":["\\n"]},
+      {"id":"external-parent-glob","source":"use super::*; fn check() { let mut failures = Vec::new(); failures.push(format!(\"a\")); failures.join(\"payload.rs\"); }","expected":["payload.rs"],"allArguments":["payload.rs"]},
+      {"id":"same-file-parent-custom-vec","source":"struct Vec; mod tests { use super::*; fn check() { let mut failures = Vec::new(); failures.push(format!(\"a\")); failures.join(\"payload.rs\"); } }","expected":["payload.rs"],"allArguments":["payload.rs"]},
+      {
+        "id": "mutable-format-branch",
+        "source": "fn check() -> String { let mut failures = Vec::new(); for value in [\"a\", \"b\"] { if !value.is_empty() { failures.push(format!(\"{}\", value)); } } assert!(!failures.is_empty()); failures.join(\"\\n\") }",
+        "expected": [],
+        "allArguments": [
+          "\\n"
+        ],
+        "compiler": "fn main() { let result: String = check(); assert_eq!(result, \"a\\nb\"); println!(\"delimiter\"); }",
+        "compilerOutput": "delimiter"
+      },
+      {
+        "id": "path-looking-delimiter",
+        "source": "fn check() -> String { let mut values = Vec::new(); values.push(\"a\"); values.push(\"b\"); values.join(\"payload.rs\") }",
+        "expected": [],
+        "allArguments": [
+          "payload.rs"
+        ],
+        "compiler": "fn main() { let result: String = check(); assert_eq!(result, \"apayload.rsb\"); println!(\"delimiter\"); }",
+        "compilerOutput": "delimiter"
+      },
+      {
+        "id": "qualified-standard",
+        "source": "fn check() -> String { let mut values = ::std::vec::Vec::new(); values.push(::std::format!(\"a\")); values.join(\"\\n\") }",
+        "expected": [],
+        "allArguments": [
+          "\\n"
+        ],
+        "compiler": "fn main() { let result: String = check(); assert_eq!(result, \"a\"); println!(\"delimiter\"); }",
+        "compilerOutput": "delimiter"
+      },
+      {
+        "id": "typed-empty",
+        "source": "fn check() -> String { let values: Vec<String> = Vec::new(); values.join(\"\\n\") }",
+        "expected": [],
+        "allArguments": [
+          "\\n"
+        ],
+        "compiler": "fn main() { let result: String = check(); assert_eq!(result, \"\"); println!(\"delimiter\"); }",
+        "compilerOutput": "delimiter"
+      },
+      {
+        "id": "nested-shadow",
+        "source": "fn check() { let mut values = Vec::new(); values.push(\"a\"); { let values = other(); values.join(\"payload.rs\"); } values.join(\"\\n\"); }",
+        "expected": [
+          "payload.rs"
+        ],
+        "allArguments": [
+          "payload.rs",
+          "\\n"
+        ]
+      },
+      {
+        "id": "closure-shadow",
+        "source": "fn check() { let mut values = Vec::new(); values.push(\"a\"); let callback = |values| values.join(\"payload.rs\"); values.join(\"\\n\"); }",
+        "expected": [
+          "payload.rs"
+        ],
+        "allArguments": [
+          "payload.rs",
+          "\\n"
+        ]
+      },
+      {
+        "id": "if-let-shadow",
+        "source": "fn check() { let mut values = Vec::new(); values.push(\"a\"); if let Some(values) = other() { values.join(\"payload.rs\"); } values.join(\"\\n\"); }",
+        "expected": [
+          "payload.rs"
+        ],
+        "allArguments": [
+          "payload.rs",
+          "\\n"
+        ]
+      },
+      {
+        "id": "match-shadow",
+        "source": "fn check() { let mut values = Vec::new(); values.push(\"a\"); match other() { Some(values) => { values.join(\"payload.rs\"); }, None => {} } values.join(\"\\n\"); }",
+        "expected": [
+          "payload.rs"
+        ],
+        "allArguments": [
+          "payload.rs",
+          "\\n"
+        ]
+      },
+      {
+        "id": "for-shadow",
+        "source": "fn check() { let mut values = Vec::new(); values.push(\"a\"); for values in paths() { values.join(\"payload.rs\"); } values.join(\"\\n\"); }",
+        "expected": [
+          "payload.rs"
+        ],
+        "allArguments": [
+          "payload.rs",
+          "\\n"
+        ]
+      },
+      {
+        "id": "destructured-shadow",
+        "source": "fn check() { let mut values = Vec::new(); values.push(\"a\"); let (values, _) = other(); values.join(\"payload.rs\"); }",
+        "expected": [
+          "payload.rs"
+        ],
+        "allArguments": [
+          "payload.rs"
+        ]
+      },
+      {
+        "id": "reassigned-receiver",
+        "source": "fn check() { let mut values = Vec::new(); values.push(\"a\"); values = other(); values.join(\"payload.rs\"); }",
+        "expected": [
+          "payload.rs"
+        ],
+        "allArguments": [
+          "payload.rs"
+        ]
+      },
+      {
+        "id": "escaped-receiver",
+        "source": "fn check() { let mut values = Vec::new(); values.push(\"a\"); replace(&mut values); values.join(\"payload.rs\"); }",
+        "expected": [
+          "payload.rs"
+        ],
+        "allArguments": [
+          "payload.rs"
+        ]
+      },
+      {
+        "id": "unknown-mutation",
+        "source": "fn check() { let mut values = Vec::new(); values.push(\"a\"); values.replace_from(other()); values.join(\"payload.rs\"); }",
+        "expected": [
+          "payload.rs"
+        ],
+        "allArguments": [
+          "payload.rs"
+        ]
+      },
+      {
+        "id": "unknown-pushed-type",
+        "source": "fn check() { let mut values = Vec::new(); values.push(other()); values.join(\"payload.rs\"); }",
+        "expected": [
+          "payload.rs"
+        ],
+        "allArguments": [
+          "payload.rs"
+        ]
+      },
+      {
+        "id": "untyped-empty",
+        "source": "fn check() { let values = Vec::new(); values.join(\"payload.rs\"); }",
+        "expected": [
+          "payload.rs"
+        ],
+        "allArguments": [
+          "payload.rs"
+        ]
+      },
+      {
+        "id": "custom-vec",
+        "source": "struct Vec; impl Vec { fn new() -> Self { Self } fn push(&mut self, _: String) {} fn join(&self, value: &str) -> std::path::PathBuf { std::path::PathBuf::from(value) } } fn check() -> std::path::PathBuf { let mut values = Vec::new(); values.push(format!(\"a\")); values.join(\"payload.rs\") }",
+        "expected": [
+          "payload.rs"
+        ],
+        "allArguments": [
+          "payload.rs"
+        ],
+        "compiler": "fn main() { let result: std::path::PathBuf = check(); assert_eq!(result, std::path::PathBuf::from(\"payload.rs\")); println!(\"path\"); }",
+        "compilerOutput": "path"
+      },
+      {
+        "id": "imported-vec",
+        "source": "use custom::Vec; fn check() { let mut values = Vec::new(); values.push(format!(\"a\")); values.join(\"payload.rs\"); }",
+        "expected": [
+          "payload.rs"
+        ],
+        "allArguments": [
+          "payload.rs"
+        ]
+      },
+      {
+        "id": "aliased-vec",
+        "source": "use custom::PathList as Vec; fn check() { let mut values = Vec::new(); values.push(format!(\"a\")); values.join(\"payload.rs\"); }",
+        "expected": [
+          "payload.rs"
+        ],
+        "allArguments": [
+          "payload.rs"
+        ]
+      },
+      {
+        "id": "generic-vec",
+        "source": "fn check<Vec>() { let mut values = Vec::new(); values.push(format!(\"a\")); values.join(\"payload.rs\"); }",
+        "expected": [
+          "payload.rs"
+        ],
+        "allArguments": [
+          "payload.rs"
+        ]
+      },
+      {
+        "id": "shadowed-std",
+        "source": "mod std {} fn check() { let mut values = std::vec::Vec::new(); values.push(format!(\"a\")); values.join(\"payload.rs\"); }",
+        "expected": [
+          "payload.rs"
+        ],
+        "allArguments": [
+          "payload.rs"
+        ]
+      },
+      {
+        "id": "custom-format",
+        "source": "macro_rules! format { ($($x:tt)*) => { other() }; } fn check() { let mut values = Vec::new(); values.push(format!(\"a\")); values.join(\"payload.rs\"); }",
+        "expected": [
+          "payload.rs"
+        ],
+        "allArguments": [
+          "payload.rs"
+        ]
+      },
+      {
+        "id": "wildcard-import",
+        "source": "use custom::*; fn check() { let mut values = Vec::new(); values.push(format!(\"a\")); values.join(\"payload.rs\"); }",
+        "expected": [
+          "payload.rs"
+        ],
+        "allArguments": [
+          "payload.rs"
+        ]
+      },
+      {
+        "id": "custom-join-trait",
+        "source": "trait CustomJoin { fn join(&self, value: &str) -> std::path::PathBuf; } fn check() { let mut values = Vec::new(); values.push(\"a\"); values.join(\"payload.rs\"); }",
+        "expected": [
+          "payload.rs"
+        ],
+        "allArguments": [
+          "payload.rs"
+        ]
+      },
+      {
+        "id": "unknown-newline-receiver",
+        "source": "fn check() { let values = other(); values.join(\"\\n\"); }",
+        "expected": [
+          "\\n"
+        ],
+        "allArguments": [
+          "\\n"
+        ]
+      },
+      {
+        "id": "path-and-delimiter",
+        "source": "fn check() -> std::path::PathBuf { let mut values = Vec::new(); values.push(\"a\"); let _ = values.join(\"\\n\"); std::path::Path::new(\"base\").join(\"payload.rs\") }",
+        "expected": [
+          "payload.rs"
+        ],
+        "allArguments": [
+          "\\n",
+          "payload.rs"
+        ],
+        "compiler": "fn main() { let result: std::path::PathBuf = check(); assert_eq!(result, std::path::PathBuf::from(\"base\").join(\"payload.rs\")); println!(\"path\"); }",
+        "compilerOutput": "path"
+      },
+      {
+        "id": "macro-escape",
+        "source": "fn check() { let mut values = Vec::new(); values.push(\"a\"); replace!(values); values.join(\"payload.rs\"); }",
+        "expected": [
+          "payload.rs"
+        ],
+        "allArguments": [
+          "payload.rs"
+        ]
+      },
+      {
+        "id": "cross-function",
+        "source": "fn first() { let mut values = Vec::new(); values.push(\"a\"); } fn second() { values.join(\"payload.rs\"); }",
+        "expected": [
+          "payload.rs"
+        ],
+        "allArguments": [
+          "payload.rs"
+        ]
+      },
+      {
+        "id": "comment-and-string-decoys",
+        "source": "fn check() { let mut values = Vec::new(); values.push(\"struct Vec; fn join() {}\"); /* use custom::*; */ values.join(\"\\n\"); }",
+        "expected": [],
+        "allArguments": [
+          "\\n"
+        ]
+      },
+      {
+        "id": "typed-collect-initializer",
+        "source": "fn check() -> String { let tokens: Vec<String> = [\"a\", \"b\"].iter().map(|value| value.to_string()).collect(); tokens.join(\",\") }",
+        "expected": [],
+        "allArguments": [
+          ","
+        ],
+        "compiler": "fn main() { let result: String = check(); assert_eq!(result, \"a,b\"); println!(\"delimiter\"); }",
+        "compilerOutput": "delimiter"
+      },
+      {
+        "id": "trait-impl-for-precedes-collection",
+        "source": "struct Foo; impl core::fmt::Display for Foo { fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result { write!(f, \"foo\") } } fn check() -> String { let mut values = Vec::new(); values.push(format!(\"a\")); values.join(\",\") }",
+        "expected": [],
+        "allArguments": [
+          ","
+        ],
+        "compiler": "fn main() { let result: String = check(); assert_eq!(result, \"a\"); println!(\"delimiter\"); }",
+        "compilerOutput": "delimiter"
+      }
+    ]
+  },
+  "tokenNarrowing": {
+    "functions": ["inspectRustManifestPathReferences", "inspectRustJoinArgumentSpans"],
+    "cases": [
+      { "token": null, "expected": null },
+      { "token": { "kind": "identifier", "text": "surface" }, "expected": "surface" },
+      { "token": { "kind": "string", "text": "\"payload.json\"" }, "expected": "literal" },
+      { "token": { "kind": "string", "text": "r#\"payload.json\"#" }, "expected": null },
+      { "token": { "kind": "number", "text": "42" }, "expected": null },
+      { "token": { "kind": "punctuation", "text": "." }, "expected": null }
+    ]
+  },
+  "execution": {
+    "target": "test-rust-physical-reference-context",
+    "command": "bun ./📜️script.ts test rust-physical-reference-context long",
+    "launchName": "🧹clean🧩️taxonomy🧲️rust-physical-reference-context",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-rust-physical-reference-context --skip-nx-cache",
+    "launchGroup": "4_gate",
+    "launchOrder": 410.08
+  },
+  "oracle": {
+    "manifestInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧲️rust-physical-reference-context/🔮️oracle/⚙️.toml",
+    "sourceInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🦀️rust-physical-reference-context.rs"
+  },
+  "transaction": {
+    "scope": "🧪️tests/🧪️target",
+    "source": "🦀️.rs",
+    "destination": "🦀️.rs",
+    "bytes": "pub const VALUE: &str = \"right\";\n",
+    "manifest": "pkg/Cargo.toml",
+    "consumer": "pkg/entry.rs",
+    "lookalike": "pkg/🦀️.rs",
+    "runtimeOutput": "READ:pub const VALUE: &str = \"right\";"
+  },
+  "referenceUniverse": {
+    "ownership": "no-follow-regular-manifests-and-exact-mounted-source-chains",
+    "admission": "affected-consumer-or-possible-affected-physical-target",
+    "unsafeUnrelatedManifest": "unrelated/Cargo.toml",
+    "independentRoot": "🧪️transaction/🧪️independent",
+    "cases": [
+      { "id": "independent-local", "base": "../🧪️tests/🧪️target", "physicalTarget": "🧪️transaction/🧪️independent/🧪️tests/🦀️target.rs", "affectsParent": false },
+      { "id": "independent-parent-escape", "base": "../../../🧪️tests/🧪️target", "physicalTarget": "🧪️tests/🦀️target.rs", "affectsParent": true }
+    ]
+  },
+  "manifestCandidates": {
+    "adversarial": {
+  "contract": "rust-finite-candidate-adversarial-v1",
+  "unknownControlFlow": "captured-bindings-remain-unproven",
+  "namespace": "standard-type-and-macro-identity-required",
+  "cases": [
+    {
+      "id": "captured-closure",
+      "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); for leaf in [\"leaf.rs\"] { std::assert!(!leaf.is_empty(), \"{leaf}\"); std::println!(\"{}\", root.join(leaf).display()); let other = |_: ()| std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../energy\").join(leaf); std::println!(\"{}\", other(()).display()); } }",
+      "expected": [],
+      "runtimeProof": {
+        "call": "inspect()",
+        "targets": [
+          "foreign/leaf.rs",
+          "energy/leaf.rs"
+        ]
+      }
+    },
+    {
+      "id": "unknown-range-loop",
+      "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); for leaf in [\"leaf.rs\"] { std::assert!(!leaf.is_empty(), \"{leaf}\"); std::println!(\"{}\", root.join(leaf).display()); for _ in 0..1 { std::println!(\"{}\", std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../energy\").join(leaf).display()); } } }",
+      "expected": [],
+      "runtimeProof": {
+        "call": "inspect()",
+        "targets": [
+          "foreign/leaf.rs",
+          "energy/leaf.rs"
+        ]
+      }
+    },
+    {
+      "id": "function-std-value",
+      "source": "fn inspect(std: ()) { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); for leaf in [\"leaf.rs\"] { std::assert!(!leaf.is_empty(), \"{leaf}\"); std::println!(\"{}\", root.join(leaf).display()); } }",
+      "expected": [
+        {
+          "value": "leaf.rs",
+          "targets": [
+            [
+              "../foreign",
+              "leaf.rs"
+            ]
+          ]
+        }
+      ],
+      "runtimeProof": {
+        "call": "inspect(())",
+        "targets": [
+          "foreign/leaf.rs"
+        ]
+      }
+    },
+    {
+      "id": "macro-use-module",
+      "source": "#[macro_use] mod provider; fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); for leaf in [\"leaf.rs\"] { std::assert!(!leaf.is_empty(), \"{leaf}\"); std::println!(\"{}\", root.join(leaf).display()); } }",
+      "expected": [],
+      "runtimeProof": {
+        "call": "inspect()",
+        "targets": [
+          "pkg/foreign/leaf.rs"
+        ],
+        "files": {
+          "provider.rs": "macro_rules! env { ($name:literal) => { concat!(::std::env!(\"CARGO_MANIFEST_DIR\"), \"/redirect\") }; }\n"
+        }
+      }
+    }
+  ],
+  "namespaceReviews": [
+    {"id":"included-environment-macro","source":"include!(\"provider.rs\"); fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); for leaf in [\"leaf.rs\"] { std::assert!(!leaf.is_empty(), \"{leaf}\"); std::println!(\"{}\", root.join(leaf).display()); } }\nfn main() { inspect(); }\n","errorCode":"E0659","files":{"provider.rs":"macro_rules! env { ($name:literal) => { concat!(::std::env!(\"CARGO_MANIFEST_DIR\"), \"/redirect\") }; }\n"}},
+    {
+      "id": "generic-std-type",
+      "source": "fn inspect<std>() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); for leaf in [\"leaf.rs\"] { ::std::println!(\"{}\", root.join(leaf).display()); } }\nfn main() { inspect::<()>(); }\n",
+      "errorCode": "E0220"
+    }
+  ]
+},
+    "contract": "rust-finite-manifest-path-candidates-v1",
+    "authority": "candidate-only-never-editable",
+    "missingFact": "unproven-never-complete-empty",
+    "grammar": [
+      "exact-standard-manifest-root",
+      "immutable-literal-string-or-tuple-array",
+      "literal-number-boolean-and-full-slice-metadata",
+      "lexical-destructured-for",
+      "exact-array-iter-enumerate",
+      "immutable-join-chain",
+      "known-standard-read-only-macro-use"
+    ],
+    "maxExpandedIterations": 256,
+    "maxTargetsPerSpan": 256,
+    "tupleCorrelation": "per-row-environment",
+    "coordinates": "relative-component-chains-only",
+    "environment": "standard-env-macro-with-no-shadow-or-foreign-glob",
+    "literal": "unescaped-normal-string-only",
+    "manifestPath": "pkg/Cargo.toml",
+    "consumerPath": "pkg/lib.rs",
+    "affectedRoot": "energy",
+    "selectedValue": "leaf.rs",
+    "cases": [
+      {
+        "id": "shadowed-environment-macro",
+        "source": "macro_rules! env { ($x:literal) => { \"/other\" }; } fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "imported-environment-macro",
+        "source": "use foreign::env; fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "no-implicit-prelude",
+        "source": "#![no_implicit_prelude] fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "no-standard-prelude",
+        "source": "#![no_std] fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "standard-qualified-despite-named-import",
+        "source": "use foreign::assert; fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { ::std::assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [
+          {
+            "value": "leaf.rs",
+            "targets": [
+              [
+                "../foreign",
+                "one",
+                "leaf.rs"
+              ],
+              [
+                "../foreign",
+                "two",
+                "leaf.rs"
+              ]
+            ]
+          }
+        ],
+        "physicalTargets": [
+          "foreign/one/leaf.rs",
+          "foreign/two/leaf.rs"
+        ],
+        "relevance": "disjoint"
+      },
+      {
+        "id": "duplicate-tuple-binding",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (directory, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "absolute-manifest-component",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"/foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "drive-manifest-component",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"C:/foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "standard-qualified-despite-foreign-glob",
+        "source": "use foreign::*; fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { ::std::assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "same-file-parent-glob",
+        "source": "mod tests { use super::*; fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } } }",
+        "expected": [
+          {
+            "value": "leaf.rs",
+            "targets": [
+              [
+                "../foreign",
+                "one",
+                "leaf.rs"
+              ],
+              [
+                "../foreign",
+                "two",
+                "leaf.rs"
+              ]
+            ]
+          }
+        ],
+        "physicalTargets": [
+          "foreign/one/leaf.rs",
+          "foreign/two/leaf.rs"
+        ],
+        "relevance": "disjoint"
+      },
+      {
+        "id": "unicode-source-span",
+        "source": "/*🧭*/ fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one🧭\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [
+          {
+            "value": "leaf.rs",
+            "targets": [
+              [
+                "../foreign",
+                "one🧭",
+                "leaf.rs"
+              ],
+              [
+                "../foreign",
+                "two",
+                "leaf.rs"
+              ]
+            ]
+          }
+        ],
+        "physicalTargets": [
+          "foreign/one🧭/leaf.rs",
+          "foreign/two/leaf.rs"
+        ],
+        "relevance": "disjoint"
+      },
+      {
+        "id": "foreign-nested-std-macro",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { foreign::std::assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "imported-assert-macro",
+        "source": "use foreign::assert; fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "foreign-glob-macro",
+        "source": "use foreign::*; fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "shadowed-standard-macro",
+        "source": "macro_rules! assert { ($($x:tt)*) => {}; } fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "unproven-qualified-macro",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { foreign::assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "partial-tuple-binding",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory, extra) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "unknown-environment",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"OTHER_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "unsupported-constructor",
+        "source": "fn inspect() { let root = std::path::PathBuf::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "conditional-mutation",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); if let Some(owner) = other() { escape(owner); } for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "escaping-after-candidate",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); escape(&owner); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "tuple-shared-label-disjoint",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [
+          {
+            "value": "leaf.rs",
+            "targets": [
+              [
+                "../foreign",
+                "one",
+                "leaf.rs"
+              ],
+              [
+                "../foreign",
+                "two",
+                "leaf.rs"
+              ]
+            ]
+          }
+        ],
+        "physicalTargets": [
+          "foreign/one/leaf.rs",
+          "foreign/two/leaf.rs"
+        ],
+        "relevance": "disjoint",
+        "runtime": true
+      },
+      {
+        "id": "tuple-shared-label-intersection",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"../energy\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [
+          {
+            "value": "leaf.rs",
+            "targets": [
+              [
+                "../foreign",
+                "../energy",
+                "leaf.rs"
+              ],
+              [
+                "../foreign",
+                "one",
+                "leaf.rs"
+              ]
+            ]
+          }
+        ],
+        "physicalTargets": [
+          "energy/leaf.rs",
+          "foreign/one/leaf.rs"
+        ],
+        "relevance": "intersects",
+        "runtime": true
+      },
+      {
+        "id": "tuple-row-correlation",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"one\", \"a\"), (\"two\", \"b\")]; for (parent, child) in owners { let owner = root.join(parent).join(child); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{parent}/{child}/{leaf}\"); } } }",
+        "expected": [
+          {
+            "value": "leaf.rs",
+            "targets": [
+              [
+                "../foreign",
+                "one",
+                "a",
+                "leaf.rs"
+              ],
+              [
+                "../foreign",
+                "two",
+                "b",
+                "leaf.rs"
+              ]
+            ]
+          }
+        ],
+        "physicalTargets": [
+          "foreign/one/a/leaf.rs",
+          "foreign/two/b/leaf.rs"
+        ],
+        "relevance": "disjoint",
+        "runtime": true
+      },
+      {
+        "id": "five-column-literal-metadata",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"First\", \"one\", 0, &[\"ok\", \"warning\"][..]), (\"second\", \"Second\", \"two\", 1, &[\"ok\"][..])]; for (kind, variant, directory, tag, outcomes) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{kind}/{variant}/{tag}/{leaf}\"); let _ = outcomes; } } }",
+        "expected": [
+          {
+            "value": "leaf.rs",
+            "targets": [
+              [
+                "../foreign",
+                "one",
+                "leaf.rs"
+              ],
+              [
+                "../foreign",
+                "two",
+                "leaf.rs"
+              ]
+            ]
+          }
+        ],
+        "physicalTargets": [
+          "foreign/one/leaf.rs",
+          "foreign/two/leaf.rs"
+        ],
+        "relevance": "disjoint"
+      },
+      {
+        "id": "enumerated-array",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [\"one\", \"two\"]; for (index, owner) in owners.iter().enumerate() { assert!(root.join(owner).join(\"leaf.rs\").is_file(), \"{index}/{owner}\"); } }",
+        "expected": [
+          {
+            "value": "leaf.rs",
+            "targets": [
+              [
+                "../foreign",
+                "one",
+                "leaf.rs"
+              ],
+              [
+                "../foreign",
+                "two",
+                "leaf.rs"
+              ]
+            ]
+          }
+        ],
+        "physicalTargets": [
+          "foreign/one/leaf.rs",
+          "foreign/two/leaf.rs"
+        ],
+        "relevance": "disjoint",
+        "runtime": true
+      },
+      {
+        "id": "independent-inner-array",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\", \"second.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}/{leaf}\"); } } }",
+        "expected": [
+          {
+            "value": "leaf.rs",
+            "targets": [
+              [
+                "../foreign",
+                "one",
+                "leaf.rs"
+              ],
+              [
+                "../foreign",
+                "two",
+                "leaf.rs"
+              ]
+            ]
+          }
+        ],
+        "physicalTargets": [
+          "foreign/one/leaf.rs",
+          "foreign/two/leaf.rs"
+        ],
+        "relevance": "disjoint"
+      },
+      {
+        "id": "pathbuf-shared-array",
+        "source": "fn inspect() { let root = ::std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); for leaf in [\"leaf.rs\"] { assert!(root.join(leaf).is_file(), \"{leaf}\"); } }",
+        "expected": [
+          {
+            "value": "leaf.rs",
+            "targets": [
+              [
+                "../foreign",
+                "leaf.rs"
+              ]
+            ]
+          }
+        ],
+        "physicalTargets": [
+          "foreign/leaf.rs"
+        ],
+        "relevance": "disjoint",
+        "runtime": true
+      },
+      {
+        "id": "duplicate-value-distinct-spans",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"one\", \"leaf.rs\"), (\"two\", \"leaf.rs\")]; for (directory, leaf) in owners { assert!(root.join(directory).join(leaf).is_file(), \"{directory}/{leaf}\"); } }",
+        "expected": [
+          {
+            "value": "leaf.rs",
+            "targets": [
+              [
+                "../foreign",
+                "one",
+                "leaf.rs"
+              ]
+            ]
+          },
+          {
+            "value": "leaf.rs",
+            "targets": [
+              [
+                "../foreign",
+                "two",
+                "leaf.rs"
+              ]
+            ]
+          }
+        ],
+        "physicalTargets": [
+          "foreign/one/leaf.rs",
+          "foreign/two/leaf.rs"
+        ],
+        "relevance": "disjoint"
+      },
+      {
+        "id": "dynamic-array",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = owners(); for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "dynamic-tuple-column",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", directory())]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "mutable-root",
+        "source": "fn inspect() { let mut root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "mutable-array",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let mut owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "mutable-loop-binding",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, mut directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "mutated-array",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; owners[0] = (\"third\", \"three\"); for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "escaped-receiver",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); escape(&owner); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "unknown-macro",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { opaque!(leaf); assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "loop-shadow",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { let owner = other(); assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "wrong-enumeration",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [\"one\", \"two\"]; for (index, owner) in owners.into_iter().enumerate() { root.join(owner).join(\"leaf.rs\"); } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "raw-target",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [r\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "escaped-target",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf\\\\.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "mixed-receivers",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}/{leaf}\"); other().join(leaf); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "foreign-std",
+        "source": "mod std {} fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"first\", \"one\"), (\"second\", \"two\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "empty-array",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = []; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      },
+      {
+        "id": "over-limit",
+        "source": "fn inspect() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let owners = [(\"label0\", \"dir0\"), (\"label1\", \"dir1\"), (\"label2\", \"dir2\"), (\"label3\", \"dir3\"), (\"label4\", \"dir4\"), (\"label5\", \"dir5\"), (\"label6\", \"dir6\"), (\"label7\", \"dir7\"), (\"label8\", \"dir8\"), (\"label9\", \"dir9\"), (\"label10\", \"dir10\"), (\"label11\", \"dir11\"), (\"label12\", \"dir12\"), (\"label13\", \"dir13\"), (\"label14\", \"dir14\"), (\"label15\", \"dir15\"), (\"label16\", \"dir16\"), (\"label17\", \"dir17\"), (\"label18\", \"dir18\"), (\"label19\", \"dir19\"), (\"label20\", \"dir20\"), (\"label21\", \"dir21\"), (\"label22\", \"dir22\"), (\"label23\", \"dir23\"), (\"label24\", \"dir24\"), (\"label25\", \"dir25\"), (\"label26\", \"dir26\"), (\"label27\", \"dir27\"), (\"label28\", \"dir28\"), (\"label29\", \"dir29\"), (\"label30\", \"dir30\"), (\"label31\", \"dir31\"), (\"label32\", \"dir32\"), (\"label33\", \"dir33\"), (\"label34\", \"dir34\"), (\"label35\", \"dir35\"), (\"label36\", \"dir36\"), (\"label37\", \"dir37\"), (\"label38\", \"dir38\"), (\"label39\", \"dir39\"), (\"label40\", \"dir40\"), (\"label41\", \"dir41\"), (\"label42\", \"dir42\"), (\"label43\", \"dir43\"), (\"label44\", \"dir44\"), (\"label45\", \"dir45\"), (\"label46\", \"dir46\"), (\"label47\", \"dir47\"), (\"label48\", \"dir48\"), (\"label49\", \"dir49\"), (\"label50\", \"dir50\"), (\"label51\", \"dir51\"), (\"label52\", \"dir52\"), (\"label53\", \"dir53\"), (\"label54\", \"dir54\"), (\"label55\", \"dir55\"), (\"label56\", \"dir56\"), (\"label57\", \"dir57\"), (\"label58\", \"dir58\"), (\"label59\", \"dir59\"), (\"label60\", \"dir60\"), (\"label61\", \"dir61\"), (\"label62\", \"dir62\"), (\"label63\", \"dir63\"), (\"label64\", \"dir64\"), (\"label65\", \"dir65\"), (\"label66\", \"dir66\"), (\"label67\", \"dir67\"), (\"label68\", \"dir68\"), (\"label69\", \"dir69\"), (\"label70\", \"dir70\"), (\"label71\", \"dir71\"), (\"label72\", \"dir72\"), (\"label73\", \"dir73\"), (\"label74\", \"dir74\"), (\"label75\", \"dir75\"), (\"label76\", \"dir76\"), (\"label77\", \"dir77\"), (\"label78\", \"dir78\"), (\"label79\", \"dir79\"), (\"label80\", \"dir80\"), (\"label81\", \"dir81\"), (\"label82\", \"dir82\"), (\"label83\", \"dir83\"), (\"label84\", \"dir84\"), (\"label85\", \"dir85\"), (\"label86\", \"dir86\"), (\"label87\", \"dir87\"), (\"label88\", \"dir88\"), (\"label89\", \"dir89\"), (\"label90\", \"dir90\"), (\"label91\", \"dir91\"), (\"label92\", \"dir92\"), (\"label93\", \"dir93\"), (\"label94\", \"dir94\"), (\"label95\", \"dir95\"), (\"label96\", \"dir96\"), (\"label97\", \"dir97\"), (\"label98\", \"dir98\"), (\"label99\", \"dir99\"), (\"label100\", \"dir100\"), (\"label101\", \"dir101\"), (\"label102\", \"dir102\"), (\"label103\", \"dir103\"), (\"label104\", \"dir104\"), (\"label105\", \"dir105\"), (\"label106\", \"dir106\"), (\"label107\", \"dir107\"), (\"label108\", \"dir108\"), (\"label109\", \"dir109\"), (\"label110\", \"dir110\"), (\"label111\", \"dir111\"), (\"label112\", \"dir112\"), (\"label113\", \"dir113\"), (\"label114\", \"dir114\"), (\"label115\", \"dir115\"), (\"label116\", \"dir116\"), (\"label117\", \"dir117\"), (\"label118\", \"dir118\"), (\"label119\", \"dir119\"), (\"label120\", \"dir120\"), (\"label121\", \"dir121\"), (\"label122\", \"dir122\"), (\"label123\", \"dir123\"), (\"label124\", \"dir124\"), (\"label125\", \"dir125\"), (\"label126\", \"dir126\"), (\"label127\", \"dir127\"), (\"label128\", \"dir128\"), (\"label129\", \"dir129\"), (\"label130\", \"dir130\"), (\"label131\", \"dir131\"), (\"label132\", \"dir132\"), (\"label133\", \"dir133\"), (\"label134\", \"dir134\"), (\"label135\", \"dir135\"), (\"label136\", \"dir136\"), (\"label137\", \"dir137\"), (\"label138\", \"dir138\"), (\"label139\", \"dir139\"), (\"label140\", \"dir140\"), (\"label141\", \"dir141\"), (\"label142\", \"dir142\"), (\"label143\", \"dir143\"), (\"label144\", \"dir144\"), (\"label145\", \"dir145\"), (\"label146\", \"dir146\"), (\"label147\", \"dir147\"), (\"label148\", \"dir148\"), (\"label149\", \"dir149\"), (\"label150\", \"dir150\"), (\"label151\", \"dir151\"), (\"label152\", \"dir152\"), (\"label153\", \"dir153\"), (\"label154\", \"dir154\"), (\"label155\", \"dir155\"), (\"label156\", \"dir156\"), (\"label157\", \"dir157\"), (\"label158\", \"dir158\"), (\"label159\", \"dir159\"), (\"label160\", \"dir160\"), (\"label161\", \"dir161\"), (\"label162\", \"dir162\"), (\"label163\", \"dir163\"), (\"label164\", \"dir164\"), (\"label165\", \"dir165\"), (\"label166\", \"dir166\"), (\"label167\", \"dir167\"), (\"label168\", \"dir168\"), (\"label169\", \"dir169\"), (\"label170\", \"dir170\"), (\"label171\", \"dir171\"), (\"label172\", \"dir172\"), (\"label173\", \"dir173\"), (\"label174\", \"dir174\"), (\"label175\", \"dir175\"), (\"label176\", \"dir176\"), (\"label177\", \"dir177\"), (\"label178\", \"dir178\"), (\"label179\", \"dir179\"), (\"label180\", \"dir180\"), (\"label181\", \"dir181\"), (\"label182\", \"dir182\"), (\"label183\", \"dir183\"), (\"label184\", \"dir184\"), (\"label185\", \"dir185\"), (\"label186\", \"dir186\"), (\"label187\", \"dir187\"), (\"label188\", \"dir188\"), (\"label189\", \"dir189\"), (\"label190\", \"dir190\"), (\"label191\", \"dir191\"), (\"label192\", \"dir192\"), (\"label193\", \"dir193\"), (\"label194\", \"dir194\"), (\"label195\", \"dir195\"), (\"label196\", \"dir196\"), (\"label197\", \"dir197\"), (\"label198\", \"dir198\"), (\"label199\", \"dir199\"), (\"label200\", \"dir200\"), (\"label201\", \"dir201\"), (\"label202\", \"dir202\"), (\"label203\", \"dir203\"), (\"label204\", \"dir204\"), (\"label205\", \"dir205\"), (\"label206\", \"dir206\"), (\"label207\", \"dir207\"), (\"label208\", \"dir208\"), (\"label209\", \"dir209\"), (\"label210\", \"dir210\"), (\"label211\", \"dir211\"), (\"label212\", \"dir212\"), (\"label213\", \"dir213\"), (\"label214\", \"dir214\"), (\"label215\", \"dir215\"), (\"label216\", \"dir216\"), (\"label217\", \"dir217\"), (\"label218\", \"dir218\"), (\"label219\", \"dir219\"), (\"label220\", \"dir220\"), (\"label221\", \"dir221\"), (\"label222\", \"dir222\"), (\"label223\", \"dir223\"), (\"label224\", \"dir224\"), (\"label225\", \"dir225\"), (\"label226\", \"dir226\"), (\"label227\", \"dir227\"), (\"label228\", \"dir228\"), (\"label229\", \"dir229\"), (\"label230\", \"dir230\"), (\"label231\", \"dir231\"), (\"label232\", \"dir232\"), (\"label233\", \"dir233\"), (\"label234\", \"dir234\"), (\"label235\", \"dir235\"), (\"label236\", \"dir236\"), (\"label237\", \"dir237\"), (\"label238\", \"dir238\"), (\"label239\", \"dir239\"), (\"label240\", \"dir240\"), (\"label241\", \"dir241\"), (\"label242\", \"dir242\"), (\"label243\", \"dir243\"), (\"label244\", \"dir244\"), (\"label245\", \"dir245\"), (\"label246\", \"dir246\"), (\"label247\", \"dir247\"), (\"label248\", \"dir248\"), (\"label249\", \"dir249\"), (\"label250\", \"dir250\"), (\"label251\", \"dir251\"), (\"label252\", \"dir252\"), (\"label253\", \"dir253\"), (\"label254\", \"dir254\"), (\"label255\", \"dir255\"), (\"label256\", \"dir256\")]; for (label, directory) in owners { let owner = root.join(directory); for leaf in [\"leaf.rs\"] { assert!(owner.join(leaf).is_file(), \"{label}: {directory}/{leaf}\"); } } }",
+        "expected": [],
+        "physicalTargets": [],
+        "relevance": "unproven"
+      }
+    ]
+  },
+  "manifestPaths": {
+    "roots": ["std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"))", "std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\"))"],
+    "binding": "immutable-lexical-local-only",
+    "literal": "unescaped-normal-string-only",
+    "loop": "literal-array-variable-used-only-as-one-proven-join-argument",
+    "cases": [
+      { "id": "direct", "source": "fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../artifacts\"); std::fs::read_to_string(root.join(\"payload.json\")); }", "expected": [{ "value": "../../artifacts", "base": [] }, { "value": "payload.json", "base": ["../../artifacts"] }] },
+      { "id": "nested-owner-loop", "source": "fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../artifacts\"); let owner = root.join(\"replace-model\"); for surface in [\"code.rs\", \"text/code.rs\"] { let source = std::fs::read_to_string(owner.join(surface)); } }", "expected": [{ "value": "../../artifacts", "base": [] }, { "value": "replace-model", "base": ["../../artifacts"] }, { "value": "code.rs", "base": ["../../artifacts", "replace-model"] }, { "value": "text/code.rs", "base": ["../../artifacts", "replace-model"] }] },
+      { "id": "shadowed", "source": "fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); let root = other(); root.join(\"payload.json\"); }", "expected": [] },
+      { "id": "destructured-shadow", "source": "fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); let (root, _) = other(); root.join(\"payload.json\"); }", "expected": [] },
+      { "id": "closure-shadow", "source": "fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); let reader = |root| root.join(\"payload.json\"); }", "expected": [] },
+      { "id": "if-let-shadow", "source": "fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); if let Some(root) = other() { root.join(\"wrong.json\"); } root.join(\"right.json\"); }", "expected": [{ "value": "right.json", "base": [] }] },
+      { "id": "match-shadow", "source": "fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); match other() { Some(root) => { root.join(\"wrong.json\"); }, None => { root.join(\"right.json\"); } } }", "expected": [{ "value": "right.json", "base": [] }] },
+      { "id": "mutable", "source": "fn check() { let mut root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); root.push(\"other\"); root.join(\"payload.json\"); }", "expected": [] },
+      { "id": "scope", "source": "fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); { let root = other(); root.join(\"wrong.json\"); } root.join(\"right.json\"); }", "expected": [{ "value": "right.json", "base": [] }] },
+      { "id": "unknown-constructor", "source": "fn check() { let root = Path::new(env!(\"CARGO_MANIFEST_DIR\")); root.join(\"payload.json\"); }", "expected": [] },
+      { "id": "wrong-environment", "source": "fn check() { let root = std::path::Path::new(env!(\"OTHER_ROOT\")); root.join(\"payload.json\"); }", "expected": [] },
+      { "id": "loop-label-use", "source": "fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); for path in [\"payload.json\"] { print!(\"{}\", path); root.join(path); } }", "expected": [] },
+      { "id": "loop-two-bases", "source": "fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); let other = root.join(\"nested\"); for path in [\"payload.json\"] { root.join(path); other.join(path); } }", "expected": [{ "value": "nested", "base": [] }] },
+      { "id": "loop-computed-array", "source": "fn check() { let root = std::path::Path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); for path in paths() { root.join(path); } }", "expected": [] },
+      { "id": "comment", "source": "fn check() {} /* let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); root.join(\"payload.json\"); */", "expected": [] },
+      { "id": "macro-payload", "source": "fn check() { quote! { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); root.join(\"payload.json\"); } }", "expected": [] },
+      { "id": "escaped", "source": "fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); root.join(\"payload\\u{2e}json\"); }", "expected": [] },
+      { "id": "cross-function", "source": "fn first() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); } fn second() { root.join(\"payload.json\"); }", "expected": [] },
+      {"id":"pathbuf-direct","source":"fn check() -> std::path::PathBuf { let root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"fixtures\"); root.join(\"payload.json\") }","expected":[{"value":"fixtures","base":[]},{"value":"payload.json","base":["fixtures"]}],"compiler":"fn main() { let result: std::path::PathBuf = check(); assert_eq!(result, std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"fixtures/payload.json\")); println!(\"pathbuf-direct\"); }","compilerOutput":"pathbuf-direct"},
+      {"id":"pathbuf-absolute-qualified","source":"fn check() -> std::path::PathBuf { ::std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"payload.json\") }","expected":[{"value":"payload.json","base":[]}],"compiler":"fn main() { let result: std::path::PathBuf = check(); assert_eq!(result, std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"payload.json\")); println!(\"pathbuf-absolute-qualified\"); }","compilerOutput":"pathbuf-absolute-qualified"},
+      {"id":"pathbuf-parenthesized","source":"fn check() -> std::path::PathBuf { (std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\"))).join(\"nested\").join(\"payload.json\") }","expected":[{"value":"nested","base":[]},{"value":"payload.json","base":["nested"]}],"compiler":"fn main() { let result: std::path::PathBuf = check(); assert_eq!(result, std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"nested/payload.json\")); println!(\"pathbuf-parenthesized\"); }","compilerOutput":"pathbuf-parenthesized"},
+      {"id":"pathbuf-single-use-loop","source":"fn check() { let root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")); for path in [\"one.json\", \"two.json\"] { root.join(path); } }","expected":[{"value":"one.json","base":[]},{"value":"two.json","base":[]}]},
+      {"id":"pathbuf-shadowed-binding","source":"fn check() { let root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")); let root = other(); root.join(\"payload.json\"); }","expected":[]},
+      {"id":"pathbuf-destructured-shadow","source":"fn check() { let root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")); let (root, _) = other(); root.join(\"payload.json\"); }","expected":[]},
+      {"id":"pathbuf-closure-shadow","source":"fn check() { let root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")); let reader = |root| root.join(\"payload.json\"); }","expected":[]},
+      {"id":"pathbuf-mutable-binding","source":"fn check() { let mut root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")); root.push(\"other\"); root.join(\"payload.json\"); }","expected":[]},
+      {"id":"pathbuf-unknown-constructor","source":"fn check() { let root = PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")); root.join(\"payload.json\"); }","expected":[]},
+      {"id":"pathbuf-wrong-constructor","source":"fn check() { let root = std::path::PathBuf::new(env!(\"CARGO_MANIFEST_DIR\")); root.join(\"payload.json\"); }","expected":[]},
+      {"id":"pathbuf-wrong-environment","source":"fn check() { let root = std::path::PathBuf::from(env!(\"OTHER_ROOT\")); root.join(\"payload.json\"); }","expected":[]},
+      {"id":"pathbuf-optional-environment","source":"fn check() { let root = std::path::PathBuf::from(option_env!(\"CARGO_MANIFEST_DIR\")); root.join(\"payload.json\"); }","expected":[]},
+      {"id":"pathbuf-shadowed-std","source":"mod std {} fn check() { let root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")); root.join(\"payload.json\"); }","expected":[]},
+      {"id":"pathbuf-loop-explicit-label","source":"fn check() { let root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")); for path in [\"payload.json\"] { println!(\"{}\", path); root.join(path); } }","expected":[]},
+      {"id":"pathbuf-loop-two-bases","source":"fn check() { let root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")); let other = root.join(\"nested\"); for path in [\"payload.json\"] { root.join(path); other.join(path); } }","expected":[{"value":"nested","base":[]}]},
+      {"id":"path-loop-implicit-label","source":"fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); for path in [\"payload.json\"] { root.join(path); println!(\"{path}\"); } }","expected":[]},
+      {"id":"pathbuf-loop-implicit-label","source":"fn check() -> std::path::PathBuf { let root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")); for path in [\"payload.json\"] { let joined = root.join(path); println!(\"{path}\"); return joined; } unreachable!() }","expected":[],"compiler":"fn main() { let result: std::path::PathBuf = check(); assert_eq!(result, std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"payload.json\")); println!(\"pathbuf-loop-implicit-label\"); }","compilerOutput":"payload.json\npathbuf-loop-implicit-label"},
+      {"id":"pathbuf-loop-escaped-label","source":"fn check() -> std::path::PathBuf { let root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")); for path in [\"payload.json\"] { let joined = root.join(path); println!(\"{{path}}\"); return joined; } unreachable!() }","expected":[{"value":"payload.json","base":[]}],"compiler":"fn main() { let result: std::path::PathBuf = check(); assert_eq!(result, std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"payload.json\")); println!(\"pathbuf-loop-escaped-label\"); }","compilerOutput":"{path}\npathbuf-loop-escaped-label"},
+      {"id":"path-loop-escaped-label","source":"fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); for path in [\"payload.json\"] { root.join(path); println!(\"{{path}}\"); } }","expected":[{"value":"payload.json","base":[]}]},
+      {"id":"pathbuf-loop-triple-brace-label","source":"fn check() { let root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")); for path in [\"payload.json\"] { root.join(path); println!(\"{{{path}}}\"); } }","expected":[]},
+      {"id":"pathbuf-loop-assert-label","source":"fn check() { let root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")); for path in [\"payload.json\"] { root.join(path); assert!(true, \"{path:?}\"); } }","expected":[]},
+      {"id":"pathbuf-loop-panic-label","source":"fn check() { let root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")); for path in [\"payload.json\"] { root.join(path); panic!(\"{path}\"); } }","expected":[]},
+      {"id":"pathbuf-loop-unknown-macro-label","source":"fn check() { let root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")); for path in [\"payload.json\"] { root.join(path); opaque!(\"path\"); } }","expected":[]},
+      {"id":"pathbuf-loop-imported-macro-is-uncertain","source":"use foreign::println; fn check() { let root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")); for path in [\"payload.json\"] { root.join(path); println!(\"{{path}}\"); } }","expected":[]},
+      {"id":"pathbuf-loop-qualified-escaped-format-with-import","source":"use std::path::Path; fn check() { let root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")); for path in [\"payload.json\"] { root.join(path); std::println!(\"{{path}}\"); } }","expected":[{"value":"payload.json","base":[]}]},
+      {"id":"pathbuf-loop-known-noncapturing-label","source":"fn check() { let root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")); for path in [\"payload.json\"] { root.join(path); println!(\"path\"); } }","expected":[{"value":"payload.json","base":[]}]}
+    ],
+    "moduleGraphCases": [
+      { "id": "mounted", "target": "artifacts/code.rs", "files": { "pkg/Cargo.toml": "[package]\nname = \"example\"\n[lib]\npath = \"glue.rs\"\n", "pkg/glue.rs": "#[path = \".\"] mod artifact { #[path = \"../artifacts/code.rs\"] mod component; }", "artifacts/code.rs": "pub fn inspect() {}" }, "expectedManifests": ["pkg/Cargo.toml"] },
+      { "id": "unmounted-lookalike", "target": "artifacts/code.rs", "files": { "pkg/Cargo.toml": "[package]\nname = \"example\"\n[lib]\npath = \"glue.rs\"\n", "pkg/glue.rs": "const TEXT: &str = r#\"#[path = \"../artifacts/code.rs\"] mod component;\"#;", "artifacts/code.rs": "pub fn inspect() {}" }, "expectedManifests": [] },
+      { "id": "ambiguous", "target": "artifacts/code.rs", "files": { "one/Cargo.toml": "[package]\nname = \"one\"\n[lib]\npath = \"glue.rs\"\n", "one/glue.rs": "#[path = \"../artifacts/code.rs\"] mod component;", "two/Cargo.toml": "[package]\nname = \"two\"\n[lib]\npath = \"glue.rs\"\n", "two/glue.rs": "#[path = \"../artifacts/code.rs\"] mod component;", "artifacts/code.rs": "pub fn inspect() {}" }, "expectedManifests": ["one/Cargo.toml", "two/Cargo.toml"] },
+      { "id": "conventional-not-manifest", "target": "src/lib.rs", "files": { "src/lib.rs": "pub fn inspect() {}" }, "expectedManifests": [] },
+      { "id": "absolute-mount-is-not-relative", "target": "pkg/absolute/code.rs", "files": { "pkg/Cargo.toml": "[package]\nname = \"example\"\n[lib]\npath = \"glue.rs\"\n", "pkg/glue.rs": "#[path = \"/absolute/code.rs\"] mod component;", "pkg/absolute/code.rs": "pub fn inspect() {}" }, "expectedManifests": [] },
+      { "id": "malformed-manifest", "target": "pkg/glue.rs", "files": { "pkg/Cargo.toml": "[package]\nname = \"one\"\nname = \"two\"\n[lib]\npath = \"glue.rs\"\n", "pkg/glue.rs": "pub fn inspect() {}" }, "expectedManifests": [] }
+    ]
+  },
+  "assertionMessages": {
+    "macros": { "assert": 1, "assert_eq": 2, "assert_ne": 2, "debug_assert": 1, "debug_assert_eq": 2, "debug_assert_ne": 2 },
+    "literal": "unescaped-normal-string-only",
+    "context": "exact-top-level-macro-argument",
+    "cases": [
+      { "id": "equal", "source": "fn check() { assert_eq!(left, right, \"committed fixtures/payload.json\"); }", "expected": [{ "macroName": "assert_eq", "value": "committed fixtures/payload.json" }] },
+      { "id": "nested", "source": "fn check() { assert!(f(1, 2), \"missing fixtures/payload.json\"); }", "expected": [{ "macroName": "assert", "value": "missing fixtures/payload.json" }] },
+      { "id": "qualified", "source": "fn check() { std::debug_assert_ne!(left, right, \"wrong fixtures/payload.json\",); }", "expected": [{ "macroName": "debug_assert_ne", "value": "wrong fixtures/payload.json" }] },
+      { "id": "format-argument", "source": "fn check() { assert_eq!(left, right, \"{} fixtures/payload.json\", actual); }", "expected": [{ "macroName": "assert_eq", "value": "{} fixtures/payload.json" }] },
+      { "id": "comment", "source": "fn check() {} // assert_eq!(left, right, \"fixtures/payload.json\");", "expected": [] },
+      { "id": "nested-comment", "source": "/* outer /* assert!(ready, \"fixtures/payload.json\"); */ end */ fn check() {}", "expected": [] },
+      { "id": "string-lookalike", "source": "const TEXT: &str = r#\"assert_eq!(left, right, \"fixtures/payload.json\");\"#;", "expected": [] },
+      { "id": "other-macro", "source": "fn check() { identity!(left, right, \"fixtures/payload.json\"); }", "expected": [] },
+      { "id": "nonliteral", "source": "fn check() { assert_eq!(left, right, concat!(\"fixtures/\", \"payload.json\")); }", "expected": [] },
+      { "id": "escaped", "source": "fn check() { assert_eq!(left, right, \"fixtures\\u{2f}payload.json\"); }", "expected": [] },
+      { "id": "raw", "source": "fn check() { assert_eq!(left, right, r#\"fixtures/payload.json\"#); }", "expected": [] }
+    ]
+  }
+}

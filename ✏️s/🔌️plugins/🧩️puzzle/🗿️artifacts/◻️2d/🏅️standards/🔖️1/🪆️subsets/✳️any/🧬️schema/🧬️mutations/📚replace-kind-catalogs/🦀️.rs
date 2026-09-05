@@ -1,5 +1,5 @@
 //! 📚 Puzzle2d mutation — `ReplaceKindCatalogs`: whole-value swap of the fixture-carried typed
-//! kind-catalog bundle (`nodes`/`handles`/`edges`/`wires` catalogs together, one manifest-import
+//! kind-catalog bundle (`nodes`/`🐙️handles`/`edges`/`wires` catalogs together, one manifest-import
 //! gesture).
 
 use crate::artifacts::puzzle2d::diff::Puzzle2dDiff;

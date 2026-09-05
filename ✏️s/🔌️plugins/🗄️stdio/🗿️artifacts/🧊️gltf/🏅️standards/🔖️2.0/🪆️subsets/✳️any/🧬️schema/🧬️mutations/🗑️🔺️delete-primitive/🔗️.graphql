@@ -1,6 +1,0 @@
-# delete-primitive mutation facet.
-input GltfDeletePrimitivePayloadV1 {
-  mesh: Int!
-  primitive: Int!
-}
-type GltfDeletePrimitiveMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

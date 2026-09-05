@@ -7,7 +7,7 @@ use store::{ArtifactStore, SpaceMember};
 type InteractionStore = ArtifactStore<InteractionState, InteractionConfigMutation>;
 
 async fn fixture() -> (InteractionStore, LocalInteractionCaptureCursor, Vec<u8>) {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == "semantic-unicode-over-page").unwrap();
     let mut state = row["expected"].clone();
     state["hover"] = serde_json::json!({"private": {"channel": "pointer", "ids": ["hover-is-not-captured"]}});
@@ -16,7 +16,14 @@ async fn fixture() -> (InteractionStore, LocalInteractionCaptureCursor, Vec<u8>)
     let mut store = InteractionStore::new(envelope).await.unwrap();
     store.install_member_store_owners_exact(interaction_store_owners());
     let identity = LocalInteractionIdentity { app_instance_id: 7, generation: store.generation_now(), revision: store.content_revision_now(), document_revision: [2; 32], topology_revision: [3; 32] };
-    let expected = serde_json::to_vec(&serde_json::json!({"identity": identity, "state": row["expected"]})).unwrap();
+    let hex = |bytes: &[u8; 32]| bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+    let expected = serde_json::to_vec(&serde_json::json!({"identity": {
+        "appInstanceId": identity.app_instance_id,
+        "documentRevision": hex(&identity.document_revision),
+        "generation": identity.generation.to_string(),
+        "revision": hex(&identity.revision),
+        "topologyRevision": hex(&identity.topology_revision),
+    }, "state": row["expected"]})).unwrap();
     let cursor = LocalInteractionCaptureCursor::new(store.snapshot_read().unwrap(), identity);
     (store, cursor, expected)
 }

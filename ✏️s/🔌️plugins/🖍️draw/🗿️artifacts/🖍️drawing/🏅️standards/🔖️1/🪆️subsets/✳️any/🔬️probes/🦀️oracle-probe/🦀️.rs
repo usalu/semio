@@ -34,7 +34,7 @@
 //!
 //! @see ../📜️script.ts — the wrapper that stamps the ProbeReport envelope around this output
 //! @see ../../🔣️oracle.json — the oracle, probe and pipeline registrations
-//! @see ../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🔬️probes/🦀️oracle-probe/🦀️.rs
+//! @see ../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🔬️probes/🦀️oracle-probe/🦀️.rs
 //!      — the sibling probe this file's SVG reader/comparator mirrors field-for-field
 
 use std::fmt::Write as _;

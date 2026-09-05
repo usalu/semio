@@ -2,7 +2,7 @@
 //! manifest stitch (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1).
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the world window
-//! (+ its `🎚️options/*`) in `🎭️modes/✏️edit/🪟️windows/🌐️world`, panel trees in `📌️panels/*`, labels in
+//! (+ its `☑️options/*`) in `🎭️modes/✏️edit/🪟️windows/🌐️world`, panel trees in `📌️panels/*`, labels in
 //! `🗣️terminology`, view state in `🎚️config`, world-scene compute needing both document+config in
 //! `🌍️world` (editor-only compute facet, no taxonomy slot — see that file's own doc), pure document-side
 //! compute in `crate::artifacts::block3d::schema`/`crate::artifacts::block3d::schema::inferences`, and
@@ -59,7 +59,7 @@ pub const BLOCK3D_GRANULARITY_SURFACE: &str = "surface";
 const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
 
 /// 🎯️ An `ActionDescriptor` addressed at this surface — the single factory every taxonomy node's chrome
-/// (`📌️panels/*`, `🎚️options/*`, `🎮️commands/*`)? builds its `on_change`/item actions with.
+/// (`📌️panels/*`, `☑️options/*`, `🎮️commands/*`)? builds its `on_change`/item actions with.
 pub fn block3d_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     semio_framework_plugin::ActionFactory::new(BLOCK3D_PLAY_APP_ID).action(action, args)
 }
@@ -448,7 +448,7 @@ pub fn create_block3d_app() -> semio_framework_plugin::AppDefinition {
         // `.workflow(...)` on this builder, so the old `BLOCK3D_EXAMPLE_CAPSULE`/`BLOCK3D_EXAMPLE_FOREST_LEFT`
         // app-level example registrations and the no-op `.workflow("block3d", …)` call are dropped here
         // (not silently: reported in this packet's migration report). The subset's own
-        // `📚️examples/🎬️hexagonal-cut-concrete-forest-left`/`🎬️nakagin-capsule` facets (artifact-level,
+        // `📚️examples/🎬️hexagonal-cut-concrete-forest-left`/`🏢️nakagin-capsule` facets (artifact-level,
         // pre-existing, untouched by this packet) and this surface's own `setActiveExample` command
         // (still real, still DSL-fixture-backed) are the modern, role-agnostic replacements for this.
         .build_definition()

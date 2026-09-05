@@ -52,29 +52,29 @@ pub(crate) fn synapse_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
 // sibling `pub mod` blocks, unchanged — imported by those names just below.
 #[path = "."]
 pub mod create_widget {
-    #[path = "🌱create-widget/🔺️diff/🦀️.rs"]
+    #[path = "🌱️create-widget/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "🌱create-widget/↩️inverse/🦀️.rs"]
+    #[path = "🌱️create-widget/↩️inverse/🦀️.rs"]
     pub mod inverse;
-    #[path = "🌱create-widget/🦀️.rs"]
+    #[path = "🌱️create-widget/🦀️.rs"]
     mod component;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🌱create-widget/🧪️tests/inserts-node-c-at-index-2/🦀️.rs"]
+    #[path = "🌱️create-widget/🧪️tests/🚪️inserts-node-c-at-index-2/🦀️.rs"]
     mod tests_inserts_node_c_at_index_2;
 }
 
 #[path = "."]
 pub mod connect_synapse {
-    #[path = "🔗connect-synapse/🔺️diff/🦀️.rs"]
+    #[path = "🔗️connect-synapse/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "🔗connect-synapse/↩️inverse/🦀️.rs"]
+    #[path = "🔗️connect-synapse/↩️inverse/🦀️.rs"]
     pub mod inverse;
-    #[path = "🔗connect-synapse/🦀️.rs"]
+    #[path = "🔗️connect-synapse/🦀️.rs"]
     mod component;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🔗connect-synapse/🧪️tests/wires-node-b-to-node-c-at-index-1/🦀️.rs"]
+    #[path = "🔗️connect-synapse/🧪️tests/🚪️wires-node-b-to-node-c-at-index-1/🦀️.rs"]
     mod tests_wires_node_b_to_node_c_at_index_1;
 }
 
@@ -88,49 +88,49 @@ pub mod create_generation {
     mod component;
     pub use component::*;
     #[cfg(test)]
-    #[path = "➕create-generation/🧪️tests/appends-generation-2-and-moves-the-selection/🦀️.rs"]
+    #[path = "➕create-generation/🧪️tests/🎨️appends-generation-2-and-moves-the-selection/🦀️.rs"]
     mod tests_appends_generation_2_and_moves_the_selection;
 }
 
 #[path = "."]
 pub mod delete_generation {
-    #[path = "🗑delete-generation/🔺️diff/🦀️.rs"]
+    #[path = "🗑️delete-generation/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "🗑delete-generation/↩️inverse/🦀️.rs"]
+    #[path = "🗑️delete-generation/↩️inverse/🦀️.rs"]
     pub mod inverse;
-    #[path = "🗑delete-generation/🦀️.rs"]
+    #[path = "🗑️delete-generation/🦀️.rs"]
     mod component;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🗑delete-generation/🧪️tests/removes-the-selected-generation-2-and-falls-back/🦀️.rs"]
+    #[path = "🗑️delete-generation/🧪️tests/🚫️removes-the-selected-generation-2-and-falls-back/🦀️.rs"]
     mod tests_removes_the_selected_generation_2_and_falls_back;
 }
 
 #[path = "."]
 pub mod rename_generation {
-    #[path = "🏷rename-generation/🔺️diff/🦀️.rs"]
+    #[path = "🏷️rename-generation/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "🏷rename-generation/↩️inverse/🦀️.rs"]
+    #[path = "🏷️rename-generation/↩️inverse/🦀️.rs"]
     pub mod inverse;
-    #[path = "🏷rename-generation/🦀️.rs"]
+    #[path = "🏷️rename-generation/🦀️.rs"]
     mod component;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🏷rename-generation/🧪️tests/retitles-generation-1-via-new-name/🦀️.rs"]
+    #[path = "🏷️rename-generation/🧪️tests/🌱️retitles-generation-1-via-new-name/🦀️.rs"]
     mod tests_retitles_generation_1_via_new_name;
 }
 
 #[path = "."]
 pub mod change_generation_value {
-    #[path = "🔧change-generation-value/🔺️diff/🦀️.rs"]
+    #[path = "🔧️change-generation-value/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "🔧change-generation-value/↩️inverse/🦀️.rs"]
+    #[path = "🔧️change-generation-value/↩️inverse/🦀️.rs"]
     pub mod inverse;
-    #[path = "🔧change-generation-value/🦀️.rs"]
+    #[path = "🔧️change-generation-value/🦀️.rs"]
     mod component;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🔧change-generation-value/🧪️tests/raises-the-storeys-answer-in-generation-1/🦀️.rs"]
+    #[path = "🔧️change-generation-value/🧪️tests/🍎️raises-the-storeys-answer-in-generation-1/🦀️.rs"]
     mod tests_raises_the_storeys_answer_in_generation_1;
 }
 //#endregion 🔖️NewLeaves
@@ -177,7 +177,7 @@ pub enum Generation3dMutation {
 //#region 🏷️Kinds
 /// 🏷️ The kebab-case spelling of every [`Generation3dMutation`] variant, in declaration order — the exact
 /// vocabulary the `procedural-3d-1-any` mutation catalog (`../../🔣️oracle.json`) declares and
-/// the `mutate-procedural-3d-1` exhaustive case measures itself against. The framework never parses Rust, so
+/// the `🦀️mutate-procedural-3d-1` exhaustive case measures itself against. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
 pub const KINDS: &[&str] = &[
     "create-widget",
@@ -540,7 +540,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔮️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

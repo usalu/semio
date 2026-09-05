@@ -1,0 +1,15 @@
+{
+  "id": "s.stdio.gltf.mutation.unbind-node-camera.v1",
+  "command": "unbind-node-camera",
+  "laws": [
+    "typed payload validation and typed rejection",
+    "direct sparse diff only at declared touched paths",
+    "inverse derives from exact base and restores that base when applied",
+    "reference integrity is repaired or rejected at the named typed paths",
+    "apply and replay are deterministic"
+  ],
+  "referencePolicy": "clears only the optional node camera reference",
+  "touchedPaths": [
+    "document/nodes/*/camera"
+  ]
+}

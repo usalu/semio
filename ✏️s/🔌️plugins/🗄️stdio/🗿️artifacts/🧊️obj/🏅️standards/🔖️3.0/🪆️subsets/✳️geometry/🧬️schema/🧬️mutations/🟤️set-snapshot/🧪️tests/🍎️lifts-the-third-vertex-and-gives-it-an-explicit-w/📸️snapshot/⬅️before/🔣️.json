@@ -1,0 +1,75 @@
+{
+  "schema": "stdio.obj",
+  "vertices": [
+    {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "x": 1.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "x": 0.0,
+      "y": 1.0,
+      "z": 0.0
+    }
+  ],
+  "texcoords": [],
+  "normals": [
+    {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 1.0
+    }
+  ],
+  "faces": [
+    {
+      "vertices": [
+        {
+          "vertex": 0,
+          "normal": 0
+        },
+        {
+          "vertex": 1,
+          "normal": 0
+        },
+        {
+          "vertex": 2,
+          "normal": 0
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "name": "shell",
+      "faces": [
+        0
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "name": "tri",
+      "faces": [
+        0
+      ]
+    }
+  ],
+  "usemtl": [
+    {
+      "faceIndexFrom": 0,
+      "material": "default"
+    }
+  ],
+  "smoothingGroups": [],
+  "unknownStatements": [
+    {
+      "lineIndex": 0,
+      "raw": "# semio fixture"
+    }
+  ]
+}

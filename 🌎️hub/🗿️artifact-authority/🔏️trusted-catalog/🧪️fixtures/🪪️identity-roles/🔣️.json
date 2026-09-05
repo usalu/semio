@@ -1,0 +1,14 @@
+{
+  "schema": "semio.hub.trusted-catalog-identity-roles/v1",
+  "source": "../👥️two-package/🔣️.json",
+  "packageReferenceHash": "componentBlake3",
+  "descriptorOwnerHash": "componentSha256",
+  "cases": [
+    { "change": "none", "codec": true, "open": true },
+    { "change": "blake3-owner", "codec": false, "open": false },
+    { "change": "descriptor-owner", "codec": false, "open": false },
+    { "change": "zero-owner", "codec": false, "open": false },
+    { "change": "bare-kind", "codec": false, "open": false },
+    { "change": "bare-surface", "codec": true, "open": false }
+  ]
+}

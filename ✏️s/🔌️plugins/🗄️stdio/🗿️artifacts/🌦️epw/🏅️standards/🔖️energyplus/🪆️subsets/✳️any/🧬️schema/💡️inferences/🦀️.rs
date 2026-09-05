@@ -2,7 +2,7 @@
 //! 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING). Directory shape
 //! mirrors `🧬️mutations/`: this file is the family-root assembly (never mod's/includes the slug
 //! dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
-//! inference gets its own `<emoji><slug>/` child (currently: `🌡climate/`, honestly derivable
+//! inference gets its own `<emoji><slug>/` child (currently: `🌡️climate/`, honestly derivable
 //! from `records` alone — EPW is climate/weather data, not geometry, so the closest honest
 //! derived statistic is a min/max/avg fold over the hourly dry-bulb temperature column, not a
 //! bounding box).
@@ -14,7 +14,7 @@ use super::climate::{compute_epw_climate_summary, EpwClimateSummary};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an epw snapshot. One field per named inference under
-/// `💡️inferences/` (currently: `climate`, backed by the `🌡climate/` slug dir).
+/// `💡️inferences/` (currently: `climate`, backed by the `🌡️climate/` slug dir).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.epw.inference")]

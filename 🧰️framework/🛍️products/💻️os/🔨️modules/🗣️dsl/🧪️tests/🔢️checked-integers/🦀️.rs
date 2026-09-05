@@ -29,7 +29,7 @@ struct Vectors {
 }
 
 fn vectors() -> Vectors {
-    let vectors: Vectors = serde_json::from_str(include_str!("../../🧪️🧪️🏔️🦋️tests/🔢️checked-integers/🔣️.json")).unwrap();
+    let vectors: Vectors = serde_json::from_str(include_str!("../../🧪️tests/🔢️checked-integers/🔣️.json")).unwrap();
     assert_eq!(vectors.version, 1);
     vectors
 }
@@ -67,13 +67,13 @@ async fn fields_match_neutral_boundaries_and_serde() {
         let expected = match usize::BITS { 32 => row.accepted32, 64 => row.accepted64, bits => panic!("unsupported pointer width {bits}") };
         macro_rules! check_type {
             ($ty:ty, $wide:ty, $variant:ident) => {{
-                let actual = row.decimal.parse::<$wide>().map_err(|error| error.to_string()).and_then(|value| <$ty>::from_value(&FieldValue::$variant(value)));
+                let actual = row.decimal.parse::<$wide>().map_err(|error| error.to_string()).and_then(|value| <$ty as DslField>::from_value(&FieldValue::$variant(value)));
                 let reference = serde_json::from_str::<$ty>(&row.decimal);
                 assert_eq!(actual.is_ok(), expected, "{} {}", row.integer_type, row.decimal);
                 assert_eq!(reference.is_ok(), expected, "serde {} {}", row.integer_type, row.decimal);
                 assert_eq!(actual.as_ref().ok(), reference.as_ref().ok(), "{} {}", row.integer_type, row.decimal);
                 if let Ok(value) = actual {
-                    assert_eq!(<$ty>::from_value(&value.to_value()), Ok(value));
+                    assert_eq!(<$ty as DslField>::from_value(&DslField::to_value(&value)), Ok(value));
                     assert_eq!(value.to_string(), row.decimal);
                 }
             }};
@@ -102,7 +102,7 @@ async fn mismatched_variants_rejected_all_types() {
     macro_rules! check_type {
         ($ty:ty, $other:expr) => {
             for value in [$other, FieldValue::Bool(false), FieldValue::Float(1.0), FieldValue::Text("1".into()), FieldValue::Absent] {
-                assert!(<$ty>::from_value(&value).is_err(), "{} {value:?}", stringify!($ty));
+                assert!(<$ty as DslField>::from_value(&value).is_err(), "{} {value:?}", stringify!($ty));
             }
         };
     }
@@ -120,12 +120,12 @@ async fn mismatched_variants_rejected_all_types() {
 
 #[semio_framework_async_macros::async_test]
 async fn nested_collections_propagate_integer_overflow() {
-    assert_eq!(Vec::<u8>::from_value(&FieldValue::List(vec![FieldValue::UInt(255)])), Ok(vec![255]));
-    assert!(Vec::<u8>::from_value(&FieldValue::List(vec![FieldValue::UInt(256)])).is_err());
-    assert_eq!(<[i8; 1]>::from_value(&FieldValue::Tuple(vec![FieldValue::Int(-128)])), Ok([-128]));
-    assert!(<[i8; 1]>::from_value(&FieldValue::Tuple(vec![FieldValue::Int(-129)])).is_err());
+    assert_eq!(<Vec<u8> as DslField>::from_value(&FieldValue::List(vec![FieldValue::UInt(255)])), Ok(vec![255]));
+    assert!(<Vec<u8> as DslField>::from_value(&FieldValue::List(vec![FieldValue::UInt(256)])).is_err());
+    assert_eq!(<[i8; 1] as DslField>::from_value(&FieldValue::Tuple(vec![FieldValue::Int(-128)])), Ok([-128]));
+    assert!(<[i8; 1] as DslField>::from_value(&FieldValue::Tuple(vec![FieldValue::Int(-129)])).is_err());
     let value = FieldValue::Map(vec![("index".into(), FieldValue::UInt(4294967296))]);
-    assert!(std::collections::BTreeMap::<String, u32>::from_value(&value).is_err());
+    assert!(<std::collections::BTreeMap<String, u32> as DslField>::from_value(&value).is_err());
 }
 //#endregion 🧪️Fields
 

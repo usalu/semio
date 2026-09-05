@@ -5,7 +5,7 @@ use super::*;
 //#region 🧪️ParameterSemantics
 #[test]
 fn graph_parameter_preserves_labels_and_existing_range_expansion() {
-    let fixture = crate::os_pack::json::parse(include_str!("../🧪️fixtures/🔣️.json")).unwrap();
+    let fixture = crate::os_pack::json::parse(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture.get("cases").and_then(crate::os_pack::json::Value::as_array).unwrap() {
         let before = case.get("before").unwrap();
         let mut widget = Widget::InputSlider {

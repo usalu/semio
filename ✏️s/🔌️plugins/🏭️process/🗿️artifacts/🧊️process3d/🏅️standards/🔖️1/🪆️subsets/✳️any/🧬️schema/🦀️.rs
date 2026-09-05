@@ -273,7 +273,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for Process3dAnalyzerAnalysis {
         type Parts = Process3dParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.process3d", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.process.process3d", standard: StandardId("1"), subset: SubsetId("*") };
 
         fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium

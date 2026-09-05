@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#", "type": "object", "additionalProperties": false,
+  "required": ["$schema", "contract", "payloadBytes", "trace", "rejectForeignOwner", "rejectResetOwner"],
+  "properties": {
+    "$schema": { "const": "./🧬️.schema.json" }, "contract": { "const": "semio.flow.transient-owners/v1" }, "payloadBytes": { "const": 0 }, "rejectForeignOwner": { "const": true }, "rejectResetOwner": { "const": true },
+    "trace": {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["id", "items", "bytes", "status", "retired"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "maxLength": 32 }, "items": { "type": "integer", "minimum": 0, "maximum": 1 },
+          "bytes": { "type": "integer", "minimum": 0, "maximum": 4096 }, "status": { "enum": ["pending", "complete"] }, "retired": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

@@ -4,6 +4,14 @@
   "sourceRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
   "projectType": "library",
   "targets": {
+    "test-exact-cargo-laws": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test exact-cargo-laws"
+      }
+    },
     "test-path-emoji-statutes": {
       "executor": "nx:run-commands",
       "options": {

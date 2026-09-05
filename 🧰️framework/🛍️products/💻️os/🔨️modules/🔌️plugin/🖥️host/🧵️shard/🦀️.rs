@@ -964,7 +964,7 @@ impl ShardLoop {
     /// is recovered from envelopes already on the wire rather than a new `ShardFrame::Grant` field:
     /// a `Grant`-level `lane` field would have needed to break TWO `ShardFrame::Grant` construction
     /// sites outside this packet's `path_scope` (`💻️os/🖥️host/🎠️activation/🦀️.rs`'s
-    /// `NativeKernelRuntime::tick_and_dispatch` and `📺️renderer/🧑️‍🎨️engine/…/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/
+    /// `NativeKernelRuntime::tick_and_dispatch` and `📺️renderer/🧑‍🎨engine/…/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/
     /// 🎠️runtime.rs`'s equivalent dispatch loop — both live, both construct `ShardFrame::Grant`
     /// directly, neither is `🔌️plugin/🖥️host/**`), and the information a `Grant`-level field would
     /// have carried is ALREADY present per-envelope (`Envelope.lane`, set once per actor by the

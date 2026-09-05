@@ -1,0 +1,2 @@
+# stdio.semio.model mutation text grammar schema
+type Document { line: String! }

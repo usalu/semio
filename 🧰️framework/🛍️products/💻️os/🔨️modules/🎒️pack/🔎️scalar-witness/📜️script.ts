@@ -31,8 +31,8 @@ export function encodeScalarRecordFixture(test:Case,oracle:boolean):{bytes:Buffe
 
 //#region 🧪️Oracle
 export function testScalarRecordWireFixture():void {
-  const fixture:Fixture=JSON.parse(readFileSync(new URL("./🧪️fixture/🔣️.json",import.meta.url),"utf8"));
-  const validate=new Ajv({strict:true,allErrors:true}).compile(JSON.parse(readFileSync(new URL("./🧪️fixture.schema.json",import.meta.url),"utf8")));
+  const fixture:Fixture=JSON.parse(readFileSync(new URL("./🧫️fixture/🔣️.json",import.meta.url),"utf8"));
+  const validate=new Ajv({strict:true,allErrors:true}).compile(JSON.parse(readFileSync(new URL("./🧬️fixture.schema.json",import.meta.url),"utf8")));
   assert.ok(validate(fixture),JSON.stringify(validate.errors));assert.equal(new Set(fixture.cases.map(test=>test.id)).size,fixture.cases.length);
   const captured=fixture.capture;
   const before:Case={id:"capture",ordinal:captured.ordinal,fields:[{type:"u64",value:String(captured.value)},null,null],wireBytes:captured.wire.length,symbols:0};

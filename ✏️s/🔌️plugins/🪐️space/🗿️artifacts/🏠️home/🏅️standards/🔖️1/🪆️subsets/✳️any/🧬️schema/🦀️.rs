@@ -149,7 +149,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for SHomeAnalyzerAnalysis {
         type Parts = SHomeParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.home", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.space.home", standard: StandardId("1"), subset: SubsetId("*") };
 
         fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium

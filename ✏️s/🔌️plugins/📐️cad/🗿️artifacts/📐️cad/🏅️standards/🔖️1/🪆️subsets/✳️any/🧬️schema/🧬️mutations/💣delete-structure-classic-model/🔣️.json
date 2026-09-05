@@ -5,7 +5,7 @@
   "displayName": "Delete Structure Classic Model",
   "emoji": "💣",
   "aggregateVariant": "DeleteStructureClassicModel",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "delete-structure-classic-model",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

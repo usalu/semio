@@ -5,7 +5,7 @@
   "displayName": "Scale Part3d",
   "emoji": "📏",
   "aggregateVariant": "ScalePart3d",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "scale-part3d",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@ use super::*;
 
 //#region 🧪️Fixture
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧪️🧪️🏔️🦋️tests/🧬️owned-schema-record/🔣️.json")).expect("owned schema record vectors")
+    serde_json::from_str(include_str!("../../🧪️tests/🧬️owned-schema-record/🔣️.json")).expect("owned schema record vectors")
 }
 
 fn source_case<'a>(row: &'a serde_json::Value) -> &'a str {

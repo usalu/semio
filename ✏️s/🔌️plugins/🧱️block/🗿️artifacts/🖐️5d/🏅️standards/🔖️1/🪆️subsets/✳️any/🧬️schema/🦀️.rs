@@ -214,7 +214,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for Block5dAnalyzerAnalysis {
         type Parts = Block5dParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.block5d", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.block.block5d", standard: StandardId("1"), subset: SubsetId("*") };
 
         async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium

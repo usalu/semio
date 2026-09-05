@@ -5,7 +5,7 @@
   "displayName": "Change Language",
   "emoji": "🌐",
   "aggregateVariant": "ChangeLanguage",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-language",
   "binaryTag": 2,
   "invertibility": "explicit-mutation",

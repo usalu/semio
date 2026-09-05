@@ -1,0 +1,5 @@
+""" 📸️ Persisted logical SVG document. """
+type SvgSnapshot {
+  schema: String!
+  doc: XmlDocument!
+}

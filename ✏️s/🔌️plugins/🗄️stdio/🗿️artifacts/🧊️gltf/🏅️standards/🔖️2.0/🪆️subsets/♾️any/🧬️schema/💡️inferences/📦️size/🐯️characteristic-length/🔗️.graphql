@@ -1,0 +1,13 @@
+# 💡️ characteristic-length glTF inference leaf GraphQL facet.
+type GltfCharacteristicLengthInferenceV1 {
+  id: ID!
+  algorithmVersion: Int!
+  cacheKey: String!
+  validity: String!
+  quality: String!
+  diagnostics: [String!]!
+  provenance: [String!]!
+  value: Float
+}
+type GltfSizeVec3 { x: Float!, y: Float!, z: Float! }
+type GltfSizeBounds3 { min: GltfSizeVec3!, max: GltfSizeVec3!, dimensions: GltfSizeVec3! }

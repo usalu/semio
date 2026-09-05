@@ -37,7 +37,7 @@ export function verifyPrintPipelineQuick(): void {
   assert.equal(resolveRegisteredPrintTemplates([]).length, templates.length);
   assert.equal(resolveRegisteredPrintTemplates(["report", "report-dark"]).length, 1);
   assert.throws(() => resolveRegisteredPrintTemplates(["not-a-template"]));
-  assert.deepEqual(printTemplatePdfNames("📄️template/📋️report/report.tex"), { light: "report.pdf", dark: "report-dark.pdf" });
+  assert.deepEqual(printTemplatePdfNames("🧾️template/📋️report/📋️report.tex"), { light: "📋️report.pdf", dark: "📋️report-dark.pdf" });
 
   const windowSource = readFileSync(join(latexRoot, "semio-window.sty"), "utf8");
   const tableSource = readFileSync(join(latexRoot, "semio-table.sty"), "utf8");

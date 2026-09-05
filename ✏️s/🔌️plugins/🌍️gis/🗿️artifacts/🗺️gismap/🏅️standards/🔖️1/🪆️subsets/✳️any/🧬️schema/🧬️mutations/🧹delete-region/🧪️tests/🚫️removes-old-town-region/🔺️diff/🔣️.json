@@ -1,0 +1,20 @@
+{
+  "artifact": null,
+  "positions": null,
+  "routes": null,
+  "regions": {
+    "added": [],
+    "removed": [
+      "region-old-town"
+    ],
+    "patched": [],
+    "reordered": null
+  },
+  "layerVisibility": null,
+  "layerStrokeScale": null,
+  "cameraJson": null,
+  "renderMode": null,
+  "vectorStyle": null,
+  "lodMode": null,
+  "locale": null
+}

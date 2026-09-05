@@ -5,7 +5,7 @@
   "displayName": "Touch Artifact",
   "emoji": "🕒",
   "aggregateVariant": "TouchArtifact",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "touch-artifact",
   "binaryTag": 3,
   "invertibility": "explicit-mutation",

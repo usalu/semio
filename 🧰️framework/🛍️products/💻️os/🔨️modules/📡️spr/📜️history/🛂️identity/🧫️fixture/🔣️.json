@@ -1,0 +1,51 @@
+{
+  "schema": "semio.member.history-identity/v1",
+  "limits": { "dictionaryEntries": 8192, "dictionaryBytes": 1048576, "identityBytes": 256, "pinGroups": 1024, "pins": 8192 },
+  "expected": {
+    "artifactId": "flow-member", "schema": "stdio.semio.flow", "dialect": ["s.stdio.semio", "v1", "flow"],
+    "owner": ["flow-parent!s.flow.flow@1/*", "content", "flow-member"]
+  },
+  "dictionary": ["flow-member", "stdio.semio.flow", "flow-parent!s.flow.flow@1/*", "content", "s.stdio.semio", "v1", "flow"],
+  "docHex": "0101000101",
+  "compositionHex": "010301020103010001040105010600",
+  "unownedCompositionHex": "010201040105010600",
+  "uuid": {
+    "artifactId": "flow-00112233-4455-6677-8899-aabbccddeeff",
+    "docHex": "01020000112233445566778899aabbccddeeff0101",
+    "compositionHex": "010301020103020000112233445566778899aabbccddeeff01040105010600"
+  },
+  "cases": [
+    { "id": "owned", "operation": "unchanged", "error": null },
+    { "id": "unowned", "operation": "unowned", "expectedOwner": null, "error": null },
+    { "id": "raw-document-id", "operation": "raw-document-id", "error": null },
+    { "id": "prefix-uuid-id", "operation": "prefix-uuid-id", "error": null },
+    { "id": "committed-last-wins", "operation": "earlier-foreign-composition", "error": null },
+    { "id": "earlier-malformed-overlay", "operation": "earlier-malformed-composition", "hex": "010701020103010001040105010600", "error": "malformed" },
+    { "id": "wrong-document", "operation": "dictionary-replace", "index": 0, "text": "other-member", "error": "identity" },
+    { "id": "wrong-schema", "operation": "dictionary-replace", "index": 1, "text": "other.flow", "error": "identity" },
+    { "id": "wrong-parent", "operation": "dictionary-replace", "index": 2, "text": "other!s.flow.flow@1/*", "error": "identity" },
+    { "id": "wrong-slot", "operation": "dictionary-replace", "index": 3, "text": "other", "error": "identity" },
+    { "id": "wrong-kind", "operation": "dictionary-replace", "index": 4, "text": "s.other.semio", "error": "identity" },
+    { "id": "wrong-standard", "operation": "dictionary-replace", "index": 5, "text": "v2", "error": "identity" },
+    { "id": "wrong-subset", "operation": "dictionary-replace", "index": 6, "text": "text", "error": "identity" },
+    { "id": "identity-control", "operation": "dictionary-replace", "index": 3, "text": "content\u0085", "error": "identity" },
+    { "id": "missing-composition", "operation": "missing-composition", "error": "identity" },
+    { "id": "duplicate-document", "operation": "duplicate-document", "error": "malformed" },
+    { "id": "owner-missing", "operation": "replace-composition", "hex": "010201040105010600", "error": "identity" },
+    { "id": "dialect-missing", "operation": "replace-composition", "hex": "010101020103010000", "error": "identity" },
+    { "id": "presence-bits", "operation": "replace-composition", "hex": "010701020103010001040105010600", "error": "malformed" },
+    { "id": "old-composition-format", "operation": "replace-composition", "hex": "000301020103010001040105010600", "error": "malformed" },
+    { "id": "composition-tail", "operation": "replace-composition", "hex": "01030102010301000104010501060000", "error": "malformed" },
+    { "id": "composition-truncated", "operation": "replace-composition", "hex": "0103010201030100010401050106", "error": "malformed" },
+    { "id": "dictionary-miss", "operation": "replace-doc", "hex": "01017f0101", "error": "malformed" },
+    { "id": "dictionary-nonminimal", "operation": "replace-doc", "hex": "010180000101", "error": "malformed" },
+    { "id": "ordinal-denied", "operation": "replace-doc", "hex": "0103000101", "error": "malformed" },
+    { "id": "unknown-id-tag", "operation": "replace-doc", "hex": "0104000101", "error": "malformed" },
+    { "id": "old-doc-format", "operation": "replace-doc", "hex": "0001000101", "error": "malformed" },
+    { "id": "doc-tail", "operation": "replace-doc", "hex": "010100010100", "error": "malformed" },
+    { "id": "dictionary-capacity", "operation": "dictionary-limit", "value": 6, "error": "capacity" },
+    { "id": "dictionary-byte-capacity", "operation": "dictionary-byte-limit", "value": 6, "error": "capacity" },
+    { "id": "total-pin-capacity", "operation": "pin-limit", "hex": "0103010201030100010401050106010100020100010101000101", "value": 1, "error": "capacity" },
+    { "id": "pin-group-capacity", "operation": "replace-composition", "hex": "01030102010301000104010501068108", "error": "capacity" }
+  ]
+}

@@ -26,36 +26,35 @@
         {
           "status": "Migrated",
           "lanes": ["Config"],
-          "routes": ["setFillCount", "setLocale", "setTerminology"]
+          "routes": ["closeVortexSuggestions", "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementSubmit", "focusSelection", "hoverSuggestion", "openVortexSuggestions", "selectSameKindSelection", "setBrushPlacementOverlapBudget", "setCamera", "setChunkSize", "setFillCount", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setLocale", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTerminology", "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "toggleSun"]
         },
         {
           "status": "Migrated",
           "lanes": ["Artifact", "Config"],
-          "routes": ["setActiveExample"]
+          "routes": ["acceptSuggestion", "addBrushObject", "addObjectKind", "createAttraction", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection", "patchInspector", "rotateSelection", "scaleSelection", "setActiveExample", "setSelectionFlag", "setTargetVolumeFlag", "translateSelection", "worldRelocate"]
         },
         {
-          "status": "BatchOnlyPendingRewrite",
+          "status": "Migrated",
           "lanes": ["Artifact"],
-          "routes": ["addTargetVolume"],
-          "blocker": "artifact-lane completion has no app-owned retained preparation and root-retirement factory"
-        },
-        {
-          "status": "BatchOnlyPendingRewrite",
-          "lanes": ["Artifact", "Config"],
-          "routes": ["acceptSuggestion", "addBrushObject", "addObjectKind", "createAttraction", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection", "patchInspector", "rotateSelection", "scaleSelection", "setFillCountStep", "setFixtureJson", "setSelectionFlag", "setTargetVolumeFlag", "translateSelection", "worldRelocate"],
-          "blocker": "artifact/config completion has neither app-owned retained preparation factory nor bounded root retirement"
-        },
-        {
-          "status": "BatchOnlyPendingRewrite",
-          "lanes": ["Config"],
-          "routes": ["closeVortexSuggestions", "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementSubmit", "focusSelection", "hoverSuggestion", "openVortexSuggestions", "relocateTargetVolume", "selectSameKindSelection", "setBrushPlacementOverlapBudget", "setCamera", "setChunkSize", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "toggleSun"],
-          "blocker": "config-lane completion has no app-owned retained preparation and root-retirement factory"
+          "routes": ["addTargetVolume", "relocateTargetVolume"]
         },
         {
           "status": "BatchOnlyPendingRewrite",
           "lanes": ["HostOnly"],
           "routes": ["engagementRepeatLast", "fillBuildTick", "registerBrushMesh", "suggestionsTick", "transformBegin", "transformEnd"],
           "blocker": "the current empty/effect-only completion does not reproduce the route's semantic runtime transition"
+        },
+        {
+          "status": "BatchOnlyPendingRewrite",
+          "lanes": ["Artifact", "Config"],
+          "routes": ["setFillCountStep"],
+          "blocker": "no explicit build_tool_job arm; the generic reducer does not dispatch this id, so a migrated route would emit nothing"
+        },
+        {
+          "status": "BatchOnlyPendingRewrite",
+          "lanes": ["Artifact", "Config"],
+          "routes": ["setFixtureJson"],
+          "blocker": "argument is a whole fixture (~129KB for the Nakagin example) against the shared 8,192-byte PUZZLE_COMMAND_RAW_BYTES retained-job wire cap; needs a chunked or resumable wire path, not a wiring change"
         }
       ]
     },

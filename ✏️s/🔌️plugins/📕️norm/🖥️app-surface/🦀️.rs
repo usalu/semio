@@ -13,9 +13,11 @@
 //! graph exactly as the artifacts require.
 
 use crate::document::{CheckReport, NormFamily, NormHost};
+use semio_framework_plugin::plugin_app_close_prelude as ui;
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasChildren};
 use semio_framework_plugin::{
-    ui_stack_vertical, ui_text, AppIo, ArtifactKindSpec, ArtifactPresentation, ArtifactView, ConfigView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType,
-    ModeDefinition, OsMediaCapability, PanelGroup, PanelTabDefinition, PanelTabKind, PortMultiplicity, SurfaceKind, UiNode, WindowKindDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowOptions,
+    AppIo, ArtifactKindSpec, ArtifactPresentation, ArtifactView, BuiltNode, ConfigView, Emit, Fault, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, ModeDefinition, OsMediaCapability,
+    PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, PortMultiplicity, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowOptions,
 };
 
 //#region 🔖️Ids
@@ -60,46 +62,55 @@ pub fn report_table_rows(report: &CheckReport) -> Vec<Vec<String>> {
 //#endregion 🔖️ViewerManifest
 
 //#region 🔖️Render
+fn render_text(value: impl Into<String>) -> UiAssemblyResult<BuiltNode> {
+    let label = ui::Label::try_from(value.into()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm UI label admission failed"))?;
+    ui::text(label).try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm UI text build failed"))
+}
+
 /// 📑️ Renders a whole `CheckReport` as one line per computed check.
-pub fn render_report(report: &CheckReport) -> UiNode {
+pub fn render_report(report: &CheckReport) -> UiAssemblyResult<BuiltNode> {
     if report.checks.is_empty() {
-        return ui_text(Label::data("No checks computed."));
+        return render_text("No checks computed.");
     }
-    let children = report.checks.iter().enumerate().map(|(index, check)| ui_text(Label::data(format!("{}. {} — {:?} u={:.2} — {}", index + 1, check.clause, check.status, check.utilization, check.message)))).collect();
-    ui_stack_vertical(children)
+    let children = report.checks.iter().enumerate().map(|(index, check)| render_text(format!("{}. {} — {:?} u={:.2} — {}", index + 1, check.clause, check.status, check.utilization, check.message))).collect::<UiAssemblyResult<Vec<_>>>()?;
+    ui::column()
+        .try_children(children)
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm report children admission failed"))?
+        .try_build()
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm report build failed"))
 }
 
 /// 📄️ Renders a document as pretty-printed JSON — the inputs window's surface.
-pub fn render_document_json<D: dsl::ToValue>(document: &D) -> UiNode {
+pub fn render_document_json<D: dsl::ToValue>(document: &D) -> UiAssemblyResult<BuiltNode> {
     let json = pack::json::to_string_pretty(&pack::json::from_dsl_value(&dsl::ToValue::to_value(document)));
-    ui_text(Label::data(json))
+    render_text(json)
 }
 
 /// 🧾️ Renders a one-line headline for a family's current session — the document panel's surface.
-pub fn render_summary<F: NormFamily>(host: &NormHost<F>) -> UiNode {
+pub fn render_summary<F: NormFamily>(host: &NormHost<F>) -> UiAssemblyResult<BuiltNode> {
     let report = host.report();
-    ui_text(Label::data(format!("{} — {} checks, worst u={:.2}, all pass={}", F::family_id().label(), report.checks.len(), report.worst_utilization(), report.all_pass())))
+    render_text(format!("{} — {} checks, worst u={:.2}, all pass={}", F::family_id().label(), report.checks.len(), report.worst_utilization(), report.all_pass()))
 }
 
 /// 📚️ Renders the catalogue panel's placeholder headline for a family.
-pub fn render_catalogue(label: &str) -> UiNode {
-    ui_text(Label::data(format!("{label} catalogue")))
+pub fn render_catalogue(label: &str) -> UiAssemblyResult<BuiltNode> {
+    render_text(format!("{label} catalogue"))
 }
 
 /// 🔍️ Renders the inspection panel — the `selected_check_index` row of the report, falling back to the
 /// first check when the index is unset or out of range (and to a placeholder when there are no checks).
-pub fn render_inspection(report: &CheckReport, selected_check_index: Option<u32>) -> UiNode {
+pub fn render_inspection(report: &CheckReport, selected_check_index: Option<u32>) -> UiAssemblyResult<BuiltNode> {
     let checks = &report.checks;
     let index = selected_check_index.map(|value| value as usize).filter(|index| *index < checks.len()).unwrap_or(0);
     match checks.get(index) {
-        Some(check) => ui_text(Label::data(format!("{check:?}"))),
-        None => ui_text(Label::data("No checks")),
+        Some(check) => render_text(format!("{check:?}")),
+        None => render_text("No checks"),
     }
 }
 
 /// ❓️ The unknown-body-key fallback every norm app's `render` ends with.
-pub fn render_unknown_body(body_key: &str) -> UiNode {
-    ui_text(Label::data(format!("Unknown body: {body_key}")))
+pub fn render_unknown_body(body_key: &str) -> UiAssemblyResult<BuiltNode> {
+    render_text(format!("Unknown body: {body_key}"))
 }
 //#endregion 🔖️Render
 
@@ -273,13 +284,9 @@ pub fn commit_snapshot_fields<M>(mutations: Vec<M>, description: &str) -> Result
     Ok(Emit::commit(mutations, description))
 }
 
-pub fn commit_document<D>(document: D, description: &str) -> Result<Emit<crate::document::SetArtifactMutation<D>, crate::config::NormConfigMutation>, Fault> {
-    Ok(Emit::commit(vec![crate::document::SetArtifactMutation::SetArtifact { document }], description))
-}
-
 /// ☑️ The one config-only edit every app's `selected-check` command emits.
 pub fn commit_selected_check_index<M>(index: Option<u32>) -> Result<Emit<M, crate::config::NormConfigMutation>, Fault> {
-    Ok(Emit::config(vec![crate::config::NormConfigMutation::SetSelectedCheckIndex { index }]))
+    Ok(Emit::config(vec![crate::config::ChangeSelectedCheckIndex { index }.into()]))
 }
 
 /// 🎯️ Builds the args-side of an app's `command_from_action` bridge for `selected-check` — the shells

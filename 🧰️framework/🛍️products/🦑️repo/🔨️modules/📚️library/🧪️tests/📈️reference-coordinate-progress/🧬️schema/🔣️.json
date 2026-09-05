@@ -1,0 +1,303 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contract",
+    "semantics",
+    "registration",
+    "cases"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "contract": {
+      "const": "reference-coordinate-progress-v1"
+    },
+    "semantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "current",
+        "pending",
+        "empty",
+        "terminal",
+        "sort",
+        "resultSort",
+        "skipped",
+        "opaqueRoots",
+        "observer"
+      ],
+      "properties": {
+        "phase": {
+          "const": "incoming-coordinate-roots"
+        },
+        "current": {
+          "const": "fully-classified-directory-prefix"
+        },
+        "pending": {
+          "const": "one-event-before-existing-candidate-cancellation-check-and-io"
+        },
+        "empty": {
+          "const": "one-zero-of-zero-event"
+        },
+        "terminal": {
+          "const": "total-of-total-without-path-only-after-success-and-final-cancellation-check"
+        },
+        "sort": {
+          "const": "depth-ascending-then-utf8-byte-order"
+        },
+        "resultSort": {
+          "const": "depth-descending-then-utf8-byte-order"
+        },
+        "skipped": {
+          "const": "included-in-total-and-progress-without-new-filesystem-access"
+        },
+        "opaqueRoots": {
+          "const": [
+            "compose",
+            "temp/compose"
+          ]
+        },
+        "observer": {
+          "const": "unchanged-fifth-argument"
+        }
+      }
+    },
+    "registration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target",
+        "command",
+        "testPath",
+        "launchName",
+        "group",
+        "order",
+        "nxCommand"
+      ],
+      "properties": {
+        "target": {
+          "const": "test-reference-coordinate-progress"
+        },
+        "command": {
+          "const": "reference-coordinate-progress"
+        },
+        "testPath": {
+          "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️reference-coordinate-progress.ts"
+        },
+        "launchName": {
+          "const": "🧹clean🧩️taxonomy📈️reference-coordinate-progress"
+        },
+        "group": {
+          "const": "4_gate"
+        },
+        "order": {
+          "const": 410.21
+        },
+        "nxCommand": {
+          "const": "bun nx run @semio-tech/repo-lib:test-reference-coordinate-progress --skip-nx-cache"
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 18,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "operation",
+          "paths",
+          "nodes",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "operation": {
+            "enum": [
+              "plan",
+              "apply"
+            ]
+          },
+          "paths": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "nodes": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/definitions/node"
+            }
+          },
+          "cancel": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "when"
+            ],
+            "properties": {
+              "when": {
+                "enum": [
+                  "before-start",
+                  "pending",
+                  "empty",
+                  "observer"
+                ]
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "when": {
+                      "enum": [
+                        "pending",
+                        "observer"
+                      ]
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "path"
+                  ]
+                },
+                "else": {
+                  "not": {
+                    "required": [
+                      "path"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "directories",
+              "visited",
+              "roots",
+              "markerProbes",
+              "observers",
+              "error"
+            ],
+            "properties": {
+              "directories": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "visited": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "roots": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "markerProbes": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "observers": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "error": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "directory",
+            "file",
+            "symlink"
+          ]
+        },
+        "content": {
+          "type": "string"
+        },
+        "gitRoot": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "file"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "content"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "content"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

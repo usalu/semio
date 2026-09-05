@@ -5,7 +5,7 @@
   "displayName": "Move Object",
   "emoji": "📍",
   "aggregateVariant": "MoveObject",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "move-object",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

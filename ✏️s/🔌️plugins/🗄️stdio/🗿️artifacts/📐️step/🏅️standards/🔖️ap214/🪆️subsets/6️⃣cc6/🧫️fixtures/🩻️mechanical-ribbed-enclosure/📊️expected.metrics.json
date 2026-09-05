@@ -1,0 +1,24 @@
+{
+  "declaredOutcome": "applied",
+  "solids": 1,
+  "empty": false,
+  "measuredFrom": "🎯️expected.step, re-imported",
+  "volume": 10584.000000000004,
+  "area": 10808,
+  "boundingBox": {
+    "xMin": -1e-7,
+    "xMax": 50.0000001,
+    "yMin": -1e-7,
+    "yMax": 30.0000001,
+    "zMin": -1e-7,
+    "zMax": 20.0000001
+  },
+  "boundingBoxDiagonal": 61.64414035413261,
+  "faces": 46,
+  "edges": 132,
+  "vertices": 88,
+  "validSolid": true,
+  "tessellationTolerance": 0.0018493242106239784,
+  "meshVertexCount": 264,
+  "meshTriangleCount": 172
+}

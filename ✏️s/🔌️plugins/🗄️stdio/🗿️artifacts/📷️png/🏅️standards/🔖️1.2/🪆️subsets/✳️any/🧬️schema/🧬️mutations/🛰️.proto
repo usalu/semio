@@ -12,7 +12,7 @@ import "🖼️change-background/🛰️.proto";
 import "📥️insert-text-chunk/🛰️.proto";
 import "🗑️remove-text-chunk/🛰️.proto";
 import "✏️replace-text-chunk/🛰️.proto";
-import "🟪️replace-pixels/🛰️.proto";
+import "🔲️replace-pixels/🛰️.proto";
 import "📦️insert-unknown-chunk/🛰️.proto";
 import "📤️remove-unknown-chunk/🛰️.proto";
 message PngMutation { oneof mutation { ChangeHeaderMutation change_header = 2; ReplacePaletteMutation replace_palette = 3; ChangeTransparencyMutation change_transparency = 4; ChangeGammaMutation change_gamma = 5; ChangeChromaticitiesMutation change_chromaticities = 6; ChangeSrgbIntentMutation change_srgb_intent = 7; ChangePhysicalDimsMutation change_physical_dims = 8; ChangeTimestampMutation change_timestamp = 9; ChangeBackgroundMutation change_background = 10; InsertTextChunkMutation insert_text_chunk = 11; RemoveTextChunkMutation remove_text_chunk = 12; ReplaceTextChunkMutation replace_text_chunk = 13; ReplacePixelsMutation replace_pixels = 14; InsertUnknownChunkMutation insert_unknown_chunk = 15; RemoveUnknownChunkMutation remove_unknown_chunk = 16; } }

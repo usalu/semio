@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📢️publication-fixtures/👥️presence/🧬️mutations/📝️change-publication-presence",
+  "semanticKind": "change-publication-presence",
+  "displayName": "Change Publication Presence",
+  "emoji": "📝️",
+  "aggregateVariant": "ChangePublicationPresence",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-publication-presence",
+  "binaryTag": 81,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": ["applied"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "json-schema", "text", "binary"]
+}

@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.hub.invite-redemption-transaction/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "limits", "vectors", "hostiles"],
+  "properties": {
+    "schema": { "const": "semio.hub.invite-redemption-transaction/v1" },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["credentialBytes", "identifierBytes", "maximumContenders"],
+      "properties": {
+        "credentialBytes": { "const": 4096 },
+        "identifierBytes": { "const": 4096 },
+        "maximumContenders": { "const": 3 }
+      }
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 16,
+      "maxItems": 32,
+      "items": { "$ref": "#/$defs/vector" }
+    },
+    "hostiles": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 12,
+      "items": { "$ref": "#/$defs/hostile" }
+    }
+  },
+  "$defs": {
+    "name": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[a-z0-9-]+$" },
+    "call": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "user", "actor", "credential", "failure"],
+      "properties": {
+        "kind": { "enum": ["redeem", "revoke", "append-forged", "restart", "rebuild"] },
+        "user": { "enum": ["same", "other", "missing"] },
+        "actor": { "enum": ["exact", "different"] },
+        "credential": { "enum": ["exact", "wrong-selector", "wrong-secret"] },
+        "failure": { "enum": ["none", "after-marker", "after-event", "after-projection"] }
+      }
+    },
+    "marker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["acceptedAt", "acceptedEventId"],
+      "properties": {
+        "acceptedAt": { "type": ["integer", "null"], "minimum": 0 },
+        "acceptedEventId": { "type": ["string", "null"], "minLength": 1, "maxLength": 4096 }
+      }
+    },
+    "vector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "initial", "concurrent", "calls", "expected"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "initial": { "enum": ["fresh", "accepted-same", "accepted-other", "revoked", "expired", "missing", "missing-user", "missing-space", "corrupt-marker", "corrupt-event"] },
+        "concurrent": { "type": "boolean" },
+        "calls": { "type": "array", "minItems": 1, "maxItems": 3, "items": { "$ref": "#/$defs/call" } },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["outcomes", "returnedEventIds", "marker", "events", "memberships", "publications", "replayEvents", "revoked"],
+          "properties": {
+            "outcomes": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 3,
+              "items": { "enum": ["newly-committed", "already-committed", "conflict", "unauthorized", "backend-error", "revoked", "append-denied", "restarted", "rebuilt"] }
+            },
+            "returnedEventIds": { "type": "array", "minItems": 1, "maxItems": 3, "items": { "type": ["string", "null"], "maxLength": 4096 } },
+            "marker": { "$ref": "#/$defs/marker" },
+            "events": { "type": "integer", "minimum": 0, "maximum": 1 },
+            "memberships": { "type": "integer", "minimum": 0, "maximum": 1 },
+            "publications": { "type": "integer", "minimum": 0, "maximum": 1 },
+            "replayEvents": { "type": "integer", "minimum": 0, "maximum": 1 },
+            "revoked": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "hostile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "mutation"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "mutation": { "enum": ["raw-capability", "client-space", "client-role", "client-event-id", "unknown-field", "oversized-identifier"] }
+      }
+    }
+  }
+}

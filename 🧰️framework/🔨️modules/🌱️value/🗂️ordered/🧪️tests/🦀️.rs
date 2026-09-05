@@ -87,7 +87,7 @@ fn check_tree<V>(root: &Root<V>) -> (usize, usize) {
 //#region ⚖️Oracle
 #[test]
 fn fixture_operations_match_btree_map_under_every_actual_grant() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🔣️ordered-map.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️ordered-map.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         for maximum_bytes in fixture["grants"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize) {
             let grant = Grant { maximum_items: 1, maximum_bytes }; let mut map = OrderedMap::new(); let mut oracle = BTreeMap::new();
@@ -148,7 +148,7 @@ fn cold_serde_preserves_duplicate_semantics_and_retires_failed_partial_roots() {
 //#region 🔎️Lookup
 #[test]
 fn lookup_matches_oracle_with_exact_long_key_comparison_bytes() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🔣️ordered-map.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️ordered-map.json")).unwrap();
     for maximum_bytes in [1, 64, 4096] {
         for row in fixture["lookupCases"].as_array().unwrap() {
             let grant = Grant { maximum_items: 1, maximum_bytes }; let mut map = OrderedMap::new();
@@ -186,7 +186,7 @@ impl Drop for Payload { fn drop(&mut self) { self.0.fetch_add(1, AtomicOrdering:
 
 #[test]
 fn cancellation_never_clones_payload_or_drops_final_value_inside_a_step() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🔣️ordered-map.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️ordered-map.json")).unwrap();
     for cancel in fixture["cancelAfterSteps"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize) {
         let drops = Arc::new(AtomicUsize::new(0)); let mut map = OrderedMap::new(); map.insert("🌊".repeat(2048) + "a", Payload(Arc::clone(&drops)));
         let mut cursor = map.begin_set("🌊".repeat(2048) + "b", Payload(Arc::clone(&drops)));
@@ -231,7 +231,7 @@ fn removed_payload_handoff_preserves_exact_last_owner() {
 /// 🔒️ Deliberate contract violations retain their tiny test allocations instead of invoking recursive payload destruction.
 #[test]
 fn live_owner_drop_guards_never_destroy_payloads() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🔣️ordered-map.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️ordered-map.json")).unwrap();
     assert_eq!(fixture["ownership"]["terminalOwners"], 0);
     for kind in 0..fixture["ownership"]["liveOwners"].as_array().unwrap().len() {
         let drops = Arc::new(AtomicUsize::new(0)); let mut map = OrderedMap::new(); map.insert("key".into(), Payload(Arc::clone(&drops)));
@@ -271,7 +271,7 @@ fn long_key_comparison_transfers_workers_and_retirement_counts_exact_key_bytes()
 #[test]
 fn shared_release_is_empty_or_transfers_the_exact_final_frontier() {
     assert!(OrderedMap::<Payload>::new().release_shared().is_ok());
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🧪️shared-owner/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/👥️shared-owner/🔣️.json")).unwrap();
     for maximum_bytes in [1, 64, 4096] {
         let drops = Arc::new(AtomicUsize::new(0));
         let key = fixture["key"]["text"].as_str().unwrap().repeat(fixture["key"]["repetitions"].as_u64().unwrap() as usize);

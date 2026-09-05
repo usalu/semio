@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.hub.trusted-catalog-identity-roles/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "source", "packageReferenceHash", "descriptorOwnerHash", "cases"],
+  "properties": {
+    "schema": { "const": "semio.hub.trusted-catalog-identity-roles/v1" },
+    "source": { "const": "../👥️two-package/🔣️.json" },
+    "packageReferenceHash": { "const": "componentBlake3" },
+    "descriptorOwnerHash": { "const": "componentSha256" },
+    "cases": {
+      "type": "array", "minItems": 6, "maxItems": 6, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["change", "codec", "open"],
+        "properties": {
+          "change": { "enum": ["none", "blake3-owner", "descriptor-owner", "zero-owner", "bare-kind", "bare-surface"] },
+          "codec": { "type": "boolean" },
+          "open": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

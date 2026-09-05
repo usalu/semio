@@ -715,7 +715,7 @@ mod tests {
 
     #[test]
     fn canonical_pair_neutral_framing_is_pack_then_spr_terminal_and_fail_closed() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🧬️canonical-pair/🔣️.json")).expect("canonical pair fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🪢️canonical-pair/🔣️.json")).expect("canonical pair fixture");
         let pair = canonical_pair_fixture();
         let control = test_control();
         let context = RebootstrapContext::new(100, &control);
@@ -756,7 +756,7 @@ mod tests {
 
     #[tokio::test]
     async fn lag_rebootstrap_neutral_wire_contract() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🧬️lag-rebootstrap/🔣️.json")).expect("fixture JSON");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🛟️lag-rebootstrap/🔣️.json")).expect("fixture JSON");
         let message = directory::os_directory::DirectoryStreamMessage::from_value(DslValue::from(fixture["control"].clone())).expect("directory control");
         let directory::os_directory::DirectoryStreamMessage::RebootstrapRequired { control } = message else { panic!("typed rebootstrap") };
         let public = directory::os_pack::json::to_json_string(&directory::os_directory::DirectoryStreamMessage::RebootstrapRequired { control: control.clone() });

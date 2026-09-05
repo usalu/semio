@@ -1,0 +1,7 @@
+{
+  "$schema": "./🧬️.schema.json", "contract": "semio.flow.viewer-owners/v1",
+  "role": "viewer", "members": "s.stdio.semio@v1/flow", "documentRights": ["read"],
+  "lanes": ["document", "config", "draft", "presence", "transient"],
+  "grant": { "items": 1, "bytes": 4096 }, "maximumSteps": 100000,
+  "expected": { "complete": true, "terminalEmpty": true }
+}

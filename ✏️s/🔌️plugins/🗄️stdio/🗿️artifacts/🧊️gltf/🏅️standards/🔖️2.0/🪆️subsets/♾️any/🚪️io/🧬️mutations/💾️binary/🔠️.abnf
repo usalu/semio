@@ -1,0 +1,4 @@
+; 🚪 Generic mutation envelope: format, marker, phase, canonical descriptor id/version, UTF-8 payload.
+document = %x01 %x47 phase varint *OCTET
+phase = %x01 / %x03
+varint = 1*5OCTET

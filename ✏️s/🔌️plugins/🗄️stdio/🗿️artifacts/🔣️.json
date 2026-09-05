@@ -9,7 +9,7 @@
         "responsibility": "LAS Point Cloud artifact definition."
       },
       {
-        "directory": "☁️ply",
+        "directory": "🧱️ply",
         "id": "s.stdio.ply",
         "kind": "artifact",
         "responsibility": "Polygon File Format artifact definition."
@@ -87,7 +87,7 @@
         "responsibility": "Portable Document Format artifact definition."
       },
       {
-        "directory": "📄️txt",
+        "directory": "🔤️txt",
         "id": "s.stdio.txt",
         "kind": "artifact",
         "responsibility": "Plain Text artifact definition."
@@ -135,7 +135,7 @@
         "responsibility": "Extensible Markup Language artifact definition."
       },
       {
-        "directory": "📷️jpg",
+        "directory": "📸️jpg",
         "id": "s.stdio.jpg",
         "kind": "artifact",
         "responsibility": "JPEG artifact definition."
@@ -177,7 +177,7 @@
         "responsibility": "Drawing Exchange Format artifact definition."
       },
       {
-        "directory": "🖼️bmp",
+        "directory": "🪟️bmp",
         "id": "s.stdio.bmp",
         "kind": "artifact",
         "responsibility": "Bitmap artifact definition."
@@ -195,7 +195,7 @@
         "responsibility": "Zlib Deflate Stream artifact definition."
       },
       {
-        "directory": "🟪️stl",
+        "directory": "🔺️stl",
         "id": "s.stdio.stl",
         "kind": "artifact",
         "responsibility": "Stereolithography artifact definition."

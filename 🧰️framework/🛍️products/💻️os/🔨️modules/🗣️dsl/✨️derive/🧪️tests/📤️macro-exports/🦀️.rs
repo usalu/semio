@@ -14,7 +14,7 @@ fn registered(source: &str) -> BTreeSet<String> {
 
 #[test]
 fn facade_exports_match_registered_macros() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
     let expected = |field: &str| fixture[field].as_array().unwrap().iter().map(|name| name.as_str().unwrap().to_owned()).collect::<BTreeSet<_>>();
     let owner = registered(include_str!("../../🦀️.rs"));
     let compiled = registered(include_str!("../../📦️packages/🦀️rust/🦀️.rs"));

@@ -5,6 +5,42 @@
     "default": ["{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/**/*.rs", "{projectRoot}/**/*"]
   },
   "targets": {
+    "artifact-directory-wiring-generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts artifact-directory-wiring generate jpg"
+      }
+    },
+    "artifact-directory-wiring-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts artifact-directory-wiring check jpg"
+      }
+    },
+    "subset-directory-wiring-generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts subset-directory-wiring generate semio mesh"
+      }
+    },
+    "subset-directory-wiring-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts subset-directory-wiring check semio mesh"
+      }
+    },
+    "flow-retained-decode-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts flow-retained-decode-check",
+        "forwardAllArgs": true
+      }
+    },
     "build-wasm-release": {
       "executor": "nx:run-commands",
       "options": {

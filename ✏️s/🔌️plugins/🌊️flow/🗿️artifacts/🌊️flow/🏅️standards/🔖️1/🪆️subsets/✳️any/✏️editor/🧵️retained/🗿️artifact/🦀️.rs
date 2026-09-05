@@ -1,6 +1,7 @@
 //! 🗿️ App-owned scene assembly delegates selected payload copying to the shared Flow cursor.
 
 use super::{Owner, Retirement};
+use crate::artifacts::flow::retirement::SceneRetirementFactory;
 use super::super::FlowWorkingScene;
 use flow::{neural, Widget};
 use flow::retained::{FlowCopyAllocationBudget, FlowSynapseCopy, FlowWidgetCopy};
@@ -10,11 +11,12 @@ use std::sync::Arc;
 #[path = "🧬️recipe/🦀️.rs"]
 pub(super) mod recipe;
 
+#[cfg(test)]
 #[path = "📸️snapshot/🦀️.rs"]
 pub(super) mod snapshot;
 
 #[path = "📬️preparation/🦀️.rs"]
-pub(super) mod preparation;
+pub(in super::super) mod preparation;
 
 //#region 🗿️SceneCursor
 const FLOW_SCENE_COPY_ALLOCATION_BYTES: usize = 16 * 1024 * 1024;
@@ -165,34 +167,6 @@ impl SceneCopy {
 //#endregion 🗿️SceneCursor
 
 //#region 🪪️SceneIdentity
-pub(super) struct SceneRetirementFactory;
-
-impl store::SnapshotRetirementFactory<FlowWorkingScene> for SceneRetirementFactory {
-    fn retire(&self, scene: Arc<FlowWorkingScene>) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(SceneRetirement { scene: ManuallyDrop::new(Some(scene)), retirement: Retirement::default() })
-    }
-}
-
-struct SceneRetirement { scene: ManuallyDrop<Option<Arc<FlowWorkingScene>>>, retirement: Retirement }
-
-impl Drop for SceneRetirement {
-    fn drop(&mut self) { if !std::thread::panicking() { assert!(self.scene.is_none() && self.retirement.is_empty(), "Flow scene retirement must reach terminal emptiness"); } }
-}
-
-impl store::ErasedSnapshotRetirement for SceneRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
-        use store::SnapshotRetirementStep as Step;
-        if maximum_items == 0 || maximum_bytes == 0 { return Ok(Step::Blocked); }
-        if !self.retirement.is_empty() { return store::ErasedSnapshotRetirement::close_step(&mut self.retirement, maximum_items, maximum_bytes); }
-        if let Some(scene) = self.scene.take() {
-            if let Some(scene) = Arc::into_inner(scene) { self.retirement.push(Owner::Scene(scene)); }
-            return Ok(Step::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(Step::Complete)
-    }
-    fn terminal_is_empty(&self) -> bool { self.scene.is_none() && self.retirement.is_empty() }
-}
-
 pub(super) struct SceneHash {
     reader: store::ArtifactCanonicalJsonReader<FlowWorkingScene>,
     hash: Option<semio_framework_hash::Sha256>,
@@ -250,6 +224,13 @@ mod tests {
     use super::*;
     use semio_framework_job::InteractiveJobCloseStep;
 
+    fn retire_child_local_owner(mut child: crate::artifacts::flow::FlowContentChild) {
+        let Some(owner) = child.take_local_owner::<FlowWorkingScene>().unwrap() else { return; };
+        let mut retirement = store::SnapshotRetirementFactory::retire(&SceneRetirementFactory, owner);
+        for _ in 0..100_000 { if retirement.close_step(1, 4096).unwrap() == store::SnapshotRetirementStep::Complete { break; } }
+        assert!(retirement.terminal_is_empty());
+    }
+
     fn close(cursor: &mut SceneCopy, grant: usize) -> usize {
         cursor.begin_close();
         let mut bytes = 0;
@@ -274,7 +255,7 @@ mod tests {
             let grant = row["grantBytes"].as_u64().unwrap() as usize;
             let bytes = label.len() + "slider".len();
             let source = Arc::new(FlowWorkingScene { widgets: vec![Widget::InputSlider { id: "slider".into(), label, value: 6.0, min: 0.0, max: 10.0, step: 0.5 }], ..Default::default() });
-            let expected = serde_json::to_value(&*source).unwrap();
+            let expected = serde_json::Value::from(dsl::ToValue::to_value(&*source));
             let weak = Arc::downgrade(&source);
             let mut cursor = SceneCopy::new(source);
             let mut copied = 0;
@@ -286,7 +267,7 @@ mod tests {
             }
             assert!(cursor.complete());
             assert_eq!(copied, bytes);
-            assert_eq!(serde_json::to_value(cursor.result.as_ref().unwrap()).unwrap(), expected);
+            assert_eq!(serde_json::Value::from(dsl::ToValue::to_value(cursor.result.as_ref().unwrap())), expected);
             assert_eq!(close(&mut cursor, grant), bytes * 2);
             assert!(weak.upgrade().is_none());
         }
@@ -310,14 +291,16 @@ mod tests {
 
     #[test]
     fn scene_identity_matches_node_crypto_and_adopts_the_exact_root() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧪️content-identity/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🪪️content-identity/🔣️.json")).unwrap();
         for row in fixture["cases"].as_array().unwrap() {
             let canonical = row["canonicalJson"].as_str().unwrap();
             let (widgets, synapses, layout) = crate::artifacts::flow::schema::mutations::decode_flow_scene_json(canonical).unwrap();
             let root = Arc::new(FlowWorkingScene { widgets, synapses, layout });
             let expected_id = format!("flow-content-sha256-{}", row["expectedSha256"].as_str().unwrap());
-            assert_eq!(serde_json::to_string(&*root).unwrap(), canonical);
-            assert_eq!(crate::artifacts::flow::flow_content_child_handle(&root.widgets, &root.synapses, &root.layout).child_id, expected_id);
+            assert_eq!(serde_json::to_string(&serde_json::Value::from(dsl::ToValue::to_value(&*root))).unwrap(), canonical);
+            let derived = crate::artifacts::flow::flow_content_child_handle(&root.widgets, &root.synapses, &root.layout);
+            assert_eq!(derived.child_id, expected_id);
+            retire_child_local_owner(derived);
             for maximum_bytes in [1, 64, 4096] {
                 let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes };
                 let mut cursor = SceneHash::new(Arc::clone(&root));
@@ -329,19 +312,26 @@ mod tests {
                 assert!(cursor.complete());
                 assert_eq!(bytes, crate::artifacts::flow::FLOW_CONTENT_ID_DOMAIN.len() + canonical.len());
                 let (scene, digest) = cursor.take().unwrap(); assert!(Arc::ptr_eq(&scene, &root));
-                let child = crate::artifacts::flow::flow_content_child_from_digest(digest, scene);
+                let mut child = crate::artifacts::flow::flow_content_child_from_digest(digest, scene);
                 assert_eq!(child.child_id, expected_id);
+                assert_eq!(child.target.artifact_id, expected_id);
+                assert_eq!(child.target.dialect.artifact_kind, fixture["dialect"]["artifactKind"].as_str().unwrap());
+                assert_eq!(child.target.dialect.standard, fixture["dialect"]["standard"].as_str().unwrap());
+                assert_eq!(child.target.dialect.subset, fixture["dialect"]["subset"].as_str().unwrap());
                 assert!(Arc::ptr_eq(&child.local_owner::<FlowWorkingScene>().unwrap(), &root));
+                drop(child.take_local_owner::<FlowWorkingScene>().unwrap().unwrap());
                 cursor.begin_close();
                 for _ in 0..100_000 {
                     if cursor.close_step(grant).unwrap() == store::SnapshotRetirementStep::Complete { break; }
                 }
                 assert!(cursor.terminal_is_empty());
             }
+            assert_eq!(Arc::strong_count(&root), 1);
             let mut retirement = store::SnapshotRetirementFactory::retire(&SceneRetirementFactory, root);
             for _ in 0..100_000 { if retirement.close_step(1, 4096).unwrap() == store::SnapshotRetirementStep::Complete { break; } }
             assert!(retirement.terminal_is_empty());
         }
+        eprintln!("[DEBUG] Flow content-addressed child and target identities matched the five Node crypto vectors at three grants");
     }
 }
 //#endregion 🧪️SceneOwnership

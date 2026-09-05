@@ -5,7 +5,7 @@
   "displayName": "Change Object Kind Description",
   "emoji": "📃️",
   "aggregateVariant": "ChangeObjectKindDescription",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-object-kind-description",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

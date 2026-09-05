@@ -1,0 +1,6 @@
+# reorder-primitives mutation facet.
+input GltfReorderPrimitivesPayloadV1 {
+  mesh: Int!
+  order: [Int!]!
+}
+type GltfReorderPrimitivesMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

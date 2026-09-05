@@ -122,29 +122,29 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.block2d.standard.v1", "standard", "1", &[], None),
-        ("s.block2d.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.block2d.schema.artifact", "schema", "s.block.block2d", &[("schema", "s.block.block2d")], None),
-        ("s.block2d.inference.artifact", "inference", "s.block.block2d.inference", &[("schema", "s.block.block2d.inference")], None),
-        ("s.block2d.composer.native", "composer", "s.block2d@1/*", &[("dialect", "s.block2d@1/*")], None),
-        ("s.block2d.composer.format-1", "composer", "s.stdio.zip@2.0/*", &[("dialect", "s.stdio.zip@2.0/*")], None),
-        ("s.block2d.composer.format-2", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
-        ("s.block2d.composer.format-3", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.block2d.composer.format-4", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
-        ("s.block2d.composer.format-5", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
-        ("s.block2d.grammar.1", "grammar", "block.block2d", &[("grammar", "block.block2d")], None),
-        ("s.block2d.grammar.2", "grammar", "block.block2d.op", &[("grammar", "block.block2d.op")], None),
-        ("s.block2d.grammar.3", "grammar", "block.block2d.diff", &[("grammar", "block.block2d.diff")], None),
-        ("s.block2d.grammar.4", "grammar", "2d.pack", &[("grammar", "2d.pack")], None),
-        ("s.block2d.grammar.5", "grammar", "2d.spr", &[("grammar", "2d.spr")], None),
+        ("s.block.block2d.standard.v1", "standard", "1", &[], None),
+        ("s.block.block2d.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.block.block2d.schema.artifact", "schema", "s.block.block2d", &[("schema", "s.block.block2d")], None),
+        ("s.block.block2d.inference.artifact", "inference", "s.block.block2d.inference", &[("schema", "s.block.block2d.inference")], None),
+        ("s.block.block2d.composer.native", "composer", "s.block.block2d@1/*", &[("dialect", "s.block.block2d@1/*")], None),
+        ("s.block.block2d.composer.format-1", "composer", "s.stdio.zip@2.0/*", &[("dialect", "s.stdio.zip@2.0/*")], None),
+        ("s.block.block2d.composer.format-2", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.block.block2d.composer.format-3", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.block.block2d.composer.format-4", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
+        ("s.block.block2d.composer.format-5", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
+        ("s.block.block2d.grammar.1", "grammar", "block.block2d", &[("grammar", "block.block2d")], None),
+        ("s.block.block2d.grammar.2", "grammar", "block.block2d.op", &[("grammar", "block.block2d.op")], None),
+        ("s.block.block2d.grammar.3", "grammar", "block.block2d.diff", &[("grammar", "block.block2d.diff")], None),
+        ("s.block.block2d.grammar.4", "grammar", "2d.pack", &[("grammar", "2d.pack")], None),
+        ("s.block.block2d.grammar.5", "grammar", "2d.spr", &[("grammar", "2d.spr")], None),
         // 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Block2dPlayApp>>()` derives
         // its extension claim from `<Block2dSnapshot as store::ArtifactDsl>::EXTENSION`
         // (`…/🧬️schema/📸️snapshot/🦀️.rs`), which is `"block2d"`, not `"block"`.
-        ("s.block2d.codec.document-1", "codec", "block.2d:block2d", &[("codec", "block.2d"), ("extension", "block2d")], None),
-        ("s.block2d.localization.en", "localization", "2D Block", &[], Some(("en", "2D Block"))),
-        ("s.block2d.localization.de", "localization", "2D-Baustein", &[], Some(("de", "2D-Baustein"))),
+        ("s.block.block2d.codec.document-1", "codec", "block.2d:block2d", &[("codec", "block.2d"), ("codec-extension", "8:block.2d:block2d")], None),
+        ("s.block.block2d.localization.en", "localization", "2D Block", &[], Some(("en", "2D Block"))),
+        ("s.block.block2d.localization.de", "localization", "2D-Baustein", &[], Some(("de", "2D-Baustein"))),
     ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.block2d")?);
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.block.block2d")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
         for (namespace, value) in *claims {

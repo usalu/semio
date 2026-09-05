@@ -5,7 +5,7 @@
   "displayName": "Change Unit",
   "emoji": "🌡️",
   "aggregateVariant": "ChangeUnit",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

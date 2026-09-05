@@ -88,7 +88,7 @@ pub mod remove_register_item {
         }
         if payload.register_id == "elements" {
             for adjacency in program.adjacencies.iter().filter(|row| row.element_a_id == entity_id || row.element_b_id == entity_id) {
-                operations.push(ProgramMutation::DisconnectAdjacency(leaves::disconnect_adjacency::mutation::DisconnectAdjacency { id: adjacency.header.id.clone() }));
+                operations.push(ProgramMutation::DisconnectAdjacency(leaves::disconnect_adjacency::DisconnectAdjacency { id: adjacency.header.id.clone() }));
             }
         }
         Ok(Emit::mutations(operations))

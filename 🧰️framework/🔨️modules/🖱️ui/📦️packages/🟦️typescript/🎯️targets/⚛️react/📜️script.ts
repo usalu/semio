@@ -43,7 +43,7 @@ class BuildScript extends BundleScript {
 
 class LintScript extends BundleScript {
   run(segments: string[]): void {
-    runBunx(["eslint", "--max-warnings", "0", "--config", "🟦️eslint.config.ts", ".", ...segments], this.root, storybookEnv());
+    runBunx(["eslint", "--max-warnings", "0", "--config", "eslint.config.ts", ".", ...segments], this.root, storybookEnv());
   }
 }
 
@@ -190,7 +190,7 @@ export const CHROME_I18N_ALLOWLIST: readonly string[] = [];
  * the scan the way the old hardcoded two-file list did. */
 const CHROME_I18N_SCANNED_ROOTS = [
   "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react",
   "♻️mit-bestand/🧺️demonstrator",
 ] as const;
 

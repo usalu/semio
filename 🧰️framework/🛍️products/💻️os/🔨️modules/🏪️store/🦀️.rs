@@ -17,6 +17,16 @@
 // R3) or by making a trait method sync (contradicts O1/R1).
 #![allow(async_fn_in_trait)]
 
+#[path = "♻️retirement/🦀️.rs"]
+pub mod retirement;
+
+#[path = "🧩️composition/🌱️initial/🪪️identity/🦀️.rs"]
+mod initial_child_identity;
+
+#[path = "🧩️composition/🚪️open/🦀️.rs"]
+pub mod member_open;
+pub use member_open::{InitialMemberStoreOpen, MemberOpenAdmissionError, MemberOpenDeclaration, MemberOpenDiagnostic, MemberOpenFrame, MemberOpenInputStep, MemberOpenOperation, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, MemberOpenStep, MemberSnapshotOpenOperation, MemberSnapshotOpenStep, UnsupportedMemberFactoryOpen, UnsupportedMemberSnapshotOpen};
+
 // The `crate::os_dsl::DslArtifact`/`crate::os_dsl::DslOps` derive macros emit `::crate::os_store::ArtifactDsl`/`::crate::os_store::OpText`
 // paths (see `dsl/derive/rs/lib.rs`), which only resolve for crates that depend on `store` as an
 // external crate — every real consumer, INCLUDING this crate's own `.ops` header grammar
@@ -1247,6 +1257,15 @@ impl<P, Mutation> Drop for ArtifactStoreVcsRetirement<P, Mutation> {
     }
 }
 
+/// ♻️ Transfers a detached document to the exact field/history retirement used by stores.
+pub fn retire_document_envelope<P: Send + 'static, Mutation: Send + 'static>(
+    envelope: ArtifactEnvelope<P, Mutation>,
+    initial_snapshot_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
+    mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+) -> Box<dyn ErasedSnapshotRetirement> {
+    Box::new(ArtifactStoreEnvelopeRetirement::new(envelope, initial_snapshot_factory, mutation_factory))
+}
+
 struct ArtifactStoreEnvelopeRetirement<P, Mutation> {
     envelope: std::mem::ManuallyDrop<Option<ArtifactEnvelope<P, Mutation>>>,
     active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
@@ -1734,6 +1753,8 @@ where
 {
     fn close_step(&mut self, store: &mut ArtifactStoreCloseView<'_, P, Mutation>, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String>;
     fn terminal_is_empty(&self, store: &ArtifactStore<P, Mutation>) -> bool;
+    fn close_uninstalled_step(&mut self, maximum_items: usize) -> Result<SnapshotRetirementStep, String>;
+    fn uninstalled_terminal_is_empty(&self) -> bool;
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1761,13 +1782,14 @@ enum ArtifactStoreCursorDisposerPhase {
 /// owner catalog. It advances one detached authority at a time and never supplies a default proof.
 pub struct ArtifactStoreCursorDisposer<P, Mutation> {
     phase: ArtifactStoreCursorDisposerPhase,
+    started: bool,
     active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     marker: std::marker::PhantomData<fn() -> (P, Mutation)>,
 }
 
 impl<P, Mutation> ArtifactStoreCursorDisposer<P, Mutation> {
     pub fn new() -> Self {
-        Self { phase: ArtifactStoreCursorDisposerPhase::Displaced, active: std::mem::ManuallyDrop::new(None), marker: std::marker::PhantomData }
+        Self { phase: ArtifactStoreCursorDisposerPhase::Displaced, started: false, active: std::mem::ManuallyDrop::new(None), marker: std::marker::PhantomData }
     }
 
     fn retain(active: &mut std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>, owner: Option<Box<dyn ErasedSnapshotRetirement>>) -> SnapshotRetirementStep {
@@ -1787,6 +1809,7 @@ where
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn close_step(&mut self, store: &mut ArtifactStoreCloseView<'_, P, Mutation>, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        self.started = true;
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1960,6 +1983,21 @@ where
     fn terminal_is_empty(&self, store: &ArtifactStore<P, Mutation>) -> bool {
         self.phase == ArtifactStoreCursorDisposerPhase::Complete && self.active.is_none() && store.owned_roots_terminal_is_empty()
     }
+
+    fn close_uninstalled_step(&mut self, maximum_items: usize) -> Result<SnapshotRetirementStep, String> {
+        if self.started || self.active.is_some() {
+            return Err("installed store disposer cannot retire as uninstalled".into());
+        }
+        if maximum_items == 0 {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        self.phase = ArtifactStoreCursorDisposerPhase::Complete;
+        Ok(SnapshotRetirementStep::Complete)
+    }
+
+    fn uninstalled_terminal_is_empty(&self) -> bool {
+        !self.started && self.phase == ArtifactStoreCursorDisposerPhase::Complete && self.active.is_none()
+    }
 }
 
 impl<P, Mutation> Drop for ArtifactStoreCursorDisposer<P, Mutation> {
@@ -2013,6 +2051,7 @@ where
     Self: Clone + ToValue + FromValue,
     Mutation: Clone + ToValue + FromValue + self::Mutation<Self>,
 {
+    type SnapshotOpen: MemberSnapshotOpenOperation<Snapshot = Self>;
     fn member_store_owners() -> MemberStoreOwners<Self, Mutation>;
 }
 //#endregion 🧬️OpaqueSnapshotRead
@@ -2646,14 +2685,10 @@ impl std::fmt::Display for ArtifactChildMaterializationError {
 
 impl std::error::Error for ArtifactChildMaterializationError {}
 
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", bound = ""))]
 pub struct ArtifactChild<S> {
     pub child_id: String,
     pub target: crate::os_io::ArtifactRef,
-    #[cfg_attr(test, serde(skip))]
     local_owner: Option<Arc<dyn std::any::Any + Send + Sync>>,
-    #[cfg_attr(test, serde(skip))]
     _snapshot: PhantomData<S>,
 }
 
@@ -2734,6 +2769,23 @@ impl<S> Clone for ArtifactChild<S> {
     }
 }
 
+impl<S> crate::os_schema_composition::ChildFieldRefs for ArtifactChild<S> {
+    const MANY: bool = false;
+    fn visit_child_field<'a, V: crate::os_schema_composition::ChildRefVisitor<'a>>(&'a self, slot: &'static str, visitor: &mut V) -> Result<(), V::Error> {
+        visitor.step()?;
+        visitor.child(
+            slot,
+            crate::os_schema_composition::ChildRefFields {
+                child_id: &self.child_id,
+                artifact_id: &self.target.artifact_id,
+                artifact_kind: &self.target.dialect.artifact_kind,
+                standard: &self.target.dialect.standard,
+                subset: &self.target.dialect.subset,
+            },
+        )
+    }
+}
+
 impl<S> std::fmt::Debug for ArtifactChild<S> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ArtifactChild").field("child_id", &self.child_id).field("target", &self.target).finish()
@@ -2785,6 +2837,140 @@ pub struct ChildRef {
     pub target: crate::os_io::ArtifactRef,
 }
 
+/// 📏️ Fixed restore admission bounds; sparse container walks consume their own step budget.
+pub const CHILD_RESTORE_MAXIMUM_REFERENCES: usize = 64;
+pub const CHILD_RESTORE_MAXIMUM_FIELD_BYTES: usize = 256;
+pub const CHILD_RESTORE_MAXIMUM_VISIT_STEPS: usize = 256;
+
+/// 🛑️ Exact loaded-parent projection failures, before opening or publishing any child store.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ChildRestoreProjectionError {
+    InvalidSlot,
+    InvalidReference,
+    DuplicateChild,
+    SingularSlot,
+    ReferenceLimit,
+    TraversalLimit,
+    IncompleteSet,
+}
+
+impl std::fmt::Display for ChildRestoreProjectionError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "child restore projection: {self:?}")
+    }
+}
+
+impl std::error::Error for ChildRestoreProjectionError {}
+
+/// 🌳️ Bounded borrowed authority derived only from the loaded parent's declared child fields.
+#[derive(Debug)]
+pub struct ChildRestoreProjection<'a> {
+    slots: &'static [crate::os_schema_composition::ChildSlotSpec],
+    rows: [Option<(&'static str, crate::os_schema_composition::ChildRefFields<'a>)>; CHILD_RESTORE_MAXIMUM_REFERENCES],
+    length: usize,
+    steps: usize,
+}
+
+impl<'a> ChildRestoreProjection<'a> {
+    /// 🔎️ Visits actual typed snapshot fields without cloning handles, leases or child content.
+    pub fn from_snapshot<S: crate::os_schema_composition::ArtifactCompositionFields>(snapshot: &'a S) -> Result<Self, ChildRestoreProjectionError> {
+        let slots = S::child_slots();
+        if slots.len() > CHILD_RESTORE_MAXIMUM_REFERENCES {
+            return Err(ChildRestoreProjectionError::ReferenceLimit);
+        }
+        for (index, slot) in slots.iter().enumerate() {
+            if slot.name.is_empty()
+                || slot.name.len() > CHILD_RESTORE_MAXIMUM_FIELD_BYTES
+                || slot.kind.len() > CHILD_RESTORE_MAXIMUM_FIELD_BYTES
+                || !crate::os_io::is_canonical_artifact_kind(slot.kind)
+                || slots[..index].iter().any(|prior| prior.name == slot.name)
+            {
+                return Err(ChildRestoreProjectionError::InvalidSlot);
+            }
+        }
+        let mut projection = Self { slots, rows: [None; CHILD_RESTORE_MAXIMUM_REFERENCES], length: 0, steps: 0 };
+        snapshot.visit_child_refs(&mut projection)?;
+        Ok(projection)
+    }
+
+    /// 🧮️ Number of exact child references carried by this loaded parent.
+    pub fn len(&self) -> usize {
+        self.length
+    }
+
+    /// 🍃️ Whether this projection has no populated child fields.
+    pub fn is_empty(&self) -> bool {
+        self.length == 0
+    }
+
+    /// 🪪️ Checks one member against the actual loaded parent, without treating it as a full batch.
+    pub fn admits_member(&self, slot: &str, expected: &crate::os_io::ArtifactRef) -> bool {
+        self.rows[..self.length].iter().flatten().any(|(name, fields)| {
+            *name == slot
+                && fields.child_id == expected.artifact_id
+                && fields.artifact_id == expected.artifact_id
+                && fields.artifact_kind == expected.dialect.artifact_kind
+                && fields.standard == expected.dialect.standard
+                && fields.subset == expected.dialect.subset
+        })
+    }
+
+    /// ⚖️ Admits exactly one unordered complete set: no omission, substitution or duplicate.
+    pub fn admit_complete<'b>(&self, incoming: impl IntoIterator<Item = (&'b str, crate::os_schema_composition::ChildRefFields<'b>)>) -> Result<(), ChildRestoreProjectionError> {
+        let mut seen = [false; CHILD_RESTORE_MAXIMUM_REFERENCES];
+        let mut count = 0;
+        for (slot, fields) in incoming {
+            if count == CHILD_RESTORE_MAXIMUM_REFERENCES {
+                return Err(ChildRestoreProjectionError::ReferenceLimit);
+            }
+            let index = self.rows[..self.length].iter().position(|entry| entry.as_ref().is_some_and(|(name, expected)| *name == slot && *expected == fields)).ok_or(ChildRestoreProjectionError::IncompleteSet)?;
+            if seen[index] {
+                return Err(ChildRestoreProjectionError::DuplicateChild);
+            }
+            seen[index] = true;
+            count += 1;
+        }
+        if count != self.length {
+            return Err(ChildRestoreProjectionError::IncompleteSet);
+        }
+        Ok(())
+    }
+}
+
+impl<'a> crate::os_schema_composition::ChildRefVisitor<'a> for ChildRestoreProjection<'a> {
+    type Error = ChildRestoreProjectionError;
+    fn step(&mut self) -> Result<(), Self::Error> {
+        if self.steps == CHILD_RESTORE_MAXIMUM_VISIT_STEPS {
+            return Err(Self::Error::TraversalLimit);
+        }
+        self.steps += 1;
+        Ok(())
+    }
+    fn child(&mut self, slot: &'static str, fields: crate::os_schema_composition::ChildRefFields<'a>) -> Result<(), Self::Error> {
+        if self.length == CHILD_RESTORE_MAXIMUM_REFERENCES {
+            return Err(Self::Error::ReferenceLimit);
+        }
+        let spec = self.slots.iter().find(|spec| spec.name == slot).ok_or(Self::Error::InvalidSlot)?;
+        if fields.child_id != fields.artifact_id
+            || fields.artifact_kind != spec.kind
+            || [fields.child_id, fields.artifact_id, fields.artifact_kind, fields.standard, fields.subset].iter().any(|field| field.is_empty() || field.len() > CHILD_RESTORE_MAXIMUM_FIELD_BYTES)
+        {
+            return Err(Self::Error::InvalidReference);
+        }
+        for (name, prior) in self.rows[..self.length].iter().flatten() {
+            if prior.child_id == fields.child_id {
+                return Err(Self::Error::DuplicateChild);
+            }
+            if *name == slot && !spec.many {
+                return Err(Self::Error::SingularSlot);
+            }
+        }
+        self.rows[self.length] = Some((slot, fields));
+        self.length += 1;
+        Ok(())
+    }
+}
+
 /// @emoji 🏠️ The ownership stamp placed on the CHILD's own `ArtifactEnvelope.owner` (not only on
 /// the parent's `ArtifactChild` handle), so ownership is queryable directly from the child side —
 /// e.g. "is this document embeddable standalone, or does deleting it require going through its
@@ -2802,9 +2988,7 @@ pub struct OwnerRef {
 /// referencing artifact, e.g. `"cover-image"`). Renders as a chip, never nests inline — the
 /// structural opposite of `ArtifactChild`; see the region doc's CHILD-vs-LINK split.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ArtifactLink {
     pub target: crate::os_io::ArtifactRef,
     pub pin: LinkPin,
@@ -2994,42 +3178,36 @@ where
 /// invariant is `owner.is_some() ⇒ dialect.is_some()` — every envelope that is somebody's child
 /// knows which dialect it materializes as, which is what lets `ArtifactView.children` type a child
 /// without consulting the parent.
-pub async fn open_member_store<P, Mutation>(envelope_pack: &[u8]) -> Result<ArtifactStore<P, Mutation>, VcsError>
+pub async fn open_member_store<P, Mutation>(schema: &str, expected: &crate::os_io::ArtifactRef, owner: Option<&OwnerRef>, envelope_pack: &[u8]) -> Result<ArtifactStore<P, Mutation>, VcsError>
 where
     P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<Mutation> + Send + 'static,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    let (pack, spr) = decode_document_pack_bytes(envelope_pack).await?;
-    let parsed = parse_document_pack::<P, Mutation>(&pack, &spr).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
-    let envelope = parsed.envelope;
-    if envelope.owner.is_some() && envelope.dialect.is_none() {
-        return Err(VcsError::Deserialize(format!("owned child {} carries no dialect", envelope.id)));
+    if owner.is_some_and(|owner| owner.child_id != expected.artifact_id) {
+        return Err(VcsError::Deserialize("member owner child identity does not match requested artifact".into()));
     }
-    let mut store = ArtifactStore::new(envelope).await?;
+    let (pack, spr) = decode_document_pack_bytes(envelope_pack).await?;
+    let history = crate::os_spr::decode_history(&spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    validate_member_history_identity(&history, schema, expected, owner)?;
+    let parsed = parse_decoded_document_spr::<P, Mutation>(&pack, history).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    let mut store = ArtifactStore::new(parsed.envelope).await?;
     store.install_member_store_owners_exact(P::member_store_owners());
     Ok(store)
 }
 
-/// 🏭️ Production [`MemberFactory`] for [`ArtifactStore`] — the composition coordinator's real
-/// child-store constructor, replacing the deleted global `dyn ChildStoreFactory` registry.
-///
-/// Deliberately distinct from the fixture impl in this file's `#[cfg(test)] mod tests`: that one
-/// defaults an empty genesis pack to `P::default()` for test convenience, whereas this delegates
-/// straight to [`create_member_store`], which **rejects an empty genesis pack**. Production must not
-/// silently invent a child document, so the two impls are not interchangeable and the fixture is not
-/// a substitute for this one. `kind` is the child's schema id.
-impl<P, Mutation> MemberFactory for ArtifactStore<P, Mutation>
-where
-    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<Mutation> + Send + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
-{
-    async fn create(kind: &str, id: &str, dialect: &crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Self, VcsError> {
-        create_member_store(kind, id, dialect, initial_pack).await
+fn validate_member_history_identity(history: &crate::os_spr::HistoryLog, schema: &str, expected: &crate::os_io::ArtifactRef, owner: Option<&OwnerRef>) -> Result<(), VcsError> {
+    let persisted_dialect = history.composition.as_ref().and_then(|composition| composition.dialect.as_ref());
+    let dialect_matches = persisted_dialect.is_some_and(|(kind, standard, subset)| kind == &expected.dialect.artifact_kind && standard == &expected.dialect.standard && subset == &expected.dialect.subset);
+    let persisted_owner = history.composition.as_ref().and_then(|composition| composition.owner.as_ref());
+    let owner_matches = match (persisted_owner, owner) {
+        (None, None) => true,
+        (Some((parent, slot, child_id)), Some(owner)) => slot == &owner.slot && child_id == &owner.child_id && child_id == &expected.artifact_id && crate::os_io::ArtifactRef::parse_uri(parent).is_ok_and(|parent| parent == owner.parent),
+        _ => false,
+    };
+    if history.doc_id != expected.artifact_id || history.schema != schema || !dialect_matches || !owner_matches {
+        return Err(VcsError::Deserialize("member envelope does not match requested identity, schema, dialect and ownership".into()));
     }
-
-    async fn open(_kind: &str, envelope_pack: &[u8]) -> Result<Self, VcsError> {
-        open_member_store(envelope_pack).await
-    }
+    Ok(())
 }
 
 //#region 🔖️CompositionDsl
@@ -4899,7 +5077,11 @@ pub mod pack_rt {
     pub fn renormalize_whole_number_floats(value: DslValue) -> DslValue {
         match value {
             DslValue::Number(Number::Float(n)) if n.fract() == 0.0 && n.is_finite() && n.abs() < (1u64 << 53) as f64 => {
-                if n >= 0.0 { DslValue::Number(Number::UInt(n as u64)) } else { DslValue::Number(Number::Int(n as i64)) }
+                if n >= 0.0 {
+                    DslValue::Number(Number::UInt(n as u64))
+                } else {
+                    DslValue::Number(Number::Int(n as i64))
+                }
             }
             DslValue::Array(items) => DslValue::Array(items.into_iter().map(renormalize_whole_number_floats).collect()),
             DslValue::Object(entries) => DslValue::Object(entries.into_iter().map(|(k, v)| (k, renormalize_whole_number_floats(v))).collect()),
@@ -9853,7 +10035,7 @@ where
 /// (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6/C10) — concurrent-merge
 /// arbitration is now `ArtifactStore::ingest_remote`/`resolve_conflict`'s job against
 /// `📡️spr/⚔️conflict`'s first-class `Conflict`/`MergeReport`, not a post-materialization hook here.
-pub async fn materialize_document_snapshot<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: &[String]) -> Result<P, VcsError>
+pub async fn materialize_document_snapshot<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>, applied_edit_ids: &[String]) -> Result<P, VcsError>
 where
     P: Clone,
     Mutation: self::Mutation<P>,
@@ -10158,7 +10340,7 @@ pub async fn print_edit_lines<Mutation: OpText>(edit: &Edit<Mutation>) -> Result
 /// `initial_snapshot`, so it is provably format-invariant and both printers thin out to this plus
 /// their own initial-snapshot encoding. Every replay-critical value is explicit: forward and
 /// inverse operations, operation metadata, message ledger, conflicts, and cursor.
-async fn print_ops_log<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> Result<String, VcsError>
+async fn print_ops_log<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Result<String, VcsError>
 where
     Mutation: OpText,
 {
@@ -10237,7 +10419,7 @@ where
 /// @emoji 📤️ Prints the full textual VCS document: the DSL text (initial snapshot) and the complete
 /// op log (`doc` header, every edit, inverse/meta/message/conflict records, and explicit cursor).
 /// Replaces the JSON envelope as the canonical persisted form.
-pub async fn print_document_text<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> Result<ArtifactTextFiles, VcsError>
+pub async fn print_document_text<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Result<ArtifactTextFiles, VcsError>
 where
     P: ArtifactDsl,
     Mutation: OpText,
@@ -10389,7 +10571,7 @@ async fn canonical_conflict_actors(actors: impl IntoIterator<Item = ActorId>) ->
     actors
 }
 
-async fn validate_persisted_conflicts<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> Result<(), VcsError> {
+async fn validate_persisted_conflicts<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Result<(), VcsError> {
     let mut conflict_ids = HashSet::new();
     let known_edits: HashMap<&str, &Edit<Mutation>> = envelope.vcs.edits.iter().map(|edit| (edit.id.as_str(), edit)).collect();
     for conflict in &envelope.conflicts {
@@ -10740,7 +10922,7 @@ pub async fn append_history_edits_to_spr(spr: &[u8], edits: &[crate::os_spr::His
 /// single byte from this record existing. `ArtifactRef`s cross the boundary as their `to_uri()`
 /// wire string, the same "own the codec at this edge" convention `CompositionPin`/`ArtifactChild`
 /// already use rather than coupling `ArtifactRef` into the protocol crate.
-async fn history_composition_from_envelope<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> Option<crate::os_spr::HistoryComposition> {
+async fn history_composition_from_envelope<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Option<crate::os_spr::HistoryComposition> {
     // 🌀️ `ArtifactRef::to_uri` is async (🚪️io, out of this packet's scope) so it cannot run inside
     // `Option`/`Iterator::map`'s sync closures (R10 shape 1) — hoisted into explicit loops instead.
     let owner = envelope.owner.as_ref().map(|owner| (owner.parent.to_uri(), owner.slot.clone(), owner.child_id.clone()));
@@ -10780,7 +10962,7 @@ async fn apply_history_composition<P, Mutation>(envelope: &mut ArtifactEnvelope<
     Ok(())
 }
 
-pub async fn print_document_spr<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> Result<Vec<u8>, VcsError>
+pub async fn print_document_spr<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Result<Vec<u8>, VcsError>
 where
     Mutation: OpBinary,
 {
@@ -10849,8 +11031,16 @@ where
     P: Clone + ArtifactPack,
     Mutation: OpText + OpBinary + self::Mutation<P>,
 {
+    let log = crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
+    parse_decoded_document_spr(pack, log).await
+}
+
+async fn parse_decoded_document_spr<P, Mutation>(pack: &[u8], mut log: crate::os_spr::HistoryLog) -> Result<ParsedDocumentText<P, Mutation>, TextError>
+where
+    P: Clone + ArtifactPack,
+    Mutation: OpText + OpBinary + self::Mutation<P>,
+{
     let initial_snapshot = P::decode_pack(pack).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
-    let mut log = crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
 
     async fn decode_op<P, Mutation: OpText + OpBinary + self::Mutation<P>>(payload: &crate::os_spr::OpPayload) -> Result<Mutation, TextError> {
         match (&payload.binary, &payload.text) {
@@ -10975,7 +11165,7 @@ where
 /// for the human-readable mirror, but the initial snapshot is encoded to pack bytes
 /// (`ArtifactPack::encode_pack`) instead of printed to DSL text — plus the AUTHORITATIVE `.spr`
 /// binary op log (`print_document_spr`), which carries real inverse/binary payloads/cursor.
-pub async fn print_document_pack<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> Result<ArtifactPackFiles, VcsError>
+pub async fn print_document_pack<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Result<ArtifactPackFiles, VcsError>
 where
     P: ArtifactPack,
     Mutation: OpText + OpBinary,
@@ -14124,6 +14314,11 @@ where
     /// `current` field doc for the maintenance invariant.
     pub fn snapshot(&self) -> Result<P, VcsError> {
         Ok(self.current.as_ref().clone())
+    }
+
+    /// 🔎️ Borrows the current immutable fold without issuing or cloning a snapshot owner.
+    pub fn snapshot_ref(&self) -> &P {
+        self.current.as_ref()
     }
 
     /// 🧵️ Immutable O(1) snapshot capability for worker and composition boundaries.
@@ -17314,6 +17509,8 @@ pub trait BlobStore: Send + Sync {
 // site, never from a bound named here.
 pub trait SpaceMember {
     async fn document_id(&self) -> &str;
+    fn artifact_ref(&self) -> Option<crate::os_io::ArtifactRef>;
+    fn owner_ref(&self) -> Option<OwnerRef>;
     fn one_item_publication_identity(&self) -> (u64, [u8; 32]);
     fn one_item_wire_publication_supported(&self) -> bool;
     fn begin_one_item_wire_publication(&self, request: MemberStoreOneItemWireRequest) -> Result<Box<dyn ErasedMemberStoreOneItemPublication>, ArtifactStoreOneItemAdmissionRejected<MemberStoreOneItemWire>>;
@@ -17477,6 +17674,14 @@ where
 {
     async fn document_id(&self) -> &str {
         self.envelope().id.as_str()
+    }
+
+    fn artifact_ref(&self) -> Option<crate::os_io::ArtifactRef> {
+        self.envelope().dialect.clone().map(|dialect| crate::os_io::ArtifactRef { artifact_id: self.envelope().id.clone(), dialect })
+    }
+
+    fn owner_ref(&self) -> Option<OwnerRef> {
+        self.envelope().owner.clone()
     }
 
     fn one_item_publication_identity(&self) -> (u64, [u8; 32]) {
@@ -17799,14 +18004,14 @@ where
     }
 }
 
-/// @emoji 🏭️ Replaces the old `ChildStoreFactory` object (O1 — a global `Arc<dyn ChildStoreFactory>`
-/// registry keyed by a runtime kind string is exactly the dyn-dispatched seam the program drops).
-/// A `space_members!`-generated enum implements this by matching `kind` over its own variants — the
-/// registry's kind-keying moves INTO the enum, closed and known at the composing plugin's own
-/// compile time, rather than living in a process-global mutable table of trait objects.
+/// 🏭️ Creates and restores members through a compile-time closed full-dialect binding.
+/// [`space_members!`] binds each coordinate to its exact schema and typed store.
 pub trait MemberFactory: Sized {
-    async fn create(kind: &str, id: &str, dialect: &crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Self, VcsError>;
-    async fn open(kind: &str, envelope_pack: &[u8]) -> Result<Self, VcsError>;
+    const OPEN_DECLARATIONS: &'static [MemberOpenDeclaration];
+    type Open: MemberOpenOperation<Member = Self>;
+    fn begin_open(request: MemberOpenRequest) -> Result<Self::Open, MemberOpenAdmissionError>;
+    async fn create(id: &str, dialect: &crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Self, VcsError>;
+    async fn open(expected: &crate::os_io::ArtifactRef, owner: Option<&OwnerRef>, envelope_pack: &[u8]) -> Result<Self, VcsError>;
 }
 
 /// @emoji 🕳️ Uninhabited default `SpaceHost`/`CompositionCoordinator` member type — the STABLE
@@ -17816,6 +18021,14 @@ pub enum NoMembers {}
 
 impl SpaceMember for NoMembers {
     async fn document_id(&self) -> &str {
+        match *self {}
+    }
+
+    fn artifact_ref(&self) -> Option<crate::os_io::ArtifactRef> {
+        match *self {}
+    }
+
+    fn owner_ref(&self) -> Option<OwnerRef> {
         match *self {}
     }
 
@@ -17965,12 +18178,19 @@ impl SpaceMember for NoMembers {
 }
 
 impl MemberFactory for NoMembers {
-    async fn create(kind: &str, _id: &str, _dialect: &crate::os_io::ArtifactDialect, _initial_pack: &[u8]) -> Result<Self, VcsError> {
-        Err(VcsError::ValidationFailed(format!("no member kind '{kind}' registered (this composition is NoMembers — composition disabled for this store)")))
+    const OPEN_DECLARATIONS: &'static [MemberOpenDeclaration] = &[];
+    type Open = UnsupportedMemberFactoryOpen<Self>;
+
+    fn begin_open(request: MemberOpenRequest) -> Result<Self::Open, MemberOpenAdmissionError> {
+        UnsupportedMemberFactoryOpen::begin(request)
     }
 
-    async fn open(kind: &str, _envelope_pack: &[u8]) -> Result<Self, VcsError> {
-        Err(VcsError::ValidationFailed(format!("no member kind '{kind}' registered (this composition is NoMembers — composition disabled for this store)")))
+    async fn create(_id: &str, dialect: &crate::os_io::ArtifactDialect, _initial_pack: &[u8]) -> Result<Self, VcsError> {
+        Err(VcsError::ValidationFailed(format!("member dialect '{}' is unavailable in NoMembers", dialect.to_coordinate())))
+    }
+
+    async fn open(expected: &crate::os_io::ArtifactRef, _owner: Option<&OwnerRef>, _envelope_pack: &[u8]) -> Result<Self, VcsError> {
+        Err(VcsError::ValidationFailed(format!("member dialect '{}' is unavailable in NoMembers", expected.dialect.to_coordinate())))
     }
 }
 
@@ -17981,25 +18201,56 @@ impl MemberFactory for NoMembers {
 /// silent bug. Usage:
 /// ```ignore
 /// space_members! {
-///     pub enum NoteMembers {
-///         Text("s.note.text", "note.text/v1") => ArtifactStore<TextSnapshot, TextMutation>,
-///         Sketch("s.note.sketch", "note.sketch/v1") => ArtifactStore<SketchSnapshot, SketchMutation>,
+///     pub enum NoteMembers, NoteMembersOpen {
+///         Text("s.note.text", "1", "*", "note.text/v1") => (TextSnapshot, TextMutation),
+///         Sketch("s.note.sketch", "1", "*", "note.sketch/v1") => (SketchSnapshot, SketchMutation),
 ///     }
 /// }
 /// ```
 /// expands to the enum, `impl SpaceMember for NoteMembers` (match-delegation over all 22 non-default
-/// methods), and `impl MemberFactory for NoteMembers` (`create`/`open` matching `kind` against each
-/// variant's kind string via `create_member_store`/`open_member_store`).
+/// methods), and `impl MemberFactory for NoteMembers` with an exact coordinate per typed store.
 #[macro_export]
 macro_rules! space_members {
-    (pub enum $enum_name:ident { $($variant:ident($kind:literal, $schema:literal) => $inner:ty),+ $(,)? }) => {
+    (pub enum $enum_name:ident, $open_name:ident { $($variant:ident($kind:literal, $standard:literal, $subset:literal, $schema:literal) => ($snapshot:ty, $mutation:ty)),+ $(,)? }) => {
         pub enum $enum_name {
-            $($variant($inner)),+
+            $($variant($crate::os_store::ArtifactStore<$snapshot, $mutation>)),+
+        }
+
+        pub enum $open_name {
+            $($variant($crate::os_store::InitialMemberStoreOpen<$enum_name, $snapshot, $mutation>)),+
+        }
+
+        impl $crate::os_store::MemberOpenOperation for $open_name {
+            type Member = $enum_name;
+
+            fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> $crate::os_store::MemberOpenStep<Self::Member> {
+                match self {
+                    $(Self::$variant(open) => match open.step_store(cx) {
+                        $crate::os_store::MemberOpenStep::Pending(progress) => $crate::os_store::MemberOpenStep::Pending(progress),
+                        $crate::os_store::MemberOpenStep::Ready(member) => $crate::os_store::MemberOpenStep::Ready($enum_name::$variant(member)),
+                        $crate::os_store::MemberOpenStep::Rejected(diagnostic) => $crate::os_store::MemberOpenStep::Rejected(diagnostic),
+                    }),+
+                }
+            }
+
+            fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<$crate::os_store::SnapshotRetirementStep, String> {
+                match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::close_step(open, maximum_items, maximum_bytes)),+ }
+            }
+
+            fn terminal_is_empty(&self) -> bool {
+                match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::terminal_is_empty(open)),+ }
+            }
         }
 
         impl $crate::os_store::SpaceMember for $enum_name {
             async fn document_id(&self) -> &str {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::document_id(m).await),+ }
+            }
+            fn artifact_ref(&self) -> Option<$crate::os_io::ArtifactRef> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::artifact_ref(m)),+ }
+            }
+            fn owner_ref(&self) -> Option<$crate::os_store::OwnerRef> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::owner_ref(m)),+ }
             }
             fn one_item_publication_identity(&self) -> (u64, [u8; 32]) {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::one_item_publication_identity(m)),+ }
@@ -18115,16 +18366,33 @@ macro_rules! space_members {
         }
 
         impl $crate::os_store::MemberFactory for $enum_name {
-            async fn create(kind: &str, id: &str, dialect: &$crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Self, $crate::os_store::VcsError> {
-                match kind {
-                    $($kind => Ok(Self::$variant($crate::os_store::create_member_store($schema, id, dialect, initial_pack).await?)),)+
-                    other => Err($crate::os_store::VcsError::ValidationFailed(format!("no member kind '{other}' registered in {}", stringify!($enum_name)))),
+            const OPEN_DECLARATIONS: &'static [$crate::os_store::MemberOpenDeclaration] = &[
+                $($crate::os_store::MemberOpenDeclaration { kind: $kind, standard: $standard, subset: $subset, schema: $schema }),+
+            ];
+
+            type Open = $open_name;
+
+            fn begin_open(request: $crate::os_store::MemberOpenRequest) -> Result<Self::Open, $crate::os_store::MemberOpenAdmissionError> {
+                let dialect = match request.admitted_expected() {
+                    Ok(expected) => expected.dialect.clone(),
+                    Err(diagnostic) => return Err($crate::os_store::MemberOpenAdmissionError { diagnostic, request }),
+                };
+                match (dialect.artifact_kind.as_str(), dialect.standard.as_str(), dialect.subset.as_str()) {
+                    $(($kind, $standard, $subset) => $crate::os_store::InitialMemberStoreOpen::begin(request).map($open_name::$variant),)+
+                    _ => Err($crate::os_store::MemberOpenAdmissionError { diagnostic: $crate::os_store::MemberOpenDiagnostic::Identity, request }),
                 }
             }
-            async fn open(kind: &str, envelope_pack: &[u8]) -> Result<Self, $crate::os_store::VcsError> {
-                match kind {
-                    $($kind => Ok(Self::$variant($crate::os_store::open_member_store(envelope_pack).await?)),)+
-                    other => Err($crate::os_store::VcsError::ValidationFailed(format!("no member kind '{other}' registered in {}", stringify!($enum_name)))),
+
+            async fn create(id: &str, dialect: &$crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Self, $crate::os_store::VcsError> {
+                match (dialect.artifact_kind.as_str(), dialect.standard.as_str(), dialect.subset.as_str()) {
+                    $(($kind, $standard, $subset) => Ok(Self::$variant($crate::os_store::create_member_store($schema, id, dialect, initial_pack).await?)),)+
+                    _ => Err($crate::os_store::VcsError::ValidationFailed(format!("no member dialect '{}' registered in {}", dialect.to_coordinate(), stringify!($enum_name)))),
+                }
+            }
+            async fn open(expected: &$crate::os_io::ArtifactRef, owner: Option<&$crate::os_store::OwnerRef>, envelope_pack: &[u8]) -> Result<Self, $crate::os_store::VcsError> {
+                match (expected.dialect.artifact_kind.as_str(), expected.dialect.standard.as_str(), expected.dialect.subset.as_str()) {
+                    $(($kind, $standard, $subset) => Ok(Self::$variant($crate::os_store::open_member_store($schema, expected, owner, envelope_pack).await?)),)+
+                    _ => Err($crate::os_store::VcsError::ValidationFailed(format!("no member dialect '{}' registered in {}", expected.dialect.to_coordinate(), stringify!($enum_name)))),
                 }
             }
         }
@@ -18152,14 +18420,10 @@ pub struct SpaceMemberPin {
 
 /// @emoji 🗄️ A space-wide checkpoint: one pin per registered member, so checking it out (or an
 /// alternative built on top of it) fans out deterministically to every member's own VCS.
-/// @emoji 🔮️ serde stays TEST-ONLY — see `SpaceMemberPin`'s docstring above.
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct SpaceCheckpoint {
     pub id: String,
-    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     #[value(skip_serializing_if = "Option::is_none")]
     pub parent_id: Option<String>,
     pub message: String,
@@ -18631,6 +18895,24 @@ pub struct GroupUndoReport {
 pub struct CompositionGraph {
     owns: HashMap<String, (String, String)>,
     links: HashMap<String, HashSet<String>>,
+    owns_authority: Arc<()>,
+    owns_generation: u64,
+}
+
+/// 🎟️ Exact read-only ownership admission consumed by an exclusive graph commit.
+pub struct OwnsAdmission {
+    parent: String,
+    slot: String,
+    child: String,
+    inserts: bool,
+    authority: Arc<()>,
+    generation: u64,
+}
+
+impl OwnsAdmission {
+    pub fn inserts(&self) -> bool {
+        self.inserts
+    }
 }
 
 impl CompositionGraph {
@@ -18675,22 +18957,45 @@ impl CompositionGraph {
     /// already owned by a DIFFERENT parent (single-ownership invariant) and (b) any edge that would
     /// cycle (see `would_cycle_owns`) — re-owning by the SAME parent/slot is idempotent, not an error.
     pub async fn insert_owns(&mut self, parent_id: &str, slot: &str, child_id: &str) -> Result<(), String> {
-        if let Some((existing_owner, _existing_slot)) = self.owns.get(child_id) {
-            if existing_owner != parent_id {
-                return Err(format!("{child_id} is already owned by {existing_owner}, cannot also be owned by {parent_id}"));
+        let admission = self.admit_owns(parent_id, slot, child_id).await?;
+        self.commit_owns_admitted(admission);
+        Ok(())
+    }
+
+    pub async fn admit_owns(&self, parent_id: &str, slot: &str, child_id: &str) -> Result<OwnsAdmission, String> {
+        if let Some((existing_owner, existing_slot)) = self.owns.get(child_id) {
+            if existing_owner != parent_id || existing_slot != slot {
+                return Err(format!("{child_id} is already owned by {existing_owner} in {existing_slot}, cannot also be owned by {parent_id} in {slot}"));
             }
+            return Ok(OwnsAdmission { parent: parent_id.into(), slot: slot.into(), child: child_id.into(), inserts: false, authority: Arc::clone(&self.owns_authority), generation: self.owns_generation });
         }
         if self.would_cycle_owns(parent_id, child_id).await {
             return Err(format!("owning {child_id} under {parent_id} would create a composition cycle"));
         }
-        self.owns.insert(child_id.to_string(), (parent_id.to_string(), slot.to_string()));
-        Ok(())
+        self.owns_generation.checked_add(1).ok_or_else(|| "composition ownership generation exhausted".to_string())?;
+        Ok(OwnsAdmission { parent: parent_id.into(), slot: slot.into(), child: child_id.into(), inserts: true, authority: Arc::clone(&self.owns_authority), generation: self.owns_generation })
+    }
+
+    pub fn commit_owns_admitted(&mut self, admission: OwnsAdmission) {
+        let OwnsAdmission { parent, slot, child, inserts, authority, generation } = admission;
+        assert!(Arc::ptr_eq(&authority, &self.owns_authority) && generation == self.owns_generation, "ownership commit retains the exact graph and admitted generation");
+        if inserts {
+            assert!(!self.owns.contains_key(&child), "ownership commit retains its exclusive admitted child");
+            self.owns.insert(child, (parent, slot));
+            self.owns_generation = self.owns_generation.checked_add(1).expect("ownership generation preflighted before insertion");
+        } else {
+            assert_eq!(self.owns.get(&child), Some(&(parent, slot)), "idempotent ownership commit retains the exact prior edge");
+        }
     }
 
     /// ✂️ Removes `child_id`'s ownership edge (e.g. on `extract`/`delete`), returning
     /// `(parent_id, slot)` if it was tracked.
     pub async fn remove_owns(&mut self, child_id: &str) -> Option<(String, String)> {
-        self.owns.remove(child_id)
+        let removed = self.owns.remove(child_id);
+        if removed.is_some() {
+            self.owns_generation = self.owns_generation.checked_add(1).expect("ownership generation exhausted");
+        }
+        removed
     }
 
     /// ✅️ Whether linking `from -> to` would create a cycle — true when `to` can already reach
@@ -18743,14 +19048,42 @@ impl CompositionGraph {
     /// children/links, instead of ever recomputing the whole graph from scratch. Never touches
     /// edges where `artifact_id` is the TARGET (another artifact's own `sync_member` call owns those).
     pub async fn sync_member<P: ArtifactRefs>(&mut self, artifact_id: &str, snapshot: &P) -> Result<(), String> {
-        self.owns.retain(|_child_id, (parent_id, _slot)| parent_id != artifact_id);
+        let mut next_owns = HashMap::new();
         for child in snapshot.child_refs().await {
-            self.insert_owns(artifact_id, &child.slot, &child.child_id).await?;
+            if child.child_id != child.target.artifact_id {
+                return Err("composition child reference does not match its target identity".into());
+            }
+            if self.owns.get(&child.child_id).is_some_and(|(parent, _)| parent != artifact_id) {
+                return Err(format!("{} is already owned by another parent", child.child_id));
+            }
+            if next_owns.get(&child.child_id).is_some_and(|(_, slot)| slot != &child.slot) {
+                return Err(format!("{} appears in multiple owner slots", child.child_id));
+            }
+            if self.would_cycle_owns(artifact_id, &child.child_id).await {
+                return Err(format!("owning {} under {artifact_id} would create a composition cycle", child.child_id));
+            }
+            next_owns.insert(child.child_id, (artifact_id.to_string(), child.slot));
+            semio_framework_async::yield_once().await;
         }
-        self.links.remove(artifact_id);
+        let mut next_links = HashSet::new();
         for link in snapshot.links().await {
-            self.insert_link(artifact_id, &link.target.artifact_id).await?;
+            if self.would_cycle_links(artifact_id, &link.target.artifact_id).await {
+                return Err(format!("linking {artifact_id} to {} would create a composition cycle", link.target.artifact_id));
+            }
+            next_links.insert(link.target.artifact_id);
+            semio_framework_async::yield_once().await;
         }
+        let generation = self.owns_generation.checked_add(1).ok_or_else(|| "composition ownership generation exhausted".to_string())?;
+        self.owns.try_reserve(next_owns.len()).map_err(|_| "composition ownership allocation rejected".to_string())?;
+        self.links.try_reserve(usize::from(!next_links.is_empty())).map_err(|_| "composition link allocation rejected".to_string())?;
+        self.owns.retain(|_, (parent, _)| parent != artifact_id);
+        self.owns.extend(next_owns);
+        if next_links.is_empty() {
+            self.links.remove(artifact_id);
+        } else {
+            self.links.insert(artifact_id.to_string(), next_links);
+        }
+        self.owns_generation = generation;
         Ok(())
     }
 
@@ -18766,6 +19099,7 @@ impl CompositionGraph {
             }
             let child = child.clone();
             drop(self.owns.remove(&child));
+            self.owns_generation = self.owns_generation.checked_add(1).expect("ownership generation exhausted");
             return SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes };
         }
         if let Some((source, target)) = self.links.iter().find_map(|(source, targets)| targets.iter().next().map(|target| (source.clone(), target.clone()))) {
@@ -19165,7 +19499,7 @@ impl TransactionCoordinator {
         let mut created_children: Vec<(crate::os_io::ArtifactRef, Mc)> = Vec::with_capacity(genesis.len());
         for (ordinal, spec) in genesis.into_iter().enumerate() {
             let child_id = minted_child_ids[ordinal].clone();
-            let mut member = Mc::create(&spec.dialect.artifact_kind, &child_id, &spec.dialect, &spec.initial_pack).await?;
+            let mut member = Mc::create(&child_id, &spec.dialect, &spec.initial_pack).await?;
             let target = crate::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect: spec.dialect.clone() };
             member.set_owner(Some(OwnerRef { parent: parent_ref.clone(), slot: spec.slot.clone(), child_id: child_id.clone() })).await;
             self.graph.insert_owns(&parent_ref.artifact_id, &spec.slot, &child_id).await.map_err(VcsError::OwnershipViolation)?;
@@ -19306,6 +19640,37 @@ impl TransactionCoordinator {
 /// @emoji 🧪️ Round-trip assertions shared by every technology crate's `Mutation` test suite.
 pub mod test_support {
     use super::*;
+
+    /// 🧬️ Order-preserving test projection for an independent JSON byte encoder.
+    #[cfg(test)]
+    pub(crate) struct SerdeValue<'a>(pub &'a DslValue);
+
+    #[cfg(test)]
+    impl Serialize for SerdeValue<'_> {
+        fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+            use serde::ser::{SerializeMap, SerializeSeq};
+            match self.0 {
+                DslValue::Null => serializer.serialize_unit(),
+                DslValue::Bool(value) => serializer.serialize_bool(*value),
+                DslValue::Number(value) => serde_json::Value::from(DslValue::Number(*value)).serialize(serializer),
+                DslValue::String(value) => serializer.serialize_str(value),
+                DslValue::Array(values) => {
+                    let mut sequence = serializer.serialize_seq(Some(values.len()))?;
+                    for value in values {
+                        sequence.serialize_element(&SerdeValue(value))?;
+                    }
+                    sequence.end()
+                }
+                DslValue::Object(values) => {
+                    let mut map = serializer.serialize_map(Some(values.len()))?;
+                    for (key, value) in values {
+                        map.serialize_entry(key, &SerdeValue(value))?;
+                    }
+                    map.end()
+                }
+            }
+        }
+    }
 
     //#region 📁️ScratchDirectory
     static TEMP_DIR_SEQUENCE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
@@ -19849,7 +20214,7 @@ impl ArtifactPack for protocol::InteractionState {
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️fixtures/🦀️.rs"]
+#[path = "🧫️fixtures/🦀️.rs"]
 mod fixture_mutations;
 
 #[cfg(test)]
@@ -19857,18 +20222,18 @@ mod fixture_mutations;
 mod owned_schema_record_tests;
 
 #[cfg(test)]
-#[path = "🧪️tests/🧬️rejected-page-close/🦀️.rs"]
+#[path = "🧪️tests/🚫️rejected-page-close/🦀️.rs"]
 mod owned_field_rejected_page_tests;
 
 #[cfg(test)]
 mod tests {
     use super::*;
     mod native_codec_send_tests {
-        include!("📦️codec/🧵️send/🧪️test/🦀️s.rs");
+        include!("📦️codec/🧵️send/🧪️tests/🦀️.rs");
     }
 
     mod backbone_detach_refusal_tests {
-        include!("🔗️backbone/✂️detach/🧪️test/🦀️s.rs");
+        include!("🔗️backbone/✂️detach/🧪️tests/🦀️.rs");
     }
 
     use super::fixture_mutations::{
@@ -19880,12 +20245,12 @@ mod tests {
     };
 
     pub(super) fn assert_fixture_descriptor<T: crate::os_spr::MutationLeaf>(descriptor: &str) {
-        assert_eq!(serde_json::to_value(T::DESCRIPTOR).unwrap(), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
+        assert_eq!(serde_json::Value::from(T::DESCRIPTOR.to_value()), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
         assert!(T::DESCRIPTOR.validate().is_ok());
     }
 
     fn direct_fixture_cases() -> serde_json::Value {
-        serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).unwrap()
+        serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()
     }
 
     fn assert_fixture_case<Op>(row: &serde_json::Value)
@@ -19894,20 +20259,20 @@ mod tests {
     {
         let mut value = row["payload"].clone();
         value["operation"] = row["operation"].clone();
-        let mutation = serde_json::from_value::<Op>(value).unwrap();
+        let mutation = Op::from_value(value.into()).unwrap();
         assert!(mutation.descriptor().validate().is_ok());
-        let mut unknown = serde_json::to_value(&mutation).unwrap();
+        let mut unknown = serde_json::Value::from(mutation.to_value());
         unknown["unknown"] = serde_json::json!(true);
-        assert!(serde_json::from_value::<Op>(unknown).is_err());
+        assert!(Op::from_value(unknown.into()).is_err());
         for key in row["payload"].as_object().unwrap().keys() {
-            let mut invalid = serde_json::to_value(&mutation).unwrap();
+            let mut invalid = serde_json::Value::from(mutation.to_value());
             invalid[key] = serde_json::json!(true);
-            assert!(serde_json::from_value::<Op>(invalid.clone()).is_err());
+            assert!(Op::from_value(invalid.clone().into()).is_err());
             invalid[key] = if key == "physicalMs" { serde_json::json!(1e21) } else { serde_json::json!(2147483648i64) };
-            assert!(serde_json::from_value::<Op>(invalid).is_err());
-            let mut missing = serde_json::to_value(&mutation).unwrap();
+            assert!(Op::from_value(invalid.into()).is_err());
+            let mut missing = serde_json::Value::from(mutation.to_value());
             missing.as_object_mut().unwrap().remove(key);
-            assert_eq!(serde_json::from_value::<Op>(missing).is_ok(), row["operation"] == "restoreN" && key == "n");
+            assert_eq!(Op::from_value(missing.into()).is_ok(), row["operation"] == "restoreN" && key == "n");
         }
         let before = DemoSnapshot { n: serde_json::from_value(row["before"].clone()).unwrap() };
         let outcome = mutation.diff(&before);
@@ -19923,7 +20288,7 @@ mod tests {
             restored = inverse.diff(&restored).diff().apply(&restored).unwrap();
         }
         assert_eq!(restored, before);
-        assert_eq!(serde_json::from_value::<Op>(serde_json::to_value(&mutation).unwrap()).unwrap(), mutation);
+        assert_eq!(Op::from_value(serde_json::from_slice::<serde_json::Value>(&serde_json::to_vec(&serde_json::Value::from(mutation.to_value())).unwrap()).unwrap().into()).unwrap(), mutation);
         let text = mutation.print_op();
         assert_eq!(text.split(' ').next(), mutation.descriptor().text_opcode);
         assert_eq!(Op::parse_op(&text).unwrap(), mutation);
@@ -21236,6 +21601,12 @@ mod tests {
         async fn document_id(&self) -> &str {
             SpaceMember::document_id(&self.0).await
         }
+        fn artifact_ref(&self) -> Option<crate::os_io::ArtifactRef> {
+            SpaceMember::artifact_ref(&self.0)
+        }
+        fn owner_ref(&self) -> Option<OwnerRef> {
+            SpaceMember::owner_ref(&self.0)
+        }
         fn one_item_publication_identity(&self) -> (u64, [u8; 32]) {
             SpaceMember::one_item_publication_identity(&self.0)
         }
@@ -21355,24 +21726,34 @@ mod tests {
         }
     }
 
-    /// @emoji 🏭️ Test-fixture `MemberFactory`: single "kind" (any `kind` string matches — these
-    /// fixtures never register more than one composable kind under one coordinator), schema fixed
-    /// at `"demo/v1"`, empty genesis packs default to `P::default()` (mirrors the deleted
-    /// `DemoChildFactory`'s fixture-local empty-pack convenience — production `create_member_store`
-    /// deliberately rejects an empty pack, this fixture-only default is NOT that).
-    impl<P, Mutation> MemberFactory for ArtifactStore<P, Mutation>
-    where
-        P: Clone + Default + ToValue + FromValue + ArtifactPack + MemberStoreOwner<Mutation> + Send + 'static,
-        Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
-    {
-        async fn create(_kind: &str, id: &str, dialect: &crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Self, VcsError> {
-            let seeded = if initial_pack.is_empty() { P::default().encode_pack() } else { initial_pack.to_vec() };
-            Ok(Self(create_member_store("demo/v1", id, dialect, &seeded).await?))
-        }
-        async fn open(_kind: &str, envelope_pack: &[u8]) -> Result<Self, VcsError> {
-            Ok(Self(open_member_store(envelope_pack).await?))
-        }
+    /// 🧪️ Exact factories for the three typed coordinator fixtures; empty genesis remains invalid.
+    macro_rules! fixture_member_factory {
+        ($mutation:ty) => {
+            impl MemberFactory for ArtifactStore<DemoSnapshot, $mutation> {
+                const OPEN_DECLARATIONS: &'static [MemberOpenDeclaration] = &[MemberOpenDeclaration { kind: "s.stdio.mesh", standard: "1", subset: "*", schema: "demo/v1" }];
+                type Open = UnsupportedMemberFactoryOpen<Self>;
+                fn begin_open(request: MemberOpenRequest) -> Result<Self::Open, MemberOpenAdmissionError> {
+                    UnsupportedMemberFactoryOpen::begin(request)
+                }
+
+                async fn create(id: &str, dialect: &crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Self, VcsError> {
+                    if dialect != &demo_child_dialect() {
+                        return Err(VcsError::ValidationFailed("unregistered fixture member dialect".into()));
+                    }
+                    Ok(Self(create_member_store("demo/v1", id, dialect, initial_pack).await?))
+                }
+                async fn open(expected: &crate::os_io::ArtifactRef, owner: Option<&OwnerRef>, envelope_pack: &[u8]) -> Result<Self, VcsError> {
+                    if expected.dialect != demo_child_dialect() {
+                        return Err(VcsError::ValidationFailed("unregistered fixture member dialect".into()));
+                    }
+                    Ok(Self(open_member_store("demo/v1", expected, owner, envelope_pack).await?))
+                }
+            }
+        };
     }
+    fixture_member_factory!(DemoMutation);
+    fixture_member_factory!(ValidatedMutation);
+    fixture_member_factory!(SeverityMutation);
 
     #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, crate::os_dsl::DslArtifact)]
     #[dsl(id = "demo.doc", extension = "demo")]
@@ -21408,6 +21789,10 @@ mod tests {
             semio_format::wrap_text(&envelope, &body)
         }
     }
+    std::thread_local! {
+        static MEMBER_SNAPSHOT_DECODE_COUNT: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    }
+
     /// 📦️ Handcrafted ArtifactPack (P6).
     impl ArtifactPack for DemoSnapshot {
         fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
@@ -21416,6 +21801,7 @@ mod tests {
             Ok(semio_format::wrap_binary(&envelope, &inner))
         }
         fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
+            MEMBER_SNAPSHOT_DECODE_COUNT.with(|count| count.set(count.get() + 1));
             let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
             if envelope.envelope_id() != <Self as ArtifactDsl>::envelope_id() {
                 return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -21561,11 +21947,21 @@ mod tests {
         fn terminal_is_empty(&self, _store: &super::ArtifactStore<DemoSnapshot, Mutation>) -> bool {
             false
         }
+
+        fn close_uninstalled_step(&mut self, maximum_items: usize) -> Result<SnapshotRetirementStep, String> {
+            Ok(if maximum_items == 0 { SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 } } else { SnapshotRetirementStep::Complete })
+        }
+
+        fn uninstalled_terminal_is_empty(&self) -> bool {
+            true
+        }
     }
 
     impl MemberStoreOwner<DemoMutation> for DemoSnapshot {
+        type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
+
         fn member_store_owners() -> MemberStoreOwners<Self, DemoMutation> {
-            MemberStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(DemoStoreOwnedDisposer::<DemoMutation>(PhantomData)))
+            demo_closable_store_owners()
         }
     }
 
@@ -21602,7 +21998,7 @@ mod tests {
     }
 
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-    pub(crate) struct LossyDiff;
+    pub(crate) struct LossyDiff {}
 
     impl MutationDiff<DemoSnapshot> for LossyDiff {
         fn apply(&self, snapshot: &DemoSnapshot) -> crate::os_spr::MutationApplyResult<DemoSnapshot> {
@@ -21693,14 +22089,125 @@ mod tests {
     //#region 📬️OneItemPublicationLaws
     //#region 🧩️RetainedMemberPublicationLaws
     crate::space_members! {
-        pub enum RetainedTestMembers {
-            First("demo.first", "demo/v1") => super::ArtifactStore<DemoSnapshot, DemoMutation>,
-            Second("demo.second", "demo/v1") => super::ArtifactStore<DemoSnapshot, DemoMutation>,
+        pub enum RetainedTestMembers, RetainedTestMembersOpen {
+            First("s.test.member", "v1", "first", "demo/v1") => (DemoSnapshot, DemoMutation),
+            Second("s.test.member", "v1", "second", "demo/v1") => (DemoSnapshot, DemoMutation),
         }
     }
 
     fn member_publication_fixture() -> serde_json::Value {
-        serde_json::from_str(include_str!("🧪️member-publication.json")).expect("language-neutral member publication fixture")
+        serde_json::from_str(include_str!("📢️member-publication.json")).expect("language-neutral member publication fixture")
+    }
+
+    fn member_dialect_fixture() -> serde_json::Value {
+        serde_json::from_str(include_str!("🧩️composition/🪪️member-dialect/🧪️tests/🔣️.json")).expect("neutral member dialect corpus")
+    }
+
+    fn close_member_dialect_fixture<M: SpaceMember>(member: &mut M) {
+        for _ in 0..65_536 {
+            match member.close_owned_step(1, 4096).expect("exact fixture member bounded close") {
+                SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+                    assert!(released_items <= 1 && released_bytes <= 4096);
+                }
+                SnapshotRetirementStep::Blocked => panic!("fixture member has no external owner"),
+                SnapshotRetirementStep::Complete => {
+                    assert!(member.close_owned_terminal_is_empty());
+                    return;
+                }
+            }
+        }
+        panic!("fixture member retirement did not finish");
+    }
+
+    fn close_member_dialect_envelope(envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation>) {
+        let mut retirement = ArtifactStoreEnvelopeRetirement::new(envelope, Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory));
+        for _ in 0..65_536 {
+            match retirement.close_step(1, 4096).expect("fixture envelope retirement") {
+                SnapshotRetirementStep::Complete => {
+                    assert!(retirement.terminal_is_empty());
+                    return;
+                }
+                SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 4096),
+                SnapshotRetirementStep::Blocked => panic!("fixture envelope has no external owner"),
+            }
+        }
+        panic!("fixture envelope retirement did not finish");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn member_factory_closed_dialect_matches_neutral_admission_corpus() {
+        let fixture = member_dialect_fixture();
+        let seed = DemoSnapshot { n: Some(7) };
+        for row in fixture["cases"].as_array().unwrap() {
+            let dialect: crate::os_io::ArtifactDialect = serde_json::from_value(row["requested"].clone()).unwrap();
+            let expected = crate::os_io::ArtifactRef { artifact_id: "child-1".into(), dialect };
+            MEMBER_SNAPSHOT_DECODE_COUNT.set(0);
+            let result = if row["operation"] == "create" {
+                RetainedTestMembers::create(&expected.artifact_id, &expected.dialect, &seed.encode_pack()).await
+            } else {
+                let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>(row["persisted"]["schema"].as_str().unwrap(), "child-1", seed.clone(), None);
+                envelope.dialect = serde_json::from_value(row["persisted"]["dialect"].clone()).unwrap();
+                let files = print_document_pack(&envelope).await.unwrap();
+                let packed = encode_document_pack_bytes(&files.pack, &files.spr).await;
+                close_member_dialect_envelope(envelope);
+                RetainedTestMembers::open(&expected, None, &packed).await
+            };
+            assert_eq!(MEMBER_SNAPSHOT_DECODE_COUNT.get(), usize::from(row["accepted"].as_bool().unwrap()), "{}: rejected identity must not hydrate a typed snapshot", row["id"]);
+            assert_eq!(result.is_ok(), row["accepted"].as_bool().unwrap(), "{}: {:?}", row["id"], result.as_ref().err());
+            if let Ok(mut member) = result {
+                let variant = match &member {
+                    RetainedTestMembers::First(_) => "First",
+                    RetainedTestMembers::Second(_) => "Second",
+                };
+                assert_eq!(variant, row["variant"].as_str().unwrap());
+                assert_eq!(member.document_id().await, "child-1");
+                let restored = DemoSnapshot::decode_pack(&member.document_pack_bytes().await.unwrap()).unwrap();
+                assert_eq!(serde_json::to_value(restored).unwrap(), serde_json::to_value(&seed).unwrap());
+                assert_eq!(member.artifact_ref().as_ref(), Some(&expected));
+                assert_eq!(member.owner_ref(), None);
+                close_member_dialect_fixture(&mut member);
+            }
+        }
+        let expected = crate::os_io::ArtifactRef { artifact_id: "child-1".into(), dialect: serde_json::from_value(fixture["bindings"][0]["dialect"].clone()).unwrap() };
+        for bytes in [&[][..], &[1][..], &[0xff, 0xff][..]] {
+            MEMBER_SNAPSHOT_DECODE_COUNT.set(0);
+            assert!(RetainedTestMembers::open(&expected, None, bytes).await.is_err());
+            assert_eq!(MEMBER_SNAPSHOT_DECODE_COUNT.get(), 0);
+        }
+        eprintln!("[DEBUG] member factory closed dialect: 13 neutral vectors, 3 malformed frames, real typed create/open and serde values");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn member_factory_closed_dialect_rejects_identity_and_owner_substitution() {
+        let fixture = member_dialect_fixture();
+        let expected = crate::os_io::ArtifactRef { artifact_id: "child-1".into(), dialect: serde_json::from_value(fixture["bindings"][0]["dialect"].clone()).unwrap() };
+        let owner = OwnerRef { parent: crate::os_io::ArtifactRef { artifact_id: "parent-1".into(), dialect: crate::os_io::ArtifactDialect::parse_coordinate("s.test.parent@v1/*").unwrap() }, slot: "content".into(), child_id: "child-1".into() };
+        for row in fixture["identityCases"].as_array().unwrap() {
+            let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", row["persistedId"].as_str().unwrap(), DemoSnapshot { n: Some(7) }, None);
+            envelope.dialect = Some(expected.dialect.clone());
+            if !row["persistedOwner"].is_null() {
+                let persisted = &row["persistedOwner"];
+                envelope.owner = Some(OwnerRef {
+                    parent: crate::os_io::ArtifactRef { artifact_id: persisted["parentId"].as_str().unwrap().into(), dialect: crate::os_io::ArtifactDialect::parse_coordinate(persisted["parentDialect"].as_str().unwrap()).unwrap() },
+                    slot: persisted["slot"].as_str().unwrap().into(),
+                    child_id: persisted["childId"].as_str().unwrap().into(),
+                });
+            }
+            let files = print_document_pack(&envelope).await.unwrap();
+            let packed = encode_document_pack_bytes(&files.pack, &files.spr).await;
+            close_member_dialect_envelope(envelope);
+            let expected_owner = row["expectedOwned"].as_bool().unwrap().then_some(&owner);
+            MEMBER_SNAPSHOT_DECODE_COUNT.set(0);
+            let result = RetainedTestMembers::open(&expected, expected_owner, &packed).await;
+            assert_eq!(MEMBER_SNAPSHOT_DECODE_COUNT.get(), usize::from(row["accepted"].as_bool().unwrap()), "{}: rejected owner must not hydrate a typed snapshot", row["id"]);
+            assert_eq!(result.is_ok(), row["accepted"].as_bool().unwrap(), "{}: {:?}", row["id"], result.as_ref().err());
+            if let Ok(mut member) = result {
+                assert_eq!(member.artifact_ref().as_ref(), Some(&expected));
+                assert_eq!(member.owner_ref().as_ref(), expected_owner);
+                close_member_dialect_fixture(&mut member);
+            }
+        }
+        eprintln!("[DEBUG] member factory exact identity: 9 neutral owner/id vectors over separate persisted envelopes");
     }
 
     fn close_erased_member_publication(publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) {
@@ -21723,6 +22230,136 @@ mod tests {
 
     fn retained_demo_member_owners() -> MemberStoreOwners<DemoSnapshot, DemoMutation> {
         demo_closable_store_owners().with_one_item_preparation(Arc::new(DemoOneItemPreparationFactory::admissible())).with_one_item_wire_preparation(Arc::new(DemoMemberWirePreparationFactory))
+    }
+
+    #[test]
+    fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        struct Observed {
+            inner: Box<dyn ErasedSnapshotRetirement>,
+            count: Arc<AtomicUsize>,
+            counted: bool,
+        }
+        impl ErasedSnapshotRetirement for Observed {
+            fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+                let step = self.inner.close_step(items, bytes)?;
+                if matches!(step, SnapshotRetirementStep::Complete) && !self.counted {
+                    assert!(self.inner.terminal_is_empty());
+                    self.count.fetch_add(1, Ordering::SeqCst);
+                    self.counted = true;
+                }
+                Ok(step)
+            }
+            fn terminal_is_empty(&self) -> bool {
+                self.counted && self.inner.terminal_is_empty()
+            }
+        }
+        struct SnapshotFactory(Arc<AtomicUsize>);
+        impl ArtifactOwnedValueRetirementFactory<DemoSnapshot> for SnapshotFactory {
+            fn retire_owned(&self, value: DemoSnapshot) -> Box<dyn ErasedSnapshotRetirement> {
+                Box::new(Observed { inner: DemoInitialSnapshotRetirementFactory.retire_owned(value), count: self.0.clone(), counted: false })
+            }
+        }
+        struct MutationFactory(Arc<AtomicUsize>);
+        impl ArtifactOwnedValueRetirementFactory<DemoMutation> for MutationFactory {
+            fn retire_owned(&self, value: DemoMutation) -> Box<dyn ErasedSnapshotRetirement> {
+                Box::new(Observed { inner: DemoMutationRetirementFactory.retire_owned(value), count: self.0.clone(), counted: false })
+            }
+        }
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧩️composition/🚪️open/🧫️fixture/🔣️.json")).unwrap();
+        for row in fixture["retention"].as_array().unwrap() {
+            let snapshots = Arc::new(AtomicUsize::new(0));
+            let mutations = Arc::new(AtomicUsize::new(0));
+            let owners = MemberStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(SnapshotFactory(snapshots.clone())), Arc::new(MutationFactory(mutations.clone())), Box::new(ArtifactStoreCursorDisposer::new()));
+            let mut pages = OwnedSchemaDecodePages::try_with_credits(OwnedSchemaDecodeCredits { maximum_pages: 1, maximum_bytes: 3 }).unwrap();
+            pages.admit_page(OwnedSchemaDecodePage::try_from_slice(&[1, 97, 83]).unwrap()).unwrap();
+            pages.seal().unwrap();
+            let expected = crate::os_io::ArtifactRef { artifact_id: "member-retained".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "1".into(), subset: "*".into() } };
+            let request = MemberOpenRequest::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), 1000, expected, None, pages).admit(1).unwrap_or_else(|_| panic!("admitted request fixture"));
+            let mut retained = member_open::MemberStoreOpenRetained::new(request, owners);
+            let stage = row["stage"].as_str().unwrap();
+            if stage != "input" {
+                let history = crate::os_spr::HistoryLog {
+                    doc_id: "member-retained".into(),
+                    schema: "demo/v1".into(),
+                    edits: vec![crate::os_spr::HistoryEdit {
+                        id: "raw-edit".into(),
+                        actor: Some("raw-actor".into()),
+                        started_at: "started".into(),
+                        finished_at: Some("finished".into()),
+                        coalesce_key: Some("key".into()),
+                        description: Some("Grüße-😀".repeat(512)),
+                        ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(vec![0xff; 129]) }],
+                        inverse: Vec::new(),
+                        meta: Some(vec![crate::os_spr::HistoryOpMeta {
+                            dependencies: vec!["dependency".into()],
+                            payload_hash: Some([3; 32]),
+                            origin: crate::os_spr::MutationOrigin::Transaction { initiator: crate::os_spr::ForeignTarget { artifact_id: "initiator".into(), artifact_kind: "s.test.member".into(), dialect: Some("1/*".into()) } },
+                            ..Default::default()
+                        }]),
+                    }],
+                    composition: Some(crate::os_spr::HistoryComposition {
+                        owner: Some(("parent".into(), "slot".into(), "member-retained".into())),
+                        dialect: Some(("s.test.member".into(), "1".into(), "*".into())),
+                        checkpoint_pins: vec![("unknown-checkpoint".into(), vec![("invalid-uri".into(), "pin".into())])],
+                    }),
+                    ..Default::default()
+                };
+                retained.stage_history(history).unwrap_or_else(|_| panic!("raw decoded model stays owned before typed hydration"));
+                let packed = DemoSnapshot { n: Some(7) }.encode_pack();
+                let initial = DemoSnapshot::decode_pack(&packed).unwrap();
+                if matches!(stage, "envelope" | "initialization") {
+                    let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-retained", initial, None).into_owners();
+                    retained.stage_envelope(envelope).unwrap_or_else(|_| panic!("unique parsed owner slot"));
+                    if stage == "initialization" {
+                        let current = DemoSnapshot::decode_pack(&packed).unwrap();
+                        let runtime = ArtifactStoreInitializationRuntime::new("member-retained", "demo/v1", current, [7; 32]);
+                        retained.stage_runtime(runtime).unwrap_or_else(|_| panic!("unique initialized owner slot"));
+                    }
+                } else {
+                    retained.stage_initial(initial).unwrap_or_else(|_| panic!("unique typed snapshot slot"));
+                }
+            }
+            if matches!(stage, "forward" | "inverse") {
+                let encoded = DemoMutation::SetN(SetN { n: 7 }).encode_op().unwrap();
+                let forwards = vec![DemoMutation::decode_op(&encoded).unwrap()];
+                let inverse = if stage == "inverse" { vec![DemoMutation::decode_op(&encoded).unwrap()] } else { Vec::new() };
+                retained
+                    .stage_edit(Edit {
+                        id: "pending-edit".into(),
+                        actor: Some("actor".into()),
+                        forwards,
+                        inverse,
+                        mutation_meta: Vec::new(),
+                        description: Some("retained during malformed next record".into()),
+                        coalesce_key: None,
+                        sequence_number: 1,
+                        started_at: "now".into(),
+                        finished_at: None,
+                    })
+                    .unwrap_or_else(|_| panic!("unique partial edit slot"));
+                assert!(DemoMutation::decode_op(&[0xff]).is_err(), "next malformed operation must not consume the retained edit");
+            }
+            let before = retained.retained_typed_owners();
+            if row["cancelled"].as_bool().unwrap() {
+                let cancel = semio_framework_job::root_cancel_token();
+                cancel.cancel_now();
+                let mut sequence = 0;
+                let cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, 999), cancel, || Some(1), &mut sequence);
+                assert_eq!(retained.check_step_authority(&cx), Err(MemberOpenDiagnostic::Cancelled));
+            } else {
+                retained.reject(if stage == "initialization" { MemberOpenDiagnostic::Initialization } else { MemberOpenDiagnostic::Malformed });
+            }
+            assert_eq!(retained.retained_input_bytes(), 3);
+            assert_eq!(retained.retained_typed_owners(), before);
+            assert!(matches!(retained.close_step(0, 0).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
+            assert_eq!(retained.retained_typed_owners(), before);
+            assert_eq!((snapshots.load(Ordering::SeqCst), mutations.load(Ordering::SeqCst)), (0, 0));
+            drive_retirement_terminal(Box::new(retained));
+            assert_eq!(snapshots.load(Ordering::SeqCst), row["snapshots"].as_u64().unwrap() as usize, "{}", row["id"]);
+            assert_eq!(mutations.load(Ordering::SeqCst), row["mutations"].as_u64().unwrap() as usize, "{}", row["id"]);
+        }
+        eprintln!("[DEBUG] member-open retained ownership: six interruption stages, exact snapshot/mutation factory terminal counts, zero-budget preservation; parser activation remains separate");
     }
 
     struct DemoMemberWirePreparationFactory;
@@ -22441,7 +23078,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retained_latest_wins_cold_rebase_preserves_admitted_cursor_capacity_for_next_publication() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🔌️plugin/🧪️tool-latest-wins-integration.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🔌️plugin/🔗️tool-latest-wins-integration.json")).unwrap();
         let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "cold-retained-rebase", DemoSnapshot { n: Some(0) }, None)).await;
         store.install_member_store_owners_exact(demo_closable_store_owners());
         let capacity = store.envelope.cursor.as_ref().unwrap().applied_edit_ids.capacity();
@@ -22643,14 +23280,16 @@ mod tests {
     struct GroupReadTriggerSnapshot {
         value: i32,
         commit: Option<Arc<std::sync::Mutex<crate::os_vcs::ArtifactGroupVisibilityOwner>>>,
+        reads: Arc<std::sync::atomic::AtomicUsize>,
     }
 
-    impl Serialize for GroupReadTriggerSnapshot {
-        fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+    impl ToValue for GroupReadTriggerSnapshot {
+        fn to_value(&self) -> DslValue {
+            self.reads.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
             if let Some(owner) = self.commit.as_ref() {
                 owner.lock().expect("injected serializer decision").commit();
             }
-            serializer.serialize_i32(self.value)
+            self.value.to_value()
         }
     }
 
@@ -22695,12 +23334,13 @@ mod tests {
 
     #[test]
     fn retained_group_envelope_read_captures_history_and_cursor_before_serializer_commit() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️group-read.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("📖️group-read.json")).unwrap();
         for case in fixture["cases"].as_array().unwrap() {
             let owner = Arc::new(std::sync::Mutex::new(crate::os_vcs::ArtifactGroupVisibilityOwner::new()));
             let view = owner.lock().unwrap().view();
             let inject_commit = case["capture"] == "pending" && case["decision"] == "committed";
-            let mut envelope = group_read_fixture_envelope(GroupReadTriggerSnapshot { value: 0, commit: inject_commit.then(|| owner.clone()) });
+            let reads = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+            let mut envelope = group_read_fixture_envelope(GroupReadTriggerSnapshot { value: 0, commit: inject_commit.then(|| owner.clone()), reads: Arc::clone(&reads) });
             let prepared_ids: Vec<String> = serde_json::from_value(fixture["prepared"]["appliedEditIds"].clone()).unwrap();
             envelope.cursor.as_mut().unwrap().stage_group_owned(ArtifactCursorOwners { applied_edit_ids: prepared_ids.clone(), redo_edit_ids: Vec::new(), checkpoint_id: None }, &view).unwrap();
             for id in &prepared_ids[1..] {
@@ -22714,8 +23354,9 @@ mod tests {
             if case["decision"] == "aborted" {
                 assert!(owner.lock().unwrap().abort());
             }
-            let captured = serde_json::to_value(&read).unwrap();
-            let fresh = serde_json::to_value(&envelope).unwrap();
+            let captured: serde_json::Value = serde_json::from_str(&crate::os_pack::json::to_json_string(&read)).unwrap();
+            let fresh: serde_json::Value = serde_json::from_str(&crate::os_pack::json::to_json_string(&envelope.capture_read().unwrap())).unwrap();
+            assert_eq!(reads.load(std::sync::atomic::Ordering::SeqCst), 2);
             for (value, selector) in [(&captured, "captured"), (&fresh, "fresh")] {
                 let expected = &fixture[case[selector].as_str().unwrap()];
                 let actual_ids: Vec<_> = value["vcs"]["edits"].as_array().unwrap().iter().map(|edit| edit["id"].clone()).collect();
@@ -22749,12 +23390,14 @@ mod tests {
         let history = history_owner.view();
         let mut cursor_owner = crate::os_vcs::ArtifactGroupVisibilityOwner::new();
         let cursor = cursor_owner.view();
-        let mut envelope = group_read_fixture_envelope(GroupReadTriggerSnapshot { value: 0, commit: None });
+        let reads = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let mut envelope = group_read_fixture_envelope(GroupReadTriggerSnapshot { value: 0, commit: None, reads: Arc::clone(&reads) });
         let reservation = envelope.vcs.edits.reserve_group_one(&history).unwrap();
         envelope.vcs.edits.stage_group_reserved(reservation, group_read_fixture_edit("foreign"), &history).unwrap();
         envelope.cursor.as_mut().unwrap().stage_group_owned(ArtifactCursorOwners::default(), &cursor).unwrap();
         assert!(envelope.capture_read().is_err());
-        assert!(serde_json::to_value(&envelope).is_err());
+        assert!(envelope.capture_read().map(|read| crate::os_pack::json::to_json_string(&read)).is_err());
+        assert_eq!(reads.load(std::sync::atomic::Ordering::SeqCst), 0);
         history_owner.abort();
         cursor_owner.abort();
         while envelope.vcs.edits.abort_group_one(&history).unwrap().is_some() {}
@@ -22765,7 +23408,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retained_group_cursor_shares_history_visibility_and_retires_displaced_roots() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("./🧪️group-cursor.json")).expect("group cursor fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("./🎯️group-cursor.json")).expect("group cursor fixture");
         let mut cursor: ArtifactCursor = serde_json::from_value(fixture["before"].clone()).expect("independent old cursor");
         let next: ArtifactCursorOwners = serde_json::from_value(fixture["after"].clone()).expect("independent next cursor");
         let mut owner = crate::os_vcs::ArtifactGroupVisibilityOwner::new();
@@ -22819,7 +23462,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retained_group_cursor_empty_base_and_dropped_publisher_return_every_staged_owner() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("./🧪️group-cursor.json")).expect("group cursor fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("./🎯️group-cursor.json")).expect("group cursor fixture");
         let mut cursor = ArtifactCursor::default();
         let mut history = ArtifactHistoryLedger::<String>::new();
         let owner = crate::os_vcs::ArtifactGroupVisibilityOwner::new();
@@ -22852,7 +23495,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn canonical_runtime_seed_retains_duplicate_owners_and_preflights_before_building() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("./🧪️runtime-seed.json")).expect("runtime seed fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("./🌱️runtime-seed.json")).expect("runtime seed fixture");
         let ids: Vec<MutationId> = serde_json::from_value::<Vec<String>>(fixture["identities"].clone()).expect("fixture identities").into_iter().map(MutationId).collect();
         let expected: Vec<String> = serde_json::from_value(fixture["applied"].clone()).expect("independent fixture applied identities");
         let retired: Vec<String> = serde_json::from_value(fixture["retired"].clone()).expect("independent fixture duplicate identities");
@@ -23992,7 +24635,7 @@ mod tests {
         assert_eq!(columns[0].lane, 0);
         assert_eq!(columns[0].labels, vec!["main".to_string()], "newest unlabeled row falls back to main");
         assert!(columns[1].labels.is_empty(), "only the newest row gets the main fallback");
-        let json = serde_json::to_string(&columns[0]).expect("serialize");
+        let json = serde_json::to_string(&test_support::SerdeValue(&columns[0].to_value())).expect("serialize");
         assert!(json.contains("checkpointId"), "wire format must be camelCase: {json}");
     }
 
@@ -25011,6 +25654,8 @@ mod tests {
     }
 
     impl MemberStoreOwner<SeverityMutation> for DemoSnapshot {
+        type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
+
         fn member_store_owners() -> MemberStoreOwners<Self, SeverityMutation> {
             MemberStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(DemoStoreOwnedDisposer::<SeverityMutation>(PhantomData)))
         }
@@ -25059,7 +25704,7 @@ mod tests {
     /// @emoji 🔬️ `print_ops_log`'s `metadata `/`message `/`conflict ` records now build their `data`
     /// payload with `crate::os_pack::json::to_json_string` instead of `serde_json::to_string`
     /// (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/02) — direct proof the two
-    /// are byte-identical for `MutationMeta`, `MutationMessage`, and `Conflict`, exercising both the
+    /// encode the same ordered first-party values byte-identically, exercising both the
     /// sparse (every `Option`/default field omitted) and dense (every optional field populated,
     /// including `MutationOrigin`'s two non-default enum-variant-with-fields shapes) ends of each
     /// type's `skip_serializing_if` surface.
@@ -25091,20 +25736,21 @@ mod tests {
             group_id: Some("group-1".into()),
             origin: crate::os_spr::MutationOrigin::Contributed { plugin_id: "plugin-a".into(), mutation_id: SchemaId("mutation-src".into()), payload_hash: crate::os_spr::PayloadHash([3u8; 32]) },
         };
-        let transaction_meta =
-            crate::os_spr::MutationMeta { origin: crate::os_spr::MutationOrigin::Transaction { initiator: crate::os_spr::ForeignTarget { artifact_id: "artifact-1".into(), artifact_kind: "demo".into(), dialect: Some("v1".into()) } }, ..dense_meta.clone() };
+        let transaction_meta = crate::os_spr::MutationMeta {
+            origin: crate::os_spr::MutationOrigin::Transaction { initiator: crate::os_spr::ForeignTarget { artifact_id: "artifact-1".into(), artifact_kind: "demo".into(), dialect: Some("v1".into()) } },
+            ..dense_meta.clone()
+        };
         for meta in [&sparse_meta, &dense_meta, &transaction_meta] {
             let mine = crate::os_pack::json::to_json_string(meta);
-            let theirs = serde_json::to_string(meta).expect("serde_json encodes MutationMeta");
+            let theirs = serde_json::to_string(&test_support::SerdeValue(&meta.to_value())).expect("serde_json encodes MutationMeta fields");
             assert_eq!(mine, theirs, "MutationMeta's ToValue/pack::json bridge diverged from serde_json for origin={:?}", meta.origin);
         }
 
         let sparse_message = crate::os_spr::MutationMessage { level: crate::os_dsl::Severity::Warning, code: crate::os_dsl::FaultCode("mutation.no-op".into()), message: "no-op".into(), target: Vec::new(), op_index: None };
-        let dense_message =
-            crate::os_spr::MutationMessage { level: crate::os_dsl::Severity::Fatal, code: crate::os_dsl::FaultCode("mutation.invariant".into()), message: "n invariant violated".into(), target: vec!["n".into()], op_index: Some(2) };
+        let dense_message = crate::os_spr::MutationMessage { level: crate::os_dsl::Severity::Fatal, code: crate::os_dsl::FaultCode("mutation.invariant".into()), message: "n invariant violated".into(), target: vec!["n".into()], op_index: Some(2) };
         for message in [&sparse_message, &dense_message] {
             let mine = crate::os_pack::json::to_json_string(message);
-            let theirs = serde_json::to_string(message).expect("serde_json encodes MutationMessage");
+            let theirs = serde_json::to_string(&test_support::SerdeValue(&message.to_value())).expect("serde_json encodes MutationMessage fields");
             assert_eq!(mine, theirs, "MutationMessage's ToValue/pack::json bridge diverged from serde_json for op_index={:?}", message.op_index);
         }
 
@@ -25117,7 +25763,7 @@ mod tests {
             timestamp: HybridLogicalTimestamp::new(9, 300),
         };
         let mine = crate::os_pack::json::to_json_string(&conflict);
-        let theirs = serde_json::to_string(&conflict).expect("serde_json encodes Conflict");
+        let theirs = serde_json::to_string(&test_support::SerdeValue(&conflict.to_value())).expect("serde_json encodes Conflict fields");
         assert_eq!(mine, theirs, "Conflict's ToValue/pack::json bridge diverged from serde_json");
     }
 
@@ -25836,10 +26482,7 @@ mod tests {
             ("object_mixed", DslValue::object([("a".into(), DslValue::uint(1)), ("b".into(), DslValue::Array(vec![DslValue::Bool(true), DslValue::Null]))])),
             (
                 "nested_deep",
-                DslValue::object([(
-                    "a".into(),
-                    DslValue::object([("b".into(), DslValue::object([("c".into(), DslValue::Array(vec![DslValue::uint(1), DslValue::uint(2), DslValue::object([("d".into(), DslValue::String("leaf".into()))])]))]))]),
-                )]),
+                DslValue::object([("a".into(), DslValue::object([("b".into(), DslValue::object([("c".into(), DslValue::Array(vec![DslValue::uint(1), DslValue::uint(2), DslValue::object([("d".into(), DslValue::String("leaf".into()))])]))]))]))]),
             ),
         ]
     }
@@ -25873,7 +26516,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn interaction_state_pack_matches_first_party_value_and_json_oracle() {
-        let oracle: serde_json::Value = serde_json::from_str(include_str!("🧪️interaction-state-pack.json")).unwrap();
+        let oracle: serde_json::Value = serde_json::from_str(include_str!("🎒️interaction-state-pack.json")).unwrap();
         let value = DslValue::from(&oracle);
         let state = <protocol::InteractionState as crate::os_dsl::FromValue>::from_value(value.clone()).unwrap();
         let encoded = <protocol::InteractionState as ArtifactPack>::encode_pack(&state);
@@ -25956,6 +26599,8 @@ mod tests {
     /// rejects it before group dispatch can alter either member's history.
 
     impl MemberStoreOwner<ValidatedMutation> for DemoSnapshot {
+        type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
+
         fn member_store_owners() -> MemberStoreOwners<Self, ValidatedMutation> {
             MemberStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(DemoStoreOwnedDisposer::<ValidatedMutation>(PhantomData)))
         }
@@ -26048,46 +26693,53 @@ mod tests {
 
         let files = print_document_pack(child.envelope()).await.expect("print");
         let persisted = encode_document_pack_bytes(&files.pack, &files.spr).await;
-        let reopened = open_member_store::<DemoSnapshot, DemoMutation>(&persisted).await.expect("open");
+        let expected = crate::os_io::ArtifactRef { artifact_id: "child-round-trip".into(), dialect };
+        let mut reopened = open_member_store::<DemoSnapshot, DemoMutation>("demo/v1", &expected, None, &persisted).await.expect("open");
 
         assert!(reopened.snapshot_retirement_factory.is_some(), "generated member reopen must install the exact snapshot retirement factory before returning ownership");
         assert!(reopened.owned_disposer_installed(), "generated member reopen must install the exact whole-store bounded disposer before returning ownership");
         assert_eq!(reopened.envelope().id, "child-round-trip");
         assert_eq!(reopened.snapshot().expect("head snapshot"), child.snapshot().expect("head snapshot"), "reopened child's live content diverged from the persisted one");
         assert_eq!(reopened.snapshot().expect("head snapshot"), DemoSnapshot { n: Some(11) }, "reopen restored the wrong cursor position");
+        close_member_dialect_fixture(&mut reopened);
+        close_member_dialect_fixture(&mut child);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn member_factory_wrapper_cannot_bypass_exact_create_or_open_owner_catalog() {
         type Wrapped = ArtifactStore<DemoSnapshot, DemoMutation>;
         let dialect = demo_child_dialect();
-        let created = <Wrapped as MemberFactory>::create("demo/v1", "wrapped-member", &dialect, &DemoSnapshot { n: Some(3) }.encode_pack()).await.expect("wrapper create");
+        let mut created = <Wrapped as MemberFactory>::create("wrapped-member", &dialect, &DemoSnapshot { n: Some(3) }.encode_pack()).await.expect("wrapper create");
         assert!(created.snapshot_retirement_factory.is_some());
         assert!(created.initial_snapshot_retirement_factory.is_some());
         assert!(created.mutation_retirement_factory.is_some());
         assert!(created.owned_disposer_installed());
         let files = print_document_pack(created.envelope()).await.expect("print wrapped member");
         let persisted = encode_document_pack_bytes(&files.pack, &files.spr).await;
-        let reopened = <Wrapped as MemberFactory>::open("demo/v1", &persisted).await.expect("wrapper open");
+        let expected = crate::os_io::ArtifactRef { artifact_id: "wrapped-member".into(), dialect };
+        let mut reopened = <Wrapped as MemberFactory>::open(&expected, None, &persisted).await.expect("wrapper open");
         assert!(reopened.snapshot_retirement_factory.is_some());
         assert!(reopened.initial_snapshot_retirement_factory.is_some());
         assert!(reopened.mutation_retirement_factory.is_some());
         assert!(reopened.owned_disposer_installed());
+        close_member_dialect_fixture(&mut reopened);
+        close_member_dialect_fixture(&mut created);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn member_close_rejects_missing_owner_and_preserves_the_installed_blocked_disposer() {
+    async fn member_close_rejects_missing_owner_and_preserves_the_installed_disposer_until_terminal() {
         let mut missing = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "missing-member-owner", DemoSnapshot { n: Some(1) }, None)).await;
         assert!(matches!(SpaceMember::close_owned_step(&mut missing, 1, 4_096), Err(reason) if reason.contains("no owner-supplied bounded disposer")));
 
         missing.install_member_store_owners_exact(DemoSnapshot::member_store_owners());
-        assert!(matches!(SpaceMember::close_owned_step(&mut missing, 1, 4_096), Ok(SnapshotRetirementStep::Blocked)));
-        assert!(missing.owned_disposer_installed(), "a blocked owner must remain retained for a later bounded close turn");
+        assert!(matches!(SpaceMember::close_owned_step(&mut missing, 1, 4_096), Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }) if released_items <= 1 && released_bytes <= 4_096));
+        assert!(missing.owned_disposer_installed(), "the admitted owner remains retained until terminal close");
         assert!(!SpaceMember::close_owned_terminal_is_empty(&missing));
         assert!(
             matches!(missing.install_snapshot_retirement_factory(Arc::new(DemoSnapshotRetirementFactory)), Err(VcsError::Deserialize(reason)) if reason.contains("already installed")),
             "a second or wrong snapshot retirement factory must never replace the exact retained owner"
         );
+        close_member_dialect_fixture(&mut missing);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -26100,7 +26752,8 @@ mod tests {
         envelope.owner = Some(OwnerRef { parent: crate::os_io::ArtifactRef { artifact_id: "parent".into(), dialect: demo_child_dialect() }, slot: "mesh".into(), child_id: "child-no-dialect".into() });
         let files = print_document_pack(&envelope).await.expect("print");
         let orphan = encode_document_pack_bytes(&files.pack, &files.spr).await;
-        assert!(matches!(open_member_store::<DemoSnapshot, DemoMutation>(&orphan).await, Err(VcsError::Deserialize(_))), "an owned child with no dialect must fail closed");
+        let expected = crate::os_io::ArtifactRef { artifact_id: "child-no-dialect".into(), dialect: demo_child_dialect() };
+        assert!(matches!(open_member_store::<DemoSnapshot, DemoMutation>("demo/v1", &expected, envelope.owner.as_ref(), &orphan).await, Err(VcsError::Deserialize(_))), "an owned child with no dialect must fail closed");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -26179,6 +26832,159 @@ mod tests {
         assert!(matches!(resolver.resolve(&ArtifactLink { target: target.clone(), pin: LinkPin::Head, role: "known".into() }).await, LinkState::Resolved { .. }));
         assert!(matches!(resolver.resolve(&ArtifactLink { target: target.clone(), pin: LinkPin::Head, role: "pinned".into() }).await, LinkState::PinnedOnly { .. }));
         assert!(matches!(resolver.resolve(&ArtifactLink { target, pin: LinkPin::Head, role: "gone".into() }).await, LinkState::Missing));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn member_factory_closed_dialect_parent_projection_matches_neutral_corpus() {
+        use crate::os_schema_composition::{ArtifactCompositionFields, ChildRefFields, ChildRefVisitor, ChildSlotSpec};
+        struct Parent<'a>(&'a [serde_json::Value]);
+        fn fields(row: &serde_json::Value) -> ChildRefFields<'_> {
+            ChildRefFields {
+                child_id: row["childId"].as_str().unwrap(),
+                artifact_id: row["artifactId"].as_str().unwrap(),
+                artifact_kind: row["artifactKind"].as_str().unwrap(),
+                standard: row["standard"].as_str().unwrap(),
+                subset: row["subset"].as_str().unwrap(),
+            }
+        }
+        impl ArtifactCompositionFields for Parent<'_> {
+            fn child_slots() -> &'static [ChildSlotSpec] {
+                &[ChildSlotSpec { name: "single", kind: "s.test.member", many: false }, ChildSlotSpec { name: "many", kind: "s.test.member", many: true }, ChildSlotSpec { name: "other", kind: "s.test.member", many: false }]
+            }
+            fn visit_child_refs<'a, V: ChildRefVisitor<'a>>(&'a self, visitor: &mut V) -> Result<(), V::Error> {
+                for row in self.0 {
+                    visitor.step()?;
+                    let slot = match row["slot"].as_str().unwrap() {
+                        "single" => "single",
+                        "many" => "many",
+                        "other" => "other",
+                        _ => "unknown",
+                    };
+                    visitor.child(slot, fields(row))?;
+                }
+                Ok(())
+            }
+        }
+        let fixture = member_dialect_fixture();
+        let slots = Parent::child_slots();
+        for (actual, expected) in slots.iter().zip(fixture["projectionSlots"].as_array().unwrap()) {
+            assert_eq!(actual.name, expected["name"].as_str().unwrap());
+            assert_eq!(actual.kind, expected["kind"].as_str().unwrap());
+            assert_eq!(actual.many, expected["many"].as_bool().unwrap());
+        }
+        let rows = fixture["projectionCases"].as_array().unwrap();
+        assert_eq!(rows.len(), 15);
+        for row in rows {
+            let parent = Parent(row["parent"].as_array().unwrap());
+            let projection = ChildRestoreProjection::from_snapshot(&parent);
+            assert_eq!(projection.is_ok(), row["projected"].as_bool().unwrap(), "{}", row["id"]);
+            let admitted = projection.as_ref().is_ok_and(|projection| projection.admit_complete(row["incoming"].as_array().unwrap().iter().map(|row| (row["slot"].as_str().unwrap(), fields(row)))).is_ok());
+            assert_eq!(admitted, row["accepted"].as_bool().unwrap(), "{}", row["id"]);
+        }
+        eprintln!("[DEBUG] member parent projection: 15 neutral loaded-parent and complete-set admission rows");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn member_factory_closed_dialect_graph_admission_matches_neutral_corpus() {
+        let fixture = member_dialect_fixture();
+        let rows = fixture["graphCases"].as_array().expect("neutral graph rows");
+        assert_eq!(rows.len(), 7);
+        for row in rows {
+            let id = row["id"].as_str().unwrap();
+            let mut graph = CompositionGraph::new().await;
+            for edge in row["edges"].as_array().unwrap() {
+                graph.insert_owns(edge["parent"].as_str().unwrap(), edge["slot"].as_str().unwrap(), edge["child"].as_str().unwrap()).await.expect("valid initial forest");
+            }
+            let previous = graph.owns.clone();
+            let candidate = &row["candidate"];
+            let parent = candidate["parent"].as_str().unwrap();
+            let slot = candidate["slot"].as_str().unwrap();
+            let child = candidate["child"].as_str().unwrap();
+            let admission = graph.admit_owns(parent, slot, child).await;
+            assert_eq!(admission.is_ok(), row["accepted"].as_bool().unwrap(), "{id}");
+            assert_eq!(graph.owns, previous, "{id}: admission is read-only");
+            if let Ok(admission) = admission {
+                assert_eq!(admission.inserts(), row["inserted"].as_bool().unwrap(), "{id}");
+                graph.commit_owns_admitted(admission);
+                assert_eq!(graph.owner_of(child).await, Some(parent), "{id}");
+                assert_eq!(graph.slot_of(child).await, Some(slot), "{id}");
+                assert!(!graph.admit_owns(parent, slot, child).await.unwrap().inserts(), "{id}: exact repeat cannot erase or replace an existing edge");
+            }
+        }
+        let graph = CompositionGraph::new().await;
+        let mut foreign = CompositionGraph::new().await;
+        let ticket = graph.admit_owns("parent", "slot", "child").await.unwrap();
+        assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| foreign.commit_owns_admitted(ticket))).is_err());
+        assert!(foreign.owns.is_empty());
+        let mut graph = CompositionGraph::new().await;
+        let ticket = graph.admit_owns("parent", "slot", "child").await.unwrap();
+        graph.insert_owns("child", "ancestor", "parent").await.unwrap();
+        let previous = graph.owns.clone();
+        assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| graph.commit_owns_admitted(ticket))).is_err());
+        assert_eq!(graph.owns, previous);
+        eprintln!("[DEBUG] member graph native admission: {} neutral vectors", rows.len());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn member_factory_closed_dialect_graph_sync_preserves_prior_state_on_rejection() {
+        struct Refs {
+            children: Vec<ChildRef>,
+            links: Vec<ArtifactLink>,
+        }
+        impl ArtifactRefs for Refs {
+            async fn child_refs(&self) -> Vec<ChildRef> {
+                self.children.clone()
+            }
+            async fn links(&self) -> Vec<ArtifactLink> {
+                self.links.clone()
+            }
+        }
+        let child_ref = |slot: &str, child: &str| ChildRef { slot: slot.into(), child_id: child.into(), target: crate::os_io::ArtifactRef { artifact_id: child.into(), dialect: demo_child_dialect() } };
+        let link_ref = |target: &str| ArtifactLink { target: crate::os_io::ArtifactRef { artifact_id: target.into(), dialect: demo_child_dialect() }, pin: LinkPin::Head, role: "reference".into() };
+        let fixture = member_dialect_fixture();
+        let rows = fixture["graphCases"].as_array().unwrap();
+        assert_eq!(rows.len(), 7);
+        for row in rows {
+            let id = row["id"].as_str().unwrap();
+            let parent = row["candidate"]["parent"].as_str().unwrap();
+            let child = row["candidate"]["child"].as_str().unwrap();
+            let slot = row["candidate"]["slot"].as_str().unwrap();
+            let mut graph = CompositionGraph::new().await;
+            for edge in row["edges"].as_array().unwrap() {
+                graph.insert_owns(edge["parent"].as_str().unwrap(), edge["slot"].as_str().unwrap(), edge["child"].as_str().unwrap()).await.unwrap();
+            }
+            graph.insert_owns(parent, "previous", "retained-prior-child").await.unwrap();
+            graph.insert_link(parent, "retained-prior-link").await.unwrap();
+            let prior_owns = graph.owns.clone();
+            let prior_links = graph.links.clone();
+            let prior_generation = graph.owns_generation;
+            let refs = Refs { children: vec![child_ref(slot, child)], links: Vec::new() };
+            let result = graph.sync_member(parent, &refs).await;
+            assert_eq!(result.is_ok(), row["syncAccepted"].as_bool().unwrap(), "{id}");
+            if result.is_ok() {
+                let mut expected = prior_owns;
+                expected.retain(|_, (owner, _)| owner != parent);
+                expected.insert(child.into(), (parent.into(), slot.into()));
+                assert_eq!(graph.owns, expected, "{id}");
+                assert!(!graph.links.contains_key(parent));
+            } else {
+                assert_eq!(graph.owns, prior_owns, "{id}");
+                assert_eq!(graph.links, prior_links, "{id}");
+                assert_eq!(graph.owns_generation, prior_generation, "{id}");
+            }
+        }
+        let mut graph = CompositionGraph::new().await;
+        graph.insert_owns("parent", "previous", "previous-child").await.unwrap();
+        graph.insert_link("cycle-source", "parent").await.unwrap();
+        graph.insert_link("parent", "previous-link").await.unwrap();
+        let prior_owns = graph.owns.clone();
+        let prior_links = graph.links.clone();
+        for refs in [Refs { children: vec![child_ref("next", "next-child")], links: vec![link_ref("cycle-source")] }, Refs { children: vec![child_ref("first", "duplicated"), child_ref("second", "duplicated")], links: Vec::new() }] {
+            assert!(graph.sync_member("parent", &refs).await.is_err());
+            assert_eq!(graph.owns, prior_owns);
+            assert_eq!(graph.links, prior_links);
+        }
+        eprintln!("[DEBUG] graph sync: seven neutral replacement vectors and late link/child-across-slots rejection preserve prior graph state");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -26378,11 +27184,8 @@ mod tests {
     /// minted child id and the identical `invocation_id`.
     #[semio_framework_async_macros::async_test]
     async fn dispatch_group_mints_genesis_child_ids_deterministically_across_replicas() {
-        // 🎯️ O1: no more registry — `ArtifactStore<DemoSnapshot, DemoMutation>`'s `MemberFactory`
-        // impl (above) matches ANY `kind` string, so genesis creation just works.
         let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-genesis-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
-        let genesis_dialect = crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() };
-        let genesis = vec![ChildGenesis { slot: "mesh-slot".into(), dialect: genesis_dialect, initial_pack: Vec::new() }];
+        let genesis = vec![ChildGenesis { slot: "mesh-slot".into(), dialect: demo_child_dialect(), initial_pack: DemoSnapshot { n: Some(0) }.encode_pack() }];
         let parent_ops: Vec<Vec<u8>> = vec![DemoMutation::SetN(SetN { n: 1 }).encode_op().expect("encode")];
 
         let mut parent_1 = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;

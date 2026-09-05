@@ -11,13 +11,13 @@ import { useTranslation } from "react-i18next";
 import i18next from "i18next";
 import { sizeVar } from "@semio-tech/ui-styling";
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
-import { type UiLabel } from "../🏷️UiLabel/🟦️.tsx";
+import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { TreeContext, TreeRowAlignmentContext, TreeAlignedRow, PropertyValueColumnContext, detailPanelIndentPx, detailPanelIndentLen, detailPanelPropertyInlineGapPx, detailPanelPropertyStackedToInlineHysteresisPx, detailPanelPropertyRowClassName, detailPanelPropertyControlClassName, detailPanelHeaderLineCenterPx, treeItemLabelStyle, treeHeaderRowClassName, treeInspectorInnerRowClassName, treeHeaderMainClassName } from "../🪵️Tree/🟦️.tsx";
+import { TreeContext, TreeRowAlignmentContext, TreeAlignedRow, PropertyValueColumnContext, detailPanelIndentPx, detailPanelIndentLen, detailPanelPropertyInlineGapPx, detailPanelPropertyStackedToInlineHysteresisPx, detailPanelPropertyRowClassName, detailPanelPropertyControlClassName, detailPanelHeaderLineCenterPx, treeItemLabelStyle, treeHeaderRowClassName, treeInspectorInnerRowClassName, treeHeaderMainClassName } from "../🌳️Tree/🟦️.tsx";
 import { type UiTranslationKey, type UiRegisteredTranslationKey, type UiTranslateFn } from "../📚️I18n/🟦️.tsx";
 import { activeUiDriver, useUiDriver, isInternalChromeControlId, resolveControlLabelId, panelKindFromPanelToggleControlId, humanizeEngagementStepId, humanizeControlId } from "../🚗️UiDriver/🟦️.tsx";
-import { useControlHotkey } from "../../🔨️modules/⌨️control-keybinding-context/🟦️.tsx";
-import { formatControlTooltipText } from "../../🔨️modules/⌨️control-tooltip-presentation/🟦️.ts";
+import { useControlHotkey } from "../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
+import { formatControlTooltipText } from "../../🔨️modules/💡️control-tooltip-presentation/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🏷️Label

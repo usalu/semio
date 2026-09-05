@@ -43,55 +43,55 @@
     "kind": "collection",
     "members": [
       {
-        "directory": "✳️any",
+        "directory": "♾️any",
         "id": "s.stdio.gltf.subset.any",
         "kind": "subset",
         "responsibility": "Shared glTF 2.0 io/oracle/generator/schema-core substrate; owns no mutation."
       },
       {
-        "directory": "✳️scene",
+        "directory": "🎬️scene",
         "id": "s.stdio.gltf.subset.scene",
         "kind": "subset",
         "responsibility": "Scene graph mutations (scenes, nodes)."
       },
       {
-        "directory": "✳️mesh",
+        "directory": "🕸️mesh",
         "id": "s.stdio.gltf.subset.mesh",
         "kind": "subset",
         "responsibility": "Mesh, primitive, morph-target and accessor mutations."
       },
       {
-        "directory": "✳️material",
+        "directory": "💎️material",
         "id": "s.stdio.gltf.subset.material",
         "kind": "subset",
         "responsibility": "Material, texture, sampler and image mutations."
       },
       {
-        "directory": "✳️animation",
+        "directory": "🎞️animation",
         "id": "s.stdio.gltf.subset.animation",
         "kind": "subset",
         "responsibility": "Animation mutations."
       },
       {
-        "directory": "✳️skin",
+        "directory": "🦴️skin",
         "id": "s.stdio.gltf.subset.skin",
         "kind": "subset",
         "responsibility": "Skin mutations."
       },
       {
-        "directory": "✳️camera",
+        "directory": "🎥️camera",
         "id": "s.stdio.gltf.subset.camera",
         "kind": "subset",
         "responsibility": "Camera mutations."
       },
       {
-        "directory": "✳️buffer",
+        "directory": "💿️buffer",
         "id": "s.stdio.gltf.subset.buffer",
         "kind": "subset",
         "responsibility": "Buffer and buffer-view mutations."
       },
       {
-        "directory": "✳️asset",
+        "directory": "🪪️asset",
         "id": "s.stdio.gltf.subset.asset",
         "kind": "subset",
         "responsibility": "Asset metadata, document extension/extras and extension-mechanism mutations."

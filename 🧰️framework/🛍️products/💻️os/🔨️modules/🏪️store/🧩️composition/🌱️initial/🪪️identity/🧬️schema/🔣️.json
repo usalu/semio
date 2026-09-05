@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Initial Child Identity Coordinate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "values",
+    "ordinal"
+  ],
+  "properties": {
+    "values": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256,
+        "pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]+$"
+      }
+    },
+    "ordinal": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 63
+    }
+  }
+}

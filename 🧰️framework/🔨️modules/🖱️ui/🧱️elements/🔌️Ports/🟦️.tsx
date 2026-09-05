@@ -77,7 +77,7 @@ export function setReactHostPort(port: ReactHostPort): ReactHostPort {
   return previous;
 }
 
-export { interactiveJobPort, setInteractiveJobPort, type InteractiveJobDescriptor, type InteractiveJobLease, type InteractiveJobPage, type InteractiveJobPort, type InteractiveJobPortSnapshot, type InteractiveJobTerminal } from "./🟦️.ts";
+export { interactiveJobPort, setInteractiveJobPort, type InteractiveJobDescriptor, type InteractiveJobLease, type InteractiveJobPage, type InteractiveJobPort, type InteractiveJobPortSnapshot, type InteractiveJobTerminal } from "./📡️interactive-jobs.ts";
 
 /** @emoji 🧊️ Scene host surface for puzzle/cad R3F + three.js (implemented by 🔌️Adapters). */
 export interface SceneHostPort {

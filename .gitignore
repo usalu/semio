@@ -43,6 +43,7 @@ TODOS.md
 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client
 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client.exe
 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client_bin
+🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/mcp
 #--------------------------------------GO--------------------------------------
 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/⚡️implementations/🐹️go/client
 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/⚡️implementations/🐹️go/client.exe
@@ -88,8 +89,9 @@ test-results
 #--------------------------------------OUTPUTS--------------------------------------
 **/🤖️generated/
 **/🤖️generated.*
+/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🦀️tokens.generated.rs
 **/🔌️plugin-modules/
-**/🔌️extension-modules/
+**/🧩️extension-modules/
 **/📺️renderer-modules/
 **/*.wasm
 **/*.cwasm

@@ -337,8 +337,8 @@ export function createBrepWasmBridge(module: BrepWasmModule): BrepWasmBridge {
 export async function ensureBrepWasmLoaded(): Promise<BrepWasmModule> {
   if (brepWasm.current) return brepWasm.current;
   const [{ default: initFlow, tessellate, dispose, brep_invoke }, { default: wasmUrl }] = await Promise.all([
-    import("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core.js"),
-    import("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core_bg.wasm?url"),
+    import("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/flow_core.js"),
+    import("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/flow_core_bg.wasm?url"),
   ]);
   if (typeof tessellate !== "function" || typeof dispose !== "function") {
     throw new Error("flow brep tessellation exports missing — rebuild flow/core wasm");

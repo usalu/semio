@@ -909,7 +909,7 @@ impl ActionSemantics {
     /// own artifact, is reversible, previews a `Diff`, undoes via `Inverse`, expects a revision, and
     /// needs `documents.write` gated `WhenDestructive`; `View`/`Interaction` read the config lane
     /// (`documents.read` + `shell.observe`); `History` needs `documents.write`; `Clipboard` needs
-    /// `shell.clipboard`; `Shell` is not reversible and needs `shell.navigate`.
+    /// `shell.clipboard`; `🐚️Shell` is not reversible and needs `shell.navigate`.
     pub fn for_kind(kind: ActionKind) -> Self {
         match kind {
             ActionKind::Mutation => Self {
@@ -3539,7 +3539,7 @@ pub fn resolve_layout_for_mode(app: &AppDefinition, mode_id: &str) -> Option<Win
 /// key that is not a declared arg id survives into the result unmodified, and a `seed` value for a
 /// declared id that hasn't been staged yet acts as that field's initial value. A dialog with zero
 /// declared `defs` (a plain confirm/cancel, e.g. `deleteSpace`) passes `seed`+`staged` through
-/// wholesale — TS twin: {@link effectiveActionArgs} (`🧮️action-argument-resolution/🟦️.ts`).
+/// wholesale — TS twin: {@link effectiveActionArgs} (`🧩️action-argument-resolution/🟦️.ts`).
 pub fn effective_action_args(defs: &[ActionArgDef], staged: &DslValue, seed: Option<&DslValue>) -> DslValue {
     let seed_pairs: Vec<(String, DslValue)> = seed.and_then(DslValue::as_object).map(<[_]>::to_vec).unwrap_or_default();
     if defs.is_empty() {
@@ -4889,7 +4889,7 @@ pub struct ContributionSet {
 /// (`🔌️plugin/🦀️.rs`) returns this stub whenever `PLUGIN_ASSEMBLY_ERROR` is set, carrying
 /// the real error text in `label`. It looks like a descriptor, parses as JSON, and would feed the
 /// generated registry catalog with fabricated contributions — so the emitter refuses to write one
-/// (`📇️describe/📦️packages/🦀️rust/🦀️.rs`). Lives here, beside [`PackageDescriptor`], because it
+/// (`🖨️describe/📦️packages/🦀️rust/🦀️.rs`). Lives here, beside [`PackageDescriptor`], because it
 /// is the one crate BOTH the guest SDK that mints it and the host emitter that rejects it depend
 /// on; a duplicated string literal in either would drift silently.
 pub const ASSEMBLY_FAILED_PLUGIN_ID: &str = "assembly-failed";
@@ -6094,7 +6094,7 @@ mod app_label_tests {
     }
     /// ⚖️ LAW: an EMPTY collection still reaches the wire as `[]`, never as an absent key.
     ///
-    /// The generated TypeScript (`🤖️generated/🟦️manifest.ts`) declares these fields as **required**
+    /// The generated TypeScript (`🤖️generated/🪪️manifest.ts`) declares these fields as **required**
     /// arrays — `commands: Array<CommandDefinition>`, not `commands?:` — because only
     /// field carries it. A `skip_serializing_if = "Vec::is_empty"` therefore handed the host
     /// `undefined` where its own types promised an array, and every unguarded `app.commands.some(…)`
@@ -6437,7 +6437,7 @@ mod app_label_tests {
         let drag: IntroductionGesture = serde_json::from_str(r#"{"kind":"drag","from":{"kind":"element","id":"puzzle3d-main"},"to":{"kind":"element","id":"puzzle3d-main"}}"#).unwrap();
         assert_eq!(drag, IntroductionGesture::Drag { from: at.clone(), to: at.clone(), button: IntroductionPointerButton::Left, modifiers: vec![] });
         // ⚖️ Defaults are still INFERRED on the way in (the input literal above names neither field),
-        // but they are always WRITTEN on the way out: `🤖️generated/🟦️manifest.ts` declares both
+        // but they are always WRITTEN on the way out: `🤖️generated/🪪️manifest.ts` declares both
         // `button: IntroductionPointerButton` and `modifiers: Array<IntroductionKeyModifier>` as
         // required, so omitting a defaulted value handed the host `undefined` where its own types
         // promised a value. Asserting the omission — as this test previously did — pinned the defect.
@@ -6713,7 +6713,7 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn tutorial_document_track_language_neutral_serde_parity() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️tutorial-document-track.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🎞️tutorial-document-track.json")).unwrap();
         let mut def = minimal_tutorial().await;
         def.tracks.document = serde_json::from_value(fixture["document"].clone()).unwrap();
         assert_eq!(serde_json::to_value(&def.tracks.document).unwrap(), fixture["document"]);
@@ -7027,7 +7027,7 @@ mod app_label_tests {
             kind: ActionKind,
             semantics: ActionSemantics,
         }
-        let cases: Vec<Case> = serde_json::from_str(include_str!("🧪️fixtures/🔣️action-semantics.json")).unwrap();
+        let cases: Vec<Case> = serde_json::from_str(include_str!("🧪️fixtures/⚖️action-semantics.json")).unwrap();
         assert_eq!(cases.len(), 6);
         for case in cases {
             assert_eq!(ActionSemantics::for_kind(case.kind), case.semantics);
@@ -7045,7 +7045,7 @@ mod app_label_tests {
         if let Some(path) = std::env::var_os("SEMIO_TYPEGEN_OUT") {
             std::fs::write(path, &rendered).unwrap();
         } else {
-            assert_eq!(rendered, include_str!("🤖️generated/🟦️manifest.ts"));
+            assert_eq!(rendered, include_str!("🤖️generated/🪪️manifest.ts"));
         }
     }
 }

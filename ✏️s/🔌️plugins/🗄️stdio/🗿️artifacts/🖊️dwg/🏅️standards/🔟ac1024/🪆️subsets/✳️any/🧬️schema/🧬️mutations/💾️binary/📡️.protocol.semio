@@ -1,0 +1,18 @@
+dialect protocol
+protocol stdio.dwg.ac1024.mutations
+version 1
+schema stdio.dwg.mutations
+start mutation
+framing record
+
+enum DwgMutationKind { SetSnapshot=0 SetVersionInfo=1 }
+enum DwgObjectBodyKind { Dictionary=0 TableControl=1 TableRecord=2 XRecord=3 Entity=4 AssociativeDependency=5 AssociativeValueDependency=6 AssociativeGeometryDependency=7 BlockGripLocationComponent=8 DynamicBlockProxyNode=9 AssociativeVariable=10 AssociativeDimensionDependencyBody=11 VisualStyle=12 BlockParameterDependencyBody=13 BlockRepresentationData=14 DynamicBlockPurgePreventer=15 EvaluationGraph=16 BlockFlipParameter=17 BlockVisibilityParameter=18 Placeholder=19 DictionaryVariable=20 AnnotationScale=21 SortEntitiesTable=22 TableStyle=23 MlineStyle=24 MleaderStyle=25 Material=26 BlockMoveAction=27 AssociativeNetwork=28 Associative2dConstraintGroup=29 BlockLinearParameter=30 BlockLinearGrip=31 BlockFlipGrip=32 BlockVisibilityGrip=33 BlockAlignmentParameter=34 BlockAlignmentGrip=35 BlockStretchAction=36 BlockScaleAction=37 BlockFlipAction=38 BlockBasePointParameter=39 BlockVerticalConstraintParameter=40 BlockHorizontalConstraintParameter=41 Layout=42 }
+struct DwgSetVersionInfo { maintenance_version u8 codepage u16 }
+struct DwgSetSnapshot { object_count varint body_kind u8 }
+
+header fixed 2
+field format u8
+field variant varint
+record mutation {
+  field_count varint
+}

@@ -221,7 +221,7 @@ export type ExtensionProps = { extension: string,
  * "leave unresolved" list (`LayoutSpec`/`StyleSpec`/`AccessibilitySpec`/`ActionBinding`/
  * `MenuRef`/`Activity`/`SurfaceProps`) does not name `UiValue`, but `📋️master.md`'s "1. Contract
  * crate" section places `UiValue` right beside `ActionId`/`Trigger`/`UiIntent` — the action
- * model, owned by packet `contract-action`'s `🦀️action.rs`, not this file. Defining it here
+ * model, owned by packet `contract-action`'s `🎬️action.rs`, not this file. Defining it here
  * risks the exact duplicate-definition collision U2 calls out as worse than an unresolved name.
  */
 props: UiValue, };"####,
@@ -263,7 +263,7 @@ export type ImageProps = { src: string, alt: Label | null, };"####,
         version: 1,
         typescript: r####"/**
  * ⌨️ The closed set of input kinds. Grepped from the fleet's actual `UiInputNode.input_kind` string
- * literals (`"text"`, `"textarea"`, `"number"`, `"file"`) plus the values the React `Interpreter`
+ * literals (`"text"`, `"textarea"`, `"number"`, `"file"`) plus the values the React `🟦️Interpreter`
  * already branches on for `inputKind` (`"number"`, `"longText"`, `"date"`, `"color"`, `"file"`,
  * default `"text"`) — the union of both sides, since the renderer supports more kinds than any
  * current plugin emits yet. Note the old Rust/TS spelling mismatch this closes: Rust emitted
@@ -889,7 +889,7 @@ layoutEpoch: bigint, };"####,
         version: 1,
         typescript: r####"/**
  * 🧬️ A neutral, JSON-shaped value — the ONE recursive type in this crate. Every node in
- * `🦀️document.rs` avoids inline recursion by addressing children through [`crate::UiNodeId`] instead
+ * `📃️document.rs` avoids inline recursion by addressing children through [`crate::UiNodeId`] instead
  * of nesting a node inside another; `UiValue` is the deliberate exception because it does not
  * describe document shape at all, it describes an arbitrary opaque payload (action args, extension
  * props) that genuinely IS JSON-shaped, and `Vec`/`BTreeMap` already give the schema an indirection to

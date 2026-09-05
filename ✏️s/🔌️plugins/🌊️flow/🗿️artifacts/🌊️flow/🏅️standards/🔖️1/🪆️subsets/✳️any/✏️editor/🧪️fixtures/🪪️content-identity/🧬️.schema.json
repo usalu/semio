@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.flow.content-identity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "domain",
+    "childIdPrefix",
+    "childSlot",
+    "targetIdentity",
+    "dialect",
+    "cases"
+  ],
+  "properties": {
+    "childSlot": { "const": "content" },
+    "targetIdentity": { "const": "child-id" },
+    "dialect": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifactKind", "standard", "subset"],
+      "properties": { "artifactKind": { "const": "s.stdio.semio" }, "standard": { "const": "v1" }, "subset": { "const": "flow" } }
+    },
+    "schema": {
+      "const": "semio.flow.content-identity"
+    },
+    "domain": {
+      "const": "semio.flow.scene.sha256.v1\u0000"
+    },
+    "childIdPrefix": {
+      "const": "flow-content-sha256-"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "canonicalJson",
+          "expectedSha256"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "baseline",
+              "label",
+              "dictionary",
+              "layout",
+              "synapse"
+            ]
+          },
+          "canonicalJson": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expectedSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    }
+  }
+}

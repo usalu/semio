@@ -1,9 +1,0 @@
-{
-  "mutation": "createWidget",
-  "index": 0,
-  "widget": {
-    "kind": "inputNote",
-    "id": "note-alpha",
-    "text": "Alpha"
-  }
-}

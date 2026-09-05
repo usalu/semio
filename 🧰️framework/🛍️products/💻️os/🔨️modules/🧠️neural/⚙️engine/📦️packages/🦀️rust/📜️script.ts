@@ -10,7 +10,7 @@ class TestScript extends BundleScript {
   }
 }
 class SourceTestScript extends BundleScript {
-  async run(): Promise<void> { await import("../../🧵️retirement/🧪️fixtures/📜️script.ts"); }
+  async run(): Promise<void> { await import("../../🧵️retirement/🧫️fixtures/📜️script.ts"); }
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-source", SourceTestScript);
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

@@ -1,0 +1,25 @@
+syntax = "proto3";
+package semio.s.fem.fem2d.mutation;
+
+// 🧬️ Fem2d mutation schema
+message Fem2dMutation {
+  // @state artifact
+  repeated FemNode nodes = 1;
+  // @state artifact
+  repeated FemElement elements = 2;
+  // @state artifact
+  repeated FemRegion regions = 3;
+  // @state artifact
+  repeated FemMaterial materials = 4;
+  // @state artifact
+  repeated FemSection sections = 5;
+  // @state artifact
+  repeated FemSupport supports = 6;
+  // @state artifact
+  repeated FemLoadCase load_cases = 7;
+  // @state artifact
+  repeated FemCombination combinations = 8;
+  // @state artifact
+  FemAnalysisSettings analysis = 9;
+}
+

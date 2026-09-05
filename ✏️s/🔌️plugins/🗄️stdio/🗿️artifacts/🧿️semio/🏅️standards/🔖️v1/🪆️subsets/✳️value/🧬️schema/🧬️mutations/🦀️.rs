@@ -65,7 +65,7 @@ fn resolve<'a>(root: &'a SemioValue, path: &[SemioValuePathSegment]) -> Option<&
 /// `DslField` impl, same structural reason `SemioValueTreeDiff`'s own doc comment cites — reusing
 /// `SemioValueTreeDiff`'s `pub(crate)` grammar primitives.
 //#region 🔖️Leaves
-#[path = "📄set-snapshot/🦀️.rs"]
+#[path = "🟤️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🔁set-value/🦀️.rs"]
 pub mod set_value;
@@ -110,7 +110,7 @@ pub enum SemioValueMutation {
 
 /// 🏷️ Kebab-case spelling of every `SemioValueMutation` variant, in declaration order — the
 /// vocabulary the `semio-v1-value` mutation catalog (`../../🔣️oracle.json`) declares and
-/// `mutate-semio-value`'s exhaustive test case measures itself against.
+/// `🍊️mutate-semio-value`'s exhaustive test case measures itself against.
 pub const KINDS: &[&str] = &["set-snapshot", "set-value", "set-map-entry", "remove-map-entry", "insert-list-item", "remove-list-item", "set-node", "remove-node"];
 //#endregion 🔖️Mutations
 
@@ -153,7 +153,7 @@ pub fn apply_semio_value_mutation(snapshot: &mut SemioValueSnapshot, mutation: &
 /// re-exports, so an owner-root test adapter compiled as an external crate cannot bring the
 /// `Mutation` trait into scope to call the method form — the structural gap wave 7 recorded for
 /// `kit`/`object`/`text`/`table`, and the same thin-wrapper remedy `kit` adopted. Used by
-/// `mutate-semio-value`'s `inverse-*` scenarios.
+/// `🍊️mutate-semio-value`'s `inverse-*` scenarios.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_value_mutation(mutation: &SemioValueMutation, base: &SemioValueSnapshot) -> Vec<SemioValueMutation> {
     <SemioValueMutation as Mutation<SemioValueSnapshot>>::inverse(mutation, base)
@@ -800,10 +800,10 @@ mod tests {
 //#endregion 🔖️Tests
 
 //#region 🧪️FixtureCases
-/// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
+/// 🧪️ Handcrafted `🟤️set-snapshot` fixture cases, wired from this tree's own mutations root so
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📄set-snapshot/🧪️tests/retypes-a-map-member-and-repoints-a-graph-node/🦀️.rs"]
+#[path = "🟤️set-snapshot/🧪️tests/🌳️retypes-a-map-member-and-repoints-a-graph-node/🦀️.rs"]
 mod set_snapshot_retypes_a_map_member_and_repoints_a_graph_node;
 //#endregion 🧪️FixtureCases

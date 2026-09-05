@@ -42,7 +42,7 @@ jobs:
           bun nx run ${{ matrix.project }}:build
       - name: Verify static site artifacts
         run: |
-          test -f "${{ matrix.dist }}/index.html"
+          test -f "${{ matrix.dist }}/🌐️.html"
           test -f "${{ matrix.dist }}/.nojekyll"
           test -f "${{ matrix.dist }}/CNAME"
       - name: Upload dist artifact

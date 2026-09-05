@@ -1147,7 +1147,7 @@ interface reactor {
 /// `effects.wit`'s completable variants (`req: request-id` payloads): every function below takes
 /// the SAME `*-params` record `effects` already carries — the whole point of the W0 `-params`
 /// refactor was to let this import and the poll-world `effect` case share one payload shape and
-/// never drift, verified mechanically by `🖥️host/🧪️schema-parity/🦀️.rs`. The `req`
+/// never drift, verified mechanically by `🖥️host/🪞️schema-parity/🦀️.rs`. The `req`
 /// correlation field itself disappears here: the returned future IS the correlation, so callers
 /// never allocate a `request-id` for these calls. Every `err` side stays the same packed fault
 /// bytes `event.completed`'s `completion-result::fault` already carries.

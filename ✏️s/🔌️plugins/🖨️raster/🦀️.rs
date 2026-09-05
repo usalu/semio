@@ -31,6 +31,7 @@ pub fn plugin() -> Result<Plugin<RasterApps>, semio_framework_plugin::PluginAsse
     Plugin::<RasterApps>::builder("raster")
         .label("Raster")
         .version("0.1.0")
+        .package_id("semio:raster")
         .artifact(crate::artifacts::raster::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .editor::<crate::editor::raster::RasterPlayApp>(crate::editor::raster::create_raster_app())
         .editor_mutation_roster::<crate::editor::raster::RasterPlayApp>()

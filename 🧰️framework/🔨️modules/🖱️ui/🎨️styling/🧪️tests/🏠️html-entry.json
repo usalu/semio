@@ -1,0 +1,11 @@
+{
+  "entry": "🌐️.html",
+  "html": "<!doctype html><html><head><title>Neutral Entry</title></head><body><main>runtime-kept</main></body></html>",
+  "requests": [
+    { "target": "/", "status": 200 },
+    { "target": "/?probe=yes", "status": 200 },
+    { "target": "/spaces/neutral", "status": 200 },
+    { "target": "/%F0%9F%8C%90%EF%B8%8F.html", "status": 200 }
+  ],
+  "forbiddenFiles": ["index.html", "404.html"]
+}

@@ -5,7 +5,7 @@
   "displayName": "Move Node",
   "emoji": "📍️",
   "aggregateVariant": "MoveNode",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "move-node",
   "binaryTag": 5,
   "invertibility": "explicit-mutation",

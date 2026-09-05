@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/✏️set-entity-name",
+  "semanticKind": "set-entity-name",
+  "displayName": "Set Entity Name",
+  "emoji": "✏",
+  "aggregateVariant": "SetEntityName",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "set-entity-name",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateStep",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stepId",
+    "title"
+  ],
+  "properties": {
+    "stepId": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    }
+  }
+}

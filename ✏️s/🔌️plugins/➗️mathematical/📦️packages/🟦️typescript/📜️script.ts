@@ -9,7 +9,7 @@ type Fixture = { schema: string; owner: "EquationPlayApp"; source: string; route
 const exact = (left: string[], right: string[]): boolean => JSON.stringify([...left].sort()) === JSON.stringify([...right].sort()) && new Set(left).size === left.length && new Set(right).size === right.length;
 
 function oracle(fixture: Fixture, source: string): boolean {
-  const ids = [...source.match(/MATHEMATICAL_TOOL_IDS: &\[&str\] = &\[([^\]]*)\]/s)?.[1]?.matchAll(/"([^"]+)"/g) ?? []].map((match) => match[1]!);
+  const ids = [...source.match(/EQUATION_TOOL_IDS: &\[&str\] = &\[([^\]]*)\]/s)?.[1]?.matchAll(/"([^"]+)"/g) ?? []].map((match) => match[1]!);
   const contracts = new Map([...source.matchAll(/ArtifactToolPublicationContract \{ tool_id: "([^"]+)", lanes: &\[ArtifactToolPublicationLane::(Artifact|Config)\] \}/g)].map((match) => [match[1]!, match[2]! as Lane]));
   const classifications = [...source.matchAll(/\.action_interactive_job\("([^"]+)", InteractiveJobClassification::Migrated\)/g)].map((match) => match[1]!);
   const expected = fixture.routes.map(({ id }) => id);
@@ -29,9 +29,9 @@ class TestScript extends BundleScript {
     if (JSON.stringify(scripts) !== JSON.stringify({ test: "bun nx run @semio-tech/mathematical-js:test" })) throw new Error("Mathematical package scripts do not match its Nx targets");
     if (JSON.stringify(dependencies) !== JSON.stringify({ ajv: "^8.20.0" })) throw new Error("Mathematical package dependencies are not source-scoped");
     const plugin = resolve(this.root, "../..");
-    const authority = resolve(plugin, "🧪️publication-authority");
+    const authority = resolve(plugin, "📣️publication-authority");
     const fixture = await Bun.file(resolve(authority, "🔣️.json")).json() as Fixture;
-    const schema = await Bun.file(resolve(authority, "🔣️.schema.json")).json();
+    const schema = await Bun.file(resolve(authority, "🧬️.schema.json")).json();
     const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
     if (!validate(fixture)) throw new Error(`Mathematical fixture failed strict Ajv: ${JSON.stringify(validate.errors)}`);
     const source = await Bun.file(resolve(plugin, fixture.source)).text();

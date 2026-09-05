@@ -1,4 +1,0 @@
-# 🗑️ delete-step direct payload.
-input DeleteStepInput {
-  id: String!
-}

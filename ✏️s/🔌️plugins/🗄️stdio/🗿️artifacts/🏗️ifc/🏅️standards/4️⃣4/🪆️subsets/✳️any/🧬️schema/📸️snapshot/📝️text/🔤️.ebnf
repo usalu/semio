@@ -1,0 +1,22 @@
+(* ebnf stdio.ifc snapshot — real ISO 10303-21 (Part-21) exchange-structure grammar. *)
+exchange file = "ISO-10303-21;", header, data, "END-ISO-10303-21;" ;
+header = "HEADER;", file description, file name, file schema, "ENDSEC;" ;
+file description = "FILE_DESCRIPTION", "(", value list, ")", ";" ;
+file name = "FILE_NAME", "(", value list, ")", ";" ;
+file schema = "FILE_SCHEMA", "(", value list, ")", ";" ;
+data = "DATA;", { instance }, "ENDSEC;" ;
+instance = "#", id, "=", instance body, ";" ;
+id = digit, { digit } ;
+instance body = simple record | complex record ;
+simple record = keyword, "(", [ value list ], ")" ;
+complex record = "(", simple record, { simple record }, ")" ;
+keyword = upper, { upper | digit | "_" } ;
+value list = value, { ",", value } ;
+value = "$" | "*" | reference | string | enum | integer | real | aggregate | typed value ;
+reference = "#", id ;
+string = "'", { safe char | "''" | escape }, "'" ;
+enum = ".", { upper | digit | "_" }, "." ;
+integer = [ "-" ], digit, { digit } ;
+real = [ "-" ], digit, { digit }, ".", { digit }, [ ( "E" | "e" ), [ "+" | "-" ], digit, { digit } ] ;
+aggregate = "(", [ value list ], ")" ;
+typed value = keyword, "(", [ value list ], ")" ;

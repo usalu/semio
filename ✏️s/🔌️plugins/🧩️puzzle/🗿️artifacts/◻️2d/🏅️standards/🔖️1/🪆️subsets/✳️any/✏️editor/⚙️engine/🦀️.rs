@@ -17,7 +17,7 @@
 //! `puzzle::apps::puzzle2d::engine::*`; the framework OS renderer's own call sites were the one real
 //! cross-crate compile dependency on the old path and were repointed at this module in the same
 //! ticket's W2-FIX lane) — the framework OS renderer
-//! (`🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs`)
+//! (`🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs`)
 //! holds a `BoardHost` and calls `board_host::puzzle_board_host()` directly, so this module and its
 //! `board_host` child must both stay `pub`.
 //!

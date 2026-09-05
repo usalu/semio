@@ -16,8 +16,7 @@ fn note_newest(path: &Path, newest: &mut Option<SystemTime>) {
     }
 }
 
-/// 🌳️ Mirrors `📜️script.ts`'s own discovery: a manifest source is tagged by its `🛂️manifest*.json`
-/// filename, never by a directory convention, and dot-directories hold parallel worktree checkouts.
+/// 🌳️ Mirrors `📜️script.ts` discovery through the semantic `manifest.json` filename suffix.
 // 🚫️async: E3 — see `note_newest` above.
 fn watch_manifest_sources(dir: &Path, newest: &mut Option<SystemTime>) {
     let Ok(entries) = fs::read_dir(dir) else { return };
@@ -30,7 +29,7 @@ fn watch_manifest_sources(dir: &Path, newest: &mut Option<SystemTime>) {
         let path = entry.path();
         if path.is_dir() {
             watch_manifest_sources(&path, newest);
-        } else if name.starts_with("🛂️manifest.json") && name.ends_with(".json") {
+        } else if name.ends_with("manifest.json") {
             println!("cargo:rerun-if-changed={}", path.display());
             note_newest(&path, newest);
         }
@@ -47,6 +46,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut newest_source = None;
     note_newest(&script, &mut newest_source);
+    for source in ["../../🛂️manifest/📇️outputs.json", "../../🛂️manifest/🧬️outputs.schema.json"] {
+        let path = manifest_dir.join(source);
+        println!("cargo:rerun-if-changed={}", path.display());
+        note_newest(&path, &mut newest_source);
+    }
     watch_manifest_sources(&repo_root, &mut newest_source);
 
     let stale = match fs::metadata(&generated).and_then(|meta| meta.modified()) {

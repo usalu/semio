@@ -5,7 +5,7 @@
 //! bytes and then tried to decode those bytes as a `PngSnapshot` pack — a confused type-pun that
 //! would always fail. No real wires-graph<->raster-image mapping exists (a real implementation
 //! would rasterize the board, a genuine feature, not this migration's scope) — this is now an
-//! honest not-yet-implemented stub, the same treatment `📄️txt` already had. `IoFidelity::Lossy`.
+//! honest not-yet-implemented stub, the same treatment `🔤️txt` already had. `IoFidelity::Lossy`.
 
 use crate::artifacts::wires::WiresSnapshot;
 use semio_framework::io::io_mechanism::Serializer;

@@ -41,15 +41,35 @@
       "id": "s.stdio.pptx.standard.ecma-376.representation.document",
       "standard": "s.stdio.pptx.standard.ecma-376",
       "representation": "document",
-      "mimes": ["application/vnd.openxmlformats-officedocument.presentationml.presentation"],
-      "extensions": [".pptx"],
+      "mimes": [
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+      ],
+      "extensions": [
+        ".pptx"
+      ],
       "is_binary": true,
       "aliases": [],
       "neutral": true,
       "status": "declared"
     }
   ],
-  "codecs": [],
+  "codecs": [
+    {
+      "id": "s.stdio.pptx.standard.ecma-376.codec.native-document.v1",
+      "status": "implemented",
+      "from": "s.stdio.pptx.standard.ecma-376.dialect.source",
+      "to": "s.stdio.pptx.standard.ecma-376.dialect.source",
+      "executable_registration": true,
+      "native_factory": {
+        "factory_id": "stdio.native.pptx.v1",
+        "artifact_kind": "stdio.pptx",
+        "document_schema": "stdio.pptx",
+        "extension": "pptx",
+        "pack_schema_hash": "83c2f6a9860ca932773a56bd3af8d558ebee223162e7b6bcecfff263988ea705",
+        "runtime_capability_id": "s.stdio.pptx.standard.ecma-376.codec.codec-stdio-pptx-extension-pptx.v1"
+      }
+    }
+  ],
   "mutations": [],
   "inferences": [],
   "resources": [
@@ -84,22 +104,22 @@
   ],
   "runtime_capabilities": [
     {
-      "id": "s.stdio.pptx.runtime.codec.codec-stdio-pptx-extension-pptx.v1",
+      "id": "s.stdio.pptx.standard.ecma-376.codec.codec-stdio-pptx-extension-pptx.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec:stdio.pptx|extension:pptx",
+      "descriptor": "runtime-capability:codec:codec-extension:10:stdio.pptx:pptx|codec:stdio.pptx",
       "claims": [
         {
           "namespace": "codec",
           "value": "stdio.pptx"
         },
         {
-          "namespace": "extension",
-          "value": "pptx"
+          "namespace": "codec-extension",
+          "value": "10:stdio.pptx:pptx"
         }
       ]
     },
     {
-      "id": "s.stdio.pptx.runtime.composer.dialect-s-stdio-pptx-ecma-376.v1",
+      "id": "s.stdio.pptx.composer.dialect-s-stdio-pptx-ecma-376.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.pptx@ecma-376/*",
       "claims": [
@@ -110,7 +130,7 @@
       ]
     },
     {
-      "id": "s.stdio.pptx.runtime.composer.dialect-s-stdio-pptx-ecma-376-strict.v1",
+      "id": "s.stdio.pptx.composer.dialect-s-stdio-pptx-ecma-376-strict.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.pptx@ecma-376/strict",
       "claims": [
@@ -121,7 +141,7 @@
       ]
     },
     {
-      "id": "s.stdio.pptx.runtime.composer.dialect-s-stdio-pptx-ecma-376-transitional.v1",
+      "id": "s.stdio.pptx.composer.dialect-s-stdio-pptx-ecma-376-transitional.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.pptx@ecma-376/transitional",
       "claims": [
@@ -132,7 +152,7 @@
       ]
     },
     {
-      "id": "s.stdio.pptx.runtime.grammar.grammar-stdio-pptx.v1",
+      "id": "s.stdio.pptx.grammar.grammar-stdio-pptx.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.pptx",
       "claims": [
@@ -143,7 +163,7 @@
       ]
     },
     {
-      "id": "s.stdio.pptx.runtime.grammar.grammar-stdio-pptx-diff.v1",
+      "id": "s.stdio.pptx.grammar.grammar-stdio-pptx-diff.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.pptx.diff",
       "claims": [
@@ -154,7 +174,7 @@
       ]
     },
     {
-      "id": "s.stdio.pptx.runtime.grammar.grammar-stdio-pptx-op.v1",
+      "id": "s.stdio.pptx.grammar.grammar-stdio-pptx-op.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.pptx.op",
       "claims": [
@@ -165,7 +185,7 @@
       ]
     },
     {
-      "id": "s.stdio.pptx.runtime.grammar.grammar-stdio-pptx-pack.v1",
+      "id": "s.stdio.pptx.grammar.grammar-stdio-pptx-pack.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.pptx.pack",
       "claims": [
@@ -176,7 +196,7 @@
       ]
     },
     {
-      "id": "s.stdio.pptx.runtime.grammar.grammar-stdio-pptx-spr.v1",
+      "id": "s.stdio.pptx.grammar.grammar-stdio-pptx-spr.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.pptx.spr",
       "claims": [
@@ -187,7 +207,7 @@
       ]
     },
     {
-      "id": "s.stdio.pptx.runtime.inference.schema-s-stdio-pptx-inference.v1",
+      "id": "s.stdio.pptx.inference.schema-s-stdio-pptx-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:s.stdio.pptx.inference",
       "claims": [
@@ -198,7 +218,7 @@
       ]
     },
     {
-      "id": "s.stdio.pptx.runtime.representation.mime-application-vnd-openxmlformats-officedocument-presentationml-presentation-extension-pptx.v1",
+      "id": "s.stdio.pptx.standard.ecma-376.representation.mime-application-vnd-openxmlformats-officedocument-presentationml-presentation-extension-pptx",
       "category": "representation",
       "descriptor": "runtime-capability:representation:mime:application/vnd.openxmlformats-officedocument.presentationml.presentation|extension:.pptx",
       "claims": [
@@ -213,7 +233,7 @@
       ]
     },
     {
-      "id": "s.stdio.pptx.runtime.schema.schema-s-stdio-pptx.v1",
+      "id": "s.stdio.pptx.schema.schema-s-stdio-pptx.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.pptx",
       "claims": [
@@ -224,23 +244,23 @@
       ]
     },
     {
-      "id": "s.stdio.pptx.runtime.subset-validator.dialect-s-stdio-pptx-ecma-376-strict.v1",
+      "id": "s.stdio.pptx.subset-validator.validated-dialect-s-stdio-pptx-ecma-376-strict.v1",
       "category": "subset-validator",
-      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.pptx@ecma-376/strict",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.pptx@ecma-376/strict",
       "claims": [
         {
-          "namespace": "dialect",
+          "namespace": "validated-dialect",
           "value": "s.stdio.pptx@ecma-376/strict"
         }
       ]
     },
     {
-      "id": "s.stdio.pptx.runtime.subset-validator.dialect-s-stdio-pptx-ecma-376-transitional.v1",
+      "id": "s.stdio.pptx.subset-validator.validated-dialect-s-stdio-pptx-ecma-376-transitional.v1",
       "category": "subset-validator",
-      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.pptx@ecma-376/transitional",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.pptx@ecma-376/transitional",
       "claims": [
         {
-          "namespace": "dialect",
+          "namespace": "validated-dialect",
           "value": "s.stdio.pptx@ecma-376/transitional"
         }
       ]

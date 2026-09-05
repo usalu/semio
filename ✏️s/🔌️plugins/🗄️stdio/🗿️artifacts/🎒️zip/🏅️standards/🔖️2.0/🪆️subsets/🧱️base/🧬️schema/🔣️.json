@@ -1,0 +1,26 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.zip/artifact.json",
+  "title": "ZipArtifact",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "entries": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "data": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

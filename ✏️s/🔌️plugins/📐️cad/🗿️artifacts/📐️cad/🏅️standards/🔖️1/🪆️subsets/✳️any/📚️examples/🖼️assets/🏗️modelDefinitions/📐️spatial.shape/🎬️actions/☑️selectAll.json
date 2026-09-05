@@ -1,0 +1,36 @@
+{
+  "schema": "spatial.action",
+  "id": "selection.selectAll",
+  "version": "1.0.0",
+  "label": "SelectAll",
+  "steps": [
+    {
+      "operation": "kernel.call",
+      "function": "spatial.selection.apply",
+      "args": {
+        "operation": {
+          "kind": "const",
+          "value": "selectAll"
+        },
+        "seedTargets": {
+          "kind": "path",
+          "root": "params",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "seedTargets"
+            }
+          ]
+        }
+      },
+      "assignTo": "result"
+    },
+    {
+      "operation": "return",
+      "result": {
+        "kind": "var",
+        "name": "result"
+      }
+    }
+  ]
+}

@@ -2033,3 +2033,272 @@ four sibling plugins that compile clean today; the coordinator runs the authorit
 - A peer's `cargo check --workspace --all-targets` held the target-dir lock for ~15 minutes. A
   lock-holding cargo at ~5% CPU with busy `rustc` children is working normally, not hung — it was
   left alone rather than killed.
+
+## 2026-09-04 ~01:55 — the dev-profile stdio component is PROVEN inadmissible; corruption recurred
+
+### The function ceiling is real, measured, not inherited from a comment
+The first component run used the `dev` profile (`pluginWasmProfile()` returns
+`SEMIO_PLUGIN_PROFILE ?? (SEMIO_BUILD_MODE === "ship" ? "wasm-release" : "dev")`, and `plugin s` sets
+neither). After 37 minutes of compiling, stdio linked and failed:
+```
+error: linking with `wasm-component-ld` failed: exit status: 1
+  = note: error: failed to encode component
+          Caused by:
+              0: failed to decode world from module
+              1: module was not valid
+              2: functions count exceeds limit of 1000000 (at offset 0xf1f)
+```
+So the root `Cargo.toml` comment is accurate and current: `codegen-units = 1` prevents rust-lld's
+`ElemSection::writeBody` SIGSEGV, but it does NOT make the debug component admissible. **Owned
+component publication must use `[profile.wasm-release]`.** Rebuild relaunched with
+`SEMIO_PLUGIN_PROFILE=wasm-release`.
+
+Worth stating plainly: this cost ~40 minutes and was avoidable — the profile is a documented
+precondition of building this crate at all, and I ran the catalog build without setting it.
+
+### The rename corruption RECURRED mid-build
+At 00:45 I measured 0 doubled emoji segments. At ~01:54 a pass re-doubled four directories, and every
+build after stdio failed instantly with
+`Cannot find module '../../../🔌️plugin/📦️packages/🟦️typescript/🟦️.ts'`:
+
+| doubled | restored to |
+| --- | --- |
+| `💻️os/🔨️modules/🔌️plugin/📦️📦️packages` | `📦️packages` |
+| `💻️os/🔨️modules/🔌️plugin/📇️📇️registry` | `📇️registry` |
+| `💻️os/🔨️modules/🏃️run/📦️📦️packages` | `📦️packages` |
+| `💻️os/🔨️modules/🌉️mcp/📦️📦️packages` | `📦️packages` |
+
+No applier process was running by the time I looked — one pass fired and stopped.
+
+**Why a directory rename was the right repair this time, and not last time.** The earlier session
+learned that a blanket restore to HEAD names is wrong because the codemod rewrites references too,
+orphaning them. So I checked first: all five referrers of
+`🔌️plugin/📦️packages/🟦️typescript/🟦️.ts` still spelled the SINGLE segment. References were
+untouched, so only the directories had moved, and moving them back is exactly correct. Each rename
+was also guarded on the destination being absent, so it could not clobber real work.
+`registry generate` returns to rc=0 afterward.
+
+### Watchdog: detect-only, deliberately not auto-repair
+An auto-restoring watchdog loop was blocked by the permission classifier, and that is the right
+outcome — a loop that renames directories every few seconds could fight a peer's legitimate rename
+mid-flight. A detect-and-report monitor is armed instead. The cost of detection-only is at most one
+lost build cycle; the cost of a wrong auto-rename is someone else's work.
+
+## 2026-09-04 ~20:30 — corrupter neutralised; build now gated purely on machine contention
+
+### Applier guard (authorised by the dev after twice reaffirming "finish end to end")
+`🔨️guard.sh` reaps ONLY `bun -e` rename-plan children of the ChatGPT/Codex app-server (PID 66250)
+and restores doubled emoji segments. The app itself is untouched. It has reaped one applier attempt;
+doubled-directory count has stayed 0 since, `cargo metadata` exits 0 and `registry generate` exits 0.
+**The corruption blocker is closed.**
+
+### Two self-inflicted build failures, both now fixed
+Both stdio attempts died at *exactly* 2h02m with **0 compile errors**:
+```
+error: spawnSync cargo ETIMEDOUT
+spawnargs: ["rustc","-p","semio-s-plugin-stdio","--target","wasm32-wasip2","--profile","wasm-release", …]
+```
+1. `SEMIO_BUILD_BUDGET_MS` was sized for a dev build, not a cold `wasm-release` monolith.
+2. `🔨️build-components.sh` **hardcoded** `export SEMIO_BUILD_BUDGET_MS=7200000`, so the larger value
+   passed on the command line was silently discarded. Now `${SEMIO_BUILD_BUDGET_MS:-7200000}`.
+
+Neither failure was a code defect. stdio reached ~2h of codegen with zero errors both times.
+
+**Also self-inflicted:** killing the orchestrator left its `rustc` reparented to init, still burning
+CPU and 1.2GB for over an hour against the replacement run. Killing that orphan moved the new rustc
+from 8-18% CPU to 134% and freed 3.5GB of swap. Kill the rustc child, not just the cargo parent.
+
+### Current gate: the shared target-dir lock, not the code
+Third run started 19:14 with the budget fix genuinely in effect. It has sat on
+`Blocking waiting for file lock on build directory` for ~78 minutes: a peer session is running its own
+`cargo rustc -p semio-s-plugin-gis --target wasm32-wasip2` and has held the lock for 1h17m. Machine is
+at load ~55 with swap heavily used.
+
+Deliberately NOT escaping via a private `CARGO_TARGET_DIR`: that forces a full cold rebuild and, at
+this load and swap pressure, would likely OOM the box and destroy the peers' in-flight work too.
+Waiting is both cooperative and lower-risk. Budget is 6h, so the wait is affordable.
+
+### Compile state (unchanged, all verified except flow)
+8 of 9 demonstrator crates verified clean for `wasm32-wasip2`, including `process` (rc=0, 0 errors,
+16m08s — the agent's check DID survive; my earlier claim that it died with its turn was wrong).
+`flow`'s six `UiNode` renderers were migrated to `scene_surface`/`UiAssemblyResult<BuiltNode>` — the
+earlier "no bridge exists" verdict was false, the pattern was already in use in the same crate.
+flow remains the one crate not yet compile-verified.
+
+## 🔎️ Session continuation — 2026-09-04 21:00–21:15
+
+### stdio gltf `#[path]` blocker: resolved by the peer, not by us
+Build 3 died on `couldn't read …/🧬️mutations/🔗️🔘️bind-node-camera/🦀️.rs`. Re-measured today:
+`🧬️mutations/🦀️.rs` (mtime 18:36) now carries **zero** `#[path]` attributes — the peer finished the
+verb-first → type-first restructure. Our build had compiled a snapshot taken at its *start* time
+(the known queued-cargo-check-reports-stale trap). No action was needed on our side.
+
+### `semio-framework-os-kernel` — also a stale read, not a real break
+`cargo check -p semio-s-plugin-stdio` reported 21 errors, all of the form
+`cannot find trait ToValue in module crate::os_store` / `unresolved imports crate::os_store::{Mutation, OpBinary, OpText}`.
+
+Root cause understood and confirmed *not ours*:
+- `📦️packages/🦀️rust/🦀️.rs:263` mounts the store as `pub mod os_store { mod component; pub use component::*; }`.
+- `pub use component::*` re-exports only **public** items, so the store root's private
+  `use crate::os_spr::{Mutation, OpBinary, OpText}` is unreachable as `crate::os_store::*`.
+- HEAD has the identical private `use`, so the store root was never the regression.
+- The offending file `🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs` is **new** (absent at HEAD) and on
+  disk *already* imports correctly: `use crate::{FromValue, Mutation, OpBinary, OpText, ToValue};`.
+
+Verified repo-wide clean: `grep -rnE 'os_store::\{[^}]*\b(ToValue|FromValue|OpText|OpBinary)\b'` → 0 hits.
+
+### `procedural-preview` "KNOWN GAP" note is stale
+Re-audited `🧊️generation3d/…/✏️editor/🦀️.rs`. A fresh `FlowEvalSession::new()` in `render` is the
+**normal** pattern — generation2d's `render` does exactly the same. Evaluation is driven by
+`pending_effects`, and gen3d **has** it (line 1004), arming a `flowEvalTick` chain, classified
+`Migrated` (dispatchable). Two unit tests cover it: `refresh_pending_effects_arms_flow_eval_tick_chain`
+and the 1000-tick convergence test. gen2d is in fact the weaker one — its `flowEvalTick` is
+`BatchOnlyPendingRewrite`, the classification that is hard-dead in-app.
+So the pane's content depends on the JS renderer honouring `requestedEffects`, which only an
+end-to-end boot can settle. Not a Rust-side gap.
+
+### Dev module directory renamed mid-session — build script made path-agnostic
+`🧰️framework/🛍️products/💻️os/🔨️modules/` now holds **two** spellings:
+- `🧑️‍💻️dev` (U+FE0F after each glyph) — canonical at HEAD, 750 tracked files, but only 33 untracked
+  build outputs on disk;
+- `🧑‍💻dev` (no selectors) — the real tree, 4579 files, holds `📜️script.ts`.
+
+Reference counts: **71** files still spell it with selectors, **14** without. A peer owns this: their
+ticket carries `🧑‍💻️dev-repair.md`, a hand-repair log scoped to this exact module.
+Decision: **do not rename anything.** We resolve the entrypoint at run time in
+`🔨️build-components.sh` instead, so the build survives whichever spelling wins.
+
+Correction to an earlier hypothesis in this file: the repo's 7106 tracked deletions are **not**
+variation-selector stripping. Normalising both sides matched only 176, and those go the *opposite*
+way (`⏱duration` → `⏱️duration`, i.e. the peer **adding** selectors, their intended direction).
+The remaining ~6930 belong to unrelated in-flight refactors.
+
+### Two self-inflicted script bugs found and fixed
+- `-maxdepth 6` could not reach the depth-8 entrypoint → `FATAL: dev script.ts not found`.
+- The dynamic `find` also had to exclude `*/dist/*`, which contains a decoy `📜️script.ts`.
+
+### State at 21:15
+Build 6 running: `wasm-release`, budget 6 h (honoured — the hardcoded-budget bug is fixed),
+`RUSTC_WRAPPER=""`. Order: stdio → cad → gis → procedural → process → puzzle → sourcing → demonstrator.
+Registry refreshed cleanly (59 plugin crates, 60 playgrounds, 45 framework packages).
+
+## 💥️ Shared `target/` wiped mid-build — 2026-09-05 ~00:42
+
+Build 7 compiled `semio-s-plugin-stdio` cleanly for **3 h 13 min** (0 errors throughout) and was then
+destroyed by something outside this session deleting `target/wasm32-wasip2` wholesale.
+
+Evidence (measured, not inferred):
+- `target/` mtime 00:42; children reduced to `debug`, `flycheck0`, `tmp`. `target/wasm32-wasip2` absent
+  and never recreated. `du -sh target` = 1.0 G, down from a tree that held a 9.97 MB gis component.
+- `lsof -p <rustc>` showed **no** open output files and **no** `(deleted)` entries — only `/dev/null`.
+  So rustc was in a pure in-memory LTO/codegen phase and had not yet written anything; its `--out-dir`
+  was already gone, so the final write was guaranteed to fail. Killed rather than gambling another hour.
+
+### Why `wasm-release` is inherently this slow
+`[profile.wasm-release]` is `lto = "thin"`, `codegen-units = 1`, `incremental = false`. codegen-units=1
+means no intra-crate parallelism, so a plugin crate is one long single-threaded tail — 3 h for stdio is
+normal here, not a hang. RSS was observed cycling 0.3 → 4.0 GB across codegen units.
+
+### Why serial-per-plugin cannot work
+`pluginCargoArgs` emits `cargo rustc -p <pkg> … -- -C link-arg=-zstack-size=8388608`. `cargo rustc`
+accepts exactly ONE package, and `SEMIO_PLUGIN_ONLY` is an exact single-id match
+(`entries.filter(e => e.pluginId === only)`), so it cannot be given a list. With every plugin sharing the
+one `target/` lock, 8 plugins × ~3 h serial is not viable.
+
+### Fix applied: isolated target dir
+Build 8 runs with `CARGO_TARGET_DIR=/Users/ueli/Documents/semio/target-demonstrator`.
+- The dev script honours it: `cargoTargetRoot = process.env.CARGO_TARGET_DIR ? resolve(...) : join(repoRoot,"target")`.
+- `.gitignore:16` (`target*`) already covers the sibling dir; precedent exists — the
+  `mit-bestand-demonstrator-fast` launch config uses `target-engines` the same way.
+- It removes BOTH failure modes at once: peers can no longer wipe or lock-block this build.
+- Cost: a cold rebuild of the dependency graph — but the shared tree was wiped anyway, so no cache was
+  lost by switching. Disk is not a constraint (335 GB free).
+
+Earlier this session I declined a private target dir because a cold rebuild risked OOM at load 55. That
+trade-off no longer holds: the cache is gone regardless, and lock contention had three rustc processes
+(mine + two peers) all compiling stdio at 12-28% CPU each.
+
+### Watch item
+Swap hit 41.0 G / 42.0 G (953 MB free) at 22:40 with load average 27.6 — the documented silent-kill
+condition. It recovered to 29.5 G and my rustc immediately jumped 11% → 96% CPU. Worth re-checking before
+blaming a build for being slow.
+
+## 🔺️ stdio mesh-subset rename completed — 2026-09-05 ~01:00
+
+Builds 8/8dev both died in ~6 min on the same root cause: stdio's module tree still pointed at names a
+peer had already renamed on disk as part of the unique-semantic-emoji work.
+
+Established the rename was intentional (not corruption) before touching anything: the naming authority
+`🔣️taxonomy.json` and framework sources already use the NEW spellings, while stdio's `#[path]`
+attributes still carried the old ones.
+
+Three renames completed in `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/🦀️.rs` only:
+
+| Old | New | `#[path]` sites |
+| --- | --- | --- |
+| `🪆️subsets/✳️mesh/` | `🪆️subsets/🔺️mesh/` | 83 |
+| `🔺️mesh/…/🧩️deserializers/🗿️artifacts/🧊️gltf/` | `…/🎬️gltf/` | 1 |
+| `🔺️mesh/…/🧵️serializers/🗿️artifacts/🧊️gltf/` | `…/🎬️gltf/` | 1 |
+| `🔺️mesh/🧬️schema/🧬️mutations/🔗set-primitive-material/` | `…/🧲️set-primitive-material/` | 3 |
+
+Each replacement was anchored on the full `🔺️mesh/…` path prefix, never on the bare segment — the
+sibling `🧊️obj` shares the `🧊️` prefix with the old `🧊️gltf` and must not be rewritten
+(see [[feedback-name-keyed-edits-need-region-guard]]).
+
+Verified structurally rather than by eye: all **4690** `#[path]` attributes in stdio's root now resolve
+to an existing file (was 5 broken). That check is the useful gate here — far cheaper than a cargo run,
+and it is what distinguishes "my rename is wrong" from "someone else's migration is mid-flight".
+
+### Current runs
+- **build9** — stdio only, `wasm-release`, `CARGO_TARGET_DIR=target-demonstrator`, `CARGO_BUILD_JOBS=6`.
+  stdio genuinely needs `wasm-release`: its dev component exceeds the wasm parser's 1,000,000-function ceiling.
+- **build8dev** — the other seven, `wasm-dev`, `CARGO_TARGET_DIR=target-demonstrator-dev`, `CARGO_BUILD_JOBS=4`.
+  Justification: the components materialized in `🔌️plugin-modules` (stdio 377 MB, process 7 MB, cad 45 MB …)
+  are dev-profile builds, so dev profile demonstrably produced loadable components for these seven.
+  Only stdio is known to breach the ceiling. If any of the seven also breaches it, that one gets rebuilt
+  in `wasm-release` — decided by evidence, not assumed up front.
+
+Splitting the profiles is what makes this tractable: `wasm-release` is `codegen-units=1` + thin LTO, i.e.
+~3 h of single-threaded tail per crate. Eight of those serially is a day; one is not.
+
+## 🧭️ Preemptive `#[path]` audit across all plugin crates — 2026-09-05 ~01:55
+
+The mesh failure showed the peer is renaming subsets **one at a time**, and each rename breaks stdio
+until its references catch up. Rather than discover the next one an hour into a build, audited every
+`#[path]` in all 33 plugin crate roots against the filesystem. Two more had already broken *while the
+builds were running*:
+
+| Crate | Old reference | Actual on disk |
+| --- | --- | --- |
+| `🗄️stdio` | `🧊️brep/…/🧬️mutations/🔗create-edge/` | `🖇️create-edge` (3 sites) |
+| `🎪️demonstrator` | `🛂️manifest/` | `🪪️manifest/` (1 site) |
+
+(`🧊️brep` itself was already renamed from `✳️brep` by the peer, and stdio's references had been updated
+for the directory but not for the `create-edge` leaf.)
+
+Result — every crate the demonstrator needs is now structurally sound:
+
+```
+ok  🗄️stdio        0/4690      ok  🧩️puzzle       0/1046
+ok  🌀️procedural   0/546       ok  🌍️gis          0/354
+ok  🏭️process      0/247       ok  🌊️flow         0/204
+ok  🎪️demonstrator 0/98        (cad, sourcing: 0 broken)
+```
+
+Still broken, but NOT demonstrator dependencies — left to their owners: `📕️norm` 33/2413
+(a `🌬️din16798` artifact tree), `🌿️vcs` 1/158.
+
+### Why the earlier `sourcing` failure was not a real defect
+`sourcing` reported 153 × `E0277 MutationLeaf not satisfied` + 17 ×
+`MutationLeaf source authority failed: descriptor owner does not exactly match source owner`, all 17 in
+mesh. Verified it was a stale mid-edit read, not a defect:
+- Every one of the 17 mesh descriptors' `owner` matches its real directory — checked against
+  `os.listdir` entries (the filesystem's own bytes) rather than against a path built from my own
+  literal, which would simply echo itself back.
+- `sourcing`'s stdio compile began 00:58:38; the mesh path fix landed ~01:01. build9, started 01:02:03
+  **after** the fix, reports `MutationLeaf failures: 0`.
+
+`process` (rc=1, 8 errors) failed on the same pre-fix mesh paths. Both `process` and `sourcing` need a
+re-run once the current pass finishes; nothing is wrong with their own sources.
+
+This is the queued-cargo-check-reports-stale trap again: a build describes the tree as of its START.

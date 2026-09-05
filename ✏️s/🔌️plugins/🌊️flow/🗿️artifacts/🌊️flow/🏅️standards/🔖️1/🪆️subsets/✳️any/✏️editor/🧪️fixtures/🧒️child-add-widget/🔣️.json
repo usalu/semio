@@ -1,0 +1,67 @@
+{
+  "schema": "semio.flow.child-add-widget/v1",
+  "parentContent": {
+    "childId": "flow-child-stable",
+    "target": {
+      "artifactId": "flow-child-stable",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "flow"
+      }
+    }
+  },
+  "before": {
+    "schema": "semio.flow",
+    "nodes": [
+      {
+        "id": "existing",
+        "kind": "inputNote",
+        "label": "inputNote",
+        "params": [{ "key": "text", "value": "kept" }],
+        "position": { "x": 1, "y": 2 }
+      }
+    ],
+    "edges": []
+  },
+  "cases": [
+    {
+      "id": "input-note",
+      "descriptor": { "kind": "inputNote", "text": "" },
+      "position": { "x": 40, "y": 41 },
+      "expectedNode": {
+        "id": "note_2",
+        "kind": "inputNote",
+        "label": "inputNote",
+        "params": [{ "key": "text", "value": "" }],
+        "position": { "x": 40, "y": 41 }
+      }
+    },
+    {
+      "id": "input-slider",
+      "descriptor": { "kind": "inputSlider", "label": "" },
+      "position": { "x": -7.5, "y": 9.25 },
+      "expectedNode": {
+        "id": "slider_2",
+        "kind": "inputSlider",
+        "label": "",
+        "params": [
+          { "key": "label", "value": "" },
+          { "key": "value", "value": "0" },
+          { "key": "min", "value": "0" },
+          { "key": "max", "value": "10" },
+          { "key": "step", "value": "0.1" }
+        ],
+        "position": { "x": -7.5, "y": 9.25 }
+      }
+    }
+  ],
+  "repeated": {
+    "kind": "inputNote",
+    "existingIds": ["note_2"],
+    "expectedId": "note_3"
+  },
+  "denials": ["missingChild", "wrongSlot", "duplicateId", "unexpectedWidgetDelta", "unexpectedEdgeDelta", "unexpectedLayoutDelta"],
+  "parentMutations": 0,
+  "childMutations": 1
+}

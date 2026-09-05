@@ -1,9 +1,0 @@
-{
-  "mutation": "change-transparency",
-  "payload": {
-    "trns": {
-      "colorType": "grayscale",
-      "gray": 7
-    }
-  }
-}

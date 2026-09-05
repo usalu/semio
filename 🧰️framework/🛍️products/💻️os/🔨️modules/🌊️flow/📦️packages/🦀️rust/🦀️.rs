@@ -36,7 +36,7 @@ pub use neural_engine as neural;
 pub mod playbook;
 //#endregion 🔖️Playbook
 
-#[path = "../../📄️artifact/🦀️.rs"]
+#[path = "../../🗿️artifact/🦀️.rs"]
 pub mod artifact;
 pub use artifact::*;
 
@@ -48,7 +48,7 @@ pub mod graph_parameter;
 #[path = "../../🧵️retained/🦀️.rs"]
 pub mod retained;
 
-#[path = "../../📚️catalogue/🦀️.rs"]
+#[path = "../../🗂️catalogue/🦀️.rs"]
 pub mod catalogue;
 pub use catalogue::*;
 
@@ -76,7 +76,7 @@ pub use drawing::*;
 // `os-kernel-host-crates-split.md`'s target-table shape. RUNTIME-DEPENDENCY-ELIMINATION ticket
 // 26/09/01.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-#[path = "../../🌉️wasm/🦀️component.rs"]
+#[path = "../../🕸️wasm/🦀️component.rs"]
 pub mod wasm_session;
 
 #[path = "../../🌿️vcs/🦀️.rs"]

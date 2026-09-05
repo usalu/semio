@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "package", "target", "moduleSha256", "retainedSha256", "laws", "registry", "dependencies", "hostSnapshots", "cases"],
+  "properties": {
+    "schema": {"const": "semio.test.dsl-fixture-sweep-extraction/v1"},
+    "package": {"const": "semio-framework-os-dsl-fixture-sweep"},
+    "target": {"const": "fixture_sweep"},
+    "moduleSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "retainedSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "laws": {"type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": {"type": "string", "pattern": "^tests::repo_wide_[a-z_]+$"}},
+    "registry": {"type": "array", "minItems": 54, "maxItems": 54, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "dependencies": {"type": "array", "minItems": 29, "maxItems": 29, "items": {
+      "type": "object", "additionalProperties": false, "required": ["alias", "package", "path", "features", "defaultFeatures"],
+      "properties": {
+        "alias": {"type": "string", "minLength": 1}, "package": {"type": "string", "minLength": 1}, "path": {"type": "string", "minLength": 1},
+        "features": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}, "defaultFeatures": {"type": "boolean"}
+      }
+    }},
+    "hostSnapshots": {"const": ["WorkflowSnapshot", "SpaceSnapshot", "CollectionSnapshot"]},
+    "cases": {"type": "array", "minItems": 16, "maxItems": 16, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+  }
+}

@@ -86,7 +86,7 @@ impl Default for SemioTextSnapshot {
 
 //#region 🔖️TextPrimitives
 /// 🧪️ Real hex/bracket-encoded value primitives backing the hand-rolled `ArtifactDsl` below — same
-/// style `✳️image`'s/`✳️audio`'s own `📸️snapshot`/`🔺️diff`/`🧬️mutations` facets already establish,
+/// style `✳️image`'s/`🔊️audio`'s own `📸️snapshot`/`🔺️diff`/`🧬️mutations` facets already establish,
 /// duplicated locally (not imported across facets) to keep each facet module independently
 /// compilable, per that precedent's own doc comment.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -337,7 +337,7 @@ impl store::ArtifactPack for SemioTextSnapshot {
 
 //#region 🌉️ExternalCodecBridge
 /// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
-/// `s.stdio.semio.text` — the shape `mutate-semio-text` compares under `ordered-json-v1`, derived
+/// `s.stdio.semio.text` — the shape `🔤️mutate-semio-text` compares under `ordered-json-v1`, derived
 /// from the snapshot type itself rather than hand-written a second time in the adapter, where it
 /// could drift away from the type it claims to project. A thin `pack::to_json_string` wrapper
 /// (first-party, over `ToValue`/`DslValue`).
@@ -348,7 +348,7 @@ pub fn encode_semio_text_snapshot_json(snapshot: &SemioTextSnapshot) -> String {
 
 /// 📥️ The `pack::from_json_str` inverse of [`encode_semio_text_snapshot_json`] — decodes the committed
 /// `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
-/// specification vectors into real [`SemioTextSnapshot`] values, so `mutate-semio-text`'s adapter
+/// specification vectors into real [`SemioTextSnapshot`] values, so `🔤️mutate-semio-text`'s adapter
 /// reads the committed fixture instead of re-declaring it as a Rust literal beside it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_text_snapshot_json(text: &str) -> Result<SemioTextSnapshot, String> {
@@ -359,7 +359,7 @@ pub fn decode_semio_text_snapshot_json(text: &str) -> Result<SemioTextSnapshot, 
 //#region 🔖️Wire
 /// 📝️ Parses `s.stdio.semio.text` DSL text into a [`SemioTextSnapshot`] — a named pass-through of this snapshot's own
 /// `store::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
-/// crate, so `mutate-semio-text`'s `identity-round-trip` scenario reaches the real committed
+/// crate, so `🔤️mutate-semio-text`'s `identity-round-trip` scenario reaches the real committed
 /// artifact (`../../📚️examples/📃️note/🖼️assets/🗣️.dsl.semio`) through this instead.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_text_dsl(text: &str) -> Result<SemioTextSnapshot, String> {

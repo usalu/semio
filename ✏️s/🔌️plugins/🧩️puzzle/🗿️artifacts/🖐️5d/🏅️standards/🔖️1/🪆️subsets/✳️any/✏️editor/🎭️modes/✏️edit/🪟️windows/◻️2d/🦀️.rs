@@ -1,9 +1,9 @@
 //! ◻️ Puzzle 5d play app — the `Board2d` window kind: the flat projection of the unified 5d document.
-//! Owns the board scene payload (nodes/handles/edges plus the glyph catalogs and placement
+//! Owns the board scene payload (nodes/🐙️handles/edges plus the glyph catalogs and placement
 //! compatibility the board host reads), binds the pointer utilities (`🪛️utilities/*`) and scopes the
 //! board-event/2D-camera actions (`🎬️actions`). Its only genuinely 2D-specific chrome measure is the
-//! LOD select in `🎚️options/🔭️lod`; the brush/fill Utility Options it shares with the 3D window come
-//! from the mode's own `🎚️options/*`.
+//! LOD select in `☑️options/🔭️lod`; the brush/fill Utility Options it shares with the 3D window come
+//! from the mode's own `☑️options/*`.
 
 use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dRuntime};
 use crate::editor::puzzle5d::modes::edit;
@@ -103,7 +103,7 @@ fn board_node_value(part: &Puzzle5dPart) -> Value {
     node
 }
 
-/// 🗂️ Projects the unified 5d kind bundle (`parts/grips/fasteners/ropes`) to the board's `nodes/handles/edges/wires` naming.
+/// 🗂️ Projects the unified 5d kind bundle (`parts/grips/fasteners/ropes`) to the board's `nodes/🐙️handles/edges/wires` naming.
 pub fn board_kind_catalogs_value(document: &Puzzle5dDocument) -> Value {
     let catalogs = document.kind_catalogs.clone().unwrap_or(json!({}));
     json!({

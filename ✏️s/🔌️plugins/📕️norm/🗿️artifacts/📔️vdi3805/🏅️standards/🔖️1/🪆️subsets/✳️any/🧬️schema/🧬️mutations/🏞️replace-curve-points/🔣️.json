@@ -5,7 +5,7 @@
   "displayName": "Replace Curve Points",
   "emoji": "🏞️",
   "aggregateVariant": "ReplaceCurvePoints",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

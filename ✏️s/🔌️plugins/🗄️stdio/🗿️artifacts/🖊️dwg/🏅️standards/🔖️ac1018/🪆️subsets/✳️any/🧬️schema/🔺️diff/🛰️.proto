@@ -1,3 +1,0 @@
-syntax = "proto3";
-package semio.s_stdio_dwg_ac1018.diff;
-message DwgDiff { optional string version = 1; optional uint32 maintenance_version = 2; optional uint32 codepage = 3; optional string drawing_wire = 4; optional string header_wire = 5; repeated string classes_wire = 6; repeated string dependencies_wire = 7; optional string summary_wire = 8; optional string application_wire = 9; optional string template_wire = 10; }

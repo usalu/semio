@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false, "required": ["schema", "grants", "cases", "events"],
+  "properties": {
+    "schema": { "const": "semio.member.dictionary-payload-cursor/v1" }, "grants": { "const": [1, 7, 4096] },
+    "cases": { "type": "array", "minItems": 34, "maxItems": 34, "items": { "$ref": "#/$defs/case" } },
+    "events": { "type": "object", "minProperties": 34, "maxProperties": 34, "propertyNames": { "pattern": "^[a-z][a-z0-9-]+$" }, "additionalProperties": { "type": "array", "maxItems": 2, "items": { "$ref": "#/$defs/event" } } }
+  },
+  "$defs": {
+    "uint": { "type": "integer", "minimum": 0, "maximum": 8192 },
+    "event": {
+      "oneOf": [
+        { "type": "array", "minItems": 3, "maxItems": 3, "prefixItems": [{ "const": "begin" }, { "$ref": "#/$defs/uint" }, { "$ref": "#/$defs/uint" }], "items": false },
+        { "type": "array", "minItems": 5, "maxItems": 5, "prefixItems": [{ "const": "entries" }, { "$ref": "#/$defs/uint" }, { "$ref": "#/$defs/uint" }, { "type": "integer", "minimum": 1, "maximum": 128 }, { "$ref": "#/$defs/uint" }], "items": false }
+      ]
+    },
+    "case": {
+      "type": "object", "additionalProperties": false, "required": ["id", "hex", "hold", "cancelAt", "offset", "entries", "scratchBytes", "error"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]+$", "maxLength": 64 },
+        "hex": { "type": "string", "pattern": "^(?:[a-f0-9]{2})+$", "maxLength": 1024 },
+        "repeat": { "type": "object", "additionalProperties": false, "required": ["byte", "count"], "properties": { "byte": { "type": "integer", "minimum": 0, "maximum": 255 }, "count": { "type": "integer", "minimum": 1, "maximum": 1024 } } },
+        "hold": { "enum": [null, "begin", "entry"] }, "cancelAt": { "type": ["null", "integer"], "minimum": 1, "maximum": 2048 },
+        "offset": { "type": "integer", "minimum": 0, "maximum": 2048 }, "entries": { "type": "integer", "minimum": 0, "maximum": 8192 },
+        "scratchBytes": { "type": "integer", "minimum": 0, "maximum": 4 }, "error": { "enum": [null, "malformed", "capacity", "state", "cancelled"] }
+      }
+    }
+  }
+}

@@ -55,13 +55,13 @@ mod tests {
     use flow::Widget;
     use protocol::{fold_plan_diff, fold_plan_inverse, Mutation, MutationDiff};
 
-    async fn base_with_source_widget() -> FlowSnapshot {
+    fn base_with_source_widget() -> FlowSnapshot {
         let base = FlowSnapshot::default();
         let create = FlowMutation::CreateWidget(CreateWidget { index: 0, widget: Widget::InputNote { id: "note-1".into(), text: "hello".into() } });
         create.diff(&base).diff().apply(&base).expect("valid mutation diff")
     }
 
-    async fn sample_payload() -> DuplicateWidget {
+    fn sample_payload() -> DuplicateWidget {
         DuplicateWidget { source_id: "note-1".into(), new_id: "note-2".into(), synapse_id: "note-1-to-note-2".into(), from_port: "out".into(), to_port: "in".into() }
     }
 
@@ -96,7 +96,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn precondition_rejects_a_missing_source_widget() {
         let base = FlowSnapshot::default();
-        let error = precondition(&sample_payload(), &base).await.expect_err("note-1 does not exist yet");
+        let error = precondition(&sample_payload(), &base).expect_err("note-1 does not exist yet");
         assert!(error.contains("note-1"));
     }
 
@@ -104,7 +104,7 @@ mod tests {
     async fn precondition_rejects_a_new_id_already_taken() {
         let base = base_with_source_widget();
         let payload = DuplicateWidget { new_id: "note-1".into(), ..sample_payload() };
-        let error = precondition(&payload, &base).await.expect_err("new_id collides with source_id");
+        let error = precondition(&payload, &base).expect_err("new_id collides with source_id");
         assert!(error.contains("differ"));
     }
 }

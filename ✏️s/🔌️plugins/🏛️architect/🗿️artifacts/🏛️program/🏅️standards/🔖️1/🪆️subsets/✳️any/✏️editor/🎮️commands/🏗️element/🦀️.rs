@@ -24,7 +24,7 @@ pub mod add_element {
         let element = default_element(payload.name.clone());
         let mut next = cfg.snapshot.clone();
         next.active_register = "elements".into();
-        Ok(Emit { artifact_mutations: vec![ProgramMutation::CreateProgramElement(leaves::create_program_element::mutation::CreateProgramElement { program_element: element })], config_mutations: snapshot(next), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![ProgramMutation::CreateProgramElement(leaves::create_program_element::CreateProgramElement { program_element: element })], config_mutations: snapshot(next), ..Default::default() })
     }
 }
 
@@ -48,9 +48,9 @@ pub mod remove_element {
     pub async fn handle(payload: &RemoveElement, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.snapshot;
         let element_id = &payload.element_id;
-        let mut operations = vec![ProgramMutation::DeleteProgramElement(leaves::delete_program_element::mutation::DeleteProgramElement { id: EntityId(element_id.clone()) })];
+        let mut operations = vec![ProgramMutation::DeleteProgramElement(leaves::delete_program_element::DeleteProgramElement { id: EntityId(element_id.clone()) })];
         for adjacency in program.adjacencies.iter().filter(|row| &row.element_a_id.0 == element_id || &row.element_b_id.0 == element_id) {
-            operations.push(ProgramMutation::DisconnectAdjacency(leaves::disconnect_adjacency::mutation::DisconnectAdjacency { id: adjacency.header.id.clone() }));
+            operations.push(ProgramMutation::DisconnectAdjacency(leaves::disconnect_adjacency::DisconnectAdjacency { id: adjacency.header.id.clone() }));
         }
         Ok(Emit::mutations(operations))
     }

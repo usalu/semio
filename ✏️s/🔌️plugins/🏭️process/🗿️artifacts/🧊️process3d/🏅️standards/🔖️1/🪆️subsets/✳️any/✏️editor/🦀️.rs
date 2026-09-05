@@ -84,7 +84,7 @@ pub use workpiece::PROCESS_3D_PLAY_BODY_MAIN;
 pub use workshop_panel::PROCESS_3D_PLAY_BODY_WORKSHOP;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
-/// (`🎚️options/*`, `📌️panels/*`, `🎮️commands/*`) builds its `on_change`/item actions with.
+/// (`☑️options/*`, `📌️panels/*`, `🎮️commands/*`) builds its `on_change`/item actions with.
 pub fn process3d_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     semio_framework_plugin::ActionFactory::new(PROCESS_3D_PLAY_CONTROLLER_ID).action(action, args)
 }
@@ -168,7 +168,7 @@ pub fn iconed_tree_item_with_action(
 
 /// 🔁️ Builds a `Effect::LoadDocument` for `document` — the sanctioned non-history "replace the
 /// whole document" gesture (`ArtifactStore::reset`, applied host-side) every wholesale document-swap
-/// command (`🎮️commands/📄️artifact`, `🎮️commands/🪵️stock`, `🎮️commands/📤️media`, `import_media`'s
+/// command (`🎮️commands/🗿️artifact`, `🎮️commands/🪵️stock`, `🎮️commands/📤️media`, `import_media`'s
 /// `geometry:in`) uses instead of the banned whole-snapshot mutation. The spr is a fresh, edit-free
 /// op-log — a genesis envelope with no history to encode.
 pub fn reset_process3d_document_effect(document: &Process3dSnapshot) -> Effect {

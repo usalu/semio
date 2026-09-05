@@ -405,11 +405,11 @@
         "vitest": "^4.0.17",
       },
     },
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg": {
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings": {
       "name": "@semio-tech/flow-core",
       "version": "0.1.0",
     },
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️📦️packages/🦀️rust": {
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust": {
       "name": "@semio-tech/framework-renderer-wgpu",
       "version": "0.1.0",
       "dependencies": {
@@ -422,7 +422,7 @@
         "vitest": "^4.0.17",
       },
     },
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️📦️packages/🟦️typescript/🎯️targets/⚛️react": {
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react": {
       "name": "@semio-tech/framework-renderer-react",
       "version": "0.1.0",
       "dependencies": {
@@ -468,7 +468,7 @@
         "vitest": "^4.0.17",
       },
     },
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript": {
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript": {
       "name": "@semio-tech/framework-os-dev",
       "version": "0.1.0",
       "dependencies": {
@@ -1438,7 +1438,7 @@
 
     "@semio-tech/cad-js-module-spatial-shape": ["@semio-tech/cad-js-module-spatial-shape@workspace:✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript"],
 
-    "@semio-tech/flow-core": ["@semio-tech/flow-core@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg"],
+    "@semio-tech/flow-core": ["@semio-tech/flow-core@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings"],
 
     "@semio-tech/flow-js": ["@semio-tech/flow-js@workspace:✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript"],
 
@@ -1448,15 +1448,15 @@
 
     "@semio-tech/framework-os": ["@semio-tech/framework-os@workspace:🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript"],
 
-    "@semio-tech/framework-os-dev": ["@semio-tech/framework-os-dev@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript"],
+    "@semio-tech/framework-os-dev": ["@semio-tech/framework-os-dev@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"],
 
     "@semio-tech/framework-os-mcp": ["@semio-tech/framework-os-mcp@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript"],
 
     "@semio-tech/framework-os-shell": ["@semio-tech/framework-os-shell@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🟦️typescript"],
 
-    "@semio-tech/framework-renderer-react": ["@semio-tech/framework-renderer-react@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"],
+    "@semio-tech/framework-renderer-react": ["@semio-tech/framework-renderer-react@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"],
 
-    "@semio-tech/framework-renderer-wgpu": ["@semio-tech/framework-renderer-wgpu@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️📦️packages/🦀️rust"],
+    "@semio-tech/framework-renderer-wgpu": ["@semio-tech/framework-renderer-wgpu@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"],
 
     "@semio-tech/framework-replication": ["@semio-tech/framework-replication@workspace:🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript"],
 

@@ -1,0 +1,7 @@
+(* ISO-14977-style EBNF for `stdio.semio`'s real `SemioDiff::print_diff` one-line wire shape —
+   descriptive mirror of the authoritative `📖️.grammar.semio` (same production names). *)
+diff = 'noChange' | tagged diff ;
+tagged diff = tag, ':', rest of line ;
+tag = 'replace' | 'brep' | 'mesh' | 'model' | 'value' | 'document' | 'cad' | 'drawing' | 'image' | 'video' | 'audio' | 'animation' | 'presentation' | 'flow' ;
+
+rest of line = { ? any character up to end of document ? } ;

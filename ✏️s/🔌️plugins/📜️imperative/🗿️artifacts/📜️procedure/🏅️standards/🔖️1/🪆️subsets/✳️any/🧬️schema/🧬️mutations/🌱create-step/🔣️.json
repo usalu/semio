@@ -5,7 +5,7 @@
   "displayName": "Create Step",
   "emoji": "🌱",
   "aggregateVariant": "CreateStep",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "create-step",
   "binaryTag": 0,
   "invertibility": "explicit-mutation",

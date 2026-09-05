@@ -1,0 +1,6 @@
+syntax = "proto3";
+// Space-separated key=value diff text, carried verbatim.
+package semio.s_stdio_semio_document.diff.text;
+message SemioDocumentDiffText {
+  string line = 1;
+}

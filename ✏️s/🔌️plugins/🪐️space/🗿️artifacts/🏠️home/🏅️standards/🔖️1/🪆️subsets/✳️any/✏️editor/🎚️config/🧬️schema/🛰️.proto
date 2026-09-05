@@ -5,4 +5,16 @@ message HomeConfig {
   string active_panel_tab = 1;
   // @state config
   string locale = 2;
+  // @state config
+  string directory_json = 3;
+  // @state config
+  string directory_session_binding_sha256 = 4;
+  // @state config
+  uint64 directory_authorization_generation = 5;
+  // @state config
+  string directory_receipt_sha256 = 6;
+  // @state config
+  string client_id = 7;
+  // @state config
+  string client_name = 8;
 }

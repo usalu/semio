@@ -1,0 +1,22 @@
+{
+  "schema": "semio.db.memory-backing/v1",
+  "maximumInlineBytes": 16384,
+  "closeWhileAdmitted": false,
+  "sequentialTasks": 128,
+  "retry": { "maximumAttempts": 8, "timerDelayMs": 1, "terminalAfterQueueRelease": true },
+  "tables": [
+    { "name": "wal", "slots": 64 },
+    { "name": "snapshots", "slots": 64 },
+    { "name": "payloads", "slots": 64 },
+    { "name": "index-runs", "slots": 64 },
+    { "name": "leases", "slots": 64 },
+    { "name": "operations", "slots": 64 },
+    { "name": "retired-pages", "slots": 64 },
+    { "name": "retired-wal", "slots": 64 }
+  ],
+  "admission": [
+    { "remaining": "exact", "accepted": true },
+    { "remaining": "one-short", "accepted": false },
+    { "remaining": "zero", "accepted": false }
+  ]
+}

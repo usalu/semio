@@ -1,0 +1,295 @@
+{
+  "schema": "semio.test.dsl-fixture-sweep-extraction/v1",
+  "package": "semio-framework-os-dsl-fixture-sweep",
+  "target": "fixture_sweep",
+  "moduleSha256": "f55c65536c22f0b1bfff654141b56b72d68ef6296c39f5d6d8fa87712ef1d3f2",
+  "retainedSha256": "8fff3665b2e856de59fe48089836f7c3e8c62cce111800ed5f60679e08782a06",
+  "laws": [
+    "tests::repo_wide_dsl_fixture_law_sweep",
+    "tests::repo_wide_semio_example_kind_coverage"
+  ],
+  "registry": [
+    "(\"writer\", <WriterSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<WriterSnapshot>),",
+    "(\"equation\", <EquationSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<EquationSnapshot>),",
+    "(\"generation_2d\", <Generation2dDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Generation2dDocument>),",
+    "(\"generation_3d\", <Generation3dDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Generation3dDocument>),",
+    "(\"flow_app\", <FlowFixture as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<FlowFixture>),",
+    "(\"gis2d\", \"gis.gismap\", crate::os_store::test_support::check_dsl_fixture_text_laws::<GisMapDocument>),",
+    "(\"gis3d\", \"gis.gisterrain\", crate::os_store::test_support::check_dsl_fixture_text_laws::<Gis3dTerrainDocument>),",
+    "(\"vcs_app\", <VcsSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<VcsSnapshot>),",
+    "(\"presentation\", <PresentationDeck as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<PresentationDeck>),",
+    "(\"shooting\", <ShootingFixture as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<ShootingFixture>),",
+    "(\"sequence\", <SequenceFixture as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<SequenceFixture>),",
+    "(\"fem2d\", <Fem2dDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Fem2dDocument>),",
+    "(\"fem3d\", <Fem3dDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Fem3dDocument>),",
+    "(\"process_3d\", <Process3dDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Process3dDocument>),",
+    "(\"lowpoly\", <LowpolySnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<LowpolySnapshot>),",
+    "(\"reasoning_wires\", <MindmapWiresDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<MindmapWiresDocument>),",
+    "(\"layout\", <LayoutDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<LayoutDocument>),",
+    "(\"cad_document\", <CadSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<CadSnapshot>),",
+    "(\"iso16757\", <Iso16757Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Iso16757Document>),",
+    "(\"vdi3805\", <Vdi3805Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Vdi3805Document>),",
+    "(\"din4108\", <Din4108Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Din4108Document>),",
+    "(\"din16798\", <Din16798Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Din16798Document>),",
+    "(\"en1990\", <En1990Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1990Document>),",
+    "(\"en1991\", <En1991Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1991Document>),",
+    "(\"en1992\", <En1992Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1992Document>),",
+    "(\"en1993\", <En1993Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1993Document>),",
+    "(\"en1994\", <En1994Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1994Document>),",
+    "(\"en1995\", <En1995Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1995Document>),",
+    "(\"en1996\", <En1996Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1996Document>),",
+    "(\"en1997\", <En1997Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1997Document>),",
+    "(\"en1998\", <En1998Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1998Document>),",
+    "(\"en1999\", <En1999Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<En1999Document>),",
+    "(\"din18599\", <Din18599Document as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Din18599Document>),",
+    "(\"playbook\", <PlaybookSpec as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<PlaybookSpec>),",
+    "(\"imperative\", <ImperativeDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<ImperativeDocument>),",
+    "(\"remodel\", <RemodelSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<RemodelSnapshot>),",
+    "(\"rewrite\", <RewriteRuleModel as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<RewriteRuleModel>),",
+    "(\"trinity_ram\", <GraphFixture as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<GraphFixture>),",
+    "(\"dag_app\", <DagSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<DagSnapshot>),",
+    "(\"draw\", <DrawDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<DrawDocument>),",
+    "(\"raster\", <RasterSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<RasterSnapshot>),",
+    "(\"note_app\", <NoteDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<NoteDocument>),",
+    "(\"puzzle_2d\", <Puzzle2dSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Puzzle2dSnapshot>),",
+    "(\"puzzle_5d\", <Puzzle5dSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Puzzle5dSnapshot>),",
+    "(\"puzzle_3d\", <Puzzle3dSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Puzzle3dSnapshot>),",
+    "(\"block_2d\", <Block2dDefinition as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Block2dDefinition>),",
+    "(\"block_5d\", <Block5dDefinition as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Block5dDefinition>),",
+    "(\"block_3d\", <Block3dDefinition as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Block3dDefinition>),",
+    "(\"home\", <SHomeDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<SHomeDocument>),",
+    "(\"semio_framework_os\", <WorkflowSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<WorkflowSnapshot>),",
+    "(\"sourcing\", <CurationDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<CurationDocument>),",
+    "(\"forms\", \"forms\", crate::os_store::test_support::check_dsl_fixture_text_laws::<FormSpec>),",
+    "(\"space\", <SpaceSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<SpaceSnapshot>),",
+    "(\"space\", <CollectionSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<CollectionSnapshot>),"
+  ],
+  "dependencies": [
+    {
+      "alias": "semio-framework-async-macros",
+      "package": "semio-framework-async-macros",
+      "path": "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "block",
+      "package": "semio-s-plugin-block",
+      "path": "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "cad_document",
+      "package": "semio-s-plugin-cad",
+      "path": "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "dag_app",
+      "package": "semio-s-plugin-dag",
+      "path": "✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "draw",
+      "package": "semio-s-plugin-draw",
+      "path": "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "fem",
+      "package": "semio-s-plugin-fem",
+      "path": "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "flow_app",
+      "package": "semio-framework-os-flow",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "gis",
+      "package": "semio-s-plugin-gis",
+      "path": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "home",
+      "package": "semio-s-plugin-space",
+      "path": "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "imperative",
+      "package": "semio-s-plugin-imperative",
+      "path": "✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "layout",
+      "package": "semio-s-plugin-layout",
+      "path": "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "lowpoly",
+      "package": "semio-s-plugin-lowpoly",
+      "path": "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "mathematical",
+      "package": "semio-s-plugin-mathematical",
+      "path": "✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "norm",
+      "package": "semio-s-plugin-norm",
+      "path": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "note_app",
+      "package": "semio-s-plugin-note",
+      "path": "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "presentation",
+      "package": "semio-s-plugin-animate",
+      "path": "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "procedural",
+      "package": "semio-s-plugin-procedural",
+      "path": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "process_3d",
+      "package": "semio-s-plugin-process",
+      "path": "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "puzzle",
+      "package": "semio-s-plugin-puzzle",
+      "path": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "raster",
+      "package": "semio-s-plugin-raster",
+      "path": "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "reasoning_mindmap_plugin",
+      "package": "semio-s-plugin-reasoning-mindmap",
+      "path": "✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "remodel",
+      "package": "semio-s-plugin-remodel",
+      "path": "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "semio_framework_os",
+      "package": "semio-framework-os",
+      "path": "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "sequence",
+      "package": "semio-s-plugin-sequence",
+      "path": "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "shooting",
+      "package": "semio-s-plugin-shooting",
+      "path": "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "sourcing",
+      "package": "semio-s-plugin-sourcing",
+      "path": "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "trinity",
+      "package": "semio-s-plugin-trinity",
+      "path": "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "vcs_app",
+      "package": "semio-s-plugin-vcs",
+      "path": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    },
+    {
+      "alias": "writer",
+      "package": "semio-s-plugin-writer",
+      "path": "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust",
+      "features": [],
+      "defaultFeatures": true
+    }
+  ],
+  "hostSnapshots": [
+    "WorkflowSnapshot",
+    "SpaceSnapshot",
+    "CollectionSnapshot"
+  ],
+  "cases": [
+    "missing-dependency",
+    "extra-dependency",
+    "changed-package",
+    "optional-dependency",
+    "changed-features",
+    "missing-registry",
+    "duplicate-registry",
+    "changed-registry",
+    "reordered-registry",
+    "missing-law",
+    "ignored-law",
+    "changed-module",
+    "changed-kernel-tests",
+    "kernel-fleet-edge",
+    "kernel-feature",
+    "missing-kernel-mount"
+  ]
+}

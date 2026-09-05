@@ -9,6 +9,14 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "publication-authority-audit": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts publication-authority-audit",
+        "forwardAllArgs": true
+      }
     }
   }
 }

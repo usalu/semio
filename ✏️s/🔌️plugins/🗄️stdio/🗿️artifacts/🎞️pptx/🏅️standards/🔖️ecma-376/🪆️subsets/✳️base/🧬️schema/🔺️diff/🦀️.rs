@@ -1434,7 +1434,7 @@ pub fn diff_set_snapshot(base: &PptxSnapshot, next: &PptxSnapshot) -> PptxDiff {
     PptxDiff::between(base, next)
 }
 
-/// 🧩 Builds the diff for inserting `slide` at `index` (FINAL state).
+/// 🧩 Builds the diff for inserting `🎞️slide` at `index` (FINAL state).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_insert_slide(index: usize, slide: PptxSlide) -> PptxDiff {
     let slides = PptxSlidesDiff { added: vec![IndexAdded { index, item: slide }], ..Default::default() };

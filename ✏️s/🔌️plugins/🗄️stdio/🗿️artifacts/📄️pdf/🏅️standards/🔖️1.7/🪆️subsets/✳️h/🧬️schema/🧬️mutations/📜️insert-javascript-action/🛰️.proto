@@ -1,7 +1,0 @@
-syntax = "proto3";
-package semio.s_stdio_pdf_1_7_h.mutation.insert_javascript_action;
-
-// Direct insert-javascript-action protobuf payload.
-message InsertJavascriptActionMutation {
-  string script = 1;
-}

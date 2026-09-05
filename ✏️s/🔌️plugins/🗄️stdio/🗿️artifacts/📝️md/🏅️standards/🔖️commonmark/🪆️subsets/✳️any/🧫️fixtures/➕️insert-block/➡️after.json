@@ -1,0 +1,33 @@
+{
+  "schema": "stdio.md",
+  "blocks": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "kind": "text",
+          "text": "Title"
+        }
+      ]
+    },
+    {
+      "kind": "paragraph",
+      "inlines": [
+        {
+          "kind": "text",
+          "text": "Inserted paragraph."
+        }
+      ]
+    },
+    {
+      "kind": "paragraph",
+      "inlines": [
+        {
+          "kind": "text",
+          "text": "First paragraph."
+        }
+      ]
+    }
+  ]
+}

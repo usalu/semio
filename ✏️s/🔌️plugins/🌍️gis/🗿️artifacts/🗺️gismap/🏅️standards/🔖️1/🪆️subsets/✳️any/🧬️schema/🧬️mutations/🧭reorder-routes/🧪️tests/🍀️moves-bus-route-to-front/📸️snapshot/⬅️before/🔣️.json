@@ -1,0 +1,49 @@
+{
+  "positions": [],
+  "routes": [
+    {
+      "id": "route-ferry",
+      "data": {
+        "kind": "ferry",
+        "lengthKm": 12.5
+      }
+    },
+    {
+      "id": "route-tram",
+      "data": {
+        "kind": "tram",
+        "lengthKm": 4.25
+      }
+    },
+    {
+      "id": "route-bus",
+      "data": {
+        "kind": "bus",
+        "lengthKm": 7.5
+      }
+    }
+  ],
+  "regions": [],
+  "drawing": {
+    "childId": "gismap-drawing-derived",
+    "target": {
+      "artifactId": "gismap-drawing",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "drawing"
+      }
+    }
+  },
+  "value": {
+    "childId": "gismap-value-derived",
+    "target": {
+      "artifactId": "gismap-value",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "value"
+      }
+    }
+  }
+}

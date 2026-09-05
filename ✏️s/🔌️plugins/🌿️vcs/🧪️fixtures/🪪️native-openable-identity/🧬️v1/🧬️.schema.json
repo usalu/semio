@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "snapshotProtocolSha256", "authority", "hostileCases"],
+  "properties": {
+    "schema": { "const": "semio.vcs.native-openable-identity/v1" },
+    "snapshotProtocolSha256": { "const": "e16083d1e963d571b44c3cc4eac8d5d3992aeecf606cd4a4a6b1095c101605d3" },
+    "authority": { "$ref": "#/$defs/authority" },
+    "hostileCases": {
+      "type": "array", "minItems": 11, "maxItems": 11,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "field", "value"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "field": { "enum": ["pluginId", "packageId", "artifactKind", "artifactSchema", "dialectKind", "viewerApp", "editorApp", "execution", "viewerWindowKindId", "rendererTarget"] },
+          "value": { "type": ["string", "null"], "maxLength": 128 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "authority": {
+      "type": "object", "additionalProperties": false,
+      "required": ["pluginId", "packageId", "artifactKind", "artifactSchema", "dialectKind", "standard", "subset", "viewerApp", "editorApp", "execution", "viewerWindowKindId", "rendererTarget"],
+      "properties": {
+        "pluginId": { "const": "vcs" },
+        "packageId": { "const": "semio:vcs" },
+        "artifactKind": { "const": "vcs.vcs" },
+        "artifactSchema": { "const": "vcs.vcs" },
+        "dialectKind": { "const": "s.vcs.vcs" },
+        "standard": { "const": "1" },
+        "subset": { "const": "*" },
+        "viewerApp": { "const": "s.vcs.vcs@1/*#viewer" },
+        "editorApp": { "const": "s.vcs.vcs@1/*#editor" },
+        "viewerWindowKindId": { "const": "framework.window.tree" },
+        "rendererTarget": { "const": "wasm" },
+        "execution": { "const": "isolated" }
+      }
+    }
+  }
+}

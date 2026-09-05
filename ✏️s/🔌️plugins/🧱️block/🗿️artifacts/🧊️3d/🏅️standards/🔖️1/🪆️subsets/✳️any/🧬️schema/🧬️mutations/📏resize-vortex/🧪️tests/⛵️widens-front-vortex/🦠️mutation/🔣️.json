@@ -1,0 +1,5 @@
+{
+  "mutation": "resizeVortex",
+  "id": "vortex-front",
+  "newRadius": 0.75
+}

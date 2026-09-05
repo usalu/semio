@@ -20,7 +20,7 @@ import {
 } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
 import { isEmptyModelDiff, type SpatialKernel, type ModelDiff } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
 import { applyTransition, pureTsStateEngineProvider, type ActionRegistry, type StateEngine, type StateEngineProvider, type StateEngineSendResult } from "../🎬️actions/🟦️.ts";
-import { createInteractionRuntime, loadSpatialInteraction, type InteractionRuntime } from "../📄️artifact/🟦️.ts";
+import { createInteractionRuntime, loadSpatialInteraction, type InteractionRuntime } from "../🗿️artifact/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🎭️AdvanceEvent

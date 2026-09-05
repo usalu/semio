@@ -11,12 +11,7 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema
 
 pub const GIS_3D_TERRAIN_SCHEMA: &str = "gis.terrain";
 
-/// 🪪️ The canonical surface dialect for `s.gis.gisterrain@1/*` (contract §1 grammar) — lives at the
-/// ARTIFACT root, not under `✏️editor`/`👁️viewer`, so a viewer file can read it without ever
-/// importing through the sibling `editor` module. `artifact_kind` is the 3-part schema id this
-/// file's own `definition()` claims (`s.gis.gisterrain`), NOT the 2-part `ArtifactIdentity::parse("s.gisterrain")`
-/// string above and NOT the module-private `🚪️io/🦀️.rs` `GISTERRAIN_DIALECT` (an older,
-/// unrelated io/composer const with a different 2-part `artifact_kind` — different file, no collision).
+/// 🪪️ One canonical terrain identity shared by definition, composer and both app roles.
 pub const GISTERRAIN_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.gis.gisterrain", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
 //#endregion 🔹Constants
 
@@ -102,33 +97,33 @@ pub fn gis_terrain_mesh_from_snapshot(document: &GisTerrainSnapshot) -> SemioMes
 /// the plugin root's `register_gis_exports` fan-out. Relocated from `⚙️engine` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g2): `declaration()` describes the artifact
 /// (kind, schema, io ports, ownership), which is not engine behaviour.
-/// 🧾️ Defines s.gisterrain's immutable runtime capability leaves.
+/// 🧾️ Defines s.gis.gisterrain's immutable runtime capability leaves.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    ArtifactDefinition::new(ArtifactIdentity::parse("s.gisterrain")?)
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.gis.gisterrain")?)
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.schema.artifact")?, ArtifactCapabilityKind::schema())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gisterrain.schema.artifact")?, ArtifactCapabilityKind::schema())
                 .descriptor(b"s.gis.gisterrain")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.gis.gisterrain")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.inference.artifact")?, ArtifactCapabilityKind::inference())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gisterrain.inference.artifact")?, ArtifactCapabilityKind::inference())
                 .descriptor(b"s.gis.gisterrain.inference")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.gis.gisterrain.inference")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.composer.native")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.gisterrain@1/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.gisterrain@1/*")?)?,
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gisterrain.composer.native")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.gis.gisterrain@1/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.gis.gisterrain@1/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.composer.las")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gisterrain.composer.las")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.las@1.0/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.las@1.0/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.composer.ply")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gisterrain.composer.ply")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.ply@1.0/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.ply@1.0/*")?)?,
         )?
@@ -141,39 +136,39 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         // activated (see that file's own doc comment) — so gismap keeps every shared EXPORT claim.
         // Import still works: `reads()` on gisterrain's own native composer is unaffected.
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.composer.stl")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gisterrain.composer.stl")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.stl@ascii/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.stl@ascii/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.composer.gltf")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gisterrain.composer.gltf")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.gltf@2.0/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.gltf@2.0/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.composer.obj")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gisterrain.composer.obj")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.obj@3.0/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.obj@3.0/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.codec.document")?, ArtifactCapabilityKind::codec())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gisterrain.codec.document")?, ArtifactCapabilityKind::codec())
                 .descriptor(b"gis.terrain:gisterrain")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "gis.terrain")?)?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "gisterrain")?)?,
+                .claim(ArtifactIdentityClaim::codec_extension("gis.terrain", "gisterrain")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.localization.en")?, ArtifactCapabilityKind::localization())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gisterrain.localization.en")?, ArtifactCapabilityKind::localization())
                 .descriptor(b"GIS Terrain")?
                 .localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "GIS Terrain")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.gisterrain.localization.de")?, ArtifactCapabilityKind::localization())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.gis.gisterrain.localization.de")?, ArtifactCapabilityKind::localization())
                 .descriptor(b"GIS Gel\xc3\xa4nde")?
                 .localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "GIS Gelände")?)?,
         )
 }
 
-/// 🔖️ Assembles s.gisterrain's typed runtime declaration.
+/// 🔖️ Assembles s.gis.gisterrain's typed runtime declaration.
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::gisterrain::schema::gisterrain_artifact_schema_descriptor())

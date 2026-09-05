@@ -1,0 +1,33 @@
+{
+  "schema": "s.stdio.semio.image",
+  "width": 2,
+  "height": 1,
+  "colorspace": "grayscale",
+  "bitDepth": 16,
+  "frames": [
+    {
+      "delayMs": 120,
+      "rgba8": [
+        0,
+        0,
+        0,
+        255,
+        0,
+        0,
+        0,
+        255
+      ]
+    }
+  ],
+  "icc": null,
+  "metadata": [
+    {
+      "key": "Author",
+      "value": "semio"
+    },
+    {
+      "key": "Comment",
+      "value": "generated"
+    }
+  ]
+}

@@ -1,9 +1,0 @@
-dialect grammar
-grammar stdio.docx.inference
-extension docx.inference
-start document
-
-document = header body
-header = "schema" SP "stdio.docx.inference" NL
-body = payload NL?
-payload = OCTET+

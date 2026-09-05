@@ -1,0 +1,793 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution. A mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the oracle registration and the catalog live here rather than in a shared manifest. `din4108-1-any` is generated from each triad leaf's own `SemanticDescriptor.kind`, in `#[derive(dsl::Mutations)]`'s declaration order, and `kinds_match_the_enum_and_the_catalog` in `../🧬️schema/🧬️mutations/🦀️.rs` fails the moment this list and the enum part company.",
+  "oracles": [
+    {
+      "id": "din4108-1-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "capabilities": [
+        "din4108-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.din4108` — checked against PyPI, which serves no `din4108`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is `../../../../../🧪️tests/🧱️mutate-din4108-1/🐍️component.py`, all 22 kinds of `Din4108Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `din4108-1-mutate`'s external-oracle requirement for its 22-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 22 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.norm.din4108",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "structuralcodes",
+              "reason": "implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution."
+            },
+            {
+              "package": "concreteproperties",
+              "reason": "implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution."
+            },
+            {
+              "package": "anastruct",
+              "reason": "implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": "📓️taxonomy.md; 📓️derivation-rules.md; .dsl.semio",
+        "fixtureCoverage": {
+          "vectors": 22,
+          "capabilitiesCovered": [
+            "din4108-1-mutate"
+          ]
+        }
+      }
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "din4108-1-any",
+      "capability": "din4108-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-airtightness-class",
+          "sourceMutationDirectoryName": "🔒️change-airtightness-class",
+          "mutationDirectoryName": "🔒️change-airtightness-class",
+          "scenarios": [
+            {
+              "id": "upgrades-the-airtightness-class-to-class1",
+              "directoryName": "🔒️upgrades-the-airtightness-class-to-class1"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-airtightness-n50",
+          "sourceMutationDirectoryName": "💨️change-airtightness-n50",
+          "mutationDirectoryName": "💨️change-airtightness-n50",
+          "scenarios": [
+            {
+              "id": "tightens-n50-to-1-point-5-per-hour",
+              "directoryName": "💨️tightens-n50-to-1-point-5-per-hour"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-application-type",
+          "sourceMutationDirectoryName": "🧩️change-application-type",
+          "mutationDirectoryName": "🧩️change-application-type",
+          "scenarios": [
+            {
+              "id": "reclassifies-the-application-type-as-wab",
+              "directoryName": "🧩️reclassifies-the-application-type-as-wab"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bb2-details-conform",
+          "sourceMutationDirectoryName": "✅️change-bb2-details-conform",
+          "mutationDirectoryName": "✅️change-bb2-details-conform",
+          "scenarios": [
+            {
+              "id": "declares-the-beiblatt-2-details-non-conforming",
+              "directoryName": "❌️declares-the-beiblatt-2-details-non-conforming"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-catalog-id",
+          "sourceMutationDirectoryName": "📇️change-catalog-id",
+          "mutationDirectoryName": "📇️change-catalog-id",
+          "scenarios": [
+            {
+              "id": "repoints-the-catalogue-entry-to-aw-07",
+              "directoryName": "📇️repoints-the-catalogue-entry-to-aw-07"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-category",
+          "sourceMutationDirectoryName": "🗂️change-category",
+          "mutationDirectoryName": "🗂️change-category",
+          "scenarios": [
+            {
+              "id": "retypes-the-assembly-as-office",
+              "directoryName": "🏢️retypes-the-assembly-as-office"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-climate",
+          "sourceMutationDirectoryName": "🌦️change-climate",
+          "mutationDirectoryName": "🌦️change-climate",
+          "scenarios": [
+            {
+              "id": "moves-the-building-to-climate-zone-4",
+              "directoryName": "🗺️moves-the-building-to-climate-zone-4"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-declared-application-class",
+          "sourceMutationDirectoryName": "🏷️change-declared-application-class",
+          "mutationDirectoryName": "🏷️change-declared-application-class",
+          "scenarios": [
+            {
+              "id": "declares-application-class-kh",
+              "directoryName": "🏷️declares-application-class-kh"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-envelope-area-m2",
+          "sourceMutationDirectoryName": "📐️change-envelope-area-m2",
+          "mutationDirectoryName": "📐️change-envelope-area-m2",
+          "scenarios": [
+            {
+              "id": "grows-the-envelope-to-150-m2",
+              "directoryName": "📐️grows-the-envelope-to-150-m2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-irradiance-wm2",
+          "sourceMutationDirectoryName": "🔆️change-irradiance-wm2",
+          "mutationDirectoryName": "🔆️change-irradiance-wm2",
+          "scenarios": [
+            {
+              "id": "raises-design-irradiance-to-750-w-per-m2",
+              "directoryName": "🔆️raises-design-irradiance-to-750-w-per-m2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-layer-lambda",
+          "sourceMutationDirectoryName": "🧊️change-layer-lambda",
+          "mutationDirectoryName": "🧊️change-layer-lambda",
+          "scenarios": [
+            {
+              "id": "degrades-the-masonry-lambda-to-0-point-5",
+              "directoryName": "🧊️degrades-the-masonry-lambda-to-0-point-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-layer-thickness",
+          "sourceMutationDirectoryName": "📏️change-layer-thickness",
+          "mutationDirectoryName": "📏️change-layer-thickness",
+          "scenarios": [
+            {
+              "id": "thickens-the-insulation-layer-to-0-point-2-m",
+              "directoryName": "📏️thickens-the-insulation-layer-to-0-point-2-m"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-material-id",
+          "sourceMutationDirectoryName": "🧽️change-material-id",
+          "mutationDirectoryName": "🧽️change-material-id",
+          "scenarios": [
+            {
+              "id": "swaps-the-insulation-material-to-eps",
+              "directoryName": "🧽️swaps-the-insulation-material-to-eps"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-moisture-mu-exterior",
+          "sourceMutationDirectoryName": "🌧️change-moisture-mu-exterior",
+          "mutationDirectoryName": "🌧️change-moisture-mu-exterior",
+          "scenarios": [
+            {
+              "id": "raises-the-exterior-mu-value-to-20",
+              "directoryName": "🌧️raises-the-exterior-mu-value-to-20"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-moisture-mu-interior",
+          "sourceMutationDirectoryName": "💦️change-moisture-mu-interior",
+          "mutationDirectoryName": "💦️change-moisture-mu-interior",
+          "scenarios": [
+            {
+              "id": "raises-the-interior-mu-value-to-2-point-5",
+              "directoryName": "💦️raises-the-interior-mu-value-to-2-point-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-psi-times-l-sum",
+          "sourceMutationDirectoryName": "🌉️change-psi-times-l-sum",
+          "mutationDirectoryName": "🌉️change-psi-times-l-sum",
+          "scenarios": [
+            {
+              "id": "raises-the-thermal-bridge-sum-to-0-point-05",
+              "directoryName": "🌉️raises-the-thermal-bridge-sum-to-0-point-05"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-rh-int",
+          "sourceMutationDirectoryName": "💧️change-rh-int",
+          "mutationDirectoryName": "💧️change-rh-int",
+          "scenarios": [
+            {
+              "id": "raises-indoor-relative-humidity-to-0-point-65",
+              "directoryName": "💧️raises-indoor-relative-humidity-to-0-point-65"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-solar-absorptance",
+          "sourceMutationDirectoryName": "☀️change-solar-absorptance",
+          "mutationDirectoryName": "☀️change-solar-absorptance",
+          "scenarios": [
+            {
+              "id": "lightens-the-facade-to-absorptance-0-point-25",
+              "directoryName": "☀️lightens-the-facade-to-absorptance-0-point-25"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-t-int-c",
+          "sourceMutationDirectoryName": "🌡️change-t-int-c",
+          "mutationDirectoryName": "🌡️change-t-int-c",
+          "scenarios": [
+            {
+              "id": "raises-the-indoor-design-temperature-to-22-point-5-c",
+              "directoryName": "🌡️raises-the-indoor-design-temperature-to-22-point-5-c"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-layer",
+          "sourceMutationDirectoryName": "➕️insert-layer",
+          "mutationDirectoryName": "➕️insert-layer",
+          "scenarios": [
+            {
+              "id": "inserts-an-interior-plaster-layer-at-index-1",
+              "directoryName": "➕️inserts-an-interior-plaster-layer-at-index-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-layer",
+          "sourceMutationDirectoryName": "➖️remove-layer",
+          "mutationDirectoryName": "➖️remove-layer",
+          "scenarios": [
+            {
+              "id": "removes-the-load-bearing-masonry-layer",
+              "directoryName": "🚫️removes-the-load-bearing-masonry-layer"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-layers",
+          "sourceMutationDirectoryName": "🔀️reorder-layers",
+          "mutationDirectoryName": "🔀️reorder-layers",
+          "scenarios": [
+            {
+              "id": "moves-the-insulation-in-front-of-the-masonry",
+              "directoryName": "🧭️moves-the-insulation-in-front-of-the-masonry"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "change-category",
+        "change-climate",
+        "change-airtightness-n50",
+        "change-psi-times-l-sum",
+        "change-rh-int",
+        "change-catalog-id",
+        "change-material-id",
+        "change-airtightness-class",
+        "change-t-int-c",
+        "change-solar-absorptance",
+        "change-irradiance-wm2",
+        "change-moisture-mu-exterior",
+        "change-moisture-mu-interior",
+        "change-envelope-area-m2",
+        "change-bb2-details-conform",
+        "change-application-type",
+        "change-declared-application-class",
+        "insert-layer",
+        "remove-layer",
+        "reorder-layers",
+        "change-layer-thickness",
+        "change-layer-lambda"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.norm.din4108",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-airtightness-class",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-airtightness-class",
+            "bridgeVersion": 1,
+            "variant": "ChangeAirtightnessClass"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-airtightness-n50",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-airtightness-n50",
+            "bridgeVersion": 1,
+            "variant": "ChangeAirtightnessN50"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-application-type",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-application-type",
+            "bridgeVersion": 1,
+            "variant": "ChangeApplicationType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-bb2-details-conform",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-bb2-details-conform",
+            "bridgeVersion": 1,
+            "variant": "ChangeBb2DetailsConform"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-catalog-id",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-catalog-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeCatalogId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-category",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-category",
+            "bridgeVersion": 1,
+            "variant": "ChangeCategory"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-climate",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-climate",
+            "bridgeVersion": 1,
+            "variant": "ChangeClimate"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-declared-application-class",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-declared-application-class",
+            "bridgeVersion": 1,
+            "variant": "ChangeDeclaredApplicationClass"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-envelope-area-m2",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-envelope-area-m2",
+            "bridgeVersion": 1,
+            "variant": "ChangeEnvelopeAreaM2"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-irradiance-wm2",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-irradiance-wm2",
+            "bridgeVersion": 1,
+            "variant": "ChangeIrradianceWM2"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-layer-lambda",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-layer-lambda",
+            "bridgeVersion": 1,
+            "variant": "ChangeLayerLambda"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "layers"
+        },
+        {
+          "id": "change-layer-thickness",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-layer-thickness",
+            "bridgeVersion": 1,
+            "variant": "ChangeLayerThickness"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "layers"
+        },
+        {
+          "id": "change-material-id",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-material-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeMaterialId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-moisture-mu-exterior",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-moisture-mu-exterior",
+            "bridgeVersion": 1,
+            "variant": "ChangeMoistureMuExterior"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-moisture-mu-interior",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-moisture-mu-interior",
+            "bridgeVersion": 1,
+            "variant": "ChangeMoistureMuInterior"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-psi-times-l-sum",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-psi-times-l-sum",
+            "bridgeVersion": 1,
+            "variant": "ChangePsiTimesLSum"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-rh-int",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-rh-int",
+            "bridgeVersion": 1,
+            "variant": "ChangeRhInt"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-solar-absorptance",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-solar-absorptance",
+            "bridgeVersion": 1,
+            "variant": "ChangeSolarAbsorptance"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-t-int-c",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-t-int-c",
+            "bridgeVersion": 1,
+            "variant": "ChangeTIntC"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "insert-layer",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-layer",
+            "bridgeVersion": 1,
+            "variant": "InsertLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "layers"
+        },
+        {
+          "id": "remove-layer",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-layer",
+            "bridgeVersion": 1,
+            "variant": "RemoveLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "layers"
+        },
+        {
+          "id": "reorder-layers",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-layers",
+            "bridgeVersion": 1,
+            "variant": "ReorderLayers"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "layers"
+        }
+      ]
+    }
+  ]
+}

@@ -5,7 +5,7 @@
   "displayName": "Change Reference Width",
   "emoji": "📏",
   "aggregateVariant": "ChangeReferenceWidth",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-reference-width",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -27,7 +27,7 @@ mod structural_correspondence_tests {
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
         let descriptor_source = std::fs::read_to_string(owner.join("🔣️.json")).expect("direct language-neutral descriptor");
         let descriptor = dsl::os_pack::json::parse(&descriptor_source).expect("direct descriptor must be valid JSON");
-        let payload_schema_source = std::fs::read_to_string(owner.join("🔣️.schema.json")).expect("direct payload schema");
+        let payload_schema_source = std::fs::read_to_string(owner.join("🧬️.schema.json")).expect("direct payload schema");
         let payload_schema = dsl::os_pack::json::parse(&payload_schema_source).expect("direct payload schema must be valid JSON");
         let catalog_source = std::fs::read_to_string(mutation_root.join("../../🔣️oracle.json")).expect("language-neutral oracle catalog");
         let catalog = dsl::os_pack::json::parse(&catalog_source).expect("language-neutral oracle catalog must be valid JSON");
@@ -39,7 +39,7 @@ mod structural_correspondence_tests {
         assert!(!source.contains(concat!("::", "mutation::")));
         assert_eq!(descriptor["semanticKind"], "change-schema");
         assert_eq!(descriptor["aggregateVariant"], "ChangeSchema");
-        assert_eq!(descriptor["payloadSchema"], "🔣️.schema.json");
+        assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
         assert_eq!(payload_schema["title"], "ChangeSchema");
         {
             let surface_source = std::fs::read_to_string(owner.join("🟦️.ts")).expect("direct mutation surface");

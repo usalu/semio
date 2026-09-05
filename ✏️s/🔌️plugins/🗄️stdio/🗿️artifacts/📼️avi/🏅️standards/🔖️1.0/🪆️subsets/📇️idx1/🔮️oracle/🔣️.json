@@ -1,0 +1,105 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "Ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION: split out of the former `✳️any` catch-all. The Video for Windows AVI 1.0 RIFF layout's third top-level chunk, `idx1`, is the (optional) index of `movi` chunk offsets/flags/sizes -- normatively distinct from both `hdrl` and `movi`. `set-idx1-present` toggles that chunk's presence, owned here rather than by `🎛️hdrl`, for the same family-module reuse rationale as `../../🎞️movi/🔮️oracle/🔣️.json`.",
+  "oracles": [],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.avi",
+      "standard": "1.0",
+      "subset": "idx1",
+      "standardDirectoryName": "🔖️1.0",
+      "subsetDirectoryName": "📇️idx1",
+      "mutations": [
+        {
+          "id": "set-idx1-present",
+          "capability": "avi-1-0-idx1-mutate",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-idx1-present",
+            "bridgeVersion": 1,
+            "variant": "SetIdx1Present"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "avi-1-0-idx1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "riff-avi-1-0-mutate-reader"
+            }
+          ],
+          "payloadSchema": "../../🎛️hdrl/🧬️schema/🧬️mutations/📇️set-idx1-present/🦀️.rs#SetIdx1Present"
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-idx1-present-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.avi",
+        "standard": "1.0",
+        "subset": "idx1"
+      },
+      "mutation": "set-idx1-present",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-avi",
+          "path": "../🧫️fixtures/📇️set-idx1-present-applied/⬅️before.avi",
+          "mediaType": "video/x-msvideo",
+          "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
+          "bytes": 498
+        },
+        {
+          "role": "expected-after-avi",
+          "path": "../🧫️fixtures/📇️set-idx1-present-applied/➡️after.avi",
+          "mediaType": "video/x-msvideo",
+          "sha256": "sha256:543e4812c677f9ae7f281373d49eec2c1854391a91712fde20497a7ce75fa2ef",
+          "bytes": 410
+        }
+      ],
+      "generator": {
+        "oracle": "riff-avi-1-0-mutate-reader",
+        "packageVersion": "2.0.0",
+        "engineFamily": "riff",
+        "engineVersion": "2.0.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only set-idx1-present-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (riff)",
+        "attribution": "Generated with riff (MIT) via the standalone riff-avi-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-avi-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "idx1Present flips false; the idx1 chunk is omitted entirely on encode."
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "avi-1.0-idx1",
+      "capability": "avi-1-0-idx1-mutate",
+      "standardDirectoryName": "🔖️1.0",
+      "subsetDirectoryName": "📇️idx1",
+      "vectors": [],
+      "kinds": [
+        "set-idx1-present"
+      ]
+    }
+  ]
+}

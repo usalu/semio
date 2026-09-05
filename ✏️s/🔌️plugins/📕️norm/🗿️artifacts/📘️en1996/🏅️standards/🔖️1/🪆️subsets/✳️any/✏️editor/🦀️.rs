@@ -13,7 +13,7 @@ use crate::editor::en1996::commands::{evaluate, selected_check, set_snapshot};
 use crate::editor::en1996::modes::edit as edit_mode;
 use crate::editor::en1996::modes::edit::windows::{inputs, results};
 use crate::editor::en1996::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::presence::{NormPresence, NormPresenceMutation};
+use semio_framework_plugin::{NoPresence, NoPresenceMutation};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{AppIo, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, LocalizedLabel, Media, MediaError, NoDraft, NoDraftMutation, UiNode};
 use semio_framework_plugin::InteractiveJobClassification;
@@ -59,8 +59,8 @@ impl ArtifactEditor for En1996PlayApp {
     type ConfigMutation = NormConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = NormPresence;
-    type PresenceMutation = NormPresenceMutation;
+    type Presence = NoPresence;
+    type PresenceMutation = NoPresenceMutation;
     type Transient = semio_framework_plugin::NoTransient;
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
@@ -105,7 +105,7 @@ impl ArtifactEditor for En1996PlayApp {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, En1996Snapshot>, cfg: &ConfigView<'_, NormConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, En1996Snapshot>, cfg: &ConfigView<'_, NormConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let host = NormHost::<En1996Family>::from_document(doc.snapshot.clone());
         match body_key {
             inputs::BODY_INPUTS => inputs::render(doc.snapshot),
@@ -114,7 +114,7 @@ impl ArtifactEditor for En1996PlayApp {
             catalogue_panel::BODY_CATALOGUE => catalogue_panel::render(),
             inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, cfg.snapshot.selected_check_index),
             _ => crate::app_surface::render_unknown_body(body_key),
-        }
+        }.map(semio_framework_plugin::built_to_component_tree)
     }
 
     //#region ðï¸MediaPorts

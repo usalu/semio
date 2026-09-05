@@ -1,0 +1,4 @@
+{
+  "mutation": "changeSfpRequiredClass",
+  "newSfpRequiredClass": 3
+}

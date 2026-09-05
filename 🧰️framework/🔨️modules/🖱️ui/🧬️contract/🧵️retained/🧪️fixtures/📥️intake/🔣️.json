@@ -1,0 +1,1 @@
+{"version":1,"grant":{"maxItems":1,"maxBytes":4096},"operationCount":2,"cancelPrefixes":[0,1,2,3,4,5,6,7,8,16,32,64,128],"laws":["original-native-source","one-lookup-owner","one-input-ordinal","ack-after-publication","refusal-retains-token","cancel-retains-input-owner","no-whole-instance-close","late-cancel-preserves-ack","shared-close-driver"]}

@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeRetrofitRKKn",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newRetrofitRKKn"
+  ],
+  "properties": {
+    "newRetrofitRKKn": {
+      "type": "number"
+    }
+  }
+}

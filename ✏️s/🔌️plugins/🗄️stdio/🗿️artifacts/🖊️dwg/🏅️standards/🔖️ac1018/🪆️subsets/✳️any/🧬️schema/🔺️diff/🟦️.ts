@@ -1,1 +1,0 @@
-export interface DwgDiff { version?: string; maintenanceVersion?: number; codepage?: number; drawing?: object; header?: object; classes?: object[]; dependencies?: object[]; summary?: object; application?: object; template?: object; }

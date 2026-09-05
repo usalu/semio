@@ -2,13 +2,13 @@
 //! top-level fields (`id3v2`/`frames`/`id3v1`), plus `SetSnapshot` for full replace.
 
 //#region 🔖️Leaves
-#[path = "📄set-snapshot/🦀️.rs"]
+#[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🏷set-id3v2/🦀️.rs"]
+#[path = "🏷️set-id3v2/🦀️.rs"]
 pub mod set_id3v2;
-#[path = "🎼set-frames/🦀️.rs"]
+#[path = "🎼️set-frames/🦀️.rs"]
 pub mod set_frames;
-#[path = "🔖set-id3v1/🦀️.rs"]
+#[path = "🔖️set-id3v1/🦀️.rs"]
 pub mod set_id3v1;
 //#endregion 🔖️Leaves
 
@@ -51,7 +51,7 @@ pub fn apply_mp3_mutation(snapshot: &mut Mp3Snapshot, mutation: &Mp3Mutation) ->
 //#region 🔖️Kinds
 impl Mp3Mutation {
     /// 🏷️ Kebab-case kind spelling — the exact vocabulary `../../🔣️oracle.json`'s
-    /// `mutationCatalogs[].kinds` declares and `mutate-mp3-mpeg1-layer3`'s Scenario Outline row ids
+    /// `mutationCatalogs[].kinds` declares and `🎛️mutate-mp3-mpeg1-layer3`'s Scenario Outline row ids
     /// equal. Hand-matched rather than derived, so [`KINDS`] is checked against something with its
     /// own reason to be right; and exhaustive, so a variant added to the enum is a COMPILE error
     /// here rather than a silently uncatalogued kind.
@@ -167,7 +167,7 @@ mod tests {
         let from_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
         assert_eq!(from_variants, from_kinds, "KINDS must equal every Mp3Mutation variant's kind()");
         assert_eq!(KINDS.len(), 4, "KINDS must list exactly the declared 4 kinds");
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔮️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "the oracle catalog manifest must declare kind {kind:?}");
         }
@@ -235,7 +235,7 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/retitles-the-id3v2-tit2-frame/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/🏷️retitles-the-id3v2-tit2-frame/🦀️.rs"]
     mod tests_set_snapshot_retitles_the_id3v2_tit2_frame;
 }
 //#endregion 🧪️FixtureTests

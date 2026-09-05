@@ -125,8 +125,8 @@ function sourceOracle(fixture: Fixture, source: string): boolean {
 class TestScript extends BundleScript {
   async run(): Promise<void> {
     const pluginRoot = resolve(this.root, "../..");
-    const fixture = await Bun.file(resolve(pluginRoot, "🗿️artifacts/🧊️process3d/🧪️tests/🔣️retained-route-laws.json")).json() as Fixture;
-    const schema = await Bun.file(resolve(pluginRoot, "🗿️artifacts/🧊️process3d/🧪️tests/🔣️retained-route-schema.json")).json();
+    const fixture = await Bun.file(resolve(pluginRoot, "🗿️artifacts/🧊️process3d/🧪️tests/⚖️retained-route-laws.json")).json() as Fixture;
+    const schema = await Bun.file(resolve(pluginRoot, "🗿️artifacts/🧊️process3d/🧪️tests/📐️retained-route-schema.json")).json();
     const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
     if (!validate(fixture)) throw new Error(`Process3d retained route fixture failed Ajv: ${JSON.stringify(validate.errors)}`);
     if (!fixtureOracle(fixture)) throw new Error("Process3d retained route fixture failed its independent extent/partition oracle");

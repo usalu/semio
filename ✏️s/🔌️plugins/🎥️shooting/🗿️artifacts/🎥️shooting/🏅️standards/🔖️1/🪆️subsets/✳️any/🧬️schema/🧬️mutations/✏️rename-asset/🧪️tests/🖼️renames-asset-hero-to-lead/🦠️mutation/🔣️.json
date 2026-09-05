@@ -1,0 +1,5 @@
+{
+  "mutation": "renameAsset",
+  "id": "asset-hero",
+  "new_name": "Lead"
+}

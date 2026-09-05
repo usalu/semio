@@ -1,0 +1,5 @@
+{
+  "component": "(component (core module $counter (memory (export \"memory\") 1) (func (export \"advance\") (param $delta i32) (result i32) i32.const 0 i32.const 0 i32.load local.get $delta i32.add i32.store i32.const 0 i32.load)) (core instance $instance (instantiate $counter)) (func (export \"advance\") (param \"delta\" u32) (result u32) (canon lift (core func $instance \"advance\"))))",
+  "calls": [{ "instance": 0, "delta": 1 }, { "instance": 1, "delta": 10 }, { "instance": 0, "delta": 2 }],
+  "expected": { "moduleImportInstances": 0, "instantiated": 2, "results": [1, 10, 3], "memory": [3, 10], "distinctMemories": true, "factoryHasNoModuleInstanceRoots": true, "automaticHasModuleInstanceRoots": true }
+}

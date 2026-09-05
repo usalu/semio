@@ -1,0 +1,116 @@
+//! 🧪️ `change-grid-spacing` fixture — `🔵️widens-grid-spacing`.
+//!
+//! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
+//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
+//! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
+//! asserted by the shared codec-matrix harness, not here.
+
+use crate::artifacts::note::schema::mutations::{apply_note_mutation, inverse_note_mutation, NoteMutation};
+use crate::artifacts::note::{NoteDiff, NoteSnapshot};
+use protocol::Mutation;
+
+const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+
+fn before() -> NoteSnapshot {
+    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+}
+fn expected_after() -> NoteSnapshot {
+    serde_json::from_str(AFTER).expect("after snapshot decodes")
+}
+fn mutation() -> NoteMutation {
+    serde_json::from_str(MUTATION).expect("mutation decodes")
+}
+
+/// ▶️ `change-grid-spacing` writes `NoteDiff.grid_spacing` only.
+#[semio_framework_async_macros::async_test]
+async fn applies_to_committed_after() {
+    let applied = apply_note_mutation(&before(), &mutation()).expect("change-grid-spacing applies to its committed before-snapshot");
+    assert_eq!(applied, expected_after(), "change-grid-spacing/widens-grid-spacing: applied state differs from committed after-snapshot");
+}
+
+/// ↩️ The inverse restores the base's own `grid_spacing`, here `Some(32.0)`.
+#[semio_framework_async_macros::async_test]
+async fn inverse_restores_before() {
+    let base = before();
+    let forward = mutation();
+    let mut snapshot = apply_note_mutation(&base, &forward).expect("change-grid-spacing applies forward");
+    let mut undo = inverse_note_mutation(&base, &forward);
+    undo.reverse();
+    for step in &undo {
+        snapshot = apply_note_mutation(&snapshot, step).expect("change-grid-spacing inverse step applies");
+    }
+    assert_eq!(snapshot, base, "change-grid-spacing/widens-grid-spacing: inverse did not restore the before-snapshot");
+}
+
+/// 🔣️ Both committed snapshots and the committed mutation are already canonical: decode→encode is a fixed point.
+#[semio_framework_async_macros::async_test]
+async fn committed_json_is_canonical() {
+    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+        let decoded: NoteSnapshot = serde_json::from_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
+        assert_eq!(reencoded, original, "change-grid-spacing/widens-grid-spacing: committed {label} JSON is not canonical");
+    }
+    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    assert_eq!(reencoded, original, "change-grid-spacing/widens-grid-spacing: committed mutation JSON is not canonical");
+}
+
+/// 🎯️ 48.0 is finite and strictly positive, so the `mutation.invariant` fatal guard does not fire.
+#[semio_framework_async_macros::async_test]
+async fn declared_outcome_holds() {
+    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
+    assert_eq!(status, "applied", "change-grid-spacing/widens-grid-spacing: this fixture declares an applied outcome");
+    let produced = mutation().diff(&before());
+    let blocked = produced.messages().iter().any(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal));
+    assert!(!blocked, "change-grid-spacing/widens-grid-spacing: declared applied but the diff builder rejected it: {:?}", produced.messages());
+    apply_note_mutation(&before(), &mutation()).expect("change-grid-spacing/widens-grid-spacing: declared applied but the diff would not apply");
+}
+
+/// 🔺️ Only the scalar `gridSpacing` slot is set; `snapGridSpacing` is a different field and stays `None`.
+///
+/// The single most load-bearing assertion in the fixture: `before`+`after` only prove the end
+/// state, whereas this pins WHICH collections and fields this mutation is allowed to touch.
+#[semio_framework_async_macros::async_test]
+async fn produces_committed_diff() {
+    let outcome = <NoteMutation as protocol::Mutation<NoteSnapshot>>::diff(&mutation(), &before());
+    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    assert_eq!(produced, committed, "change-grid-spacing/widens-grid-spacing: produced diff differs from the committed 🔺️diff/🔣️.json");
+}
+
+/// 🔣️ The committed diff round-trips through the note artifact's own `NoteDiff`: its container is
+/// `#[serde(default)]` with no `skip_serializing_if`, so all 23 fields must be present, `null` for
+/// every slot `change-grid-spacing` leaves alone.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_is_canonical() {
+    let decoded: NoteDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    assert_eq!(reencoded, original, "change-grid-spacing/widens-grid-spacing: committed diff JSON is not canonical");
+}
+
+/// 🩹 The committed `gridSpacing`-only delta carries `before` to `after` on its own.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_applies_to_after() {
+    let decoded: NoteDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let produced = <NoteDiff as protocol::MutationDiff<NoteSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    assert_eq!(produced, expected_after(), "change-grid-spacing/widens-grid-spacing: committed diff did not carry before to after");
+}
+
+/// 📏 The DRAWN grid spacing widens 32→48 while the independent SNAP grid spacing holds at 8.
+#[semio_framework_async_macros::async_test]
+async fn drawn_grid_spacing_widens_without_moving_the_snap_grid() {
+    let base = before();
+    let applied = apply_note_mutation(&base, &mutation()).expect("change-grid-spacing applies");
+    assert_eq!(base.grid_spacing, Some(32.0), "change-grid-spacing/widens-grid-spacing: the base must start at 32.0");
+    assert_eq!(applied.grid_spacing, Some(48.0), "change-grid-spacing/widens-grid-spacing: spacing must widen to 48.0");
+    assert_eq!(applied.snap_grid_spacing, Some(8.0), "the snap grid is a separate setting and must not follow the drawn grid");
+    assert_eq!(applied.grid_subdivisions, Some(4.0), "widening the grid must not change its subdivision count");
+    assert_eq!(applied.grid_visible, Some(true), "widening the grid must not change its visibility");
+}

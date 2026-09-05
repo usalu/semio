@@ -10,7 +10,7 @@
 
 // #region 🔌️Adapters
 import { Scene } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "../../🧪️🐨️story.ts";
+import type { Meta, StoryObj } from "../../🧪️story.ts";
 // #endregion 🔌️Adapters
 
 // 📍️#region 📍️Scene

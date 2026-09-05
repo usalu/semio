@@ -129,7 +129,7 @@
         {
           "id": "set-default-app",
           "capability": "os-config-opening-1-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -148,7 +148,7 @@
         {
           "id": "clear-default-app",
           "capability": "os-config-opening-1-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -175,7 +175,7 @@
         {
           "id": "change-merge-policy",
           "capability": "os-config-merge-policy-1-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -202,7 +202,7 @@
         {
           "id": "sign-in",
           "capability": "os-config-identity-1-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied"
           ],
@@ -221,7 +221,7 @@
         {
           "id": "sign-out",
           "capability": "os-config-identity-1-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied"
           ],

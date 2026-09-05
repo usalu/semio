@@ -325,3 +325,340 @@ shell shows "No plugins loaded". The streaming plugin build (fresh `semio-s-plug
 compiles `semio-s-plugin-stdio` first, which fails on semio-ac's in-flight BREP wave (`tol` fields,
 `SemioBrepInference::infer`); the native check stops at the same place. Waiting for their green, then:
 fresh component → reload → verify flow/preview/examples → `describe` → registry check → close.
+
+---
+
+# Session 2026-09-05 (semio-f4) — resumed
+
+## Tree changed under the ticket
+
+The repo-wide emoji rename landed broadly between Sep 3 and now: `git status --porcelain` reports 39893
+entries, 7058 git-deleted tracked paths. The gen3d subset moved from `…/✳️any/🖥️app/✏️editor/` to
+`…/✳️any/✏️editor/`. This ticket's Sep-3 edits **survived** the move and the corruption event:
+`GENERATION3D_RETAINED_TOOL_IDS` (29 ids, `✏️editor/🦀️.rs:165`),
+`Generation3dBoundedCommandJobFactory` (`:248`), `factory_type:` in the proofs block (`:745`),
+`register_tool_job_factories` (`:700`), `build_tool_job` (`:705`), and the
+`retained_route_dispositions_are_exact_and_exhaustive` law test (`:2165`). Zero
+`BatchOnlyPendingRewrite` remain in the Rust source.
+
+## Sep-3 boot blockers that are now GONE
+
+- **Registry generation passes.** `bun ./📜️script.ts generate` in
+  `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry` → "plugin registry catalog refreshed
+  (59 plugin crates, 60 playgrounds, 45 framework packages)", exit 0. The taxonomy-schema failures that
+  killed boots 6 and 7 (`pathEmojiPolicy.reservedSubtreeDirectoryNames`, `packageSourceDispositions`
+  source-format contracts) no longer reproduce.
+- The generated playground row is intact: `generation3d` → app `s.procedural.generation3d@1/*#editor`,
+  ports `{react: 6018, wgpu: 6118}`, `engines: []`
+  (`🔌️plugin/📇️registry/🤖️generated/🎠️playgrounds.json`). Note the file was renamed
+  `🔣️playgrounds.json` → `🎠️playgrounds.json`.
+
+## NEW defect: the committed descriptor is stale and still carries the six blocked classifications
+
+`✏️s/🔌️plugins/🌀️procedural/🔣️.json` (992 KB, mtime Sep 4 11:17) declares app
+`s.procedural.generation3d@1/*#editor` with 47 window actions + 1 app command. Reading
+`semantics.execution.interactiveJob` on each (the field is nested there, not at the action root):
+
+| interactiveJob | count |
+|---|---|
+| `migrated` | 42 |
+| `batchOnlyPendingRewrite` | **6** |
+
+The six are exactly the Sep-3 set: `nodeGraphEdit`, `addGeneration`, `removeGeneration`,
+`renameGeneration`, `updateGenerationValues`, `selectGeneration`. The Rust source has flipped them all to
+`Migrated`; the descriptor has not been regenerated since. Because the descriptor is what the registry and
+the shell read, these six stay hard-rejected at runtime by `validate_ui_dispatch_classification` until
+`describe` is re-run.
+
+`✏️s/🔌️plugins/🌀️procedural/🛂️.descriptor.semio` is still the **Sep 1 11:06** file — the same stale
+component that produced `unknown app: s.procedural.generation3d@1/*#editor` in boot 11 on Sep 3.
+
+## Machine state (this session's constraint)
+
+10 cores, 32 GB. At session start: **load average 261**, swap **34.6 / 35.8 GB used**. Four peer Claude
+sessions plus a Codex `audit` run are compiling stdio/puzzle/framework concurrently. Deliberately running
+one compile at a time; a second concurrent heavy build on this box reproduces the silent-OOM failure mode.
+
+## Ordered plan
+
+1. `cargo check -p semio-s-plugin-procedural --lib --target wasm32-wasip2` in an isolated
+   `target-gen3d` with `RUSTC_WRAPPER=""` — the truth gate for "can the app build for the browser".
+   *(in flight, 0 errors so far, currently in framework crates)*
+2. Regenerate the descriptor (`describe`) so the six flips reach `🔣️.json`; re-run registry `generate`.
+3. Build a fresh procedural wasm component to replace the Sep-1 `🛂️.descriptor.semio`.
+4. Boot `bun run dev:procedural:3d` → `http://localhost:6018/`; verify the node-graph window and the
+   World3d preview render non-empty and examples switch.
+5. Land a durable app-level end-to-end test (see below) so the goal is provable without a browser.
+
+## Test gap identified
+
+`✏️editor/🦀️.rs` has 34 tests, including a complete harness (`testkit::app_with_registry`,
+`testkit::dispatch`, `testkit::render`, `testkit::drain_flow_eval_ticks` at `:1911-1957`) and good
+data-path coverage (`all_bundled_examples_emit_preview_meshes` `:2573`,
+`preview_payload_has_meshes_and_instances` `:2479`,
+`examples_match_set_active_example_select_options` `:2821`). What is missing is the test that would have
+caught the factory defect and would catch the stale descriptor: an app-level test that drives
+`flowEvalTick` and `setActiveExample` through the **real dispatch path** and asserts that both the
+NodeGraph window scene and the World3d window scene are non-empty. `🏭️process/🧊️process3d`'s editor
+(`:2222`) is the closest sibling pattern.
+
+## ⛔ Blocker (2026-09-05 03:45–04:00): `semio-s-plugin-stdio` is mid-migration and gates the build
+
+`cargo check -p semio-s-plugin-procedural --lib --target wasm32-wasip2` (isolated `target-gen3d`,
+`RUSTC_WRAPPER=""`, 16 min) reached procedural's dependencies and stopped with:
+
+```
+✏️s/🔌️plugins/🗄️stdio/…/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🧬️schema/🧬️mutations/🦀️.rs:72:1:
+error: couldn't read …/🧬️mutations/🟤️set-snapshot/🦀️.rs: No such file or directory (os error 2)
+error: could not compile `semio-s-plugin-stdio` (lib) due to 1 previous error
+```
+
+`semio-s-plugin-stdio` is a real `[dependencies]` entry of procedural
+(`✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/Cargo.toml:51`), not a dev-dependency, so procedural's
+lib and its wasm component cannot build without it. There is no runtime-only escape hatch.
+
+### Cause: the repo-wide emoji rename, still running
+
+Ticket `26/04/08/ENFORCE-UNIQUE-SEMANTIC-EMOJIS-ACROSS-REPOSITORY` is renaming directories and updating
+reference strings afterwards, so breakage appears as a lagging window. Its own `🗄️stdio-repair.md`
+(Sep 4 18:07) states it covered only scaffolding/packages/shared oracle families, that
+"format-specific artifact trees are not yet included", and that "no whole-plugin completion is claimed".
+Those artifact trees are exactly where the failures are.
+
+It is working format-by-format, one note per format: `🎨️svg` 03:42, `🌳️pdf` 03:38, `📕️norm` 03:28,
+`📜️docx` 03:20, `🎞️gif` 03:09, `📐️step` / `☁️las` 02:52. ifc and xml are its current working set —
+the two trees our errors point into. 96 stdio directories were renamed between 03:44 and 03:51.
+
+Two drift classes: variation-selector loss (`🏷set-entity-name` vs on-disk `🏷️set-entity-name`) and a
+different emoji entirely (`🔖️4` → `4️⃣4`; `🟤️set-snapshot` vs on-disk `📸️set-snapshot`).
+
+### Decision: do not repair stdio
+
+Three peers (semio-1d, semio-08, semio-c2) all offered the field, but repairing it would fight the owner
+mid-migration, and semio-c2 flags that a wrong-emoji mount can resolve to a real-but-wrong directory and
+fail silently rather than loudly. semio-1d independently corroborated the march by directory mtimes: the
+8 subsets already renamed to `🧱️base` carry mtimes spread 02:23 → 03:43 today, while the 4 still named
+`✳️base` (zip, json, pptx, xlsx) are untouched at Sep 4 11:13. Live owner, converging, not ours.
+
+### Tooling added: `🔨️check-path-mounts.py`
+
+`cargo check` reports only the FIRST unresolved mount, so a green-looking fix means nothing here. The
+gate resolves every `#[path = "…"]` mount plus every `include!`/`include_bytes!`/`include_str!` literal
+against the filesystem in about a second, and names the on-disk sibling when the drift is selector-only:
+
+```
+python3 ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️03/PROCEDURAL-3D-END-TO-END/🔨️check-path-mounts.py" "✏️s/🔌️plugins/🗄️stdio"
+```
+
+Measured over stdio at 45s intervals: 15 → 8 → 89 → 95 → 67 → 73 → 70. The rise was `🔖️4` → `4️⃣4`
+landing under `🏗️ifc/🏅️standards`; the falls are the owner catching references up. As of 03:55
+`✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust` reports 0 (verified not a silent zero — the walk does visit
+the mounting `🦀️.rs`), with the remainder in the `🧪️oracle` and `🗿️artifacts` subtrees.
+
+Acceptance criterion for resuming: that gate reaching 0 over `✏️s/🔌️plugins/🗄️stdio`, not a single
+green `cargo check`.
+
+## Work completed today that does NOT depend on stdio
+
+- Nine un-awaited async testkit call sites repaired across the gen3d subset (three edit-mode window
+  tests, three generate-mode window tests, three panel tests), all converted to
+  `#[semio_framework_async_macros::async_test]` with every assertion preserved.
+- The two goal-critical window tests (`renders_node_graph_scene`, `renders_world_preview_scene`) moved
+  from the registryless `app()` to `app_with_registry()`, so they now exercise the real dispatch
+  classification path. On the registryless harness they would have passed green while every action was
+  runtime-dead — which is why the original factory defect survived a full test suite.
+- New test `switching_active_example_changes_preview_meshes` drives `setActiveExample` through the real
+  dispatch path and asserts the preview meshes change and stay non-empty.
+- All of the above is written but **not compile-verified**, because the crate cannot compile until stdio
+  lands. Nothing here is claimed as passing.
+
+## Gate refinement and its honest limits (04:00)
+
+semio-c2 correctly objected that a raw unresolved-mount count conflates two very different things, so
+`🔨️check-path-mounts.py` now tags every hit:
+
+- `[BUILD]` — a `#[path]` module mount OUTSIDE `#[cfg(test)]` (brace-counted from each
+  `#[cfg(test)]` / `#[cfg(all(test, …))]` attribute). These stop `cargo check` and every component build.
+- `[test ]` — a mount inside `cfg(test)`, or an `include!`/`include_bytes!`/`include_str!` fixture
+  reference. These stop `cargo test` only.
+
+Exit code is now 1 only when the build-blocking set is non-empty, so it works as a gate. Over stdio the
+split runs roughly 60 test-only against a small, moving build-blocking set.
+
+Two limits, stated so nobody over-trusts it:
+
+1. **It classifies per file, so it cannot tell reachable from orphaned.** It reported three `[BUILD]`
+   hits in procedural — `🧪️tests/🦀️mutate-procedural-3d-1/🦀️.rs:40` and its gen2d/assembly twins,
+   all mounting `../../../../../🗄️stdio/🧪️oracle/⚖️law/🦀️.rs` at a relative depth that is four levels
+   short. These are **false positives**: `grep -n "mutate-procedural-3d-1"` against
+   `✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/🦀️.rs` returns nothing, the crate declares no
+   `[[test]]` target, and the files import `semio_repo_test_host` — they are generated multi-language
+   test hosts driven by the repo test-domain harness, not part of the cargo lib target. Correcting the
+   2026-09-05 survey note, which claimed they participate in the `--lib` target.
+2. **A resolving mount says nothing about whether the crate compiles.** The reference-string half of the
+   rename produces ordinary unresolved-import errors that no path gate can see (semio-08's point).
+
+So procedural's own lib has **zero** build-blocking mounts; the whole blocker is inside stdio.
+
+## Posture change: retry loop instead of standing down (04:00)
+
+semio-c2 established that a rustc error in this window is **stale on arrival** — their build failed on
+`🟤️set-snapshot` and by the time they opened the file it already read `📸️set-snapshot`, repaired by the
+applier in between. A failed build is therefore not evidence the tree is broken *now*.
+
+Running `🗑️scratchpad/retry-check.sh`: `cargo check -p semio-s-plugin-procedural --lib --target
+wasm32-wasip2` against the warm isolated `target-gen3d` with `RUSTC_WRAPPER=""`, retrying only when the
+output contains `couldn't read` (the rename-race signature), bailing immediately on any other error,
+90s between attempts, 12 attempts. This keeps us off stdio's files while still building the moment the
+owner's tree is consistent.
+
+## Subagent edits verified by reading, not by report (04:05)
+
+`👁️preview/🦀️.rs` now carries `renders_world_preview_scene` on
+`#[semio_framework_async_macros::async_test]` with `app_with_registry().await`, every harness call
+awaited, and the `meshesJson != "[]"` / `instancesJson != "[]"` regression guard intact. The new
+`switching_active_example_changes_preview_meshes` dispatches
+`Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id:
+PROCEDURAL_EXAMPLE_BOX_FILLET.into() })`. Every symbol confirmed present:
+`PROCEDURAL_EXAMPLE_BOX_FILLET = "box-fillet-preview"` (`🧬️schema/🦀️.rs:278`), the struct's single
+`example_id: String` field (`🎨️set-active-example/🦀️.rs:36-38`), and an identical construction already
+used at `✏️editor/🦀️.rs:2322`. All eight edited files pass `rustfmt --check` as parse-clean.
+
+## Gate bug found and fixed (04:05) — syntax vs scope
+
+The first classified version of `🔨️check-path-mounts.py` was wrong. It read:
+
+```python
+blocking = pattern is MOUNT and not in_test_scope(text, match.start())
+```
+
+which tagged EVERY `include_bytes!` / `include_str!` as test-only regardless of scope. The compile that
+was running at the time disproved it directly — it died on a **production** `include_bytes!`:
+
+```
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../📇️registry/🦀️.rs:897:75:
+error: couldn't read …/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio
+```
+
+Build-fatal, and the gate was calling it noise. Corrected to `blocking = not in_test_scope(...)`:
+**scope decides, not syntax.** A production `include_bytes!` of a missing asset is exactly as fatal as a
+missing `#[path]` module, and a `#[path]` inside `#[cfg(test)]` is not fatal at all. Any earlier number
+in this file from the syntax-based split should be read as superseded.
+
+After the fix, over `✏️s/🔌️plugins/🗄️stdio`: 7 build-blocking, 59 test-only (semio-c2 measured 12
+blocking minutes earlier — still converging).
+
+## Loop restructured: the gate is the precondition, not the diagnostic (04:08)
+
+rustc reports only the FIRST unresolved reference, so a blind retry loop needs one full 5-10 minute
+compile per broken reference and loses the race against the applier. `retry-check.sh` now polls the
+one-second gate and spends a compile only when the build-blocking set is clear, bailing immediately on
+any error that is not `couldn't read`. Threshold is `> 3` rather than `!= 0` because procedural's three
+orphaned generated test hosts can never resolve and would otherwise deadlock the loop forever.
+
+## Subagent edits verified by reading (04:10)
+
+Spot-checked beyond the preview window. `🕸️flow/🦀️.rs` has both tests on
+`#[semio_framework_async_macros::async_test]` with `app_with_registry().await` and every assertion intact
+(`fixtureJson` contains `flow.fixture`, an operator id containing `math.add`/`brep.`, `capabilitiesJson`
+contains `flow`). `🛍️catalogue/🦀️.rs` converted correctly and stayed on the registryless `app()`, which
+is right for a panel-label test. Two files carry pre-existing `rustfmt` diffs (an import order in
+`🕸️flow`, a line-width wrap in `🛍️catalogue`) that are untouched production lines, not introduced here.
+
+## Reachability: all remaining stdio hits are outside the build graph (04:15)
+
+semio-c2 pointed out that a numeric threshold encodes today's count of unreachable hits and rots. Verified
+their claim independently rather than adopting it:
+
+- `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml:6` declares package
+  **`semio-s-plugin-stdio-test-oracle`** — a separate crate. `grep oracle` against both
+  `semio-s-plugin-stdio`'s and `semio-s-plugin-procedural`'s manifests returns **nothing**, so neither
+  depends on it. Its 4 hits can never block either build.
+- The 3 `🔮️oracle` hits under `🎵️mp3` / `🖊️dwg` are mounted **only** from that oracle package's
+  `📦️lib.rs` (mp3 at `:463`). stdio's own `📦️packages/🦀️rust/🦀️.rs` mentions `🔮️oracle` exactly once,
+  inside a doc comment, with no `#[path]` mount anywhere.
+
+So every remaining build-blocking hit is unreachable from `semio-s-plugin-procedural`, and the loop had
+been holding on hits that could never block it.
+
+The fix keeps the gate honest and moves reachability to the consumer, where the build-graph knowledge
+lives: the gate still reports everything, and `retry-check.sh` filters `/🧪️oracle/`, `/🔮️oracle/` and
+the orphaned `mutate-*-1/` test hosts, each with its reason in a comment. That is self-documenting where
+`> 3` was a magic number. Reachable-blocking went to 0 and the procedural wasm check started at 04:15.
+
+Independent corroboration from semio-08: rustc was in sustained codegen inside `semio-s-plugin-stdio`
+under a puzzle wasm build, which a crate with unresolved mounts could not reach. Their caveat is kept:
+that is "past mount resolution", not "compiles clean" — the reference-string half of the rename would
+surface later as ordinary unresolved imports, which no path gate can see.
+
+## The six flipped classifications are honest (04:15)
+
+Audited each of the six that moved from `BatchOnlyPendingRewrite` to `Migrated` on 2026-09-03, since
+flipping a label on a stub would convert a clean up-front rejection into a silent runtime no-op:
+
+| Action | Handler real | Mutation reducer real | Lane correct | Test coverage |
+|---|---|---|---|---|
+| `nodeGraphEdit` | yes | yes (DeleteWidget, CreateWidget, ConnectSynapse, UpdateSynapse, DisconnectSynapse) | Artifact | yes |
+| `addGeneration` | yes | yes (CreateGeneration diff/inverse) | Artifact + Config | yes |
+| `removeGeneration` | yes | yes (DeleteGeneration diff/inverse) | Artifact + Config | yes |
+| `renameGeneration` | yes | yes (RenameGeneration diff/inverse) | Artifact + Config | yes |
+| `updateGenerationValues` | yes | yes (ChangeGenerationValue diff/inverse) | Artifact + Config | yes |
+| `selectGeneration` | yes | yes (SetGeneration config) | Config | yes |
+
+No stubs. Full evidence in `📓️six-flipped-handlers-audit-2026-09-05.md`.
+
+## Second upstream blocker: the `📇️directory` SpaceView refactor (04:20)
+
+The wasm check cleared stdio's mount class and then stopped earlier in the graph, in
+`semio-framework-os-kernel`:
+
+```
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs:22:61:
+error[E0432]: unresolved import `super::schema::DirectorySpaceDetailV1`
+  -> no `DirectorySpaceDetailV1` in `os_directory::schema`
+```
+
+Also a peer's live work, not ours:
+- `📇️directory/🧬️schema/🦀️.rs` has mtime **04:07 — written during this compile** — and no longer
+  defines `DirectorySpaceDetailV1`. It now carries `SpaceView` (`:789`), `PublicSpaceViewV1` (`:808`),
+  `MemberSpaceViewV1` (`:823`).
+- `git show HEAD:…/🧬️schema/🦀️.rs | grep -c DirectorySpaceDetailV1` returns 2, so the type existed at
+  HEAD and its removal is uncommitted in-flight work.
+- Three files still on the old name: `🔌️client/🦀️.rs` (`:22`, `:792`, `:793`, `:2392`, including
+  `let DirectorySpaceDetailV1::Author { documents, .. } = detail`), `🌉️mcp/🏠️workspace/🦀️.rs`,
+  `🌉️mcp/🏠️workspace/🔗️remote/🦀️.rs`.
+
+**Not repairing it.** Mapping `DirectorySpaceDetailV1::Author` onto `PublicSpaceViewV1` vs
+`MemberSpaceViewV1` is a projection decision only the author knows; guessing would bake in the wrong one.
+Owner asked for via semio-89. `semio-framework-os-kernel` is on the path of every s-plugin wasm build,
+so this blocks procedural, puzzle, process and the `s` shell alike.
+
+## Retry predicate made principled (04:22)
+
+String-matching `couldn't read` only caught the rename-race. The honest predicate for "retry" is **did
+the file the error points at change under me** — if it was rewritten after the compile began, the error
+describes a tree that no longer exists. `retry-check.sh` now:
+
+1. stops immediately and reports if the first error's file is under `🌀️procedural` — that is a real
+   finding and the whole point of the exercise;
+2. retries on `couldn't read` (rename race);
+3. retries when the error's file has an mtime later than the compile's start (peer mid-edit), via
+   `stat -f %m`;
+4. otherwise exits 3 with "stable error in a crate we do not own".
+
+Known limitation: a peer whose refactor is *paused* rather than continuous produces a stable-looking
+error that rule 4 will bail on, even though it is still transient in the sense that its author will
+finish it. The directory break is exactly that shape.
+
+## Correction issued to a peer (04:20)
+
+Told semio-08 that semio-94 was "almost certainly" the wasm-dev lock holder, inferring it from ticket
+scope. Wrong — semio-94's scratchpad id does not match. The real owner of the queued process build is
+ticket `26/08/28/DEMONSTRATOR`. Corrected before they acted on it. Should have matched the scratchpad id
+they gave me instead of pattern-matching on ticket scope.
+
+semio-08 also corrected the memory note written from the orphaned-cargo incident: `ppid=1` answers "will
+anyone reap this?", not "is anything happening?". A peer's orphaned build can be actively compiling and
+holding the lock legitimately — their queue's holder had a live `rustc` child at 4-7% CPU for 40 minutes.
+The rule is now: parent ~0% CPU **with** a live rustc child means holding and working, leave it; parent
+~0% CPU with **no** child for minutes means stuck. Only kill an orphan positively identified as your own.

@@ -1,8 +1,0 @@
-{
-  "mutation": "resize-page",
-  "payload": {
-    "height": 841.89,
-    "index": 1,
-    "width": 0
-  }
-}

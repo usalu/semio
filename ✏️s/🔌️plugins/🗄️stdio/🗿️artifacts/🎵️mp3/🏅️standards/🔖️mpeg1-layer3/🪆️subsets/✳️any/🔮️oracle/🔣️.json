@@ -1,0 +1,292 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution to the repository test platform, distinct from the shared ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json manifest. MP3 is two independent layers in one byte stream — ID3 metadata and the ISO/IEC 11172-3 MPEG audio frame sequence — and no single crate is authoritative over both. `id3` is registered as the reference for the ID3 layer; the frame layer is walked by a hand-written ISO 11172-3 header/frame-size reader in this subset's own oracle module, the same composition shape 📼️avi (riff + hand-written hdrl/strl/movi codec) and 💬️bcf (zip + quick-xml) already establish. LICENCE NOTE: `symphonia`, the obvious pure-Rust MP3 DECODER, is MPL-2.0 and no owner ruling on that licence exists in this repository, so it was NOT registered; `id3` is MIT, and decoding PCM audio is not needed to exercise this subset's vocabulary (which addresses `id3v2`/`frames`/`id3v1`, never sample data).",
+  "oracles": [
+    {
+      "id": "id3-mpeg1-layer3-mutate",
+      "ecosystem": "rust",
+      "package": "id3",
+      "version": "1.17",
+      "capabilities": [
+        "mp3-mpeg1-layer3-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-mp3-mpeg1-layer3-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://codeberg.org/polyfloyd/rust-id3",
+      "rationale": "The reference ID3 implementation of the Rust ecosystem (11.5M downloads, MIT, pure Rust; its only transitive dependencies are flate2 — already linked here — plus byteorder and bitflags). It READS AND WRITES ID3v2.2/2.3/2.4, which is what makes it usable as a mutation oracle rather than only an independent reader: `Tag::read_from2` parses the tag, `Tag::write_to` re-serializes it from its own frame model alone, and `Tag::skip` independently locates the end of the ID3v2 region — the byte boundary this subset's `decode_mp3` also has to find, computed here by the reference rather than by the subject. Its ID3v1 half (`id3::v1::Tag::read_from`) is read-only, so `set-id3v1` WRITES the 128-byte trailer from the ID3v1 field layout directly (fixed-width ISO-8859-1 fields, no encoder freedom at all) and `id3::v1::Tag::read_from` reads it back independently — a genuine differential on the read side, honestly narrower on the write side. The MPEG audio frame layer is NOT this crate's business and is not claimed here: the frame walk (11-bit sync word, version/layer/bitrate/sample-rate fields, and the Layer I vs Layer II/III frame-size formula) is hand-written from ISO/IEC 11172-3 in this subset's oracle module and never calls this subset's own `find_frame_sync`/`parse_frame_header`.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "rust-id3",
+        "implementation": "rust-id3 ID3v1/v2 reader/writer",
+        "version": "1.17"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    }
+  ],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-mp3-mpeg1-layer3-v1",
+      "description": "MP3 byte streams compared by the ID3v2 tag (its specification MAJOR version byte and the ordered list of text frames as id + decoded text; the revision byte at offset 4 is not modelled by `id3` and is therefore not projected rather than being invented), the ordered MPEG frame sequence (per frame: MPEG version id, layer, bitrate in kbps, sample rate in Hz, padding flag, channel mode and total frame size in bytes) and the ID3v1 trailer's own fields (title/artist/album/year/comment/genre id). ID3v2 padding length and the exact synchsafe size field are writer freedom — the ID3v2.3 specification lets a writer append arbitrary zero padding after the last frame — and so is the ID3v2 flags byte; the audio payload bytes themselves are retained verbatim by both sides and are covered by the frame sizes rather than being re-hashed.",
+      "tolerance": 0,
+      "ignoreKeys": [
+        "flags",
+        "tagSize",
+        "paddingLength",
+        "fileSize"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "mp3-mpeg1-layer3-any",
+      "capability": "mp3-mpeg1-layer3-mutate",
+      "standardDirectoryName": "🔖️mpeg1-layer3",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "🟤️set-snapshot",
+          "mutationDirectoryName": "📸️set-snapshot",
+          "scenarios": [
+            {
+              "id": "retitles-the-id3v2-tit2-frame",
+              "directoryName": "🏷️retitles-the-id3v2-tit2-frame"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "set-snapshot",
+        "set-id3v2",
+        "set-frames",
+        "set-id3v1"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.mp3",
+      "standard": "mpeg1-layer3",
+      "subset": "any",
+      "standardDirectoryName": "🔖️mpeg1-layer3",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "set-frames",
+          "capability": "mp3-mpeg1-layer3-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-frames",
+            "bridgeVersion": 1,
+            "variant": "SetFrames"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "mp3-mpeg1-layer3-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-id3v1",
+          "capability": "mp3-mpeg1-layer3-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-id3v1",
+            "bridgeVersion": 1,
+            "variant": "SetId3v1"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "mp3-mpeg1-layer3-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-id3v2",
+          "capability": "mp3-mpeg1-layer3-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-id3v2",
+            "bridgeVersion": 1,
+            "variant": "SetId3v2"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "mp3-mpeg1-layer3-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "mp3-mpeg1-layer3-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "mp3-mpeg1-layer3-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-frames-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.mp3",
+        "standard": "mpeg1-layer3",
+        "subset": "any"
+      },
+      "mutation": "set-frames",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🎼️set-frames/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2d14c3f1dfaea2bf2a02ade2c76a3cb4bbd65705138a5ed21ca64abb0fa88dce",
+          "bytes": 1928
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🎼️set-frames/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:09a807e81e750bbc40f0d05e992a3bbd66031993a93fd2060fc2ea816e9b333d",
+          "bytes": 2359
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "mp3-carrier",
+      "notes": "SetFrames{frames:[...]} replaces the whole MPEG frame list with a real 2-frame sequence (frame 2 appended), every header bit-field spelled per the real 4-byte MPEG1 Layer III header layout."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-id3v1-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.mp3",
+        "standard": "mpeg1-layer3",
+        "subset": "any"
+      },
+      "mutation": "set-id3v1",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🔖️set-id3v1/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2d14c3f1dfaea2bf2a02ade2c76a3cb4bbd65705138a5ed21ca64abb0fa88dce",
+          "bytes": 1928
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🔖️set-id3v1/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:677be29391827a6ec809344c40c24f58af47a85393149221676ed8bd294d2c14",
+          "bytes": 754
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "mp3-carrier",
+      "notes": "SetId3v1{id3v1:None} strips the 128-byte ID3v1 trailer."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-id3v2-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.mp3",
+        "standard": "mpeg1-layer3",
+        "subset": "any"
+      },
+      "mutation": "set-id3v2",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🏷️set-id3v2/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2d14c3f1dfaea2bf2a02ade2c76a3cb4bbd65705138a5ed21ca64abb0fa88dce",
+          "bytes": 1928
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🏷️set-id3v2/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3ea1eafa1255c19b0f3de964256c178a3bc8fa95071c9560b00162f25ae658a0",
+          "bytes": 1972
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "mp3-carrier",
+      "notes": "SetId3v2 overwrites the ID3v2 tag's title frame (TIT2) data in place."
+    }
+  ]
+}

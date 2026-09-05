@@ -3,7 +3,7 @@
 # repository crate at all, only the one approved third-party reader. That isolation is deliberate — it
 # is what lets the probe build and run while `semio-s-plugin-stdio` is mid-refactor, and it is what
 # guarantees the reader shares no code with the implementation it adjudicates.
-# See ../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🔬️probes/🦀️oracle-probe/Cargo.toml
+# See ../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🔬️probes/🦀️oracle-probe/Cargo.toml
 # for the same standalone-workspace pattern.
 [workspace]
 

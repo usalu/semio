@@ -1,0 +1,30 @@
+{
+  "schema": "semio.hub.directory.ordered-append-broadcast/v1",
+  "maximumEventsPerDecision": 2,
+  "cases": [
+    {
+      "id": "concurrent-single-events",
+      "persistedSequences": [41, 42],
+      "appendSucceeds": true,
+      "expectedBroadcastSequences": [41, 42]
+    },
+    {
+      "id": "paired-user-member-events",
+      "persistedSequences": [51, 52],
+      "appendSucceeds": true,
+      "expectedBroadcastSequences": [51, 52]
+    },
+    {
+      "id": "append-failure",
+      "persistedSequences": [61],
+      "appendSucceeds": false,
+      "expectedBroadcastSequences": []
+    },
+    {
+      "id": "empty-idempotent-decision",
+      "persistedSequences": [],
+      "appendSucceeds": true,
+      "expectedBroadcastSequences": []
+    }
+  ]
+}

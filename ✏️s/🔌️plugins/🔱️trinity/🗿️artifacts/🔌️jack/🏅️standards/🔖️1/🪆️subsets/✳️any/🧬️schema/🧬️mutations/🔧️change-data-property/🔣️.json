@@ -5,7 +5,7 @@
   "displayName": "Change Data Property",
   "emoji": "🔧️",
   "aggregateVariant": "ChangeDataProperty",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-data-property",
   "binaryTag": 6,
   "invertibility": "explicit-mutation",

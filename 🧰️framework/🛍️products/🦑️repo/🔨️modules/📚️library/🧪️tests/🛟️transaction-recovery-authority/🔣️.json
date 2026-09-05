@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "contract": "transaction-owned-recovery-versus-forward-inputs-v1",
+  "registration": { "id": "transaction-recovery-authority", "name": "🧹clean🧩️taxonomy🛟️transaction-recovery-authority", "order": 410.191 },
+  "semantics": {
+    "forward": "owned-write-proof-then-exact-generator-inputs",
+    "recovery": "owned-write-proof-without-forward-readset",
+    "unknownOwnedWrites": "reject-before-reading-inputs",
+    "inputFailure": "private-typed-boundary-not-error-text",
+    "externalInputChanges": "preserve-on-inverse"
+  },
+  "cases": [
+    { "id": "unchanged", "input": "same", "membership": "same", "output": "pre", "owned": "valid", "forward": "valid", "inputReads": 1, "membershipReads": 1 },
+    { "id": "changed-record", "input": "changed", "membership": "same", "output": "pre", "owned": "valid", "forward": "input-drift", "inputReads": 1, "membershipReads": 0 },
+    { "id": "unreadable-record", "input": "unreadable", "membership": "same", "output": "pre", "owned": "valid", "forward": "input-drift", "inputReads": 1, "membershipReads": 0 },
+    { "id": "added-member", "input": "same", "membership": "added", "output": "pre", "owned": "valid", "forward": "input-drift", "inputReads": 1, "membershipReads": 1 },
+    { "id": "missing-member", "input": "same", "membership": "missing", "output": "pre", "owned": "valid", "forward": "input-drift", "inputReads": 1, "membershipReads": 1 },
+    { "id": "unreadable-membership", "input": "same", "membership": "unreadable", "output": "pre", "owned": "valid", "forward": "input-drift", "inputReads": 1, "membershipReads": 1 },
+    { "id": "unstarted-output-drift", "input": "same", "membership": "same", "output": "foreign", "owned": "owned-drift", "forward": "owned-drift", "inputReads": 0, "membershipReads": 0 },
+    { "id": "owned-drift-before-readset-drift", "input": "changed", "membership": "added", "output": "foreign", "owned": "owned-drift", "forward": "owned-drift", "inputReads": 0, "membershipReads": 0 }
+  ]
+}

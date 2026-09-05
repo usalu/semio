@@ -1,0 +1,1824 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ DOCX ECMA-376/✳️any's own contribution to the repository test platform -- its mutation oracle registration and its declared mutation vocabulary (wave 7, ticket 26/08/23/END-TO-END-TESTING-REFACTOR). A DOCX is a ZIP of XML parts, and both `zip` 6 and `quick-xml` 0.42 are already linked and are genuinely independent of this repository's own codec: `zip` unzips/rezips the OPC container, `quick-xml` parses/edits/re-serializes the OOXML parts (word/document.xml, word/styles.xml, [Content_Types].xml, every *.rels). Registered as ONE oracle entry naming the composition -- neither library alone reads a DOCX; the pair together is the real independent implementation, and this subset's own oracle module (../🦀️oracle.rs) is the composition code, not a third dependency.",
+  "oracles": [
+    {
+      "id": "zip-quick-xml-docx-ecma-376-mutate",
+      "ecosystem": "rust",
+      "package": "zip",
+      "version": "6",
+      "capabilities": [
+        "docx-ecma-376-mutate-second-implementation"
+      ],
+      "comparisonProfiles": [
+        "semantic-docx-ecma-376-mutate-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/zip-rs/zip2 ; https://github.com/tafia/quick-xml",
+      "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🦀️oracle.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "packages": [
+        {
+          "package": "quick-xml",
+          "version": "0.42",
+          "license": "MIT",
+          "homepage": "https://github.com/tafia/quick-xml",
+          "role": "independent XML reader/writer for every part inside the archive"
+        }
+      ],
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "zip",
+        "implementation": "zip Rust ZIP reader/writer",
+        "version": "6"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "jszip-fast-xml-parser-docx-ecma-376-mutate",
+      "kind": "cross-semio-implementation",
+      "ecosystem": "javascript",
+      "package": "jszip",
+      "version": "3.10.1",
+      "packages": [
+        {
+          "package": "fast-xml-parser",
+          "version": "5.11.1",
+          "license": "MIT",
+          "homepage": "https://github.com/NaturalIntelligence/fast-xml-parser",
+          "role": "independent XML reader/writer for every part inside the archive"
+        }
+      ],
+      "engine": {
+        "family": "zip-xml",
+        "implementation": "jszip + fast-xml-parser (read-only projection; comparison done by the pipeline, never by this composition)",
+        "version": "jszip@3.10.1 + fast-xml-parser@5.11.1"
+      },
+      "capabilities": [
+        "docx-ecma-376-mutate-second-implementation"
+      ],
+      "comparisonProfiles": [
+        "semantic-docx-ecma-376-jszip-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://github.com/Stuk/jszip ; https://github.com/NaturalIntelligence/fast-xml-parser",
+      "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🦀️oracle.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔬️probes"
+    },
+    {
+      "id": "jszip-docx-ecma-376-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "jszip",
+      "version": "3.10.1",
+      "engine": {
+        "family": "jszip",
+        "implementation": "jszip reader",
+        "version": "3.10.1"
+      },
+      "capabilities": [
+        "docx-ecma-376-mutate"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "rationale": "📖️ A READER, and that is the whole point of registering it separately.\n\nThis subset also carries a `🦀️oracle.rs` that COMPUTES what each mutation should produce. That entry is registered `cross-semio-implementation` and does not discharge anything, because both halves of such a comparison descend from one reading of the specification.\n\nThis entry is a different mechanism. The expected state is not computed at all — it is COMMITTED, as the `after` half of a byte-reproducible fixture. `jszip` 3.10.1 then parses the ECMA-376 OPC package on BOTH sides and the comparison is over what it recovered. The probes say so in their own header: \"Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should.\"\n\nSo the judge is a third-party implementation of the format, and nothing in this repository predicts the answer it is judging. That is what makes it qualifying where the sibling entry is not.",
+      "comparisonProfiles": [
+        "semantic-docx-ecma-376-mutate-v1"
+      ]
+    }
+  ],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-docx-ecma-376-mutate-v1",
+      "description": "DOCX documents compared by the typed semantic view this subset's own `DocxDocument` models: `body` (the ordered w:body block tree -- paragraphs with their style reference and ordered runs, tables with their ordered rows/cells, recursively) and `styles` (the ordered w:styles list, id/name/basedOn), both order-sensitive per WordprocessingML's own document-order semantics. Every OTHER real OPC part (docProps/*, any part touched only through SetPart/RemovePart) is compared by content-type plus content digest, projected as an unordered path-keyed map so writer-freedom part ORDER never registers as a difference. word/document.xml and word/styles.xml themselves are excluded from that raw-part map: two independent writers legitimately differ byte-for-byte on non-semantic whitespace/attribute-order/self-closing-form for the exact same document, which is exactly why the typed body/styles projection exists instead. [Content_Types].xml and every *.rels part are pure OPC plumbing, regenerated deterministically from the typed content-types/relationships tables on every re-encode by both sides, and are not part of the comparison at all -- neither side's typed mutation vocabulary (13 kinds: NoMutation, SetSnapshot, InsertBlock, RemoveBlock, SetBlockContent, SetRunText, SetRunFormatting, InsertStyle, RemoveStyle, SetStyleName, SetStyleBasedOn, SetPart, RemovePart) ever targets them directly.",
+      "ignoreKeys": []
+    },
+    {
+      "id": "semantic-docx-ecma-376-jszip-v1",
+      "description": "Bundle-style comparison for the jszip+fast-xml-parser oracle: delegates to the docx-ecma-376-jszip-compare-v1 pipeline rather than a single-projection diff.",
+      "pipeline": "docx-ecma-376-jszip-compare-v1"
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "docx-ecma-376-base",
+      "capability": "docx-ecma-376-mutate",
+      "standardDirectoryName": "🔖️ecma-376",
+      "subsetDirectoryName": "🧱️base",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "🟤️set-snapshot",
+          "mutationDirectoryName": "🟤️set-snapshot",
+          "scenarios": [
+            {
+              "id": "bolds-the-tower-run-of-the-opening-paragraph",
+              "directoryName": "🧪️bolds-the-tower-run-of-the-opening-paragraph"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "insert-block",
+        "remove-block",
+        "set-block-content",
+        "set-run-text",
+        "set-run-formatting",
+        "insert-style",
+        "remove-style",
+        "set-style-name",
+        "set-style-based-on",
+        "set-part",
+        "remove-part"
+      ]
+    }
+  ],
+  "comparisonPipelines": [
+    {
+      "id": "docx-ecma-376-jszip-compare-v1",
+      "description": "Reads the subject's produced docx and the fixture's own expected docx with an independent jszip+fast-xml-parser composition, then compares their typed body/styles projections plus the unordered other-parts digest map. GATING.",
+      "stages": [
+        {
+          "probe": "docx-import",
+          "description": "An independent reader accepts both files.",
+          "inputs": [
+            "expected-docx",
+            "actual-docx"
+          ],
+          "assertions": {
+            "bothImport": true
+          }
+        },
+        {
+          "probe": "docx-compare",
+          "description": "Order-sensitive body/styles structural equality plus unordered other-parts digest equality — the operative equality.",
+          "inputs": [
+            "expected-docx",
+            "actual-docx"
+          ],
+          "assertions": {
+            "equal": true
+          }
+        }
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "kind": "external-process",
+      "ecosystem": "javascript",
+      "package": "jszip",
+      "version": "3.10.1",
+      "engine": {
+        "family": "zip-xml",
+        "implementation": "jszip + fast-xml-parser",
+        "version": "jszip@3.10.1 + fast-xml-parser@5.11.1"
+      },
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "id": "docx-import",
+      "capabilities": [
+        "docx.zip.import"
+      ],
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔬️probes/📜️script.ts",
+        "docx-import"
+      ],
+      "rationale": "An INDEPENDENT reader accepts both files at all. Nothing downstream means anything if one of them does not parse.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Run against every generated fixture pair this session (25 recipes, 43 files) — bothImport true in every case.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "reads-a-real-docx",
+            "met": true,
+            "detail": "parses [Content_Types].xml + word/document.xml + word/styles.xml + every other OPC part"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "jszip and fast-xml-parser are both pure-JS, already vendored in node_modules"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "external-process",
+      "ecosystem": "javascript",
+      "package": "jszip",
+      "version": "3.10.1",
+      "engine": {
+        "family": "zip-xml",
+        "implementation": "jszip + fast-xml-parser",
+        "version": "jszip@3.10.1 + fast-xml-parser@5.11.1"
+      },
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "id": "docx-project",
+      "capabilities": [
+        "docx.zip.project"
+      ],
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔬️probes/📜️script.ts",
+        "docx-project"
+      ],
+      "rationale": "The typed projection every comparison is measured against — the ordered body block tree (paragraphs with style ref + ordered runs, tables with ordered rows/cells recursively), the ordered styles list (id/name/basedOn), and every other real OPC part as a path-keyed content-type+digest map.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Run against insert-block-appends-a-pricing-table/➡️after.docx: reports blockCount 3 with the appended 2×2 table's rows/cells/paragraphs recovered correctly, and against set-part-adds-core-properties/➡️after.docx: reports otherPartCount 1 for docProps/core.xml with the correct resolved content type.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "recovers-ordered-body",
+            "met": true,
+            "detail": "paragraph and table blocks recovered in document order, xml:space=preserve text kept intact"
+          },
+          {
+            "id": "recovers-ordered-styles",
+            "met": true,
+            "detail": "id/name/basedOn recovered in word/styles.xml document order"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "external-process",
+      "ecosystem": "javascript",
+      "package": "jszip",
+      "version": "3.10.1",
+      "engine": {
+        "family": "zip-xml",
+        "implementation": "jszip + fast-xml-parser",
+        "version": "jszip@3.10.1 + fast-xml-parser@5.11.1"
+      },
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "id": "docx-compare",
+      "capabilities": [
+        "docx.zip.compare"
+      ],
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔬️probes/📜️script.ts",
+        "docx-compare"
+      ],
+      "rationale": "Order-sensitive structural deep-equal over body/styles plus unordered digest equality over every other OPC part — the GATING comparison. Computes no mutation semantics, only structural equality of two already-existing byte blobs.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways this session with real measured numbers: no-mutation-no-op's identical before/after pair -> {equal:true, diffCount:0}; that same before against a deliberately corrupted copy (word/styles.xml's Heading1 name replaced with \"CORRUPTED HEADING\") -> {equal:false, diffCount:1, diffs:[\"$.styles[0].name: \\\"heading 1\\\" \\u2260 \\\"CORRUPTED HEADING\\\"\"]}. Also exercised on a genuine applied mutation: bolds-the-tower-run-of-the-opening-paragraph's before/after -> {equal:false, diffCount:1, diffs:[\"$.body[0].runs[1].bold: false \\u2260 true\"]}.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "equal:true, diffCount:0"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "equal:false, diffCount:1, exact field named"
+          }
+        ]
+      }
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.docx",
+      "standard": "ecma-376",
+      "subset": "base",
+      "standardDirectoryName": "🔖️ecma-376",
+      "subsetDirectoryName": "🧱️base",
+      "mutations": [
+        {
+          "id": "no-mutation",
+          "capability": "docx-ecma-376-mutate",
+          "outcomes": [
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "no-mutation",
+            "bridgeVersion": 1,
+            "variant": "NoMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-docx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "docx-ecma-376-mutate",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-docx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "insert-block",
+          "capability": "docx-ecma-376-mutate",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-block",
+            "bridgeVersion": 1,
+            "variant": "InsertBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-docx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-block",
+          "capability": "docx-ecma-376-mutate",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-block",
+            "bridgeVersion": 1,
+            "variant": "RemoveBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-docx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-block-content",
+          "capability": "docx-ecma-376-mutate",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-block-content",
+            "bridgeVersion": 1,
+            "variant": "SetBlockContent"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-docx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-run-text",
+          "capability": "docx-ecma-376-mutate",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-run-text",
+            "bridgeVersion": 1,
+            "variant": "SetRunText"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-docx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-run-formatting",
+          "capability": "docx-ecma-376-mutate",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-run-formatting",
+            "bridgeVersion": 1,
+            "variant": "SetRunFormatting"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-docx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "insert-style",
+          "capability": "docx-ecma-376-mutate",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-style",
+            "bridgeVersion": 1,
+            "variant": "InsertStyle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-docx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-style",
+          "capability": "docx-ecma-376-mutate",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-style",
+            "bridgeVersion": 1,
+            "variant": "RemoveStyle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-docx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-style-name",
+          "capability": "docx-ecma-376-mutate",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-style-name",
+            "bridgeVersion": 1,
+            "variant": "SetStyleName"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-docx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-style-based-on",
+          "capability": "docx-ecma-376-mutate",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-style-based-on",
+            "bridgeVersion": 1,
+            "variant": "SetStyleBasedOn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-docx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-part",
+          "capability": "docx-ecma-376-mutate",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-part",
+            "bridgeVersion": 1,
+            "variant": "SetPart"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-docx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-part",
+          "capability": "docx-ecma-376-mutate",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-part",
+            "bridgeVersion": 1,
+            "variant": "RemovePart"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-docx-ecma-376-mutate-reader"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "no-mutation-no-op",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "no-mutation",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/⏸️no-mutation-no-op/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/⏸️no-mutation-no-op/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only no-mutation-no-op",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The identity element — `DocxMutation::NoMutation => DocxDiff::default()` — so before and after are the same document, byte for byte."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "bolds-the-tower-run-of-the-opening-paragraph",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/💪️bolds-the-tower-run-of-the-opening-paragraph/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/💪️bolds-the-tower-run-of-the-opening-paragraph/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:ed3c264eee4a586f86f81533ddb531a824746981c3c7f61f72257271d89f7f6e",
+          "bytes": 1885
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only bolds-the-tower-run-of-the-opening-paragraph",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Same scenario id and opening paragraph as the committed set-snapshot/🧪️tests fixture: the second run of the opening paragraph is bolded, nothing else moves."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-no-op-identical-snapshot",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📸️set-snapshot-no-op-identical-snapshot/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/📸️set-snapshot-no-op-identical-snapshot/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-snapshot-no-op-identical-snapshot",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "`set-snapshot`'s own diff leaf explicitly warns `mutation.no-op` and returns `DocxDiff::default()` when the new snapshot is identical to the current one."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-block-appends-a-pricing-table",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "insert-block",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📊️insert-block-appends-a-pricing-table/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/📊️insert-block-appends-a-pricing-table/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:7df486ab38f42ad9ad918279e29a7c3b62fc4822aac7d39cbfbad8a62dbc8d6b",
+          "bytes": 1932
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only insert-block-appends-a-pricing-table",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Appends a 2×2 table as the body's third (final) block — also the corpus's one exercise of table/row/cell serialization and projection."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-block-rejected-invalid-index",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "insert-block",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🚧️insert-block-rejected-invalid-index/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only insert-block-rejected-invalid-index",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Inserting at index 99 of a 2-block body is outside the final collection — `apply_indexed`'s `mutation.apply.invalid-index`. No legal after-state exists, so only `⬅️before.docx` is carried."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-block-drops-the-closing-paragraph",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-block",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/✂️remove-block-drops-the-closing-paragraph/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/✂️remove-block-drops-the-closing-paragraph/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:fc3503d2dee072527768474d8ebe384b3d4a4cc602079c836aba2551e0ee20ca",
+          "bytes": 1845
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only remove-block-drops-the-closing-paragraph",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Removes the second (closing) paragraph, leaving the opening paragraph alone."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-block-rejected-missing-index",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-block",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🕳️remove-block-rejected-missing-index/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only remove-block-rejected-missing-index",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Removing block index 5 of a 2-block body does not exist — `apply_indexed`'s `mutation.apply.missing-target`. Before-only."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-block-content-replaces-the-closing-paragraph",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-block-content",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📝️set-block-content-replaces-the-closing-paragraph/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/📝️set-block-content-replaces-the-closing-paragraph/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:024f8fb3c8e510edb7d211fc36b2af82df1e24105a8b5e5196a32193f95c313f",
+          "bytes": 1878
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-block-content-replaces-the-closing-paragraph",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Replaces the closing paragraph's full content with different text via the same style."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-block-content-no-op-unchanged-content",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-block-content",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/💤️set-block-content-no-op-unchanged-content/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/💤️set-block-content-no-op-unchanged-content/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-block-content-no-op-unchanged-content",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Replacing a block with structurally identical content: `diff_block(old,new)` returns `None`, so `diff_set_block_content` returns `DocxDiff::default()`."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-run-text-rewrites-the-closing-paragraph",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-run-text",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/✍️set-run-text-rewrites-the-closing-paragraph/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/✍️set-run-text-rewrites-the-closing-paragraph/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:024f8fb3c8e510edb7d211fc36b2af82df1e24105a8b5e5196a32193f95c313f",
+          "bytes": 1878
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-run-text-rewrites-the-closing-paragraph",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Rewrites the closing paragraph's single run's literal text."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-run-text-no-op-identical-text",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-run-text",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🪞️set-run-text-no-op-identical-text/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🪞️set-run-text-no-op-identical-text/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-run-text-no-op-identical-text",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "`diff_set_run_text` explicitly checks `run.text == text` and returns `DocxDiff::default()` when the new text is identical to the current one."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-run-formatting-italicizes-the-closing-paragraph",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-run-formatting",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🪄️set-run-formatting-italicizes-the-closing-paragraph/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🪄️set-run-formatting-italicizes-the-closing-paragraph/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:548775c77d42db22152f1435754d0fef7886c4d3d37953a5b0f0b365beaf067e",
+          "bytes": 1883
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-run-formatting-italicizes-the-closing-paragraph",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Sets the closing paragraph's single run to italic; bold/underline stay false."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-run-formatting-no-op-identical-flags",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-run-formatting",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🚩️set-run-formatting-no-op-identical-flags/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🚩️set-run-formatting-no-op-identical-flags/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-run-formatting-no-op-identical-flags",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "`diff_set_run_formatting` returns `DocxDiff::default()` when bold/italic/underline all already match the requested flags."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-style-adds-a-quote-style",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "insert-style",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/💬️insert-style-adds-a-quote-style/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/💬️insert-style-adds-a-quote-style/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:fe86b3f5610d516e14780a4db18dd55ce482d625832ff5d872fae0587a0ac8e4",
+          "bytes": 1897
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only insert-style-adds-a-quote-style",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Inserts a new `Quote` style, based on `Body`, at the end of the style table."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-style-rejected-duplicate-id",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "insert-style",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/👯️insert-style-rejected-duplicate-id/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:fe86b3f5610d516e14780a4db18dd55ce482d625832ff5d872fae0587a0ac8e4",
+          "bytes": 1897
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only insert-style-rejected-duplicate-id",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The before-state already carries a `Quote` style; inserting another with the same id is `apply_named`'s `mutation.apply.duplicate-target`. Before-only."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-style-drops-the-quote-style",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-style",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🗨️remove-style-drops-the-quote-style/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:fe86b3f5610d516e14780a4db18dd55ce482d625832ff5d872fae0587a0ac8e4",
+          "bytes": 1897
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🗨️remove-style-drops-the-quote-style/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only remove-style-drops-the-quote-style",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Removes the `Quote` style, leaving `Heading1`/`Body`."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-style-rejected-missing-id",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-style",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🪪️remove-style-rejected-missing-id/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only remove-style-rejected-missing-id",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The before-state has no `Quote` style; removing it is `apply_named`'s `mutation.apply.missing-target`. Before-only."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-style-name-renames-the-body-style",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-style-name",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🔤️set-style-name-renames-the-body-style/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🔤️set-style-name-renames-the-body-style/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:01b185a897431278b8de2a8e32e48f9143fab88f6d5b199ba54819a7cc9f4479",
+          "bytes": 1875
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-style-name-renames-the-body-style",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Renames the `Body` style from \"Body Text\" to \"Body Copy\"."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-style-name-rejected-missing-id",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-style-name",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🏷️set-style-name-rejected-missing-id/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-style-name-rejected-missing-id",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The before-state has no `Quote` style; renaming it is a named modification against a missing target. Before-only."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-style-based-on-reparents-the-quote-style",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-style-based-on",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🌳️set-style-based-on-reparents-the-quote-style/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:fe86b3f5610d516e14780a4db18dd55ce482d625832ff5d872fae0587a0ac8e4",
+          "bytes": 1897
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🌳️set-style-based-on-reparents-the-quote-style/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:ce7f676f91255c3ce675fa93e814eeedaad017305be3d3b2a655e18161f8d764",
+          "bytes": 1899
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-style-based-on-reparents-the-quote-style",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Reparents `Quote` from `basedOn: Body` to `basedOn: Heading1`."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-style-based-on-rejected-missing-id",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-style-based-on",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🔗️set-style-based-on-rejected-missing-id/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-style-based-on-rejected-missing-id",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The before-state has no `Quote` style; setting its `basedOn` is a named modification against a missing target. Before-only."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-part-adds-core-properties",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-part",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🧩️set-part-adds-core-properties/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🧩️set-part-adds-core-properties/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:f39b0501391e460c8f0393fcfb4bed0fcaf78cdcc4acca0030125aa7e1d60dc4",
+          "bytes": 2330
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-part-adds-core-properties",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Inserts a real `docProps/core.xml` part (content this typed layer doesn't model) that did not exist before."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-part-no-op-identical-content",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "set-part",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🟰️set-part-no-op-identical-content/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:f39b0501391e460c8f0393fcfb4bed0fcaf78cdcc4acca0030125aa7e1d60dc4",
+          "bytes": 2330
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🟰️set-part-no-op-identical-content/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:f39b0501391e460c8f0393fcfb4bed0fcaf78cdcc4acca0030125aa7e1d60dc4",
+          "bytes": 2330
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only set-part-no-op-identical-content",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Setting a part to content-type+bytes identical to what is already there: `diff_part` returns `None`, so `diff_set_part` returns `DocxDiff::default()`."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-part-drops-core-properties",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-part",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🧹️remove-part-drops-core-properties/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:f39b0501391e460c8f0393fcfb4bed0fcaf78cdcc4acca0030125aa7e1d60dc4",
+          "bytes": 2330
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🧹️remove-part-drops-core-properties/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only remove-part-drops-core-properties",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Removes the `docProps/core.xml` part that existed in the before-state."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-part-rejected-missing-path",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "remove-part",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🧭️remove-part-rejected-missing-path/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:4ccedf9cffe18e5726646113dc6d5c8b847e1b6f2f339134053f855d8db0df1a",
+          "bytes": 1875
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineFamily": "zip-xml",
+        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate --only remove-part-rejected-missing-path",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip dual MIT/GPL-3.0-or-later, used under MIT) + MIT (fast-xml-parser)",
+        "attribution": "Generated with jszip (MIT) and fast-xml-parser (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The before-state carries no `docProps/core.xml` part; removing it targets a part that is not in the package. Before-only."
+    }
+  ]
+}

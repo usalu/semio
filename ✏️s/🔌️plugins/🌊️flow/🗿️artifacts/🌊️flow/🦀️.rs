@@ -6,7 +6,7 @@
 //!
 //! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`flow→C:flow`, the canonical editor for
 //! stdio's `flow` subset): the old inline `widgets`/`synapses`/`layout` fields are replaced by a
-//! composed `s.stdio.semio.flow` CHILD slot (`🔖️ContentBridge` below) — this plugin no longer
+//! composed `s.stdio.semio@v1/flow` CHILD slot (`🔖️ContentBridge` below) — this plugin no longer
 //! defines its own node-graph content model, it composes stdio's `flow` subset instead. The rich
 //! live editing types (`flow::Widget`/`flow::SynapseSpec`/`flow::WidgetLayout`, the framework
 //! kernel's own vocabulary `FlowHost` edits) still flow entirely through `FlowSnapshot::to_fixture`/
@@ -21,6 +21,9 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema
 use std::collections::HashMap;
 use std::io::Write;
 use std::sync::Arc;
+
+#[path = "♻️retirement/🦀️.rs"]
+pub mod retirement;
 
 //#region 🔖️Types
 pub use crate::artifacts::flow::snapshot::schema::FlowSnapshot;
@@ -38,7 +41,7 @@ pub const FLOW_DIALECT: Dialect = Dialect { artifact_kind: "s.flow.flow", standa
 //#endregion 🔖️Dialect
 
 //#region 🔖️ContentBridge
-/// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio.flow` document — the flow plugin's
+/// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio@v1/flow` document — the flow plugin's
 /// widgets/synapses/layout now live in this composed child's `nodes`/`edges` rather than inline on
 /// `FlowSnapshot`.
 pub type FlowContentChild = store::ArtifactChild<SemioFlowSnapshot>;
@@ -129,21 +132,24 @@ fn widget_from_node(node: &SemioFlowNode) -> Widget {
 /// `SynapseSpec` maps onto `FlowEdge` 1:1 (`kind` is a constant "data" tag on encode, discarded on
 /// decode — lossless, since `SynapseSpec` carries no `kind` of its own to lose).
 pub fn flow_content_snapshot_from_working(widgets: &[Widget], synapses: &[SynapseSpec], layout: &flow::OrderedMap<WidgetLayout>) -> SemioFlowSnapshot {
-    let nodes = widgets
-        .iter()
-        .map(|widget| {
-            let id = crate::artifacts::flow::schema::widget_id(widget).to_string();
-            let kind = crate::artifacts::flow::schema::widget_kind_label(widget).to_string();
-            let position = layout.get(&id).map(|entry| semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2 { x: entry.x, y: entry.y }).unwrap_or_default();
-            let label = match widget { Widget::InputSlider { label, .. } => label.clone(), _ => kind.clone() };
-            SemioFlowNode { id: id.clone(), kind, label, params: widget_params(widget), position }
-        })
-        .collect();
+    let nodes = widgets.iter().map(|widget| {
+        let id = crate::artifacts::flow::schema::widget_id(widget);
+        flow_content_node_from_working(widget, layout.get(id))
+    }).collect();
     let edges = synapses
         .iter()
         .map(|synapse| SemioFlowEdge { id: synapse.id.clone(), from: SemioPortRef { node: synapse.from.clone(), port: synapse.from_port.clone() }, to: SemioPortRef { node: synapse.to.clone(), port: synapse.to_port.clone() }, kind: "data".into() })
         .collect();
     SemioFlowSnapshot { schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes, edges }
+}
+
+/// 🌉 Maps one exact working widget and layout entry into its typed Semio child node.
+pub fn flow_content_node_from_working(widget: &Widget, layout: Option<&WidgetLayout>) -> SemioFlowNode {
+    let id = crate::artifacts::flow::schema::widget_id(widget).to_string();
+    let kind = crate::artifacts::flow::schema::widget_kind_label(widget).to_string();
+    let position = layout.map(|entry| semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2 { x: entry.x, y: entry.y }).unwrap_or_default();
+    let label = match widget { Widget::InputSlider { label, .. } => label.clone(), _ => kind.clone() };
+    SemioFlowNode { id, kind, label, params: widget_params(widget), position }
 }
 
 /// 🌉 Inverse of [`flow_content_snapshot_from_working`].
@@ -186,7 +192,7 @@ pub const FLOW_CONTENT_ID_DOMAIN: &[u8] = b"semio.flow.scene.sha256.v1\0";
 pub(crate) fn flow_content_child_from_digest(digest: [u8; 32], scene: Arc<FlowWorkingScene>) -> FlowContentChild {
     let child_id = format!("flow-content-sha256-{}", semio_framework_hash::hex_lower(&digest));
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: "flow-content".into(), dialect };
+    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target).with_local_owner(scene)
 }
 //#endregion 🔖️ContentBridge
@@ -197,7 +203,6 @@ pub(crate) fn flow_content_child_from_digest(digest: [u8; 32], scene: Arc<FlowWo
 /// every wire codec, and dies with its final child/snapshot clone. Durable child-id reuse therefore
 /// cannot replace or resolve another app instance's scene.
 #[derive(Clone, Debug, Default, value_derive::ToValue)]
-#[cfg_attr(test, derive(serde::Serialize))]
 pub struct FlowWorkingScene {
     pub widgets: Vec<Widget>,
     pub synapses: Vec<SynapseSpec>,
@@ -254,7 +259,7 @@ mod tests {
     use super::*;
 
     fn owner_handle(text: &str) -> FlowContentChild {
-        let target = store::os_io::ArtifactRef { artifact_id: "flow-content".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() } };
+        let target = store::os_io::ArtifactRef { artifact_id: "flow-content-reused".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() } };
         let scene = FlowWorkingScene { widgets: vec![Widget::InputNote { id: "note".into(), text: text.into() }], synapses: Vec::new(), layout: flow::OrderedMap::new() };
         FlowContentChild::new("flow-content-reused".into(), target).with_local_owner(Arc::new(scene))
     }
@@ -267,7 +272,7 @@ mod tests {
 
     #[test]
     fn flow_scene_owner_fixture_is_language_neutral_and_bounded() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/flow-scene-owner-law.json")).expect("language-neutral Flow owner fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/⚖️flow-scene-owner-law.json")).expect("language-neutral Flow owner fixture");
         assert_eq!(fixture["ownedSlots"], 1);
         assert_eq!(fixture["maximumCases"], 5);
         assert_eq!(fixture["cases"].as_array().map(Vec::len), Some(5));
@@ -291,10 +296,11 @@ mod tests {
         assert_eq!(owner_text(&stale_a), "A", "stale A must not resolve reused B");
         assert_eq!(owner_text(&reused_b), "B");
 
-        let wire = serde_json::to_value(&stale_a).expect("third-party serde wire oracle");
+        let wire = serde_json::Value::from(dsl::ToValue::to_value(&stale_a));
         assert_eq!(wire.as_object().map(serde_json::Map::len), Some(2));
         assert!(wire.get("localOwner").is_none());
-        let decoded: FlowContentChild = serde_json::from_value(wire).expect("third-party serde decode oracle");
+        let encoded = serde_json::to_vec(&wire).expect("independent JSON encoding");
+        let decoded: FlowContentChild = flow::os_pack::json::from_json_str(std::str::from_utf8(&encoded).unwrap()).expect("child wire decode");
         assert!(decoded.local_owner::<FlowWorkingScene>().is_none());
 
         drop(left_owner);
@@ -342,7 +348,7 @@ mod tests {
     fn authored_slider_labels_survive_child_content_round_trip() {
         let cases: serde_json::Value = serde_json::from_str(include_str!("🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🏷️slider-labels.json")).unwrap();
         for row in cases["cases"].as_array().unwrap() {
-            let widget: Widget = serde_json::from_value(row["widget"].clone()).unwrap();
+            let widget: Widget = dsl::FromValue::from_value(dsl::DslValue::from(row["widget"].clone())).unwrap();
             let content = flow_content_snapshot_from_working(&[widget.clone()], &[], &flow::OrderedMap::new());
             assert_eq!(content.nodes[0].label, row["expectedDagName"].as_str().unwrap());
             assert_eq!(working_from_flow_content_snapshot(&content).0, [widget]);
@@ -353,32 +359,32 @@ mod tests {
 //#region 🔖️Declaration
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    ArtifactDefinition::new(ArtifactIdentity::parse("s.flow")?)
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.flow.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.flow.flow")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.flow.flow")?)?)?
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.flow.flow")?)
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.flow.flow.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.flow.flow")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.flow.flow")?)?)?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.flow.inference.artifact")?, ArtifactCapabilityKind::inference())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.flow.flow.inference.artifact")?, ArtifactCapabilityKind::inference())
                 .descriptor(b"s.flow.flow.inference")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.flow.flow.inference")?)?,
         )?
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.flow.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.flow@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.flow@1/*")?)?)?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.flow.flow.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.flow.flow@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.flow.flow@1/*")?)?)?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.flow.composer.md")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.flow.flow.composer.md")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.md@commonmark/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.md@commonmark/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.flow.composer.json")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.flow.flow.composer.json")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.json@rfc8259/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.flow.codec.document")?, ArtifactCapabilityKind::codec())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.flow.flow.codec.document")?, ArtifactCapabilityKind::codec())
                 .descriptor(b"flow.fixture:flow")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "flow.fixture")?)?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "flow")?)?,
+                .claim(ArtifactIdentityClaim::codec_extension("flow.fixture", "flow")?)?,
         )?
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.flow.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Flow")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Flow")?)?)?
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.flow.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Flow")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Flow")?)?)
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.flow.flow.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Flow")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Flow")?)?)?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.flow.flow.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Flow")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Flow")?)?)
 }
 
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {

@@ -1,6 +1,6 @@
 //! 📡️ Replication contract — TypeScript twin of the Rust `protocol` crate.
 //!
-//! Byte-for-byte identical to `📦️packages/🦀️rust`'s encoders: the 20 frames in `🧫️fixtures/🧫️wire`
+//! Byte-for-byte identical to `📦️packages/🦀️rust`'s encoders: the 20 frames in `🧫️fixtures/📡️wire`
 //! are the shared gate both sides must reproduce. Frame layout is `lane u8`, `frame tag u8`, then
 //! fields in declaration order — no length prefix, no per-field tags.
 
@@ -10,7 +10,7 @@ export * from "./📡️wire/🏠️local-interaction/📡️transport/🟦️.t
 /**
  * 🔁️ TS mirror of `store_sync`'s Rust actor protocol (`ArtifactActorConfig`/`ArtifactActorMsg`/
  * `ArtifactEvent`/`ArtifactSyncStatus`/`RemoteState`/`PersistenceBinding`) — the wire/postMessage
- * shapes `🟦️backbone-worker.ts` speaks, kept camelCase-tag-identical to the Rust side (`#[serde(tag =
+ * shapes `🧵️backbone-worker.ts` speaks, kept camelCase-tag-identical to the Rust side (`#[serde(tag =
  * "kind", rename_all = "camelCase")]`) so a shared JSON fixture suite (`store/sync/fixtures/`)
  * stays plausible across both runtimes even though this file is a deliberately dumb TS twin (no
  * materialization — it only relays queues, exactly like the Rust actor's `ChannelBackbone` side).
@@ -79,7 +79,7 @@ export function mutationEnvelopeFromWire(envelope: WireMutationEnvelope, codec: 
  * prop. `cursor`/`viewport` are DELETED (ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-
  * UNIVERSAL-ARTIFACT-CREATION C7.1) — replaced by `views` (artifact scope, one entry per open
  * window/surface) and `ui` (app scope, `data-ui-path` hover/focus/press). `color`/`surface` are
- * stamped by the client actor (`🟦️backbone-worker.ts`'s `stampSession`) — shells never fill them. */
+ * stamped by the client actor (`🧵️backbone-worker.ts`'s `stampSession`) — shells never fill them. */
 export type ArtifactPresencePeer = {
   readonly actor: string;
   readonly connectedAtMs: number;
@@ -1291,7 +1291,7 @@ export function decodeServerFrame(bytes: Uint8Array): { readonly lane: WireLane;
 
 /** 🗃️ A durable place a document synchronizes with — mirrors Rust `PersistenceBinding`. `surface`
  * (contract-freeze §C0 "Presence scope") travels out of band on the document WS URL's `?surface=`
- * query param — see `connectHub` in `🟦️backbone-worker.ts`'s `🔖️Hub` region. No `PresencePeer` wire
+ * query param — see `connectHub` in `🧵️backbone-worker.ts`'s `🔖️Hub` region. No `PresencePeer` wire
  * change: its flag byte is full and the file is peer-leased. */
 //#endregion 🔖️SyncProtocol
 
@@ -1323,7 +1323,7 @@ if (import.meta.vitest) {
       const { readFile } = await import("node:fs/promises");
       const { dirname, join } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
-      return JSON.parse(await readFile(join(dirname(fileURLToPath(import.meta.url)), "🧫️fixtures/🧫️artifact-bootstrap/🔣️.json"), "utf8")) as Fixture;
+      return JSON.parse(await readFile(join(dirname(fileURLToPath(import.meta.url)), "🧫️fixtures/🚀️artifact-bootstrap/🔣️.json"), "utf8")) as Fixture;
     }
 
     function bootstrapFromFixture(fixture: Fixture, inline: boolean): WireArtifactBootstrap {
@@ -1378,8 +1378,8 @@ if (import.meta.vitest) {
       const { fileURLToPath } = await import("node:url");
       const { createHash } = await import("node:crypto");
       const { default: Ajv2020 } = await import("ajv/dist/2020.js");
-      const root = join(dirname(fileURLToPath(import.meta.url)), "🧫️fixtures/🧫️artifact-bootstrap");
-      const schema = JSON.parse(await readFile(join(root, "🔣️.schema.json"), "utf8"));
+      const root = join(dirname(fileURLToPath(import.meta.url)), "🧫️fixtures/🚀️artifact-bootstrap");
+      const schema = JSON.parse(await readFile(join(root, "🧬️.schema.json"), "utf8"));
       expect(new Ajv2020({ strict: true }).compile(schema)(fixture)).toBe(true);
       const pack = new Uint8Array(fromHex(fixture.payload.packHex));
       const spr = new Uint8Array(fromHex(fixture.payload.sprHex));
@@ -1504,7 +1504,7 @@ if (import.meta.vitest) {
         // — i.e. beside the os-kernel crate, not under the sync module. The old path here pointed at a
         // pre-restructure location that no longer exists, so this cross-language byte-identity check had
         // been silently ENOENT-ing instead of comparing anything.
-        const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), "🧫️fixtures/🧫️wire");
+        const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), "🧫️fixtures/📡️wire");
   
         function loadClient(name: string) {
           const bytes = new Uint8Array(readFileSync(join(fixturesDir, name)));
@@ -1526,19 +1526,19 @@ if (import.meta.vitest) {
         const legacyHello = new Uint8Array(readFileSync(join(fixturesDir, "🚫️legacy-client-hello-rejected", "💾️.bin")));
         expect(() => decodeClientFrame(legacyHello)).toThrow(/unknown tag 0/u);
   
-        const commands = loadClient("📦️client-commands.bin");
+        const commands = loadClient("🕹️client-commands/💾️.bin");
         if (typeof commands.frame === "string" || !("Commands" in commands.frame)) throw new Error("expected a Commands frame");
         expect(commands.frame.Commands.envelopes).toHaveLength(1);
         assertOpBinaryPayload(commands.frame.Commands.envelopes[0]?.diff.payload ?? []);
   
-        const frontierAdvertise = loadClient("📦️client-frontier-advertise.bin");
+        const frontierAdvertise = loadClient("🚩️client-frontier-advertise/💾️.bin");
         if (typeof frontierAdvertise.frame === "string" || !("FrontierAdvertise" in frontierAdvertise.frame)) throw new Error("expected a FrontierAdvertise frame");
   
-        const previewPublish = loadClient("📦️client-preview-publish.bin");
+        const previewPublish = loadClient("📣️client-preview-publish/💾️.bin");
         if (typeof previewPublish.frame === "string" || !("PreviewPublish" in previewPublish.frame)) throw new Error("expected a PreviewPublish frame");
         expect(previewPublish.frame.PreviewPublish.key).toBe("cursor");
   
-        const presence = loadClient("📦️client-presence.bin");
+        const presence = loadClient("🙋️client-presence/💾️.bin");
         if (typeof presence.frame === "string" || !("Presence" in presence.frame)) throw new Error("expected a Presence frame");
         // 👥️ The fixture's `peer` bytes ARE a real `encode_presence_peer` blob now (Rust writes
         // `sample_presence_peer_with_interaction()`), so this decodes them with the TS twin and checks
@@ -1571,56 +1571,56 @@ if (import.meta.vitest) {
         ]);
         expect(encodePresencePeer(peer)).toEqual(Array.from(new Uint8Array(presence.frame.Presence.peer)));
   
-        const creditGrant = loadClient("📦️client-credit-grant.bin");
+        const creditGrant = loadClient("🎟️client-credit-grant/💾️.bin");
         if (typeof creditGrant.frame === "string" || !("CreditGrant" in creditGrant.frame)) throw new Error("expected a CreditGrant frame");
         expect(creditGrant.frame.CreditGrant.n).toBe(16);
   
-        const bye = loadClient("📦️client-bye.bin");
+        const bye = loadClient("👋️client-bye/💾️.bin");
         expect(bye.frame).toBe("Bye");
   
-        const welcomeTail = loadServer("📦️server-welcome-tail.bin");
+        const welcomeTail = loadServer("🔗️server-welcome-tail/💾️.bin");
         if (typeof welcomeTail.frame === "string" || !("Welcome" in welcomeTail.frame)) throw new Error("expected a Welcome frame");
         expect(welcomeTail.frame.Welcome.resume_token).toBe("resume-1");
         expect(welcomeTail.frame.Welcome.bootstrap).toBe("Tail");
   
-        const welcomeSnapshot = loadServer("📦️server-welcome-snapshot-inline.bin");
+        const welcomeSnapshot = loadServer("📸️server-welcome-snapshot-inline/💾️.bin");
         if (typeof welcomeSnapshot.frame === "string" || !("Welcome" in welcomeSnapshot.frame)) throw new Error("expected a Welcome frame");
         if (welcomeSnapshot.frame.Welcome.bootstrap === "None" || welcomeSnapshot.frame.Welcome.bootstrap === "Tail" || !("Snapshot" in welcomeSnapshot.frame.Welcome.bootstrap)) throw new Error("expected a Snapshot bootstrap");
         expect(welcomeSnapshot.frame.Welcome.bootstrap.Snapshot.inline).toEqual([9, 9, 9]);
   
-        const snapshotChunk = loadServer("📦️server-snapshot-chunk.bin");
+        const snapshotChunk = loadServer("🧩️server-snapshot-chunk/💾️.bin");
         if (typeof snapshotChunk.frame === "string" || !("SnapshotChunk" in snapshotChunk.frame)) throw new Error("expected a SnapshotChunk frame");
         expect(snapshotChunk.frame.SnapshotChunk.bytes).toEqual([1, 2, 3, 4]);
   
-        const snapshotDone = loadServer("📦️server-snapshot-done.bin");
+        const snapshotDone = loadServer("🏁️server-snapshot-done/💾️.bin");
         if (typeof snapshotDone.frame === "string" || !("SnapshotDone" in snapshotDone.frame)) throw new Error("expected a SnapshotDone frame");
         expect(snapshotDone.frame.SnapshotDone.seq_count).toBe(4);
   
-        const serverCommands = loadServer("📦️server-commands.bin");
+        const serverCommands = loadServer("🎮️server-commands/💾️.bin");
         if (typeof serverCommands.frame === "string" || !("Commands" in serverCommands.frame)) throw new Error("expected a Commands frame");
         expect(serverCommands.frame.Commands.envelopes).toHaveLength(1);
   
-        const ackAccepted = loadServer("📦️server-ack-accepted.bin");
+        const ackAccepted = loadServer("✅️server-ack-accepted/💾️.bin");
         if (typeof ackAccepted.frame === "string" || !("Ack" in ackAccepted.frame)) throw new Error("expected an Ack frame");
         expect(ackAccepted.frame.Ack.batch_id).toBe(1);
         expect(ackAccepted.frame.Ack.stages).toHaveLength(3);
   
-        const ackTransformed = loadServer("📦️server-ack-transformed.bin");
+        const ackTransformed = loadServer("🔀️server-ack-transformed/💾️.bin");
         if (typeof ackTransformed.frame === "string" || !("Ack" in ackTransformed.frame)) throw new Error("expected an Ack frame");
         expect(ackTransformed.frame.Ack.batch_id).toBe(2);
   
-        const ackRejected = loadServer("📦️server-ack-rejected.bin");
+        const ackRejected = loadServer("⛔️server-ack-rejected/💾️.bin");
         if (typeof ackRejected.frame === "string" || !("Ack" in ackRejected.frame)) throw new Error("expected an Ack frame");
         expect(ackRejected.frame.Ack.batch_id).toBe(3);
         const rejectedStage = ackRejected.frame.Ack.stages.find((stage) => typeof stage !== "string" && "Applied" in stage);
         if (typeof rejectedStage === "string" || rejectedStage === undefined || !("Applied" in rejectedStage) || typeof rejectedStage.Applied.outcome === "string" || !("Rejected" in rejectedStage.Applied.outcome)) throw new Error("expected a rejected apply outcome");
         expect(rejectedStage.Applied.outcome.Rejected.messages).toEqual([1, 2, 3]);
   
-        const preview = loadServer("📦️server-preview.bin");
+        const preview = loadServer("👁️server-preview/💾️.bin");
         if (typeof preview.frame === "string" || !("Preview" in preview.frame)) throw new Error("expected a Preview frame");
         expect(preview.frame.Preview.key).toBe("cursor");
   
-        const serverPresence = loadServer("📦️server-presence.bin");
+        const serverPresence = loadServer("👥️server-presence/💾️.bin");
         if (typeof serverPresence.frame === "string" || !("Presence" in serverPresence.frame)) throw new Error("expected a Presence frame");
         // 👥️ Two peers, deliberately mixed by the Rust fixture: a plain JSON blob and a real
         // `encode_presence_peer` payload — so this asserts the frame carries opaque per-peer bytes
@@ -1629,15 +1629,15 @@ if (import.meta.vitest) {
         expect(JSON.parse(new TextDecoder().decode(new Uint8Array(serverPresence.frame.Presence.peers[0]!)))).toEqual({ id: "a" });
         expect(decodePresencePeer(new Uint8Array(serverPresence.frame.Presence.peers[1]!), [0])).toEqual(peer);
   
-        const creditGrantServer = loadServer("📦️server-credit-grant.bin");
+        const creditGrantServer = loadServer("🎫️server-credit-grant/💾️.bin");
         if (typeof creditGrantServer.frame === "string" || !("CreditGrant" in creditGrantServer.frame)) throw new Error("expected a CreditGrant frame");
         expect(creditGrantServer.frame.CreditGrant.n).toBe(32);
   
-        const error = loadServer("📦️server-error.bin");
+        const error = loadServer("🚨️server-error/💾️.bin");
         if (typeof error.frame === "string" || !("Error" in error.frame)) throw new Error("expected an Error frame");
         expect(error.frame.Error.code).toBe("rejected");
   
-        const session = loadServer("📦️server-session.bin");
+        const session = loadServer("🪪️server-session/💾️.bin");
         if (typeof session.frame === "string" || !("Session" in session.frame)) throw new Error("expected a Session frame");
         expect(session.frame.Session.actor).toBe("actor-1");
         expect(session.frame.Session.color).toBe(5);

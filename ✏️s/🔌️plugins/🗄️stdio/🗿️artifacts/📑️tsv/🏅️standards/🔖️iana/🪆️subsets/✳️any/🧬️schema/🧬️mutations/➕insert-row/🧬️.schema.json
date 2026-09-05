@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "InsertRowMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["index", "row"],
+  "properties": {
+    "index": { "type": "integer", "minimum": 0 },
+    "row": { "type": "array", "items": { "type": "string" } }
+  }
+}

@@ -1,0 +1,149 @@
+{
+  "schema": "semio.stdio.claim-authority/v1",
+  "cases": [
+    {
+      "id": "composition-and-validation-distinct",
+      "claims": [
+        {
+          "category": "composer",
+          "namespace": "dialect",
+          "value": "s.stdio.xml@1.0/valid"
+        },
+        {
+          "category": "subset-validator",
+          "namespace": "validated-dialect",
+          "value": "s.stdio.xml@1.0/valid"
+        }
+      ],
+      "code": "accepted"
+    },
+    {
+      "id": "composition-validation-collision",
+      "claims": [
+        {
+          "category": "composer",
+          "namespace": "dialect",
+          "value": "s.stdio.xml@1.0/valid"
+        },
+        {
+          "category": "subset-validator",
+          "namespace": "dialect",
+          "value": "s.stdio.xml@1.0/valid"
+        }
+      ],
+      "code": "artifact-definition.duplicate-claim"
+    },
+    {
+      "id": "composition-collision",
+      "claims": [
+        {
+          "category": "composer",
+          "namespace": "dialect",
+          "value": "s.stdio.xml@1.0/valid"
+        },
+        {
+          "category": "composer",
+          "namespace": "dialect",
+          "value": "s.stdio.xml@1.0/valid"
+        }
+      ],
+      "code": "artifact-definition.duplicate-claim"
+    },
+    {
+      "id": "validation-collision",
+      "claims": [
+        {
+          "category": "subset-validator",
+          "namespace": "validated-dialect",
+          "value": "s.stdio.xml@1.0/valid"
+        },
+        {
+          "category": "subset-validator",
+          "namespace": "validated-dialect",
+          "value": "s.stdio.xml@1.0/valid"
+        }
+      ],
+      "code": "artifact-definition.duplicate-claim"
+    },
+    {
+      "id": "two-pdf-schemas-one-extension",
+      "claims": [
+        {
+          "category": "codec",
+          "namespace": "codec-extension",
+          "value": "9:stdio.pdf:pdf",
+          "codecSchema": "stdio.pdf",
+          "extension": "pdf"
+        },
+        {
+          "category": "codec",
+          "namespace": "codec-extension",
+          "value": "13:stdio.pdf.1.7:pdf",
+          "codecSchema": "stdio.pdf.1.7",
+          "extension": "pdf"
+        }
+      ],
+      "code": "accepted"
+    },
+    {
+      "id": "same-codec-extension-collision",
+      "claims": [
+        {
+          "category": "codec",
+          "namespace": "codec-extension",
+          "value": "9:stdio.pdf:pdf",
+          "codecSchema": "stdio.pdf",
+          "extension": "pdf"
+        },
+        {
+          "category": "codec",
+          "namespace": "codec-extension",
+          "value": "9:stdio.pdf:pdf",
+          "codecSchema": "stdio.pdf",
+          "extension": "pdf"
+        }
+      ],
+      "code": "artifact-definition.duplicate-claim"
+    },
+    {
+      "id": "colon-delimiters-do-not-alias",
+      "claims": [
+        {
+          "category": "codec",
+          "namespace": "codec-extension",
+          "value": "3:a:b:c",
+          "codecSchema": "a:b",
+          "extension": "c"
+        },
+        {
+          "category": "codec",
+          "namespace": "codec-extension",
+          "value": "1:a:b:c",
+          "codecSchema": "a",
+          "extension": "b:c"
+        }
+      ],
+      "code": "accepted"
+    },
+    {
+      "id": "utf8-byte-length-not-character-count",
+      "claims": [
+        {
+          "category": "codec",
+          "namespace": "codec-extension",
+          "value": "3:éx:pdf",
+          "codecSchema": "éx",
+          "extension": "pdf"
+        },
+        {
+          "category": "codec",
+          "namespace": "codec-extension",
+          "value": "2:ex:pdf",
+          "codecSchema": "ex",
+          "extension": "pdf"
+        }
+      ],
+      "code": "accepted"
+    }
+  ]
+}

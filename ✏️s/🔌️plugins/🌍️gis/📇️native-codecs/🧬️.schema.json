@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.gis.native-codec-receipts/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "pluginId", "packageId", "packageVersion", "receipts", "hostile"],
+  "properties": {
+    "schema": { "const": "semio.gis.native-codec-receipts/v1" },
+    "pluginId": { "const": "gis" },
+    "packageId": { "const": "semio:gis" },
+    "packageVersion": { "const": "0.1.0" },
+    "receipts": { "type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": { "$ref": "#/$defs/receipt" } },
+    "hostile": { "type": "array", "minItems": 8, "maxItems": 8, "items": { "enum": ["missing", "duplicate", "foreign-package", "wrong-version", "bare-kind", "wrong-schema", "wrong-extension", "zero-hash"] }, "uniqueItems": true }
+  },
+  "$defs": {
+    "receipt": {
+      "type": "object", "additionalProperties": false,
+      "required": ["factoryId", "kind", "schema", "extension", "capability", "protocolPath", "protocolBytes", "protocolSha256"],
+      "properties": {
+        "factoryId": { "enum": ["gis.gismap.v1", "gis.gisterrain.v1"] },
+        "kind": { "enum": ["s.gis.gismap", "s.gis.gisterrain"] },
+        "schema": { "enum": ["gis.map", "gis.terrain"] },
+        "extension": { "enum": ["gismap", "gisterrain"] },
+        "capability": { "enum": ["s.gis.gismap.codec.document", "s.gis.gisterrain.codec.document"] },
+        "protocolPath": { "enum": ["🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio", "🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"] },
+        "protocolBytes": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "protocolSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    }
+  }
+}

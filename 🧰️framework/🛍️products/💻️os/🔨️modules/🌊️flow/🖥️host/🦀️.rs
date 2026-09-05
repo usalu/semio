@@ -1315,7 +1315,7 @@ impl FlowHost {
         crate::os_pack::json::to_json_string(&self.dag.selected_node_ids())
     }
 
-    /// 🎯️ Full selection snapshot as JSON (`nodes`, `edges`, `handles`).
+    /// 🎯️ Full selection snapshot as JSON (`nodes`, `edges`, `🐙️handles`).
     pub fn selection_domains_json(&self) -> String {
         self.dag.selection_domains_json()
     }
@@ -1496,7 +1496,6 @@ impl FlowHost {
     }
 
     fn next_widget_id(&mut self, descriptor: &WidgetDescriptor) -> String {
-        self.next_widget_serial += 1;
         let prefix = match descriptor {
             WidgetDescriptor::Neuron { neuron_kind, .. } => neuron_kind.replace('.', "_"),
             WidgetDescriptor::InputSlider { .. } => "slider".into(),
@@ -1507,7 +1506,19 @@ impl FlowHost {
             WidgetDescriptor::OutputAction { .. } => "action".into(),
             WidgetDescriptor::OutputExport { .. } => "export".into(),
         };
-        format!("{prefix}_{}", self.next_widget_serial)
+        let id_prefix = format!("{prefix}_");
+        let used = self
+            .fixture
+            .widgets
+            .iter()
+            .filter_map(|widget| widget_id_for(widget).strip_prefix(&id_prefix)?.parse::<u64>().ok())
+            .collect::<std::collections::HashSet<_>>();
+        let mut serial = 2_u64;
+        while used.contains(&serial) {
+            serial = serial.checked_add(1).expect("the finite Flow widget set must leave a generated identifier");
+        }
+        self.next_widget_serial = serial;
+        format!("{prefix}_{serial}")
     }
 
     pub fn set_slider_value(&mut self, widget_id: &str, value: f64) {
@@ -4168,7 +4179,7 @@ mod tests {
     fn delete_selection_removes_edge_selected_by_synapse_id_domain() {
         let mut host = host_with_test_bridge();
         let before = host.fixture.synapses.len();
-        host.dag.set_selection_domains_json(r#"{"nodes":[],"edges":["s1"],"handles":[]}"#);
+        host.dag.set_selection_domains_json(r#"{"nodes":[],"edges":["s1"],"🐙️handles":[]}"#);
         assert!(host.has_selection(), "synapse id s1 must map into engine edge selection");
         host.delete_selection().unwrap();
         assert!(host.fixture.synapses.len() < before);

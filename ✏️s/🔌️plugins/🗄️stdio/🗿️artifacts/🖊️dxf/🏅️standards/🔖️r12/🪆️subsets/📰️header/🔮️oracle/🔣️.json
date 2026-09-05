@@ -1,0 +1,804 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution to the repository test platform, distinct from the shared ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json manifest. `dxf` 0.6 reads AND writes DXF, so it stands as an independent second producer for `@mode-differential` scenarios, not just an independent reader. Registered under its own id and the `dxf-r12-mutate` capability this subset's exhaustive DxfMutation catalog (19 kinds) actually tags, per the wave 7 fleet brief's oracle-registration gotcha (reusing a neighbour's capability fails the contract with `oracle-capability-mismatch`). This subset also defines its own `semantic-dxf-r12-v1` comparison profile here (not in the shared manifest, which this ticket must not edit) -- the registry aggregator merges every discovered manifest's `comparisonProfiles` repo-wide.",
+  "oracles": [
+    {
+      "id": "dxf-crate-r12-mutate",
+      "ecosystem": "rust",
+      "package": "dxf",
+      "version": "0.6",
+      "capabilities": [
+        "dxf-r12-mutate-second-implementation"
+      ],
+      "comparisonProfiles": [
+        "semantic-dxf-r12-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/IxMilia/dxf",
+      "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🦀️oracle.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "dxf-rs",
+        "implementation": "IxMilia dxf Rust DXF reader/writer",
+        "version": "0.6"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "dxf-crate-r12-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "dxf",
+      "version": "0.6",
+      "engine": {
+        "family": "dxf-rs",
+        "implementation": "dxf reader",
+        "version": "0.6"
+      },
+      "capabilities": [
+        "dxf-r12-mutate",
+        "dxf-r12-entities-mutate",
+        "dxf-r12-blocks-mutate",
+        "dxf-r12-tables-mutate"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "rationale": "📖️ A READER, and that is the whole point of registering it separately.\n\nThis subset also carries a 🦀️oracle.rs that COMPUTES what each mutation should produce. That entry is registered cross-semio-implementation and does not discharge anything, because both halves of such a comparison descend from one reading of the DXF R12 specification.\n\nThis entry is a different mechanism. The expected state is not computed at all — it is COMMITTED, as the after half of a byte-reproducible fixture (../🏭️generator/📜️script.ts + 🦀️engine, one recipe per witnessable (mutation, outcome) coordinate). dxf 0.6 then parses the real DXF group-code stream on BOTH sides and the comparison is over what it recovered. The probes say so in their own header: \"Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should.\"\n\nSo the judge is a third-party implementation of the format, and nothing in this repository predicts the answer it is judging. That is what makes it qualifying where the sibling entry is not.\n\nOne honest narrowing, carried from the earlier research on this subset and re-verified here: set-header-var/remove-header-var are witnessed only for $INSBASE — dxf::Header is a fixed generated struct with no arbitrary $VAR slot, and no other header variable this subset could target survives an R12 save/reload through this reference library at all. A second, NEW finding from this retrofit: set-header-var's real production dispatch (🧬️schema/🔺️diff/🦀️.rs's validate_named_targets, read directly) has no reachable rejection against any well-formed base document — both its modify-branch (target already present) and its add-branch (target absent) always validate — so this oracle's fixture corpus carries set-header-var-applied only, no set-header-var-rejected-*; see the ticket-root report for the full reachability argument. A third finding, also new: dxf 0.6's own LOADER (not its writer) resynthesizes a removed-but-still-referenced LAYER/LTYPE row with default values on read (ensure_layer_is_present / ensure_line_type_is_present, called from add_entity / add_layer during parsing) — verified not to weaken the gate (expected and actual are read by the same loader, so a genuine regression still differs from the resynthesized default) but recorded because the projection shows a default-valued residual row, not a clean absence, for remove-layer-applied and remove-linetype-applied specifically.",
+      "comparisonProfiles": [
+        "semantic-dxf-r12-v1"
+      ]
+    }
+  ],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-dxf-r12-v1",
+      "description": "DXF R12 documents compared by declared version, drawing units, HEADER vars, LAYER/STYLE/LTYPE table rows (name-keyed), BLOCKS (name, base point, nested entity list) and top-level ENTITIES (order-significant, typed by kind: LINE/CIRCLE/ARC/TEXT/SOLID/INSERT). Handles, owner pointers, xdata and R13+ subclass markers a writer may still emit are encoder freedom, not normative.",
+      "tolerance": 0.0001,
+      "ignoreKeys": [
+        "handle",
+        "ownerHandle",
+        "fileSize",
+        "byteLength"
+      ],
+      "pipeline": "dxf-r12-reader-compare-v1"
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "dxf-r12-any",
+      "capability": "dxf-r12-mutate",
+      "standardDirectoryName": "🔖️r12",
+      "subsetDirectoryName": "📰️header",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📸️set-snapshot",
+          "mutationDirectoryName": "📸️set-snapshot",
+          "scenarios": [
+            {
+              "id": "widens-the-circle-entity-radius",
+              "directoryName": "🧪️widens-the-circle-entity-radius"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-header-var",
+        "remove-header-var"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.dxf",
+      "standard": "r12",
+      "subset": "header",
+      "standardDirectoryName": "🔖️r12",
+      "subsetDirectoryName": "📰️header",
+      "mutations": [
+        {
+          "id": "no-mutation",
+          "capability": "dxf-r12-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#DxfMutation::NoMutation",
+          "outcomes": [
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "no-mutation",
+            "bridgeVersion": 1,
+            "variant": "DxfMutation::NoMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "semantic-projection-is-unchanged"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "dxf-r12-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#DxfMutation::SetSnapshot",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "DxfMutation::SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "replacement-snapshot-reproduces-exactly-or-reports-no-op"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-header-var",
+          "capability": "dxf-r12-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#DxfMutation::SetHeaderVar",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-header-var",
+            "bridgeVersion": 1,
+            "variant": "DxfMutation::SetHeaderVar"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "header-insertion-base-agrees",
+              "only-insbase-is-representable-in-r12"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "remove-header-var",
+          "capability": "dxf-r12-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#DxfMutation::RemoveHeaderVar",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-header-var",
+            "bridgeVersion": 1,
+            "variant": "DxfMutation::RemoveHeaderVar"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "header-insertion-base-resets-to-origin",
+              "only-insbase-is-representable-in-r12"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "drafting-plate",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.dxf",
+        "standard": "r12",
+        "subset": "header"
+      },
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "primary-dxf",
+          "path": "../🧫️fixtures/📐️drafting-plate/📐️drafting-plate.dxf",
+          "mediaType": "image/vnd.dxf",
+          "sha256": "sha256:18f9470d4a545fcca0ad6fb7ce9d0721c098f1012a45dc4eed4e28cad80fbbdb",
+          "bytes": 9521
+        }
+      ],
+      "generator": {
+        "oracle": "dxf-crate-r12-mutate-reader",
+        "packageVersion": "0.6",
+        "engineFamily": "dxf-rs",
+        "engineVersion": "0.6",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-dxf-r12-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A single base input document carrying, in ONE drawing, the starting state all 19 declared dxf@r12 mutation kinds need: a non-origin $INSBASE (so set-header-var/remove-header-var both move the projection), 3 LAYER rows with distinct colours and linetypes, 3 STYLE rows with distinct fonts, 5 LTYPE rows with distinct descriptions, 2 BLOCKs with different base points and different nested entity lists, and 7 order-significant top-level ENTITIES spanning all six typed kinds the subset models (line, line, circle, arc, solid, text, insert) across three layers. DXF R12 declares no drawing unit at all ($INSUNITS is R2000+ and the dxf crate never emits it for R12), so length is honestly unitless; DXF angles (group codes 50/51) are degrees. Verified against the reference library itself, not asserted: all 19 kinds move the semantic-dxf-r12-v1 projection on this fixture and every inverse restores it exactly; the gate accepts a byte-different dxf re-encode with 0 differences and rejects the same set-entity payload applied to the wrong index with 13. Byte-reproducible: dxf::Header::default stamps $TDCREATE/$TDUPDATE with chrono::Local::now(), the only non-content value in the output, and the generator replaces both with a fixed stamp parsed by dxf's own reader."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "no-mutation-no-op",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.dxf",
+        "standard": "r12",
+        "subset": "header"
+      },
+      "mutation": "no-mutation",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-dxf",
+          "path": "../🧫️fixtures/⏸️no-mutation-no-op/⬅️before.dxf",
+          "mediaType": "image/vnd.dxf",
+          "sha256": "sha256:18f9470d4a545fcca0ad6fb7ce9d0721c098f1012a45dc4eed4e28cad80fbbdb",
+          "bytes": 9521
+        },
+        {
+          "role": "expected-after-dxf",
+          "path": "../🧫️fixtures/⏸️no-mutation-no-op/➡️after.dxf",
+          "mediaType": "image/vnd.dxf",
+          "sha256": "sha256:18f9470d4a545fcca0ad6fb7ce9d0721c098f1012a45dc4eed4e28cad80fbbdb",
+          "bytes": 9521
+        }
+      ],
+      "generator": {
+        "oracle": "dxf-crate-r12-mutate-reader",
+        "packageVersion": "0.6",
+        "engineFamily": "dxf-rs",
+        "engineVersion": "0.6.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only no-mutation-no-op",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (dxf)",
+        "attribution": "Generated with dxf (MIT) via the standalone engine binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-dxf-r12-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Identity — before and after are the same document, encoded independently."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.dxf",
+        "standard": "r12",
+        "subset": "header"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-dxf",
+          "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.dxf",
+          "mediaType": "image/vnd.dxf",
+          "sha256": "sha256:18f9470d4a545fcca0ad6fb7ce9d0721c098f1012a45dc4eed4e28cad80fbbdb",
+          "bytes": 9521
+        },
+        {
+          "role": "expected-after-dxf",
+          "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.dxf",
+          "mediaType": "image/vnd.dxf",
+          "sha256": "sha256:83056be0ab0c13bb447ad62ada59db6bfcda9548879a649e0b1b56d2176492d8",
+          "bytes": 9654
+        }
+      ],
+      "generator": {
+        "oracle": "dxf-crate-r12-mutate-reader",
+        "packageVersion": "0.6",
+        "engineFamily": "dxf-rs",
+        "engineVersion": "0.6.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only set-snapshot-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (dxf)",
+        "attribution": "Generated with dxf (MIT) via the standalone engine binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-dxf-r12-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Whole-document replace: $INSBASE, a new LAYER, and the circle entity's radius (the subset's own declared 'widens-the-circle-entity-radius' scenario) all change together."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-no-op",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.dxf",
+        "standard": "r12",
+        "subset": "header"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-dxf",
+          "path": "../🧫️fixtures/🪞️set-snapshot-no-op/⬅️before.dxf",
+          "mediaType": "image/vnd.dxf",
+          "sha256": "sha256:18f9470d4a545fcca0ad6fb7ce9d0721c098f1012a45dc4eed4e28cad80fbbdb",
+          "bytes": 9521
+        },
+        {
+          "role": "expected-after-dxf",
+          "path": "../🧫️fixtures/🪞️set-snapshot-no-op/➡️after.dxf",
+          "mediaType": "image/vnd.dxf",
+          "sha256": "sha256:18f9470d4a545fcca0ad6fb7ce9d0721c098f1012a45dc4eed4e28cad80fbbdb",
+          "bytes": 9521
+        }
+      ],
+      "generator": {
+        "oracle": "dxf-crate-r12-mutate-reader",
+        "packageVersion": "0.6",
+        "engineFamily": "dxf-rs",
+        "engineVersion": "0.6.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only set-snapshot-no-op",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (dxf)",
+        "attribution": "Generated with dxf (MIT) via the standalone engine binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-dxf-r12-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Replacement snapshot equals the base — DxfDiff::between is empty."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-rejected-duplicate-layer",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.dxf",
+        "standard": "r12",
+        "subset": "header"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-dxf",
+          "path": "../🧫️fixtures/👯️set-snapshot-rejected-duplicate-layer/⬅️before.dxf",
+          "mediaType": "image/vnd.dxf",
+          "sha256": "sha256:18f9470d4a545fcca0ad6fb7ce9d0721c098f1012a45dc4eed4e28cad80fbbdb",
+          "bytes": 9521
+        }
+      ],
+      "generator": {
+        "oracle": "dxf-crate-r12-mutate-reader",
+        "packageVersion": "0.6",
+        "engineFamily": "dxf-rs",
+        "engineVersion": "0.6.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only set-snapshot-rejected-duplicate-layer",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (dxf)",
+        "attribution": "Generated with dxf (MIT) via the standalone engine binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-dxf-r12-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Payload snapshot declares a layer name that collides with an existing base layer — invalid-add-target (🔺️diff/🦀️.rs:1571)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-header-var-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.dxf",
+        "standard": "r12",
+        "subset": "header"
+      },
+      "mutation": "set-header-var",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-dxf",
+          "path": "../🧫️fixtures/🏷️set-header-var-applied/⬅️before.dxf",
+          "mediaType": "image/vnd.dxf",
+          "sha256": "sha256:18f9470d4a545fcca0ad6fb7ce9d0721c098f1012a45dc4eed4e28cad80fbbdb",
+          "bytes": 9521
+        },
+        {
+          "role": "expected-after-dxf",
+          "path": "../🧫️fixtures/🏷️set-header-var-applied/➡️after.dxf",
+          "mediaType": "image/vnd.dxf",
+          "sha256": "sha256:597dae413c4df8a113bafdbed79914b09a301adef46d7321f3c6c8bc448195b4",
+          "bytes": 9520
+        }
+      ],
+      "generator": {
+        "oracle": "dxf-crate-r12-mutate-reader",
+        "packageVersion": "0.6",
+        "engineFamily": "dxf-rs",
+        "engineVersion": "0.6.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only set-header-var-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (dxf)",
+        "attribution": "Generated with dxf (MIT) via the standalone engine binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-dxf-r12-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "$INSBASE changes value — the one generic $VAR dxf's Header persists unconditionally on an R12 save."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-header-var-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.dxf",
+        "standard": "r12",
+        "subset": "header"
+      },
+      "mutation": "remove-header-var",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-dxf",
+          "path": "../🧫️fixtures/🧹️remove-header-var-applied/⬅️before.dxf",
+          "mediaType": "image/vnd.dxf",
+          "sha256": "sha256:18f9470d4a545fcca0ad6fb7ce9d0721c098f1012a45dc4eed4e28cad80fbbdb",
+          "bytes": 9521
+        },
+        {
+          "role": "expected-after-dxf",
+          "path": "../🧫️fixtures/🧹️remove-header-var-applied/➡️after.dxf",
+          "mediaType": "image/vnd.dxf",
+          "sha256": "sha256:e70bd876b3b7bbeaeb310321b5f1ff69fac883279eaea362c261ef8fdba59389",
+          "bytes": 9518
+        }
+      ],
+      "generator": {
+        "oracle": "dxf-crate-r12-mutate-reader",
+        "packageVersion": "0.6",
+        "engineFamily": "dxf-rs",
+        "engineVersion": "0.6.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only remove-header-var-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (dxf)",
+        "attribution": "Generated with dxf (MIT) via the standalone engine binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-dxf-r12-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "$INSBASE resets to the origin."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-header-var-rejected-missing",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.dxf",
+        "standard": "r12",
+        "subset": "header"
+      },
+      "mutation": "remove-header-var",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-dxf",
+          "path": "../🧫️fixtures/🔍️remove-header-var-rejected-missing/⬅️before.dxf",
+          "mediaType": "image/vnd.dxf",
+          "sha256": "sha256:18f9470d4a545fcca0ad6fb7ce9d0721c098f1012a45dc4eed4e28cad80fbbdb",
+          "bytes": 9521
+        }
+      ],
+      "generator": {
+        "oracle": "dxf-crate-r12-mutate-reader",
+        "packageVersion": "0.6",
+        "engineFamily": "dxf-rs",
+        "engineVersion": "0.6.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only remove-header-var-rejected-missing",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (dxf)",
+        "attribution": "Generated with dxf (MIT) via the standalone engine binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-dxf-r12-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Target name is genuinely absent from header_vars — invalid-remove-target, carrier-independent."
+    }
+  ],
+  "probes": [
+    {
+      "id": "dxf-import",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "dxf",
+      "version": "0.6.1",
+      "engine": {
+        "family": "dxf-rs",
+        "implementation": "engine (dxf 0.6 + this artifact's own semantic-dxf-r12-v1 projection)",
+        "version": "dxf@0.6.1"
+      },
+      "capabilities": [
+        "dxf.reader.import"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🔬️probes/📜️script.ts",
+        "dxf-import"
+      ],
+      "rationale": "An INDEPENDENT reader (dxf 0.6's own group-code parser, via the standalone engine binary) accepts both files at all. Nothing downstream means anything if one of them does not parse.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Run against every generated fixture this session (38 recipes, 58 files) — bothImport true in every case; confirmed directly for insert-entity-applied/⬅️before.dxf + after.dxf.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "reads-a-real-dxf",
+            "met": true,
+            "detail": "decodes HEADER, TABLES (LAYER/STYLE/LTYPE), BLOCKS, ENTITIES via dxf::Drawing::load"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "engine depends only on dxf 0.6, resolved from the local cargo registry cache; no network during execution"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dxf-project",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "dxf",
+      "version": "0.6.1",
+      "engine": {
+        "family": "dxf-rs",
+        "implementation": "engine (dxf 0.6 + this artifact's own semantic-dxf-r12-v1 projection)",
+        "version": "dxf@0.6.1"
+      },
+      "capabilities": [
+        "dxf.reader.project"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🔬️probes/📜️script.ts",
+        "dxf-project"
+      ],
+      "rationale": "The typed projection semantic-dxf-r12-v1 is measured against — acadVersion, insertionBase, LAYER/STYLE/LTYPE rows, BLOCKS (name, base point, nested entity list), top-level ENTITIES, all with the exact field set ../🦀️oracle.rs's own project_dxf_r12 uses.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Run against insert-entity-applied/➡️after.dxf: reports entityCount 8 (base 7 + 1 inserted circle at index 2), matching the real production InsertEntity dispatch's own index-addressed insert.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "name-keyed-tables-ordered-entities",
+            "met": true,
+            "detail": "layers/styles/linetypes compare name-keyed (validate_named_targets is the real production semantics); blocks/entities compare positionally (validate_indexed_targets)"
+          },
+          {
+            "id": "no-opaque-payloads-needed",
+            "met": true,
+            "detail": "unlike AVI's movi chunks, this subset's document has no large opaque binary payloads to hash — the typed projection is already the full comparable shape"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dxf-compare",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "dxf",
+      "version": "0.6.1",
+      "engine": {
+        "family": "dxf-rs",
+        "implementation": "engine (dxf 0.6 + this artifact's own semantic-dxf-r12-v1 projection)",
+        "version": "dxf@0.6.1"
+      },
+      "capabilities": [
+        "dxf.reader.compare"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🔬️probes/📜️script.ts",
+        "dxf-compare"
+      ],
+      "rationale": "Name-keyed-for-tables / ordered-for-blocks-and-entities structural equality over two independently-decoded projections, at semantic-dxf-r12-v1's own 1e-4 tolerance — the GATING comparison. Computes no mutation semantics, only structural equality of two already-existing byte blobs.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways this session with real measured numbers: no-mutation-no-op's before.dxf vs after.dxf (byte-identical pair) -> {equal:true, diffCount:0}; set-style-applied's after.dxf vs before.dxf (one field, NOTES' font, deliberately different) -> {equal:false, diffCount:1, diffs:[\"$.styles[name=NOTES].font: \\\"arial.ttf\\\" \\u2260 \\\"romans.shx\\\"\"]}. Tolerance independently confirmed discriminating at the declared 1e-4: a circle radius perturbed by 1e-5 compares equal (0 diffs), perturbed by 1e-2 does not (1 diff, delta 0.009999999999990905).",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "identical before/after bytes compare equal:true, diffCount:0"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "a single deliberately-wrong field compares equal:false, diffCount:1, and the diff names the exact field path"
+          },
+          {
+            "id": "tolerance-discriminates",
+            "met": true,
+            "detail": "1e-5 radius perturbation accepted, 1e-2 rejected, at the profile's own declared 1e-4 threshold"
+          }
+        ]
+      }
+    }
+  ],
+  "comparisonPipelines": [
+    {
+      "id": "dxf-r12-reader-compare-v1",
+      "description": "Reads the subject's produced DXF and the fixture's own expected DXF with an independent dxf 0.6 projection (../🏭️generator/🦀️engine's `project` subcommand, independently re-derived from ../🦀️oracle.rs's project_dxf_r12 shape, never imported from it), then compares their projections under semantic-dxf-r12-v1 (LAYER/STYLE/LTYPE name-keyed; BLOCKS and ENTITIES, including a block's own nested entity list, order-significant). GATING.",
+      "stages": [
+        {
+          "probe": "dxf-import",
+          "description": "An independent reader accepts both files.",
+          "inputs": [
+            "expected-dxf",
+            "actual-dxf"
+          ],
+          "assertions": {
+            "bothImport": true
+          }
+        },
+        {
+          "probe": "dxf-compare",
+          "description": "Structural equality under semantic-dxf-r12-v1 — the operative equality.",
+          "inputs": [
+            "expected-dxf",
+            "actual-dxf"
+          ],
+          "assertions": {
+            "equal": true
+          }
+        }
+      ]
+    }
+  ]
+}

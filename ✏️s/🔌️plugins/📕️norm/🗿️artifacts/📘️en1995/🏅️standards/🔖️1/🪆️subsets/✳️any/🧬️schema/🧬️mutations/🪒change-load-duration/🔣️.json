@@ -5,7 +5,7 @@
   "displayName": "Change Load Duration",
   "emoji": "🪒",
   "aggregateVariant": "ChangeLoadDuration",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

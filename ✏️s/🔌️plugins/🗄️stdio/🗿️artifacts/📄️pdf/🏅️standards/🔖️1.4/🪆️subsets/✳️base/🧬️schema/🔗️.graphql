@@ -1,5 +1,0 @@
-# 🧬️ PdfArtifact (1.4) schema -- see 📸️snapshot/🔗️.graphql for PageDoc.
-type PdfArtifact {
-  schema: String! @state(class: ARTIFACT)
-  pages: [PageDoc!]! @state(class: ARTIFACT)
-}

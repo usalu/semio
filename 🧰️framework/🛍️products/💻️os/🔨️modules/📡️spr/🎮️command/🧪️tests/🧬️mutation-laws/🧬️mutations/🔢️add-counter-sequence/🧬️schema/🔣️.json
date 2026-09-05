@@ -10,7 +10,7 @@
         "deltas": {
           "type": "array",
           "items": {
-            "$ref": "../../../🧬️schema/🔣️.json#/$defs/I64"
+            "$ref": "../../../📐️schema/🔣️.json#/$defs/I64"
           }
         }
       }

@@ -10,12 +10,12 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { type UiLabel, uiDataLabel } from "../🏷️UiLabel/🟦️.tsx";
+import { type UiLabel, uiDataLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { Icon, type ControlIcon, type IconSource } from "../🔣️Icons/🟦️.tsx";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
 import { useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
-import { formatKeybindingShortcut } from "../../🔨️modules/⌨️keybinding-text-interpretation/🟦️.ts";
+import { formatKeybindingShortcut } from "../../🔨️modules/🔤️keybinding-text-interpretation/🟦️.ts";
 import { floatingMenuItemClass, ContextMenuChrome } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️";
 // #endregion 🔌️Adapters
 

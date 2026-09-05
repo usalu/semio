@@ -1,0 +1,19 @@
+{
+  "schema": "flow.fixture",
+  "camera": {
+    "x": 0.0,
+    "y": 0.0,
+    "zoom": 1.0
+  },
+  "content": {
+    "childId": "flow-content-duplicate-widget-fixture",
+    "target": {
+      "artifactId": "flow-content-duplicate-widget-fixture",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "flow"
+      }
+    }
+  }
+}

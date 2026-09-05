@@ -1,0 +1,72 @@
+{
+  "mutation": "duplicateBlocks",
+  "sourceIds": [
+    "blk-ink",
+    "blk-table"
+  ],
+  "blocks": [
+    {
+      "kind": "stroke",
+      "id": "blk-ink-copy",
+      "name": "Sketch copy",
+      "x": 20.0,
+      "y": 160.0,
+      "width": 80.0,
+      "height": 40.0,
+      "rotation": 0.0,
+      "visible": true,
+      "locked": false,
+      "points": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          10.0,
+          10.0
+        ]
+      ],
+      "strokeWidth": 2.0,
+      "color": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "kind": "table",
+      "id": "blk-table-copy",
+      "name": "Samples copy",
+      "x": 0.0,
+      "y": 220.0,
+      "width": 320.0,
+      "height": 160.0,
+      "rotation": 0.0,
+      "visible": true,
+      "locked": false,
+      "columns": [
+        "A",
+        "B"
+      ],
+      "rows": [
+        [
+          {
+            "content": "Alpha"
+          },
+          {
+            "content": ""
+          }
+        ],
+        [
+          {
+            "content": ""
+          },
+          {
+            "content": ""
+          }
+        ]
+      ]
+    }
+  ]
+}

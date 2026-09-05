@@ -232,7 +232,7 @@ fn catalog_rows_subset(catalogs: &Value, slice: &str, keys: &[&str]) -> Option<V
 }
 
 /// 🗂️ Projects the document's `meta.kindCatalogs` onto the board engine's catalog contract. The
-/// document owns `nodes`/`handles`/`edges`/`wires` ([`Puzzle2dKindCatalogs`]) while
+/// document owns `nodes`/`🐙️handles`/`edges`/`wires` ([`Puzzle2dKindCatalogs`]) while
 /// `BoardHost::set_board_kind_catalogs_from_json` reads `nodeKinds`/`handleKinds`/`edgeKinds`/`wireKinds`
 /// and rejects any row still carrying the document's `label`, so each row is narrowed to the keys the
 /// engine actually reads. Without this the engine's `node_kinds` map stays empty and every
@@ -1141,7 +1141,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle2dRetainedCom
 }
 
 /// 🖌️ Upper bound on the events one board flush may carry into a single retained step. The browser
-/// flushes a handful of events per interaction (`PUZZLE2D_FLUSH_NOW_EVENT_NAMES` in `Board2dHost`), so
+/// flushes a handful of events per interaction (`PUZZLE2D_FLUSH_NOW_EVENT_NAMES` in `🖥️Board2dHost`), so
 /// one bounded step covers a real interaction; an oversized batch is refused rather than silently
 /// truncated.
 const PUZZLE2D_BOARD_EVENT_BATCH_LIMIT: usize = 256;
@@ -1158,7 +1158,7 @@ fn puzzle2d_board_events_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dP
 
 /// 🖌️ `applyBoardEvents` is the single verb the browser's board session commits through — `brushPlace`,
 /// `select`, `edgeCreate`/`edgeDelete`, `nodeDelete` and `camera` all arrive in its `eventsJson` batch
-/// (`Board2dHost/🟦️.tsx`). It reruns the same pipeline `handle` does — scene, board host,
+/// (`🖥️Board2dHost/🟦️.tsx`). It reruns the same pipeline `handle` does — scene, board host,
 /// runtime sync, the action, host-event drain, document delta — minus the `ArtifactView` that a
 /// retained work never sees, so the committed `AppOperationContext` is simply absent here.
 fn puzzle2d_board_events_reduce(

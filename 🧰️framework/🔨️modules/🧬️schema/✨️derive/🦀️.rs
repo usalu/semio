@@ -92,7 +92,7 @@ fn parse_field_axis(field: &syn::Field) -> syn::Result<FieldAxis> {
 /// 🧭️ Classifies a field's composition role (CHILD / LINK / neither) by matching the LAST path
 /// segment of its type syntactically — this proc-macro crate never resolves types, only names.
 enum CompositionFieldKind {
-    Child { many: bool },
+    Child,
     Link { many: bool },
     None,
 }
@@ -135,13 +135,13 @@ fn classify_composition_field(ty: &Type) -> CompositionFieldKind {
     if let Some(element) = vec_element_type(ty) {
         let element = unwrap_option(element);
         return match last_segment_ident(element).map(|ident| ident.to_string()).as_deref() {
-            Some("ArtifactChild") => CompositionFieldKind::Child { many: true },
+            Some("ArtifactChild") => CompositionFieldKind::Child,
             Some("ArtifactLink") => CompositionFieldKind::Link { many: true },
             _ => CompositionFieldKind::None,
         };
     }
     match last_segment_ident(ty).map(|ident| ident.to_string()).as_deref() {
-        Some("ArtifactChild") => CompositionFieldKind::Child { many: false },
+        Some("ArtifactChild") => CompositionFieldKind::Child,
         Some("ArtifactLink") => CompositionFieldKind::Link { many: false },
         _ => CompositionFieldKind::None,
     }
@@ -211,6 +211,7 @@ pub fn expand_artifact_schema(input: &DeriveInput) -> syn::Result<proc_macro2::T
     let mut field_entries = Vec::new();
     let mut derived_entries = Vec::new();
     let mut child_entries = Vec::new();
+    let mut child_visits = Vec::new();
     let mut link_entries = Vec::new();
     for field in &fields.named {
         let name = field.ident.as_ref().ok_or_else(|| syn::Error::new_spanned(field, "named field required"))?;
@@ -225,15 +226,21 @@ pub fn expand_artifact_schema(input: &DeriveInput) -> syn::Result<proc_macro2::T
             FieldAxis::Derived => derived_entries.push(quote! { #camel }),
         }
 
+        if field.attrs.iter().any(|attr| attr.path().is_ident("child")) {
+            let kind = parse_child_kind(field)?;
+            let kind_lit = syn::LitStr::new(&kind, name.span());
+            let name_lit = syn::LitStr::new(&camel, name.span());
+            let ty = &field.ty;
+            child_entries.push(quote! {
+                ::semio_framework_schema::ChildSlotSpec { name: #name_lit, kind: #kind_lit, many: <#ty as ::semio_framework_schema::ChildFieldRefs>::MANY }
+            });
+            child_visits.push(quote! {
+                ::semio_framework_schema::ChildFieldRefs::visit_child_field(&self.#name, #name_lit, visitor)?;
+            });
+            continue;
+        }
         match classify_composition_field(&field.ty) {
-            CompositionFieldKind::Child { many } => {
-                let kind = parse_child_kind(field)?;
-                let kind_lit = syn::LitStr::new(&kind, name.span());
-                let name_lit = syn::LitStr::new(&camel, name.span());
-                child_entries.push(quote! {
-                    ::semio_framework_schema::ChildSlotSpec { name: #name_lit, kind: #kind_lit, many: #many }
-                });
-            }
+            CompositionFieldKind::Child => { parse_child_kind(field)?; }
             CompositionFieldKind::Link { many } => {
                 let roles = parse_link_roles(field)?;
                 let name_lit = syn::LitStr::new(&camel, name.span());
@@ -261,10 +268,14 @@ pub fn expand_artifact_schema(input: &DeriveInput) -> syn::Result<proc_macro2::T
         }
 
         impl ::semio_framework_schema::ArtifactCompositionFields for #ident {
-            async fn child_slots() -> &'static [::semio_framework_schema::ChildSlotSpec] {
+            fn visit_child_refs<'a, V: ::semio_framework_schema::ChildRefVisitor<'a>>(&'a self, visitor: &mut V) -> Result<(), V::Error> {
+                #(#child_visits)*
+                Ok(())
+            }
+            fn child_slots() -> &'static [::semio_framework_schema::ChildSlotSpec] {
                 &[#(#child_entries),*]
             }
-            async fn link_slots() -> &'static [::semio_framework_schema::LinkSlotSpec] {
+            fn link_slots() -> &'static [::semio_framework_schema::LinkSlotSpec] {
                 &[#(#link_entries),*]
             }
         }

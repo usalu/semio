@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["receipt", "hostile", "lifecycle", "labels"],
+  "properties": {
+    "receipt": { "$ref": "#/$defs/receipt" },
+    "hostile": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "patch"],
+        "properties": { "id": { "type": "string", "minLength": 1 }, "patch": { "type": "object" } }
+      }
+    },
+    "lifecycle": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "action", "expected"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "action": { "enum": ["open", "resolve", "reject", "mismatch", "cancel", "duplicate", "switch-visible"] },
+          "expected": { "enum": ["open", "ack", "reject", "close", "cancelled", "pending", "retained"] }
+        }
+      }
+    },
+    "labels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {
+        "en": { "type": "array", "minItems": 4, "items": { "type": "string", "minLength": 1 } },
+        "de": { "type": "array", "minItems": 4, "items": { "type": "string", "minLength": 1 } }
+      }
+    }
+  },
+  "$defs": {
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "sessionBindingSha256", "authorizationGeneration", "throughSeqInclusive", "receiptSha256"],
+      "properties": {
+        "schema": { "const": "semio.space.home.directory-projection-receipt.v1" },
+        "sessionBindingSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "authorizationGeneration": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "throughSeqInclusive": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "receiptSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    }
+  }
+}

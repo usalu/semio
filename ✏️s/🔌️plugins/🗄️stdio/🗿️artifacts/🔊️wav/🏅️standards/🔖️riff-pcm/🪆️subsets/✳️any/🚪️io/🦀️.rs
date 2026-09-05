@@ -249,7 +249,7 @@ mod codec_tests {
     /// here as a literal so the test doesn't reach across an emoji-path `include_bytes!` boundary.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn real_fixture() -> Vec<u8> {
-        include_bytes!("../📚️examples/🎬️demo/🖼️assets/🧪️example/🔊️.wav").to_vec()
+        include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎧️example/🔊️.wav").to_vec()
     }
 
     #[semio_framework_async_macros::async_test]

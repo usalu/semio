@@ -100,7 +100,10 @@ impl ArtifactViewer for HomeViewer {
     /// rename/share affordances, fed by `cfg.snapshot.directory()` — never the artifact document itself.
     fn render(body_key: &str, _doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree> {
         let root = match body_key {
-            main::S_HOME_VIEW_BODY => main::render(&cfg.snapshot.directory(), &cfg.snapshot.locale)?,
+            main::S_HOME_VIEW_BODY => {
+                let directory = cfg.snapshot.directory().map_err(|_| PluginAssemblyError::new("s.home.directory-projection-malformed", "Home directory projection is invalid"))?;
+                main::render(&directory, &cfg.snapshot.locale)?
+            }
             _ => semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}")))
                 .map_err(|_| PluginAssemblyError::new("s.home.viewer.render.unknown-body", "unknown body key text admission failed"))?,
         };

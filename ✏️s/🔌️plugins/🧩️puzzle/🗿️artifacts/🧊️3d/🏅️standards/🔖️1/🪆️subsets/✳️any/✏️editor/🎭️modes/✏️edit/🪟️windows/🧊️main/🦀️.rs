@@ -2,7 +2,7 @@
 //! projection: the instance/mesh/vortex/attraction/target-volume/reference payloads, the selection
 //! and gumball descriptor, the LOD/chunking/environment blocks and the interaction channel (active
 //! utility, suggestion popup, fill-build progress, reveal cutoffs) the host renderer reads. Also
-//! owns the engagement HUD and collects its chrome measures from the mode's `🎚️options/*` and its own
+//! owns the engagement HUD and collects its chrome measures from the mode's `☑️options/*` and its own
 //! `🪛️utilities/*`.
 //!
 //! 🪟️ One KIND, many INSTANCES: the default layout splits it into an orthographic "Top" and a
@@ -61,7 +61,7 @@ pub fn definition(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> WindowKi
     }
 }
 
-/// 🎚️ The live chrome measures for one window instance, collected from the mode's `🎚️options/*`
+/// 🎚️ The live chrome measures for one window instance, collected from the mode's `☑️options/*`
 /// components plus this window's own `🪛️utilities/*` option groups.
 pub fn window_measures(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
     vec![

@@ -24,39 +24,60 @@ pub struct GisMapBounds {
 
 /// 🗺️ Recursively collects every `{lon, lat}` object and `[number, number]` pair inside `value`.
 pub(crate) fn scan_lon_lat_pairs(value: &dsl::DslValue, out: &mut Vec<(f64, f64)>) {
+    visit_lon_lat_pairs(value, 1, &mut |lon, lat| out.push((lon, lat)), &mut |_| Ok::<(), std::convert::Infallible>(())).expect("infallible coordinate collection");
+}
+
+fn visit_lon_lat_pairs<E>(value: &dsl::DslValue, depth: u32, point: &mut impl FnMut(f64, f64), checkpoint: &mut impl FnMut(u32) -> Result<(), E>) -> Result<(), E> {
+    checkpoint(depth)?;
     match value {
         dsl::DslValue::Object(entries) => {
             let lon = entries.iter().find(|(key, _)| key == "lon").and_then(|(_, value)| value.as_f64());
             let lat = entries.iter().find(|(key, _)| key == "lat").and_then(|(_, value)| value.as_f64());
             if let (Some(lon), Some(lat)) = (lon, lat) {
-                out.push((lon, lat));
+                point(lon, lat);
             }
             for (_, value) in entries {
-                scan_lon_lat_pairs(value, out);
+                visit_lon_lat_pairs(value, depth.saturating_add(1), point, checkpoint)?;
             }
         }
         dsl::DslValue::Array(items) => {
             if let [a, b] = items.as_slice() {
                 if let (Some(a), Some(b)) = (a.as_f64(), b.as_f64()) {
-                    out.push((a, b));
-                    return;
+                    point(a, b);
+                    return Ok(());
                 }
             }
             for item in items {
-                scan_lon_lat_pairs(item, out);
+                visit_lon_lat_pairs(item, depth.saturating_add(1), point, checkpoint)?;
             }
         }
         _ => {}
     }
+    Ok(())
+}
+
+/// ⏱️ Folds coordinates without retaining a point vector and checks every visited value.
+pub(crate) fn controlled_lon_lat_bounds<E>(snapshot: &GisMapSnapshot, checkpoint: &mut impl FnMut(u32) -> Result<(), E>) -> Result<Option<GisMapBounds>, E> {
+    let mut bounds = None;
+    for feature in snapshot.positions.iter().chain(snapshot.routes.iter()).chain(snapshot.regions.iter()) {
+        visit_lon_lat_pairs(&feature.data, 1, &mut |lon, lat| include_point(&mut bounds, lon, lat), checkpoint)?;
+    }
+    Ok(bounds)
+}
+
+fn include_point(bounds: &mut Option<GisMapBounds>, lon: f64, lat: f64) {
+    *bounds = Some(match bounds.as_ref() {
+        Some(current) => GisMapBounds { lon_min: current.lon_min.min(lon), lon_max: current.lon_max.max(lon), lat_min: current.lat_min.min(lat), lat_max: current.lat_max.max(lat) },
+        None => GisMapBounds { lon_min: lon, lon_max: lon, lat_min: lat, lat_max: lat },
+    });
 }
 
 /// 📦 Bounding box across every scanned `(lon, lat)` pair, or `None` when nothing scanned.
 pub(crate) fn lon_lat_bounds(pairs: &[(f64, f64)]) -> Option<GisMapBounds> {
     pairs.iter().fold(None, |acc, &(lon, lat)| {
-        Some(match acc {
-            Some(bounds) => GisMapBounds { lon_min: bounds.lon_min.min(lon), lon_max: bounds.lon_max.max(lon), lat_min: bounds.lat_min.min(lat), lat_max: bounds.lat_max.max(lat) },
-            None => GisMapBounds { lon_min: lon, lon_max: lon, lat_min: lat, lat_max: lat },
-        })
+        let mut bounds = acc;
+        include_point(&mut bounds, lon, lat);
+        bounds
     })
 }
 
@@ -77,7 +98,7 @@ mod tests {
     use crate::artifacts::gismap::MapFeature;
 
     fn dsl_of(value: serde_json::Value) -> dsl::DslValue {
-        dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null)
+        dsl::DslValue::from(value)
     }
 
     #[semio_framework_async_macros::async_test]

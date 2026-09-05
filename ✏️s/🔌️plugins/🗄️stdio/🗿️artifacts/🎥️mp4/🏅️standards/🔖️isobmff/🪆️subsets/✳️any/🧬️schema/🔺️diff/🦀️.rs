@@ -121,7 +121,7 @@ pub fn between_indexed<T: Clone + PartialEq, D>(base: &[T], other: &[T], between
 }
 
 /// 📐️ Shared rank/unrank index-transport arithmetic (adapted from gif 89a's `GifDiff` absorb —
-/// `🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️base/🧬️schema/🔺️diff/🦀️.rs`
+/// `🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs`
 /// `count_le`/`rank_excluding`/`unrank_excluding`/`transport_forward` — chosen over deriving a
 /// position-label array because it needs no base-length parameter, which `MutationDiff::absorb`'s
 /// base-free signature can't supply). `excluded_sorted` must be sorted ascending.

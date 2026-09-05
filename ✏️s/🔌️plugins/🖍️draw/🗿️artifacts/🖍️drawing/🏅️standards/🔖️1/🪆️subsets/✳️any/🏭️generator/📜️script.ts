@@ -36,7 +36,7 @@ const ENGINE = join(HERE, "🦀️json-engine");
 const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
 const ORACLE_ID = "serde-json-drawing-carrier-reader";
 const COMPARISON_PROFILE = "semantic-drawing-carrier-v1";
-/** 🧾️ Kept in step with `🦀️json-engine/src/lib.rs::KINDS`. */
+/** 🧾️ Kept in step with `🦀️json-engine/src/📚️lib.rs::KINDS`. */
 const KINDS: readonly string[] = ["set-layer-locked", "set-layer-blend-mode", "rename-layer"];
 //#endregion 🧬️Contract
 

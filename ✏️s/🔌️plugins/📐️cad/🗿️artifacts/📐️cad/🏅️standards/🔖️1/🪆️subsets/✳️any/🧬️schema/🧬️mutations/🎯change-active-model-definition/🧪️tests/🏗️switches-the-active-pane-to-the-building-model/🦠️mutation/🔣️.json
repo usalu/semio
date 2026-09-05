@@ -1,0 +1,4 @@
+{
+  "mutation": "changeActiveModelDefinition",
+  "newModelDefinitionId": "aec.building"
+}

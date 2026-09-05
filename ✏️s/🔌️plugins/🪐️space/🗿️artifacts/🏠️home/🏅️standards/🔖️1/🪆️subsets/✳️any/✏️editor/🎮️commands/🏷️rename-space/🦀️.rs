@@ -20,7 +20,7 @@ pub struct RenameSpace {
 //#region 🔖️Handle
 pub fn handle(payload: &RenameSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     if payload.name.trim().is_empty() {
-        let current_name = cfg.snapshot.directory().spaces.get(&payload.space_id).map(|space| space.view.name.clone()).unwrap_or_default();
+        let current_name = cfg.snapshot.directory()?.spaces.get(&payload.space_id).map(|space| space.view.name.clone()).unwrap_or_default();
         let args = Some(pack::json_to_dsl_value(&pack::json!({ "spaceId": payload.space_id.clone(), "name": current_name })));
         return Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(125), dialog_id: "renameSpace".into(), args }));
     }

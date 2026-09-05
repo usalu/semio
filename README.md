@@ -1,33 +1,33 @@
 <p align="center">
     <a href="https://docs.semio-tech.com">
       <picture>
-          <source media="(prefers-color-scheme: dark)" srcset="🧰️framework/🔨️modules/🖼️assets/🪧️logos/🔣️logo_dark.svg">
-          <source media="(prefers-color-scheme: light)" srcset="🧰️framework/🔨️modules/🖼️assets/🪧️logos/🔣️logo.svg">
-          <img alt="compose" src="🧰️framework/🔨️modules/🖼️assets/🪧️logos/🔣️logo.svg">
+          <source media="(prefers-color-scheme: dark)" srcset="🧰️framework/🔨️modules/🖼️assets/🪧️logos/🪧️logo/🌙️dark/🖋️vector.svg">
+          <source media="(prefers-color-scheme: light)" srcset="🧰️framework/🔨️modules/🖼️assets/🪧️logos/🪧️logo/☀️light/🖋️vector.svg">
+          <img alt="compose" src="🧰️framework/🔨️modules/🖼️assets/🪧️logos/🪧️logo/☀️light/🖋️vector.svg">
       </picture>
     </a>
     <br/>
-    <a href="https://play.semio-tech.com"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️site-play.svg" alt="A free online playground to toy with compose without login."></a>
-    <a href="https://docs.semio-tech.com"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️site-docs.svg" alt="The documentation page to learn compose."></a>
-    <a href="https://js.semio-tech.com"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️dev-js.svg" alt="The elements Storybook for shared javascript UI elements."></a>
-    <a href="https://discord.gg/m6nnf6pQRc"><img src="🧰️framework/🔨️modules/assets/📛️badge/🔣️discord.svg" alt="Discord"></a>
+    <a href="https://play.semio-tech.com"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🎮️site-play/🏷️badge.svg" alt="A free online playground to toy with compose without login."></a>
+    <a href="https://docs.semio-tech.com"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/📖️site-docs/🏷️badge.svg" alt="The documentation page to learn compose."></a>
+    <a href="https://js.semio-tech.com"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🟨️dev-js/🏷️badge.svg" alt="The elements Storybook for shared javascript UI elements."></a>
+    <a href="https://discord.gg/m6nnf6pQRc"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/👾️discord/🏷️badge.svg" alt="Discord"></a>
     <br/>
-     <a href="https://github.com/usalu/semio"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️repo-semio.svg" alt="The repository."></a>
-    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️cite-zenodo.svg" alt="Cite"></a>
-    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️license-agpl-v3.svg" alt="Affero General Public License v3.0 or later"></a>
+     <a href="https://github.com/usalu/semio"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🧬️repo-semio/🏷️badge.svg" alt="The repository."></a>
+    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔖️cite-zenodo/🏷️badge.svg" alt="Cite"></a>
+    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/⚖️license-agpl-v3/🏷️badge.svg" alt="Affero General Public License v3.0 or later"></a>
     <br/>
-    <a href="https://eg-ice-25.semio-tech.com"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️presentation-egice25.svg" alt="The presentation of our latest research paper on LLMs with compose."></a>
-    <a href="https://doi.org/10.17868/strath.00093288"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️latest-research.svg" alt="The latest research paper on LLMs with compose."></a>
-    <a href="https://eg-ice-23.semio-tech.com"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️presentation-egice23.svg" alt="The presentation of our previous research paper on formalizing architecture."></a>
+    <a href="https://eg-ice-25.semio-tech.com"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🎙️presentation-egice25/🏷️badge.svg" alt="The presentation of our latest research paper on LLMs with compose."></a>
+    <a href="https://doi.org/10.17868/strath.00093288"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔬️latest-research/🏷️badge.svg" alt="The latest research paper on LLMs with compose."></a>
+    <a href="https://eg-ice-23.semio-tech.com"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🎤️presentation-egice23/🏷️badge.svg" alt="The presentation of our previous research paper on formalizing architecture."></a>
     <br/>
-    <a href="https://play.semio-tech.com"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️ui-browser.svg" alt="Browser"></a>
-    <a href="https://www.grasshopper3d.com/"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️ui-grasshopper.svg" alt="Grasshopper"></a>
-    <a href="https://www.microsoft.com/windows/windows-11"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️ui-windows.svg" alt="Windows"></a>
-    <a href="https://apple.com/macos"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️ui-macos.svg" alt="macOS"></a>
+    <a href="https://play.semio-tech.com"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🌐️ui-browser/🏷️badge.svg" alt="Browser"></a>
+    <a href="https://www.grasshopper3d.com/"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🦗️ui-grasshopper/🏷️badge.svg" alt="Grasshopper"></a>
+    <a href="https://www.microsoft.com/windows/windows-11"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🪟️ui-windows/🏷️badge.svg" alt="Windows"></a>
+    <a href="https://apple.com/macos"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🍎️ui-macos/🏷️badge.svg" alt="macOS"></a>
     <br/>
-    <a href="https://www.typescriptlang.org/"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️powered-by-typescript.svg" alt="Typescript"></a>
-    <a href="https://www.python.org/"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️powered-by-python.svg" alt="Python"></a>
-    <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔣️powered-by-csharp.svg" alt="C#"></a>
+    <a href="https://www.typescriptlang.org/"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🟦️powered-by-typescript/🏷️badge.svg" alt="Typescript"></a>
+    <a href="https://www.python.org/"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🐍️powered-by-python/🏷️badge.svg" alt="Python"></a>
+    <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="🧰️framework/🔨️modules/🖼️assets/📛️badge/🔷️powered-by-csharp/🏷️badge.svg" alt="C#"></a>
     <br/>
     <br/>
     <i>🧩️ Design-Information-Modeling for Kit-of-Parts 🏘️ </i>
@@ -131,31 +131,31 @@ Let me walk you through 🚶️
 
 It is the digital pencil for sketching plans and digital scalpel for building models in compose ✍️
 
-![sketchpad demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/🖼️sketchpad-demo.gif)
+![sketchpad demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/💻️applications/✏️sketchpad/🎞️sketchpad-demo.gif)
 
 ## 👥️ studio [↑](#%EF%B8%8F-products-)
 
 A studio is a synchronous collaboriation environment for teams to work together in compose 🤝️
 
-![compose studio Demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/🖼️studio-demo.png)
+![compose studio Demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/💻️applications/👥️studio-demo.png)
 
 ## ☁️ cloud [↑](#%EF%B8%8F-products-)
 
 Use any file-hosting platform as an asynchronous Common-Data-Environment 📁️
 
-![Cloud Demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/🖼️cloud-demo.png)
+![Cloud Demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/💻️applications/☁️cloud-demo.png)
 
 ## 🤖️ assistant [↑](#%EF%B8%8F-products-)
 
 The assistant helps you on every step in the design process with compose ✍️
 
-![compose assistant Demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/🖼️assistant-demo.png)
+![compose assistant Demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/💻️applications/🤖️assistant-demo.png)
 
 ## 🦗️ [🦗️compose.gh](https://docs.semio-tech.com/manual/grasshopper) [↑](#%EF%B8%8F-products-)
 
 A batteries-included [Grasshopper](https://www.grasshopper3d.com) program for compose ⚡️
 
-![compose Grasshopper Demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/🖼️grasshopper-demo.png)
+![compose Grasshopper Demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/💻️applications/🦗️grasshopper-demo.png)
 
 ## 🦏️ 📐️compose.3dm [↑](#%EF%B8%8F-products-)
 
@@ -165,13 +165,13 @@ A Grasshopper-based integration of [Rhino](https://www.rhino3d.com) and compose 
 
 A Grasshopper-based integration of [Wasp](https://www.food4rhino.com/en/app/wasp) and compose 🔀️
 
-![Wasp Demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/🖼️wasp-demo.png)
+![Wasp Demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/💻️applications/🐝️wasp-demo.png)
 
 ## 🦌️ compose.monoceros [↑](#%EF%B8%8F-products-)
 
 A Grasshopper-based integration of [Monoceros](https://monoceros.sub.digital) and compose 🔀️
 
-![Monoceros Demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/🖼️monoceros-demo.png)
+![Monoceros Demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/💻️applications/🦄️monoceros-demo.png)
 
 ## 🐞️ compose.ladybug [↑](#%EF%B8%8F-products-)
 
@@ -378,7 +378,7 @@ The monorepo organizes its code into distinct technologies, each serving a speci
 
 The core design-information-modeling technology, containing the main schema, engines, and domain implementations.
 
-### [🧰️ repo](🧰️framework/🛍️products/🦑️repo/📝️📖️README.md) [↑](#-technologies-)
+### [🧰️ repo](🧰️framework/🛍️products/🦑️repo/README.md) [↑](#-technologies-)
 
 Infrastructure and tooling for the monorepo, including CLI, vscode integrations, MCP servers, and generic utilities.
 
@@ -386,7 +386,7 @@ Infrastructure and tooling for the monorepo, including CLI, vscode integrations,
 
 A research project introducing an AI-first design assistant, bridging the semantic graph with interactive UI.
 
-### [🧩️ elements](🧰️framework/🔨️modules/🖱️ui/📝️📖️README.md) [↑](#-technologies-)
+### [🧩️ elements](🧰️framework/🔨️modules/🖱️ui/README.md) [↑](#-technologies-)
 
 Shared React UI components and layouts used across the browser-based applications within the monorepo.
 

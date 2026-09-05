@@ -1183,8 +1183,8 @@ mod tests {
     use store::HistoryColumn;
 
     const RETAINED_LIMITS: &str = include_str!("🧪️fixtures/🧫️retained-command-limits/🔣️.json");
-    const RETAINED_EDIT_LIMITS: &str = include_str!("🧪️fixtures/🧫️retained-edit-limits/🔣️.json");
-    const RETAINED_ROUTES: &str = include_str!("🧪️fixtures/retained-command-routes.json");
+    const RETAINED_EDIT_LIMITS: &str = include_str!("🧪️fixtures/✍️retained-edit-limits/🔣️.json");
+    const RETAINED_ROUTES: &str = include_str!("🧪️fixtures/🛣️retained-command-routes.json");
 
     //#region 🔖️CommandSurface
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
@@ -1413,7 +1413,7 @@ mod tests {
         for body in [VCS_PLAY_BODY_DOCUMENT, VCS_PLAY_BODY_INSPECTION] {
             assert!(json.contains(body), "panel body {body} missing from the manifest");
         }
-        assert!(json.contains("vcs.document"), "artifact kind missing from the manifest");
+        assert!(json.contains("vcs.vcs"), "artifact kind missing from the manifest");
     }
 
     /// 🧪️ The registry-enforced app (View/Shell kind discipline) must still dispatch every declared

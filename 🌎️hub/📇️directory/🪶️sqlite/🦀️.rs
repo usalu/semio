@@ -15,12 +15,14 @@ use crate::artifact_authority::chunk_cas::{decode_artifact_cas_ownership_v1, enc
 use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{
-    active_capability, auth_audit, bounded_event_read, checkpoint_projection_rebuild, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, same_admin_operation_request, validate_admin_operation_audit,
-    validate_bounded_auth_text, validate_verified_checkpoint_append, visibility_to_str, ArtifactCasSweepCandidatePage, HubClock, HubDirectory, InviteCapability, NewDirectoryEvent, ProjectionRebuildControl, SessionCapability, ShareCapability,
-    ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, UNCONTROLLED_PROJECTION_REBUILD,
+    active_capability, auth_audit, bounded_event_read, checkpoint_projection_rebuild, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request,
+    directory_command_result_kind_from_str, directory_command_result_kind_str, validate_admin_operation_audit, validate_bounded_auth_text, validate_directory_command_claim, validate_verified_checkpoint_append, verify_invite_redemption_event, visibility_to_str, ArtifactCasSweepCandidatePage, HubClock, HubDirectory, InviteCapability, NewDirectoryEvent,
+    ProjectionRebuildControl, SessionCapability, ShareCapability,
+    InviteRedemptionPreflight, ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES,
+    UNCONTROLLED_PROJECTION_REBUILD,
 };
 use directory::os_directory::{
-    ArtifactCheckpoint, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor, DocumentFrontier, DocumentOwner,
+    validate_directory_event_page_event, ArtifactCheckpoint, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor, DocumentFrontier, DocumentOwner,
     Hlc, PublishedArtifactCheckpoint,
 };
 use directory::os_identity::time_ordered_id;
@@ -164,7 +166,9 @@ CREATE TABLE IF NOT EXISTS hub_space_invite (
     expires_at INTEGER NOT NULL,
     revoked_at INTEGER,
     revoked_reason TEXT,
-    accepted_at INTEGER
+    accepted_at INTEGER,
+    accepted_event_id TEXT,
+    CHECK ((accepted_at IS NULL) = (accepted_event_id IS NULL))
 );
 CREATE TABLE IF NOT EXISTS hub_auth_audit (
     sequence INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -200,6 +204,19 @@ CREATE TABLE IF NOT EXISTS hub_admin_operation_audit (
     outcome_code TEXT NOT NULL,
     reason_code TEXT,
     UNIQUE (request_id, terminal)
+);
+CREATE TABLE IF NOT EXISTS hub_directory_command_receipt (
+    actor_user_id TEXT NOT NULL,
+    request_id TEXT NOT NULL CHECK (length(request_id) = 32),
+    command_sha256 TEXT NOT NULL CHECK (length(command_sha256) = 64),
+    result_kind TEXT NOT NULL CHECK (result_kind IN ('none', 'invite')),
+    disposition TEXT NOT NULL CHECK (disposition IN ('pending', 'completed')),
+    event_seq_first INTEGER,
+    event_seq_last INTEGER,
+    receipt_sha256 TEXT,
+    claimed_at INTEGER NOT NULL,
+    completed_at INTEGER,
+    PRIMARY KEY (actor_user_id, request_id)
 );
 CREATE TABLE IF NOT EXISTS hub_directory_event (
     seq INTEGER PRIMARY KEY AUTOINCREMENT CHECK (seq <= 9007199254740991),
@@ -311,6 +328,7 @@ CREATE INDEX IF NOT EXISTS idx_auth_audit_occurred ON hub_auth_audit (occurred_a
 CREATE INDEX IF NOT EXISTS idx_admin_operation_audit_sequence ON hub_admin_operation_audit (sequence);
 CREATE INDEX IF NOT EXISTS idx_admin_operation_audit_request ON hub_admin_operation_audit (request_id, sequence);
 CREATE INDEX IF NOT EXISTS idx_admin_operation_audit_operation ON hub_admin_operation_audit (operation_id, sequence);
+CREATE INDEX IF NOT EXISTS idx_directory_command_receipt_actor ON hub_directory_command_receipt (actor_user_id, request_id);
 ";
 //#endregion 🔖️Schema
 
@@ -339,6 +357,34 @@ fn insert_auth_audit(conn: &Connection, event: &AuthAuditRecord) -> DirectoryRes
 
 const ADMIN_OPERATION_AUDIT_SELECT: &str =
     "sequence, request_id, intent_digest, operation_id, occurred_at, phase, terminal, intent_kind, target_kind, target_id, principal_user_id, principal_session_id, principal_generation, correlation_id, event_seq_first, event_seq_last, outcome_code, reason_code";
+
+const DIRECTORY_COMMAND_RECEIPT_SELECT: &str = "actor_user_id, request_id, command_sha256, result_kind, disposition, event_seq_first, event_seq_last, receipt_sha256, claimed_at, completed_at";
+
+fn directory_command_receipt_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<DirectoryCommandReceiptRecord> {
+    let convert = |index: usize, message: String| rusqlite::Error::FromSqlConversionFailure(index, rusqlite::types::Type::Text, Box::new(std::io::Error::other(message)));
+    let result_kind_text: String = row.get(3)?;
+    let result_kind = directory_command_result_kind_from_str(&result_kind_text).map_err(|error| convert(3, error.to_string()))?;
+    let disposition_text: String = row.get(4)?;
+    let disposition = match disposition_text.as_str() {
+        "pending" => DirectoryCommandDispositionV1::Pending,
+        "completed" => DirectoryCommandDispositionV1::Completed,
+        other => return Err(convert(4, format!("unknown command disposition '{other}'"))),
+    };
+    let event_seq_first: Option<i64> = row.get(5)?;
+    let event_seq_last: Option<i64> = row.get(6)?;
+    Ok(DirectoryCommandReceiptRecord {
+        actor_user_id: row.get(0)?,
+        request_id: row.get(1)?,
+        command_sha256: row.get(2)?,
+        result_kind,
+        disposition,
+        event_seq_first: event_seq_first.map(|seq| seq.unsigned_abs()),
+        event_seq_last: event_seq_last.map(|seq| seq.unsigned_abs()),
+        receipt_sha256: row.get(7)?,
+        claimed_at: row.get(8)?,
+        completed_at: row.get(9)?,
+    })
+}
 
 fn admin_operation_audit_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<AdminOperationAuditRecord> {
     let sequence: i64 = row.get(0)?;
@@ -395,12 +441,29 @@ impl SqliteDirectory {
     /// `path` may be `:memory:` for tests.
     pub async fn connect(path: &str) -> DirectoryResult<Self> {
         let conn = Connection::open(path).map_err(backend)?;
+        conn.busy_timeout(std::time::Duration::from_secs(2)).map_err(backend)?;
         conn.execute_batch(SCHEMA).map_err(backend)?;
         Ok(Self { conn: Arc::new(Mutex::new(conn)) })
     }
 
     fn lock(&self) -> DirectoryResult<std::sync::MutexGuard<'_, Connection>> {
         self.conn.lock().map_err(|_| DirectoryError::Backend("sqlite connection lock poisoned".into()))
+    }
+
+    #[cfg(test)]
+    pub(crate) fn install_invite_projection_failure(&self) -> DirectoryResult<()> {
+        self.lock()?
+            .execute_batch(
+                "CREATE TEMP TRIGGER hub_test_fail_invite_projection BEFORE INSERT ON hub_space_membership
+                 WHEN NEW.user_id = 'u-invite-failure'
+                 BEGIN SELECT RAISE(ABORT, 'injected invite projection failure'); END;",
+            )
+            .map_err(backend)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn clear_invite_projection_failure(&self) -> DirectoryResult<()> {
+        self.lock()?.execute_batch("DROP TRIGGER hub_test_fail_invite_projection;").map_err(backend)
     }
 
     fn revoke_auth_sessions_matching(&self, predicate: &str, key: &str, subject_digest: Option<[u8; 32]>, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>> {
@@ -429,9 +492,7 @@ impl SqliteDirectory {
         Ok(revoked)
     }
 
-    fn persist_event(&self, tx: &Transaction<'_>, event: &NewDirectoryEvent) -> DirectoryResult<DirectoryEvent> {
-        let id = time_ordered_id();
-        let recorded_at_ms = now_ms();
+    fn persist_event_with_identity(&self, tx: &Transaction<'_>, event: &NewDirectoryEvent, id: String, recorded_at_ms: i64) -> DirectoryResult<DirectoryEvent> {
         let payload_value = serde_json::Value::from(&event.body.to_value());
         let kind = payload_value.get("kind").and_then(|value| value.as_str()).unwrap_or_default().to_string();
         tx.execute(
@@ -439,7 +500,13 @@ impl SqliteDirectory {
             rusqlite::params![id, event.hlc.physical_ms, event.hlc.logical, actor_kind_to_str(event.actor.kind), event.actor.id, event.space_id, event.user_id, kind, payload_value.to_string(), recorded_at_ms],
         )
         .map_err(backend)?;
-        Ok(DirectoryEvent { seq: u64::try_from(tx.last_insert_rowid()).map_err(backend)?, id, hlc: event.hlc, actor: event.actor.clone(), space_id: event.space_id.clone(), user_id: event.user_id.clone(), body: event.body.clone(), recorded_at_ms })
+        let persisted = DirectoryEvent { seq: u64::try_from(tx.last_insert_rowid()).map_err(backend)?, id, hlc: event.hlc, actor: event.actor.clone(), space_id: event.space_id.clone(), user_id: event.user_id.clone(), body: event.body.clone(), recorded_at_ms };
+        validate_directory_event_page_event(&persisted).map_err(|_| DirectoryError::Conflict("directory event violates the bounded event-page contract".into()))?;
+        Ok(persisted)
+    }
+
+    fn persist_event(&self, tx: &Transaction<'_>, event: &NewDirectoryEvent) -> DirectoryResult<DirectoryEvent> {
+        self.persist_event_with_identity(tx, event, time_ordered_id(), now_ms())
     }
 
     fn project_verified_checkpoint(&self, tx: &Transaction<'_>, event: &DirectoryEvent, checkpoint: &ArtifactCheckpoint) -> DirectoryResult<()> {
@@ -935,6 +1002,31 @@ impl HubDirectory for SqliteDirectory {
         Ok(role.and_then(|r| SpaceRole::parse(&r)))
     }
 
+    async fn list_space_administration_members_page(&self, space_id: &str, after_user_id: Option<&str>, limit: usize) -> DirectoryResult<Vec<SpaceAdministrationMemberRow>> {
+        if limit == 0 || limit > super::SPACE_ADMINISTRATION_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("space administration member page limit must be 1..={}", super::SPACE_ADMINISTRATION_PAGE_FETCH_MAX)));
+        }
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare(
+                "SELECT u.id, u.email, u.display_name, m.role
+                 FROM hub_space_membership m JOIN hub_user u ON u.id = m.user_id
+                 WHERE m.space_id = ?1 AND (?2 IS NULL OR u.id > ?2) ORDER BY u.id LIMIT ?3",
+            )
+            .map_err(backend)?;
+        let rows = statement
+            .query_map(rusqlite::params![space_id, after_user_id, i64::try_from(limit).map_err(backend)?], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?, row.get::<_, String>(3)?))
+            })
+            .map_err(backend)?;
+        rows.map(|row| {
+            let (user_id, email, display_name, role) = row.map_err(backend)?;
+            let role = SpaceRole::parse(&role).ok_or_else(|| DirectoryError::Backend("stored member role is invalid".into()))?;
+            Ok(SpaceAdministrationMemberRow { user_id, email, display_name, role })
+        })
+        .collect()
+    }
+
     async fn get_document_descriptor(&self, scope: &DocumentScope) -> DirectoryResult<Option<DocumentDescriptor>> {
         self.lock()?
             .query_row(
@@ -1160,6 +1252,79 @@ impl HubDirectory for SqliteDirectory {
         Ok(AdminOperationAuditRecord { sequence, fact: fact.clone() })
     }
 
+    async fn claim_or_read_directory_command_receipt(&self, claim: &NewDirectoryCommandReceipt) -> DirectoryResult<DirectoryCommandClaimV1> {
+        validate_directory_command_claim(claim)?;
+        let mut conn = self.lock()?;
+        let tx = conn.transaction().map_err(backend)?;
+        let existing = tx
+            .query_row(
+                &format!("SELECT {DIRECTORY_COMMAND_RECEIPT_SELECT} FROM hub_directory_command_receipt WHERE actor_user_id = ?1 AND request_id = ?2"),
+                rusqlite::params![claim.actor_user_id, claim.request_id],
+                directory_command_receipt_row,
+            )
+            .optional()
+            .map_err(backend)?;
+        if let Some(record) = existing {
+            tx.rollback().map_err(backend)?;
+            return Ok(if record.command_sha256 == claim.command_sha256 { DirectoryCommandClaimV1::Existing(record) } else { DirectoryCommandClaimV1::Conflict });
+        }
+        tx.execute(
+            "INSERT INTO hub_directory_command_receipt (actor_user_id, request_id, command_sha256, result_kind, disposition, event_seq_first, event_seq_last, receipt_sha256, claimed_at, completed_at) VALUES (?1, ?2, ?3, ?4, 'pending', NULL, NULL, NULL, ?5, NULL)",
+            rusqlite::params![claim.actor_user_id, claim.request_id, claim.command_sha256, directory_command_result_kind_str(claim.result_kind), claim.claimed_at],
+        )
+        .map_err(backend)?;
+        tx.commit().map_err(backend)?;
+        Ok(DirectoryCommandClaimV1::Claimed(DirectoryCommandReceiptRecord {
+            actor_user_id: claim.actor_user_id.clone(),
+            request_id: claim.request_id.clone(),
+            command_sha256: claim.command_sha256.clone(),
+            result_kind: claim.result_kind,
+            disposition: DirectoryCommandDispositionV1::Pending,
+            event_seq_first: None,
+            event_seq_last: None,
+            receipt_sha256: None,
+            claimed_at: claim.claimed_at,
+            completed_at: None,
+        }))
+    }
+
+    async fn complete_directory_command_receipt(&self, completion: &DirectoryCommandReceiptCompletion) -> DirectoryResult<DirectoryCommandReceiptRecord> {
+        let mut conn = self.lock()?;
+        let tx = conn.transaction().map_err(backend)?;
+        let changed = tx
+            .execute(
+                "UPDATE hub_directory_command_receipt SET disposition = 'completed', event_seq_first = ?3, event_seq_last = ?4, receipt_sha256 = ?5, completed_at = ?6 WHERE actor_user_id = ?1 AND request_id = ?2 AND disposition = 'pending'",
+                rusqlite::params![
+                    completion.actor_user_id,
+                    completion.request_id,
+                    completion.event_seq_first.map(i64::try_from).transpose().map_err(backend)?,
+                    completion.event_seq_last.map(i64::try_from).transpose().map_err(backend)?,
+                    completion.receipt_sha256,
+                    completion.completed_at
+                ],
+            )
+            .map_err(backend)?;
+        if changed == 0 {
+            tx.rollback().map_err(backend)?;
+            return Err(DirectoryError::Conflict("directory command receipt claim is not pending".into()));
+        }
+        let record = tx
+            .query_row(
+                &format!("SELECT {DIRECTORY_COMMAND_RECEIPT_SELECT} FROM hub_directory_command_receipt WHERE actor_user_id = ?1 AND request_id = ?2"),
+                rusqlite::params![completion.actor_user_id, completion.request_id],
+                directory_command_receipt_row,
+            )
+            .map_err(backend)?;
+        tx.commit().map_err(backend)?;
+        Ok(record)
+    }
+
+    async fn release_directory_command_receipt(&self, actor_user_id: &str, request_id: &str) -> DirectoryResult<()> {
+        let conn = self.lock()?;
+        conn.execute("DELETE FROM hub_directory_command_receipt WHERE actor_user_id = ?1 AND request_id = ?2 AND disposition = 'pending'", rusqlite::params![actor_user_id, request_id]).map_err(backend)?;
+        Ok(())
+    }
+
     async fn admin_operation_audit_for_request(&self, request_id: &str) -> DirectoryResult<Vec<AdminOperationAuditRecord>> {
         validate_bounded_auth_text(request_id, "admin request id", AUTH_TEXT_MAX_BYTES)?;
         let conn = self.lock()?;
@@ -1197,7 +1362,7 @@ impl HubDirectory for SqliteDirectory {
         let mut conn = self.lock()?;
         let tx = conn.transaction().map_err(backend)?;
         tx.execute(
-            "INSERT INTO hub_space_invite (id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, NULL, NULL, NULL)",
+            "INSERT INTO hub_space_invite (id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at, accepted_event_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, NULL, NULL, NULL, NULL)",
             rusqlite::params![issued.record.id, issued.record.selector, issued.record.secret_digest.as_slice(), space_id, role.as_str(), issued.record.created_at, issued.record.expires_at],
         )
         .map_err(backend)?;
@@ -1206,13 +1371,62 @@ impl HubDirectory for SqliteDirectory {
         Ok(issued)
     }
 
-    async fn authenticate_invite(&self, capability: &InviteCapability) -> DirectoryResult<Option<InviteRecord>> {
-        let record = self
-            .lock()?
-            .query_row("SELECT id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at FROM hub_space_invite WHERE selector = ?1", [capability.selector()], invite_row)
+    async fn redeem_invite_atomic(&self, capability: &InviteCapability, actor: &DirectoryActor, user_id: &str, hlc: Hlc) -> DirectoryResult<InviteRedemptionCommit> {
+        let mut conn = self.lock()?;
+        let tx = conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate).map_err(backend)?;
+        let accepted_at_ms = now_ms();
+        let record = tx
+            .query_row("SELECT id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at, accepted_event_id FROM hub_space_invite WHERE selector = ?1", [capability.selector()], invite_row)
             .optional()
             .map_err(backend)?;
-        Ok(record.filter(|record| record.accepted_at.is_none() && active_capability(&record.selector, &record.secret_digest, record.expires_at, record.revoked_at, capability.selector(), &capability.secret_digest(), now_ms())))
+        let user_exists: i64 = tx.query_row("SELECT EXISTS(SELECT 1 FROM hub_user WHERE id = ?1)", [user_id], |row| row.get(0)).map_err(backend)?;
+        let space_exists: i64 = match record.as_ref() {
+            Some(invite) => tx.query_row("SELECT EXISTS(SELECT 1 FROM hub_space WHERE id = ?1)", [&invite.space_id], |row| row.get(0)).map_err(backend)?,
+            None => 0,
+        };
+        match invite_redemption_preflight(record.as_ref(), capability, actor, user_id, user_exists == 1, space_exists == 1, accepted_at_ms) {
+            InviteRedemptionPreflight::AlreadyCommitted => {
+                let invite = record.as_ref().expect("committed preflight requires a record");
+                let event = tx
+                    .query_row(
+                        "SELECT seq, id, hlc_physical, hlc_logical, actor_kind, actor_id, space_id, user_id, payload, recorded_at FROM hub_directory_event WHERE id = ?1",
+                        [invite.accepted_event_id.as_deref().unwrap_or_default()],
+                        event_row,
+                    )
+                    .optional()
+                    .map_err(backend)?;
+                let event = verify_invite_redemption_event(invite, event, user_id)?;
+                tx.commit().map_err(backend)?;
+                return Ok(InviteRedemptionCommit::AlreadyCommitted { event });
+            }
+            InviteRedemptionPreflight::Revoked => return Err(DirectoryError::Conflict("invite already revoked".into())),
+            InviteRedemptionPreflight::Expired => return Err(DirectoryError::Conflict("invite expired".into())),
+            InviteRedemptionPreflight::Denied => return Err(DirectoryError::Unauthorized),
+            InviteRedemptionPreflight::Corrupt => return Err(DirectoryError::Backend("invite acceptance marker is incomplete".into())),
+            InviteRedemptionPreflight::Claim => {}
+        }
+        let invite = record.expect("claim preflight requires a record");
+        let event_id = time_ordered_id();
+        let changed = tx
+            .execute(
+                "UPDATE hub_space_invite SET accepted_at = ?2, accepted_event_id = ?3 WHERE id = ?1 AND accepted_at IS NULL AND accepted_event_id IS NULL AND revoked_at IS NULL AND expires_at > ?2",
+                rusqlite::params![invite.id, accepted_at_ms, event_id],
+            )
+            .map_err(backend)?;
+        if changed != 1 {
+            return Err(DirectoryError::Backend("SQLite invitation claim lost its immediate transaction fence".into()));
+        }
+        let event = NewDirectoryEvent {
+            hlc,
+            actor: actor.clone(),
+            space_id: Some(invite.space_id.clone()),
+            user_id: Some(user_id.to_string()),
+            body: DirectoryEventBody::InviteRedeemed { space_id: invite.space_id, user_id: user_id.to_string(), invite_id: invite.id, role: role_to_wire(invite.role) },
+        };
+        let persisted = self.persist_event_with_identity(&tx, &event, event_id, accepted_at_ms)?;
+        self.project(&tx, &persisted)?;
+        tx.commit().map_err(backend)?;
+        Ok(InviteRedemptionCommit::NewlyCommitted { event: persisted })
     }
 
     async fn revoke_invite_as(&self, invite_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()> {
@@ -1221,9 +1435,10 @@ impl HubDirectory for SqliteDirectory {
         let audit = auth_audit(revoked_at, "invite-revoked", Some(invite_id), None, actor_user_id, None, "success", Some(reason), correlation_id, "server")?;
         let mut conn = self.lock()?;
         let tx = conn.transaction().map_err(backend)?;
-        let changed = tx.execute("UPDATE hub_space_invite SET revoked_at = ?2, revoked_reason = ?3 WHERE id = ?1 AND revoked_at IS NULL", rusqlite::params![invite_id, revoked_at, reason]).map_err(backend)?;
+        let changed = tx.execute("UPDATE hub_space_invite SET revoked_at = ?2, revoked_reason = ?3 WHERE id = ?1 AND revoked_at IS NULL AND accepted_at IS NULL", rusqlite::params![invite_id, revoked_at, reason]).map_err(backend)?;
         if changed == 0 {
-            return Err(DirectoryError::NotFound(format!("invite {invite_id}")));
+            let accepted: Option<i64> = tx.query_row("SELECT accepted_at FROM hub_space_invite WHERE id = ?1", [invite_id], |row| row.get(0)).optional().map_err(backend)?.flatten();
+            return if accepted.is_some() { Err(DirectoryError::Conflict("invite already accepted".into())) } else { Err(DirectoryError::NotFound(format!("invite {invite_id}"))) };
         }
         insert_auth_audit(&tx, &audit)?;
         tx.commit().map_err(backend)?;
@@ -1232,9 +1447,35 @@ impl HubDirectory for SqliteDirectory {
 
     async fn list_invites(&self, space_id: &str) -> DirectoryResult<Vec<InviteRecord>> {
         let conn = self.lock()?;
-        let mut stmt = conn.prepare("SELECT id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at FROM hub_space_invite WHERE space_id = ?1 ORDER BY created_at DESC").map_err(backend)?;
+        let mut stmt = conn.prepare("SELECT id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at, accepted_event_id FROM hub_space_invite WHERE space_id = ?1 ORDER BY created_at DESC").map_err(backend)?;
         let rows = stmt.query_map([space_id], invite_row).map_err(backend)?;
         Ok(rows.filter_map(|row| row.ok()).collect())
+    }
+
+    async fn list_space_administration_invites_page(&self, space_id: &str, after: Option<(i64, &str)>, limit: usize) -> DirectoryResult<Vec<SpaceAdministrationInviteRow>> {
+        if limit == 0 || limit > super::SPACE_ADMINISTRATION_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("space administration invite page limit must be 1..={}", super::SPACE_ADMINISTRATION_PAGE_FETCH_MAX)));
+        }
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare(
+                "SELECT id, role, created_at, expires_at, revoked_at IS NOT NULL, accepted_at IS NOT NULL
+                 FROM hub_space_invite
+                 WHERE space_id = ?1 AND (?2 IS NULL OR created_at < ?2 OR (created_at = ?2 AND id < ?3))
+                 ORDER BY created_at DESC, id DESC LIMIT ?4",
+            )
+            .map_err(backend)?;
+        let rows = statement
+            .query_map(rusqlite::params![space_id, after.map(|(created_at, _)| created_at), after.map(|(_, invite_id)| invite_id), i64::try_from(limit).map_err(backend)?], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, i64>(2)?, row.get::<_, i64>(3)?, row.get::<_, bool>(4)?, row.get::<_, bool>(5)?))
+            })
+            .map_err(backend)?;
+        rows.map(|row| {
+            let (invite_id, role, created_at_ms, expires_at_ms, revoked, accepted) = row.map_err(backend)?;
+            let role = SpaceRole::parse(&role).ok_or_else(|| DirectoryError::Backend("stored invite role is invalid".into()))?;
+            Ok(SpaceAdministrationInviteRow { invite_id, role, created_at_ms, expires_at_ms, revoked, accepted })
+        })
+        .collect()
     }
     //#endregion
 
@@ -1629,8 +1870,8 @@ impl HubDirectory for SqliteDirectory {
 
     //#region EventLog
     async fn append_events(&self, events: &[NewDirectoryEvent]) -> DirectoryResult<Vec<DirectoryEvent>> {
-        if events.iter().any(|event| matches!(&event.body, DirectoryEventBody::ArtifactCheckpointPublished { .. })) {
-            return Err(DirectoryError::Conflict("checkpoint publication requires the verified authority append seam".into()));
+        if events.iter().any(|event| matches!(&event.body, DirectoryEventBody::ArtifactCheckpointPublished { .. } | DirectoryEventBody::InviteRedeemed { .. })) {
+            return Err(DirectoryError::Conflict("event requires its verified authority append seam".into()));
         }
         let mut conn = self.lock()?;
         let tx = conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate).map_err(backend)?;
@@ -1752,8 +1993,8 @@ impl HubDirectory for SqliteDirectory {
              SET auth_session_id = (SELECT auth_session_id FROM hub_rebuild_sync_binding WHERE hub_rebuild_sync_binding.id = hub_sync_session.id),
                  user_id = (SELECT user_id FROM hub_rebuild_sync_binding WHERE hub_rebuild_sync_binding.id = hub_sync_session.id)
              WHERE id IN (SELECT id FROM hub_rebuild_sync_binding);
-             INSERT INTO hub_space_invite (id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at)
-             SELECT id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at FROM hub_rebuild_space_invite;
+             INSERT INTO hub_space_invite (id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at, accepted_event_id)
+             SELECT id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at, accepted_event_id FROM hub_rebuild_space_invite;
              DROP TABLE hub_rebuild_user;
              DROP TABLE hub_rebuild_auth_session;
              DROP TABLE hub_rebuild_sync_binding;
@@ -1802,6 +2043,7 @@ fn invite_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<InviteRecord> {
         revoked_at: row.get(7)?,
         revoked_reason: row.get(8)?,
         accepted_at: row.get(9)?,
+        accepted_event_id: row.get(10)?,
     })
 }
 
@@ -2027,7 +2269,7 @@ mod tests {
     // `hex()` oracle and describe the cross-space authorization boundary shared by every backend.
     #[test]
     fn share_token_vectors_match_sqlite_hex_oracle() {
-        let vectors: ShareTokenVectors = serde_json::from_str(include_str!("../🧪️tests/🔣️share-token-vectors.json")).expect("share-token vectors");
+        let vectors: ShareTokenVectors = serde_json::from_str(include_str!("../🧪️tests/🔑️share-token-vectors.json")).expect("share-token vectors");
         let oracle = Connection::open_in_memory().expect("sqlite oracle");
         for vector in vectors.encoding {
             let actual = crate::directory::encode_capability_bytes(&vector.bytes);
@@ -2042,7 +2284,7 @@ mod tests {
     async fn share_token_lifecycle_and_scope() {
         let directory = SqliteDirectory::connect(":memory:").await.expect("connect");
         directory.seed().await.expect("seed");
-        let vectors: ShareTokenVectors = serde_json::from_str(include_str!("../🧪️tests/🔣️share-token-vectors.json")).expect("share-token vectors");
+        let vectors: ShareTokenVectors = serde_json::from_str(include_str!("../🧪️tests/🔑️share-token-vectors.json")).expect("share-token vectors");
         let grant_scope = DocumentScope::new(vectors.scope.grant.space_id, vectors.scope.grant.document_id);
         let allowed_scope = DocumentScope::new(vectors.scope.allowed.space_id, vectors.scope.allowed.document_id);
         let denied_scope = DocumentScope::new(vectors.scope.denied.space_id, vectors.scope.denied.document_id);
@@ -2210,6 +2452,33 @@ mod tests {
         let replayed = directory.rebuild_projections().await.expect("rebuild");
         assert_eq!(replayed, 3);
         assert_eq!(directory.get_space("default").await.unwrap(), before);
+    }
+
+    #[tokio::test]
+    async fn directory_event_page_v1_append_admission_is_transactional_sqlite() {
+        let directory = SqliteDirectory::connect(":memory:").await.expect("connect");
+        directory.seed().await.expect("seed");
+        let head = directory.head_seq().await.expect("head before boundary event");
+        let mut event = NewDirectoryEvent {
+            hlc: Hlc { physical_ms: 1, logical: 0 },
+            actor: DirectoryActor { kind: DirectoryActorKind::System, id: "system:event-page-admission".into() },
+            space_id: Some("default".into()),
+            user_id: None,
+            body: DirectoryEventBody::SpaceRenamed { space_id: "default".into(), name: String::new() },
+        };
+        let candidate = DirectoryEvent { seq: head + 1, id: time_ordered_id(), hlc: event.hlc, actor: event.actor.clone(), space_id: event.space_id.clone(), user_id: None, body: event.body.clone(), recorded_at_ms: now_ms() };
+        let base = directory::os_pack::json::to_json_string(&candidate).len();
+        let DirectoryEventBody::SpaceRenamed { name, .. } = &mut event.body else { unreachable!() };
+        *name = "x".repeat(directory::os_directory::DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES - base);
+        let exact = directory.append_events(&[event.clone()]).await.expect("append exact event-page boundary");
+        assert_eq!(directory::os_pack::json::to_json_string(&exact[0]).len(), directory::os_directory::DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES);
+        let head = directory.head_seq().await.expect("head before oversized event");
+        let before = directory.get_space("default").await.expect("space before oversized event");
+        let DirectoryEventBody::SpaceRenamed { name, .. } = &mut event.body else { unreachable!() };
+        name.push('x');
+        assert!(matches!(directory.append_events(&[event]).await, Err(DirectoryError::Conflict(_))));
+        assert_eq!(directory.head_seq().await.expect("head after oversized event"), head);
+        assert_eq!(directory.get_space("default").await.expect("space after oversized event"), before);
     }
 }
 //#endregion 🧪️Tests

@@ -1,0 +1,45 @@
+# First-Party Missing-Option and WGPU Layout Discriminator Audit
+
+Date: 2026-09-04  
+Scope: current source only; no Cargo/Nx command was run by this audit.
+
+## Verdict
+
+**RED for complete serde parity; PARTIAL for the WGPU root/child repair.** The new first-party missing-`Option<T>` behavior is correctly wired for the ordinary spelling in a plain struct and a named enum variant, and its two tests use serde as an independent oracle. That is source-backed, not fresh runtime evidence. It does not cover qualified `std::option::Option`, aliases, or a foreign type named `Option`.
+
+The current WGPU source has now repaired its serde root/child ambiguity with an explicit manual discriminator and a declared empty-stack/unknown-kind law. It is source-backed only. The remaining WGPU holes are the unchecked terminal `WindowLayoutWindowNode.kind` and the public arbitrary-string axis producer. The registered UI quick target has no exact layout selector and its latest retained run stopped at two test-only `E0308` diagnostics before any assertion.
+
+## First-Party Derive
+
+| Boundary | Current evidence | Classification |
+| --- | --- | --- |
+| Plain named struct, bare `Option<T>` omitted | `NamedField` records `is_option` through `type_is_option`; a no-default missing field emits `Default::default()` at [`🦀️.rs:371-395`](../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/🦀️.rs:371) and [`🦀️.rs:499-521`](../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/🦀️.rs:499). The integration test deserializes the same JSON with serde and compares it to `FromValue` at [`🌾flatten-with-skip.rs:227-245`](../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/tests/🌾flatten-with-skip.rs:227). | **PASS, source-only.** |
+| Internally tagged named enum variant, bare `Option<T>` omitted | `variant_field_from_value_read` has the same no-default fallback at [`🦀️.rs:596-631`](../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/🦀️.rs:596); the independent serde comparison is [`🌾flatten-with-skip.rs:247-269`](../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/tests/🌾flatten-with-skip.rs:247). | **PASS, source-only.** |
+| Qualified standard spelling | The detector accepts `std::option::Option<T>` (and `::std`/`core` forms) because it examines the final path segment and requires `Option` at [`🦀️.rs:378-381`](../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/🦀️.rs:378). | **PASS by expansion inspection; RED test coverage.** No current derive fixture uses a qualified spelling. |
+| True type alias | `type Maybe<T> = Option<T>` has final segment `Maybe`, so the derive takes the required-field branch rather than the `Option` fallback. Serde's missing-field expression is generic over the resolved field type, not a macro path-name check (local `serde_derive` `de.rs:766-805`); it therefore retains standard `Option` missing semantics through an alias. | **RED.** This is a public semantic divergence; use `#[value(default)]` as the current explicit workaround. The current source census found aliases, but no alias used in a value-derived field, so there is no current caller incident. |
+| Nonstandard `foo::Option<T>` | The same final-segment test incorrectly classifies any path ending in `Option` as standard. If such a type implements `Default`, an omitted wire key is silently accepted; otherwise the generated impl fails to compile. | **RED design edge.** No current `struct`/`enum`/`type Option` declaration was found, but the macro must not claim semantic type resolution it cannot do. Whitelist only canonical paths where possible and document that aliases require explicit `#[value(default)]`; add a compile/runtime regression for both cases. |
+
+The dedicated Nx project exposes only a broad `test` route ([`📋️project.json`](../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/📋️project.json), [`📜️script.ts:5-14`](../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/📜️script.ts:5)). It has no `test-quick` target, exact-one selector, or qualified/alias hostile vector. The two new tests are valuable serde oracles, but this audit did not execute them.
+
+## WGPU Layout
+
+The actual WGPU component owns a separate legacy layout model, not the renderer-neutral `WindowLayoutNode` tagged enum. The contract model is properly internally tagged at [`ui contract layout.rs:263-313`](../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️📐️layout.rs:263), but the WGPU shell imports and renders its own `WindowLayoutRoot`/`Child` types ([`shell.rs:13,206-220`](../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️🐚️shell.rs:13)). Contract test success therefore cannot certify this WGPU wire path.
+
+| Boundary | Current evidence | Classification |
+| --- | --- | --- |
+| Valid first-party and serde child/root decode | Both `Deserialize` implementations now first parse JSON to a value and select with `serde_window_layout_node_is_stack` ([`component.rs:798-813`](../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️🧩️component.rs:798), [`:838-852`](../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️🧩️component.rs:838)); `FromValue` uses the same `window_layout_kind_is_stack` result ([`component.rs:829-891`](../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️🧩️component.rs:829)). Valid kinds are closed to `stack`, `row`, `column`, `horizontal`, and `vertical`. The new missing-Option fallback makes omitted `size`, `title`, `instance_id`, `template_id`, and `active_window_kind_id` decode as `None`. | **PASS, source-only.** |
+| Empty stack and unknown root/child kind | The declared law uses serde to decode an empty stack as `Stack`, rejects JSON `bogus`, and rejects first-party `bogus` ([`component.rs:1393-1399`](../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️🧩️component.rs:1393)). This supersedes the earlier untagged-trial finding. | **PASS, source-only.** No fresh terminal was observed by this audit. |
+| Terminal window discriminator | `WindowLayoutWindowNode` keeps `kind: String` and defaults a missing key to `"window"`, but it does not validate a present key ([`component.rs:744-764`](../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️🧩️component.rs:744)). A stack may therefore contain `{ "kind":"bogus", "windowKindId":"x" }`; neither serde nor `FromValue` rejects it. | **RED.** Make the terminal kind closed/implicit and add serde/DSL malformed-terminal vectors. |
+| Axis producer invariant | `create_default_layout` accepts `direction: &str` and writes it directly as the node kind ([`component.rs:929-936`](../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️🧩️component.rs:929)), while the decoder accepts only four axis names. No current caller was found, but public construction can mint a value its own decoder rejects. | **RED API invariant.** Replace the raw string with a closed axis type or validate before publication; include producer/round-trip law. |
+
+## Gates and Remaining Quick Frontier
+
+- `@semio-tech/ui-rs:test-quick` calls `📜️script.ts test quick`, which invokes the entire crate with `tui-terminal,wgpu`; it has no exact-name/one-selection preflight ([`📋️project.json`](../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json), [`📜️script.ts:164-178`](../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📜️script.ts:164)).
+- The most recent retained quick evidence is session `82295`, exit 1 on two test-only `E0308` mismatches before assertion; its report does not retain exact diagnostics ([`root-ui-wgpu-taxonomy-path-repair.md:11-14`](📓️root-ui-wgpu-taxonomy-path-repair.md:11)). It is an honest non-pass, not evidence against or for either decoder law.
+- A second `test-wgpu-engine` route likewise runs a broad feature set, and the UI-contract quick target tests a different tagged type. Neither replaces an exact WGPU legacy-layout discriminator corpus. No heavy gate was run here because the task was a concurrent read-only audit.
+
+## Minimal Honest Follow-up
+
+1. Close the terminal window kind and axis producer, preferably by converging this WGPU model on the tagged contract node. Preserve the landed strict root/child decoder; do not restore untagged trial decoding.
+2. Add a neutral JSON/DSL fixture covering populated and empty stacks, axes, all missing optional fields, non-object/missing/non-string/unknown kinds, malformed terminal windows, and invalid programmatic direction. Require serde and `FromValue` to agree on every vector.
+3. Add the missing derive vectors: bare and qualified standard `Option`, alias rejection/documented explicit default, and a foreign terminal `Option` path. Register an exact-one selector before running each named law. Only a fresh terminal can upgrade this report from source-only.

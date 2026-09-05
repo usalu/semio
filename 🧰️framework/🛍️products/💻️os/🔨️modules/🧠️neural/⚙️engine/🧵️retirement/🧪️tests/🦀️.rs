@@ -19,7 +19,7 @@ fn close(mut owner: ValueRetirement, maximum_bytes: usize) -> usize {
 
 #[test]
 fn nested_fixture_retires_exact_bytes_under_every_actual_grant() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🔣️value-retirement.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️value-retirement.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let text = row["expandedText"]["text"].as_str().unwrap().repeat(row["expandedText"]["repetitions"].as_u64().unwrap() as usize);
         let json = row["json"].as_str().unwrap().replace("$text", &text);
@@ -78,7 +78,7 @@ fn partial_nested_retirement_transfers_workers_without_byte_loss() {
 //#region 🧠️CacheRetirement
 #[test]
 fn cache_retirement_preserves_shared_roots_and_drains_replaced_nested_values() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🧪️cache-retirement/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🗃️cache-retirement/🔣️.json")).unwrap();
     for maximum_bytes in [1, 64, 4096] {
         let cache = Arc::new(super::super::NeuralCache::new());
         for seed in fixture["operations"].as_array().unwrap().iter().filter(|value| value["op"] == "seed") {
@@ -112,7 +112,7 @@ fn cache_live_final_drop_is_guarded_instead_of_recursively_destroying_dictionari
 //#region 📸️EvaluationRetirement
 #[test]
 fn evaluation_snapshot_and_channel_owners_retire_exact_long_key_and_payload_bytes() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🧪️evaluation-owners/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧮️evaluation-owners/🔣️.json")).unwrap();
     for maximum_bytes in [1, 64, 4096] {
         let node = fixture["node"]["text"].as_str().unwrap().repeat(fixture["node"]["repeat"].as_u64().unwrap() as usize);
         let payload = fixture["payload"]["text"].as_str().unwrap().repeat(fixture["payload"]["repeat"].as_u64().unwrap() as usize);

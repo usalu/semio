@@ -1,5 +1,5 @@
 /** ◻️ Puzzle 5D editor — Board2d window: typed twin of `🦀️.rs`'s view-model. Mirrors the
- * pane's `render(envelope: &Puzzle5dScene)` boundary — the flat 2D projection (board nodes/handles/
+ * pane's `render(envelope: &Puzzle5dScene)` boundary — the flat 2D projection (board nodes/🐙️handles/
  * edges plus glyph catalogs and placement compatibility) of the unified 5d document (absent entirely
  * from the viewer's read-only twin, see `👁️viewer/…/🟦️.ts`). */
 

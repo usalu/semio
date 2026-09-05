@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/din16798/mutation/text.json",
+  "title": "Din16798MutationsText",
+  "type": "object"
+}

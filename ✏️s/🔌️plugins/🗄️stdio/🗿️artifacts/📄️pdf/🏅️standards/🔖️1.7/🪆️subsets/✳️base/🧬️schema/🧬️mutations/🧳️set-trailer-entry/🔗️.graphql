@@ -1,5 +1,0 @@
-# 🧳️ Direct set-trailer-entry GraphQL payload.
-input SetTrailerEntryMutationInput {
-  key: String
-  value: String
-}

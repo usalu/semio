@@ -1,0 +1,75 @@
+{
+  "schema": "semio.artifact.owned-retirement/v1",
+  "cases": [
+    {
+      "id": "empty-string",
+      "kind": "string",
+      "value": "",
+      "bytes": 0
+    },
+    {
+      "id": "unicode-string",
+      "kind": "string",
+      "value": "Grüße",
+      "bytes": 7
+    },
+    {
+      "id": "large-string",
+      "kind": "string",
+      "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "bytes": 1025
+    },
+    {
+      "id": "strings",
+      "kind": "strings",
+      "value": [
+        "a",
+        "Ü",
+        "😀"
+      ],
+      "bytes": 7
+    },
+    {
+      "id": "some-string",
+      "kind": "optionalString",
+      "value": "Werk",
+      "bytes": 4
+    },
+    {
+      "id": "none-string",
+      "kind": "optionalString",
+      "value": null,
+      "bytes": 0
+    },
+    {
+      "id": "pair",
+      "kind": "pair",
+      "value": [
+        "a",
+        "ß"
+      ],
+      "bytes": 3
+    }
+  ],
+  "budgets": [
+    {
+      "items": 1,
+      "bytes": 1
+    },
+    {
+      "items": 3,
+      "bytes": 5
+    },
+    {
+      "items": 16,
+      "bytes": 4096
+    }
+  ],
+  "hostile": [
+    "zero-item-grant",
+    "zero-byte-grant",
+    "retained-shared-root",
+    "false-terminal-witness",
+    "over-budget-child"
+  ]
+}

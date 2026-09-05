@@ -1,0 +1,166 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.renderer.open-artifact-relay.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "manifests", "preferences", "valid", "invalid"],
+  "properties": {
+    "version": { "const": 1 },
+    "manifests": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["pluginId", "apps"],
+        "properties": {
+          "pluginId": { "type": "string", "minLength": 1 },
+          "artifactKinds": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id"],
+              "properties": { "id": { "type": "string", "minLength": 1 } }
+            }
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["pluginId", "version"],
+              "properties": {
+                "pluginId": { "type": "string", "minLength": 1 },
+                "version": { "type": "string", "minLength": 1 }
+              }
+            }
+          },
+          "apps": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "role", "dialect"],
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "role": { "enum": ["viewer", "editor"] },
+                "dialect": { "$ref": "#/definitions/dialect" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["defaults"],
+      "properties": {
+        "defaults": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["dialect", "role", "app"],
+            "properties": {
+              "dialect": { "$ref": "#/definitions/dialect" },
+              "role": { "enum": ["viewer", "editor"] },
+              "app": { "$ref": "#/definitions/app" }
+            }
+          }
+        }
+      }
+    },
+    "valid": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "actionId", "args", "expected"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "actionId": { "enum": ["os.open-artifact", "os.open-artifact-with"] },
+          "args": { "$ref": "#/definitions/relayArgs" },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["artifactRef", "dialect", "role", "app"],
+            "properties": {
+              "artifactRef": { "type": "string", "minLength": 1 },
+              "dialect": { "$ref": "#/definitions/dialect" },
+              "role": { "enum": ["viewer", "editor"] },
+              "app": { "$ref": "#/definitions/app" },
+              "documentId": { "type": "string", "minLength": 1 },
+              "spaceId": { "type": "string", "minLength": 1 },
+              "schema": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "invalid": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "actionId", "args", "error"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "actionId": { "enum": ["os.open-artifact", "os.open-artifact-with"] },
+          "args": { "type": "object" },
+          "error": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "relayArgs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactRef"],
+      "properties": {
+        "artifactRef": { "type": "string", "minLength": 1 },
+        "role": {
+          "oneOf": [
+            { "enum": ["viewer", "editor"] },
+            { "type": "integer", "enum": [0, 1] }
+          ]
+        },
+        "pluginId": { "type": "string", "minLength": 1 },
+        "appId": { "type": "string", "minLength": 1 },
+        "documentId": { "type": "string", "minLength": 1 },
+        "spaceId": { "type": "string", "minLength": 1 },
+        "schema": { "type": "string", "minLength": 1 }
+      },
+      "dependencies": {
+        "pluginId": ["appId"],
+        "appId": ["pluginId"],
+        "documentId": ["schema"],
+        "schema": ["documentId"]
+      }
+    },
+    "dialect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactKind", "standard", "subset"],
+      "properties": {
+        "artifactKind": { "type": "string", "minLength": 1 },
+        "standard": { "type": "string", "minLength": 1 },
+        "subset": { "type": "string", "minLength": 1 }
+      }
+    },
+    "app": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pluginId", "appId"],
+      "properties": {
+        "pluginId": { "type": "string", "minLength": 1 },
+        "appId": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

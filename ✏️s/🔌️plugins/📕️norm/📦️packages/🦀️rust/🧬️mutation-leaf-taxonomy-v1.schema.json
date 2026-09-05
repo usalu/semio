@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.norm.mutation-leaf-taxonomy/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contractId", "rows", "schemaVersion"],
+  "properties": {
+    "contractId": {
+      "const": "semio.norm.mutation-leaf-taxonomy/v1"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "rows": {
+      "type": "array",
+      "minItems": 392,
+      "maxItems": 392,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["aggregateVariant", "artifact", "entity", "kind", "module", "physicalLayout", "record", "source", "standard", "subset", "type", "verb"],
+        "properties": {
+          "aggregateVariant": { "type": "string", "pattern": "^[A-Z][A-Za-z0-9_]*$" },
+          "artifact": { "type": "string", "minLength": 1 },
+          "entity": { "type": "string", "minLength": 1 },
+          "kind": { "type": "string", "minLength": 1 },
+          "module": { "type": "string", "minLength": 1 },
+          "physicalLayout": { "enum": ["direct", "split"] },
+          "record": { "type": "string", "minLength": 1 },
+          "source": { "type": "string", "pattern": "🧬️mutations/.+/🦀️\\.rs$" },
+          "standard": { "type": "string", "minLength": 1 },
+          "subset": { "type": "string", "minLength": 1 },
+          "type": { "type": "string", "pattern": "^[A-Z][A-Za-z0-9_]*$" },
+          "verb": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

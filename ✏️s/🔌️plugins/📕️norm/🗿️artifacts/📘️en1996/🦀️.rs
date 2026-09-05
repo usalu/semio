@@ -85,26 +85,26 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     use crate::artifacts::definition::{CapabilitySpec, ClaimSpec, LocalizationSpec};
     const SCHEMA: &[ClaimSpec] = &[ClaimSpec { namespace: "schema", value: "s.norm.en1996" }];
     const INFERENCE: &[ClaimSpec] = &[ClaimSpec { namespace: "schema", value: "s.norm.en1996.inference" }];
-    const COMPOSER: &[ClaimSpec] = &[ClaimSpec { namespace: "dialect", value: "s.en1996@1/*" }];
-    const CODEC: &[ClaimSpec] = &[ClaimSpec { namespace: "codec", value: "semio.norm.en1996/v1" }, ClaimSpec { namespace: "extension", value: "en1996" }];
+    const COMPOSER: &[ClaimSpec] = &[ClaimSpec { namespace: "dialect", value: "s.norm.en1996@1/*" }];
+    const CODEC: &[ClaimSpec] = &[ClaimSpec { namespace: "codec", value: "semio.norm.en1996/v1" }, ClaimSpec { namespace: "codec-extension", value: "20:semio.norm.en1996/v1:en1996" }];
     const EN: &[LocalizationSpec] = &[LocalizationSpec { locale: "en", text: "EN 1996 design of masonry structures" }];
     const DE: &[LocalizationSpec] = &[LocalizationSpec { locale: "de", text: "EN 1996 Bemessung und Konstruktion von Mauerwerksbauten" }];
     const CAPABILITIES: &[CapabilitySpec] = &[
-        CapabilitySpec { identity: "s.en1996.standard.v1", kind: "standard", descriptor: "v1", claims: &[], localizations: &[] },
-        CapabilitySpec { identity: "s.en1996.standard.v1.profile.any", kind: "profile", descriptor: "any", claims: &[], localizations: &[] },
-        CapabilitySpec { identity: "s.en1996.schema.artifact", kind: "schema", descriptor: "s.norm.en1996", claims: SCHEMA, localizations: &[] },
-        CapabilitySpec { identity: "s.en1996.inference.outline", kind: "inference", descriptor: "s.norm.en1996.inference", claims: INFERENCE, localizations: &[] },
-        CapabilitySpec { identity: "s.en1996.composer.any", kind: "composer", descriptor: "s.en1996@1/*", claims: COMPOSER, localizations: &[] },
-        CapabilitySpec { identity: "s.en1996.grammar.document", kind: "grammar", descriptor: "en1996.document", claims: &[ClaimSpec { namespace: "grammar", value: "en1996.document" }], localizations: &[] },
-        CapabilitySpec { identity: "s.en1996.grammar.op", kind: "grammar", descriptor: "en1996.op", claims: &[ClaimSpec { namespace: "grammar", value: "en1996.op" }], localizations: &[] },
-        CapabilitySpec { identity: "s.en1996.grammar.diff", kind: "grammar", descriptor: "en1996.diff", claims: &[ClaimSpec { namespace: "grammar", value: "en1996.diff" }], localizations: &[] },
-        CapabilitySpec { identity: "s.en1996.grammar.pack", kind: "grammar", descriptor: "en1996.pack", claims: &[ClaimSpec { namespace: "grammar", value: "en1996.pack" }], localizations: &[] },
-        CapabilitySpec { identity: "s.en1996.grammar.spr", kind: "grammar", descriptor: "en1996.spr", claims: &[ClaimSpec { namespace: "grammar", value: "en1996.spr" }], localizations: &[] },
-        CapabilitySpec { identity: "s.en1996.codec.document.v1", kind: "codec", descriptor: "semio.norm.en1996/v1:en1996", claims: CODEC, localizations: &[] },
-        CapabilitySpec { identity: "s.en1996.localization.en", kind: "localization", descriptor: "EN 1996 design of masonry structures", claims: &[], localizations: EN },
-        CapabilitySpec { identity: "s.en1996.localization.de", kind: "localization", descriptor: "EN 1996 Bemessung und Konstruktion von Mauerwerksbauten", claims: &[], localizations: DE },
+        CapabilitySpec { identity: "s.norm.en1996.standard.v1", kind: "standard", descriptor: "v1", claims: &[], localizations: &[] },
+        CapabilitySpec { identity: "s.norm.en1996.standard.v1.profile.any", kind: "profile", descriptor: "any", claims: &[], localizations: &[] },
+        CapabilitySpec { identity: "s.norm.en1996.schema.artifact", kind: "schema", descriptor: "s.norm.en1996", claims: SCHEMA, localizations: &[] },
+        CapabilitySpec { identity: "s.norm.en1996.inference.outline", kind: "inference", descriptor: "s.norm.en1996.inference", claims: INFERENCE, localizations: &[] },
+        CapabilitySpec { identity: "s.norm.en1996.composer.any", kind: "composer", descriptor: "s.norm.en1996@1/*", claims: COMPOSER, localizations: &[] },
+        CapabilitySpec { identity: "s.norm.en1996.grammar.document", kind: "grammar", descriptor: "en1996.document", claims: &[ClaimSpec { namespace: "grammar", value: "en1996.document" }], localizations: &[] },
+        CapabilitySpec { identity: "s.norm.en1996.grammar.op", kind: "grammar", descriptor: "en1996.op", claims: &[ClaimSpec { namespace: "grammar", value: "en1996.op" }], localizations: &[] },
+        CapabilitySpec { identity: "s.norm.en1996.grammar.diff", kind: "grammar", descriptor: "en1996.diff", claims: &[ClaimSpec { namespace: "grammar", value: "en1996.diff" }], localizations: &[] },
+        CapabilitySpec { identity: "s.norm.en1996.grammar.pack", kind: "grammar", descriptor: "en1996.pack", claims: &[ClaimSpec { namespace: "grammar", value: "en1996.pack" }], localizations: &[] },
+        CapabilitySpec { identity: "s.norm.en1996.grammar.spr", kind: "grammar", descriptor: "en1996.spr", claims: &[ClaimSpec { namespace: "grammar", value: "en1996.spr" }], localizations: &[] },
+        CapabilitySpec { identity: "s.norm.en1996.codec.document.v1", kind: "codec", descriptor: "semio.norm.en1996/v1:en1996", claims: CODEC, localizations: &[] },
+        CapabilitySpec { identity: "s.norm.en1996.localization.en", kind: "localization", descriptor: "EN 1996 design of masonry structures", claims: &[], localizations: EN },
+        CapabilitySpec { identity: "s.norm.en1996.localization.de", kind: "localization", descriptor: "EN 1996 Bemessung und Konstruktion von Mauerwerksbauten", claims: &[], localizations: DE },
     ];
-    crate::artifacts::definition::assemble_definition("s.en1996", CAPABILITIES)
+    crate::artifacts::definition::assemble_definition("s.norm.en1996", CAPABILITIES)
 }
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {

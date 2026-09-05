@@ -1,0 +1,560 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:home:retained-command-limits:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "controller",
+    "documentSchema",
+    "factory",
+    "limits",
+    "routes",
+    "boundaryCases",
+    "oracle"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "const": "HomeApp"
+    },
+    "controller": {
+      "const": "s-home"
+    },
+    "documentSchema": {
+      "const": "s.home"
+    },
+    "factory": {
+      "const": "HomeRetainedCommandJobFactory"
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rawBytes",
+        "checkpointBytes",
+        "configValueBytes",
+        "configBaseBytes",
+        "commandStepBytes",
+        "storeStepBytes",
+        "workItems",
+        "preparationPhases"
+      ],
+      "properties": {
+        "rawBytes": {
+          "const": 131072
+        },
+        "checkpointBytes": {
+          "const": 512
+        },
+        "configValueBytes": {
+          "const": 512
+        },
+        "configBaseBytes": {
+          "const": 4194304
+        },
+        "commandStepBytes": {
+          "const": 16777216
+        },
+        "storeStepBytes": {
+          "const": 16777216
+        },
+        "workItems": {
+          "const": 1
+        },
+        "preparationPhases": {
+          "const": 3
+        }
+      }
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 17,
+      "maxItems": 17,
+      "prefixItems": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "applyDirectoryEventPage"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "Config"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "createStudio"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Creates and resolves studio catalog/draft/backbone owners through process-global ports without resumable external I/O."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "bindSpaceFile"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Binds a file-backed studio through blocking file/backbone work and process-global port ownership."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "importSpace"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Mixed request/import branches parse a whole document and publish external storage without retained decoding or cancellation."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "openSpace"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "HostOnly"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "navigateVirtualFileSystemNode"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "HostOnly"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "deleteVirtualFileSystemNode"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Traverses global catalog owners and performs external deletion without an app-owned resumable cursor."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "goHome"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "HostOnly"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "setActivePanelTab"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "Config"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "createSpace"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "HostOnly"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "deleteSpace"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "HostOnly"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "renameSpace"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "The dialog branch decodes and searches the whole directory read model; the shared command route has no bounded cursor."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "shareSpace"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "HostOnly"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "copyInviteLink"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "HostOnly"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "foldDirectoryEvents"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Parses the complete event JSON array and repeatedly clones/folds/serializes the directory model in one dispatch."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "presenceHeartbeat"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "HostOnly"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "setClient"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "Config"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        }
+      ],
+      "items": false
+    },
+    "boundaryCases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "bytes",
+          "accepted"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 513
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "oracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "library",
+        "scope",
+        "runtimeDependency"
+      ],
+      "properties": {
+        "library": {
+          "const": "serde_json"
+        },
+        "scope": {
+          "const": "test-only-existing-dependency"
+        },
+        "runtimeDependency": {
+          "const": false
+        }
+      }
+    }
+  }
+}

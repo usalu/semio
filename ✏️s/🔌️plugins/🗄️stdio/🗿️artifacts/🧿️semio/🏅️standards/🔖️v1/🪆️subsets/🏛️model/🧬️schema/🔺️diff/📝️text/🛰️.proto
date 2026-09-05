@@ -1,0 +1,3 @@
+syntax = "proto3";
+package semio.stdio_semio_model.diff_text;
+message Document { string line = 1; }

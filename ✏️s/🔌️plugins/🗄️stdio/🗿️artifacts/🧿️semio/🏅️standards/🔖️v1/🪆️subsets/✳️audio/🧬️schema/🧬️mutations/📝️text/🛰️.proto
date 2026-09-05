@@ -1,3 +1,0 @@
-syntax = "proto3";
-package semio.stdio_semio_audio.mutations_text;
-message Artifact { string schema = 1; bytes payload = 2; }

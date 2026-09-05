@@ -56,15 +56,15 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn evaluate_updates_preview_state_without_operations() {
-        let mut app = flow_app();
-        let result = dispatch(&mut app, FlowCommand::Evaluate(Evaluate {}));
+        let mut app = flow_app().await;
+        let result = dispatch(&mut app, FlowCommand::Evaluate(Evaluate {})).await;
         assert!(result.mutations.is_empty(), "evaluate is a view action");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn resolving_a_node_output_re_arms_the_tick_chain() {
-        let mut app = flow_app();
-        let result = dispatch(&mut app, FlowCommand::FlowEvalResolve(crate::editor::flow::commands::flow_eval_resolve::FlowEvalResolve { node_hash: 42, output_json: "{}".into() }));
+        let mut app = flow_app().await;
+        let result = dispatch(&mut app, FlowCommand::FlowEvalResolve(crate::editor::flow::commands::flow_eval_resolve::FlowEvalResolve { node_hash: 42, output_json: "{}".into() })).await;
         assert!(result.mutations.is_empty(), "resolving is not a document edit");
     }
 

@@ -5,7 +5,7 @@
   "displayName": "Add Attribute",
   "emoji": "🧩️",
   "aggregateVariant": "AddAttribute",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "add-attribute",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

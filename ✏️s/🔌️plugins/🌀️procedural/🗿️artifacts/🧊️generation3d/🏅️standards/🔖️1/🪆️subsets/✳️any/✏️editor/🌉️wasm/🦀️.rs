@@ -514,9 +514,9 @@ mod mounted_laws {
     fn domain_local_static_verifier_rejects_raw_routes_and_proves_three_dimensional_coverage() {
         let owner_source = include_str!("../../🧬️schema/🧬️mutations/💾️binary/🦀️.rs");
         let snapshot_source = include_str!("../../🧬️schema/📸️snapshot/💾️binary/🦀️.rs");
-        let lifecycle_fixture = include_str!("../../🧪️tests/🔣️p8yz-b-retained-mounted-laws.json");
-        let owner_fixture = include_str!("../../🧪️tests/🔣️p8yz-b-owner-catalog-laws.json");
-        let oracle_fixture = include_str!("../../🧪️tests/🔣️p8yz-b-third-party-oracle-laws.json");
+        let lifecycle_fixture = include_str!("../../🧪️tests/🧷️p8yz-b-retained-mounted-laws.json");
+        let owner_fixture = include_str!("../../🧪️tests/👑️p8yz-b-owner-catalog-laws.json");
+        let oracle_fixture = include_str!("../../🧪️tests/🔬️p8yz-b-third-party-oracle-laws.json");
 
         assert!(owner_source.contains("mutation.delete-widget-position.3d-only"));
         assert!(owner_source.contains("GENERATION3D_RETAINED_SCHEMA_DISCRIMINATOR"));

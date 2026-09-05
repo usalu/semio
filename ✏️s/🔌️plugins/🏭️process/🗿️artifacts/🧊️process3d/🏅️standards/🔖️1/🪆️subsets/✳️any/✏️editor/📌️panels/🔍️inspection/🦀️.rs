@@ -3,7 +3,7 @@
 //!
 //! 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `Process3dPlayApp::render_with_request_context`
 //! resolves the live `"geometry"` domain selection (`PROCESS3D_INTERACTION_DOMAIN`) once per render and
-//! threads the selected ids here — the SAME canonical targets `📄️artifact`/`🛠️workshop` bind their trees
+//! threads the selected ids here — the SAME canonical targets `🗿️artifact`/`🛠️workshop` bind their trees
 //! to (`fixture.stock_id`, a `step_payloads` entry's own `id`, or a workshop machine's `"machine:{id}"`).
 //! This panel resolves that id against the document and renders its real fields; an empty selection (or
 //! one that resolves to nothing, e.g. a just-deleted step) still falls back to the empty state.

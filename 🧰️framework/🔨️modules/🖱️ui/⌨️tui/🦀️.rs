@@ -6750,15 +6750,18 @@ mod tests {
         loop {
             match pty.try_read(&mut buf) {
                 Ok(0) => {
-                    if pty.try_wait().ok().flatten().is_some() {
-                        break;
-                    }
+                    let _ = pty.try_wait();
                     if Instant::now() >= deadline {
                         break;
                     }
                     std::thread::sleep(Duration::from_millis(10));
                 }
-                Ok(n) => out.extend_from_slice(&buf[..n]),
+                Ok(n) => {
+                    out.extend_from_slice(&buf[..n]);
+                    if String::from_utf8_lossy(&out).contains("hello") {
+                        break;
+                    }
+                }
                 Err(e) => panic!("try_read failed: {}", e.message),
             }
         }

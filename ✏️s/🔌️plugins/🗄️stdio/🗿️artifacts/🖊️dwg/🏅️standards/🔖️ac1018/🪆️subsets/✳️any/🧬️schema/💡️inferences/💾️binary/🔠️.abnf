@@ -1,3 +1,0 @@
-; abnf s.stdio.dwg.inference (ac1018)
-document = payload
-payload = *OCTET

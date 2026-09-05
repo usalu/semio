@@ -64,7 +64,7 @@ mod structural_correspondence_tests {
                 assert!(surface_source.contains(kind) || surface_source.contains(variant));
             }
             {
-                let surface_source = std::fs::read_to_string(owner.join("🔣️.schema.json")).expect("direct language surface");
+                let surface_source = std::fs::read_to_string(owner.join("📋️.schema.json")).expect("direct language surface");
                 assert!(surface_source.contains(kind) || surface_source.contains(variant));
             }
             {
@@ -96,7 +96,7 @@ mod structural_correspondence_tests {
                 assert!(surface_source.contains(kind) || surface_source.contains(variant));
             }
             {
-                let surface_source = std::fs::read_to_string(owner.join("🔣️.schema.json")).expect("direct language surface");
+                let surface_source = std::fs::read_to_string(owner.join("📋️.schema.json")).expect("direct language surface");
                 assert!(surface_source.contains(kind) || surface_source.contains(variant));
             }
             {
@@ -128,7 +128,7 @@ mod structural_correspondence_tests {
                 assert!(surface_source.contains(kind) || surface_source.contains(variant));
             }
             {
-                let surface_source = std::fs::read_to_string(owner.join("🔣️.schema.json")).expect("direct language surface");
+                let surface_source = std::fs::read_to_string(owner.join("📋️.schema.json")).expect("direct language surface");
                 assert!(surface_source.contains(kind) || surface_source.contains(variant));
             }
             {
@@ -160,7 +160,7 @@ mod structural_correspondence_tests {
                 assert!(surface_source.contains(kind) || surface_source.contains(variant));
             }
             {
-                let surface_source = std::fs::read_to_string(owner.join("🔣️.schema.json")).expect("direct language surface");
+                let surface_source = std::fs::read_to_string(owner.join("📋️.schema.json")).expect("direct language surface");
                 assert!(surface_source.contains(kind) || surface_source.contains(variant));
             }
             {
@@ -192,7 +192,7 @@ mod structural_correspondence_tests {
                 assert!(surface_source.contains(kind) || surface_source.contains(variant));
             }
             {
-                let surface_source = std::fs::read_to_string(owner.join("🔣️.schema.json")).expect("direct language surface");
+                let surface_source = std::fs::read_to_string(owner.join("📋️.schema.json")).expect("direct language surface");
                 assert!(surface_source.contains(kind) || surface_source.contains(variant));
             }
             {
@@ -224,7 +224,7 @@ mod structural_correspondence_tests {
                 assert!(surface_source.contains(kind) || surface_source.contains(variant));
             }
             {
-                let surface_source = std::fs::read_to_string(owner.join("🔣️.schema.json")).expect("direct language surface");
+                let surface_source = std::fs::read_to_string(owner.join("📋️.schema.json")).expect("direct language surface");
                 assert!(surface_source.contains(kind) || surface_source.contains(variant));
             }
             {

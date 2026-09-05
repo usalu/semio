@@ -1,0 +1,169 @@
+{
+  "reason": "Restore Cargo source-directory conventions; no new emoji is selected.",
+  "moves": [
+    {
+      "source": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🦀️json-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🦀️json-engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🦀️csv-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🦀️csv-engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🦀️json-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🦀️json-engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🦀️json-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🦀️json-engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🦀️json-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🦀️json-engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🦀️json-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🦀️json-engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️header/🏭️generator/🦀️engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️header/🏭️generator/🦀️engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🏭️generator/🦀️lopdf-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🏭️generator/🦀️lopdf-engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️base/🏭️generator/🦀️lopdf-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️base/🏭️generator/🦀️lopdf-engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🏭️generator/🦀️lopdf-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🏭️generator/🦀️lopdf-engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🏭️generator/🦀️lopdf-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🏭️generator/🦀️lopdf-engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/🦀️engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/🦀️engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/🦀️lopdf-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/🦀️lopdf-engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🏭️generator/🦀️lopdf-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🏭️generator/🦀️lopdf-engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🏭️generator/🦀️lopdf-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🏭️generator/🦀️lopdf-engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🏭️generator/🦀️lopdf-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🏭️generator/🦀️lopdf-engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🏭️generator/🦀️lopdf-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🏭️generator/🦀️lopdf-engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🏭️generator/🦀️lopdf-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🏭️generator/🦀️lopdf-engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🔬️probes/🦀️reader/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🔬️probes/🦀️reader/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️base/🏭️generator/🦀️engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️base/🏭️generator/🦀️engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️base/🔬️probes/🦀️extension-reader/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️base/🔬️probes/🦀️extension-reader/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️base/🏭️generator/🦀️quick-xml-svg-codec/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️base/🏭️generator/🦀️quick-xml-svg-codec/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✳️base/🏭️generator/🦀️quick-xml-oracle-codec/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✳️base/🏭️generator/🦀️quick-xml-oracle-codec/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🏭️generator/🦀️jpeg-jfif-codec/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🏭️generator/🦀️jpeg-jfif-codec/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/🦀️png-codec/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/🦀️png-codec/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️hdrl/🏭️generator/🦀️riff-avi-codec/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️hdrl/🏭️generator/🦀️riff-avi-codec/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️base/🏭️generator/🦀️serde-json-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️base/🏭️generator/🦀️serde-json-engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️header/🏭️generator/🦀️engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️header/🏭️generator/🦀️engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/🦀️image-bmp-codec/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/🦀️image-bmp-codec/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️document/🏭️generator/🦀️tiff-ifd-codec/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️document/🏭️generator/🦀️tiff-ifd-codec/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️document/🔬️probes/🦀️byte-order-reader/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️document/🔬️probes/🦀️byte-order-reader/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🔬️probes/🦀️resource-reader/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🔬️probes/🦀️resource-reader/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/🦀️engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/🦀️engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/🦀️tobj-obj-reader/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🏭️generator/🦀️tobj-obj-reader/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🏭️generator/🦀️json-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🏭️generator/🦀️json-engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🏭️generator/🦀️json-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🏭️generator/🦀️json-engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🔬️probes/🦀️oracle-probe/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🔬️probes/🦀️oracle-probe/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🏭️generator/🦀️json-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🏭️generator/🦀️json-engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🏭️generator/🦀️json-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🏭️generator/🦀️json-engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🏭️generator/🦀️svg-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🏭️generator/🦀️svg-engine/src"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🏭️generator/🦀️json-engine/🟥️src",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🏭️generator/🦀️json-engine/src"
+    }
+  ]
+}

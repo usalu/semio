@@ -1,0 +1,62 @@
+{
+  "schema": "semio.spr.retained-verification/v1",
+  "profile": { "major": 1, "minor": 0, "requiredFlags": 1, "canonicalVarints": true, "signed": false, "encrypted": false },
+  "limits": { "fileBytes": 67108864, "frameBodyBytes": 1048576, "records": 8192 },
+  "headerHex": "895350520d0a1a0a0100000001000000010000006fdee5cf0000000000000000",
+  "commits": [
+    {
+      "sequence": 1, "previousOffset": 0, "offset": 91, "end": 166,
+      "records": [
+        { "kind": 3, "flags": 2, "payloadHex": "0100020b666c6f772d6d656d62657210737464696f2e73656d696f2e666c6f77" },
+        { "kind": 1, "flags": 2, "payloadHex": "0101000101" }
+      ],
+      "coveredBytes": 59, "recoveredFrames": 3
+    },
+    {
+      "sequence": 2, "previousOffset": 91, "offset": 180, "end": 255,
+      "records": [{ "kind": 64, "flags": 2, "payloadHex": "010000" }],
+      "coveredBytes": 14, "recoveredFrames": 5
+    }
+  ],
+  "fuelGrants": [1, 7, 4096],
+  "negative": [
+    { "id": "magic", "operation": "header-xor", "offset": 0, "value": 1, "repairCrc": true, "error": "header" },
+    { "id": "major", "operation": "header-xor", "offset": 8, "value": 2, "repairCrc": true, "error": "header" },
+    { "id": "minor", "operation": "header-xor", "offset": 10, "value": 1, "repairCrc": true, "error": "header" },
+    { "id": "missing-chain", "operation": "header-xor", "offset": 12, "value": 1, "repairCrc": true, "error": "header" },
+    { "id": "unknown-required", "operation": "header-xor", "offset": 12, "value": 8, "repairCrc": true, "error": "header" },
+    { "id": "signed-required", "operation": "header-xor", "offset": 12, "value": 2, "repairCrc": true, "error": "header" },
+    { "id": "encrypted-required", "operation": "header-xor", "offset": 12, "value": 4, "repairCrc": true, "error": "header" },
+    { "id": "header-reserved", "operation": "header-xor", "offset": 24, "value": 1, "repairCrc": false, "error": "header" },
+    { "id": "header-crc", "operation": "header-xor", "offset": 20, "value": 1, "repairCrc": false, "error": "header" },
+    { "id": "frame-crc", "operation": "frame-xor", "offset": 45, "value": 1, "repairCrc": false, "error": "frame" },
+    { "id": "back-length", "operation": "frame-xor", "offset": 74, "value": 1, "repairCrc": false, "error": "frame" },
+    { "id": "sequence", "operation": "commit-xor", "offset": 0, "value": 1, "repairCrc": true, "error": "commit" },
+    { "id": "previous-offset", "operation": "commit-xor", "offset": 8, "value": 1, "repairCrc": true, "error": "commit" },
+    { "id": "covered-length", "operation": "commit-xor", "offset": 16, "value": 1, "repairCrc": true, "error": "commit" },
+    { "id": "record-count", "operation": "commit-xor", "offset": 24, "value": 1, "repairCrc": true, "error": "commit" },
+    { "id": "commit-reserved", "operation": "commit-xor", "offset": 28, "value": 1, "repairCrc": true, "error": "commit" },
+    { "id": "commit-chain", "operation": "commit-xor", "offset": 63, "value": 1, "repairCrc": true, "error": "commit" },
+    { "id": "later-commit-chain", "operation": "second-commit-xor", "offset": 63, "value": 1, "repairCrc": true, "error": "commit" },
+    { "id": "later-record-crc", "operation": "frame-xor", "offset": 171, "value": 1, "repairCrc": false, "error": "frame" },
+    { "id": "commit-flags", "operation": "frame-xor", "offset": 93, "value": 2, "repairCrc": true, "error": "commit" },
+    { "id": "nonminimal-length", "operation": "replace-first-length", "hex": "a200", "error": "frame" },
+    { "id": "overflow-length", "operation": "replace-first-length", "hex": "ffffffffffffffffff02", "error": "frame" },
+    { "id": "undersized-body", "operation": "replace-first-length", "hex": "01", "error": "frame" },
+    { "id": "frame-capacity", "operation": "replace-first-length", "hex": "818040", "error": "capacity" },
+    { "id": "record-capacity", "operation": "record-limit", "value": 2, "error": "capacity" },
+    { "id": "file-capacity", "operation": "file-limit", "value": 254, "error": "capacity" }
+  ],
+  "compressed": [
+    { "id": "deflate-committed", "kind": 64, "flags": 7, "rawLengthHex": "09", "storedHex": "2b4a2d49cccc4b4d510400", "rawHex": "72657461696e656421", "error": null },
+    { "id": "missing-raw-length", "kind": 64, "flags": 7, "rawLengthHex": "", "storedHex": "", "error": "frame" },
+    { "id": "nonminimal-raw-length", "kind": 64, "flags": 7, "rawLengthHex": "8900", "storedHex": "2b4a2d49cccc4b4d510400", "error": "frame" },
+    { "id": "overflow-raw-length", "kind": 64, "flags": 7, "rawLengthHex": "ffffffffffffffffff02", "storedHex": "", "error": "frame" },
+    { "id": "unterminated-raw-length", "kind": 64, "flags": 7, "rawLengthHex": "80", "storedHex": "", "error": "frame" },
+    { "id": "ten-continuations", "kind": 64, "flags": 7, "rawLengthHex": "80808080808080808080", "storedHex": "", "error": "frame" },
+    { "id": "compressed-commit", "kind": 12, "flags": 7, "rawLengthHex": "09", "storedHex": "2b4a2d49cccc4b4d510400", "error": "commit" },
+    { "id": "reserved-frame-flags", "kind": 64, "flags": 135, "rawLengthHex": "09", "storedHex": "2b4a2d49cccc4b4d510400", "error": "frame" },
+    { "id": "compressed-identity-codec", "kind": 64, "flags": 3, "rawLengthHex": "09", "storedHex": "2b4a2d49cccc4b4d510400", "error": "frame" },
+    { "id": "codec-without-compression", "kind": 64, "flags": 6, "rawLengthHex": "", "storedHex": "2b4a2d49cccc4b4d510400", "error": "frame" }
+  ]
+}

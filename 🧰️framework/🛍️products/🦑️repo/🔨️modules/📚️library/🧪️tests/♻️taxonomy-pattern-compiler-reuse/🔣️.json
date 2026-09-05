@@ -1,0 +1,250 @@
+{
+  "schemaVersion": 1,
+  "contractId": "taxonomy-pattern-compiler-reuse-v1",
+  "factory": "createTaxonomyPathMatcher",
+  "rounds": 4,
+  "uniqueNormalizedPatterns": 14,
+  "normalization": {
+    "paths": "windows-separators-leading-dot-nfc",
+    "patterns": "nfc-only"
+  },
+  "integration": {
+    "loadedField": "pathMatcher",
+    "normalizerOwners": {
+      "validatedContractPattern": 1,
+      "parseTaxonomy": 2,
+      "resolveFileKind": 2,
+      "explicitTicketRows": 1,
+      "matchingFixedContracts": 1,
+      "renderCatalogGlob": 1,
+      "projectNestedCargoPackages": 1,
+      "mutationPayloadSchemaOwner": 1,
+      "generatorInputPaths": 1,
+      "generatorPlanning": 1,
+      "assertRegenerationContract": 1,
+      "assertTicketImportantRemovalAuthority": 2
+    },
+    "loadOwners": ["inventoryTaxonomyWithSourceParentPruning", "planTaxonomy", "applyTaxonomyPlan"],
+    "fixedContractCallCount": 6,
+    "changedInput": { "pointer": "/fixedFilenameContracts/cargo-manifest/reason", "suffix": " - fresh invocation" },
+    "freshProbe": { "path": "🔣️fresh-session.json", "pattern": "fresh-session*.json" }
+  },
+  "oracle": {
+    "library": "picomatch",
+    "options": {
+      "dot": true,
+      "nocase": false,
+      "nonegate": true,
+      "noext": true,
+      "nobrace": true,
+      "strictSlashes": true,
+      "flags": "u"
+    }
+  },
+  "cases": [
+    {
+      "id": "literal",
+      "path": "🔣️root.json",
+      "pattern": "🔣️root.json",
+      "expected": true
+    },
+    {
+      "id": "leading-dot",
+      "path": "./🔣️root.json",
+      "pattern": "🔣️root.json",
+      "expected": true
+    },
+    {
+      "id": "windows-separators",
+      "path": "🧪️root\\🔣️.json",
+      "pattern": "🔣️root.json",
+      "expected": true
+    },
+    {
+      "id": "single-star",
+      "path": "roota.json",
+      "pattern": "root*.json",
+      "expected": true
+    },
+    {
+      "id": "single-star-no-slash",
+      "path": "🧪️root/a/b.json",
+      "pattern": "root*.json",
+      "expected": false
+    },
+    {
+      "id": "single-star-dot",
+      "path": "root.a.json",
+      "pattern": "root*.json",
+      "expected": true
+    },
+    {
+      "id": "globstar-zero",
+      "path": "../♻️taxonomy-pattern-compiler-reuse/🟦️.ts",
+      "pattern": "**/🟦️.ts",
+      "expected": true
+    },
+    {
+      "id": "globstar-many",
+      "path": "🧪️root/a/b/🟦️.ts",
+      "pattern": "**/🟦️.ts",
+      "expected": true
+    },
+    {
+      "id": "globstar-extension",
+      "path": "🟦️root.js",
+      "pattern": "**/🟦️.ts",
+      "expected": false
+    },
+    {
+      "id": "middle-globstar-zero",
+      "path": "🦀️root.rs",
+      "pattern": "🧪️root/**/🦀️.rs",
+      "expected": true
+    },
+    {
+      "id": "middle-globstar-many",
+      "path": "🧪️root/a/b/🦀️.rs",
+      "pattern": "🧪️root/**/🦀️.rs",
+      "expected": true
+    },
+    {
+      "id": "unicode-question",
+      "path": "😀.rootts",
+      "pattern": "root?.ts",
+      "expected": true
+    },
+    {
+      "id": "question-width",
+      "path": "rootab.ts",
+      "pattern": "root?.ts",
+      "expected": false
+    },
+    {
+      "id": "class-range",
+      "path": "rootB7.json",
+      "pattern": "root[A-C][0-9].json",
+      "expected": true
+    },
+    {
+      "id": "class-range-miss",
+      "path": "rootD7.json",
+      "pattern": "root[A-C][0-9].json",
+      "expected": false
+    },
+    {
+      "id": "class-width",
+      "path": "rootB77.json",
+      "pattern": "root[A-C][0-9].json",
+      "expected": false
+    },
+    {
+      "id": "tail-globstar-parent",
+      "path": "🧪️root",
+      "pattern": "🧪️root/**",
+      "expected": false
+    },
+    {
+      "id": "tail-globstar-slash",
+      "path": "🧪️root/",
+      "pattern": "🧪️root/**",
+      "expected": true
+    },
+    {
+      "id": "tail-globstar-many",
+      "path": "🧪️root/a/b",
+      "pattern": "🧪️root/**",
+      "expected": true
+    },
+    {
+      "id": "all-dot",
+      "path": "a/.hidden.ts",
+      "pattern": "**/*.ts",
+      "expected": true
+    },
+    {
+      "id": "all-root",
+      "path": "a.ts",
+      "pattern": "**/*.ts",
+      "expected": true
+    },
+    {
+      "id": "all-miss",
+      "path": "a.js",
+      "pattern": "**/*.ts",
+      "expected": false
+    },
+    {
+      "id": "nfc-path",
+      "path": "éa.json",
+      "pattern": "é*.json",
+      "expected": true
+    },
+    {
+      "id": "nfc-pattern",
+      "path": "éa.json",
+      "pattern": "é*.json",
+      "expected": true
+    },
+    {
+      "id": "nfc-both",
+      "path": "éa.json",
+      "pattern": "é*.json",
+      "expected": true
+    },
+    {
+      "id": "literal-regex-punctuation",
+      "path": "rootfile(1)+.ts",
+      "pattern": "rootfile(1)+.ts",
+      "expected": true
+    },
+    {
+      "id": "vs-distinct",
+      "path": "🟦.rootts",
+      "pattern": "🟦️root.ts",
+      "expected": false
+    },
+    {
+      "id": "vs-exact",
+      "path": "🟦️root.ts",
+      "pattern": "🟦️root.ts",
+      "expected": true
+    },
+    {
+      "id": "question-no-slash",
+      "path": "🧪️root/a/b.json",
+      "pattern": "root?.json",
+      "expected": false
+    },
+    {
+      "id": "character-class",
+      "path": "rootb.md",
+      "pattern": "root[ab].md",
+      "expected": true
+    },
+    {
+      "id": "character-class-miss",
+      "path": "rootc.md",
+      "pattern": "root[ab].md",
+      "expected": false
+    },
+    {
+      "id": "segment-star",
+      "path": "🧪️root/a",
+      "pattern": "🧪️root/*",
+      "expected": true
+    },
+    {
+      "id": "segment-star-no-slash",
+      "path": "🧪️root/a/b",
+      "pattern": "🧪️root/*",
+      "expected": false
+    }
+  ],
+  "invalidPatterns": [
+    "[",
+    "🧪️root/[a",
+    "[z-a]",
+    "🧪️root/[z-a]"
+  ]
+}

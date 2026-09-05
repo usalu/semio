@@ -1,0 +1,362 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution. A mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so `s.animate.presentation`'s catalog and its (non-)oracle registration live here rather than in a shared manifest. The catalog's `kinds` are the kebab spelling of `PresentationMutation`'s variants in declaration order; `../🧬️schema/🧬️mutations/🦀️.rs`'s `KINDS` const and its `kinds_match_the_enum_and_the_catalog` test keep this file, that const and the enum in agreement.",
+  "oracles": [
+    {
+      "id": "presentation-1-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "capabilities": [
+        "presentation-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "🐍️ No third-party library reads or writes s.animate.presentation's animate.presentation.dsl envelope — this repository-defined format. The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../../../🧪️tests/mutate-presentation-1/🐍️component.py, written from this subset's own committed ../🧬️schema/📸️snapshot/🔣️.json and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's resize/replace/create/delete/rename/reorder verb entries and 📓️derivation-rules.md's per-ordered-collection recipe. It imports nothing from the Rust it judges and transliterates none of it. Honest boundary: source is not decodable from any committed fixture (only the real .dsl.semio artifact's own parser resolves it), so resize-source-frame/replace-source are modelled with source as an opaque marker (touched vs not) rather than real content; the seven tiles-scoped kinds are verified for real against this case's own committed local://🔣️.json base. All nine kinds' forward and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan — all eighteen passed on the first run.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.animate.presentation",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "rust/crates.io",
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "generic slide-deck / figure-crop libraries",
+              "reason": "No third-party library speaks this repositorys own composed (source, tiles) presentation envelope; it is a repository-defined format with no published grammar elsewhere."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md; ../🧬️schema/📸️snapshot/🔣️.json; ../../../🧪️tests/mutate-presentation-1/🧫️fixtures/🔣️.json",
+        "fixtureCoverage": {
+          "vectors": 9,
+          "capabilitiesCovered": [
+            "presentation-1-mutate"
+          ]
+        }
+      }
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "presentation-1-any",
+      "capability": "presentation-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "create-tile",
+          "sourceMutationDirectoryName": "🆕create-tile",
+          "mutationDirectoryName": "🆕create-tile",
+          "scenarios": [
+            {
+              "id": "rejects-a-duplicate-tile-id",
+              "directoryName": "🧪️rejects-a-duplicate-tile-id"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-tile",
+          "sourceMutationDirectoryName": "🗑️delete-tile",
+          "mutationDirectoryName": "🗑️delete-tile",
+          "scenarios": [
+            {
+              "id": "rejects-deleting-a-missing-tile",
+              "directoryName": "🧪️rejects-deleting-a-missing-tile"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-tiles",
+          "sourceMutationDirectoryName": "🧹delete-tiles",
+          "mutationDirectoryName": "🧹delete-tiles",
+          "scenarios": [
+            {
+              "id": "rejects-when-every-addressed-tile-is-missing",
+              "directoryName": "🧪️rejects-when-every-addressed-tile-is-missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-tile",
+          "sourceMutationDirectoryName": "✏️rename-tile",
+          "mutationDirectoryName": "✏️rename-tile",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-tile-already-has-that-name",
+              "directoryName": "🧪️no-ops-when-the-tile-already-has-that-name"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-tiles",
+          "sourceMutationDirectoryName": "🔀reorder-tiles",
+          "mutationDirectoryName": "🔀reorder-tiles",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-tile-is-already-at-that-index",
+              "directoryName": "🧪️no-ops-when-the-tile-is-already-at-that-index"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-source",
+          "sourceMutationDirectoryName": "🖼️replace-source",
+          "mutationDirectoryName": "🖼️replace-source",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-source-is-already-identical",
+              "directoryName": "🧪️no-ops-when-the-source-is-already-identical"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-tiles",
+          "sourceMutationDirectoryName": "🔁replace-tiles",
+          "mutationDirectoryName": "🔁replace-tiles",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-collection-is-already-empty",
+              "directoryName": "🧪️no-ops-when-the-collection-is-already-empty"
+            }
+          ]
+        },
+        {
+          "mutationId": "resize-source-frame",
+          "sourceMutationDirectoryName": "🔲resize-source-frame",
+          "mutationDirectoryName": "🔲resize-source-frame",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-frame-is-already-identical",
+              "directoryName": "🧪️no-ops-when-the-frame-is-already-identical"
+            }
+          ]
+        },
+        {
+          "mutationId": "resize-tile-crop",
+          "sourceMutationDirectoryName": "✂️resize-tile-crop",
+          "mutationDirectoryName": "✂️resize-tile-crop",
+          "scenarios": [
+            {
+              "id": "rejects-a-zero-width-crop",
+              "directoryName": "🧪️rejects-a-zero-width-crop"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "resize-source-frame",
+        "replace-source",
+        "create-tile",
+        "delete-tile",
+        "delete-tiles",
+        "rename-tile",
+        "resize-tile-crop",
+        "reorder-tiles",
+        "replace-tiles"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.animate.presentation",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "create-tile",
+          "capability": "presentation-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-tile",
+            "bridgeVersion": 1,
+            "variant": "CreateTile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "presentation-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-tile",
+          "capability": "presentation-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-tile",
+            "bridgeVersion": 1,
+            "variant": "DeleteTile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "presentation-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-tiles",
+          "capability": "presentation-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-tiles",
+            "bridgeVersion": 1,
+            "variant": "DeleteTiles"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "presentation-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "rename-tile",
+          "capability": "presentation-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-tile",
+            "bridgeVersion": 1,
+            "variant": "RenameTile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "presentation-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "reorder-tiles",
+          "capability": "presentation-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-tiles",
+            "bridgeVersion": 1,
+            "variant": "ReorderTiles"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "presentation-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "replace-source",
+          "capability": "presentation-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-source",
+            "bridgeVersion": 1,
+            "variant": "ReplaceSource"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "presentation-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "replace-tiles",
+          "capability": "presentation-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-tiles",
+            "bridgeVersion": 1,
+            "variant": "ReplaceTiles"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "presentation-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "resize-source-frame",
+          "capability": "presentation-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "resize-source-frame",
+            "bridgeVersion": 1,
+            "variant": "ResizeSourceFrame"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "presentation-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "resize-tile-crop",
+          "capability": "presentation-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "resize-tile-crop",
+            "bridgeVersion": 1,
+            "variant": "ResizeTileCrop"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "presentation-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

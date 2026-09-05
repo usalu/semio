@@ -8,9 +8,12 @@
 
 //#region 🔌️Adapters
 import { describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, relative, sep } from "node:path";
+import { basename, dirname, join, relative, sep } from "node:path";
+import { clearContributionCache, isTestContributionPath, scanDeclaredDependencies, testContributionDirectoryName } from "./🟦️.ts";
+import contributionDirectoryCases from "../../🧪️tests/🧭️contribution-directory-ownership/🔣️.json";
+import contributionDirectorySchema from "../../🧪️tests/🧭️contribution-directory-ownership/🧬️schema/🔣️.json";
 
 /** 🧭️ Repo-relative, forward-slashed path — the shape every discovered record carries. */
 const relativeToRepo = (root: string, target: string): string => relative(root, target).split(sep).join("/");
@@ -304,7 +307,7 @@ describe("🧹️ clean safety", () => {
   });
 
   test("no tracked fixture, source file or compose path is ever a clean candidate", () => {
-    const sentinelFixture = join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/📄️protocol-vector.txt");
+    const sentinelFixture = join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/📡️protocol-vector.txt");
     const before = readFileSync(sentinelFixture, "utf8");
     const report = cleanTestOutputs(repoRoot, { dry: true });
     for (const row of report.removals) {
@@ -633,8 +636,8 @@ describe("🪆️ case above subset", () => {
     expect(caseAboveSubsetBreaches(discoveredAt("🧪️synthetic/📦️artifact/🏅️standards/🔖️1/🪆️subsets/✳️only"), featureTagged("@mutations-thing-v1"), registry)).toEqual([]);
   });
 
-  // 🚫️Confirmed live: `gif/create-and-round-trip-gif`, `jpg/create-and-read-jpeg` and
-  // `zip/create-and-edit-archive` each import exactly one real subset's `io` from their adapter while
+  // 🚫️Confirmed live: `gif/🐯️create-and-round-trip-gif`, `jpg/📖️create-and-read-jpeg` and
+  // `zip/✏️create-and-edit-archive` each import exactly one real subset's `io` from their adapter while
   // C4 confirmed all three genuinely stay artifact-wide — a case with no `@mutations-` tag is never a
   // mutation-catalog candidate at all, whatever its adapter happens to import.
   test("a case with no @mutations- tag is never a candidate, whatever its adapter names", () => {
@@ -735,16 +738,44 @@ describe("🧫️ mutation without fixture", () => {
     expect(mutationFixtureBreaches(registryWith([malformed]))).toEqual([]);
   });
 
-  // 🔍️The real gate: every live mutation-without-fixture instance, right now, is a real `s.stdio.*`
-  // interchange format — the same bucket A10/D1 already documented as owed a genuine third-party
-  // reference — never one of the artifacts D1 promoted or that already carries v1 vectors.
-  test("the live registry's debt is real, concentrated in s.stdio.* formats, and never fires on png/change-background or architect/program", () => {
-    const liveRegistry = loadOracleRegistry(repoRoot);
-    const breaches = mutationFixtureBreaches(liveRegistry);
-    expect(breaches.length).toBeGreaterThan(0);
-    expect(breaches.every((entry) => / of s\./.test(entry.summary))).toBe(true);
-    expect(breaches.some((entry) => entry.summary.includes("s.stdio.png"))).toBe(false);
-    expect(breaches.some((entry) => entry.summary.includes("s.architect.program"))).toBe(false);
+  test("the live registry retains the independent Stdio declaration census and has no declared fixture debt", () => {
+    const liveRegistry = loadOracleRegistry(repoRoot), taxonomy = testTaxonomy(repoRoot), owner = "✏️s/🔌️plugins/🗄️stdio";
+    const physical: { path: string; value: Record<string, any> }[] = [];
+    const walk = (path: string): void => {
+      for (const entry of readdirSync(join(repoRoot, path), { withFileTypes: true })) {
+        const child = `${path}/${entry.name}`;
+        if (isExcludedTestPath(repoRoot, child)) continue;
+        if (entry.isDirectory()) walk(child);
+        else if (entry.isFile() && entry.name.endsWith(".json")) {
+          const content = readFileSync(join(repoRoot, child), "utf8");
+          if (!/"(?:mutationManifests|fixtureManifests)"\s*:/u.test(content)) continue;
+          const value = JSON.parse(content);
+          if (Array.isArray(value.mutationManifests) || Array.isArray(value.fixtureManifests)) physical.push({ path: child, value });
+        }
+      }
+    };
+    walk(owner);
+    expect(physical.length).toBeGreaterThan(0);
+    const declarationIds = (value: { mutationManifests?: readonly any[] }) => (value.mutationManifests ?? []).map((manifest) => ({ artifact: manifest.artifact, standard: manifest.standard, subset: manifest.subset, mutations: manifest.mutations.map((mutation: { id: string }) => mutation.id) }));
+    const witnesses = new Set(["s.stdio.binary", "s.stdio.wav", "s.stdio.mp3", "s.stdio.txt"]);
+    const observedWitnesses = new Set<string>();
+    for (const row of physical) {
+      const matches = liveRegistry.contributions.filter((contribution) => contribution.manifestPath === row.path);
+      expect(matches.length, row.path).toBe(1);
+      const live = matches[0]!;
+      expect(basename(dirname(row.path)), row.path).toBe(testContributionDirectoryName(taxonomy, live.owner));
+      expect(declarationIds(live), row.path).toEqual(declarationIds(row.value));
+      expect(live.fixtureManifests.map((fixture) => fixture.id), row.path).toEqual((row.value.fixtureManifests ?? []).map((fixture: { id: string }) => fixture.id));
+      for (const manifest of row.value.mutationManifests ?? []) if (witnesses.has(manifest.artifact)) {
+        expect(basename(dirname(row.path))).not.toBe(taxonomy.testContributionDirName);
+        observedWitnesses.add(manifest.artifact);
+      }
+    }
+    const live = liveRegistry.contributions.filter((contribution) => contribution.owner === owner || contribution.owner.startsWith(`${owner}/`));
+    expect(live.flatMap((contribution) => contribution.mutationManifests).flatMap((manifest) => manifest.mutations).length).toBe(physical.flatMap((row) => row.value.mutationManifests ?? []).flatMap((manifest) => manifest.mutations).length);
+    expect(live.flatMap((contribution) => contribution.fixtureManifests).length).toBe(physical.flatMap((row) => row.value.fixtureManifests ?? []).length);
+    expect([...observedWitnesses].sort()).toEqual([...witnesses].sort());
+    expect(mutationFixtureBreaches(liveRegistry)).toEqual([]);
   }, 30_000);
 });
 
@@ -981,6 +1012,94 @@ describe("⚖️ artifact comparison profiles", () => {
 });
 
 
+describe("🧭️ contribution directory ownership", () => {
+  test("handpicked owner directories match neutral cases and the lodash map oracle", async () => {
+    const { default: Ajv } = await import("ajv");
+    const { default: lodash } = await import("lodash");
+    expect(new Ajv({ strict: true }).validate(contributionDirectorySchema, contributionDirectoryCases)).toBe(true);
+    const taxonomy = { ...testTaxonomy(repoRoot), testContributionDirName: contributionDirectoryCases.defaultDirectory, testContributionDirectoryOverrides: contributionDirectoryCases.overrides };
+    const expected = contributionDirectoryCases.cases.map(({ directory }) => directory);
+    expect(contributionDirectoryCases.cases.map(({ owner }) => testContributionDirectoryName(taxonomy, owner))).toEqual(expected);
+    expect(contributionDirectoryCases.cases.map(({ owner }) => lodash.get(contributionDirectoryCases.overrides, [owner], contributionDirectoryCases.defaultDirectory))).toEqual(expected);
+    expect(contributionDirectoryCases.cases.map(({ path }) => isTestContributionPath(taxonomy, path))).toEqual(contributionDirectoryCases.cases.map(({ owned }) => owned));
+  });
+
+  test("discovery and dependency ownership use exact owner overrides without aliases", () => {
+    const root = mkdtempSync(join(tmpdir(), "contribution-directory-ownership-"));
+    const vocabulary = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
+    const candidates = [
+      { owner: "🎠️kernel", directory: "🔮️oracle", dependency: "selected-reference", owned: true },
+      { owner: "🎠️kernel", directory: "🧪️oracle", dependency: "old-name-production", owned: false },
+      { owner: "🧩️other", directory: "🧪️oracle", dependency: "default-reference", owned: true },
+      { owner: "🧩️other", directory: "🔮️oracle", dependency: "lookalike-production", owned: false },
+    ];
+    try {
+      const taxonomy = { ...JSON.parse(readFileSync(join(repoRoot, vocabulary), "utf8")), testContributionDirectoryOverrides: contributionDirectoryCases.overrides };
+      mkdirSync(join(root, vocabulary, ".."), { recursive: true });
+      writeFileSync(join(root, vocabulary), JSON.stringify(taxonomy));
+      for (const candidate of candidates) {
+        const dir = join(root, candidate.owner, candidate.directory);
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(join(dir, "🔣️.json"), JSON.stringify({ schemaVersion: 2, oracles: [{ id: candidate.dependency, package: "semver", ecosystem: "javascript", capabilities: [], comparisonProfiles: [], license: "ISC", testOnly: true }] }));
+        writeFileSync(join(dir, "package.json"), JSON.stringify({ dependencies: { [candidate.dependency]: "1.0.0" } }));
+        writeFileSync(join(dir, "🟦️.ts"), "import semver from \"semver\";\n");
+      }
+      const contributions = discoverTestContributions(root);
+      expect(contributions.map(({ manifestPath }) => manifestPath).sort()).toEqual(candidates.filter(({ owned }) => owned).map(({ owner, directory }) => `${owner}/${directory}/🔣️.json`).sort());
+      const dependencies = scanDeclaredDependencies(root);
+      for (const candidate of candidates) expect(dependencies.find(({ name }) => name === candidate.dependency)?.productionReachable).toBe(!candidate.owned);
+      expect([...new Set(oracleImportsInProduction(root).map(({ path }) => path))].sort()).toEqual(candidates.filter(({ owned }) => !owned).map(({ owner, directory }) => `${owner}/${directory}/🟦️.ts`).sort());
+      writeFileSync(join(root, "🎠️kernel/🔮️oracle/🔣️.json"), "{ malformed");
+      clearContributionCache();
+      expect(discoverTestContributions(root).map(({ owner }) => owner)).toEqual(["🧩️other"]);
+      expect(scanDeclaredDependencies(root).find(({ name }) => name === "selected-reference")?.productionReachable).toBe(false);
+      expect(oracleImportsInProduction(root).some(({ path }) => path.startsWith("🎠️kernel/🔮️oracle/"))).toBe(false);
+    } finally {
+      clearContributionCache();
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("root dependency discovery and classification honor the same neutral owner contract", async () => {
+    const ts = await import("typescript");
+    const source = ts.createSourceFile("script.ts", readFileSync(join(repoRoot, "📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const names = ["dependencyDiscoverContributionManifests", "dependencyClassifyOracleEntry"];
+    const statements = source.statements.filter((node) => ts.isFunctionDeclaration(node) && names.includes(node.name?.text ?? "") || ts.isVariableStatement(node) && node.declarationList.declarations.some((item) => item.name.getText(source) === "DEPENDENCY_TEST_DOMAIN_PATH_RE"));
+    expect(statements).toHaveLength(3);
+    const compiled = ts.transpileModule(statements.map((node) => node.getText(source)).join("\n"), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
+    const api = new Function("readdirSync", "existsSync", "join", `${compiled}\nreturn { discover: dependencyDiscoverContributionManifests, classify: dependencyClassifyOracleEntry };`)(readdirSync, existsSync, join) as {
+      discover(root: string, directory: string, filename: string, overrides: Readonly<Record<string, string>>): string[];
+      classify(entry: { name: string; version: string; kinds: string[]; users: string[]; declarations: { user: string; version: string; kind: string }[]; oracleConflictUsers?: string[] }, oracleIds: readonly string[], overrides: Readonly<Record<string, string>>, defaultDirectory: string): void;
+    };
+    const root = mkdtempSync(join(tmpdir(), "root-contribution-directory-"));
+    try {
+      for (const row of contributionDirectoryCases.cases) {
+        const directory = row.path.slice(0, row.path.lastIndexOf("/"));
+        mkdirSync(join(root, directory), { recursive: true });
+        writeFileSync(join(root, directory, "🔣️.json"), "{}\n");
+        const entry = { name: "reference", version: "1.0.0", kinds: ["production-runtime"], users: [row.path], declarations: [{ user: row.path, version: "1.0.0", kind: "production-runtime" }] };
+        api.classify(entry, ["reference"], contributionDirectoryCases.overrides, contributionDirectoryCases.defaultDirectory);
+        expect(entry.kinds, row.path).toEqual([row.owned ? "test-oracle" : "production-runtime"]);
+      }
+      const expected = contributionDirectoryCases.cases.filter(({ owned }) => owned).map(({ path }) => `${path.slice(0, path.lastIndexOf("/"))}/🔣️.json`).sort();
+      expect(api.discover(root, contributionDirectoryCases.defaultDirectory, "🔣️.json", contributionDirectoryCases.overrides).sort()).toEqual(expected);
+      rmSync(join(root, "🎠️kernel/🔮️oracle/🔣️.json"));
+      expect(api.discover(root, contributionDirectoryCases.defaultDirectory, "🔣️.json", contributionDirectoryCases.overrides).sort()).toEqual(expected.filter((path) => path !== "🎠️kernel/🔮️oracle/🔣️.json"));
+      const absent = { name: "reference", version: "1.0.0", kinds: ["production-runtime"], users: ["🎠️kernel/🔮️oracle/package.json"], declarations: [{ user: "🎠️kernel/🔮️oracle/package.json", version: "1.0.0", kind: "production-runtime" }] };
+      api.classify(absent, ["reference"], contributionDirectoryCases.overrides, contributionDirectoryCases.defaultDirectory);
+      expect(absent.kinds).toEqual(["test-oracle"]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("the handpicked kernel oracle remains discoverable at runtime", () => {
+    const contribution = discoverTestContributions(repoRoot).find(({ owner }) => owner === "🧰️framework/🔨️modules/🎠️kernel");
+    expect(contribution?.manifestPath).toBe("🧰️framework/🔨️modules/🎠️kernel/🔮️oracle/🔣️.json");
+    expect(contribution?.oracles.map(({ id }) => id)).toContain("semver");
+  }, 60_000);
+});
+
 describe("🧩️ open/closed", () => {
   test("the framework's own registry names no plugin, product or file format", () => {
     const taxonomy = testTaxonomy(repoRoot);
@@ -1017,7 +1136,7 @@ describe("🧩️ open/closed", () => {
 
   test("the framework test domain's sources name no implementation area", () => {
     const domain = join(repoRoot, testTaxonomy(repoRoot).testDomainPath);
-    for (const file of ["📜️script.ts", "📦️packages/🟦️typescript/🟦️.ts", "🧬️protocol/🦀️.rs", "🏃️runner/🦀️.rs"]) {
+    for (const file of ["📜️script.ts", "📦️packages/🟦️typescript/🟦️.ts", "📡️protocol/🦀️.rs", "🏃️runner/🦀️.rs"]) {
       const content = readFileSync(join(domain, file), "utf8");
       // 🧭️Which areas are implementations is taxonomy vocabulary; this test names none of them.
       for (const area of implementationAreas()) expect(content.includes(`${area}/`), `${file} names the implementation area ${area}`).toBe(false);
@@ -1088,7 +1207,7 @@ describe("🧬️ physical mutation vector registry", () => {
   test("physical vectors are strict and independent of runtime capability kinds", () => {
     expect(mutationCatalogProblems(catalog, "artifact/🏅️standards/🔖️1/🪆️subsets/✳️any")).toEqual([]);
     expect(mutationCatalogProblems({ ...catalog, vectors: [{ mutationId: vector.mutationId, mutationDirectoryName: vector.mutationDirectoryName, scenarios: vector.scenarios }] })).toContain("vectors[0].sourceMutationDirectoryName must be non-empty NFC");
-    expect(mutationCatalogProblems({ ...catalog, vectors: [{ ...vector, scenarios: [{ ...scenario, directoryName: "changes-the-value" }] }] })).toContain("vectors[0].scenarios[0].directoryName must equal 🧪️changes-the-value");
+    expect(mutationCatalogProblems({ ...catalog, vectors: [{ ...vector, scenarios: [{ ...scenario, directoryName: "changes-the-value" }] }] })).toContain("vectors[0].scenarios[0].directoryName must be one canonical NFC test-case identity");
     expect(mutationCatalogProblems({ ...catalog, vectors: [vector, { ...vector, mutationDirectoryName: "🧭️change-value" }] })).toContain("vectors mutationId change-value is duplicated");
     expect(mutationCatalogProblems({ ...catalog, standardDirectoryName: "🔖️2" }, "artifact/🏅️standards/🔖️1/🪆️subsets/✳️any")).toContain("catalog profile does not match its contribution owner");
   });
@@ -1116,15 +1235,15 @@ describe("🧬️ physical mutation vector registry", () => {
   test("a source or projected 13-node bundle is represented exactly once", () => {
     const root = mkdtempSync(join(tmpdir(), "mutation-vector-contract-"));
     const owner = "artifact/🏅️standards/🔖️1/🪆️subsets/✳️any";
-    const source = join(root, owner, "🧬️schema", "🧬️mutations", vector.sourceMutationDirectoryName, "🧪️tests", scenario.id);
+    const source = join(root, owner, "🧬️schema", "🧬️mutations", vector.sourceMutationDirectoryName, "🧪️tests", scenario.directoryName);
     try {
       for (const dir of ["🦠️mutation", "📸️snapshot/⬅️before", "📸️snapshot/➡️after", "🔺️diff", "🎯️outcome"]) mkdirSync(join(source, dir), { recursive: true });
       for (const file of ["🦀️.rs", "🦠️mutation/🔣️.json", "📸️snapshot/⬅️before/🔣️.json", "📸️snapshot/➡️after/🔣️.json", "🔺️diff/🔣️.json", "🎯️outcome/🔣️.json"]) writeFileSync(join(source, file), "{}\n");
       const contribution = { owner, manifestPath: `${owner}/🔣️oracle.json`, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], mutationCatalogs: [catalog], migrationStatus: {} };
       const registry = { schemaVersion: 1, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], mutationCatalogs: [catalog], contributions: [contribution] } as unknown as import("./🟦️.ts").OracleRegistry;
-      expect(mutationVectorRegistryBreaches(root, registry)).toEqual([]);
+      expect(mutationVectorRegistryBreaches(root, registry, testTaxonomy(repoRoot))).toEqual([]);
       rmSync(join(source, "🎯️outcome", "🔣️.json"));
-      expect(mutationVectorRegistryBreaches(root, registry).map((entry) => entry.id)).toContain("mutation-vector-bundle-invalid");
+      expect(mutationVectorRegistryBreaches(root, registry, testTaxonomy(repoRoot)).map((entry) => entry.id)).toContain("mutation-vector-bundle-invalid");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -1153,7 +1272,7 @@ describe("🧬️ physical mutation vector registry", () => {
     // 🧾️Every finding the audit produces must belong to a KNOWN family. A new, unnamed breach id is a
     // gate nobody has read; the count itself is repository state and is reported, never pinned.
     const breaches = mutationVectorRegistryBreaches(repoRoot, registry);
-    const known = new Set(["mutation-vector-catalog-invalid", "mutation-vector-mixed-state", "mutation-vector-bundle-invalid", "mutation-vector-source-id-mismatch", "mutation-vector-missing", "mutation-vector-unregistered"]);
+    const known = new Set(["mutation-vector-catalog-invalid", "mutation-vector-mixed-state", "mutation-vector-duplicate-owner", "mutation-vector-bundle-invalid", "mutation-vector-source-id-mismatch", "mutation-vector-missing", "mutation-vector-unregistered"]);
     for (const entry of breaches) expect(known.has(entry.id), `unknown vector breach id ${entry.id}`).toBe(true);
     for (const entry of breaches) expect(entry.scope.length).toBeGreaterThan(0);
   }, 120_000);
@@ -1162,8 +1281,8 @@ describe("🧬️ physical mutation vector registry", () => {
 describe("🧫️ real-world artifact fixtures", () => {
   // 🧫️A multi-megabyte real document is read where the domain already keeps it. Copying it into a
   // fixtures directory would duplicate megabytes of git history for no gain.
-  const thesis = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️base/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf";
-  const owner = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf";
+  const thesis = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf";
+  const owner = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf";
   const featureFilename = testFilenameForKind(testTaxonomy(repoRoot), testTaxonomy(repoRoot).testFeatureFileKindId);
   const discovered = { owner, ownerName: "📄️pdf", case: "c", caseDir: `${owner}/🧪️tests/c`, featurePath: `${owner}/🧪️tests/c/${featureFilename}`, adapters: {}, sharedFixtureDir: null, localFixtureDir: null, projectName: "p" } as unknown as import("./🟦️.ts").DiscoveredCase;
 

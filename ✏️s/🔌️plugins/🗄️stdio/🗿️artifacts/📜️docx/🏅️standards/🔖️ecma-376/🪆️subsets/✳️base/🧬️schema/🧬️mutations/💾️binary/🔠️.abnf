@@ -1,3 +1,0 @@
-; abnf stdio.docx mutations
-document = payload
-payload = *OCTET

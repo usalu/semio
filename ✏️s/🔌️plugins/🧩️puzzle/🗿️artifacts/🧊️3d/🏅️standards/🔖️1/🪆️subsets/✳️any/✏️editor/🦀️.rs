@@ -2527,7 +2527,12 @@ fn puzzle3d_action_uses_precompute(action: &str) -> bool {
 }
 
 //#region 🧵️RetainedCommands
-pub(crate) const PUZZLE3D_RETAINED_TOOL_IDS: &[&str] = &["openAddObjectDialog", "worldPointerDown", "setLocale", "setTerminology", "setActiveExample", "setFillCount"];
+pub(crate) const PUZZLE3D_RETAINED_TOOL_IDS: &[&str] = &[
+    "openAddObjectDialog", "worldPointerDown", "setLocale", "setTerminology", "setActiveExample", "setFillCount",
+    "addTargetVolume",
+    "acceptSuggestion", "addBrushObject", "addObjectKind", "createAttraction", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection", "patchInspector", "rotateSelection", "scaleSelection", "setSelectionFlag", "setTargetVolumeFlag", "translateSelection", "worldRelocate",
+    "closeVortexSuggestions", "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementSubmit", "focusSelection", "hoverSuggestion", "openVortexSuggestions", "relocateTargetVolume", "selectSameKindSelection", "setBrushPlacementOverlapBudget", "setCamera", "setChunkSize", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "toggleSun",
+];
 const PUZZLE3D_RETAINED_PAYLOAD_SCHEMA: &str = "puzzle.3d.fixture.tool-command.v1";
 
 fn puzzle3d_retained_extent(command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
@@ -3184,10 +3189,10 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
     fn step(
         &mut self,
         command: &Puzzle3dCommand,
-        _snapshot: &Puzzle3dPlaySnapshot,
+        snapshot: &Puzzle3dPlaySnapshot,
         config: &Puzzle3dConfig,
-        _interaction: &protocol::InteractionState,
-        _hover: &semio_framework_plugin::app::InteractionHoverState,
+        interaction: &protocol::InteractionState,
+        hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
         match self.stage {
             Puzzle3dEngagementRepeatStage::Prepare => {
@@ -3202,12 +3207,20 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 })
             }
             Puzzle3dEngagementRepeatStage::Publish => {
+                // 🪣️ 26/09/02/PUZZLE-3D-END-TO-END wave S: the old stub only ever emitted `self.effect`
+                // (the `setFillCount` bump) with a bare `ui_scope: Full` — dropping the real
+                // `handle_action_impl` side effect that `engagementRepeatLast` is a `document_action`,
+                // so it ALWAYS clears `config.fill_checkpoint` back to empty (see
+                // `puzzle3d_action_document_intent`/the `document_action && action != "setFillCount"`
+                // branch in `handle_action_impl`), abandoning any in-flight fill checkpoint even when
+                // the active utility isn't "fill". `self.effect` was only ever a duplicate of what
+                // `puzzle3d_retained_reduce`'s `handle_action_impl` fallback recomputes from `config`
+                // directly — drop it (still consuming it so `close_step`'s pending-release accounting
+                // sees no orphaned effect) and return the real reduce output instead.
+                self.effect = None;
                 self.stage = Puzzle3dEngagementRepeatStage::Complete;
-                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
-                    effects: self.effect.take().into_iter().collect(),
-                    ui_scope: UiDirtyScope::Full,
-                    ..Default::default()
-                }))
+                let emit = puzzle3d_retained_reduce(command, snapshot, config, interaction, hover)?;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(emit))
             }
             Puzzle3dEngagementRepeatStage::Complete => Err(Fault::from("puzzle3d-engagement-repeat-complete-repolled")),
             Puzzle3dEngagementRepeatStage::Closing => Err(Fault::from("puzzle3d-engagement-repeat-closing")),
@@ -5988,8 +6001,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
         command: &Puzzle3dCommand,
         snapshot: &Puzzle3dPlaySnapshot,
         config: &Puzzle3dConfig,
-        _interaction: &protocol::InteractionState,
-        _hover: &semio_framework_plugin::app::InteractionHoverState,
+        interaction: &protocol::InteractionState,
+        hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
         if self.processed_units >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
             return Err(Fault::from("puzzle3d-precompute-work-capacity"));
@@ -6054,7 +6067,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     self.catalog_vortex_cursor += 1;
                     return Ok(Self::progress("puzzle3d-precompute-catalog-vortex", "Scanning one vortex kind", "Eine Vortexart wird geprüft"));
                 }
-                self.stage = if matches!(self.tool_id, "setFillCount" | "fillBuildTick") {
+                self.stage = if matches!(self.tool_id, "setFillCount" | "fillBuildTick" | set_fill_count::STEP_ACTION_ID) {
                     Puzzle3dPrecomputeCommandStage::CheckpointBytes
                 } else {
                     Puzzle3dPrecomputeCommandStage::Publish
@@ -6113,11 +6126,39 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                         });
                         emit.ui_scope = puzzle3d_fill_build_scope();
                     }
-                    "fillBuildTick" => {
-                        emit.ui_scope = if puzzle3d_fill_tool_active(config) { puzzle3d_fill_build_scope() } else { UiDirtyScope::None };
+                    // 🪣️ 26/09/02/PUZZLE-3D-END-TO-END wave S: these three used to set ONLY `ui_scope`,
+                    // discarding the real effect (`fillBuildTick`'s isolated `SpawnJob` + advanced
+                    // `fill_checkpoint`, `registerBrushMesh`'s real-GLB `engine.register_mesh`,
+                    // `suggestionsTick`'s brush-lane advance) that the legacy `handle_action_impl` path
+                    // actually produces for the SAME `(command, snapshot, config)` triple. Delegating to
+                    // `puzzle3d_retained_reduce` — the exact reducer `BoundedFirstStepCommandWork` already
+                    // uses for the 11 generic-fallback ids — reproduces that real `Emit` verbatim instead
+                    // of re-deriving it by hand: it special-cases `fillBuildTick` via
+                    // `fill_build_tick_cached` (falling back to a full resync `handle_action_impl` call
+                    // when the checkpoint fails to restore) and otherwise calls
+                    // `app.handle_action_impl(...)` directly, byte-for-byte what `ArtifactEditor::handle`
+                    // itself executes for `suggestionsTick`/`registerBrushMesh`.
+                    "fillBuildTick" | "suggestionsTick" | "registerBrushMesh" => {
+                        emit = puzzle3d_retained_reduce(command, snapshot, config, interaction, hover)?;
                     }
-                    "suggestionsTick" => emit.ui_scope = puzzle3d_suggestions_tick_scope(),
-                    "registerBrushMesh" => emit.ui_scope = UiDirtyScope::None,
+                    // 🪣️ `setFillCountStep` has no dedicated arm in `build_tool_job` yet (see
+                    // `📓️wave-S-report.md`) — reproduces the exact fallback `handle()` runs today
+                    // (`✏️editor/🦀️.rs` `ArtifactEditor::handle`'s `matches!(…, "setFillCount" |
+                    // set_fill_count::STEP_ACTION_ID)` branch): restore the checkpoint, and only when
+                    // that fails, rebuild the full precompute scene from the document before stepping.
+                    set_fill_count::STEP_ACTION_ID => {
+                        emit = with_puzzle3d_app_for(config, |app| {
+                            let mut precompute = app.precompute.borrow_mut();
+                            if !config.fill_checkpoint.is_empty() && !precompute.restore_persisted_fill(&config.fill_checkpoint) {
+                                let active_utility = puzzle3d_scene_active_utility(config, command.window_id());
+                                let scene = scene_from_projection(&puzzle3d_projection_value(snapshot.value()), config.clone(), &active_utility);
+                                sync_precompute_session(&mut precompute, &scene);
+                                precompute.restore_persisted_fill(&config.fill_checkpoint);
+                            }
+                            precompute.set_fill_applied_count(config.fill_applied_count);
+                            set_fill_count::step(&mut precompute, config, command.args())
+                        });
+                    }
                     _ => return Err(Fault::from("puzzle3d-precompute-tool-authority")),
                 }
                 self.stage = Puzzle3dPrecomputeCommandStage::Complete;
@@ -6204,6 +6245,57 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle3dRetainedCom
         ArtifactToolPublicationContract { tool_id: "setTerminology", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setFillCount", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "addTargetVolume", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "acceptSuggestion", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "addBrushObject", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "addObjectKind", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "createAttraction", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "deleteAttraction", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "deleteTargetVolume", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "duplicateSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "patchInspector", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setSelectionFlag", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setTargetVolumeFlag", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "worldRelocate", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "closeVortexSuggestions", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "cycleBrushCandidate", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "cycleBrushCandidateBack", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "engagementAbort", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "engagementControlSelect", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "focusSelection", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "hoverSuggestion", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "openVortexSuggestions", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "relocateTargetVolume", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "selectSameKindSelection", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setBrushPlacementOverlapBudget", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setChunkSize", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setGridSnapEnabled", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setGridSpacing", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setGridVisible", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setLodAutomatic", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setLodDepthVariable", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setLodManual", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setObjectKindWeight", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setProjection", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setProjectionParam", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setProximityRadius", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setSelectableKind", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setSunAzimuth", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setSunElevation", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setSunIntensity", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setTransformGumballFlag", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setVortexDirection", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setVortexKindWeight", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setVortexShow", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setVoxelDims", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "toggleSun", lanes: &[ArtifactToolPublicationLane::Config] },
     ];
 }
 //#endregion 🧵️RetainedCommands
@@ -6647,7 +6739,12 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         factory: "Puzzle3dRetainedCommandJobFactory",
         factory_type: Puzzle3dRetainedCommandJobFactory,
         contract: semio_framework::ToolExecutionContract::resumable(8_192, 512, 1, 262_144, 7_500, 1, 1),
-        tools: ["openAddObjectDialog", "worldPointerDown", "setLocale", "setTerminology", "setActiveExample", "setFillCount"]
+        tools: [
+            "openAddObjectDialog", "worldPointerDown", "setLocale", "setTerminology", "setActiveExample", "setFillCount",
+            "addTargetVolume",
+            "acceptSuggestion", "addBrushObject", "addObjectKind", "createAttraction", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection", "patchInspector", "rotateSelection", "scaleSelection", "setSelectionFlag", "setTargetVolumeFlag", "translateSelection", "worldRelocate",
+            "closeVortexSuggestions", "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementSubmit", "focusSelection", "hoverSuggestion", "openVortexSuggestions", "relocateTargetVolume", "selectSameKindSelection", "setBrushPlacementOverlapBudget", "setCamera", "setChunkSize", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "toggleSun",
+        ]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -7249,71 +7346,71 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
                     ])
                     .submit_label(LocalizedLabel::native("Add", "Hinzufügen")),
             )
-            .action_interactive_job("acceptSuggestion", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addBrushObject", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addObjectKind", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addTargetVolume", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("closeVortexSuggestions", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("createAttraction", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("cycleBrushCandidate", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("cycleBrushCandidateBack", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("deleteAttraction", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("deleteSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("deleteTargetVolume", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("duplicateSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("engagementAbort", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("engagementControlSelect", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("acceptSuggestion", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("addBrushObject", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("addObjectKind", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("addTargetVolume", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("closeVortexSuggestions", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("createAttraction", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("cycleBrushCandidate", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("cycleBrushCandidateBack", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteAttraction", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteTargetVolume", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("duplicateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementAbort", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementControlSelect", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementRepeatLast", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("engagementSubmit", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("engagementSubmit", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("fillBuildTick", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("focusSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("hoverSuggestion", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("focusSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("hoverSuggestion", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("openAddObjectDialog", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("openVortexSuggestions", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("patchInspector", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("openVortexSuggestions", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchInspector", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("registerBrushMesh", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("relocateTargetVolume", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("rotateSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("scaleSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("selectSameKindSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("relocateTargetVolume", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("rotateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("scaleSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("selectSameKindSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setBrushPlacementOverlapBudget", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setCamera", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setChunkSize", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setBrushPlacementOverlapBudget", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCamera", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setChunkSize", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setFillCount", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job(set_fill_count::STEP_ACTION_ID, semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("setFixtureJson", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setGridSnapEnabled", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setGridSpacing", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setGridVisible", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setGridSnapEnabled", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setGridSpacing", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setGridVisible", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setLocale", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLodAutomatic", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setLodDepthVariable", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setLodManual", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setObjectKindWeight", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setProjection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setProjectionParam", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setProximityRadius", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setSelectableKind", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setSelectionFlag", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setSunAzimuth", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setSunElevation", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setSunIntensity", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setTargetVolumeFlag", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setLodAutomatic", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLodDepthVariable", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLodManual", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setObjectKindWeight", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setProjection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setProjectionParam", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setProximityRadius", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSelectableKind", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSelectionFlag", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunAzimuth", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunElevation", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunIntensity", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setTargetVolumeFlag", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setTerminology", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setTransformGumballFlag", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setVortexDirection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setVortexKindWeight", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setVortexShow", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setVoxelDims", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setTransformGumballFlag", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setVortexDirection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setVortexKindWeight", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setVortexShow", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setVoxelDims", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("suggestionsTick", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("toggleSun", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("toggleSun", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("transformBegin", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("transformEnd", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("translateSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("translateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("worldPointerDown", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("worldRelocate", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("worldRelocate", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .build_definition()
 }
 
@@ -7682,7 +7779,7 @@ mod tests {
 
     #[test]
     fn retained_publication_contracts_are_an_exact_nonempty_tool_bijection() {
-        let fixture: Value = parse(include_str!("../🧪️retained-jobs/🔣️.json")).expect("Puzzle3D retained route fixture");
+        let fixture: Value = parse(include_str!("../🗄️retained-jobs/🔣️.json")).expect("Puzzle3D retained route fixture");
         assert_eq!(fixture.get("toolIds"), Some(&Value::Array(PUZZLE3D_RETAINED_TOOL_IDS.iter().map(|id| Value::from(*id)).collect())));
         let manifest = create_puzzle3d_app();
         for tool_id in PUZZLE3D_RETAINED_TOOL_IDS {

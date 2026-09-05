@@ -1223,12 +1223,143 @@ pub struct WalRecoveryReport {
     pub torn_tail_bytes: u64,
 }
 
+struct WalChainFrame {
+    start: usize,
+    body: usize,
+    end: usize,
+    next: usize,
+    position: usize,
+    kind: u8,
+    digest: semio_framework_hash::Hasher,
+    crc: protocol::codec::Crc32cCursor,
+}
+
+struct WalSegmentChain {
+    offset: usize,
+    frame: Option<WalChainFrame>,
+    pending: semio_framework_hash::Hasher,
+    records_len: u64,
+    record_count: u32,
+    next_commit: u64,
+    last_commit_offset: u64,
+    tip: Option<[u8; 32]>,
+    previous_tip: WalPriorChainTip,
+    segment: u64,
+    header_seen: bool,
+}
+
+#[derive(Clone, Copy)]
+enum WalPriorChainTip { Genesis, RetainedBoundary, Verified([u8; 32]) }
+
+impl WalSegmentChain {
+    async fn new(pages: &db_storage::DbIoPages, segment: u64, previous_tip: WalPriorChainTip) -> Result<Self, DbError> {
+        let header = protocol::format::read_header(&WalPageSource(pages)).await.map_err(protocol_err)?;
+        if header.required_flags != protocol::wire::REQUIRED_HASH_CHAIN || header.version_minor != protocol::format::FORMAT_VERSION_MINOR {
+            return Err(DbError::Corrupt("wal requires its exact hash-chain format".to_string()));
+        }
+        let bytes = WalPageReader::new(pages, 0, protocol::format::HEADER_SIZE)?.array::<{ protocol::format::HEADER_SIZE }>()?;
+        let mut pending = semio_framework_hash::Hasher::new();
+        pending.update(semio_framework_hash::hash(&bytes).as_bytes());
+        Ok(Self { offset: protocol::format::HEADER_SIZE, frame: None, pending, records_len: 0, record_count: 0, next_commit: 1, last_commit_offset: 0, tip: None, previous_tip, segment, header_seen: false })
+    }
+
+    fn check_segment_header(&mut self, pages: &db_storage::DbIoPages, frame: &WalChainFrame, document: &ArtifactId) -> Result<(), DbError> {
+        if frame.kind != WAL_SEGMENT_HEADER || self.header_seen || frame.start != protocol::format::HEADER_SIZE {
+            return Err(DbError::Corrupt("wal segment header is missing or repeated".to_string()));
+        }
+        let mut reader = WalPageReader::new(pages, frame.body + 2, frame.end)?;
+        if reader.varint()? != document.0.len() as u64 { return Err(DbError::Corrupt("wal segment document differs".to_string())); }
+        for byte in document.0.as_bytes() {
+            if reader.byte()? != *byte { return Err(DbError::Corrupt("wal segment document differs".to_string())); }
+        }
+        if u64::from_le_bytes(reader.array()?) != self.segment { return Err(DbError::Corrupt("wal segment index differs".to_string())); }
+        let previous = match reader.byte()? { 0 => None, 1 => Some(reader.array::<32>()?), _ => return Err(DbError::Corrupt("wal previous tip marker differs".to_string())) };
+        let matches = match self.previous_tip {
+            WalPriorChainTip::Genesis => previous.is_none(),
+            WalPriorChainTip::RetainedBoundary => previous.is_some(),
+            WalPriorChainTip::Verified(tip) => previous == Some(tip),
+        };
+        if !matches || reader.position != frame.end { return Err(DbError::Corrupt("wal previous committed chain tip differs".to_string())); }
+        self.header_seen = true;
+        Ok(())
+    }
+
+    async fn step(&mut self, pages: &db_storage::DbIoPages, trusted_len: usize, document: &ArtifactId, control: &mut WalCursorControl) -> Result<bool, DbError> {
+        control.grant()?;
+        if self.frame.is_none() {
+            if self.offset == trusted_len {
+                if !self.header_seen || self.tip.is_none() || self.record_count != 0 || self.records_len != 0
+                    || self.last_commit_offset.checked_add(protocol::format::COMMIT_FRAME_LEN) != Some(trusted_len as u64) {
+                    return Err(DbError::Corrupt("wal segment ends outside a verified commit".to_string()));
+                }
+                return Ok(true);
+            }
+            let mut reader = WalPageReader::new(pages, self.offset, trusted_len)?;
+            let length = reader.varint()?;
+            check_len(length, protocol::ProtocolLimits::default().max_frame_len, "wal chain frame")?;
+            let body = reader.position;
+            let end = body.checked_add(usize::try_from(length).map_err(|_| DbError::LimitExceeded("wal chain frame length"))?).ok_or(DbError::LimitExceeded("wal chain frame end"))?;
+            let next = end.checked_add(8).ok_or(DbError::LimitExceeded("wal chain trailer"))?;
+            if length < 2 || next > trusted_len { return Err(DbError::Corrupt("wal chain frame exceeds committed bytes".to_string())); }
+            let kind = reader.byte()?;
+            let flags = reader.byte()?;
+            if flags != protocol::wire::FRAME_FLAG_CRITICAL { return Err(DbError::Corrupt("wal chain frame flags differ".to_string())); }
+            self.frame = Some(WalChainFrame { start: self.offset, body, end, next, position: self.offset, kind, digest: semio_framework_hash::Hasher::new(), crc: protocol::codec::Crc32cCursor::new() });
+        }
+        let frame = self.frame.as_mut().ok_or_else(|| DbError::Internal("wal chain frame disappeared".to_string()))?;
+        let first_len = pages.page(0).ok_or_else(|| DbError::Corrupt("wal chain lost its first page".to_string()))?.len();
+        let (page, local) = if frame.position < first_len { (0, frame.position) } else {
+            let rest = frame.position - first_len;
+            (1 + rest / db_storage::DB_IO_PAGE_BYTES, rest % db_storage::DB_IO_PAGE_BYTES)
+        };
+        let fragment = pages.page(u8::try_from(page).map_err(|_| DbError::LimitExceeded("wal chain page index"))?).ok_or_else(|| DbError::Corrupt("wal chain lost its page".to_string()))?;
+        let count = fragment.len().checked_sub(local).ok_or(DbError::LimitExceeded("wal chain page offset"))?.min(frame.next - frame.position).min(db_storage::DB_IO_PAGE_BYTES);
+        if count == 0 { return Err(DbError::Corrupt("wal chain made no byte progress".to_string())); }
+        let bytes = &fragment[local..local + count];
+        frame.digest.update(bytes);
+        let crc_start = frame.position.max(frame.body);
+        let crc_end = (frame.position + count).min(frame.end);
+        if crc_start < crc_end { frame.crc.update_page(&bytes[crc_start - frame.position..crc_end - frame.position]); }
+        frame.position += count;
+        if frame.position != frame.next { return Ok(false); }
+        let frame = self.frame.take().ok_or_else(|| DbError::Internal("wal chain frame disappeared".to_string()))?;
+        let mut trailer = WalPageReader::new(pages, frame.end, frame.next)?;
+        if u32::from_le_bytes(trailer.array()?) != frame.crc.finish() || u32::from_le_bytes(trailer.array()?) as usize != frame.next - frame.start {
+            return Err(DbError::Corrupt("wal chain crc or frame length differs".to_string()));
+        }
+        if frame.kind == protocol::wire::REC_COMMIT {
+            if frame.end - frame.body - 2 != protocol::format::COMMIT_PAYLOAD_LEN || frame.next - frame.start != protocol::format::COMMIT_FRAME_LEN as usize {
+                return Err(DbError::Corrupt("wal chain commit framing differs".to_string()));
+            }
+            let payload = WalPageReader::new(pages, frame.body + 2, frame.end)?.array::<{ protocol::format::COMMIT_PAYLOAD_LEN }>()?;
+            let commit = protocol::format::parse_commit_payload(&payload).await.map_err(protocol_err)?;
+            if commit.commit_seq != self.next_commit || commit.prev_commit_offset != self.last_commit_offset || commit.record_count != self.record_count
+                || commit.records_len != self.records_len || payload[28..32] != [0; 4] || commit.chain_hash != *self.pending.finalize().as_bytes() {
+                return Err(DbError::Corrupt("wal committed hash chain differs".to_string()));
+            }
+            self.tip = Some(commit.chain_hash);
+            self.pending = semio_framework_hash::Hasher::new(); self.pending.update(&commit.chain_hash);
+            self.record_count = 0; self.records_len = 0;
+            self.last_commit_offset = frame.start as u64;
+            self.next_commit = self.next_commit.checked_add(1).ok_or(DbError::LimitExceeded("wal commit sequence"))?;
+        } else {
+            if !is_wal_record_kind(frame.kind).await { return Err(DbError::Corrupt("wal chain contains an unknown record".to_string())); }
+            if !self.header_seen || frame.kind == WAL_SEGMENT_HEADER { self.check_segment_header(pages, &frame, document)?; }
+            self.pending.update(frame.digest.finalize().as_bytes());
+            self.record_count = self.record_count.checked_add(1).ok_or(DbError::LimitExceeded("wal commit record count"))?;
+            self.records_len = self.records_len.checked_add((frame.next - frame.start) as u64).ok_or(DbError::LimitExceeded("wal commit record bytes"))?;
+        }
+        self.offset = frame.next;
+        Ok(false)
+    }
+}
+
 /// @emoji 🔁️ Decodes every `WAL_*` record across a document's ENTIRE WAL (every sealed segment in
-/// full, plus the active segment's currently-trusted prefix), in segment then on-disk order — the
-/// primitive `db_artifact`'s materialize-from-WAL-suffix step builds on. Every sealed segment is
-/// expected fully trusted (a torn sealed segment is `DbError::Corrupt`, since `truncate_tail` only
-/// targets an unsealed segment); the last (possibly active, possibly unsealed) segment is
-/// recovered via `protocol::format::recover` first.
+/// full, plus the active segment), in segment then on-disk order. Each segment's complete retained
+/// bytes must end in a verified commit; torn tails are rejected. Page-bounded verification checks
+/// every frame and commit before releasing that segment's records, carrying the validated chain
+/// tip into the next exact document/index header. Recovery/truncation belongs to the WAL opener.
+/// A compacted suffix has no authenticated preceding tip; use `open_genesis` for a genesis proof.
 pub struct WalReplayCursor<'storage, S: db_storage::WalStorage> {
     storage: &'storage S,
     document: ArtifactId,
@@ -1237,6 +1368,10 @@ pub struct WalReplayCursor<'storage, S: db_storage::WalStorage> {
     pages: Option<db_storage::DbIoPages>,
     offset: usize,
     trusted_len: usize,
+    validation: Option<WalSegmentChain>,
+    previous_tip: Option<[u8; 32]>,
+    genesis_required: bool,
+    failed: bool,
     control: WalCursorControl,
     closed: bool,
 }
@@ -1255,21 +1390,34 @@ impl<'storage, S: db_storage::WalStorage> WalReplayCursor<'storage, S> {
 
     pub async fn open(storage: &'storage S, document: &ArtifactId, control: WalCursorControl) -> Result<Self, DbError> {
         let segments = storage.list_segments(document).await?;
-        Ok(Self { storage, document: document.clone(), segments, segment: 0, pages: None, offset: protocol::format::HEADER_SIZE, trusted_len: 0, control, closed: false })
+        Ok(Self { storage, document: document.clone(), segments, segment: 0, pages: None, offset: protocol::format::HEADER_SIZE, trusted_len: 0, validation: None, previous_tip: None, genesis_required: false, failed: false, control, closed: false })
+    }
+
+    /// 🌱️ Requires the retained chain to start at genesis rather than trusting a compacted boundary.
+    pub async fn open_genesis(storage: &'storage S, document: &ArtifactId, control: WalCursorControl) -> Result<Self, DbError> {
+        let mut cursor = Self::open(storage, document, control).await?;
+        cursor.genesis_required = true;
+        Ok(cursor)
     }
 
     async fn open_segment(&mut self) -> Result<bool, DbError> {
         let Some(index) = self.segments.as_slice().get(self.segment).copied() else { return Ok(false) };
         self.control.grant()?;
-        let len = self.storage.segment_len(&self.document, index).await?;
-        let pages = self.storage.read(&self.document, index, pack::ByteRange { offset: 0, len }).await?;
-        let report = protocol::format::recover(&WalPageSource(&pages), &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).await.map_err(protocol_err)?;
-        if report.bytes_recovered != pages.len() as u64 {
-            return Err(DbError::Corrupt(format!("wal segment {index} for {} has a torn tail ({} of {} bytes trusted)", self.document, report.bytes_recovered, pages.len())));
+        let first = self.segments.as_slice()[0];
+        if (self.genesis_required && first != 0) || first.checked_add(self.segment as u64) != Some(index) {
+            return Err(DbError::Corrupt("wal segment sequence differs from its required boundary".to_string()));
         }
+        let len = self.storage.segment_len(&self.document, index).await?;
+        self.pages = Some(self.storage.read(&self.document, index, pack::ByteRange { offset: 0, len }).await?);
+        let pages = self.pages.as_ref().ok_or_else(|| DbError::Internal("wal replay lost admitted pages".to_string()))?;
         self.offset = protocol::format::HEADER_SIZE;
-        self.trusted_len = report.bytes_recovered as usize;
-        self.pages = Some(pages);
+        self.trusted_len = pages.len();
+        let previous_tip = match self.previous_tip {
+            Some(tip) => WalPriorChainTip::Verified(tip),
+            None if index == 0 => WalPriorChainTip::Genesis,
+            None => WalPriorChainTip::RetainedBoundary,
+        };
+        self.validation = Some(WalSegmentChain::new(pages, index, previous_tip).await?);
         Ok(true)
     }
 
@@ -1286,6 +1434,15 @@ impl<'storage, S: db_storage::WalStorage> WalReplayCursor<'storage, S> {
     }
 
     pub async fn next_step(&mut self) -> Result<WalReplayStep, DbError> {
+        if self.failed { return Err(DbError::Corrupt("wal replay remains failed until closed".to_string())); }
+        let result = self.next_validated_step().await;
+        let interrupted = matches!(&result, Err(DbError::LimitExceeded("wal cursor fuel")))
+            || matches!(&result, Err(DbError::Unavailable(message)) if message == "wal cursor cancelled" || message == "wal cursor deadline reached");
+        if result.is_err() && !interrupted { self.failed = true; }
+        result
+    }
+
+    async fn next_validated_step(&mut self) -> Result<WalReplayStep, DbError> {
         loop {
             self.control.grant()?;
             if self.closed {
@@ -1293,6 +1450,14 @@ impl<'storage, S: db_storage::WalStorage> WalReplayCursor<'storage, S> {
             }
             if self.pages.is_none() && !self.open_segment().await? {
                 return Ok(WalReplayStep::Done);
+            }
+            if let Some(validation) = self.validation.as_mut() {
+                let pages = self.pages.as_ref().ok_or_else(|| DbError::Internal("wal chain lost segment pages".to_string()))?;
+                if validation.step(pages, self.trusted_len, &self.document, &mut self.control).await? {
+                    self.previous_tip = validation.tip;
+                    self.validation = None;
+                }
+                return Ok(WalReplayStep::Yield);
             }
             if self.offset == self.trusted_len {
                 if self.close_segment_step().await? {
@@ -1327,6 +1492,8 @@ impl<'storage, S: db_storage::WalStorage> WalReplayCursor<'storage, S> {
             }
         }
         self.pages = None;
+        self.validation = None;
+        self.previous_tip = None;
         self.trusted_len = 0;
         if self.segments.close_step() {
             return Ok(true);
@@ -1346,7 +1513,7 @@ impl<'storage, S: db_storage::WalStorage> WalReplayCursor<'storage, S> {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.closed && self.pages.is_none() && self.segments.terminal_is_empty()
+        self.closed && self.pages.is_none() && self.validation.is_none() && self.segments.terminal_is_empty()
     }
 }
 
@@ -2093,7 +2260,7 @@ mod retained_tests {
                     seen += 1;
                     while record.close_step().unwrap() {}
                 }
-                WalReplayStep::Yield => boundary_yields += 1,
+                WalReplayStep::Yield => { if seen != 0 { boundary_yields += 1; } },
                 WalReplayStep::Done => panic!("retained replay closed without resumable segment retirement"),
             }
         }

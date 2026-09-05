@@ -1,4 +1,0 @@
-# 🧽️ Direct remove-trailer-entry GraphQL payload.
-input RemoveTrailerEntryMutationInput {
-  key: String
-}

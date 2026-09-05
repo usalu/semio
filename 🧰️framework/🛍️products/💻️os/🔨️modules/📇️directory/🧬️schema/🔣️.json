@@ -170,6 +170,21 @@
         "recordedAtMs": { "type": "integer" }
       }
     },
+    "DirectoryEventPageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "sessionBindingSha256", "authorizationGeneration", "afterSeqExclusive", "throughSeqInclusive", "hasMore", "events", "receiptSha256"],
+      "properties": {
+        "schema": { "const": "semio.directory.event-page.v1" },
+        "sessionBindingSha256": { "type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$" },
+        "authorizationGeneration": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "afterSeqExclusive": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "throughSeqInclusive": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "hasMore": { "type": "boolean" },
+        "events": { "type": "array", "maxItems": 128, "items": { "$ref": "#/$defs/DirectoryEvent" } },
+        "receiptSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
     "DirectoryCommand": {
       "type": "object",
       "required": ["kind"],
@@ -274,6 +289,60 @@
             "kind": { "const": "announce-document" },
             "descriptor": { "$ref": "#/$defs/DocumentDescriptor" }
           }
+        }
+      ]
+    },
+    "DirectoryCommandOutcomeV1": { "type": "string", "enum": ["accepted", "previously-accepted", "secret-undeliverable"] },
+    "DirectoryCommandErrorCodeV1": { "type": "string", "enum": ["unauthorized", "forbidden", "stale-session", "request-conflict", "invalid", "overloaded", "too-large", "capacity", "closed", "cancelled", "transport"] },
+    "DirectoryCommandRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "requestId", "command"],
+      "properties": {
+        "schema": { "const": "semio.directory.command-request.v1" },
+        "requestId": { "type": "string", "pattern": "^(?!0{32}$)[0-9a-f]{32}$", "x-semio-note": "idempotency correlation only — never a capability" },
+        "command": { "$ref": "#/$defs/DirectoryCommand" }
+      }
+    },
+    "DirectoryCommandResultV1": {
+      "type": "object",
+      "required": ["kind"],
+      "discriminator": { "propertyName": "kind" },
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": { "kind": { "const": "none" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "inviteToken"],
+          "properties": {
+            "kind": { "const": "invite" },
+            "inviteToken": { "type": "string", "minLength": 1, "maxLength": 256, "x-semio-note": "one-shot capability; never persisted, broadcast, folded, or logged" }
+          }
+        }
+      ]
+    },
+    "DirectoryCommandReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "requestId", "commandSha256", "outcome", "events", "result", "receiptSha256"],
+      "properties": {
+        "schema": { "const": "semio.directory.command-receipt.v1" },
+        "requestId": { "type": "string", "pattern": "^(?!0{32}$)[0-9a-f]{32}$" },
+        "commandSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "outcome": { "$ref": "#/$defs/DirectoryCommandOutcomeV1" },
+        "events": { "type": "array", "maxItems": 4, "items": { "$ref": "#/$defs/DirectoryEvent" } },
+        "result": { "$ref": "#/$defs/DirectoryCommandResultV1" },
+        "receiptSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "outcome": { "enum": ["previously-accepted", "secret-undeliverable"] } }, "required": ["outcome"] },
+          "then": { "properties": { "events": { "maxItems": 0 }, "result": { "properties": { "kind": { "const": "none" } } } } }
         }
       ]
     },
@@ -652,6 +721,202 @@
         "updatedAtMs": { "type": "integer" }
       }
     },
+    "PublicSpaceViewV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kind", "visibility", "memberCount", "documentCount", "createdAtMs", "updatedAtMs"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "kind": { "$ref": "#/$defs/DirectorySpaceKind" },
+        "visibility": { "const": "public" },
+        "memberCount": { "type": "integer", "minimum": 0 },
+        "documentCount": { "type": "integer", "minimum": 0 },
+        "createdAtMs": { "type": "integer" },
+        "updatedAtMs": { "type": "integer" }
+      }
+    },
+    "MemberSpaceViewV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kind", "visibility", "ownerUserId", "role", "memberCount", "documentCount", "activeConnections", "createdAtMs", "updatedAtMs"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "kind": { "$ref": "#/$defs/DirectorySpaceKind" },
+        "visibility": { "$ref": "#/$defs/DirectorySpaceVisibility" },
+        "ownerUserId": { "type": "string" },
+        "role": { "$ref": "#/$defs/DirectorySpaceRole" },
+        "memberCount": { "type": "integer", "minimum": 0 },
+        "documentCount": { "type": "integer", "minimum": 0 },
+        "activeConnections": { "type": "integer", "minimum": 0 },
+        "createdAtMs": { "type": "integer" },
+        "updatedAtMs": { "type": "integer" }
+      }
+    },
+    "PublicDocumentCatalogEntryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["documentId", "artifactKind", "artifactSchema", "owner", "packSchemaHash"],
+      "properties": {
+        "documentId": { "type": "string" },
+        "artifactKind": { "type": "string" },
+        "artifactSchema": { "type": "string" },
+        "owner": { "$ref": "#/$defs/DocumentOwner" },
+        "packSchemaHash": { "$ref": "#/$defs/NonzeroArtifactHash" }
+      }
+    },
+    "DirectorySpaceListEntryV1": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["access", "space"],
+          "properties": { "access": { "const": "public" }, "space": { "$ref": "#/$defs/PublicSpaceViewV1" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["access", "space"],
+          "properties": { "access": { "const": "member" }, "space": { "allOf": [{ "$ref": "#/$defs/MemberSpaceViewV1" }, { "type": "object", "properties": { "role": { "const": "spectator" } } }] } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["access", "space"],
+          "properties": { "access": { "const": "author" }, "space": { "allOf": [{ "$ref": "#/$defs/MemberSpaceViewV1" }, { "type": "object", "properties": { "role": { "const": "author" } } }] } }
+        }
+      ]
+    },
+    "DirectorySpaceAdministrationMemberRowV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["userId", "email", "displayName", "role", "owner"],
+      "properties": {
+        "userId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "email": { "type": "string", "maxLength": 256 },
+        "displayName": { "type": "string", "maxLength": 256 },
+        "role": { "$ref": "#/$defs/DirectorySpaceRole" },
+        "owner": { "type": "boolean" }
+      }
+    },
+    "DirectorySpaceAdministrationInviteRowV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inviteId", "role", "createdAtMs", "expiresAtMs", "revoked", "accepted"],
+      "properties": {
+        "inviteId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "role": { "$ref": "#/$defs/DirectorySpaceRole" },
+        "createdAtMs": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "expiresAtMs": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "revoked": { "type": "boolean" },
+        "accepted": { "type": "boolean" }
+      }
+    },
+    "DirectorySpaceAdministrationCursorV1": { "type": "string", "minLength": 1, "maxLength": 512, "pattern": "^[A-Za-z0-9._-]+$" },
+    "DirectorySpaceAdministrationCapabilitiesV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["renameSpace", "setVisibility", "deleteSpace", "upsertMember", "removeMember", "createInvite", "revokeInvite"],
+      "properties": {
+        "renameSpace": { "type": "boolean" },
+        "setVisibility": { "type": "boolean" },
+        "deleteSpace": { "type": "boolean" },
+        "upsertMember": { "type": "boolean" },
+        "removeMember": { "type": "boolean" },
+        "createInvite": { "type": "boolean" },
+        "revokeInvite": { "type": "boolean" }
+      }
+    },
+    "DirectorySpaceAdministrationMemberWindowV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rows"],
+      "properties": {
+        "rows": { "type": "array", "maxItems": 64, "items": { "$ref": "#/$defs/DirectorySpaceAdministrationMemberRowV1" } },
+        "nextCursor": { "$ref": "#/$defs/DirectorySpaceAdministrationCursorV1" }
+      }
+    },
+    "DirectorySpaceAdministrationInviteWindowV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rows"],
+      "properties": {
+        "rows": { "type": "array", "maxItems": 64, "items": { "$ref": "#/$defs/DirectorySpaceAdministrationInviteRowV1" } },
+        "nextCursor": { "$ref": "#/$defs/DirectorySpaceAdministrationCursorV1" }
+      }
+    },
+    "DirectorySpaceAdministrationDocumentWindowV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rows"],
+      "properties": {
+        "rows": { "type": "array", "maxItems": 64, "items": { "$ref": "#/$defs/DocumentView" } },
+        "nextCursor": { "$ref": "#/$defs/DirectorySpaceAdministrationCursorV1" }
+      }
+    },
+    "DirectorySpaceAdministrationPublicDocumentWindowV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rows"],
+      "properties": {
+        "rows": { "type": "array", "maxItems": 64, "items": { "$ref": "#/$defs/PublicDocumentCatalogEntryV1" } },
+        "nextCursor": { "$ref": "#/$defs/DirectorySpaceAdministrationCursorV1" }
+      }
+    },
+    "DirectorySpaceAdministrationPageV1": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["access", "schema", "sessionBindingSha256", "authorizationGeneration", "spaceId", "space", "documents", "receiptSha256"],
+          "properties": {
+            "access": { "const": "public" },
+            "schema": { "const": "semio.directory.space-administration-page.v1" },
+            "sessionBindingSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "authorizationGeneration": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+            "spaceId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "space": { "$ref": "#/$defs/PublicSpaceViewV1" },
+            "documents": { "$ref": "#/$defs/DirectorySpaceAdministrationPublicDocumentWindowV1" },
+            "receiptSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["access", "schema", "sessionBindingSha256", "authorizationGeneration", "spaceId", "space", "members", "documents", "receiptSha256"],
+          "properties": {
+            "access": { "const": "member" },
+            "schema": { "const": "semio.directory.space-administration-page.v1" },
+            "sessionBindingSha256": { "type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$" },
+            "authorizationGeneration": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+            "spaceId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "space": { "allOf": [{ "$ref": "#/$defs/MemberSpaceViewV1" }, { "type": "object", "properties": { "role": { "const": "spectator" } } }] },
+            "members": { "$ref": "#/$defs/DirectorySpaceAdministrationMemberWindowV1" },
+            "documents": { "$ref": "#/$defs/DirectorySpaceAdministrationDocumentWindowV1" },
+            "receiptSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["access", "schema", "sessionBindingSha256", "authorizationGeneration", "spaceId", "space", "members", "documents", "invites", "capabilities", "receiptSha256"],
+          "properties": {
+            "access": { "const": "author" },
+            "schema": { "const": "semio.directory.space-administration-page.v1" },
+            "sessionBindingSha256": { "type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$" },
+            "authorizationGeneration": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+            "spaceId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "space": { "allOf": [{ "$ref": "#/$defs/MemberSpaceViewV1" }, { "type": "object", "properties": { "role": { "const": "author" } } }] },
+            "members": { "$ref": "#/$defs/DirectorySpaceAdministrationMemberWindowV1" },
+            "documents": { "$ref": "#/$defs/DirectorySpaceAdministrationDocumentWindowV1" },
+            "invites": { "$ref": "#/$defs/DirectorySpaceAdministrationInviteWindowV1" },
+            "capabilities": { "$ref": "#/$defs/DirectorySpaceAdministrationCapabilitiesV1" },
+            "receiptSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+          }
+        }
+      ]
+    },
     "MemberView": {
       "type": "object",
       "additionalProperties": false,
@@ -815,6 +1080,121 @@
         "headSeq": { "type": "integer", "minimum": 0 },
         "commitSeq": { "type": "integer", "minimum": 0 },
         "epoch": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "DocumentExecutionTargetHashV1": { "type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$" },
+    "DocumentExecutionTargetSurfaceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["surfaceId", "appId", "windowKindId", "role", "rendererTarget"],
+      "properties": {
+        "surfaceId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "appId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "windowKindId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "role": { "type": "string", "enum": ["viewer", "editor"] },
+        "rendererTarget": { "type": "string", "enum": ["react", "wgpu", "wasm"] }
+      }
+    },
+    "DocumentExecutionTargetLeaseFieldsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "version", "scope", "descriptorDigestV1", "catalog", "package", "component", "descriptor", "artifact", "parentDialect", "surface", "grant", "revalidation"],
+      "properties": {
+        "schema": { "const": "semio.os.document-execution-target-lease/v1" },
+        "version": { "const": 1 },
+        "scope": { "$ref": "#/$defs/DocumentScope" },
+        "descriptorDigestV1": { "$ref": "#/$defs/DocumentExecutionTargetHashV1" },
+        "catalog": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["generationId"],
+          "properties": { "generationId": { "$ref": "#/$defs/DocumentExecutionTargetHashV1" } }
+        },
+        "package": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pluginId", "packageId", "version", "componentSha256", "componentBlake3", "descriptorByteSha256"],
+          "properties": {
+            "pluginId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "packageId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "version": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "componentSha256": { "$ref": "#/$defs/DocumentExecutionTargetHashV1" },
+            "componentBlake3": { "$ref": "#/$defs/DocumentExecutionTargetHashV1" },
+            "descriptorByteSha256": { "$ref": "#/$defs/DocumentExecutionTargetHashV1" }
+          }
+        },
+        "component": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sha256", "blake3", "byteLength"],
+          "properties": {
+            "sha256": { "$ref": "#/$defs/DocumentExecutionTargetHashV1" },
+            "blake3": { "$ref": "#/$defs/DocumentExecutionTargetHashV1" },
+            "byteLength": { "type": "integer", "minimum": 1, "maximum": 67108864 }
+          }
+        },
+        "descriptor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sha256", "byteLength"],
+          "properties": {
+            "sha256": { "$ref": "#/$defs/DocumentExecutionTargetHashV1" },
+            "byteLength": { "type": "integer", "minimum": 1, "maximum": 4194304 }
+          }
+        },
+        "artifact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "schema", "packSchemaHash"],
+          "properties": {
+            "kind": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "schema": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "packSchemaHash": { "$ref": "#/$defs/DocumentExecutionTargetHashV1" }
+          }
+        },
+        "parentDialect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["artifactKind", "standard", "subset"],
+          "properties": {
+            "artifactKind": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "standard": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "subset": { "type": "string", "minLength": 1, "maxLength": 256 }
+          }
+        },
+        "surface": { "$ref": "#/$defs/DocumentExecutionTargetSurfaceV1" },
+        "grant": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["read", "write", "observe"],
+          "properties": {
+            "read": { "const": true },
+            "write": { "type": "boolean" },
+            "observe": { "const": true }
+          }
+        },
+        "checkpoint": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["checkpointId", "descriptorDigestV1", "baselineFrontier", "aggregateSha256"],
+          "properties": {
+            "checkpointId": { "$ref": "#/$defs/DocumentExecutionTargetHashV1" },
+            "descriptorDigestV1": { "$ref": "#/$defs/DocumentExecutionTargetHashV1" },
+            "baselineFrontier": { "$ref": "#/$defs/ArtifactFrontier" },
+            "aggregateSha256": { "$ref": "#/$defs/DocumentExecutionTargetHashV1" }
+          }
+        },
+        "revalidation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["directoryRevision", "membershipGeneration"],
+          "properties": {
+            "directoryRevision": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+            "membershipGeneration": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+            "sessionGeneration": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+            "shareGeneration": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }
+          }
+        }
       }
     },
     "InviteView": {

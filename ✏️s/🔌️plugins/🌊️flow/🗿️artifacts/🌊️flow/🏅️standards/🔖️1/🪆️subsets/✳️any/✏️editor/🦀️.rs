@@ -2,7 +2,7 @@
 //! manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
-//! `🎭️modes/*/🪟️windows/*`, chrome measures in those windows' `🎚️options/*`, panel trees in `📌️panels/*`,
+//! `🎭️modes/*/🪟️windows/*`, chrome measures in those windows' `☑️options/*`, panel trees in `📌️panels/*`,
 //! labels in `🗣️terminology/🦀️.rs`, view state in `🎚️config/🦀️.rs`, plugin registration
 //! and `FlowHost` bridging (below — constitutional: general, an artifact must never depend on an app, so
 //! both live here rather than under `🗿️artifacts`).
@@ -50,6 +50,10 @@ use store::EngineHandles;
 #[path = "🧵️retained/🦀️.rs"]
 mod retained;
 
+#[cfg(test)]
+#[path = "🫧️transient/🧪️tests/🦀️.rs"]
+mod transient_retirement_tests;
+
 //#region 🔖️Constants
 pub const FLOW_PLAY_APP_ID: &str = "flow-play";
 pub use catalogue_panel::FLOW_PLAY_BODY_CATALOGUE;
@@ -62,7 +66,7 @@ pub use main::FLOW_PLAY_BODY_MAIN;
 pub use preview::FLOW_PLAY_BODY_GENERATE_PREVIEW;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
-/// (`🎚️options/*`, `📌️panels/*`) builds its `on_change`/item actions with.
+/// (`☑️options/*`, `📌️panels/*`) builds its `on_change`/item actions with.
 pub fn flow_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     semio_framework_plugin::ActionFactory::new(FLOW_PLAY_APP_ID).action(action, args)
 }
@@ -1231,6 +1235,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowDirectStoreJobF
     type Owner = semio_framework_plugin::EditorApp<FlowPlayApp>;
     const TOOL_IDS: &'static [&'static str] = FLOW_DIRECT_STORE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;
+
     const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeWidget", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
@@ -1250,6 +1255,182 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowDirectStoreJobF
     ];
 }
 //#endregion 🧵️DirectStoreLaneRoutes
+
+//#region 🧵️ChildGroupRetainedRoute
+const FLOW_CHILD_GROUP_TOOL_IDS: &[&str] = &["addWidget"];
+const FLOW_CHILD_GROUP_RAW_BYTES: usize = 16_384;
+
+struct FlowChildGroupWork {
+    instance_owner: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
+    completed: bool,
+    closing: bool,
+}
+
+impl FlowChildGroupWork {
+    fn new(instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+        Self { instance_owner: Some(instance_owner), completed: false, closing: false }
+    }
+
+    fn admitted_child<'a>(
+        command: &'a FlowCommand,
+        snapshot: &'a FlowSnapshot,
+        context: Option<&'a semio_framework_plugin::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
+    ) -> Option<(&'a add_widget::AddWidget, store::SnapshotReadRef<'a, semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot>)> {
+        let FlowCommand::AddWidget(payload) = command else { return None };
+        let context = context?;
+        let child_id = &snapshot.content.child_id;
+        let dialect = context.children.dialect("content", child_id)?;
+        if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "flow" {
+            return None;
+        }
+        let child = context.children.typed_read::<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot>("content", child_id).ok()?;
+        Some((payload, child))
+    }
+}
+
+impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for FlowChildGroupWork {
+    fn tool_id(&self) -> &'static str {
+        "addWidget"
+    }
+
+    fn extent(
+        &self,
+        command: &FlowCommand,
+        snapshot: &FlowSnapshot,
+        _interaction: &protocol::InteractionState,
+        context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
+    ) -> Option<usize> {
+        if self.closing || self.completed || command.command_id() != "addWidget" {
+            return None;
+        }
+        let (payload, child) = Self::admitted_child(command, snapshot, context)?;
+        let text_bytes = payload.kind.len().checked_add(payload.neuron_kind.as_ref().map_or(0, String::len))?;
+        let x = payload.x.unwrap_or(120.0);
+        let y = payload.y.unwrap_or(120.0);
+        (text_bytes <= FLOW_CHILD_GROUP_RAW_BYTES && x.is_finite() && y.is_finite() && child.nodes.len() <= FLOW_STORE_MAX_MUTATION_ITEMS && child.edges.len() <= FLOW_STORE_MAX_MUTATION_ITEMS).then_some(1)
+    }
+
+    fn step(
+        &mut self,
+        command: &FlowCommand,
+        snapshot: &FlowSnapshot,
+        config: &FlowConfig,
+        history: &semio_framework_plugin::HistoryView,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+        context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
+        _operation: &semio_framework_plugin::AppOperationContext,
+    ) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
+        if self.closing || self.completed {
+            return Err(Fault::from("flow-retained-add-widget-terminal"));
+        }
+        let (payload, _) = Self::admitted_child(command, snapshot, context).ok_or_else(|| Fault::from("flow-retained-add-widget-child-authority"))?;
+        let context = context.ok_or_else(|| Fault::from("flow-retained-add-widget-context"))?;
+        let view = semio_framework_plugin::resolve_ready(ArtifactView::with_children(snapshot, history, (*context.children).clone()));
+        let instance_owner = self.instance_owner.as_ref().ok_or_else(|| Fault::from("flow-retained-add-widget-instance-owner"))?;
+        let emit = instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| owner.with_session(|session| add_widget::handle(payload, &view, &ConfigView { snapshot: config }, session))?)?;
+        let exact_child = emit.child_emits.first().filter(|child| {
+            child.slot == "content" && child.child_id == snapshot.content.child_id && child.ops.len() == 1 && child.labels.len() == 1
+        });
+        if exact_child.is_none()
+            || emit.child_emits.len() != 1
+            || !emit.artifact_mutations.is_empty()
+            || !emit.config_mutations.is_empty()
+            || !emit.draft_mutations.is_empty()
+            || emit.description.is_some()
+            || emit.coalesce_key.is_some()
+            || !emit.effects.is_empty()
+            || !emit.events.is_empty()
+            || !emit.tasks.is_empty()
+        {
+            return Err(Fault::from("flow-retained-add-widget-output-contract"));
+        }
+        self.completed = true;
+        Ok(ArtifactCommandWorkStep::Complete(emit))
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if !self.closing || maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+        }
+        if self.instance_owner.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.instance_owner.is_none()
+    }
+}
+
+struct FlowChildGroupJobFactory {
+    keys: Vec<semio_framework::ToolFactoryKey>,
+}
+
+impl FlowChildGroupJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: FLOW_CHILD_GROUP_TOOL_IDS.iter().map(|tool_id| semio_framework::ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for FlowChildGroupJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<semio_framework_plugin::EditorApp<FlowPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<semio_framework_plugin::EditorApp<FlowPlayApp>>;
+
+    fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        FLOW_DOCUMENT_SCHEMA
+    }
+
+    fn classification(&self) -> semio_framework::InteractiveJobClassification {
+        semio_framework::InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
+        semio_framework::ToolExecutionContract::resumable(FLOW_CHILD_GROUP_RAW_BYTES, 256, 1, 16_384, 7_500, 1, 1)
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > FLOW_CHILD_GROUP_RAW_BYTES
+            || checkpoint.as_ref().is_some_and(|checkpoint| checkpoint.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES)
+        {
+            return Err((semio_framework::ToolJobFactoryError::new("Flow addWidget job rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(match checkpoint {
+            Some(checkpoint) => ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint),
+            None => ArtifactRetainedCommandJob::from_wire(payload, input),
+        })
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowChildGroupJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<FlowPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = FLOW_CHILD_GROUP_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[semio_framework_plugin::ArtifactToolPublicationContract {
+        tool_id: "addWidget",
+        lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child],
+    }];
+}
+//#endregion 🧵️ChildGroupRetainedRoute
 
 //#region 🧵️HostOnlyRetainedRoutes
 const FLOW_HOST_ONLY_TOOL_IDS: &[&str] = &["evaluate", "contextMenuAt", "openSpotlight", "replaceImage", "flowEvalTick", "flowEvalResolve"];
@@ -1330,7 +1511,7 @@ impl semio_framework_job::InteractiveJob for FlowHostEffectJob {
         }
         if !self.completed {
             let Some(payload) = self.payload.as_ref() else { return Self::fault() };
-            let view = semio_framework_plugin::resolve_ready(ArtifactView::with_children(&payload.snapshot, &payload.history, (*payload.children).clone()));
+            let view = semio_framework_plugin::resolve_ready(ArtifactView::with_children(payload.snapshot.as_ref(), &payload.history, (*payload.children).clone()));
             let emit = payload.instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| {
                 owner.with_session(|session| match &payload.command {
                     FlowCommand::Evaluate(_) => Ok(evaluate::evaluate_result(&payload.snapshot, &payload.config, session)),
@@ -1514,6 +1695,22 @@ impl FlowHostEffectJobFactoryProofs {
     }
 }
 
+struct FlowChildGroupJobFactoryProofs;
+
+impl FlowChildGroupJobFactoryProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<FlowPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.flow.flow@1/*#editor",
+        document_schema: "flow.fixture",
+        factory: "FlowChildGroupJobFactory",
+        factory_type: FlowChildGroupJobFactory,
+        tools: {
+            "addWidget" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 1, 16_384, 7_500, 1, 1),
+        }
+    }
+}
+
 //#region 🔖️FlowPlayApp
 struct FlowInstanceOperationOwner {
     eval_session: Option<FlowEvalSession>,
@@ -1585,8 +1782,52 @@ impl ArtifactEditor for FlowPlayApp {
     const DIALECT: Dialect = crate::artifacts::flow::FLOW_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;
 
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.child-projection"), error.to_string()))
+    }
+
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(retained::artifact::preparation::PreparationFactory))
+    }
+
+    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(crate::artifacts::flow::retirement::store_owners())
+    }
+
+    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(retained::config::store_owners())
+    }
+
+    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<NoDraft, NoDraftMutation>())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<NoDraft, NoDraftMutation>())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(Arc::new(crate::editor::flow::presence::retirement::FlowPresenceRetirementFactory))
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(Arc::new(crate::editor::flow::presence::retirement::FlowPresenceRetirementFactory))
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(crate::editor::flow::presence::retirement::store_disposer())
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(Box::new(semio_framework_plugin::NoTransientStoreDisposer::new()))
     }
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
@@ -1596,25 +1837,31 @@ impl ArtifactEditor for FlowPlayApp {
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
         let mut proofs = FlowDirectStoreJobFactoryProofs::bounded_first_step_tool_proofs();
         proofs.extend(FlowHostEffectJobFactoryProofs::bounded_first_step_tool_proofs());
+        proofs.extend(FlowChildGroupJobFactoryProofs::bounded_first_step_tool_proofs());
         proofs
     }
 
     fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
+        registry.register(FlowChildGroupJobFactory::new(&controller))?;
         registry.register(FlowHostEffectJobFactory::new(&controller))?;
         registry.register(FlowDirectStoreJobFactory::new(&controller))
     }
 
     fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !FLOW_HOST_ONLY_TOOL_IDS.contains(&request.tool_id.as_str()) && !FLOW_DIRECT_STORE_TOOL_IDS.contains(&request.tool_id.as_str()) {
+        if !FLOW_CHILD_GROUP_TOOL_IDS.contains(&request.tool_id.as_str()) && !FLOW_HOST_ONLY_TOOL_IDS.contains(&request.tool_id.as_str()) && !FLOW_DIRECT_STORE_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.retained.tool-mismatch"), "Flow command does not match its exact retained tool registration"));
         }
-        if FLOW_DIRECT_STORE_TOOL_IDS.contains(&request.tool_id.as_str()) {
+        if FLOW_CHILD_GROUP_TOOL_IDS.contains(&request.tool_id.as_str()) || FLOW_DIRECT_STORE_TOOL_IDS.contains(&request.tool_id.as_str()) {
             let tool_id = request.command.command_id();
-            let work: Box<dyn ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> = Box::new(FlowDirectStoreWork::new(tool_id));
+            let work: Box<dyn ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> = if FLOW_CHILD_GROUP_TOOL_IDS.contains(&request.tool_id.as_str()) {
+                Box::new(FlowChildGroupWork::new(request.instance_operation_owner))
+            } else {
+                Box::new(FlowDirectStoreWork::new(tool_id))
+            };
             let operation_context = semio_framework_plugin::AppOperationContext {
                 app_instance_id: request.app_instance_id,
                 parent_document_id: request.parent_document_id,
@@ -1633,8 +1880,8 @@ impl ArtifactEditor for FlowPlayApp {
                 operation_context,
                 request.completion,
                 FlowCommand::command_id,
-                FLOW_DIRECT_STORE_RAW_BYTES,
-                FLOW_STORE_MAX_MUTATION_ITEMS,
+                if FLOW_CHILD_GROUP_TOOL_IDS.contains(&request.tool_id.as_str()) { FLOW_CHILD_GROUP_RAW_BYTES } else { FLOW_DIRECT_STORE_RAW_BYTES },
+                if FLOW_CHILD_GROUP_TOOL_IDS.contains(&request.tool_id.as_str()) { 1 } else { FLOW_STORE_MAX_MUTATION_ITEMS },
                 work,
             )?;
             return Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)));
@@ -1682,7 +1929,7 @@ impl ArtifactEditor for FlowPlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<FlowMutation, FlowConfigMutation, Self::DraftMutation>, Fault> {
-        if FLOW_HOST_ONLY_TOOL_IDS.contains(&command.command_id()) || FLOW_DIRECT_STORE_TOOL_IDS.contains(&command.command_id()) {
+        if FLOW_CHILD_GROUP_TOOL_IDS.contains(&command.command_id()) || FLOW_HOST_ONLY_TOOL_IDS.contains(&command.command_id()) || FLOW_DIRECT_STORE_TOOL_IDS.contains(&command.command_id()) {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.retained.legacy-dispatch"), "Flow retained routes execute only through their exact app-owned job factory"));
         }
         let mut session = FlowEvalSession::new();
@@ -1726,14 +1973,14 @@ impl ArtifactEditor for FlowPlayApp {
         let labels = flow_play_labels(config);
         let mut session = FlowEvalSession::new();
         match body_key {
-            FLOW_PLAY_BODY_MAIN => main::render(fixture, config, &mut session),
-            FLOW_PLAY_BODY_COMPILED => compiled::render(fixture, config, &mut session),
-            FLOW_PLAY_BODY_GENERATIONS => generations::render(config, semio_framework_plugin::locale_from_str(&config.locale), semio_framework_plugin::Terminology::Native),
-            FLOW_PLAY_BODY_GENERATE_FORM => form::render(fixture, config),
-            FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(config),
+            FLOW_PLAY_BODY_MAIN => main::render(fixture, config, &mut session).map(semio_framework_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_COMPILED => compiled::render(fixture, config, &mut session).map(semio_framework_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_GENERATIONS => generations::render(config, semio_framework_plugin::locale_from_str(&config.locale), semio_framework_plugin::Terminology::Native).map(semio_framework_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_GENERATE_FORM => form::render(fixture, config).map(semio_framework_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(config).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_DOCUMENT => document_panel::render(fixture, labels).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(fixture, config, &mut session, labels).map(semio_framework_plugin::built_to_component_tree),
-            FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(labels),
+            FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(labels).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -1747,14 +1994,14 @@ impl ArtifactEditor for FlowPlayApp {
         owner
             .with_mut::<FlowInstanceOperationOwner, _>(|owner| {
                 owner.with_session(|session| match body_key {
-                    FLOW_PLAY_BODY_MAIN => main::render(doc.snapshot, cfg.snapshot, session),
-                    FLOW_PLAY_BODY_COMPILED => compiled::render(doc.snapshot, cfg.snapshot, session),
-                    FLOW_PLAY_BODY_GENERATIONS => generations::render(cfg.snapshot, semio_framework_plugin::locale_from_str(&cfg.snapshot.locale), semio_framework_plugin::Terminology::Native),
-                    FLOW_PLAY_BODY_GENERATE_FORM => form::render(doc.snapshot, cfg.snapshot),
-                    FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(cfg.snapshot),
+                    FLOW_PLAY_BODY_MAIN => main::render(doc.snapshot, cfg.snapshot, session).map(semio_framework_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_COMPILED => compiled::render(doc.snapshot, cfg.snapshot, session).map(semio_framework_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_GENERATIONS => generations::render(cfg.snapshot, semio_framework_plugin::locale_from_str(&cfg.snapshot.locale), semio_framework_plugin::Terminology::Native).map(semio_framework_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_GENERATE_FORM => form::render(doc.snapshot, cfg.snapshot).map(semio_framework_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(cfg.snapshot).map(semio_framework_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_DOCUMENT => document_panel::render(doc.snapshot, flow_play_labels(cfg.snapshot)).map(semio_framework_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(doc.snapshot, cfg.snapshot, session, flow_play_labels(cfg.snapshot)).map(semio_framework_plugin::built_to_component_tree),
-                    FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(flow_play_labels(cfg.snapshot)),
+                    FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(flow_play_labels(cfg.snapshot)).map(semio_framework_plugin::built_to_component_tree),
                     _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
                 })
             })
@@ -1911,7 +2158,7 @@ pub fn create_flow_app() -> AppDefinition {
             ActionArgOption::new("inputNote", LocalizedLabel::native("Note", "Notiz")),
         ])
         .default_value("inputSlider")])
-        .action_interactive_job("addWidget", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("addWidget", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("removeWidget", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("duplicateWidget", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("deleteSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
@@ -2005,18 +2252,12 @@ pub fn create_flow_app() -> AppDefinition {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::meta;
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     use semio_s_plugin_stdio::artifacts::semio::{create_semio_member, SemioMembers};
     use store::ArtifactPack;
 
     pub type FlowApp = VcsArtifactApp<EditorApp<FlowPlayApp>, SemioMembers>;
 
-    /// 🧪️ Testkit gap wrapper (`📓️w2-p5-flow-notes.md`): `new_app_with_registry` still takes
-    /// `fn() -> App`, but `create_flow_app` now returns `AppDefinition` (contract §2.4) — mirrors the
-    /// cad pilot's identical wrapper.
-    async fn flow_manifest_for_testkit() -> App {
-        App { definition: create_flow_app(), examples: Vec::new() }
-    }
 
     /// 🧪️ Installs a hand-authored `flow.extension` manifest fixture (a "math" module contributing the
     /// `math.add` operator) so tests exercising the catalogue/extension surfaces have something real
@@ -2026,7 +2267,7 @@ pub(crate) mod testkit {
     /// exhaustively tests its own manifest/operator content in its own `#[cfg(test)] mod tests` (e.g.
     /// `flow-extension-math`'s `manifest_lists_math_operators_and_schemas`); this fixture only covers
     /// what flow-core's own tests assert on (`catalogue_lists_module_operators`).
-    async fn install_first_party_light_flow_extensions_for_tests() {
+    fn install_first_party_light_flow_extensions_for_tests() {
         use std::sync::Once;
         static ONCE: Once = Once::new();
         ONCE.call_once(|| {
@@ -2050,9 +2291,9 @@ pub(crate) mod testkit {
     }
 
     pub(crate) async fn register_content_child(app: &mut FlowApp) {
-        let snapshot = app.snapshot().await.expect("Flow parent snapshot");
+        let snapshot = app.snapshot().expect("Flow parent snapshot");
         let fixture = snapshot.to_fixture();
-        let content = crate::artifacts::flow::flow_content_snapshot_from_working(&fixture.widgets, &fixture.synapses, &fixture.layout).await;
+        let content = crate::artifacts::flow::flow_content_snapshot_from_working(&fixture.widgets, &fixture.synapses, &fixture.layout);
         let dialect = snapshot.content.target.dialect.clone();
         let member = create_semio_member(&snapshot.content.child_id, &dialect, &content.encode_pack()).await.expect("Flow child member");
         app.register_child("content", snapshot.content.child_id, dialect, member).await.expect("register Flow content child");
@@ -2069,27 +2310,91 @@ pub(crate) mod testkit {
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub async fn flow_app_with_registry() -> FlowApp {
         install_first_party_light_flow_extensions_for_tests();
-        let definition = flow_manifest_for_testkit().await.definition;
-        let registry = AppActionRegistry::from_definition(&definition).await;
+        let definition = create_flow_app();
+        let registry = AppActionRegistry::from_definition(&definition);
         let mut app = VcsArtifactApp::<EditorApp<FlowPlayApp>, SemioMembers>::with_registry(EditorApp::default(), registry).await;
         register_content_child(&mut app).await;
         app
     }
 
     pub async fn dispatch(app: &mut FlowApp, command: FlowCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
     }
 
     pub async fn dispatch_with_registry(app: &mut FlowApp, command: FlowCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
     }
 
     pub async fn render(app: &mut FlowApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+        let tree = app.render(body_key, None, &ViewModel::default()).await.expect("render");
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(tree).expect("rendered fixture observation and retirement")
+    }
+
+    fn projection_fixture_node(value: &serde_json::Value) -> semio_framework_plugin::BuiltNode {
+        let mut node = semio_framework_plugin::BuiltNode::try_new(value["key"].as_str().unwrap(), serde_json::from_value(value["component"].clone()).unwrap()).unwrap();
+        for child in value["children"].as_array().unwrap() { node.children.try_push(projection_fixture_node(child)).unwrap(); }
+        if value["rejected"].as_bool() == Some(true) {
+            node.rejected_children.try_push(semio_framework_plugin::BuiltNode::try_new("rejected", serde_json::from_value(serde_json::json!({ "type": "text", "value": "rejected" })).unwrap()).unwrap()).unwrap();
+        }
+        node
+    }
+
+    fn saturated_rejected_fixture_tree(pages: usize, capacity: usize) -> semio_framework_plugin::ComponentTree {
+        use semio_framework_ui_contract::{BuiltNode, Component, Label, TextProps};
+        let text = |key: &str| BuiltNode::try_new(key, Component::Text(TextProps { value: Label::try_from("fixture").unwrap(), emphasize: None, data_attributes: None })).unwrap();
+        let mut root = text("root");
+        let mut full_pages = pages.checked_sub(capacity + 2).unwrap();
+        for group in 0..capacity {
+            let mut branch = text(&format!("group-{group}"));
+            for row in 0..capacity {
+                let mut node = text(&format!("row-{row}"));
+                if full_pages > 0 {
+                    for leaf in 0..capacity { node.children.try_push(text(&format!("leaf-{leaf}"))).unwrap(); }
+                    full_pages -= 1;
+                }
+                branch.children.try_push(node).unwrap();
+            }
+            root.children.try_push(branch).unwrap();
+        }
+        assert_eq!(full_pages, 0);
+        root.rejected_children.try_push(text("rejected")).unwrap();
+        semio_framework_plugin::ComponentTree { root }
+    }
+
+    #[test]
+    fn flow_render_fixture_projection_retires_populated_and_rejected_pages() {
+        use semio_framework_plugin::testkit::{project_and_retire_fixture_tree, FIXTURE_TREE_MAX_DEPTH, FIXTURE_TREE_MAX_NODES, FIXTURE_TREE_RETIRE_STEPS};
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🖼️tree-projection/🔣️.json")).unwrap();
+        assert_eq!(fixture["contractId"], "semio.fixture.tree-projection/v1");
+        assert_eq!(fixture["maximumDepth"], FIXTURE_TREE_MAX_DEPTH);
+        assert_eq!(fixture["maximumNodes"], FIXTURE_TREE_MAX_NODES);
+        assert_eq!(fixture["retirementSteps"], FIXTURE_TREE_RETIRE_STEPS);
+        for row in fixture["cases"].as_array().unwrap() {
+            let tree = semio_framework_plugin::ComponentTree { root: projection_fixture_node(&row["input"]) };
+            match project_and_retire_fixture_tree(tree) {
+                Ok(json) => assert_eq!(serde_json::from_str::<serde_json::Value>(&json).unwrap(), row["expected"]),
+                Err(error) => assert_eq!(Some(error), row["error"].as_str()),
+            }
+            assert!(semio_framework_ui_contract::close_built_node_page_one());
+        }
+        let probe = &fixture["retirementProbe"];
+        let pages = probe["reservedPages"].as_u64().unwrap() as usize;
+        let capacity = probe["childCapacity"].as_u64().unwrap() as usize;
+        assert_eq!(pages, semio_framework_ui_contract::UI_BUILT_CHILD_RETIRE_SLOTS);
+        assert_eq!(capacity, semio_framework_ui_contract::UI_BUILT_CHILDREN_MAX);
+        drop(saturated_rejected_fixture_tree(pages, capacity));
+        let steps = (1..=FIXTURE_TREE_RETIRE_STEPS).find(|_| semio_framework_ui_contract::close_built_node_page_one()).expect("all reserved pages retire within the exact authority bound");
+        assert_eq!(steps, probe["closeSteps"].as_u64().unwrap() as usize);
+        assert_eq!(steps - pages, probe["ownedNodes"].as_u64().unwrap() as usize);
+        assert!(steps > probe["supersededLimit"].as_u64().unwrap() as usize);
+        let tree = saturated_rejected_fixture_tree(pages, capacity);
+        assert_eq!(project_and_retire_fixture_tree(tree).unwrap_err(), probe["error"].as_str().unwrap());
+        assert_eq!(semio_framework_ui_contract::close_built_node_page_one(), probe["terminalEmpty"].as_bool().unwrap());
+        eprintln!("[DEBUG] retained Flow fixture tree observation: two positive trees, two structural denials and {pages} saturated pages retired in {steps} counted turns");
     }
 
     pub async fn main_window_measures(app: &mut FlowApp) -> Vec<WindowMeasure> {
-        app.window_measures().get(main::FLOW_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
+        app.window_measures().await.get(main::FLOW_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
     }
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking is the framework's injected
@@ -2102,7 +2407,8 @@ pub(crate) mod testkit {
         let mut targets: Vec<serde_json::Value> = node_ids.iter().map(|id| serde_json::json!({ "granularity": "node", "id": flow_graph_node_target_id(id) })).collect();
         targets.extend(edge_ids.iter().map(|id| serde_json::json!({ "granularity": "edge", "id": flow_graph_edge_target_id(id) })));
         let targets_json = serde_json::to_string(&targets).expect("targets json");
-        app.handle_action("interactionSelect", Some(&serde_json::json!({ "domainId": FLOW_INTERACTION_GRAPH, "targets": targets_json, "merge": "replace" })), &meta("test")).expect("interactionSelect");
+        let args = dsl::DslValue::from(serde_json::json!({ "domainId": FLOW_INTERACTION_GRAPH, "targets": targets_json, "merge": "replace" }));
+        app.handle_action("interactionSelect", Some(&args), &meta("test")).await.expect("interactionSelect");
     }
 }
 //#endregion 🧪️Testkit
@@ -2112,13 +2418,104 @@ pub(crate) mod testkit {
 mod tests {
     use super::*;
     use crate::editor::flow::testkit::{dispatch, flow_app, flow_app_with_registry, FlowApp};
-    use semio_framework_plugin::testkit::{assert_undo_redo_round_trip, meta};
-    use semio_framework_plugin::PluginApp;
+    use semio_framework_plugin::testkit::meta;
+    use semio_framework_plugin::{EditorApp, PluginApp};
+
+    #[test]
+    fn retained_add_widget_factory_is_exact_child_only_and_legacy_closed() {
+        let factory = FlowChildGroupJobFactory::new("s.flow.flow@1/*#editor");
+        let keys = semio_framework::ToolJobFactory::keys(&factory);
+        assert_eq!(keys, &[semio_framework::ToolFactoryKey::new("s.flow.flow@1/*#editor", "addWidget")]);
+        assert_eq!(semio_framework::ToolJobFactory::payload_schema_id(&factory), FLOW_DOCUMENT_SCHEMA);
+        assert_eq!(semio_framework::ToolJobFactory::classification(&factory), semio_framework_plugin::InteractiveJobClassification::Migrated);
+        assert_eq!(
+            semio_framework::ToolJobFactory::execution_contract(&factory),
+            semio_framework::ToolExecutionContract::resumable(16_384, 256, 1, 16_384, 7_500, 1, 1),
+        );
+        assert_eq!(<FlowChildGroupJobFactory as semio_framework_plugin::ArtifactOwnedToolJobFactory>::TOOL_IDS, &["addWidget"]);
+        let publication = <FlowChildGroupJobFactory as semio_framework_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS;
+        assert_eq!(publication.len(), 1);
+        assert_eq!(publication[0].tool_id, "addWidget");
+        assert_eq!(publication[0].lanes, &[semio_framework_plugin::ArtifactToolPublicationLane::Child]);
+        let proofs = <FlowPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs();
+        assert_eq!(proofs.len(), FLOW_DIRECT_STORE_TOOL_IDS.len() + FLOW_HOST_ONLY_TOOL_IDS.len() + FLOW_CHILD_GROUP_TOOL_IDS.len());
+        assert!(FLOW_CHILD_GROUP_TOOL_IDS.contains(&"addWidget"));
+        eprintln!("[DEBUG] retained addWidget factory owns one key, one exact proof and one Child-only publication lane");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires() {
+        use semio_framework_plugin::TypedOperationResultLane;
+        use store::{ArtifactPack, SpaceMember};
+
+        let fixture: Value = serde_json::from_str(include_str!("🧪️fixtures/🧵️add-widget-retained/🔣️.json")).expect("retained addWidget fixture");
+        let mut app = flow_app_with_registry().await;
+        PluginApp::bind_instance_id(&mut app, 1).await;
+        let parent_before = app.snapshot().expect("Flow parent before retained addWidget");
+        let child_id = parent_before.content.child_id.clone();
+        let child_before = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot::decode_pack(
+            &app.child_store("content", &child_id).await.expect("Flow child before retained addWidget").document_pack_bytes().await.expect("Flow child pack before retained addWidget"),
+        )
+        .expect("decode Flow child before retained addWidget");
+        let accepted = &fixture["accepted"][0]["command"];
+        let started = dispatch(
+            &mut app,
+            FlowCommand::AddWidget(add_widget::AddWidget {
+                kind: accepted["kind"].as_str().expect("kind").to_string(),
+                neuron_kind: accepted["neuronKind"].as_str().map(str::to_string),
+                x: accepted["x"].as_f64(),
+                y: accepted["y"].as_f64(),
+            }),
+        )
+        .await;
+        assert!(started.mutations.is_empty(), "retained addWidget must not publish through its immediate invocation result");
+        let mut lanes = Vec::new();
+        for turn in 0..100_000 {
+            let _ = PluginApp::maintenance_step(&mut app, 1, 16_384).expect("retained addWidget maintenance");
+            PluginApp::advance_typed_operation_publication(&mut app).await.expect("retained addWidget publication");
+            if let Some(page) = PluginApp::take_typed_operation_result_page(&mut app, 1) {
+                assert_ne!(page.lane, TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
+                lanes.push(page.lane);
+                assert!(PluginApp::acknowledge_typed_operation_result(&mut app, page.token).expect("retained addWidget ACK"));
+            }
+            if !PluginApp::has_pending_typed_operations(&app) {
+                eprintln!("[DEBUG] retained addWidget completed Worker/Child/Terminal publication and ACK in {turn} bounded turns");
+                break;
+            }
+            std::thread::yield_now();
+        }
+        assert_eq!(lanes.iter().filter(|lane| **lane == TypedOperationResultLane::Child).count(), 1);
+        assert_eq!(lanes.iter().filter(|lane| **lane == TypedOperationResultLane::Terminal).count(), 1);
+        assert!(!PluginApp::has_pending_typed_operations(&app));
+        let parent_after = app.snapshot().expect("Flow parent after retained addWidget");
+        assert_eq!(parent_after.content, parent_before.content, "retained addWidget must preserve the exact parent content coordinate");
+        let child_after = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot::decode_pack(
+            &app.child_store("content", &child_id).await.expect("Flow child after retained addWidget").document_pack_bytes().await.expect("Flow child pack after retained addWidget"),
+        )
+        .expect("decode Flow child after retained addWidget");
+        assert_eq!(child_after.nodes.len(), child_before.nodes.len() + 1);
+        assert_eq!(child_after.edges, child_before.edges);
+        let expected = &fixture["accepted"][0]["expected"];
+        let inserted_expected = &fixture["accepted"][0]["inserted"];
+        let inserted = child_after.nodes.last().expect("retained addWidget inserted node");
+        assert_eq!(inserted.kind, inserted_expected["kind"].as_str().expect("inserted kind"));
+        assert_eq!(inserted.position.x, inserted_expected["x"].as_f64().expect("inserted x"));
+        assert_eq!(inserted.position.y, inserted_expected["y"].as_f64().expect("inserted y"));
+        assert_eq!(expected["parentMutations"], 0);
+        assert_eq!(expected["childGroups"], 1);
+        for _ in 0..100_000 {
+            if PluginApp::close_step(&mut app, 1, 16_384).expect("retained addWidget app close") == semio_framework_plugin::PluginCloseStep::Complete {
+                break;
+            }
+        }
+        assert!(PluginApp::close_terminal_is_empty(&app));
+        eprintln!("[DEBUG] retained addWidget published one typed child mutation, preserved parent identity and closed every app owner");
+    }
 
     /// ↩️ Nonadjacent severed edges regain their exact original indices and large authored content.
     #[test]
     fn delete_cascade_inverse_restores_exact_edge_order_and_label() {
-        let fixture: Value = serde_json::from_str(include_str!("🧪️fixtures/🧪️delete-cascade/🔣️.json")).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!("🧪️fixtures/🧹️delete-cascade/🔣️.json")).unwrap();
         let mut scene = fixture["scene"].clone();
         let label = fixture["label"]["unit"].as_str().unwrap().repeat(fixture["label"]["repetitions"].as_u64().unwrap() as usize);
         assert_eq!(label.len(), fixture["label"]["expectedBytes"].as_u64().unwrap() as usize);
@@ -2142,8 +2539,8 @@ mod tests {
     /// 🗂️ Serde is the independent Rust JSON oracle for the language-agnostic Flow/Note route census.
     #[test]
     fn action_cohort_fixtures_match_the_exact_route_census() {
-        let flow: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🔣️action-cohort.json"))).expect("Flow action-cohort fixture must be valid JSON");
-        let note: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🗒️note/🔣️action-cohort.json"))).expect("Note action-cohort fixture must be valid JSON");
+        let flow: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🎬️action-cohort/🔣️.json"))).expect("Flow action-cohort fixture must be valid JSON");
+        let note: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🗒️note/🧪️action-cohort/🔣️.json"))).expect("Note action-cohort fixture must be valid JSON");
         for (fixture, owner, total, framework_owned) in [(&flow, "FlowPlayApp", 37_u64, 0_usize), (&note, "NotePlayApp", 36_u64, 0_usize)] {
             assert_eq!(fixture["owner"], owner);
             assert_eq!(fixture["routeCount"].as_u64(), Some(total));
@@ -2160,7 +2557,7 @@ mod tests {
 
     async fn context_menu_items(app: &mut FlowApp, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> Value {
         let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface, window_instance_id: None, point: None };
-        serde_json::to_value(app.context_menu(&request)).unwrap_or(Value::Null)
+        serde_json::to_value(app.context_menu(&request).await).unwrap_or(Value::Null)
     }
 
     //#region 🔖️CommandSurface
@@ -2224,7 +2621,7 @@ mod tests {
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) async fn every_command() -> Vec<FlowCommand> {
+    pub(super) fn every_command() -> Vec<FlowCommand> {
         use flow::CameraJson;
         vec![
             FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: Some(10.0), y: None }),
@@ -2331,31 +2728,30 @@ mod tests {
     //#region 🔖️CrossCutting
     #[semio_framework_async_macros::async_test]
     async fn undo_restores_fixture_after_add_widget() {
-        let mut app = flow_app();
+        let mut app = flow_app().await;
         let before = app.snapshot().expect("snapshot").to_fixture().widgets.len();
-        assert_undo_redo_round_trip(
-            &mut app,
-            FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0) }),
-            |app| app.snapshot().expect("snapshot").to_fixture().widgets.len(),
-            before,
-            before + 1,
-        );
+        dispatch(&mut app, FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0) })).await;
+        assert_eq!(app.snapshot().expect("snapshot").to_fixture().widgets.len(), before + 1);
+        app.handle_action("undo", None, &meta("local")).await.expect("undo");
+        assert_eq!(app.snapshot().expect("snapshot").to_fixture().widgets.len(), before);
+        app.handle_action("redo", None, &meta("local")).await.expect("redo");
+        assert_eq!(app.snapshot().expect("snapshot").to_fixture().widgets.len(), before + 1);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn generate_mode_renders_three_surfaces() {
-        let mut app = flow_app();
+        let mut app = flow_app().await;
         use crate::editor::flow::testkit::render;
-        assert!(render(&mut app, FLOW_PLAY_BODY_GENERATIONS).contains("addGeneration"));
-        assert!(render(&mut app, FLOW_PLAY_BODY_GENERATE_FORM).contains("Add a generation"));
-        assert!(render(&mut app, FLOW_PLAY_BODY_GENERATE_PREVIEW).contains("text-editor"));
+        assert!(render(&mut app, FLOW_PLAY_BODY_GENERATIONS).await.contains("addGeneration"));
+        assert!(render(&mut app, FLOW_PLAY_BODY_GENERATE_FORM).await.contains("Add a generation"));
+        assert!(render(&mut app, FLOW_PLAY_BODY_GENERATE_PREVIEW).await.contains("text-editor"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::flow::testkit::render;
-        let mut app = flow_app();
-        assert!(render(&mut app, "flow.play.nope").contains("Unknown body"));
+        let mut app = flow_app().await;
+        assert!(render(&mut app, "flow.play.nope").await.contains("Unknown body"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2374,14 +2770,14 @@ mod tests {
     async fn two_instances_converge_on_disjoint_edits() {
         use crate::artifacts::flow::schema::widget_id;
         use semio_framework_plugin::testkit::paired_apps;
-        let (mut instance_a, mut instance_b) = paired_apps::<EditorApp<FlowPlayApp>>("mem://flow-convergence");
+        let (mut instance_a, mut instance_b) = paired_apps::<EditorApp<FlowPlayApp>>("mem://flow-convergence").await;
 
-        instance_a.dispatch_typed(FlowCommand::RenameFlowWidget(rename_flow_widget::RenameFlowWidget { old_id: "slider".into(), value: "input".into() }), &meta("actor-a")).expect("a renames slider");
-        instance_b.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(10.0), y: Some(10.0) }), &meta("actor-b")).expect("b adds a note");
+        instance_a.dispatch_typed(FlowCommand::RenameFlowWidget(rename_flow_widget::RenameFlowWidget { old_id: "slider".into(), value: "input".into() }), &meta("actor-a")).await.expect("a renames slider");
+        instance_b.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(10.0), y: Some(10.0) }), &meta("actor-b")).await.expect("b adds a note");
 
         // A neutral history action always dispatches through the store, which pumps inbound operations first.
-        instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).expect("pump a");
-        instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).expect("pump b");
+        instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("pump a");
+        instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).await.expect("pump b");
 
         let projection_a = instance_a.snapshot().expect("snapshot a").to_fixture();
         let projection_b = instance_b.snapshot().expect("snapshot b").to_fixture();
@@ -2394,8 +2790,8 @@ mod tests {
     //#region 🔖️ContextMenu
     #[semio_framework_async_macros::async_test]
     async fn context_menu_includes_select_all_when_empty() {
-        let mut app = flow_app_with_registry();
-        let menu = context_menu_items(&mut app, Some(semio_framework_plugin::ContextMenuSurfaceTarget { surface_id: "main".into(), kind: "nodeGraph".into(), hits: vec![], selection: vec![], text: None }));
+        let mut app = flow_app_with_registry().await;
+        let menu = context_menu_items(&mut app, Some(semio_framework_plugin::ContextMenuSurfaceTarget { surface_id: "main".into(), kind: "nodeGraph".into(), hits: vec![], selection: vec![], text: None })).await;
         let menu_json = menu.to_string();
         assert!(menu_json.contains("selectAll"), "menu should be {menu_json}");
         assert!(menu_json.contains("Select All") || menu_json.contains("select-all"), "menu should be {menu_json}");
@@ -2408,7 +2804,7 @@ mod tests {
     /// `InteractionState` now and `ArtifactApp::context_menu` is not threaded an `InteractionView` this
     /// wave (see `flow_context_menu_items`'s doc comment) — the request's own `surface.selection` groups
     /// are the only way to feed a selection into the menu, mirroring what the real click caller carries.
-    async fn node_selection_surface(node_ids: &[&str]) -> semio_framework_plugin::ContextMenuSurfaceTarget {
+    fn node_selection_surface(node_ids: &[&str]) -> semio_framework_plugin::ContextMenuSurfaceTarget {
         semio_framework_plugin::ContextMenuSurfaceTarget {
             surface_id: "main".into(),
             kind: "nodeGraph".into(),
@@ -2420,14 +2816,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn context_menu_includes_hide_preview_for_selection_and_set_preview_off_mutates_scene() {
-        let mut app = flow_app_with_registry();
-        let menu = context_menu_items(&mut app, Some(node_selection_surface(&["slider"]))).to_string();
+        let mut app = flow_app_with_registry().await;
+        let menu = context_menu_items(&mut app, Some(node_selection_surface(&["slider"]))).await.to_string();
         assert!(menu.contains("setPreviewOff"), "menu should expose preview toggle: {menu}");
         assert!(menu.contains("Hide preview") || menu.contains("eye-off"), "menu should offer hide preview: {menu}");
         assert!(menu.contains("focusSelection"), "menu should expose zoom to selection: {menu}");
         assert!(menu.contains(r#""checked":true"#), "preview checked when visible: {menu}");
-        dispatch(&mut app, FlowCommand::SetPreviewOff(set_preview_off::SetPreviewOff { ids: vec!["slider".into()], value: true }));
-        let after_menu = context_menu_items(&mut app, Some(node_selection_surface(&["slider"]))).to_string();
+        dispatch(&mut app, FlowCommand::SetPreviewOff(set_preview_off::SetPreviewOff { ids: vec!["slider".into()], value: true })).await;
+        let after_menu = context_menu_items(&mut app, Some(node_selection_surface(&["slider"]))).await.to_string();
         assert!(after_menu.contains("Show preview") || after_menu.contains(r#""icon":"eye""#), "menu should offer show preview: {after_menu}");
     }
 
@@ -2437,19 +2833,19 @@ mod tests {
     /// (right-clicking a node) supplies alongside the `contextMenuAt` dispatch.
     #[semio_framework_async_macros::async_test]
     async fn context_menu_at_selects_target_and_enables_preview() {
-        let mut app = flow_app_with_registry();
-        let before = context_menu_items(&mut app, None).to_string();
+        let mut app = flow_app_with_registry().await;
+        let before = context_menu_items(&mut app, None).await.to_string();
         assert!(!before.contains(r#""id":"delete-selection""#), "preview starts without delete: {before}");
-        dispatch(&mut app, FlowCommand::ContextMenuAt(context_menu_at::ContextMenuAt { id: "slider".into() }));
-        let after = context_menu_items(&mut app, Some(node_selection_surface(&["slider"]))).to_string();
+        dispatch(&mut app, FlowCommand::ContextMenuAt(context_menu_at::ContextMenuAt { id: "slider".into() })).await;
+        let after = context_menu_items(&mut app, Some(node_selection_surface(&["slider"]))).await.to_string();
         assert!(after.contains("setPreviewOff"), "menu keeps preview: {after}");
         assert!(after.contains(r#""ids":["slider"]"#) || after.contains("slider"), "preview args target the clicked node: {after}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn context_menu_annotates_mixed_selection_counts_and_omits_delete_without_selection() {
-        let mut app = flow_app_with_registry();
-        let empty = context_menu_items(&mut app, Some(semio_framework_plugin::ContextMenuSurfaceTarget { surface_id: "main".into(), kind: "nodeGraph".into(), hits: vec![], selection: vec![], text: None })).to_string();
+        let mut app = flow_app_with_registry().await;
+        let empty = context_menu_items(&mut app, Some(semio_framework_plugin::ContextMenuSurfaceTarget { surface_id: "main".into(), kind: "nodeGraph".into(), hits: vec![], selection: vec![], text: None })).await.to_string();
         assert!(!empty.contains(r#""id":"delete-selection""#), "empty must omit delete: {empty}");
 
         let menu = context_menu_items(
@@ -2464,7 +2860,7 @@ mod tests {
                 ],
                 text: None,
             }),
-        )
+        ).await
         .to_string();
         assert!(menu.contains(r#""id":"delete-selection""#), "mixed selection must expose delete: {menu}");
         assert!(menu.contains("8 nodes and 13 edges"), "count phrase missing: {menu}");
@@ -2473,7 +2869,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn context_menu_for_edge_hit_uses_surface_edge_selection() {
-        let mut app = flow_app_with_registry();
+        let mut app = flow_app_with_registry().await;
         let menu = context_menu_items(
             &mut app,
             Some(semio_framework_plugin::ContextMenuSurfaceTarget {
@@ -2483,7 +2879,7 @@ mod tests {
                 selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: "edge".into(), ids: vec!["syn-1".into()] }],
                 text: None,
             }),
-        )
+        ).await
         .to_string();
         assert!(menu.contains(r#""id":"delete-selection""#), "edge selection must expose delete: {menu}");
         assert!(menu.contains("1 edge") || menu.contains("1 Kante"), "edge count phrase missing: {menu}");
@@ -2491,7 +2887,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
-        let mut app = flow_app_with_registry();
+        let mut app = flow_app_with_registry().await;
         let request = ContextMenuRequest {
             menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
             surface: Some(semio_framework_plugin::ContextMenuSurfaceTarget {
@@ -2507,7 +2903,7 @@ mod tests {
             window_instance_id: None,
             point: None,
         };
-        let menu = app.context_menu(&request);
+        let menu = app.context_menu(&request).await;
         assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
         let last = menu.last().expect("grouped disclosure menu should not be empty");
         let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true) && last.action.as_deref() == Some("deleteSelection");

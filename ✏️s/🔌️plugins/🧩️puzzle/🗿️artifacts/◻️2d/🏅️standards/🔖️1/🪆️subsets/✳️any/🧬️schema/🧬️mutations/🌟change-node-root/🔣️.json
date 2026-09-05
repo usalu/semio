@@ -5,7 +5,7 @@
   "displayName": "Change Node Root",
   "emoji": "🌟",
   "aggregateVariant": "ChangeNodeRoot",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-node-root",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

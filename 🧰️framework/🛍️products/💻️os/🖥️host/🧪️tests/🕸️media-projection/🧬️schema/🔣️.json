@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kindId",
+    "mediaType",
+    "wire",
+    "conversion"
+  ],
+  "properties": {
+    "kindId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mediaType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "class",
+        "form"
+      ],
+      "properties": {
+        "class": {
+          "enum": [
+            "twoD",
+            "threeD",
+            "text",
+            "data",
+            "graph",
+            "kit",
+            "computation",
+            "presentation"
+          ]
+        },
+        "form": {
+          "$ref": "#/$defs/form"
+        }
+      }
+    },
+    "wire": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "schema"
+          ],
+          "properties": {
+            "kind": {
+              "const": "document"
+            },
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "formatKind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "binary"
+            },
+            "formatKind": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    },
+    "conversion": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/form"
+            },
+            {
+              "$ref": "#/$defs/form"
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2,
+          "items": false
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "form": {
+      "enum": [
+        "any",
+        "vector",
+        "raster",
+        "brep",
+        "mesh",
+        "document",
+        "value",
+        "dag",
+        "trinity",
+        "type",
+        "design",
+        "kit",
+        "flow",
+        "sequence",
+        "procedure",
+        "deck"
+      ]
+    }
+  }
+}

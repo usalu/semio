@@ -5,7 +5,7 @@
   "displayName": "Change Node Operator Kind",
   "emoji": "🧮",
   "aggregateVariant": "ChangeNodeOperatorKind",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

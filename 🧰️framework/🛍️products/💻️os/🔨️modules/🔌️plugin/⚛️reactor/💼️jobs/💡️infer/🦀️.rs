@@ -419,7 +419,7 @@ mod tests {
             canonical_payload: vec![9, 8, 7],
             dependencies: Vec::new(),
         };
-        serde_json::to_vec(&request).expect("test request encodes")
+        protocol::json::to_json_string(&request).into_bytes()
     }
 
     /// 💡️ Registers a real native inference service (not mocked away) and drives `semio.infer`
@@ -444,7 +444,7 @@ mod tests {
         }
         match step_job(200, JobBudget { fuel: 1, deadline_ms: 1 }).await {
             JobStep::Done(bytes) => {
-                let result: crate::app::WireArtifactInferenceResult = serde_json::from_slice(&bytes).expect("slice 2 result decodes");
+                let result: crate::app::WireArtifactInferenceResult = protocol::json::from_json_str(std::str::from_utf8(&bytes).expect("result UTF-8")).expect("slice 2 result decodes");
                 assert_eq!(result.canonical_payload, vec![9, 8, 7]);
                 assert!(result.complete);
             }

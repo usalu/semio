@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReorderNodes",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "from",
+    "parent",
+    "to"
+  ],
+  "properties": {
+    "parent": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "from": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "to": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

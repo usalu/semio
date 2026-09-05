@@ -581,9 +581,10 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 // executor-bridge call site in this crate; the `space` artifact/editor/viewer calls below are
 // already sync (no bridge needed).
 pub fn plugin() -> Result<Plugin<SpaceApps>, semio_framework_plugin::PluginAssemblyError> {
-    Plugin::<SpaceApps>::builder("s")
+    Plugin::<SpaceApps>::builder("space")
         .label("S Studio")
         .version("0.1.0")
+        .package_id("semio:space")
         .local_backbone_storage()
         .artifact(resolve_ready(crate::artifacts::home::declaration()).map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .editor::<crate::editor::home::HomeApp>(resolve_ready(crate::editor::home::create_home_app()))

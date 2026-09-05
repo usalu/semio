@@ -49,7 +49,9 @@
       "status": "declared"
     }
   ],
-  "codecs": [],
+  "codecs": [
+    { "id": "s.stdio.png.standard.1-2.codec.native-document.v1", "status": "implemented", "from": "s.stdio.png.standard.1-2.dialect.source", "to": "s.stdio.png.standard.1-2.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.png.v1", "artifact_kind": "stdio.png", "document_schema": "stdio.png", "extension": "png", "pack_schema_hash": "fae0c8a340fe7d7486768794f7f3cad326ec9cd055fe271985154c383c48f9d0", "runtime_capability_id": "s.stdio.png.standard.1-2.codec.codec-stdio-png-extension-png.v1" } }
+  ],
   "mutations": [],
   "inferences": [],
   "resources": [
@@ -84,22 +86,22 @@
   ],
   "runtime_capabilities": [
     {
-      "id": "s.stdio.png.runtime.codec.codec-stdio-png-extension-png.v1",
+      "id": "s.stdio.png.standard.1-2.codec.codec-stdio-png-extension-png.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec:stdio.png|extension:png",
+      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.png:png|codec:stdio.png",
       "claims": [
         {
           "namespace": "codec",
           "value": "stdio.png"
         },
         {
-          "namespace": "extension",
-          "value": "png"
+          "namespace": "codec-extension",
+          "value": "9:stdio.png:png"
         }
       ]
     },
     {
-      "id": "s.stdio.png.runtime.composer.dialect-s-stdio-png-1-2.v1",
+      "id": "s.stdio.png.composer.dialect-s-stdio-png-1-2.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.png@1.2/*",
       "claims": [
@@ -110,7 +112,7 @@
       ]
     },
     {
-      "id": "s.stdio.png.runtime.grammar.grammar-stdio-png.v1",
+      "id": "s.stdio.png.grammar.grammar-stdio-png.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.png",
       "claims": [
@@ -121,7 +123,7 @@
       ]
     },
     {
-      "id": "s.stdio.png.runtime.grammar.grammar-stdio-png-diff.v1",
+      "id": "s.stdio.png.grammar.grammar-stdio-png-diff.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.png.diff",
       "claims": [
@@ -132,7 +134,7 @@
       ]
     },
     {
-      "id": "s.stdio.png.runtime.grammar.grammar-stdio-png-op.v1",
+      "id": "s.stdio.png.grammar.grammar-stdio-png-op.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.png.op",
       "claims": [
@@ -143,7 +145,7 @@
       ]
     },
     {
-      "id": "s.stdio.png.runtime.grammar.grammar-stdio-png-pack.v1",
+      "id": "s.stdio.png.grammar.grammar-stdio-png-pack.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.png.pack",
       "claims": [
@@ -154,7 +156,7 @@
       ]
     },
     {
-      "id": "s.stdio.png.runtime.grammar.grammar-stdio-png-spr.v1",
+      "id": "s.stdio.png.grammar.grammar-stdio-png-spr.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.png.spr",
       "claims": [
@@ -165,7 +167,7 @@
       ]
     },
     {
-      "id": "s.stdio.png.runtime.inference.schema-s-stdio-png-inference.v1",
+      "id": "s.stdio.png.inference.schema-s-stdio-png-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:s.stdio.png.inference",
       "claims": [
@@ -176,7 +178,7 @@
       ]
     },
     {
-      "id": "s.stdio.png.runtime.representation.mime-image-png-extension-png.v1",
+      "id": "s.stdio.png.standard.1-2.representation.mime-image-png-extension-png",
       "category": "representation",
       "descriptor": "runtime-capability:representation:mime:image/png|extension:.png",
       "claims": [
@@ -191,7 +193,7 @@
       ]
     },
     {
-      "id": "s.stdio.png.runtime.schema.schema-s-stdio-png.v1",
+      "id": "s.stdio.png.schema.schema-s-stdio-png.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.png",
       "claims": [

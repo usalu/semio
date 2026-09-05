@@ -5,7 +5,7 @@
   "displayName": "Delete Artifact",
   "emoji": "🗑️",
   "aggregateVariant": "DeleteArtifact",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "delete-artifact",
   "binaryTag": 1,
   "invertibility": "explicit-mutation",

@@ -1,3 +1,0 @@
-(* ebnf norm.en1992.snapshot *)
-document = header, body ;
-header = 'schema', space, 'norm.en1992.snapshot', newline ;

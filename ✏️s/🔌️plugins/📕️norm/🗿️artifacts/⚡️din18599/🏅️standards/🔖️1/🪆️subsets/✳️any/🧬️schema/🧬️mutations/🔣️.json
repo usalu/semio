@@ -1,0 +1,85 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/din18599/mutation.json",
+  "title": "Din18599Mutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "useClass",
+    "heatedAreaM2",
+    "occupants",
+    "hT",
+    "hV",
+    "climate",
+    "internalGainsWM2",
+    "solarGainsKwh",
+    "systemLossesKwh",
+    "renewableKwh",
+    "annualLimitKwh",
+    "energyCarrier",
+    "referenceQPKwh"
+  ],
+  "properties": {
+    "useClass": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "heatedAreaM2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "occupants": {
+      "type": "integer",
+      "format": "uint32",
+      "x-semio-state": "artifact"
+    },
+    "hT": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "hV": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "climate": {
+      "$ref": "#/$defs/Din18599MonthlyClimate",
+      "x-semio-state": "artifact"
+    },
+    "internalGainsWM2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "solarGainsKwh": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "systemLossesKwh": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "renewableKwh": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "annualLimitKwh": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "energyCarrier": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "referenceQPKwh": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+module Stdio_gltf_snapshot_glb;
+# glTF 2.0 binary container (.glb): 12-byte header then a JSON chunk and an optional BIN chunk.
+public type Header = unit {
+    magic: bytes &size=4 &requires=(self.magic == b"glTF");
+    version: uint32;
+    total_length: uint32;
+};
+public type Chunk = unit {
+    chunk_length: uint32;
+    chunk_type: bytes &size=4; # b"JSON" or b"BIN\x00"
+    chunk_data: bytes &size=self.chunk_length;
+};
+public type Document = unit {
+    header: Header;
+    chunks: Chunk[] &eod;
+};

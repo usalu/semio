@@ -1,0 +1,40 @@
+{
+  "bridgeFile": "🌉️bridge.js",
+  "installMetaFile": "📥️install.json",
+  "staticDirectories": ["🪞️vendor", "🧵️shard", "🧩️puzzle"],
+  "httpCases": [
+    { "owner": "plugin", "method": "GET", "url": "/%F0%9F%94%8C%EF%B8%8Fplugin-modules/watch", "expected": "snapshot" },
+    { "owner": "plugin", "method": "GET", "url": "/plugin-modules/watch", "expected": "next" },
+    { "owner": "plugin", "method": "POST", "url": "/%F0%9F%94%8C%EF%B8%8Fplugin-modules/watch", "expected": "next" },
+    { "owner": "plugin", "method": "GET", "url": "/%F0%9F%94%8C%EF%B8%8Fplugin-modules/%2e%2e/watch", "expected": "next" },
+    { "owner": "extension", "method": "GET", "url": "/%F0%9F%A7%A9%EF%B8%8Fextension-modules/watch?v=1", "expected": "snapshot" },
+    { "owner": "extension", "method": "POST", "url": "/%F0%9F%A7%A9%EF%B8%8Fextension-modules/install", "expected": "installed" },
+    { "owner": "extension", "method": "POST", "url": "/extensions/install", "expected": "next" },
+    { "owner": "extension", "method": "POST", "url": "/%F0%9F%A7%A9%EF%B8%8Fextension-modules/install%2fchild", "expected": "next" },
+    { "owner": "extension", "method": "GET", "url": "/%F0%9F%A7%A9%EF%B8%8Fextension-modules/install", "expected": "next" }
+  ],
+  "routeCases": [
+    { "input": "/🔌️plugin-modules/watch", "output": "/🔌️plugin-modules/watch" },
+    { "input": "/%F0%9F%94%8C%EF%B8%8Fplugin-modules/watch?v=1", "output": "/🔌️plugin-modules/watch" },
+    { "input": "/🧩️extension-modules/install", "output": "/🧩️extension-modules/install" },
+    { "input": "/%F0%9F%A7%A9%EF%B8%8Fextension-modules/watch", "output": "/🧩️extension-modules/watch" },
+    { "input": "/plugin-modules/watch", "output": null },
+    { "input": "/extensions/install", "output": null },
+    { "input": "/🔌️plugin-modules-else/watch", "output": null },
+    { "input": "/🧩️extension-modules/%2e%2e/escape", "output": null },
+    { "input": "/🔌️plugin-modules/a%2fb", "output": null },
+    { "input": "/🔌️plugin-modules/a%5cb", "output": null },
+    { "input": "/🔌️plugin-modules/%00", "output": null },
+    { "input": "/🔌️plugin-modules/%GG", "output": null },
+    { "input": "/🔌️plugin-modules//watch", "output": null },
+    { "input": "/🔌️plugin-modules/./watch", "output": null }
+  ],
+  "moduleUrls": [
+    { "pluginId": "puzzle", "plugin": "/🔌️plugin-modules/🧩️puzzle/🌉️bridge.js", "extension": "/🧩️extension-modules/🧩️puzzle/🌉️bridge.js" },
+    { "pluginId": "s", "plugin": "/🔌️plugin-modules/🪐️s/🌉️bridge.js", "extension": "/🧩️extension-modules/🪐️s/🌉️bridge.js" },
+    { "pluginId": "flow-extension-math", "plugin": "/🔌️plugin-modules/🧮️flow-extension-math/🌉️bridge.js", "extension": "/🧩️extension-modules/🧮️flow-extension-math/🌉️bridge.js" }
+  ],
+  "invalidDirectories": ["raw-id", "📁️generic", "📂️generic", "📄️generic", "🧩️🧩️stacked", "🧩️word-🧱️inside", "🧩️../escape", "🧩️nested/name", "🧩️back\\slash", "🧩️ spaced", "🧩️trailing-", "漢️not-emoji"],
+  "validDirectories": ["🧩️puzzle", "🧑️‍💻️developer", "1️⃣first"],
+  "hostileCatalogs": ["duplicate-id", "duplicate-emoji", "missing-name", "extra-field", "wrong-version", "empty-modules"]
+}

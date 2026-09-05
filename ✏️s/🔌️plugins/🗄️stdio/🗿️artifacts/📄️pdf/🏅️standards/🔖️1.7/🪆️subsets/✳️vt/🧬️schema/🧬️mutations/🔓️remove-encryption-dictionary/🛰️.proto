@@ -1,8 +1,0 @@
-syntax = "proto3";
-package semio.s_stdio_pdf_1_7_vt.mutation.remove_encryption_dictionary;
-
-// 🔓️ Direct remove-encryption-dictionary protobuf payload.
-message RemoveEncryptionDictionaryMutation {
-  int64 version = 1;
-  int64 revision = 2;
-}

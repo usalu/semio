@@ -1,0 +1,48 @@
+{
+  "schema": "semio.hub.inference-wal-proof-fixture/v1",
+  "scope": { "spaceId": "cccccccccccccccccccccccccccccccc", "documentId": "dddddddddddddddddddddddddddddddd" },
+  "documentKey": "v1:32:32:ccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddd",
+  "generation": 17,
+  "jobId": "def1e2178d0dbbc3a290ec4715c21dc9",
+  "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc",
+  "bindingMismatches": [
+    { "jobId": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc" },
+    { "jobId": "def1e2178d0dbbc3a290ec4715c21dc9", "proposalHash": "0000000000000000000000000000000000000000000000000000000000000000" }
+  ],
+  "maximumRecords": 8,
+  "command": {
+    "mutationId": "cec79f6a558b12166665dede9eb0ce66",
+    "documentId": "v1:32:32:ccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddd",
+    "actor": "user:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa#session:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "dependencies": [],
+    "diff": { "schema": "gis.map", "payloadHex": "010203" },
+    "inverse": { "schema": "gis.map", "payloadHex": "030201" },
+    "timestamp": { "actor": 1, "physicalMs": 1000, "logical": 0 }
+  },
+  "encodedHex": "2063656337396636613535386231323136363636356465646539656230636536364976313a33323a33323a636363636363636363636363636363636363636363636363636363636363636364646464646464646464646464646464646464646464646464646464646464644e757365723a61616161616161616161616161616161616161616161616161616161616161612373657373696f6e3a626262626262626262626262626262626262626262626262626262626262626200076769732e6d617003010203076769732e6d61700303020101e80700",
+  "commandHash": "61f583b4a007941be3537433dabeeb42c5d777bd8d5078c8c810f09e70e8f995",
+  "payloadAuthority": "protocol-envelope-only-not-an-executable-gis-mutation",
+  "ownership": [
+    { "interrupt": "drop", "expected": "cancelled", "heldActive": 1, "releasedActive": 0, "stoppedProgress": 1 },
+    { "interrupt": "cancel", "expected": "cancelled", "heldActive": 1, "releasedActive": 0, "stoppedProgress": 1 },
+    { "interrupt": "deadline", "expected": "expired", "heldActive": 1, "releasedActive": 0, "stoppedProgress": 1 }
+  ],
+  "traces": [
+    { "name": "exact-committed-command", "records": [{ "kind": "begin", "txId": 1 }, { "kind": "command", "bytes": "target" }, { "kind": "commit", "txId": 1, "recordCount": 1 }], "expected": "verified", "reusableAfterInvalidation": false },
+    { "name": "missing-command", "records": [{ "kind": "begin", "txId": 1 }, { "kind": "command", "bytes": "different" }, { "kind": "commit", "txId": 1, "recordCount": 1 }], "expected": "absent" },
+    { "name": "same-id-altered-envelope", "records": [{ "kind": "begin", "txId": 1 }, { "kind": "command", "bytes": "altered-target" }, { "kind": "commit", "txId": 1, "recordCount": 1 }], "expected": "absent" },
+    { "name": "command-without-begin", "records": [{ "kind": "command", "bytes": "target" }, { "kind": "commit", "txId": 1, "recordCount": 1 }], "expected": "invalid" },
+    { "name": "incomplete-transaction", "records": [{ "kind": "begin", "txId": 1 }, { "kind": "command", "bytes": "target" }], "expected": "invalid" },
+    { "name": "wrong-commit-identity", "records": [{ "kind": "begin", "txId": 1 }, { "kind": "command", "bytes": "target" }, { "kind": "commit", "txId": 2, "recordCount": 1 }], "expected": "invalid" },
+    { "name": "wrong-commit-count", "records": [{ "kind": "begin", "txId": 1 }, { "kind": "command", "bytes": "target" }, { "kind": "commit", "txId": 1, "recordCount": 2 }], "expected": "invalid" },
+    { "name": "aborted-target", "records": [{ "kind": "begin", "txId": 1 }, { "kind": "command", "bytes": "target" }, { "kind": "abort", "txId": 1 }], "expected": "absent" },
+    { "name": "duplicate-target", "records": [{ "kind": "begin", "txId": 1 }, { "kind": "command", "bytes": "target" }, { "kind": "commit", "txId": 1, "recordCount": 1 }, { "kind": "begin", "txId": 2 }, { "kind": "command", "bytes": "target" }, { "kind": "commit", "txId": 2, "recordCount": 1 }], "expected": "invalid" },
+    { "name": "same-document-different-space", "spaceId": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "records": [{ "kind": "begin", "txId": 1 }, { "kind": "command", "bytes": "target" }, { "kind": "commit", "txId": 1, "recordCount": 1 }], "expected": "stale" },
+    { "name": "generation-replaced-after-replay", "observedGeneration": 18, "records": [{ "kind": "begin", "txId": 1 }, { "kind": "command", "bytes": "target" }, { "kind": "commit", "txId": 1, "recordCount": 1 }], "expected": "stale" },
+    { "name": "cancel-before-replay", "cancelAfterRecords": 0, "records": [{ "kind": "begin", "txId": 1 }, { "kind": "command", "bytes": "target" }, { "kind": "commit", "txId": 1, "recordCount": 1 }], "expected": "cancelled" },
+    { "name": "cancel-before-proof-publication", "cancelAfterRecords": 3, "records": [{ "kind": "begin", "txId": 1 }, { "kind": "command", "bytes": "target" }, { "kind": "commit", "txId": 1, "recordCount": 1 }], "expected": "cancelled" },
+    { "name": "unflushed-command-is-not-durable", "flushed": false, "records": [{ "kind": "begin", "txId": 1 }, { "kind": "command", "bytes": "target" }, { "kind": "commit", "txId": 1, "recordCount": 1 }], "expected": "absent" },
+    { "name": "torn-durable-tail", "tornTail": true, "records": [{ "kind": "begin", "txId": 1 }, { "kind": "command", "bytes": "target" }, { "kind": "commit", "txId": 1, "recordCount": 1 }], "expected": "invalid" },
+    { "name": "record-budget-max-plus-one", "maximumRecords": 2, "records": [{ "kind": "begin", "txId": 1 }, { "kind": "command", "bytes": "target" }, { "kind": "commit", "txId": 1, "recordCount": 1 }], "expected": "bounds" }
+  ]
+}

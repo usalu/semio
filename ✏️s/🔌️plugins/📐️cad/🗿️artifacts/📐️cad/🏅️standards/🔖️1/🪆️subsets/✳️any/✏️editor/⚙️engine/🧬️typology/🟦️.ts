@@ -9,7 +9,7 @@ import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/s-3d-js
 import { Model, ObjectRef, TypologyPrimitiveKind, TypologyRef, TypologySpec, listModelDefinitionTypologies, listTypologiesForModelDefinition, loadTypology, typologyForInteraction } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
 import type { ModelDiff } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
 import type { ActionSpec } from "../🎬️actions/🟦️.ts";
-import { loadSpatialInteraction } from "../📄️artifact/🟦️.ts";
+import { loadSpatialInteraction } from "../🗿️artifact/🟦️.ts";
 
 
 

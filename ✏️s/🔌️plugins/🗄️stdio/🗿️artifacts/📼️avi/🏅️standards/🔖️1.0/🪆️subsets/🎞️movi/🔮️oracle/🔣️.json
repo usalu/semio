@@ -1,0 +1,618 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "Ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION: split out of the former `✳️any` catch-all. The Video for Windows AVI 1.0 RIFF layout (`RIFF('AVI ' hdrl movi idx1)`) defines `movi` as the top-level LIST chunk carrying the actual interleaved video/audio sample data (`00dc`/`01wb`-style stream data chunks), normatively distinct from the `hdrl` LIST that only describes the streams. `insert-chunk`/`remove-chunk`/`set-chunk-keyframe`/`add-unknown-chunk`/`remove-unknown-chunk` are that data list's own vocabulary, owned here rather than by `🎛️hdrl`. (A per-chunk video/audio STREAM TYPE split was considered instead, but `strh`/`strf` are one shared record shape for both, distinguished only by a runtime `fccType` value, not a separate schema location -- `hdrl`/`movi`/`idx1` are the format's real, normative top-level chunk structure.) The leaf struct definitions physically moved into this subset's own `🧬️schema/🧬️mutations`; the `AviMutation` enum, its diff dispatch and the real RIFF codec they compile into remain in `🎛️hdrl` (one shared, always-co-resident implementation across the whole container -- the same family-module reuse this repo already uses for svg tiny/basic). This subset owns no new third-party oracle: `riff-avi-1-0-mutate-reader` (declared by `../../🎛️hdrl/🔮️oracle/🔣️.json`, merged into the shared registry) already reads `movi` chunks back.",
+  "oracles": [],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.avi",
+      "standard": "1.0",
+      "subset": "movi",
+      "standardDirectoryName": "🔖️1.0",
+      "subsetDirectoryName": "🎞️movi",
+      "mutations": [
+        {
+          "id": "insert-chunk",
+          "capability": "avi-1-0-movi-mutate",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-chunk",
+            "bridgeVersion": 1,
+            "variant": "InsertChunk"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "avi-1-0-movi-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "riff-avi-1-0-mutate-reader"
+            }
+          ],
+          "payloadSchema": "../../🎛️hdrl/🧬️schema/🧬️mutations/🧩insert-chunk/🦀️.rs#InsertChunk"
+        },
+        {
+          "id": "remove-chunk",
+          "capability": "avi-1-0-movi-mutate",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-chunk",
+            "bridgeVersion": 1,
+            "variant": "RemoveChunk"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "avi-1-0-movi-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "riff-avi-1-0-mutate-reader"
+            }
+          ],
+          "payloadSchema": "../../🎛️hdrl/🧬️schema/🧬️mutations/🗑️remove-chunk/🦀️.rs#RemoveChunk"
+        },
+        {
+          "id": "set-chunk-keyframe",
+          "capability": "avi-1-0-movi-mutate",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-chunk-keyframe",
+            "bridgeVersion": 1,
+            "variant": "SetChunkKeyframe"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "avi-1-0-movi-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "riff-avi-1-0-mutate-reader"
+            }
+          ],
+          "payloadSchema": "../../🎛️hdrl/🧬️schema/🧬️mutations/🔑set-chunk-keyframe/🦀️.rs#SetChunkKeyframe"
+        },
+        {
+          "id": "add-unknown-chunk",
+          "capability": "avi-1-0-movi-mutate",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "add-unknown-chunk",
+            "bridgeVersion": 1,
+            "variant": "AddUnknownChunk"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "avi-1-0-movi-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "riff-avi-1-0-mutate-reader"
+            }
+          ],
+          "payloadSchema": "../../🎛️hdrl/🧬️schema/🧬️mutations/🧱add-unknown-chunk/🦀️.rs#AddUnknownChunk"
+        },
+        {
+          "id": "remove-unknown-chunk",
+          "capability": "avi-1-0-movi-mutate",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-unknown-chunk",
+            "bridgeVersion": 1,
+            "variant": "RemoveUnknownChunk"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "avi-1-0-movi-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "riff-avi-1-0-mutate-reader"
+            }
+          ],
+          "payloadSchema": "../../🎛️hdrl/🧬️schema/🧬️mutations/🧹remove-unknown-chunk/🦀️.rs#RemoveUnknownChunk"
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-chunk-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.avi",
+        "standard": "1.0",
+        "subset": "movi"
+      },
+      "mutation": "insert-chunk",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-avi",
+          "path": "../🧫️fixtures/🧩️insert-chunk-applied/⬅️before.avi",
+          "mediaType": "video/x-msvideo",
+          "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
+          "bytes": 498
+        },
+        {
+          "role": "expected-after-avi",
+          "path": "../🧫️fixtures/🧩️insert-chunk-applied/➡️after.avi",
+          "mediaType": "video/x-msvideo",
+          "sha256": "sha256:55fb0795e7f46bb8022e95a5a71a865aa7b757054eb462bdbfc5a6e7174fdd68",
+          "bytes": 526
+        }
+      ],
+      "generator": {
+        "oracle": "riff-avi-1-0-mutate-reader",
+        "packageVersion": "2.0.0",
+        "engineFamily": "riff",
+        "engineVersion": "2.0.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only insert-chunk-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (riff)",
+        "attribution": "Generated with riff (MIT) via the standalone riff-avi-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-avi-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A 4th movi chunk is appended to stream 0; strh.length is left stale at 3."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-chunk-rejected-missing-stream",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.avi",
+        "standard": "1.0",
+        "subset": "movi"
+      },
+      "mutation": "insert-chunk",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-avi",
+          "path": "../🧫️fixtures/🚫️insert-chunk-rejected-missing-stream/⬅️before.avi",
+          "mediaType": "video/x-msvideo",
+          "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
+          "bytes": 498
+        }
+      ],
+      "generator": {
+        "oracle": "riff-avi-1-0-mutate-reader",
+        "packageVersion": "2.0.0",
+        "engineFamily": "riff",
+        "engineVersion": "2.0.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only insert-chunk-rejected-missing-stream",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (riff)",
+        "attribution": "Generated with riff (MIT) via the standalone riff-avi-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-avi-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Attempted stream_index does not exist — missing-target at the STREAMS level."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-chunk-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.avi",
+        "standard": "1.0",
+        "subset": "movi"
+      },
+      "mutation": "remove-chunk",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-avi",
+          "path": "../🧫️fixtures/🗑️remove-chunk-applied/⬅️before.avi",
+          "mediaType": "video/x-msvideo",
+          "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
+          "bytes": 498
+        },
+        {
+          "role": "expected-after-avi",
+          "path": "../🧫️fixtures/🗑️remove-chunk-applied/➡️after.avi",
+          "mediaType": "video/x-msvideo",
+          "sha256": "sha256:f779bef843866f679e9233454fd1b8c5b56fba3fa5a52e75cd483ccfe939c875",
+          "bytes": 470
+        }
+      ],
+      "generator": {
+        "oracle": "riff-avi-1-0-mutate-reader",
+        "packageVersion": "2.0.0",
+        "engineFamily": "riff",
+        "engineVersion": "2.0.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only remove-chunk-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (riff)",
+        "attribution": "Generated with riff (MIT) via the standalone riff-avi-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-avi-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The middle movi chunk of stream 0 is removed."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-chunk-rejected-missing-chunk",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.avi",
+        "standard": "1.0",
+        "subset": "movi"
+      },
+      "mutation": "remove-chunk",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-avi",
+          "path": "../🧫️fixtures/❓️remove-chunk-rejected-missing-chunk/⬅️before.avi",
+          "mediaType": "video/x-msvideo",
+          "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
+          "bytes": 498
+        }
+      ],
+      "generator": {
+        "oracle": "riff-avi-1-0-mutate-reader",
+        "packageVersion": "2.0.0",
+        "engineFamily": "riff",
+        "engineVersion": "2.0.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only remove-chunk-rejected-missing-chunk",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (riff)",
+        "attribution": "Generated with riff (MIT) via the standalone riff-avi-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-avi-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Valid stream, attempted chunk index does not exist — missing-target at the CHUNKS level."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-chunk-keyframe-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.avi",
+        "standard": "1.0",
+        "subset": "movi"
+      },
+      "mutation": "set-chunk-keyframe",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-avi",
+          "path": "../🧫️fixtures/🔑️set-chunk-keyframe-applied/⬅️before.avi",
+          "mediaType": "video/x-msvideo",
+          "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
+          "bytes": 498
+        },
+        {
+          "role": "expected-after-avi",
+          "path": "../🧫️fixtures/🔑️set-chunk-keyframe-applied/➡️after.avi",
+          "mediaType": "video/x-msvideo",
+          "sha256": "sha256:e967b92fed43d49ce7588382902ec4d3b20f7cd0b707872cc3b82eeb67de6ce4",
+          "bytes": 498
+        }
+      ],
+      "generator": {
+        "oracle": "riff-avi-1-0-mutate-reader",
+        "packageVersion": "2.0.0",
+        "engineFamily": "riff",
+        "engineVersion": "2.0.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only set-chunk-keyframe-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (riff)",
+        "attribution": "Generated with riff (MIT) via the standalone riff-avi-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-avi-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The last movi chunk of stream 0 flips its keyframe flag; chunk data is untouched."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-chunk-keyframe-rejected-missing-chunk",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.avi",
+        "standard": "1.0",
+        "subset": "movi"
+      },
+      "mutation": "set-chunk-keyframe",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-avi",
+          "path": "../🧫️fixtures/⚠️set-chunk-keyframe-rejected-missing-chunk/⬅️before.avi",
+          "mediaType": "video/x-msvideo",
+          "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
+          "bytes": 498
+        }
+      ],
+      "generator": {
+        "oracle": "riff-avi-1-0-mutate-reader",
+        "packageVersion": "2.0.0",
+        "engineFamily": "riff",
+        "engineVersion": "2.0.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only set-chunk-keyframe-rejected-missing-chunk",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (riff)",
+        "attribution": "Generated with riff (MIT) via the standalone riff-avi-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-avi-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Valid stream, attempted chunk index does not exist — missing-target at the CHUNKS level."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "add-unknown-chunk-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.avi",
+        "standard": "1.0",
+        "subset": "movi"
+      },
+      "mutation": "add-unknown-chunk",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-avi",
+          "path": "../🧫️fixtures/🧱️add-unknown-chunk-applied/⬅️before.avi",
+          "mediaType": "video/x-msvideo",
+          "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
+          "bytes": 498
+        },
+        {
+          "role": "expected-after-avi",
+          "path": "../🧫️fixtures/🧱️add-unknown-chunk-applied/➡️after.avi",
+          "mediaType": "video/x-msvideo",
+          "sha256": "sha256:bf318fba1f227cc927d108de1a1931ad3844f7189a32df46708f46c61a46f273",
+          "bytes": 510
+        }
+      ],
+      "generator": {
+        "oracle": "riff-avi-1-0-mutate-reader",
+        "packageVersion": "2.0.0",
+        "engineFamily": "riff",
+        "engineVersion": "2.0.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only add-unknown-chunk-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (riff)",
+        "attribution": "Generated with riff (MIT) via the standalone riff-avi-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-avi-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A second top-level unknown chunk is appended after the existing JUNK chunk."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "add-unknown-chunk-rejected-out-of-bounds",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.avi",
+        "standard": "1.0",
+        "subset": "movi"
+      },
+      "mutation": "add-unknown-chunk",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-avi",
+          "path": "../🧫️fixtures/⛔️add-unknown-chunk-rejected-out-of-bounds/⬅️before.avi",
+          "mediaType": "video/x-msvideo",
+          "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
+          "bytes": 498
+        }
+      ],
+      "generator": {
+        "oracle": "riff-avi-1-0-mutate-reader",
+        "packageVersion": "2.0.0",
+        "engineFamily": "riff",
+        "engineVersion": "2.0.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only add-unknown-chunk-rejected-out-of-bounds",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (riff)",
+        "attribution": "Generated with riff (MIT) via the standalone riff-avi-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-avi-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Attempted insertion index exceeds the final collection length — invalid-index."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-unknown-chunk-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.avi",
+        "standard": "1.0",
+        "subset": "movi"
+      },
+      "mutation": "remove-unknown-chunk",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-avi",
+          "path": "../🧫️fixtures/🧹️remove-unknown-chunk-applied/⬅️before.avi",
+          "mediaType": "video/x-msvideo",
+          "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
+          "bytes": 498
+        },
+        {
+          "role": "expected-after-avi",
+          "path": "../🧫️fixtures/🧹️remove-unknown-chunk-applied/➡️after.avi",
+          "mediaType": "video/x-msvideo",
+          "sha256": "sha256:3866d6c95f412a0b48159db58462079117b70a5368b8310496200277da1af6e4",
+          "bytes": 486
+        }
+      ],
+      "generator": {
+        "oracle": "riff-avi-1-0-mutate-reader",
+        "packageVersion": "2.0.0",
+        "engineFamily": "riff",
+        "engineVersion": "2.0.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only remove-unknown-chunk-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (riff)",
+        "attribution": "Generated with riff (MIT) via the standalone riff-avi-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-avi-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The one top-level unknown (JUNK) chunk is removed, leaving none."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-unknown-chunk-rejected-missing",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.avi",
+        "standard": "1.0",
+        "subset": "movi"
+      },
+      "mutation": "remove-unknown-chunk",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-avi",
+          "path": "../🧫️fixtures/🔍️remove-unknown-chunk-rejected-missing/⬅️before.avi",
+          "mediaType": "video/x-msvideo",
+          "sha256": "sha256:15185878ef74f57b4df1acf85d4cbc6b7b8c1354a5f6c30adf13090dc4b7c101",
+          "bytes": 498
+        }
+      ],
+      "generator": {
+        "oracle": "riff-avi-1-0-mutate-reader",
+        "packageVersion": "2.0.0",
+        "engineFamily": "riff",
+        "engineVersion": "2.0.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts generate --only remove-unknown-chunk-rejected-missing",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (riff)",
+        "attribution": "Generated with riff (MIT) via the standalone riff-avi-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-avi-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Attempted removal index does not exist — missing-target."
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "avi-1.0-movi",
+      "capability": "avi-1-0-movi-mutate",
+      "standardDirectoryName": "🔖️1.0",
+      "subsetDirectoryName": "🎞️movi",
+      "vectors": [],
+      "kinds": [
+        "insert-chunk",
+        "remove-chunk",
+        "set-chunk-keyframe",
+        "add-unknown-chunk",
+        "remove-unknown-chunk"
+      ]
+    }
+  ]
+}

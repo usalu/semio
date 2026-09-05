@@ -1,0 +1,13 @@
+dialect grammar
+grammar stdio.dwg.ac1024.snapshot
+start document
+comment none
+
+document = IDENT field*
+field = IDENT field-value?
+field-value = "=" value
+value = scalar value-tail? | list | record
+scalar = field | TEXT | INT | FLOAT | "-" "inf"
+value-tail = "," value
+list = "[" value* "]"
+record = "{" field* "}"

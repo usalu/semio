@@ -2,7 +2,7 @@
 /// <reference types="vitest/importMeta" />
 // @vitest-environment jsdom
 // #region 🧲️Header
-/** @emoji 🎬️ `@semio-tech/cad-js/renderer` — CAD renderer (R3F) with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `cad/asset/modelDefinition/spatial.shape/interaction/🔣️box.json`. */
+/** @emoji 🎬️ `@semio-tech/cad-js/renderer` — CAD renderer (R3F) with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `cad/asset/modelDefinition/spatial.shape/interaction/📦️box.json`. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
@@ -210,7 +210,7 @@ import {
   type InteractionSnapshot,
   type ModelDocument,
   type SpatialComputeMode,
-} from "../📄️artifact/🟦️.ts";
+} from "../🗿️artifact/🟦️.ts";
 
 type AnchorRecord = kernelGeometry.AnchorRecord;
 type AnchorRef = kernelGeometry.AnchorRef;

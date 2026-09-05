@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SetSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot"
+  ],
+  "properties": {
+    "snapshot": {
+      "type": "object",
+      "required": [
+        "schema",
+        "version"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "maintenanceVersion": {
+          "type": "integer"
+        },
+        "codepage": {
+          "type": "integer"
+        },
+        "drawing": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "header": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "classes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "summary": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "application": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "template": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "auxiliaryHeader": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "revisionHistory": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "preview": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "applicationHistory": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

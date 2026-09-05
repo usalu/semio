@@ -180,7 +180,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for Vdi3805AnalyzerAnalysis {
         type Parts = Vdi3805Parts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.vdi3805", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.norm.vdi3805", standard: StandardId("1"), subset: SubsetId("*") };
 
         fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium

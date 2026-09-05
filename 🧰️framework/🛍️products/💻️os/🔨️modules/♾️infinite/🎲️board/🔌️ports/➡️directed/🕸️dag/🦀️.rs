@@ -3281,7 +3281,7 @@ impl DagHost {
         self.engine.selection.edge_ids.iter().filter_map(|&eid| self.edge_id_map.get(&eid).cloned()).collect()
     }
 
-    /// 🎯️ Nodes, edges, and handles in the current selection as JSON (`nodes`, `edges`, `handles`).
+    /// 🎯️ Nodes, edges, and handles in the current selection as JSON (`nodes`, `edges`, `🐙️handles`).
     pub fn selection_domains_json(&self) -> String {
         #[derive(ToValue, FromValue)]
         struct Domains {
@@ -6975,7 +6975,7 @@ mod tests {
 
     #[test]
     fn dag_host_slider_overlay_preserves_language_neutral_field_labels() {
-        let fixture: Value = dsl::os_pack::json::parse(include_str!("🧪️fixtures/🔣️slider-overlay.json")).unwrap();
+        let fixture: Value = dsl::os_pack::json::parse(include_str!("🧪️fixtures/🎚️slider-overlay.json")).unwrap();
         for case in fixture["cases"].as_array().unwrap() {
             let row = &case["row"];
             let host = DagHost::from_fixture_without_layout(DagFixture {

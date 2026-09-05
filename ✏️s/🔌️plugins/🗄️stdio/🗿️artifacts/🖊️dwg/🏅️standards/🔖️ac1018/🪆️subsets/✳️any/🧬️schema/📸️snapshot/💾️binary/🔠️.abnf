@@ -1,3 +1,0 @@
-; abnf stdio.dwg snapshot
-document = payload
-payload = *OCTET

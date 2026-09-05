@@ -1,9 +1,0 @@
-# 🧾️ The same script with component 1's AC scan removed, so AC chroma table 0x11 is never defined.
-# Three Huffman tables remain: 0x00, 0x01, 0x10. This is the AFTER half.
-#
-# ⚠️ The scan goes with the table, and it has to: a JPEG defines a Huffman table BECAUSE a scan
-# references it, so no conforming writer can emit a file whose table list differs by one entry while
-# the scan list is identical. The pair therefore witnesses `remove-huffman-table`'s observable effect
-# on the table list, and it does not isolate it from the scan that entailed the table.
-0 1 2: 0 0 0 0;
-0: 1 63 0 0;

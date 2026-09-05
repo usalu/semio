@@ -5,7 +5,7 @@ use super::*;
 //#region 🧪️RetainedReplacement
 #[test]
 fn contributed_registry_replacement_preserves_readers_and_drains_old_versions() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let plugin = fixture["pluginId"].as_str().unwrap();
     let manifest = serde_json::to_string(&fixture["manifest"]).unwrap();
     install_flow_extension_manifest(plugin, &manifest).unwrap();
@@ -54,7 +54,7 @@ impl neural::Operator for FaultingOperator {
 
 #[test]
 fn registry_maintenance_retains_cursor_outside_a_faulted_worker() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let mut registry = neural::Registry::new();
     registry.register_operator(neural::OperatorInfo::default(), vec![OperatorImpl { schemas: vec![], operator: Box::new(FaultingOperator { text: fixture["pluginId"].as_str().unwrap().into() }) }], &[]);
     {
@@ -77,7 +77,7 @@ fn registry_maintenance_retains_cursor_outside_a_faulted_worker() {
 
 #[test]
 fn registry_replacement_admission_preserves_roots_on_capacity_and_generation_exhaustion() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let plugin = fixture["pluginId"].as_str().unwrap();
     let manifest = fixture["manifest"].to_string();
     install_flow_extension_manifest(plugin, &manifest).unwrap();

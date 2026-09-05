@@ -14,7 +14,7 @@
 pub use protocol::codec;
 pub use protocol::codec::ids;
 pub use protocol::source;
-/// 🌱️ Re-exported so a crate that already depends on `pack` (e.g. `🔺️mesh-engine`) can implement
+/// 🌱️ Re-exported so a crate that already depends on `pack` (e.g. `🏗️mesh-engine`) can implement
 /// `ToValue`/`FromValue` for its own types without taking a second, direct dependency on
 /// `replication` — implementing a foreign trait for a local type is allowed by the orphan rule.
 pub use protocol::value;
@@ -35,7 +35,7 @@ pub mod http;
 #[path = "../../🔌️io/🦀️.rs"]
 pub mod io;
 
-#[path = "../../🧪️testkit/🦀️.rs"]
+#[path = "../../🧨️testkit/🦀️.rs"]
 pub mod testkit;
 
 #[path = "../../🦀️.rs"]

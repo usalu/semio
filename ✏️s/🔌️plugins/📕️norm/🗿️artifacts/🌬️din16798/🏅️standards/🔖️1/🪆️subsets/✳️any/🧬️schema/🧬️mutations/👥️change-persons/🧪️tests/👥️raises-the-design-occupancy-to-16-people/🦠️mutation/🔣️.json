@@ -1,0 +1,4 @@
+{
+  "mutation": "changePersons",
+  "newPersons": 16
+}

@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateStory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "story"
+  ],
+  "properties": {
+    "story": {
+      "title": "TextStory",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "content",
+        "id",
+        "styleRuns"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "styleRuns": {
+          "type": "array",
+          "items": {
+            "title": "TextStyleRun",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "end",
+              "start"
+            ],
+            "properties": {
+              "start": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "end": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "paragraphStyleId": {
+                "type": "string"
+              },
+              "characterStyleId": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "operation": {
+    "node": 0,
+    "data": {
+      "state": "present",
+      "value": {
+        "KHR_lights_punctual": {}
+      }
+    }
+  },
+  "after": {
+    "KHR_lights_punctual": {}
+  },
+  "touchedPaths": [
+    "document/nodes/*/extensions"
+  ]
+}

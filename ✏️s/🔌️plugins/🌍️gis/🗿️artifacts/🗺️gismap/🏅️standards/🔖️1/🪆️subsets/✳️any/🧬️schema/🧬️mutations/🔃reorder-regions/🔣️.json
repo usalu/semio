@@ -5,7 +5,7 @@
   "displayName": "Reorder Regions",
   "emoji": "🔃",
   "aggregateVariant": "ReorderRegions",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "reorder-regions",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

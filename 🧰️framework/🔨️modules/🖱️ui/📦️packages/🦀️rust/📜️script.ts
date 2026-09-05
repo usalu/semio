@@ -110,7 +110,7 @@ type GeneratedTarget = { readonly path: string; readonly content: string };
 function generatedTargets(repoRoot: string, axes: UiAxesSpec): GeneratedTarget[] {
   return [
     { path: join(wgpuTargetRoot, "🤖️generated.rs"), content: emitRust(axes) },
-    { path: join(repoRoot, "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️ui-axes.ts"), content: emitTypeScript(axes) },
+    { path: join(repoRoot, "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes.ts"), content: emitTypeScript(axes) },
   ];
 }
 //#endregion 🔖️targets
@@ -137,7 +137,7 @@ class GenerateAxesScript extends BundleScript {
       mkdirSync(dirname(target.path), { recursive: true });
       writeFileSync(target.path, target.content);
     }
-    console.log(`ui axes refreshed (${axes.locales.length} locales, ${axes.terminologies.length} terminologies) -> 🤖️generated.rs, 🤖️generated/🟦️ui-axes.ts`);
+    console.log(`ui axes refreshed (${axes.locales.length} locales, ${axes.terminologies.length} terminologies) -> 🤖️generated.rs, 🤖️generated/🎚️ui-axes.ts`);
   }
 }
 //#endregion 🔖️generate

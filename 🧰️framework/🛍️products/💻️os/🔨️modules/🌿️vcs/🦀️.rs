@@ -257,7 +257,7 @@ mod group_history_visibility_tests {
     use super::*;
 
     fn observed(ledger: &ArtifactHistoryLedger<i32>) -> serde_json::Value {
-        serde_json::to_value(ledger).expect("independent serializer sees the selected exact history")
+        serde_json::from_str(&crate::os_pack::json::to_json_string(ledger)).expect("independent parser sees the selected exact history")
     }
 
     #[test]

@@ -1,0 +1,21 @@
+{
+  "schema": "semio.hub.inference-author-fixture/v1",
+  "cases": [
+    { "operation": "author", "accepted": true },
+    { "operation": "cross-space", "accepted": false },
+    { "operation": "cross-document", "accepted": false },
+    { "operation": "wrong-user", "accepted": false },
+    { "operation": "wrong-session", "accepted": false },
+    { "operation": "rotated-generation", "accepted": false },
+    { "operation": "spectator", "accepted": false },
+    { "operation": "removed-member", "accepted": false },
+    { "operation": "revoked", "accepted": false },
+    { "operation": "expiry-exact", "accepted": false },
+    { "operation": "expiry-past", "accepted": false },
+    { "operation": "expiry-after-read", "accepted": false },
+    { "operation": "clock-regressed", "accepted": false },
+    { "operation": "cancelled", "accepted": false },
+    { "operation": "deadline", "accepted": false },
+    { "operation": "negative-clock", "accepted": false }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/en1992/mutation/text.json",
+  "title": "En1992MutationsText",
+  "type": "object"
+}

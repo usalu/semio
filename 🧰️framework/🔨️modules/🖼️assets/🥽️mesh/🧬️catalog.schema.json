@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Mesh Delivery Catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "version", "collections", "entries"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": 1 },
+    "collections": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["catalog", "root", "output"],
+        "properties": {
+          "catalog": { "type": "string", "pattern": "^[^/\\\\%?#.]+(?:/[^/\\\\%?#.]+)*\\.json$" },
+          "root": { "$ref": "#/definitions/directory" },
+          "output": { "$ref": "#/definitions/directory" }
+        }
+      }
+    },
+    "entries": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["url", "source", "path"],
+        "properties": {
+          "url": { "type": "string", "pattern": "^/mesh/[^/\\\\%?#.]+\\.glb$" },
+          "source": { "$ref": "#/definitions/meshPath" },
+          "path": { "$ref": "#/definitions/meshPath" }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "directory": { "type": "string", "pattern": "^[^/\\\\%?#.]+(?:/[^/\\\\%?#.]+)*$" },
+    "meshPath": { "type": "string", "pattern": "^[^/\\\\%?#.]+(?:/[^/\\\\%?#.]+)*\\.glb$" }
+  }
+}

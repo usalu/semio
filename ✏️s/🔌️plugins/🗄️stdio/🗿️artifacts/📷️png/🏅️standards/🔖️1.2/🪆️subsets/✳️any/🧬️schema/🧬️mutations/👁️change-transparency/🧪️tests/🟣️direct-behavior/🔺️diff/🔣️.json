@@ -1,0 +1,16 @@
+{
+  "chunkOrder": {
+    "added": [
+      {
+        "index": 3,
+        "marker": {
+          "chunk": "trns"
+        }
+      }
+    ]
+  },
+  "trns": {
+    "colorType": "grayscale",
+    "gray": 7
+  }
+}

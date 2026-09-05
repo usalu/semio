@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "kind", "ownerPath", "packageRelativePath", "identity", "entryPaths", "artifacts"],
+  "properties": {
+    "$schema": { "const": "./🧬️package-catalog.schema.json" },
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "canonical-wgpu-package" },
+    "ownerPath": { "$ref": "#/definitions/path" },
+    "packageRelativePath": { "const": "📦️packages/🦀️rust" },
+    "identity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["cargoPackageName", "nodePackageName", "nxProjectName"],
+      "properties": {
+        "cargoPackageName": { "const": "semio-framework-os-renderer-wgpu" },
+        "nodePackageName": { "const": "@semio-tech/framework-renderer-wgpu" },
+        "nxProjectName": { "const": "@semio-tech/framework-renderer-wgpu" }
+      }
+    },
+    "entryPaths": {
+      "type": "object", "additionalProperties": false,
+      "required": ["cargoLibrary", "cargoBinary", "cargoBuild", "nodeLibrary"],
+      "properties": {
+        "cargoLibrary": { "$ref": "#/definitions/path" },
+        "cargoBinary": { "$ref": "#/definitions/path" },
+        "cargoBuild": { "const": "build.rs" },
+        "nodeLibrary": { "$ref": "#/definitions/path" }
+      }
+    },
+    "artifacts": {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "relativePath", "targetRelativePath", "language", "role", "content"],
+        "properties": {
+          "id": { "enum": ["build-adapter", "binary-adapter", "typescript-adapter", "renderer-registration"] },
+          "relativePath": { "$ref": "#/definitions/path" },
+          "targetRelativePath": { "anyOf": [{ "$ref": "#/definitions/path" }, { "type": "null" }] },
+          "language": { "enum": ["rust", "typescript"] },
+          "role": { "enum": ["declaration", "implementation"] },
+          "content": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "browserEntries": {
+      "type": "array", "minItems": 2, "maxItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "sourceRelativePath", "outputRelativePath", "inclusion"],
+        "properties": {
+          "id": { "enum": ["frame-worker", "browser-boot"] },
+          "sourceRelativePath": { "$ref": "#/definitions/path" },
+          "outputRelativePath": { "$ref": "#/definitions/path" },
+          "inclusion": { "enum": ["tracked", "ignored"] }
+        }
+      }
+    },
+    "path": { "type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\\\:*?\"<>|\u0000-\u001f]+$" }
+  }
+}

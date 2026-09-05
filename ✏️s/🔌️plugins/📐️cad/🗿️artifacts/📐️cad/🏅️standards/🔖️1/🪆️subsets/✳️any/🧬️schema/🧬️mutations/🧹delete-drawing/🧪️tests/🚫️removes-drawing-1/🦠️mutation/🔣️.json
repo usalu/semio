@@ -1,0 +1,4 @@
+{
+  "mutation": "deleteDrawing",
+  "childId": "drawing-1"
+}

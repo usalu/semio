@@ -5656,11 +5656,11 @@ mod tests {
     /// `GIS_MAP_LOD_MAX_SPAN_DEG`/`GIS_MAP_LOD_TILE_Z` banding. The `projection`/`tileNumbering`/
     /// `tileBounds` groups of the same fixture ARE cross-checked against the `mercantile` library by
     /// `../📦️packages/🦀️rust/tests/🗺️tiled_map_mercator_oracle.rs` and by
-    /// `🧪️tests/web-mercator-tile-oracle/🐍️.py`; all three read this one fixture so oracle and subject
+    /// `🧪️tests/🕸️web-mercator-tile-oracle/🐍️.py`; all three read this one fixture so oracle and subject
     /// compare identical inputs.
     ///
-    /// @see 🧪️tests/web-mercator-tile-oracle/🥒️.feature
-    const MERCATOR_ORACLE_FIXTURE: &str = include_str!("🧪️tests/web-mercator-tile-oracle/🧫️fixtures/🔣️.json");
+    /// @see 🧪️tests/🕸️web-mercator-tile-oracle/🥒️.feature
+    const MERCATOR_ORACLE_FIXTURE: &str = include_str!("🧪️tests/🕸️web-mercator-tile-oracle/🧫️fixtures/🔣️.json");
 
     #[test]
     fn lod_band_selection_matches_frozen_specification_vectors() {

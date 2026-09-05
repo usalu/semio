@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "authority": "historical-package-owner-identity",
+  "execution": {
+    "projectLibraryRelativePath": "📦️packages/🟦️typescript/📋️project.json",
+    "target": "test-historical-package-owner-identity",
+    "command": "bun ./📜️script.ts test historical-package-owner-identity",
+    "launchName": "🧹clean🧩️taxonomy🏺️historical-package-owner-identity",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-historical-package-owner-identity --skip-nx-cache",
+    "launchCatalogs": [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"],
+    "group": "4_gate",
+    "order": 410.07
+  },
+  "historicalDocument": {
+    "libraryRelativePath": "📦️packages/🟦️typescript/🧫️fixtures/🔣️remaining-package-purity-authority.json",
+    "sha256": "49087f2dee618c3c8392ce3bc25c348af87d5380fe16523ed61ee6c02448f577",
+    "size": 241861,
+    "mappingIndex": 29
+  },
+  "sourcePreimage": {
+    "encoding": "base64",
+    "sha256": "66814d3e84264f1ae203b848737771517160d7a050643504d8f8fd57da456c4a",
+    "size": 1907,
+    "bytes": "Ly8hIPCfk6bvuI8gUGFja2FnZSBnbHVlIOKAlCBwcm9jLW1hY3JvIGNyYXRlIHJvb3Q7IGltcGxlbWVudGF0aW9uIGluIG93bmVyIGDwn6aA77iPY29tcG9uZW50LnJzYC4KCiNbcGF0aCA9ICIuLi8uLi/wn6aA77iPY29tcG9uZW50LnJzIl0KbW9kIGNvbXBvbmVudDsKCnVzZSBwcm9jX21hY3JvOjpUb2tlblN0cmVhbTsKdXNlIHN5bjo6e3BhcnNlX21hY3JvX2lucHV0LCBEZXJpdmVJbnB1dH07CgovLy8g8J+Xg++4jyBDb21waWxlcyBhIGBtYWNoaW5lIDxuYW1lPiB7IC4uIH1gIGRlY2xhcmF0aW9uIGludG8gYSBgcHViIG1vZCA8bmFtZT4geyAuLiB9YC4KLy8g8J+aq++4j2FzeW5jOiBFMyBwcm9jLW1hY3JvIGVudHJ5IHBvaW50IOKAlCBzaWduYXR1cmUgaXMgZml4ZWQgYnkgcnVzdGMgYXMgZm4oVG9rZW5TdHJlYW0pIC0+IFRva2VuU3RyZWFtCiNbcHJvY19tYWNyb10KcHViIGZuIHN0YXRlY2hhcnQoaW5wdXQ6IFRva2VuU3RyZWFtKSAtPiBUb2tlblN0cmVhbSB7CiAgICBjb21wb25lbnQ6OmV4cGFuZF9zdGF0ZWNoYXJ0KGlucHV0LmludG8oKSkudW53cmFwX29yX2Vsc2UofGV8IGUudG9fY29tcGlsZV9lcnJvcigpKS5pbnRvKCkKfQoKLy8vIPCfl4PvuI8gSW1wbGVtZW50cyBgZnNtOjpTdGF0ZWNoYXJ0RXZlbnRgIGZvciBhIGNvbnN1bWVyLWF1dGhvcmVkIGVudW0uCi8vIPCfmqvvuI9hc3luYzogRTMgcHJvYy1tYWNybyBlbnRyeSBwb2ludCDigJQgc2lnbmF0dXJlIGlzIGZpeGVkIGJ5IHJ1c3RjIGFzIGZuKFRva2VuU3RyZWFtKSAtPiBUb2tlblN0cmVhbQojW3Byb2NfbWFjcm9fZGVyaXZlKFN0YXRlY2hhcnRFdmVudCldCnB1YiBmbiBkZXJpdmVfc3RhdGVjaGFydF9ldmVudChpbnB1dDogVG9rZW5TdHJlYW0pIC0+IFRva2VuU3RyZWFtIHsKICAgIGxldCBkZXJpdmVfaW5wdXQgPSBwYXJzZV9tYWNyb19pbnB1dCEoaW5wdXQgYXMgRGVyaXZlSW5wdXQpOwogICAgY29tcG9uZW50OjpleHBhbmRfc3RhdGVjaGFydF9ldmVudCgmZGVyaXZlX2lucHV0KS51bndyYXBfb3JfZWxzZSh8ZXwgZS50b19jb21waWxlX2Vycm9yKCkpLmludG8oKQp9CgovLy8g8J+Xg++4jyBJbXBsZW1lbnRzIGBmc206OlN0YXRlY2hhcnRTY2hlbWFgIGZvciBhIGNvbnN1bWVyLWF1dGhvcmVkIGNvbnRleHQgc3RydWN0LgovLyDwn5qr77iPYXN5bmM6IEUzIHByb2MtbWFjcm8gZW50cnkgcG9pbnQg4oCUIHNpZ25hdHVyZSBpcyBmaXhlZCBieSBydXN0YyBhcyBmbihUb2tlblN0cmVhbSkgLT4gVG9rZW5TdHJlYW0KI1twcm9jX21hY3JvX2Rlcml2ZShTdGF0ZWNoYXJ0U2NoZW1hKV0KcHViIGZuIGRlcml2ZV9zdGF0ZWNoYXJ0X3NjaGVtYShpbnB1dDogVG9rZW5TdHJlYW0pIC0+IFRva2VuU3RyZWFtIHsKICAgIGxldCBkZXJpdmVfaW5wdXQgPSBwYXJzZV9tYWNyb19pbnB1dCEoaW5wdXQgYXMgRGVyaXZlSW5wdXQpOwogICAgY29tcG9uZW50OjpleHBhbmRfc3RhdGVjaGFydF9zY2hlbWEoJmRlcml2ZV9pbnB1dCkudW53cmFwX29yX2Vsc2UofGV8IGUudG9fY29tcGlsZV9lcnJvcigpKS5pbnRvKCkKfQoKLy8vIPCfl4PvuI8gRW1pdHMgYSBgI1t3YXNtX2JpbmRnZW5dYC1leHBvcnRlZCBjbGFzcyB3cmFwcGluZyBvbmUgbWFjaGluZSBpbnN0YW5jZS4KLy8g8J+aq++4j2FzeW5jOiBFMyBwcm9jLW1hY3JvIGVudHJ5IHBvaW50IOKAlCBzaWduYXR1cmUgaXMgZml4ZWQgYnkgcnVzdGMgYXMgZm4oVG9rZW5TdHJlYW0pIC0+IFRva2VuU3RyZWFtCiNbcHJvY19tYWNyb10KcHViIGZuIGV4cG9ydF93YXNtX21hY2hpbmUoaW5wdXQ6IFRva2VuU3RyZWFtKSAtPiBUb2tlblN0cmVhbSB7CiAgICBjb21wb25lbnQ6OmV4cGFuZF9leHBvcnRfd2FzbV9tYWNoaW5lKGlucHV0LmludG8oKSkudW53cmFwX29yX2Vsc2UofGV8IGUudG9fY29tcGlsZV9lcnJvcigpKS5pbnRvKCkKfQo="
+  },
+  "identityCases": [
+    {
+      "id": "valid",
+      "value": "unmarked:🧪️owner",
+      "identityPrefix": "unmarked:",
+      "kind": "source",
+      "expected": "accept",
+      "coordinate": "🧪️owner"
+    },
+    {
+      "id": "prefix-authority-drift",
+      "value": "unmarked:🧪️owner",
+      "identityPrefix": "other:",
+      "kind": "source",
+      "expected": "reject"
+    },
+    {
+      "id": "prefix-value-drift",
+      "value": "other:🧪️owner",
+      "identityPrefix": "unmarked:",
+      "kind": "source",
+      "expected": "reject"
+    },
+    {
+      "id": "absolute-suffix",
+      "value": "unmarked:/🧪️owner",
+      "identityPrefix": "unmarked:",
+      "kind": "source",
+      "expected": "reject"
+    },
+    {
+      "id": "parent-escape",
+      "value": "unmarked:../🧪️owner",
+      "identityPrefix": "unmarked:",
+      "kind": "source",
+      "expected": "reject"
+    },
+    {
+      "id": "empty-suffix",
+      "value": "unmarked:",
+      "identityPrefix": "unmarked:",
+      "kind": "source",
+      "expected": "reject"
+    },
+    {
+      "id": "nested-prefix",
+      "value": "unmarked:unmarked:🧪️owner",
+      "identityPrefix": "unmarked:",
+      "kind": "source",
+      "expected": "reject"
+    },
+    {
+      "id": "wrong-role",
+      "value": "unmarked:🧪️owner",
+      "identityPrefix": "unmarked:",
+      "kind": "destination",
+      "expected": "reject"
+    }
+  ],
+  "historicalCoordinates": [
+    {
+      "pointer": "/mappings/29/0",
+      "kind": "source"
+    },
+    {
+      "pointer": "/mappings/29/3",
+      "kind": "source",
+      "representation": "recorded-package-owner-identity",
+      "identityPrefix": "unmarked:"
+    },
+    {
+      "pointer": "/mappings/29/4",
+      "kind": "source"
+    },
+    {
+      "pointer": "/mappings/29/5",
+      "kind": "source"
+    },
+    {
+      "pointer": "/mappings/29/6",
+      "kind": "destination"
+    }
+  ],
+  "fixture": {
+    "source": "🧰️framework/🧪️owner/📦️packages/🦀️rust/🦀️.rs",
+    "relocated": "🧰️framework/🧪️relocated/📦️packages/🦀️rust/🦀️.rs",
+    "added": "🧰️framework/🧪️relocated/📦️packages/🦀️rust/📚️library/🦀️.rs",
+    "manifest": "[package]\nname = \"purity-census-fixture\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\npath = \"🦀️.rs\"\n\n[package.metadata.semio]\nrole = \"s-module\"\nid = \"purity-census-fixture\"\n",
+    "extraSource": "pub fn newly_added() -> usize { 7 }\n"
+  }
+}

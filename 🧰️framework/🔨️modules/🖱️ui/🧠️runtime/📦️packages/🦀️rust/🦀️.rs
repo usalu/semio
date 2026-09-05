@@ -15,26 +15,26 @@
 //!    contract and shared job protocol — it compiles for `wasm32-wasip2` and
 //!    `wasm32-unknown-unknown` by construction.
 
-#[path = "🦀️context.rs"]
+#[path = "🎛️context.rs"]
 mod context;
-#[path = "🦀️dispatch.rs"]
+#[path = "🎯️dispatch.rs"]
 mod dispatch;
-#[path = "🦀️entity.rs"]
+#[path = "🪪️entity.rs"]
 mod entity;
-#[path = "🦀️gateway.rs"]
+#[path = "📮️gateway.rs"]
 mod gateway;
-#[path = "🦀️inbox.rs"]
+#[path = "📥️inbox.rs"]
 mod inbox;
-#[path = "🦀️presence.rs"]
+#[path = "👥️presence.rs"]
 mod presence;
-#[path = "🦀️present.rs"]
+#[path = "🎭️present.rs"]
 mod present;
-#[path = "🦀️reconcile.rs"]
+#[path = "♻️reconcile.rs"]
 mod reconcile;
-#[path = "🦀️tracking.rs"]
+#[path = "🕸️tracking.rs"]
 mod tracking;
 #[cfg(test)]
-#[path = "🦀️transaction.rs"]
+#[path = "🔄️transaction.rs"]
 mod transaction;
 
 pub use context::*;

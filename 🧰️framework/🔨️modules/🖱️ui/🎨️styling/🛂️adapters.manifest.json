@@ -1,28 +1,28 @@
 {
-  "tokens": "../🎨️🟠️styling/🔣️.json",
+  "tokens": "🔣️.json",
   "adapters": [
     {
       "id": "js-tailwind",
       "description": "Tailwind v4 @theme fragments + @font-face for @semio-tech/ui-styling",
-      "generator": "script.ts generate",
-      "outputs": ["🤖️generated/palette-fonts.css", "🤖️generated/palette-🎨️theme.css", "🤖️generated/palette-presence.css", "../🎨️🟠️styling/🎨️palette.css", "🤖️generated/🟦️tokens.generated.ts"]
+      "generator": "📦️packages/🦀️rust/📜️script.ts generate",
+      "outputs": ["🤖️generated/🔤️palette-fonts.css", "🤖️generated/🌓️palette-theme.css", "🤖️generated/🚦️palette-presence.css", "🎨️palette.css", "🤖️generated/🟦️tokens.generated.ts"]
     },
     {
       "id": "dotnet-elements-styling",
       "description": "C# Palette, Strokes, Radii from 🔣️.json",
-      "generator": "script.ts generate",
-      "outputs": ["net/Elements.Styling/Generated/Palette.g.cs"]
+      "generator": "📦️packages/🦀️rust/📜️script.ts generate",
+      "outputs": ["🔷️net/🖌️Elements.Styling/🤖️Generated/🎨️Palette.g.cs"]
     },
     {
       "id": "rust-ui-styling",
-      "description": "ui_styling crate 🤖️generated.rs — linear-sRGB themes, strokes, radii, metrics",
-      "generator": "script.ts generate",
-      "outputs": ["🤖️generated.rs"]
+      "description": "ui_styling Rust tokens — linear-sRGB themes, strokes, radii, metrics",
+      "generator": "📦️packages/🦀️rust/📜️script.ts generate",
+      "outputs": ["🦀️tokens.generated.rs"]
     },
     {
       "id": "python-ui-styling",
       "description": "Python styling.generated module",
-      "generator": "script.ts generate",
+      "generator": "📦️packages/🦀️rust/📜️script.ts generate",
       "outputs": ["📦️packages/🐍️python/🎨️styling/🤖️generated.py"]
     }
   ]

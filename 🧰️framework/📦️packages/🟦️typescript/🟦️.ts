@@ -1,6 +1,7 @@
 /** @emoji 📦️ `@semio-tech/framework` — package glue (reexports + inline vitest). */
 export * from "../../🔨️modules/🎯️action-bus/🟦️.ts";
-export * from "../../🔨️modules/🧮️action-argument-resolution/🟦️.ts";
+export { blake3Hex, Blake3Hasher } from "../../🔨️modules/🔏️hash/🟦️.ts";
+export * from "../../🔨️modules/🧩️action-argument-resolution/🟦️.ts";
 export * from "../../🔨️modules/🧬️schema/🟦️.ts";
 export * from "../../🔨️modules/🖥️platform/🟦️.ts";
 export * from "../../🔨️modules/🔺️mesh/🟦️.ts";
@@ -45,7 +46,7 @@ import {
   type PluginRegistryEntry,
   type PluginSourceEvent,
 } from "../../🔨️modules/🎠️kernel/🟦️.ts";
-import { effectiveActionArgs, missingRequiredArgs } from "../../🔨️modules/🧮️action-argument-resolution/🟦️.ts";
+import { effectiveActionArgs, missingRequiredArgs } from "../../🔨️modules/🧩️action-argument-resolution/🟦️.ts";
 import { type ActionArgDef, type ArgSchema } from "../../🔨️modules/🛂️manifest/🟦️.ts";
 import {
   ActionId,
@@ -666,8 +667,8 @@ if (import.meta.vitest) {
       { variant: "alpha", pluginId: "alpha", aliases: [] },
       { variant: "beta-play", pluginId: "beta", app: "beta-play-app", aliases: ["b", "beta play"] },
     ],
-    moduleUrl: (pluginId, wasmOut) => `/plugin-modules/${pluginId}/${wasmOut.replace(/\.wasm$/, ".js")}`,
-    extensionModuleUrl: (pluginId, wasmOut) => `/extensions/${pluginId}/${wasmOut.replace(/\.wasm$/, ".js")}`,
+    moduleUrl: (pluginId) => `/🔌️plugin-modules/${pluginId}/🌉️bridge.js`,
+    extensionModuleUrl: (pluginId) => `/🧩️extension-modules/${pluginId}/🌉️bridge.js`,
   };
 
   describe("PlaygroundResolution", () => {
@@ -685,11 +686,11 @@ if (import.meta.vitest) {
       const boot = resolvePlaygroundBoot(SYNTHETIC_PLUGIN_CATALOG, "beta-play", {
         variant: "alpha",
         defaultAppId: "alpha-app",
-        plugins: [{ pluginId: "alpha", moduleUrl: "/plugin-modules/alpha/alpha_plugin.js" }],
+        plugins: [{ pluginId: "alpha", moduleUrl: "/🔌️plugin-modules/alpha/alpha_plugin.js" }],
       });
       expect(boot.variant).toBe("beta-play");
       expect(boot.defaultAppId).toBe("beta-play-app");
-      expect(boot.plugins).toEqual([{ pluginId: "beta", moduleUrl: "/plugin-modules/beta/beta.js", contributes: [], consumes: [] }]);
+      expect(boot.plugins).toEqual([{ pluginId: "beta", moduleUrl: "/🔌️plugin-modules/beta/🌉️bridge.js", contributes: [], consumes: [] }]);
     });
   });
 
@@ -782,37 +783,63 @@ if (import.meta.vitest) {
 
   describe("PluginSource", () => {
     const registry: readonly PluginRegistryEntry[] = [
-      { pluginId: "note", moduleUrl: "/plugin-modules/note/note_plugin.js" },
-      { pluginId: "s", moduleUrl: "/plugin-modules/s/s_plugin.js" },
+      { pluginId: "note", moduleUrl: "/🔌️plugin-modules/note/note_plugin.js" },
+      { pluginId: "s", moduleUrl: "/🔌️plugin-modules/s/s_plugin.js" },
     ];
 
+    it("subscribes to the adapter's exact watch URLs without a product route dependency", async () => {
+      const { default: fixture } = await import("../../🔨️modules/🎠️kernel/🧫️fixtures/📡️source-watch.json");
+      const { default: schema } = await import("../../🔨️modules/🎠️kernel/🧫️fixtures/📐️source-watch.schema.json");
+      const { default: Ajv } = await import("ajv");
+      expect(new Ajv().validate(schema, fixture)).toBe(true);
+      const opened: string[] = [], closed: string[] = [];
+      vi.stubGlobal("EventSource", class {
+        onmessage: ((event: MessageEvent) => void) | null = null;
+        constructor(private readonly url: string) { opened.push(url); }
+        close() { closed.push(this.url); }
+      });
+      try {
+        for (const stream of fixture.streams) {
+          const source = stream.source === "dev" ? createDevPluginSource(registry, stream.watchUrl) : createExtensionSource(SYNTHETIC_PLUGIN_CATALOG, stream.watchUrl);
+          const unsubscribe = source.subscribe(() => {});
+          expect(opened.at(-1)).toBe(stream.watchUrl);
+          unsubscribe();
+          expect(closed.at(-1)).toBe(stream.watchUrl);
+        }
+        expect(opened).toEqual(fixture.streams.map((stream) => stream.watchUrl));
+        expect(closed).toEqual(opened);
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    });
+
     it("list() returns the registry it was created with", async () => {
-      const source = createDevPluginSource(registry);
+      const source = createDevPluginSource(registry, "/neutral/watch");
       expect(source.id).toBe("dev");
       await expect(source.list()).resolves.toEqual(registry);
     });
 
     it("moduleUrl() cache-busts a cold page load even before the build snapshot arrives", () => {
-      const source = createDevPluginSource(registry);
+      const source = createDevPluginSource(registry, "/neutral/watch");
       const first = new URL(source.moduleUrl("note"), "http://semio.test");
       const second = new URL(source.moduleUrl("s"), "http://semio.test");
-      expect(first.pathname).toBe("/plugin-modules/note/note_plugin.js");
+      expect(decodeURIComponent(first.pathname)).toBe("/🔌️plugin-modules/note/note_plugin.js");
       expect(first.searchParams.get("v")).toMatch(/^\d+$/);
       expect(second.searchParams.get("v")).toBe(first.searchParams.get("v"));
     });
 
     it("moduleUrl() cache-busts with a rebuiltAt query param", () => {
-      const source = createDevPluginSource(registry);
-      expect(source.moduleUrl("note", 1785789943669)).toBe("/plugin-modules/note/note_plugin.js?v=1785789943669");
+      const source = createDevPluginSource(registry, "/neutral/watch");
+      expect(source.moduleUrl("note", 1785789943669)).toBe("/🔌️plugin-modules/note/note_plugin.js?v=1785789943669");
     });
 
     it("moduleUrl() throws for an unknown pluginId", () => {
-      const source = createDevPluginSource(registry);
+      const source = createDevPluginSource(registry, "/neutral/watch");
       expect(() => source.moduleUrl("missing")).toThrow(/missing/);
     });
 
     it("subscribe() is a harmless no-op without a global EventSource (node/vitest)", () => {
-      const source = createDevPluginSource(registry);
+      const source = createDevPluginSource(registry, "/neutral/watch");
       const events: PluginSourceEvent[] = [];
       const unsubscribe = source.subscribe((event) => events.push(event));
       expect(() => unsubscribe()).not.toThrow();
@@ -838,16 +865,16 @@ if (import.meta.vitest) {
         extensions: [{ pluginId: "gamma-extension", wasmOut: "gamma.wasm", role: "extension", contributes: [], consumes: [] }],
         hosts: [],
         playgrounds: [],
-        moduleUrl: (pluginId, wasmOut) => `/plugin-modules/${pluginId}/${wasmOut.replace(/\.wasm$/, ".js")}`,
-        extensionModuleUrl: (pluginId, wasmOut) => `/extensions/${pluginId}/${wasmOut.replace(/\.wasm$/, ".js")}`,
+        moduleUrl: (pluginId) => `/🔌️plugin-modules/${pluginId}/🌉️bridge.js`,
+        extensionModuleUrl: (pluginId) => `/🧩️extension-modules/${pluginId}/🌉️bridge.js`,
       };
-      const dev = createDevPluginSource(registry);
-      const extensions = createExtensionSource(catalog);
+      const dev = createDevPluginSource(registry, "/neutral/watch");
+      const extensions = createExtensionSource(catalog, "/neutral/extension-watch");
       const multiplexed = multiplexPluginSources(dev, extensions);
       expect(multiplexed.id).toBe("dev+extensions");
       const listed = await multiplexed.list();
       expect(listed.map((entry) => entry.pluginId).sort()).toEqual([...registry.map((entry) => entry.pluginId), ...catalog.extensions.map((entry) => entry.pluginId)].sort());
-      expect(new URL(multiplexed.moduleUrl("note"), "http://semio.test").pathname).toBe("/plugin-modules/note/note_plugin.js");
+      expect(decodeURIComponent(new URL(multiplexed.moduleUrl("note"), "http://semio.test").pathname)).toBe("/🔌️plugin-modules/note/note_plugin.js");
       expect(() => multiplexed.moduleUrl("missing")).toThrow(/missing/);
     });
   });

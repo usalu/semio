@@ -106,8 +106,8 @@ if (import.meta.vitest) {
   it("actor instance close fault publication fixture preserves watchdog and terminal-outcome precedence", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
-    const fixture = JSON.parse(readFileSync(new URL("./🧪️fault.fixture.json", import.meta.url), "utf8"));
-    const schema = JSON.parse(readFileSync(new URL("./🧪️fault.schema.json", import.meta.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("./🚨️fault.fixture.json", import.meta.url), "utf8"));
+    const schema = JSON.parse(readFileSync(new URL("./🧯️fault.schema.json", import.meta.url), "utf8"));
     const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(fixture)).toBe(true);
     expect(validate({ ...fixture, extra: true })).toBe(false);
@@ -130,8 +130,8 @@ if (import.meta.vitest) {
   it("actor instance close native value fixture accounts exact descendant text and independent cloned structure", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
-    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🧪️fixture/🔣️.json", import.meta.url), "utf8"));
-    const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🧪️schema/🔣️.json", import.meta.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
+    const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📐️schema/🔣️.json", import.meta.url), "utf8"));
     const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(fixture)).toBe(true);
     expect(validate({ ...fixture, extra: true })).toBe(false);
@@ -177,8 +177,8 @@ if (import.meta.vitest) {
   it("actor instance close fixed-list fixture preserves ordered payload handoff", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
-    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📋️list/🧪️fixture/🔣️.json", import.meta.url), "utf8"));
-    const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📋️list/🧪️schema/🔣️.json", import.meta.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📋️list/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
+    const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📋️list/📐️schema/🔣️.json", import.meta.url), "utf8"));
     const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(fixture)).toBe(true);
     expect(validate({ ...fixture, capacity: 5 })).toBe(false);
@@ -202,8 +202,8 @@ if (import.meta.vitest) {
   it("actor typed descendant fixture covers the exact component and patch rosters", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
-    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧪️fixture/🔣️.json", import.meta.url), "utf8"));
-    const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧪️schema/🔣️.json", import.meta.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
+    const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🌳️typed/📐️schema/🔣️.json", import.meta.url), "utf8"));
     const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(fixture)).toBe(true);
     expect(validate({ ...fixture, componentVariants: fixture.componentVariants.slice(1) })).toBe(false);
@@ -234,8 +234,8 @@ if (import.meta.vitest) {
     }
     expect(bytes(fixture.document.value)).toBe(fixture.document.valueTextBytes);
     expect(oracleBytes).toBe(fixture.document.valueTextBytes);
-    const components = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧪️components.json", import.meta.url), "utf8"));
-    const componentSchema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧪️components.schema.json", import.meta.url), "utf8"));
+    const components = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧩️components.json", import.meta.url), "utf8"));
+    const componentSchema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧬️components.schema.json", import.meta.url), "utf8"));
     const validateComponents = new Ajv({ strict: true }).compile(componentSchema);
     expect(validateComponents(components)).toBe(true);
     expect(validateComponents({ ...components, cases: components.cases.slice(1) })).toBe(false);
@@ -260,8 +260,8 @@ if (import.meta.vitest) {
   it("actor arena handback fixture preserves exact fair obligations across word boundaries", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
-    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📮️handback/🧪️fixture/🔣️.json", import.meta.url), "utf8"));
-    const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📮️handback/🧪️schema/🔣️.json", import.meta.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📮️handback/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
+    const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📮️handback/📐️schema/🔣️.json", import.meta.url), "utf8"));
     const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(fixture)).toBe(true);
     expect(validate({ ...fixture, slots: 255 })).toBe(false);
@@ -310,8 +310,8 @@ if (import.meta.vitest) {
   it("actor patch storage separates physical placement from semantic retirement grants", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
-    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📋️patch/🧪️fixture/🔣️.json", import.meta.url), "utf8"));
-    const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📋️patch/🧪️schema/🔣️.json", import.meta.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🩹️patch/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
+    const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🩹️patch/📐️schema/🔣️.json", import.meta.url), "utf8"));
     const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(fixture)).toBe(true);
     for (const invalid of [
@@ -346,7 +346,7 @@ if (import.meta.vitest) {
     const { default: Ajv } = await import("ajv");
     const fixture = JSON.parse(readFileSync(new URL("./🧪️fixture/🔣️.json", import.meta.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("./🧬️schema.json", import.meta.url), "utf8"));
-    const fixtureSchema = JSON.parse(readFileSync(new URL("./🧪️schema/🔣️.json", import.meta.url), "utf8"));
+    const fixtureSchema = JSON.parse(readFileSync(new URL("./📐️schema/🔣️.json", import.meta.url), "utf8"));
     const ajv = new Ajv({ strict: true });
     ajv.addSchema(schema);
     expect(ajv.compile(fixtureSchema)(fixture)).toBe(true);

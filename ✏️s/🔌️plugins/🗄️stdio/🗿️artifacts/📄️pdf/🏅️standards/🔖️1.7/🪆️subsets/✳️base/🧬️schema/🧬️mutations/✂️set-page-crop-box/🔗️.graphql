@@ -1,5 +1,0 @@
-# ✂️ Direct set-page-crop-box GraphQL payload.
-input SetPageCropBoxMutationInput {
-  index: Int
-  cropBox: [Float!]
-}

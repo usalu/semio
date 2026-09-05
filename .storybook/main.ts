@@ -13,7 +13,7 @@ import { existsSync } from "node:fs";
 
 import type { StorybookConfig } from "@storybook/react-vite";
 import { semioAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts";
-import { uiTailwindBuildPlugins } from "../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️build-tooling.ts";
+import { uiTailwindBuildPlugins } from "../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🏗️build-tooling.ts";
 import { resolveActiveScopes, buildScopeStoryGlobs, buildScopeAliases, buildScopeWatchIgnores, type StoryScope } from "./scopes.ts";
 
 const require = createRequire(import.meta.url);
@@ -61,10 +61,10 @@ function buildStorybookAliases(): Record<string, string> {
   const baseline: Record<string, string> = {
     // 🧪️ More specific than the bare package alias, so it must come FIRST — Vite substitutes an
     // alias by prefix, and without this `@semio-tech/ui-react/test` resolves to a literal
-    // `<uiReactDir>/test` that does not exist. `Interpreter/🟦️.tsx` reaches it through a
+    // `<uiReactDir>/test` that does not exist. `🟦️Interpreter/🟦️.tsx` reaches it through a
     // runtime `await import(...)`, which Vite still has to resolve at build time, so a plain
     // (non-test) storybook build fails on it. Mirrors the same pair in os/dev's `⚙️vite.config.ts`.
-    "@semio-tech/ui-react/test": toVitePath(join(uiReactDir, "🧪️render.ts")),
+    "@semio-tech/ui-react/test": toVitePath(join(uiReactDir, "🖌️render.ts")),
     // 📦️ Point at the package's real entry FILE, not the directory: Vite's alias substitution is
     // literal, and it only auto-resolves a directory via a bare `index.*`, which an emoji-prefixed
     // `📦️index.tsx` is not. The taxonomy sweep is renaming these entries to `🟦️.tsx` and updates
@@ -90,7 +90,7 @@ const config: StorybookConfig = {
   // the shell's "plugin artifact missing" panel instead of booting. These are build OUTPUTS produced
   // by `dev`'s materialize step, not sources — storybook only serves whatever is already on disk and
   // never triggers a cargo build itself.
-  staticDirs: [{ from: "../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules", to: "/plugin-modules" }],
+  staticDirs: [{ from: "../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules", to: "/plugin-modules" }],
   addons: [getAbsolutePath("@storybook/addon-vitest"), getAbsolutePath("@storybook/addon-docs")],
   framework: {
     name: getAbsolutePath("@storybook/react-vite"),
@@ -127,12 +127,12 @@ const config: StorybookConfig = {
         resolve(repoRootPath, "🧰️framework/⚡️implementations/🟦️typescript/🟦️.ts"),
       ),
       "@semio-tech/framework-platform-renderer-react": firstExisting(
-        resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx"),
-        resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx"),
+        resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx"),
+        resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx"),
       ),
       "@semio-tech/framework-playground-renderer-react": firstExisting(
-        resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx"),
-        resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx"),
+        resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx"),
+        resolve(repoRootPath, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx"),
       ),
     };
     for (const item of workspaceResolve.resolve?.alias ?? []) {

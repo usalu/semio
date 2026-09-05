@@ -5,7 +5,7 @@
   "displayName": "Change Part3d Mesh",
   "emoji": "🧱",
   "aggregateVariant": "ChangePart3dMesh",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-part3d-mesh",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

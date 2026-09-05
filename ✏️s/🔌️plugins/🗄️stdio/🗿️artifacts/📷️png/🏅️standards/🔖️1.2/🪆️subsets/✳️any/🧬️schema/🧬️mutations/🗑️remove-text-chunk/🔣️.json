@@ -5,7 +5,7 @@
   "displayName": "Remove Text Chunk",
   "emoji": "🗑️",
   "aggregateVariant": "RemoveTextChunk",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "remove-text-chunk",
   "binaryTag": 12,
   "invertibility": "explicit-mutation",

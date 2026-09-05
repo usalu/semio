@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "declarations", "generatedDeclarations", "requestIdentity", "inputBytes", "retiredBytes", "limits", "grants", "cases", "lifecycle", "caseRetirement", "semantic", "semanticLifecycle"],
+  "properties": {
+    "schema": { "const": "semio.member.selected-factory-identity/v1" },
+    "declarations": { "type": "array", "minItems": 18, "maxItems": 18, "items": { "$ref": "#/$defs/declaration" } },
+    "generatedDeclarations": { "const": [["s.test.member", "v1", "first", "demo/v1"], ["s.test.member", "v1", "second", "demo/v1"]] },
+    "requestIdentity": { "type": "array", "minItems": 10, "maxItems": 10, "items": { "$ref": "#/$defs/text" } },
+    "inputBytes": { "const": 257 }, "retiredBytes": { "const": 329 },
+    "caseRetirement": { "type": "object", "minProperties": 21, "maxProperties": 21, "propertyNames": { "$ref": "#/$defs/name" }, "additionalProperties": { "type": "integer", "minimum": 257, "maximum": 1024 } },
+    "limits": { "const": { "declarations": 64, "fieldBytes": 256 } }, "grants": { "const": [1, 7, 4096] },
+    "cases": { "type": "array", "minItems": 21, "maxItems": 21, "items": {
+      "type": "object", "additionalProperties": false, "required": ["id", "mutation", "dialect", "selected", "error"],
+      "properties": {
+        "id": { "$ref": "#/$defs/name" }, "mutation": { "enum": ["none", "reverse", "missing", "empty", "capacity", "duplicate", "duplicate-foreign", "late-kind", "late-schema", "late-control", "late-length", "late-noncanonical", "late-standard", "late-subset", "late-standard-length", "late-subset-control"] },
+        "dialect": { "$ref": "#/$defs/dialect" }, "selected": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/declaration" }] },
+        "error": { "enum": [null, "identity", "capacity"] }
+      }
+    } },
+    "semantic": { "type": "array", "minItems": 9, "maxItems": 9, "items": {
+      "type": "object", "additionalProperties": false, "required": ["id", "field", "value", "inputBytes", "retiredBytes", "error", "handoffs"],
+      "properties": { "id": { "$ref": "#/$defs/name" }, "field": { "enum": ["none", "schema", "document", "parent", "slot", "child", "kind", "standard", "subset"] },
+        "value": { "$ref": "#/$defs/text" }, "inputBytes": { "type": "integer", "minimum": 1, "maximum": 1024 }, "retiredBytes": { "type": "integer", "minimum": 1, "maximum": 4096 }, "error": { "enum": [null, "identity"] }, "handoffs": { "enum": [0, 1] } }
+    } },
+    "semanticLifecycle": { "type": "array", "minItems": 5, "maxItems": 5, "items": {
+      "type": "object", "additionalProperties": false, "required": ["id", "at", "event", "error", "retiredBytes"],
+      "properties": { "id": { "$ref": "#/$defs/name" }, "at": { "enum": ["selected", "ready"] }, "event": { "enum": ["cancel", "generation", "operation", "capacity"] }, "error": { "enum": ["cancelled", "stale", "capacity"] }, "retiredBytes": { "enum": [346, 1370] } }
+    } },
+    "lifecycle": { "type": "array", "minItems": 7, "maxItems": 7, "items": {
+      "type": "object", "additionalProperties": false, "required": ["id", "at", "event", "handoffs", "error", "retiredBytes"],
+      "properties": {
+        "id": { "$ref": "#/$defs/name" }, "at": { "enum": ["begin", "selected-unpublished", "ready", "witness"] },
+        "event": { "enum": ["none", "cancel", "generation", "operation", "expired", "clock-absent"] },
+        "handoffs": { "enum": [0, 1] }, "error": { "enum": [null, "cancelled", "stale", "expired"] }, "retiredBytes": { "const": 329 }
+      }
+    } }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1, "maxLength": 256 }, "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]+$" },
+    "declaration": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "$ref": "#/$defs/text" } },
+    "dialect": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/$defs/text" } }
+  }
+}

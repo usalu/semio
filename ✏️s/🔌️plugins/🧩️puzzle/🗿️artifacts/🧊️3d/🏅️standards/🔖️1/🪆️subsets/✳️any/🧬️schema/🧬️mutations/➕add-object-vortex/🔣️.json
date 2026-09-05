@@ -5,7 +5,7 @@
   "displayName": "Add Object Vortex",
   "emoji": "➕",
   "aggregateVariant": "AddObjectVortex",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "add-object-vortex",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

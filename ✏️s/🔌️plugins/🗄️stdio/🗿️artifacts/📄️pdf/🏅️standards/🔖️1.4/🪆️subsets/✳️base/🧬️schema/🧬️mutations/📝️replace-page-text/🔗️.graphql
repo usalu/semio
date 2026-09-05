@@ -1,4 +1,0 @@
-# 📝️ replace-page-text payload.
-input ReplacePageTextInput {
-  index: Pdf14Index!
-  text: String!

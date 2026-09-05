@@ -1,0 +1,363 @@
+{
+  "schema": "spatial.interaction",
+  "id": "solid.booleanDifference",
+  "version": "1.0.0",
+  "label": "BooleanDifference",
+  "interaction": {
+    "spatialGroundPick": false,
+    "pickDisabledStates": ["idle", "committed"],
+    "groundPointerMoveStates": [],
+    "heightDragStates": [],
+    "verticalRodStates": [],
+    "heightConfirmState": null
+  },
+  "machine": {
+    "initial": "idle",
+    "states": [
+      {
+        "name": "idle",
+        "on": [
+          {
+            "event": "start",
+            "transitions": [
+              {
+                "target": "select_surfaces_or_polysurfaces_to_subtract_from",
+                "key": "s",
+                "label": "Start",
+                "effects": [
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": [0, 0, 0]
+                    }
+                  },
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "points"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": []
+                    }
+                  },
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "targets"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": []
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "select_surfaces_or_polysurfaces_to_subtract_from",
+        "selection": {
+          "accept": ["shell", "solid"],
+          "multiple": true,
+          "prompt": "Select surfaces or polysurfaces to subtract from"
+        },
+        "on": [
+          {
+            "event": "selection.changed",
+            "transitions": [
+              {
+                "target": "select_surfaces_or_polysurfaces_to_subtract_from",
+                "key": "s",
+                "label": "Select",
+                "effects": [
+                  {
+                    "mutation": "action",
+                    "action": "command.addSelection",
+                    "params": {
+                      "field": {
+                        "kind": "const",
+                        "value": "baseObjects"
+                      },
+                      "targets": {
+                        "kind": "path",
+                        "root": "event",
+                        "segments": [
+                          {
+                            "kind": "field",
+                            "name": "targets"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "confirm",
+            "transitions": [
+              {
+                "target": "select_surfaces_or_polysurfaces_to_subtract_with",
+                "key": "Enter",
+                "label": "Finish"
+              }
+            ]
+          },
+          {
+            "event": "contextmenu",
+            "transitions": [
+              {
+                "target": "select_surfaces_or_polysurfaces_to_subtract_with",
+                "key": "RightClick",
+                "label": "Finish"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "select_surfaces_or_polysurfaces_to_subtract_with",
+        "selection": {
+          "accept": ["shell", "solid"],
+          "multiple": true,
+          "prompt": "Select surfaces or polysurfaces to subtract with"
+        },
+        "on": [
+          {
+            "event": "selection.changed",
+            "transitions": [
+              {
+                "target": "select_surfaces_or_polysurfaces_to_subtract_with",
+                "key": "s",
+                "label": "Select",
+                "effects": [
+                  {
+                    "mutation": "action",
+                    "action": "command.addSelection",
+                    "params": {
+                      "field": {
+                        "kind": "const",
+                        "value": "cutterObjects"
+                      },
+                      "targets": {
+                        "kind": "path",
+                        "root": "event",
+                        "segments": [
+                          {
+                            "kind": "field",
+                            "name": "targets"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "confirm",
+            "transitions": [
+              {
+                "target": "committed",
+                "key": "Enter",
+                "label": "Finish"
+              }
+            ]
+          },
+          {
+            "event": "contextmenu",
+            "transitions": [
+              {
+                "target": "committed",
+                "key": "RightClick",
+                "label": "Finish"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "committed",
+        "final": true
+      }
+    ]
+  },
+  "display": {
+    "states": [
+      {
+        "state": "select_surfaces_or_polysurfaces_to_subtract_from",
+        "items": [
+          {
+            "kind": "label",
+            "id": "select_surfaces_or_polysurfaces_to_subtract_from-prompt",
+            "role": "prompt",
+            "text": "Select surfaces or polysurfaces to subtract from",
+            "position": {
+              "kind": "const",
+              "value": [0, 0.25, 1.55]
+            }
+          },
+          {
+            "kind": "preview",
+            "id": "select_surfaces_or_polysurfaces_to_subtract_from-preview",
+            "role": "preview",
+            "previewKind": "boolean-base",
+            "params": {
+              "cursor": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "cursor"
+                  }
+                ]
+              },
+              "prevPoint": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "prevPoint"
+                  }
+                ]
+              },
+              "points": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "points"
+                  }
+                ]
+              },
+              "targets": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "baseObjects"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "state": "select_surfaces_or_polysurfaces_to_subtract_with",
+        "items": [
+          {
+            "kind": "label",
+            "id": "select_surfaces_or_polysurfaces_to_subtract_with-prompt",
+            "role": "prompt",
+            "text": "Select surfaces or polysurfaces to subtract with",
+            "position": {
+              "kind": "const",
+              "value": [0, 0.25, 1.55]
+            }
+          },
+          {
+            "kind": "preview",
+            "id": "select_surfaces_or_polysurfaces_to_subtract_with-preview",
+            "role": "preview",
+            "previewKind": "boolean-cutters",
+            "params": {
+              "cursor": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "cursor"
+                  }
+                ]
+              },
+              "prevPoint": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "prevPoint"
+                  }
+                ]
+              },
+              "points": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "points"
+                  }
+                ]
+              },
+              "targets": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "cutterObjects"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "commit": {
+    "fromStates": ["ready"],
+    "operation": {
+      "kind": "action",
+      "action": "command.finish",
+      "params": {
+        "commandId": {
+          "kind": "const",
+          "value": "solid.booleanDifference"
+        },
+        "resultKind": {
+          "kind": "const",
+          "value": "booleanDifference"
+        }
+      }
+    }
+  },
+  "key": "g",
+  "produces": {
+    "typology": "spatial.shape.solid.boolean-difference"
+  }
+}

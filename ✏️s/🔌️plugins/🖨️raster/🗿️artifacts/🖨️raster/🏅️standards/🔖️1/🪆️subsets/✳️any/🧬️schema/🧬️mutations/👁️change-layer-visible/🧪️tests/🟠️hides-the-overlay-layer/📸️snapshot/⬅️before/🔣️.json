@@ -1,0 +1,45 @@
+{
+  "schema": "raster.document",
+  "id": "layered-poster",
+  "title": "Layered Poster",
+  "layers": [
+    {
+      "kind": "pixel",
+      "id": "backdrop",
+      "name": "Backdrop",
+      "visible": true,
+      "opacity": 1.0,
+      "blendMode": "normal",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "scaleX": 1.0,
+        "scaleY": 1.0,
+        "rotation": 0.0
+      },
+      "mask": null,
+      "width": 512,
+      "height": 512,
+      "imageKey": null
+    },
+    {
+      "kind": "pixel",
+      "id": "overlay",
+      "name": "Overlay",
+      "visible": true,
+      "opacity": 1.0,
+      "blendMode": "normal",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "scaleX": 1.0,
+        "scaleY": 1.0,
+        "rotation": 0.0
+      },
+      "mask": null,
+      "width": 512,
+      "height": 512,
+      "imageKey": null
+    }
+  ]
+}

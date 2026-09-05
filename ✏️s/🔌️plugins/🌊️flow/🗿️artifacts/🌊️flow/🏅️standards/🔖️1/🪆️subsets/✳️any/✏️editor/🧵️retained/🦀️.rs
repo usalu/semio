@@ -105,11 +105,7 @@ impl Retirement {
             Owner::Value(neural::Value::Atom(neural::Atom::String(value))) => self.text(value),
             Owner::Value(neural::Value::Atom(_)) => {}
             Owner::Widget(widget) => self.widget(widget),
-            Owner::Scene(value) => {
-                self.push(Owner::Widgets(value.widgets));
-                self.push(Owner::Specs(value.synapses));
-                self.push(Owner::Layouts(value.layout));
-            }
+            Owner::Scene(value) => self.push(Owner::Domain(crate::artifacts::flow::retirement::retire_scene(value))),
             Owner::Widgets(mut values) => {
                 let next = values.pop();
                 if !values.is_empty() { self.push(Owner::Widgets(values)); }
@@ -179,7 +175,7 @@ impl Retirement {
                 if !values.is_empty() { self.push(Owner::Layout(values)); }
                 if let Some(value) = next { self.text(value.id); }
             }
-            Owner::Mutation(value) => self.mutation(value),
+            Owner::Mutation(value) => self.push(Owner::Domain(crate::artifacts::flow::retirement::retire_mutation(value))),
             Owner::Mutations(mut values) => {
                 let next = values.pop();
                 if !values.is_empty() { self.push(Owner::Mutations(values)); }
@@ -241,26 +237,7 @@ impl Retirement {
         }
     }
 
-    fn mutation(&mut self, mutation: FlowMutation) {
-        match mutation {
-            FlowMutation::CreateWidget(value) => self.push(Owner::Widget(value.widget)),
-            FlowMutation::DeleteWidget(value) => self.text(value.id),
-            FlowMutation::ReorderWidgets(value) => self.text(value.id),
-            FlowMutation::ReplaceWidget(value) => { self.text(value.id); self.push(Owner::Widget(value.widget)); }
-            FlowMutation::ConnectWidgets(value) => {
-                self.text(value.id); self.text(value.from); self.text(value.to); self.text(value.from_port); self.text(value.to_port);
-            }
-            FlowMutation::DisconnectWidgets(value) => self.text(value.id),
-            FlowMutation::ReorderSynapses(value) => self.text(value.id),
-            FlowMutation::UpdateSynapseEndpoints(value) => {
-                self.text(value.id); self.text(value.from); self.text(value.to); self.text(value.from_port); self.text(value.to_port);
-            }
-            FlowMutation::MoveWidgets(value) => self.push(Owner::Layout(value.entries)),
-            FlowMutation::DuplicateWidget(value) => {
-                self.text(value.source_id); self.text(value.new_id); self.text(value.synapse_id); self.text(value.from_port); self.text(value.to_port);
-            }
-        }
-    }
+
 }
 //#endregion 🧹️Retirement
 

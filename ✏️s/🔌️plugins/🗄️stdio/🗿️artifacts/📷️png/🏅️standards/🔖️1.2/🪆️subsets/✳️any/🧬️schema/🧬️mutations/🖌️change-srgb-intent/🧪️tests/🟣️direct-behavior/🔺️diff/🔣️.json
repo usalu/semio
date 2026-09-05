@@ -1,0 +1,13 @@
+{
+  "chunkOrder": {
+    "added": [
+      {
+        "index": 3,
+        "marker": {
+          "chunk": "srgb"
+        }
+      }
+    ]
+  },
+  "srgb": "saturation"
+}

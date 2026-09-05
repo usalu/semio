@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "apps"],
+  "properties": {
+    "schema": { "const": "semio.app.publication-authority.v1" },
+    "apps": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["owner", "toolIdsConstant", "source", "routes", "laws", "ui"],
+        "properties": {
+          "owner": { "enum": ["Block2dPlayApp", "Block3dPlayApp", "Block5dPlayApp"] },
+          "toolIdsConstant": { "type": "string", "pattern": "^BLOCK[0-9]D_RETAINED_TOOL_IDS$" },
+          "source": { "type": "string", "minLength": 1 },
+          "routes": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "lane"],
+              "properties": {
+                "id": { "type": "string", "pattern": "^[a-z][A-Za-z0-9]*$" },
+                "lane": { "enum": ["HostOnly", "Artifact", "Config", "Draft", "Presence", "Transient", "Child"] }
+              }
+            }
+          },
+          "laws": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["bounded", "cancel", "replay", "freshness", "ack", "incrementalClose"],
+            "properties": {
+              "bounded": { "const": true },
+              "cancel": { "const": true },
+              "replay": { "const": true },
+              "freshness": { "const": true },
+              "ack": { "const": true },
+              "incrementalClose": { "const": true }
+            }
+          },
+          "ui": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["locales", "accessibleLabels", "customizableUi"],
+            "properties": {
+              "locales": { "const": ["en", "de"] },
+              "accessibleLabels": { "const": true },
+              "customizableUi": { "const": true }
+            }
+          }
+        }
+      }
+    }
+  }
+}

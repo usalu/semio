@@ -1,0 +1,14 @@
+{
+  "mutation": "setSnapshot",
+  "snapshot": {
+    "schema": "stdio.deflate",
+    "compressionMethod": 8,
+    "windowBits": 7,
+    "compressionLevelHint": "maximum",
+    "payload": [
+      104,
+      105,
+      33
+    ]
+  }
+}

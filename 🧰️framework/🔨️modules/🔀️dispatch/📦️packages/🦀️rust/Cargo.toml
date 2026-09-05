@@ -3,6 +3,7 @@ name = "semio-framework-dispatch-macros"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
+autotests = false
 description = "#[dyn_enum] / dyn_enum! — enum-dispatch codegen replacing dyn Trait objects (O1: drop dyn dispatch) so AFIT traits stay object-usable without Box<dyn Future>"
 
 [lints]
@@ -16,3 +17,19 @@ path = "🦀️.rs"
 syn = { version = "2.0", features = ["full", "extra-traits"] }
 quote = "1.0"
 proc-macro2 = "1.0"
+
+[[test]]
+name = "mixed_receivers"
+path = "tests/🧩️mixed-receivers.rs"
+
+[[test]]
+name = "mut_receiver"
+path = "tests/✍️mutable-receiver.rs"
+
+[[test]]
+name = "scale"
+path = "tests/📈️scale.rs"
+
+[[test]]
+name = "uninhabited"
+path = "tests/🕳️uninhabited.rs"

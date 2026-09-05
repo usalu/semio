@@ -35,7 +35,7 @@ impl SubsetRoundtripSpec for CadAnyRoundtrip {
     type Inference = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::CadInference;
 
     async fn dialect() -> store::os_io::ArtifactDialect {
-        store::os_io::ArtifactDialect { artifact_kind: "s.cad".into(), standard: "1".into(), subset: "*".into() }
+        store::os_io::ArtifactDialect { artifact_kind: "s.cad.cad".into(), standard: "1".into(), subset: "*".into() }
     }
 
     async fn fidelity() -> IoFidelityClass {

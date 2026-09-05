@@ -1,5 +1,0 @@
-# Direct insert-media-annotation GraphQL payload.
-input InsertMediaAnnotationMutationInput {
-  subtype: String!
-  title: String!
-}

@@ -1,0 +1,36 @@
+# P2-FG1: REAL binary op frame, replacing F6's `print_op().into_bytes()` text-as-binary shortcut
+# (`../🦀️.rs`'s upgraded `OpBinary` impl, `#region OpCodecs`). `StepMutation` is a
+# genuine data-carrying enum whose variants embed recursive/data-carrying payloads (`StepSnapshot`,
+# `StepEntity`, `StepValue` — itself self-recursive via `Aggregate(Vec<StepValue>)`/
+# `TypedValue{value: Box<StepValue>}`) — no `DslField` impl exists or can exist for any of them
+# (confirmed by a real `cargo check` rejection of `#[derive(dsl::DslOps)]`, see that file's own
+# module doc comment), so the generic `format u8 | ordinal varint | record body` layout genuinely
+# does not fit. Handcrafted instead: `format u8` (`store::pack_rt::OP_BINARY_FORMAT` convention) +
+# `tag u8` (the `StepMutation` variant ordinal, same 0-10 order `print_step_mutation`'s own
+# keyword match uses) as two REAL fixed fields, then the variant's own payload as one opaque
+# trailing `bytes` chain.
+#
+# The payload itself is real varint/length-prefixed binary, genuinely field-by-field for every
+# flat record (`enc_file_description_bin`/`enc_file_name_bin`/`enc_file_schema_bin`/
+# `enc_entity_bin`/`enc_step_snapshot_bin` in `../../🔺️diff/🦀️.rs`'s
+# `#region 🔖️ValueBinaryCodecs`, reusing `store::pack_rt::write_varint_u64`/
+# `store::write_varint_i64`/`store::ByteReader`) and genuinely recursive only where `StepValue`
+# itself recurses (`enc_value_bin`'s `Aggregate`/`TypedValue` arms, plain Rust function recursion —
+# NOT re-modeled field-by-field at THIS protocol-dialect layer because `Prim::Ref` — the only
+# construct that could describe `StepValue`'s self-recursion declaratively — unconditionally errors
+# during `walk_protocol` (`protocol-prim-ref-recursion`, the recipe's own consolidated gap table —
+# every P1-P3 pilot with a self-recursive value type independently hit and worked around the same
+# wall, most recently md's `MdBlock`/dxf's `DxfEntity` this same wave). Same honest-boundary
+# treatment the plan itself prescribes for a compressed/recursive payload segment — opaque at the
+# protocol layer, genuinely structured field-by-field (and round-trip-tested) at the Rust layer.
+dialect protocol
+protocol stdio.step.mutation
+version 1
+schema stdio.step
+start record
+
+framing record
+header fixed 2
+field format u8
+field tag u8
+chain payload bytes

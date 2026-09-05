@@ -2,7 +2,7 @@
 /// <reference types="vitest/importMeta" />
 /** @emoji 🔺️ `@semio-tech/framework` — component scene protocol payloads shared by render hosts. */
 import type { IconName } from "@semio-tech/assets";
-import type { LocalizedLabel } from "../🛂️manifest/🤖️generated/🟦️ui-axes.ts";
+import type { LocalizedLabel } from "../🛂️manifest/🤖️generated/🎚️ui-axes.ts";
 import type { ActionDescriptor, PluginContextMenuRequest } from "../🛂️manifest/🟦️.ts";
 
 //#region ComponentSceneProtocol
@@ -25,7 +25,7 @@ export type UiMenuRef = {
 
 /** 🌐️ A 3D world surface scene payload — mirrors the wasm `componentScene` node's `world3d` field. */
 /** 🖱️ One row of a resolved context menu — TS twin of the Rust `ContextMenuItemSpec`
- * (`🧰️framework/🔨️modules/🖱️ui/🧊️wgpu/📦️packages/🦀️rust/📦️lib.rs`). Plugins build these with
+ * (`🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧩️component.rs`). Plugins build these with
  * `MenuBuilder`; the host maps them through `ContextMenuController` (React) / `render_context_menu`
  * (wgpu) unchanged. */
 export type ContextMenuItemSpec = {
@@ -47,9 +47,9 @@ export type ContextMenuItemSpec = {
 
 //#region 🗂️ContextMenuOrganizer
 /** 🗂️ Canonical ribbon-parent taxonomy — TS twin of the Rust `RIBBON_PARENT_CATEGORIES` const
- * (`🧰️framework/🔨️modules/🖱️ui/🧊️wgpu/📦️packages/🦀️rust/📦️lib.rs`) and of ui-react's closed
- * `UiRibbonParentCategory` union (`🧰️framework/🔨️modules/🖱️ui/⚛️react/📦️packages/🟦️typescript/🟦️.tsx`
- * ~3419). Id spelling and order are load-bearing: `organizeContextMenu` sorts `menu.group.<category>`
+ * (`🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧩️component.rs`) and of ui-react's closed
+ * `UiRibbonParentCategory` union (`🧰️framework/🔨️modules/🖱️ui/🧱️elements/📚️I18n/🟦️.tsx`).
+ * Id spelling and order are load-bearing: `organizeContextMenu` sorts `menu.group.<category>`
  * rows by this order (unknown categories sort after, in emit order). */
 const RIBBON_PARENT_CATEGORIES = [
   "history", "hand", "selection", "lasso", "filter", "open", "save", "transfer", "transform", "create", "view", "actions", "settings",
@@ -272,7 +272,7 @@ export type World3dScene = {
   readonly environmentJson?: string;
   readonly frameJson?: string;
   readonly fitJson?: string;
-  /** 🌐️⛰️ GIS 3D terrain style/source descriptor, consumed by `WorldTerrainLayer`. */
+  /** 🌐️⛰️ GIS 3D terrain style/source descriptor, consumed by `🗺️WorldTerrainLayer`. */
   readonly terrainJson?: string;
   /** ☁️ Point-cloud rendering layers (10^5-10^6 points) — an array of `{ id, positionsB64 (base64 le
    * f32 xyz), colorsB64? (base64 u8 rgb), size, sizeAttenuation }`, consumed by `WorldPointCloudLayer`. */
@@ -641,7 +641,7 @@ export type UiComponentSceneNode = {
   readonly eventFeed?: EventFeedScene;
 };
 
-/** 🧷️ Shared prop shape for every `framework/os/renderer/js/react/index.tsx` host component. */
+/** 🧷️ Shared prop shape for the host components under `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements`. */
 export type ComponentSceneHostProps = {
   readonly node: UiComponentSceneNode;
   readonly onAction: (action: ActionDescriptor) => void;

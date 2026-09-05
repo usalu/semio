@@ -1,0 +1,26 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.animation/diff.json",
+  "title": "SemioAnimationDiff",
+  "description": "Sparse field-by-field diff over SemioAnimationSnapshot. No full-replace slot. timelines/channels/keyframes are index-keyed removed/modified/added triples (IndexedTripleDiff<D,T>).",
+  "type": "object",
+  "definitions": {
+    "AnimKeyframeDiff": {
+      "type": "object",
+      "properties": { "t": { "type": "number" }, "value": { "type": "object" } }
+    },
+    "AnimChannelDiff": {
+      "type": "object",
+      "properties": { "target": { "type": "object" }, "interpolation": { "type": "string" }, "keyframes": { "type": "object" } }
+    },
+    "AnimTimelineDiff": {
+      "type": "object",
+      "properties": {
+        "name": { "type": ["string", "null"], "description": "tri-state: absent=unchanged, null=cleared, string=renamed" },
+        "channels": { "type": "object" }
+      }
+    }
+  },
+  "properties": {
+    "timelines": { "type": "object", "description": "IndexedTripleDiff<AnimTimelineDiff, AnimTimeline>" }
+  }
+}

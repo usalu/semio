@@ -5,7 +5,7 @@
   "displayName": "Change Shear Area Mm2",
   "emoji": "📏",
   "aggregateVariant": "ChangeShearAreaMm2",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

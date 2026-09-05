@@ -1,0 +1,2 @@
+# change-asset-descriptive-metadata mutation facet.
+type GltfChangeAssetDescriptiveMetadataMutationV1 { id: ID!, version: Int!, touchedPaths: [String!]!, accepted: Boolean!, rejectionCode: String }

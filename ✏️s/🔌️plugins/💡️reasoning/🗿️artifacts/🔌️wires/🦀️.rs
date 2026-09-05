@@ -83,7 +83,7 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schem
 
 /// 🏷️ `wires.node` is the honest string boundary carrying the FULL raw board node `DslValue` (every
 /// key a board node can dynamically carry — `nodeKind`/`shape`/`radius`/`width`/`height`/`text`/
-/// `root`/`handles`/... — this app's board nodes are an untyped `DslValue` object, not a fixed Rust
+/// `root`/`🐙️handles`/... — this app's board nodes are an untyped `DslValue` object, not a fixed Rust
 /// struct, so no fixed field list could ever be exhaustive) as JSON. `id`/`label`(=`text`)/
 /// `kind`(=`nodeKind`)/`position`(=`x`,`y`) are ALSO projected onto the composed `SemioGraphNode`'s
 /// own native fields for genuine graph-shape tooling that only understands the neutral subset — but
@@ -329,56 +329,56 @@ mod tests {
 //#region 🔖️Declaration
 pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    ArtifactDefinition::new(ArtifactIdentity::parse("s.wires")?)
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.reasoning.wires")?)
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.wires.schema.artifact")?, ArtifactCapabilityKind::schema())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.reasoning.wires.schema.artifact")?, ArtifactCapabilityKind::schema())
                 .descriptor(b"s.reasoning.wires")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.reasoning.wires")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.wires.inference.artifact")?, ArtifactCapabilityKind::inference())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.reasoning.wires.inference.artifact")?, ArtifactCapabilityKind::inference())
                 .descriptor(b"s.reasoning.wires.inference")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.reasoning.wires.inference")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.wires.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.wires@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.wires@1/*")?)?,
+            ArtifactCapability::new(ArtifactIdentity::parse("s.reasoning.wires.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.reasoning.wires@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.reasoning.wires@1/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.wires.composer.svg")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.reasoning.wires.composer.svg")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.svg@1.1/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.svg@1.1/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.wires.composer.csv")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.reasoning.wires.composer.csv")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.csv@rfc4180/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.csv@rfc4180/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.wires.composer.md")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.reasoning.wires.composer.md")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.md@commonmark/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.md@commonmark/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.wires.composer.png")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.reasoning.wires.composer.png")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.png@1.2/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.png@1.2/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.wires.composer.json")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.reasoning.wires.composer.json")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.json@rfc8259/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.wires.codec.document")?, ArtifactCapabilityKind::codec())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.reasoning.wires.codec.document")?, ArtifactCapabilityKind::codec())
                 .descriptor(b"reasoning.wires.fixture:wires")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "reasoning.wires.fixture")?)?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "wires")?)?,
+                .claim(ArtifactIdentityClaim::codec_extension("reasoning.wires.fixture", "wires")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.wires.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Mindmap Wires")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Mindmap Wires")?)?,
+            ArtifactCapability::new(ArtifactIdentity::parse("s.reasoning.wires.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Mindmap Wires")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Mindmap Wires")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.wires.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Mindmap-Wires")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Mindmap-Wires")?)?,
+            ArtifactCapability::new(ArtifactIdentity::parse("s.reasoning.wires.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Mindmap-Wires")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Mindmap-Wires")?)?,
         )
 }
 

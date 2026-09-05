@@ -1,7 +1,7 @@
 //! 🗺️ Web-Mercator / slippy-tile oracle test for `tiled_map::projection` and `tiled_map::tiles`.
 //!
 //! Reads the SAME frozen fixture as the sibling Python oracle adapter
-//! (`../../🗺️tiled-map/🧪️tests/web-mercator-tile-oracle/🧫️fixtures/🔣️.json`), whose `projection`,
+//! (`../../🗺️tiled-map/🧪️tests/🕸️web-mercator-tile-oracle/🧫️fixtures/🔣️.json`), whose `projection`,
 //! `tileNumbering` and `tileBounds` arrays were computed independently by the `mercantile` third-party
 //! library (pure Python, zero runtime deps) from the published EPSG:3857 / OSM slippy-tile spec. This
 //! file asserts this repository's Rust implementation reproduces the same numbers, discharging
@@ -14,7 +14,7 @@
 //! `tiled-map/🦀️.rs`'s own `mod tests` — see `.🧬semio/…/GIS-MAP-END-TO-END/📓️research/📝️map-math-oracle-tests.md` for the ready-to-apply diff covering those, plus the zoom/pan invariants
 //! that need `MAX_VISIBLE_TILE_REQUESTS`.
 //!
-//! @see 🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/web-mercator-tile-oracle/🥒️.feature
+//! @see 🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🕸️web-mercator-tile-oracle/🥒️.feature
 
 use semio_framework_surface::tiled_map::canvas::camera::{screen_to_world, Camera, Viewport};
 use semio_framework_surface::tiled_map::projection::{lonlat_to_world, tile_world_rect, world_to_lonlat, WORLD_HALF};
@@ -33,7 +33,7 @@ fn fixture() -> Value {
         "..",
         "🗺️tiled-map",
         "🧪️tests",
-        "web-mercator-tile-oracle",
+        "🕸️web-mercator-tile-oracle",
         "🧫️fixtures",
         "🔣️.json",
     ]

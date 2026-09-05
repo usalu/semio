@@ -15,7 +15,7 @@
 //! fields is ever `Some`, each keyed so the ACTUAL Rust variant (not a text heuristic) decides which one,
 //! which is exactly as precise as the old hand-rolled `Atom` match. `ValueDsl` also derives
 //! `dsl::ToValue`/`dsl::FromValue` (on top of `dsl::DslRecord`) so it can nest inside
-//! `🎮️commands/🔧️set-step-params`'s `BTreeMap<String, ValueDsl>` payload field — that command struct's
+//! `🎮️commands/🎚️set-step-params`'s `BTreeMap<String, ValueDsl>` payload field — that command struct's
 //! own `ToValue`/`FromValue` derive needs it, via the framework's blanket `BTreeMap<String, T: ToValue>`
 //! impl (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/02: `app_commands!` itself
 //! forces only `ToValue`/`FromValue`/`dsl::DslOps` onto the generated command enum, never serde).

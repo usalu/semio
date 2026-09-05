@@ -43,7 +43,7 @@ use protocol::{OpBinary, OpText};
 
 //#region 🔖️Mutations
 //#region 🔖️Leaves
-#[path = "📄set-snapshot/🦀️.rs"]
+#[path = "🟤️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "➕insert-vertex/🦀️.rs"]
 pub mod insert_vertex;
@@ -827,10 +827,10 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🧪️FixtureCases
-/// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
+/// 🧪️ Handcrafted `🟤️set-snapshot` fixture cases, wired from this tree's own mutations root so
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📄set-snapshot/🧪️tests/lifts-the-third-vertex-and-gives-it-an-explicit-w/🦀️.rs"]
+#[path = "🟤️set-snapshot/🧪️tests/🍎️lifts-the-third-vertex-and-gives-it-an-explicit-w/🦀️.rs"]
 mod set_snapshot_lifts_the_third_vertex_and_gives_it_an_explicit_w;
 //#endregion 🧪️FixtureCases

@@ -1,6 +1,0 @@
-syntax = "proto3";
-package semio.s_stdio_step.artifact;
-message StepArtifact {
-  string schema = 1;
-  string text_wire = 2;
-}

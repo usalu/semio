@@ -199,7 +199,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for Block2dAnalyzerAnalysis {
         type Parts = Block2dParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.block2d", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.block.block2d", standard: StandardId("1"), subset: SubsetId("*") };
 
         async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
@@ -251,6 +251,13 @@ semio_framework_plugin::derive_artifact_facets!(
 /// 📸️ A fresh, empty `Block2dSnapshot` (all fields at their `Default`).
 pub async fn empty_block2d_snapshot() -> Block2dSnapshot {
     Block2dSnapshot::default()
+}
+
+/// 📄️ The block2d boot document — parsed from the bundled `hexagonal-cut-concrete-forest-left`
+/// example fixture (the same DSL text `setActiveExample` loads), falling back to the empty snapshot
+/// only when that fixture fails to parse. Shared by `Block2dPlayApp` and `Block2dViewer`.
+pub async fn default_block2d_snapshot() -> Block2dSnapshot {
+    super::snapshot::text::parse_dsl(super::snapshot::text::BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_block2d_snapshot())
 }
 
 /// 🪪️ Finds the smallest `"{prefix}{n}"` id not already present in `existing`.

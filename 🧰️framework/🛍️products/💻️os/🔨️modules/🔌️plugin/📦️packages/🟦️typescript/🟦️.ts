@@ -3,7 +3,7 @@
  *
  * MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H2): `pluginWorkerSource`/`PLUGIN_WORKER_FILE`
  * (one Worker per plugin) are replaced by `shardWorkerSource`/`SHARD_WORKER_FILE` — ONE
- * package-agnostic `🟨️shard-worker.js`, served from `/plugin-modules/_shard/`, multiplexed by
+ * package-agnostic `🟨️shard-worker.js`, served from `/🔌️plugin-modules/🧵️shard/`, multiplexed by
  * `actorId` across a bounded shard pool (see `🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts`'s
  * `ShardClient`, the client-side transport this worker pairs with). V8 reserves a 4 GiB guard region
  * per wasm module per worker — one-worker-per-plugin capped the browser at ~20 plugins; this is the
@@ -18,6 +18,8 @@ import { buildBudgetMs, resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, sem
 
 export const PLUGIN_HOST_SHIM_FILE = "🟨️.js";
 export const SHARD_WORKER_FILE = "🟨️shard-worker.js";
+export const PREVIEW2_VENDOR_RELATIVE = "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim";
+export const GUESTSLIM_FONT_RELATIVE = "🪞️vendor/🔤️guestslim-typst-fonts.bin";
 
 export type PluginWebMaterializeContext = {
   readonly repoRoot: string;
@@ -481,7 +483,7 @@ export async function createActorApi(actorId, activationGeneration) {
 `;
 }
 
-const PREVIEW2_SHIM_IMPORT = /(from\s+['"])(?:@bytecodealliance\/preview2-shim|(?:\.\.\/)+(?:plugin-modules\/)?_vendor\/@bytecodealliance\/preview2-shim)\/([\w-]+)(?:\.js)?(['"])/g;
+const PREVIEW2_SHIM_IMPORT = /(from\s+['"])(?:@bytecodealliance\/preview2-shim|(?:\.\.\/)+(?:🔌️plugin-modules\/)?🪞️vendor\/🤝️bytecode-alliance\/🪟️preview2-shim)\/([\w-]+)(?:\.js)?(['"])/g;
 
 /** @emoji 🪢️ Rewrites bare or previously staged Preview2 imports to one caller-resolved directory prefix. */
 export function rewritePreview2ShimImportSource(source: string, prefix: string): string {
@@ -746,7 +748,7 @@ async function optimizePluginCoreModulesAsync(outDir: string, componentBase: str
  * work in wall-clock time — the sync {@link transpilePluginComponent} above cannot provide that overlap
  * no matter how it is scheduled from the caller side (see {@link spawnAsync}'s doc). Kept as a SEPARATE
  * export rather than changing the sync function in place: the extension store's `webMaterialize`
- * (`🏪️store/📜️store.ts`, outside this packet's owned paths) calls the sync version without awaiting
+ * (`🏪️store/📥️store.ts`, outside this packet's owned paths) calls the sync version without awaiting
  * it, relying on it blocking until done before it deletes the temp artifact directory in its own
  * `finally` — flipping that function to async out from under that caller would silently race the
  * artifact's cleanup against jco still reading it. */

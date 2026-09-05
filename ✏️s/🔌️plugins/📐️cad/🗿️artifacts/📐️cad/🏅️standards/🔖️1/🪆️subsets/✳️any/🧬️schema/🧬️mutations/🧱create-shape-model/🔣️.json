@@ -5,7 +5,7 @@
   "displayName": "Create Shape Model",
   "emoji": "🧱",
   "aggregateVariant": "CreateShapeModel",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "create-shape-model",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

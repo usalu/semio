@@ -1,9 +1,0 @@
-dialect grammar
-grammar en1998.diff
-extension en1998
-start document
-
-document = header body
-header = "schema" SP "norm.en1998.diff" NL
-body = payload NL?
-payload = OCTET+

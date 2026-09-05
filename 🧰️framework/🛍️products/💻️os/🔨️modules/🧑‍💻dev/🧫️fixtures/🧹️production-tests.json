@@ -1,0 +1,14 @@
+{
+  "productionDefinition": "undefined",
+  "source": "export const runtimeWitness = 'runtime-alive'; export let testWitness = null; if (import.meta.vitest) { const testOnly = await import('node:fs'); testWitness = testOnly.proof; }",
+  "testModule": "export const proof = 'test-alive';",
+  "assetSource": "export const runtimeUrl = new URL('./🔎️build-inspection.json', import.meta.url).href; export let testUrl = null; if (import.meta.vitest) { testUrl = new URL('./🧹️production-tests.json', import.meta.url).href; }",
+  "assetCases": [
+    { "mode": "production", "assets": ["🔎️build-inspection.json"], "testUrl": false },
+    { "mode": "test", "assets": ["🔎️build-inspection.json", "🧹️production-tests.json"], "testUrl": true }
+  ],
+  "cases": [
+    { "mode": "production", "nodeImports": 0, "runtimeWitness": "runtime-alive", "testWitness": null },
+    { "mode": "test", "nodeImports": 1, "runtimeWitness": "runtime-alive", "testWitness": "test-alive" }
+  ]
+}

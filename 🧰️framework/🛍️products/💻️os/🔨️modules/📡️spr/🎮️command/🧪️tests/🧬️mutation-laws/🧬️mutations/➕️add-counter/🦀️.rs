@@ -3,9 +3,10 @@ use super::super::{Counter, CounterDiff, CounterMutation};
 use crate::os_spr::{MutationKind, MutationOutcome, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl_derive::DslRecord, dsl_derive::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl_derive::DslRecord, dsl_derive::MutationLeaf, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "add-counter")]
 pub struct AddCounter { pub delta: i64 }
 

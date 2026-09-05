@@ -7,9 +7,9 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { type StyleVariantProps } from "../../🔨️modules/🏷️style-variants/🟦️.ts";
+import { type StyleVariantProps } from "../../🔨️modules/🧬️style-variants/🟦️.ts";
 import { type ControlIcon } from "../🔣️Icons/🟦️.tsx";
-import { ButtonGroup, ButtonGroupItem, buttonGroupItemVariants } from "../🎛️ButtonGroup/🟦️.tsx";
+import { ButtonGroup, ButtonGroupItem, buttonGroupItemVariants } from "../🔳️ButtonGroup/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🌩️Button

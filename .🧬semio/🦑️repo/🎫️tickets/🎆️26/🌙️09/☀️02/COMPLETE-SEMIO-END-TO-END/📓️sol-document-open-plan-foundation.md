@@ -187,6 +187,26 @@ The all-features target performs independent `--list` preflights for nine exact 
 
 This packet stops at the server HTTP authority boundary. A real production profile must explicitly link native codecs and supply a verified bundle with nonempty open targets before either feature is advertised. React/native/WGPU/MCP must then acquire the plan and derived SocketGrant per dial, obey checkpoint/tail revalidation, and mount only the exact returned target. Those client transports, renderer activation and native effect/event attachment remain separate work; there is no compatibility route, raw descriptor/factory response or readiness overclaim.
 
+## Public parent-dialect follow-on
+
+Current source now projects the complete verified application parent dialect through the public Rust and TypeScript `DocumentOpenPlanV1` contract. `DocumentOpenParentDialectV1` is a strict three-field shared DTO (`artifactKind`, `standard`, `subset`), requires artifact-kind equality plus nonempty, UTF-8-byte-bounded, control-free and trim-free values, and is reexported from the public directory facade. The Hub copies only the already verified catalog selection into `public_plan`; the authenticated receipt exchange and socket validity fences compare the same private dialect again. Native `DirectoryClient` retains the public value in `DocumentSocketAuthorityV1`; browser installed-target admission compares all three fields before receipt exchange. No compatibility or caller-selected dialect form was added.
+
+The neutral plan corpus commits the parent dialect in catalog generation framing and contains eight malformed catalog rows, four public-plan validation/equality cases and three consume-time substitutions. The browser schema/fixture requires the same DTO on both installed target and plan and includes three equality substitutions plus control and trim hostiles. The independent source oracle command:
+
+```text
+bun ./📜️script.ts open-plan-server-check --oracle-only
+```
+
+exited 0 on current source and reported descriptor `1`, catalog `2`, receipt `1`, independent codecs `3`, issuer `11`, consume `9`, negative `20`, exchange-negative `5`, redaction `1`, plus production TypeScript parity with `15` plan and `5` exchange rejections. A separate AJV 2020 validation of the browser schema/fixture exited 0 with installed/plan parent equality, five hostile parent vectors and two structural malformed rejections. The production TypeScript parser directly accepted the valid plan, structurally rejected the three malformed parent cases, and deliberately left the syntactically valid standard substitution to the exact installed/catalog equality fence.
+
+After the taxonomy owner repaired the selector-free canonical spellings, the registered root-routed oracle-only target exited 0 with the same counts. The registered framework OS focused test for `browser document open requires exact installed package artifact and surface authority` then exited 0 with one selected/one passed and 236 skipped. Native compile session `44281` exited 0 in 35.70 seconds for `semio-framework-os-kernel --lib` on the retained ticket target, proving the public Rust schema, DirectoryClient retention and store authority construction compile together; it is warnings-only build evidence, not a runtime assertion.
+
+Registered current-source native session `99222` retained the oracle phases above, completed the first library selector build, and then exited 1 before the Hub selectors or any native law ran. The second selector's Hub-binary build stopped in the concurrently edited shared plugin crate with exactly two `E0425` diagnostics: `mounted` was out of scope at `plugin/🦀️.rs:22044`, and `_permit` was bound at `:22512` while `permit` was used at `:22562`. The stored Cargo diagnostic is under the retained ticket target's `.fingerprint/semio-framework-plugin-ea04a964c632e7d9/output-lib-semio_framework_plugin`. This is zero native assertions and does not supersede historical server session `95998`; no parent-dialect-owned compiler error surfaced. Hub20 and all-feature checks were not run from this terminal.
+
+After the shared plugin owner reported its registered check green, warmed session `26716` reran the same registered target. The parent-dialect oracle and production TypeScript phases again passed with the exact counts above, but the first library selector build exited 101 in `semio-s-plugin-stdio` before discovery. The current source produced 52 `E0277` diagnostics; the first four are the HTML5 `any` mutation leaves `set-snapshot`, `set-element-name`, `set-text`, and `set-raw-text` not satisfying `MutationLeaf`, followed by aggregate repetitions. The retained diagnostic is `.fingerprint/semio-s-plugin-stdio-cf88cc8f0df9beac/output-lib-semio_s_plugin_stdio`. This second terminal also contains zero native assertions; Hub20 and all-feature remain unrun.
+
+The future `DocumentExecutionTargetLeaseV1` remains the intended single immutable client comparison boundary documented in `📓️terra-client-execution-target-lease-blueprint.md`; this follow-on does not claim that larger browser/native lease cutover.
+
 ## Owned files
 
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs`

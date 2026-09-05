@@ -48,8 +48,8 @@ pub fn contribute(base: &PngSnapshot, bkgd: &Option<PngBackground>) -> PngDiff {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
-    serde_json::from_str(include_str!("🧪️tests/direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-background payload")
+    serde_json::from_str(include_str!("🧪️tests/🟣️direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-background payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/direct-behavior/🦀️.rs"]
+#[path = "🧪️tests/🟣️direct-behavior/🦀️.rs"]
 mod tests_direct_behavior;

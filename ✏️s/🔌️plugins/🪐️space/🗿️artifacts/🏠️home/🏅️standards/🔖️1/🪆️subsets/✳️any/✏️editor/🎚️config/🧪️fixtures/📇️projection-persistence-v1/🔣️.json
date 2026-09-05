@@ -1,0 +1,67 @@
+{
+  "schema": "semio.space.home.directory-projection-persistence/v1",
+  "wire": {
+    "spaces": {
+      "space-α": {
+        "view": {
+          "id": "space-α",
+          "name": "Werkstatt 雪",
+          "kind": "studio",
+          "visibility": "private",
+          "ownerUserId": "user-owner",
+          "role": "author",
+          "memberCount": 1,
+          "documentCount": 1,
+          "activeConnections": 0,
+          "createdAtMs": 10,
+          "updatedAtMs": 30
+        },
+        "members": [
+          {
+            "userId": "user-owner",
+            "email": "owner@example.test",
+            "displayName": "Äda",
+            "role": "author"
+          }
+        ],
+        "documents": [
+          {
+            "spaceId": "space-α",
+            "documentId": "document-雪",
+            "artifactKind": "s.gis.map",
+            "artifactSchema": "semio.s.gis.map.v1",
+            "owner": {
+              "pluginId": "s.gis",
+              "packageId": "semio:gis",
+              "version": "1.0.0",
+              "packageHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "packSchemaHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "bootstrapVersion": 1,
+            "bootstrapFrontier": {
+              "headSeq": 3,
+              "commitSeq": 3,
+              "epoch": 1
+            },
+            "bootstrapSnapshotHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          }
+        ]
+      }
+    },
+    "cursor": 3,
+    "users": {
+      "user-owner": {
+        "id": "user-owner",
+        "email": "owner@example.test",
+        "displayName": "Äda",
+        "createdAtMs": 1
+      }
+    }
+  },
+  "expectedDocumentIds": ["document-雪"],
+  "malformed": [
+    "not json",
+    "{}",
+    "{\"spaces\":{},\"cursor\":0,\"users\":{},\"unknown\":true}"
+  ]
+}

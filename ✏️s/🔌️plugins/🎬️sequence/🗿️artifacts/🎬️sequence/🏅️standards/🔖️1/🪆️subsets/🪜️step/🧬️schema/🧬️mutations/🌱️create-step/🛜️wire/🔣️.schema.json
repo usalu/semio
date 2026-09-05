@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/sequence/sequence/mutation/create-step.json",
+  "title": "CreateStepMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "step"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createStep"
+    },
+    "step": {
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/mutation/create-step/payload.json#/properties/step"
+    }
+  }
+}

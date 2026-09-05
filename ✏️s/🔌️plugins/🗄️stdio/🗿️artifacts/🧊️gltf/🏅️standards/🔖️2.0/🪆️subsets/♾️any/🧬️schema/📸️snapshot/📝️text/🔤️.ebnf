@@ -1,0 +1,14 @@
+(* ebnf stdio.gltf snapshot -- RFC8259 JSON text, root object narrowed to glTF 2.0 (§5) shape. *)
+document = gltf document , ws ;
+gltf document = "{" , ws , "\"asset\"" , ws , ":" , ws , asset object , ( ws , "," , ws , member )* , ws , "}" ;
+asset object = "{" , ws , "\"version\"" , ws , ":" , ws , string , ( ws , "," , ws , asset field )* , ws , "}" ;
+asset field = ( "\"generator\"" | "\"copyright\"" | "\"minVersion\"" ) , ws , ":" , ws , string ;
+member = string , ws , ":" , ws , value ;
+value = object | array | string | number | "true" | "false" | "null" ;
+object = "{" , ws , ( member , ( ws , "," , ws , member )* )? , ws , "}" ;
+array = "[" , ws , ( value , ( ws , "," , ws , value )* )? , ws , "]" ;
+string = '"' , { unescaped | escape } , '"' ;
+escape = "\" , ( '"' | "\" | "/" | "b" | "f" | "n" | "r" | "t" | ( "u" , hex , hex , hex , hex ) ) ;
+number = [ "-" ] , int , [ "." , digit , { digit } ] , [ ( "e" | "E" ) , [ "+" | "-" ] , digit , { digit } ] ;
+int = "0" | ( digit1 , { digit } ) ;
+ws = { " " | "\t" | "\n" | "\r" } ;

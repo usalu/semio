@@ -18,7 +18,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { discoverPackages, loadTaxonomy, readSemioMarkerSubTable } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import type { PlaygroundAssetSpec } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds";
-import type { OwnedBuildPlugin } from "../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️build-tooling.ts";
+import type { OwnedBuildPlugin } from "../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🏗️build-tooling.ts";
 
 export type { PlaygroundAssetSpec };
 
@@ -67,19 +67,19 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
     sourceRoots: [
       repoRelative("🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react"),
       repoRelative("🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript"),
-      repoRelative("🧰️framework/🔨️modules/🖱️ui/🖼️assets"),
+      repoRelative("🧰️framework/🔨️modules/🖼️assets"),
       repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript"),
     ],
     aliases: {
       "@semio-tech/infinite-canvas-react-renderer": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/🟦️.tsx",
-      "@elements/ui/globals.css": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️.css",
+      "@elements/ui/globals.css": "🧰️framework/🔨️modules/🖱️ui/🌐️globals-ui.css",
     },
     // 🎫️ 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE W7: most stories moved to co-locate with their
     // component (🧱️elements/<Element>/🧪️.story.tsx); the legacy glob stays for stories whose component
     // is still barrel-inline (not yet extracted) or whose target element dir is already occupied by
     // another story sharing its name (the fixed single-leaf-filename taxonomy holds one story file per
     // dir — see 📋️w0-status.md's W7 section for the full per-story disposition).
-    storyGlobs: ["./stories/ui/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)", "../🧰️framework/🔨️modules/🖱️ui/🧱️elements/**/🧪️.story.tsx"],
+    storyGlobs: ["./stories/ui/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)", "../🧰️framework/🔨️modules/🖱️ui/🧱️elements/**/*.story.tsx"],
   },
   {
     id: "puzzle",
@@ -104,20 +104,20 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
   {
     id: "framework",
     titlePrefix: "🛠️framework",
-    sourceRoots: [repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"), repoRelative("🧰️framework/📦️packages/🟦️typescript")],
+    sourceRoots: [repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"), repoRelative("🧰️framework/📦️packages/🟦️typescript")],
   },
   {
     id: "framework/hosts",
     titlePrefix: "🛠️framework🔌️hosts",
     sourceRoots: [
-      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"),
+      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"),
       repoRelative("🧰️framework/📦️packages/🟦️typescript"),
       repoRelative("🧰️framework/🔨️modules/🗺️surface"),
       repoRelative("🧰️framework/🔨️modules/✍️editor"),
       repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust"),
     ],
     aliases: {
-      "@semio-tech/framework-renderer-react": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx",
+      "@semio-tech/framework-renderer-react": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx",
       "@semio-tech/framework": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
     },
   },
@@ -125,22 +125,22 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
     id: "framework/os",
     titlePrefix: "🛠️framework🖥️os",
     sourceRoots: [
-      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"),
-      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"),
+      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"),
+      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"),
       repoRelative("🧰️framework/📦️packages/🟦️typescript"),
       repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry"),
       repoRelative("🧰️framework/🛍️products/💻️os"),
     ],
     aliases: {
-      "@semio-tech/framework-renderer-react": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx",
-      "@semio-tech/framework-renderer-wgpu": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer-boot/🟦️.ts",
+      "@semio-tech/framework-renderer-react": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx",
+      "@semio-tech/framework-renderer-wgpu": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer-boot/🟦️.ts",
       "@semio-tech/framework": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
-      "/plugin-modules": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules",
-      "/renderer-modules": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/📺️renderer-modules",
+      "/plugin-modules": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules",
+      "/renderer-modules": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚡️implementations/🟦️typescript/📺️renderer-modules",
     },
     assets: [
-      { kind: "static-dir", route: "/plugin-modules", root: "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules" },
-      { kind: "static-dir", route: "/renderer-modules", root: "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/📺️renderer-modules" },
+      { kind: "static-dir", route: "/plugin-modules", root: "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules" },
+      { kind: "static-dir", route: "/renderer-modules", root: "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚡️implementations/🟦️typescript/📺️renderer-modules" },
     ],
     vitePlugins: async () => {
       const { playgroundIframeEmbedHeadersPlugin } = await import(/* @vite-ignore */ "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts");

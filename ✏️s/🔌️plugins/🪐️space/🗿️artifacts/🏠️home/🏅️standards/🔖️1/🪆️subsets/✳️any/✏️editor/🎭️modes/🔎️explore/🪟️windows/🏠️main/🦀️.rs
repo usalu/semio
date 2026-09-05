@@ -132,7 +132,7 @@ fn render_rows(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, actions: &
 /// (`getComputedStyle(...).getPropertyValue("--window-content-dead-line")`), the SAME clearance
 /// `ComponentSceneHost`/`TableHost` already gets for free (its own top-level wrapper applies it) but a
 /// bare `UiNode::Stack` root does not. The real fix belongs in the interpreter's `UiStackHost`
-/// (`Interpreter/🟦️.tsx`, framework-owned, outside this lane's lease) — applying
+/// (`🟦️Interpreter/🟦️.tsx`, framework-owned, outside this lane's lease) — applying
 /// `padding-top: var(--window-content-dead-line)` to a window body's ROOT stack the same way table
 /// hosts already get it. Two empty separators (measured: ~6.4px of clearance each from the stack's own
 /// `gap-double`) reliably clear the dead-line with margin; confirmed live via Playwright-style
@@ -159,9 +159,10 @@ fn create_space_button(actions: &SHomeLabels) -> semio_framework_plugin::UiAssem
 pub fn render(cfg: &HomeConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let table = semio_framework_plugin::resolve_labels_for_locale::<HomeTableLabels>(&cfg.locale);
     let actions = semio_framework_plugin::resolve_labels_for_locale::<SHomeLabels>(&cfg.locale);
+    let directory = cfg.directory().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("s.home.directory-projection-malformed", "Home directory projection is invalid"))?;
     // 🌉️ `crate::home_space_rows` is a plugin-root async fn (outside this lease); `render` must
     // stay sync (called synchronously by `HomeApp::render`) — bridged via `resolve_ready`.
-    let rows = semio_framework_plugin::resolve_ready(crate::home_space_rows(&cfg.directory()));
+    let rows = semio_framework_plugin::resolve_ready(crate::home_space_rows(&directory));
     let table_node = render_rows(&rows, table, actions)?;
     let mut children: semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode> = semio_framework_plugin::UiFixedList::default();
     for child in [window_content_dead_line_spacer()?, window_content_dead_line_spacer()?, create_space_button(actions)?, table_node] {

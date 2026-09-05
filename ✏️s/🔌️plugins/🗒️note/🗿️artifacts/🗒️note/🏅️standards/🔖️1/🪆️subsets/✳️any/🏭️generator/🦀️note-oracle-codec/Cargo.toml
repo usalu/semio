@@ -17,7 +17,7 @@ name = "note-oracle-codec"
 path = "🦀️.rs"
 
 # 🔒️ All three already approved as `test-oracle` in 🔒️dependencies.json and already registered
-# against this exact subset in ../../🔣️oracle.json (dxf-crate-note-ink-reader,
+# against this exact subset in ../../🔮️oracle/🔣️.json (dxf-crate-note-ink-reader,
 # quick-xml-note-drawing-reader, lopdf-note-text-reader). Pinned to the SAME versions.
 [dependencies]
 dxf = "0.6"

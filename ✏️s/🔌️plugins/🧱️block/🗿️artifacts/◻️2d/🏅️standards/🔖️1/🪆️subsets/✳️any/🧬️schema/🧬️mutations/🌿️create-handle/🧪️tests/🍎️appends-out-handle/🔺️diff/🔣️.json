@@ -1,0 +1,27 @@
+{
+  "artifact": null,
+  "schema": null,
+  "nodeKind": null,
+  "presentation": null,
+  "handleKinds": null,
+  "handles": {
+    "added": [
+      {
+        "id": "handle-out",
+        "handleKind": "hk-power",
+        "angle": 3.0,
+        "radius": 0.5
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "compatibility": null,
+  "attributes": null,
+  "authors": null,
+  "camera2d": null,
+  "meta": null,
+  "selectedIds": null,
+  "locale": null
+}

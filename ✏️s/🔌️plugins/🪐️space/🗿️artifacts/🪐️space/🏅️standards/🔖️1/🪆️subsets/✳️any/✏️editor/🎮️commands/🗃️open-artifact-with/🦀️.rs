@@ -1,5 +1,5 @@
 //! 🗃️️ SpaceIndexEditor commands command — `open-artifact-with`. The explicit "Open with…" chooser
-//! variant of `📂open-artifact`: `role`/`plugin_id`/`app_id` are the user's explicit picks from the
+//! variant of `🗿️open-artifact`: `role`/`plugin_id`/`app_id` are the user's explicit picks from the
 //! chooser dialog (worker-brief task 2), always sent, never defaulted by the shell.
 
 use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;

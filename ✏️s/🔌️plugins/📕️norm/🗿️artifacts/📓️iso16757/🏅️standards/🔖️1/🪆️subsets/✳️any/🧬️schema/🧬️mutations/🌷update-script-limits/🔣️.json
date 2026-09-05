@@ -5,7 +5,7 @@
   "displayName": "Update Script Limits",
   "emoji": "🌷",
   "aggregateVariant": "UpdateScriptLimits",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

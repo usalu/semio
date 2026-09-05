@@ -119,6 +119,7 @@ impl PackagePluginDependency {
 #[derive(Clone, Debug, PartialEq)]
 pub struct ExtensionPackageManifest {
     pub extension_id: String,
+    pub directory_name: String,
     pub label: String,
     pub version: String,
     pub extends: String,
@@ -152,6 +153,7 @@ impl ExtensionPackageManifest {
         use crate::os_pack::json::{object, Value};
         object([
             ("extensionId".to_string(), Value::from(self.extension_id.clone())),
+            ("directoryName".to_string(), Value::from(self.directory_name.clone())),
             ("label".to_string(), Value::from(self.label.clone())),
             ("version".to_string(), Value::from(self.version.clone())),
             ("extends".to_string(), Value::from(self.extends.clone())),
@@ -177,6 +179,7 @@ impl ExtensionPackageManifest {
         let package_format = value.get("packageFormat").and_then(Value::as_u64).ok_or_else(|| "missing field packageFormat".to_string())? as u16;
         Ok(Self {
             extension_id: field_str("extensionId")?,
+            directory_name: field_str("directoryName")?,
             label: field_str("label")?,
             version: field_str("version")?,
             extends: field_str("extends")?,
@@ -320,10 +323,23 @@ pub fn content_hash(bytes: &[u8]) -> String {
 mod tests {
     use super::*;
 
+    #[test]
+    fn authored_installation_directory_survives_the_wire_codec() {
+        let bytes = include_bytes!("./🧪️installation.json");
+        let owned = crate::os_pack::json::parse_bytes(bytes).unwrap();
+        let oracle: serde_json::Value = serde_json::from_slice(bytes).unwrap();
+        let manifest = ExtensionPackageManifest::from_json(owned.get("manifest").unwrap()).unwrap();
+        let serialized = manifest.to_json();
+        assert_eq!(serialized.get("extensionId").and_then(crate::os_pack::json::Value::as_str), oracle["manifest"]["extensionId"].as_str());
+        assert_eq!(serialized.get("directoryName").and_then(crate::os_pack::json::Value::as_str), oracle["manifest"]["directoryName"].as_str());
+        assert_ne!(serialized.get("extensionId"), serialized.get("directoryName"));
+    }
+
     async fn sample_manifest() -> ExtensionPackageManifest {
         use crate::os_pack::json::{object, Value};
         ExtensionPackageManifest {
             extension_id: "flow.math".into(),
+            directory_name: "🧮️flow-math".into(),
             label: "Flow Math".into(),
             version: "0.1.0".into(),
             extends: "flow".into(),
@@ -358,6 +374,7 @@ mod tests {
         use crate::os_pack::json::{object, Value};
         let bare = object([
             ("extensionId".to_string(), Value::from("flow.math")),
+            ("directoryName".to_string(), Value::from("🧮️flow-math")),
             ("label".to_string(), Value::from("Flow Math")),
             ("version".to_string(), Value::from("0.1.0")),
             ("extends".to_string(), Value::from("")),

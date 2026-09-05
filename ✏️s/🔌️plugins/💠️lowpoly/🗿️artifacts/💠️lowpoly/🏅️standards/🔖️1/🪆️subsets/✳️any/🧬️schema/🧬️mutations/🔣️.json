@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s.lowpoly.lowpoly/mutations.json",
   "title": "LowpolyMutation",
-  "description": "Seventeen-variant mutation dispatch envelope — real facet mirror of the Rust `LowpolyMutation` enum (`dsl::Mutations`-derived). serde's default externally-tagged representation: exactly one key, the PascalCase Rust variant name, whose value is that variant's payload — confirmed against every mutation family's committed `🧪️tests/…/🦠️mutation/🔣️.json` fixture. Each branch references its sibling `<mutation>/🔣️.schema.json` leaf rather than duplicating it.",
+  "description": "Seventeen-variant mutation dispatch envelope — real facet mirror of the Rust `LowpolyMutation` enum (`dsl::Mutations`-derived). serde's default externally-tagged representation: exactly one key, the PascalCase Rust variant name, whose value is that variant's payload — confirmed against every mutation family's committed `🧪️tests/…/🦠️mutation/🔣️.json` fixture. Each branch references its sibling `<mutation>/🧬️.schema.json` leaf rather than duplicating it.",
   "oneOf": [
     {
       "type": "object",
@@ -12,7 +12,7 @@
       ],
       "properties": {
         "CreateObject": {
-          "$ref": "🌱️create-object/🔣️.schema.json"
+          "$ref": "🌱️create-object/🧬️.schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "DeleteObject": {
-          "$ref": "💀️delete-object/🔣️.schema.json"
+          "$ref": "💀️delete-object/🧬️.schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "ReorderObjects": {
-          "$ref": "🔀️reorder-objects/🔣️.schema.json"
+          "$ref": "🔀️reorder-objects/🧬️.schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "RenameObject": {
-          "$ref": "🏷️rename-object/🔣️.schema.json"
+          "$ref": "🏷️rename-object/🧬️.schema.json"
         }
       }
     },
@@ -60,7 +60,7 @@
       ],
       "properties": {
         "ChangeObjectSmoothShading": {
-          "$ref": "🔘️change-object-smooth-shading/🔣️.schema.json"
+          "$ref": "🔘️change-object-smooth-shading/🧬️.schema.json"
         }
       }
     },
@@ -72,7 +72,7 @@
       ],
       "properties": {
         "MoveObject": {
-          "$ref": "↗️move-object/🔣️.schema.json"
+          "$ref": "↗️move-object/🧬️.schema.json"
         }
       }
     },
@@ -84,7 +84,7 @@
       ],
       "properties": {
         "RotateObject": {
-          "$ref": "🔄️rotate-object/🔣️.schema.json"
+          "$ref": "🔄️rotate-object/🧬️.schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
       ],
       "properties": {
         "ScaleObject": {
-          "$ref": "📐️scale-object/🔣️.schema.json"
+          "$ref": "📐️scale-object/🧬️.schema.json"
         }
       }
     },
@@ -108,7 +108,7 @@
       ],
       "properties": {
         "CreateMesh": {
-          "$ref": "🕸️create-mesh/🔣️.schema.json"
+          "$ref": "🕸️create-mesh/🧬️.schema.json"
         }
       }
     },
@@ -120,7 +120,7 @@
       ],
       "properties": {
         "DeleteMesh": {
-          "$ref": "🧨delete-mesh/🔣️.schema.json"
+          "$ref": "🧨delete-mesh/🧬️.schema.json"
         }
       }
     },
@@ -132,7 +132,7 @@
       ],
       "properties": {
         "InsertPaintLayer": {
-          "$ref": "➕️insert-paint-layer/🔣️.schema.json"
+          "$ref": "➕️insert-paint-layer/🧬️.schema.json"
         }
       }
     },
@@ -144,7 +144,7 @@
       ],
       "properties": {
         "RemovePaintLayer": {
-          "$ref": "➖️remove-paint-layer/🔣️.schema.json"
+          "$ref": "➖️remove-paint-layer/🧬️.schema.json"
         }
       }
     },
@@ -156,7 +156,7 @@
       ],
       "properties": {
         "RenamePaintLayer": {
-          "$ref": "🔖️rename-paint-layer/🔣️.schema.json"
+          "$ref": "🔖️rename-paint-layer/🧬️.schema.json"
         }
       }
     },
@@ -168,7 +168,7 @@
       ],
       "properties": {
         "ChangePaintLayerVisible": {
-          "$ref": "👁️change-paint-layer-visible/🔣️.schema.json"
+          "$ref": "👁️change-paint-layer-visible/🧬️.schema.json"
         }
       }
     },
@@ -180,7 +180,7 @@
       ],
       "properties": {
         "ChangePaintLayerOpacity": {
-          "$ref": "🌫️change-paint-layer-opacity/🔣️.schema.json"
+          "$ref": "🌫️change-paint-layer-opacity/🧬️.schema.json"
         }
       }
     },
@@ -192,7 +192,7 @@
       ],
       "properties": {
         "ChangePaintLayerBlendMode": {
-          "$ref": "🎛️change-paint-layer-blend-mode/🔣️.schema.json"
+          "$ref": "🎛️change-paint-layer-blend-mode/🧬️.schema.json"
         }
       }
     },
@@ -204,7 +204,7 @@
       ],
       "properties": {
         "EditPaintLayer": {
-          "$ref": "🎨️edit-paint-layer/🔣️.schema.json"
+          "$ref": "🎨️edit-paint-layer/🧬️.schema.json"
         }
       }
     }

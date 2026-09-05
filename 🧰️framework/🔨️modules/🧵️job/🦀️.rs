@@ -481,7 +481,7 @@ mod fixed_operation_registry_tests {
         assert!(registry.is_empty(), "language-neutral fixed operation case {id} retained an owner");
     }
 
-    include!("🧪️fixtures/fixed-operation-registry-cases.rs");
+    include!("🧪️fixtures/🧪️fixed-operation-registry-cases.rs");
 
     #[test]
     fn maximum_plus_one_and_saturation_return_the_exact_owner() {

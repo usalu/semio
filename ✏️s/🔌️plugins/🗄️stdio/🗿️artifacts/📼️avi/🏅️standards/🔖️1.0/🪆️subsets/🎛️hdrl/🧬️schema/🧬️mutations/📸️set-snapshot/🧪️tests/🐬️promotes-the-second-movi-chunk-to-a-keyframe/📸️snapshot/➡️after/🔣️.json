@@ -1,0 +1,94 @@
+{
+  "schema": "stdio.avi",
+  "mainHeader": {
+    "microSecPerFrame": 40000,
+    "maxBytesPerSec": 0,
+    "paddingGranularity": 0,
+    "flags": 16,
+    "totalFrames": 2,
+    "initialFrames": 0,
+    "streams": 1,
+    "suggestedBufferSize": 0,
+    "width": 2,
+    "height": 2,
+    "reserved": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "streams": [
+    {
+      "strh": {
+        "fccType": "vids",
+        "fccHandler": "DIB ",
+        "flags": 0,
+        "priority": 0,
+        "language": 0,
+        "initialFrames": 0,
+        "scale": 1,
+        "rate": 25,
+        "start": 0,
+        "length": 2,
+        "suggestedBufferSize": 0,
+        "quality": -1,
+        "sampleSize": 0,
+        "rcFrameLeft": 0,
+        "rcFrameTop": 0,
+        "rcFrameRight": 2,
+        "rcFrameBottom": 2,
+        "rcFrameWidth": 16,
+        "strhExtra": []
+      },
+      "strf": {
+        "format": "bitmapInfo",
+        "size": 40,
+        "width": 2,
+        "height": 2,
+        "planes": 1,
+        "bit_count": 24,
+        "compression": "DIB ",
+        "size_image": 16,
+        "x_pels_per_meter": 0,
+        "y_pels_per_meter": 0,
+        "colors_used": 0,
+        "colors_important": 0
+      },
+      "chunks": [
+        {
+          "fourcc": "00dc",
+          "data": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "keyframe": true
+        },
+        {
+          "fourcc": "00dc",
+          "data": [
+            2,
+            2,
+            2,
+            2
+          ],
+          "keyframe": true
+        }
+      ],
+      "strlExtra": []
+    }
+  ],
+  "idx1Present": true,
+  "unknownChunks": [
+    {
+      "fourcc": "JUNK",
+      "data": [
+        0,
+        0
+      ]
+    }
+  ],
+  "hdrlExtra": []
+}

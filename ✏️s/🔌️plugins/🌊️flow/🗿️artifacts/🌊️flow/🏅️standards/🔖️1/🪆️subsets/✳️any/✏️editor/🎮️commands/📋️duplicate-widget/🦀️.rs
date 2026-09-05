@@ -8,7 +8,6 @@ use semio_framework_plugin::app::ChildEmit;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, RequestId};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::mutations::{insert_edge, insert_node, SemioFlowMutation};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, PortRef, SemioFlowSnapshot};
-use serde_json::json;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Constants
@@ -171,11 +170,11 @@ fn request_id(payload: &DuplicateWidgetStep) -> u64 {
 }
 
 fn queue(payload: &DuplicateWidgetStep) -> Effect {
-    Effect::DispatchAction { req: RequestId(request_id(payload)), action: DUPLICATE_WIDGET_STEP_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(json!(payload))), delay_ms: 0 }
+    Effect::DispatchAction { req: RequestId(request_id(payload)), action: DUPLICATE_WIDGET_STEP_ACTION_ID.into(), args: Some(dsl::ToValue::to_value(payload)), delay_ms: 0 }
 }
 
 fn yield_step(step: DuplicateWidgetStep) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
-    let json = serde_json::to_string(&step).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("flow.duplicate-widget.checkpoint-invalid"), error.to_string()))?;
+    let json = dsl::os_pack::json::to_json_string(&step);
     if json.len() > MAX_CHECKPOINT_BYTES {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("flow.duplicate-widget.checkpoint-too-large"), "the bounded Flow continuation checkpoint exceeds 4,096 UTF-8 bytes"));
     }
@@ -186,13 +185,13 @@ fn checkpoint_generation(json: &str) -> Option<u64> {
     if json.len() > MAX_CHECKPOINT_BYTES {
         return None;
     }
-    serde_json::from_str::<DuplicateWidgetStep>(json).ok().map(|step| step.generation)
+    dsl::os_pack::json::from_json_str::<DuplicateWidgetStep>(json).ok().map(|step| step.generation)
 }
 
 fn commit_duplicate(generation: u64, child_id: &str, node: FlowNode, source_id: String, new_id: String, synapse_id: String) -> Emit<FlowMutation, FlowConfigMutation> {
     let edge = FlowEdge { id: synapse_id, from: PortRef { node: source_id, port: String::new() }, to: PortRef { node: new_id, port: String::new() }, kind: "data".into() };
     Emit {
-        child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", child_id, vec![SemioFlowMutation::InsertNode(insert_node::InsertNode { node }), SemioFlowMutation::InsertEdge(insert_edge::InsertEdge { edge })])],
+        child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", child_id, vec![SemioFlowMutation::InsertNode(insert_node::InsertNode::new(node)), SemioFlowMutation::InsertEdge(insert_edge::InsertEdge::new(edge))])],
         coalesce_key: Some(format!("duplicateWidget:{generation}")),
         config_mutations: vec![FlowConfigMutation::SetDuplicateWidgetProgress { json: String::new() }],
         ui_scope: UiDirtyScope::Full,
@@ -217,7 +216,7 @@ pub fn advance_duplicate_widget(payload: &DuplicateWidgetStep, doc: &ArtifactVie
     {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("flow.duplicate-widget.checkpoint-invalid"), "the Flow continuation exceeds its bounded field envelope"));
     }
-    if serde_json::from_str::<DuplicateWidgetStep>(&cfg.snapshot.duplicate_widget_progress_json).ok().as_ref() != Some(payload)
+    if dsl::os_pack::json::from_json_str::<DuplicateWidgetStep>(&cfg.snapshot.duplicate_widget_progress_json).ok().as_ref() != Some(payload)
         || payload.app_id != operation.app_instance_id.to_string()
         || payload.document_id != operation.parent_document_id
         || payload.operation_id.parse::<u64>().is_err()
@@ -300,15 +299,15 @@ mod tests {
         }
     }
 
-    fn next_checkpoint(result: InvocationResult) -> Option<serde_json::Value> {
+    fn next_checkpoint(result: InvocationResult) -> Option<dsl::DslValue> {
         result.requested_effects.into_iter().find_map(|effect| match effect {
-            Effect::DispatchAction { action, args, .. } if action == DUPLICATE_WIDGET_STEP_ACTION_ID => args.map(store::pack_rt::dsl_value_to_json),
+            Effect::DispatchAction { action, args, .. } if action == DUPLICATE_WIDGET_STEP_ACTION_ID => args,
             _ => None,
         })
     }
 
     async fn source_id(app: &FlowApp) -> String {
-        let fixture = app.snapshot().await.expect("Flow snapshot").to_fixture();
+        let fixture = app.snapshot().expect("Flow snapshot").to_fixture();
         crate::artifacts::flow::schema::widget_id(fixture.widgets.first().expect("default Flow widget")).to_string()
     }
 
@@ -344,8 +343,8 @@ mod tests {
         step.source_index = Some(7);
         step.new_id = Some("note-copy".into());
         step.scan_index = 64;
-        let encoded = serde_json::to_string(&step).expect("checkpoint encode");
-        let decoded: DuplicateWidgetStep = serde_json::from_str(&encoded).expect("checkpoint decode");
+        let encoded = dsl::os_pack::json::to_json_string(&step);
+        let decoded: DuplicateWidgetStep = dsl::os_pack::json::from_json_str(&encoded).expect("checkpoint decode");
         assert_eq!(decoded, step);
         assert!(encoded.len() <= MAX_CHECKPOINT_BYTES);
     }
@@ -361,13 +360,13 @@ mod tests {
         assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum Flow public command codec envelope exceeded 8 ms");
 
         let started = std::time::Instant::now();
-        let first = initial.handle_action("duplicateWidget", Some(&serde_json::json!({ "widgetId": widget_id })), &meta("document-a")).await.expect("public Flow duplicate start");
+        let first = initial.handle_action("duplicateWidget", Some(&dsl::DslValue::from(serde_json::json!({ "widgetId": widget_id }))), &meta("document-a")).await.expect("public Flow duplicate start");
         assert!(started.elapsed() < std::time::Duration::from_millis(8), "Flow public start handler/op-codec/diff/apply envelope exceeded 8 ms");
         let checkpoint = next_checkpoint(first).expect("durable Flow continuation");
         let (_, config_ops, _) = initial.take_last_emit_wire().await.expect("initial Flow config operation wire");
 
         let mut restarted = flow_app_with_registry().await;
-        let child_id = restarted.snapshot().await.expect("restarted Flow snapshot").content.child_id;
+        let child_id = restarted.snapshot().expect("restarted Flow snapshot").content.child_id;
         let before = restarted.child_store("content", &child_id).await.expect("restarted Flow child").document_pack_bytes().await.expect("Flow child before pack");
         let started = std::time::Instant::now();
         let config_blobs = protocol::decode_ops_vec(&config_ops).expect("Flow config operation vector decode");
@@ -394,20 +393,20 @@ mod tests {
     async fn public_action_bus_isolates_two_documents_and_emits_generation_bound_supersession() {
         let mut first_app = flow_app_with_registry().await;
         let mut second_app = flow_app_with_registry().await;
-        second_app.handle_action("addWidget", Some(&serde_json::json!({ "kind": "inputNote", "x": 7.0, "y": 7.0 })), &meta("document-b")).await.expect("make second Flow document distinct");
+        second_app.handle_action("addWidget", Some(&dsl::DslValue::from(serde_json::json!({ "kind": "inputNote", "x": 7.0, "y": 7.0 }))), &meta("document-b")).await.expect("make second Flow document distinct");
         register_content_child(&mut second_app).await;
         let first_id = source_id(&first_app).await;
         let second_id = source_id(&second_app).await;
-        assert_ne!(first_app.snapshot().await.expect("first Flow document").content.child_id, second_app.snapshot().await.expect("second Flow document").content.child_id);
-        let first = first_app.handle_action("duplicateWidget", Some(&serde_json::json!({ "widgetId": first_id })), &meta("document-a")).await.expect("first Flow document start");
+        assert_ne!(first_app.snapshot().expect("first Flow document").content.child_id, second_app.snapshot().expect("second Flow document").content.child_id);
+        let first = first_app.handle_action("duplicateWidget", Some(&dsl::DslValue::from(serde_json::json!({ "widgetId": first_id }))), &meta("document-a")).await.expect("first Flow document start");
         let first_checkpoint = next_checkpoint(first).expect("first Flow checkpoint");
-        let second = second_app.handle_action("duplicateWidget", Some(&serde_json::json!({ "widgetId": second_id })), &meta("document-b")).await.expect("second Flow document start");
+        let second = second_app.handle_action("duplicateWidget", Some(&dsl::DslValue::from(serde_json::json!({ "widgetId": second_id }))), &meta("document-b")).await.expect("second Flow document start");
         let second_checkpoint = next_checkpoint(second).expect("second Flow checkpoint");
 
-        let first_generation = serde_json::from_value::<DuplicateWidgetStep>(first_checkpoint.clone()).expect("first checkpoint decode").generation;
+        let first_generation = <DuplicateWidgetStep as dsl::FromValue>::from_value(first_checkpoint.clone()).expect("first checkpoint decode").generation;
         let replacement_id = source_id(&first_app).await;
         let started = std::time::Instant::now();
-        let replacement = first_app.handle_action("duplicateWidget", Some(&serde_json::json!({ "widgetId": replacement_id })), &meta("document-a")).await.expect("superseding Flow start");
+        let replacement = first_app.handle_action("duplicateWidget", Some(&dsl::DslValue::from(serde_json::json!({ "widgetId": replacement_id }))), &meta("document-a")).await.expect("superseding Flow start");
         assert!(started.elapsed() < std::time::Duration::from_millis(8), "Flow supersession envelope exceeded 8 ms");
         assert!(next_checkpoint(replacement).is_some());
         let (_, config_ops, _) = first_app.take_last_emit_wire().await.expect("supersession config operation wire");
@@ -426,15 +425,15 @@ mod tests {
         let mut second = flow_app_with_registry().await;
         reidentify_parent(&mut first, "flow-parent-a").await;
         reidentify_parent(&mut second, "flow-parent-b").await;
-        let first_snapshot = first.snapshot().await.expect("first Flow parent");
-        let second_snapshot = second.snapshot().await.expect("second Flow parent");
+        let first_snapshot = first.snapshot().expect("first Flow parent");
+        let second_snapshot = second.snapshot().expect("second Flow parent");
         assert_eq!(first_snapshot.content.child_id, second_snapshot.content.child_id, "fixture deliberately shares one child identity across two parents");
         let widget_id = source_id(&first).await;
-        let first_checkpoint = next_checkpoint(first.handle_action("duplicateWidget", Some(&serde_json::json!({ "widgetId": widget_id })), &meta("parent-a")).await.expect("first parent start")).expect("first parent checkpoint");
+        let first_checkpoint = next_checkpoint(first.handle_action("duplicateWidget", Some(&dsl::DslValue::from(serde_json::json!({ "widgetId": widget_id }))), &meta("parent-a")).await.expect("first parent start")).expect("first parent checkpoint");
         let second_id = source_id(&second).await;
-        let second_checkpoint = next_checkpoint(second.handle_action("duplicateWidget", Some(&serde_json::json!({ "widgetId": second_id })), &meta("parent-b")).await.expect("second parent start")).expect("second parent checkpoint");
-        let first_payload: DuplicateWidgetStep = serde_json::from_value(first_checkpoint.clone()).expect("first parent payload");
-        let second_payload: DuplicateWidgetStep = serde_json::from_value(second_checkpoint.clone()).expect("second parent payload");
+        let second_checkpoint = next_checkpoint(second.handle_action("duplicateWidget", Some(&dsl::DslValue::from(serde_json::json!({ "widgetId": second_id }))), &meta("parent-b")).await.expect("second parent start")).expect("second parent checkpoint");
+        let first_payload: DuplicateWidgetStep = dsl::FromValue::from_value(first_checkpoint.clone()).expect("first parent payload");
+        let second_payload: DuplicateWidgetStep = dsl::FromValue::from_value(second_checkpoint.clone()).expect("second parent payload");
         assert_ne!(first_payload.document_id, second_payload.document_id);
         assert_eq!(first_payload.child_id, second_payload.child_id);
         let crossed = second.handle_action(DUPLICATE_WIDGET_STEP_ACTION_ID, Some(&first_checkpoint), &meta("parent-b")).await.expect("cross-parent continuation is rejected");
@@ -447,9 +446,9 @@ mod tests {
     async fn public_action_bus_rejects_stale_content_and_oversize_admission() {
         let mut app = flow_app_with_registry().await;
         let widget_id = source_id(&app).await;
-        let first = app.handle_action("duplicateWidget", Some(&serde_json::json!({ "widgetId": widget_id })), &meta("document-stale")).await.expect("Flow stale test start");
+        let first = app.handle_action("duplicateWidget", Some(&dsl::DslValue::from(serde_json::json!({ "widgetId": widget_id }))), &meta("document-stale")).await.expect("Flow stale test start");
         let checkpoint = next_checkpoint(first).expect("Flow stale checkpoint");
-        app.handle_action("addWidget", Some(&serde_json::json!({ "kind": "inputNote", "x": 1.0, "y": 1.0 })), &meta("document-stale")).await.expect("advance Flow content identity");
+        app.handle_action("addWidget", Some(&dsl::DslValue::from(serde_json::json!({ "kind": "inputNote", "x": 1.0, "y": 1.0 }))), &meta("document-stale")).await.expect("advance Flow content identity");
         register_content_child(&mut app).await;
         let started = std::time::Instant::now();
         let stale = app.handle_action(DUPLICATE_WIDGET_STEP_ACTION_ID, Some(&checkpoint), &meta("document-stale")).await.expect("stale Flow continuation no-op");
@@ -457,7 +456,7 @@ mod tests {
         assert!(stale.requested_effects.is_empty() && stale.mutations.is_empty());
 
         let started = std::time::Instant::now();
-        let oversized = app.handle_action("duplicateWidget", Some(&serde_json::json!({ "widgetId": "x".repeat(MAX_WIDGET_ID_BYTES + 1) })), &meta("document-stale")).await;
+        let oversized = app.handle_action("duplicateWidget", Some(&dsl::DslValue::from(serde_json::json!({ "widgetId": "x".repeat(MAX_WIDGET_ID_BYTES + 1) }))), &meta("document-stale")).await;
         assert!(started.elapsed() < std::time::Duration::from_millis(8), "Flow oversize admission exceeded 8 ms");
         let fault = oversized.expect_err("oversize Flow admission must be explicit Busy");
         assert_eq!(fault.code.0, "flow.duplicate-widget.busy");

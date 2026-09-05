@@ -1,0 +1,163 @@
+{
+  "name": "@semio-tech/framework-renderer-wgpu",
+  "$schema": "../../../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
+  "projectType": "library",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/**/*"]
+  },
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test quick",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+      }
+    },
+    "test-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-native",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "directory-retained-home-bootstrap-source-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts directory-retained-home-bootstrap-source-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+      }
+    },
+    "directory-retained-home-bootstrap-native-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts directory-retained-home-bootstrap-native-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+      }
+    },
+    "test-browser-worker": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-browser-worker",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+      }
+    },
+    "test-preview-generated": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-preview-generated",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+      }
+    },
+    "check-browser-worker": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts check-browser-worker",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+      }
+    },
+    "generate-frame-worker": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts generate-frame-worker",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+      }
+    },
+    "preview-generated": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts preview-generated",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+      }
+    },
+    "check-frame-worker": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts check-frame-worker",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test long",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test exhaustive",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+      }
+    },
+    "wasm": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["generate-frame-worker"],
+      "options": {
+        "command": "bun ./📜️script.ts wasm",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["generate-frame-worker"],
+      "options": {
+        "command": "bun ./📜️script.ts serve",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["generate-frame-worker"],
+      "options": {
+        "command": "bun ./📜️script.ts dev",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts native",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "native-environment-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts native-environment-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+      }
+    },
+    "native-build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts native-build",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts lint",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+      }
+    }
+  },
+  "tags": [
+    "scope:framework",
+    "type:renderer"
+  ]
+}

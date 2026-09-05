@@ -19,9 +19,9 @@
 //! bounded `ComputePool` semaphore instead of an unbounded `std::thread::spawn` per call.
 
 use super::schema::{
-    DirectoryCommand, DirectoryEvent, DirectoryStreamMessage, DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1,
-    DocumentOpenPackageV1, DocumentOpenPlanV1, DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1,
-    DocumentPlanSocketGrantIntentV1, DocumentScope, DocumentView, InviteView, MemberView, SpaceView,
+    DirectoryCommand, DirectoryEvent, DirectoryEventPageV1, DirectorySpaceDetailV1, DirectorySpaceListEntryV1, DirectoryStreamMessage, DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1,
+    DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanV1, DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1,
+    DocumentPlanSocketGrantIntentV1, DocumentScope, DIRECTORY_EVENT_PAGE_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER,
 };
 use crate::os_dsl::{DslValue, FromValue, ToValue, ValueError};
 use semio_framework_async::OperationContext;
@@ -135,7 +135,7 @@ pub trait DirectoryWsConnection: DirectoryConnectionPlatform {
 pub enum DirectoryWsPoll {
     Text(String),
     Pending,
-    Closed,
+    Closed(Option<u16>),
 }
 //#endregion 🔖️Transport
 
@@ -202,51 +202,6 @@ pub struct CommandOutcome {
     pub result: Option<DslValue>,
 }
 
-/// 🏠️ `GET /directory/spaces/{id}`'s body: the space itself plus its members/documents/invites
-/// (contract §C2), flattened onto one JSON object rather than nested under a `space` key.
-/// Hand-written, not derived: `#[value(...)]` deliberately does not support a serde-`flatten`
-/// equivalent (`semio_framework_value_derive`'s own header docs) — flattening `space`'s own
-/// object entries into this struct's top level is done by hand below instead.
-#[derive(Clone, Debug)]
-pub struct SpaceDetail {
-    pub space: SpaceView,
-    pub members: Vec<MemberView>,
-    pub documents: Vec<DocumentView>,
-    pub invites: Vec<InviteView>,
-}
-
-impl ToValue for SpaceDetail {
-    fn to_value(&self) -> DslValue {
-        let mut entries = match self.space.to_value() {
-            DslValue::Object(entries) => entries,
-            other => vec![("space".to_string(), other)],
-        };
-        entries.push(("members".to_string(), self.members.to_value()));
-        entries.push(("documents".to_string(), self.documents.to_value()));
-        entries.push(("invites".to_string(), self.invites.to_value()));
-        DslValue::Object(entries)
-    }
-}
-
-impl FromValue for SpaceDetail {
-    fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let space = SpaceView::from_value(value.clone())?;
-        let DslValue::Object(entries) = value else { return Err(ValueError::new("SpaceDetail expects a wire object")) };
-        let mut members = Vec::new();
-        let mut documents = Vec::new();
-        let mut invites = Vec::new();
-        for (key, entry) in entries {
-            match key.as_str() {
-                "members" => members = Vec::<MemberView>::from_value(entry).map_err(|error| error.under("members"))?,
-                "documents" => documents = Vec::<DocumentView>::from_value(entry).map_err(|error| error.under("documents"))?,
-                "invites" => invites = Vec::<InviteView>::from_value(entry).map_err(|error| error.under("invites"))?,
-                _ => {}
-            }
-        }
-        Ok(SpaceDetail { space, members, documents, invites })
-    }
-}
-
 /// 🪪️ `GET /auth/sessions/me`'s body (contract §C2, camelCase — this route is NEW this wave).
 #[derive(Clone, Debug, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
@@ -266,6 +221,143 @@ pub struct SessionView {
 pub struct SessionMintResponse {
     pub token: String,
     pub user_id: String,
+}
+
+/// 📄️ Immutable original page bytes plus only the authenticated header needed for ACK ordering.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CanonicalDirectoryEventPageV1 {
+    canonical_json: String,
+    session_binding_sha256: String,
+    authorization_generation: u64,
+    after_seq_exclusive: u64,
+    through_seq_inclusive: u64,
+    has_more: bool,
+    receipt_sha256: String,
+}
+
+impl CanonicalDirectoryEventPageV1 {
+    pub fn canonical_json(&self) -> &str { &self.canonical_json }
+    pub fn session_binding_sha256(&self) -> &str { &self.session_binding_sha256 }
+    pub fn authorization_generation(&self) -> u64 { self.authorization_generation }
+    pub fn after_seq_exclusive(&self) -> u64 { self.after_seq_exclusive }
+    pub fn through_seq_inclusive(&self) -> u64 { self.through_seq_inclusive }
+    pub fn has_more(&self) -> bool { self.has_more }
+    pub fn receipt_sha256(&self) -> &str { &self.receipt_sha256 }
+
+    /// ✅️ Captures the exact non-secret header a retained Home action must acknowledge.
+    pub fn acknowledgement(&self, bootstrap_epoch: u64) -> DirectoryEventPageAckV1 {
+        DirectoryEventPageAckV1 {
+            bootstrap_epoch,
+            session_binding_sha256: self.session_binding_sha256.clone(),
+            authorization_generation: self.authorization_generation,
+            through_seq_inclusive: self.through_seq_inclusive,
+            receipt_sha256: self.receipt_sha256.clone(),
+        }
+    }
+}
+
+/// 🧾️ Exact retained-Home acknowledgement for one still-owned directory page.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DirectoryEventPageAckV1 {
+    pub bootstrap_epoch: u64,
+    pub session_binding_sha256: String,
+    pub authorization_generation: u64,
+    pub through_seq_inclusive: u64,
+    pub receipt_sha256: String,
+}
+
+/// 🚦️ Next I/O boundary after one accepted page acknowledgement.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DirectoryBootstrapTransition {
+    Fetch { after: u64 },
+    Live { since: u64 },
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum DirectoryBootstrapPhase {
+    Fetching,
+    AwaitingAck,
+    Live,
+    Closed,
+}
+
+/// 🧭️ Sole native-shell owner of the fetch → retained Home ACK → live cursor.
+pub struct DirectoryEventPageBootstrapV1 {
+    bootstrap_epoch: u64,
+    acknowledged_through: u64,
+    pending: Option<CanonicalDirectoryEventPageV1>,
+    phase: DirectoryBootstrapPhase,
+}
+
+impl DirectoryEventPageBootstrapV1 {
+    pub fn new(bootstrap_epoch: u64, after: u64) -> Result<Self, DirectoryClientError> {
+        if bootstrap_epoch > DOCUMENT_OPEN_MAX_SAFE_INTEGER || after > DOCUMENT_OPEN_MAX_SAFE_INTEGER {
+            return Err(DirectoryClientError::Decode("directory bootstrap owner is not wire-safe".into()));
+        }
+        Ok(Self { bootstrap_epoch, acknowledged_through: after, pending: None, phase: DirectoryBootstrapPhase::Fetching })
+    }
+
+    pub fn bootstrap_epoch(&self) -> u64 {
+        self.bootstrap_epoch
+    }
+
+    pub fn after(&self) -> u64 {
+        self.acknowledged_through
+    }
+
+    pub fn present(&mut self, page: CanonicalDirectoryEventPageV1) -> Result<DirectoryEventPageAckV1, DirectoryClientError> {
+        if self.phase != DirectoryBootstrapPhase::Fetching || page.after_seq_exclusive != self.acknowledged_through || page.through_seq_inclusive < self.acknowledged_through {
+            return Err(DirectoryClientError::Decode("directory bootstrap page ordering mismatch".into()));
+        }
+        let acknowledgement = page.acknowledgement(self.bootstrap_epoch);
+        self.pending = Some(page);
+        self.phase = DirectoryBootstrapPhase::AwaitingAck;
+        Ok(acknowledgement)
+    }
+
+    pub fn acknowledge(&mut self, acknowledgement: &DirectoryEventPageAckV1) -> Result<DirectoryBootstrapTransition, DirectoryClientError> {
+        let page = self.pending.as_ref().ok_or_else(|| DirectoryClientError::Decode("directory bootstrap has no pending page".into()))?;
+        if self.phase != DirectoryBootstrapPhase::AwaitingAck
+            || acknowledgement.bootstrap_epoch != self.bootstrap_epoch
+            || acknowledgement.session_binding_sha256 != page.session_binding_sha256
+            || acknowledgement.authorization_generation != page.authorization_generation
+            || acknowledgement.through_seq_inclusive != page.through_seq_inclusive
+            || acknowledgement.receipt_sha256 != page.receipt_sha256
+        {
+            return Err(DirectoryClientError::Decode("directory bootstrap acknowledgement mismatch".into()));
+        }
+        self.acknowledged_through = page.through_seq_inclusive;
+        let has_more = page.has_more;
+        self.pending = None;
+        self.phase = if has_more { DirectoryBootstrapPhase::Fetching } else { DirectoryBootstrapPhase::Live };
+        Ok(if has_more { DirectoryBootstrapTransition::Fetch { after: self.acknowledged_through } } else { DirectoryBootstrapTransition::Live { since: self.acknowledged_through } })
+    }
+
+    pub fn reject(&mut self, bootstrap_epoch: u64, receipt_sha256: &str) -> Result<u64, DirectoryClientError> {
+        let page = self.pending.as_ref().ok_or_else(|| DirectoryClientError::Decode("directory bootstrap has no pending page".into()))?;
+        if self.phase != DirectoryBootstrapPhase::AwaitingAck || bootstrap_epoch != self.bootstrap_epoch || receipt_sha256 != page.receipt_sha256 {
+            return Err(DirectoryClientError::Decode("directory bootstrap rejection mismatch".into()));
+        }
+        self.pending = None;
+        self.phase = DirectoryBootstrapPhase::Fetching;
+        Ok(self.acknowledged_through)
+    }
+
+    pub fn wake(&mut self, rebootstrap: bool) -> Option<u64> {
+        if self.phase != DirectoryBootstrapPhase::Live {
+            return None;
+        }
+        if rebootstrap {
+            self.acknowledged_through = 0;
+        }
+        self.phase = DirectoryBootstrapPhase::Fetching;
+        Some(self.acknowledged_through)
+    }
+
+    pub fn close(&mut self) {
+        self.pending = None;
+        self.phase = DirectoryBootstrapPhase::Closed;
+    }
 }
 
 #[derive(FromValue)]
@@ -294,6 +386,7 @@ pub struct DocumentSocketAuthorityV1 {
     pub catalog: DocumentOpenCatalogV1,
     pub package: DocumentOpenPackageV1,
     pub artifact: DocumentOpenArtifactV1,
+    pub parent_dialect: DocumentOpenParentDialectV1,
     pub pack_schema_hash: [u8; 32],
     pub surface: DocumentOpenSurfaceV1,
     pub grant: DocumentOpenGrantV1,
@@ -426,6 +519,7 @@ pub fn encode_url_component(value: &str) -> String {
 }
 
 const DOCUMENT_ADMISSION_RESPONSE_MAX_BYTES: usize = 64 * 1024;
+const DIRECTORY_SCOPE_ID_MAX_BYTES: usize = 4 * 1024;
 
 #[cfg(not(target_arch = "wasm32"))]
 fn emit_socket_grant_probe(path: &str, grant: &str) {
@@ -686,16 +780,64 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         }
     }
 
-    pub async fn spaces(&self, ctx: &OperationContext) -> Result<Vec<SpaceView>, DirectoryClientError> {
-        self.request_json(ctx, HttpMethod::Get, "/directory/spaces", None).await
+    pub async fn spaces(&self, ctx: &OperationContext) -> Result<Vec<DirectorySpaceListEntryV1>, DirectoryClientError> {
+        let spaces: Vec<DirectorySpaceListEntryV1> = self.request_json(ctx, HttpMethod::Get, "/directory/spaces", None).await?;
+        if spaces.iter().all(DirectorySpaceListEntryV1::validate) {
+            Ok(spaces)
+        } else {
+            Err(DirectoryClientError::Decode("directory space list access discriminator mismatch".into()))
+        }
     }
 
-    pub async fn space(&self, ctx: &OperationContext, id: &str) -> Result<SpaceDetail, DirectoryClientError> {
-        self.request_json(ctx, HttpMethod::Get, &format!("/directory/spaces/{id}"), None).await
+    pub async fn space(&self, ctx: &OperationContext, id: &str) -> Result<DirectorySpaceDetailV1, DirectoryClientError> {
+        let detail: DirectorySpaceDetailV1 = self.request_json(ctx, HttpMethod::Get, &format!("/directory/spaces/{id}"), None).await?;
+        if detail.validate() {
+            Ok(detail)
+        } else {
+            Err(DirectoryClientError::Decode("directory space detail access discriminator mismatch".into()))
+        }
     }
 
     pub async fn events(&self, ctx: &OperationContext, since: u64) -> Result<Vec<DirectoryEvent>, DirectoryClientError> {
         self.request_json(ctx, HttpMethod::Get, &format!("/directory/events?since={since}"), None).await
+    }
+
+    /// 📄️ Fetches one bounded canonical page while preserving the exact response bytes for Home.
+    pub async fn event_page(&self, ctx: &OperationContext, after: u64) -> Result<CanonicalDirectoryEventPageV1, DirectoryClientError> {
+        if after > DOCUMENT_OPEN_MAX_SAFE_INTEGER {
+            return Err(DirectoryClientError::Decode("directory event page after frontier is not wire-safe".into()));
+        }
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose()?;
+        let path = format!("/directory/event-page/v1?after={after}");
+        let response = self.transport.http(ctx, HttpMethod::Get, &self.url(&path), bearer, None).await?;
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        match response.status {
+            401 => return Err(DirectoryClientError::Unauthorized),
+            200..=299 => {}
+            status => return Err(DirectoryClientError::Http { status, body: String::from_utf8_lossy(&response.body).into_owned() }),
+        }
+        if response.body.len() > DIRECTORY_EVENT_PAGE_MAX_BYTES {
+            return Err(DirectoryClientError::Decode("directory event page response exceeded 64 KiB".into()));
+        }
+        let canonical_json = String::from_utf8(response.body).map_err(|error| DirectoryClientError::Decode(error.to_string()))?;
+        let page = DirectoryEventPageV1::parse_canonical_json(&canonical_json).map_err(|_| DirectoryClientError::Decode("directory event page response is not canonical".into()))?;
+        if page.after_seq_exclusive != after {
+            return Err(DirectoryClientError::Decode("directory event page response frontier mismatch".into()));
+        }
+        Ok(CanonicalDirectoryEventPageV1 {
+            canonical_json,
+            session_binding_sha256: page.session_binding_sha256,
+            authorization_generation: page.authorization_generation,
+            after_seq_exclusive: page.after_seq_exclusive,
+            through_seq_inclusive: page.through_seq_inclusive,
+            has_more: page.has_more,
+            receipt_sha256: page.receipt_sha256,
+        })
     }
 
     pub async fn me(&self, ctx: &OperationContext) -> Result<SessionView, DirectoryClientError> {
@@ -711,7 +853,26 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
     where
         T: Clone,
     {
-        DirectoryStream::new(self.clone(), since)
+        DirectoryStream::new(self.clone(), None, since, true)
+    }
+
+    /// 📌️ Creates a global wakeup stream whose reconnect cursor advances only by explicit page ACK.
+    pub fn stream_acknowledged(self: &Arc<Self>, since: u64) -> Result<DirectoryStream<T>, DirectoryClientError>
+    where
+        T: Clone,
+    {
+        if since > DOCUMENT_OPEN_MAX_SAFE_INTEGER {
+            return Err(DirectoryClientError::Decode("directory stream acknowledged frontier is not wire-safe".into()));
+        }
+        Ok(DirectoryStream::new(self.clone(), None, since, false))
+    }
+
+    /// 🎯️ Creates one exact scope-bound stream whose membership revocation is terminal.
+    pub fn stream_scoped(self: &Arc<Self>, scope: DocumentScope, since: u64) -> DirectoryStream<T>
+    where
+        T: Clone,
+    {
+        DirectoryStream::new(self.clone(), Some(scope), since, true)
     }
 
     pub fn open_stream_ws(&self, ctx: &OperationContext, since: u64, timeout_ms: u64) -> Result<T::Ws, DirectoryClientError> {
@@ -738,6 +899,39 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         if ctx.cancel.is_cancelled_now() {
             connection.close();
             return Err(DirectoryClientError::Cancelled);
+        }
+        Ok(connection)
+    }
+
+    /// 🎯️ Issues and consumes one membership-bound grant for an exact document scope.
+    pub fn open_scoped_stream_ws(&self, ctx: &OperationContext, scope: &DocumentScope, since: u64, timeout_ms: u64) -> Result<T::Ws, DirectoryClientError> {
+        if ctx.cancel.is_cancelled_now() {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        if scope.space_id.is_empty() || scope.document_id.is_empty() || scope.space_id.len() > DIRECTORY_SCOPE_ID_MAX_BYTES || scope.document_id.len() > DIRECTORY_SCOPE_ID_MAX_BYTES {
+            return Err(DirectoryClientError::Decode("directory stream scope invalid".into()));
+        }
+        let prefix = format!(
+            "/directory/spaces/{}/documents/{}",
+            encode_url_component(&scope.space_id),
+            encode_url_component(&scope.document_id),
+        );
+        let mut receipt = self.issue_socket_grant(ctx, &format!("{prefix}/socket-grants"), b"", timeout_ms)?;
+        if ctx.cancel.is_cancelled_now() {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let url = directory_scoped_ws_url(&self.base_url, scope, since);
+        let mut protocols = vec![std::mem::take(&mut receipt.protocol), std::mem::take(&mut receipt.grant)];
+        let connection = self.transport.open_ws(ctx, &url, &protocols, timeout_ms);
+        wipe_string(&mut protocols[1]);
+        let mut connection = connection?;
+        if ctx.cancel.is_cancelled_now() {
+            connection.close();
+            return Err(DirectoryClientError::Cancelled);
+        }
+        if let Err(error) = connection.send_binary(directory_socket_hello_v1()) {
+            connection.close();
+            return Err(error.into());
         }
         Ok(connection)
     }
@@ -852,6 +1046,7 @@ impl<T: DirectoryTransport + Send + Sync> HubSocketGrantSource for DirectoryClie
             catalog: plan.catalog,
             package: plan.package,
             artifact: plan.artifact,
+            parent_dialect: plan.parent_dialect,
             pack_schema_hash,
             surface: plan.surface,
             grant: plan.grant,
@@ -864,7 +1059,7 @@ impl<T: DirectoryTransport + Send + Sync> HubSocketGrantSource for DirectoryClie
 //#endregion 🔖️Client
 
 //#region 🔖️Stream
-/// ⏱️ Reconnect backoff floor/ceiling — same constants `🟦️backbone-worker.ts`'s
+/// ⏱️ Reconnect backoff floor/ceiling — same constants `🧵️backbone-worker.ts`'s
 /// `HUB_RECONNECT_MIN_MS`/`HUB_RECONNECT_MAX_MS` already use for the document WS.
 pub const HUB_RECONNECT_MIN_MS: u64 = 500;
 pub const HUB_RECONNECT_MAX_MS: u64 = 30_000;
@@ -878,6 +1073,18 @@ pub fn directory_ws_url(base_url: &str, since: u64) -> String {
     format!("{scheme}://{authority}/directory/socket/v1?since={since}")
 }
 
+/// 🎯️ Builds the exact URL paired with one scope-bound directory grant.
+pub fn directory_scoped_ws_url(base_url: &str, scope: &DocumentScope, since: u64) -> String {
+    let secure = base_url.starts_with("https://") || base_url.starts_with("wss://");
+    let authority = base_url.split_once("://").map_or(base_url, |(_, rest)| rest).split('/').next().unwrap_or(base_url);
+    let scheme = if secure { "wss" } else { "ws" };
+    format!(
+        "{scheme}://{authority}/directory/spaces/{}/documents/{}/socket/v1?since={since}",
+        encode_url_component(&scope.space_id),
+        encode_url_component(&scope.document_id),
+    )
+}
+
 /// ⏱️ Doubling backoff capped at `HUB_RECONNECT_MAX_MS`, floored at `HUB_RECONNECT_MIN_MS`.
 pub fn next_backoff_ms(current_ms: u64) -> u64 {
     current_ms.saturating_mul(2).clamp(HUB_RECONNECT_MIN_MS, HUB_RECONNECT_MAX_MS)
@@ -887,9 +1094,11 @@ pub fn next_backoff_ms(current_ms: u64) -> u64 {
 /// on the shared `TimerWheel`; `Idle` yields immediately instead of parking a worker on a socket.
 pub enum DirectoryStreamTurn<T: DirectoryTransport> {
     Dial { client: Arc<DirectoryClient<T>>, since: u64 },
+    DialScoped { client: Arc<DirectoryClient<T>>, scope: DocumentScope, since: u64 },
     Message(DirectoryStreamMessage),
     ReconnectAt(u64),
     Idle,
+    Revoked(DocumentScope),
     Closed,
 }
 
@@ -898,7 +1107,9 @@ pub enum DirectoryStreamTurn<T: DirectoryTransport> {
 /// drop, so the hub replays only the gap.
 pub struct DirectoryStream<T: DirectoryTransport> {
     client: Arc<DirectoryClient<T>>,
+    scope: Option<DocumentScope>,
     since: u64,
+    track_observed_frontier: bool,
     connection: Option<T::Ws>,
     backoff_ms: u64,
     reconnect_at_ms: Option<u64>,
@@ -907,12 +1118,21 @@ pub struct DirectoryStream<T: DirectoryTransport> {
 }
 
 impl<T: DirectoryTransport + Clone> DirectoryStream<T> {
-    fn new(client: Arc<DirectoryClient<T>>, since: u64) -> Self {
-        Self { client, since, connection: None, backoff_ms: HUB_RECONNECT_MIN_MS, reconnect_at_ms: None, dialing: false, closed: false }
+    fn new(client: Arc<DirectoryClient<T>>, scope: Option<DocumentScope>, since: u64, track_observed_frontier: bool) -> Self {
+        Self { client, scope, since, track_observed_frontier, connection: None, backoff_ms: HUB_RECONNECT_MIN_MS, reconnect_at_ms: None, dialing: false, closed: false }
     }
 
     pub fn since(&self) -> u64 {
         self.since
+    }
+
+    /// 📌️ Advances the durable reconnect frontier after an exact Home page acknowledgement.
+    pub fn acknowledge(&mut self, through: u64) -> Result<(), DirectoryClientError> {
+        if self.track_observed_frontier || through < self.since || through > DOCUMENT_OPEN_MAX_SAFE_INTEGER {
+            return Err(DirectoryClientError::Decode("directory stream acknowledgement frontier invalid".into()));
+        }
+        self.since = through;
+        Ok(())
     }
 
     pub fn close(&mut self) {
@@ -960,7 +1180,10 @@ impl<T: DirectoryTransport + Clone> DirectoryStream<T> {
         }
         if self.connection.is_none() {
             self.dialing = true;
-            return DirectoryStreamTurn::Dial { client: self.client.clone(), since: self.since };
+            return match &self.scope {
+                Some(scope) => DirectoryStreamTurn::DialScoped { client: self.client.clone(), scope: scope.clone(), since: self.since },
+                None => DirectoryStreamTurn::Dial { client: self.client.clone(), since: self.since },
+            };
         }
         for _ in 0..8 {
             let Some(connection) = self.connection.as_mut() else { return self.reconnecting(now_ms) };
@@ -972,7 +1195,12 @@ impl<T: DirectoryTransport + Clone> DirectoryStream<T> {
                     }
                 }
                 Ok(DirectoryWsPoll::Pending) => return DirectoryStreamTurn::Idle,
-                Ok(DirectoryWsPoll::Closed) | Err(_) => {
+                Ok(DirectoryWsPoll::Closed(Some(4401))) => {
+                    self.connection = None;
+                    self.closed = true;
+                    return self.scope.clone().map_or(DirectoryStreamTurn::Closed, DirectoryStreamTurn::Revoked);
+                }
+                Ok(DirectoryWsPoll::Closed(_)) | Err(_) => {
                     self.connection = None;
                     return self.reconnecting(now_ms);
                 }
@@ -989,6 +1217,9 @@ impl<T: DirectoryTransport + Clone> DirectoryStream<T> {
     }
 
     fn track(&mut self, message: &DirectoryStreamMessage) {
+        if !self.track_observed_frontier {
+            return;
+        }
         match message {
             DirectoryStreamMessage::Event { event } => self.since = self.since.max(event.seq),
             DirectoryStreamMessage::Heartbeat { head_seq } => self.since = self.since.max(*head_seq),
@@ -1029,7 +1260,7 @@ pub mod native {
 
     #[cfg(test)]
     mod runtime_identity_tests {
-        include!("🪪️runtime/🧪️test/🦀️s.rs");
+        include!("🪪️runtime/🧪️tests/🦀️.rs");
     }
 
     pub struct UreqStreamingHttpTransport {
@@ -1177,10 +1408,10 @@ pub mod native {
             for _ in 0..8 {
                 match self.0.read() {
                     Ok(Message::Text(text)) => return Ok(DirectoryWsPoll::Text(text.to_string())),
-                    Ok(Message::Close(_)) => return Ok(DirectoryWsPoll::Closed),
+                    Ok(Message::Close(frame)) => return Ok(DirectoryWsPoll::Closed(frame.map(|frame| u16::from(frame.code)))),
                     Ok(Message::Ping(_) | Message::Pong(_) | Message::Binary(_) | Message::Frame(_)) => {}
                     Err(tungstenite::Error::Io(error)) if error.kind() == std::io::ErrorKind::WouldBlock => return Ok(DirectoryWsPoll::Pending),
-                    Err(tungstenite::Error::ConnectionClosed | tungstenite::Error::AlreadyClosed) => return Ok(DirectoryWsPoll::Closed),
+                    Err(tungstenite::Error::ConnectionClosed | tungstenite::Error::AlreadyClosed) => return Ok(DirectoryWsPoll::Closed(None)),
                     Err(error) => return Err(TransportError::Io(error.to_string())),
                 }
             }
@@ -1435,7 +1666,12 @@ pub mod browser {
     use semio_framework_async::OperationContext;
     use wasm_bindgen::prelude::*;
     use wasm_bindgen::JsCast;
-    use web_sys::{BinaryType, MessageEvent, RequestInit, Response, WebSocket};
+    use web_sys::{BinaryType, CloseEvent, MessageEvent, RequestInit, Response, WebSocket};
+
+    enum BrowserDirectoryFrame {
+        Text(String),
+        Closed(Option<u16>),
+    }
 
     #[derive(Clone)]
     pub struct BrowserDirectoryTransport;
@@ -1489,21 +1725,27 @@ pub mod browser {
             }
             let socket = WebSocket::new_with_str_sequence(url, &protocol_values).map_err(|error| TransportError::Io(format!("{error:?}")))?;
             socket.set_binary_type(BinaryType::Blob);
-            let (incoming_tx, incoming_rx) = tokio::sync::mpsc::unbounded_channel::<String>();
+            let (incoming_tx, incoming_rx) = tokio::sync::mpsc::unbounded_channel::<BrowserDirectoryFrame>();
+            let message_tx = incoming_tx.clone();
             let onmessage = Closure::wrap(Box::new(move |event: MessageEvent| {
                 if let Some(text) = event.data().as_string() {
-                    let _ = incoming_tx.send(text);
+                    let _ = message_tx.send(BrowserDirectoryFrame::Text(text));
                 }
             }) as Box<dyn FnMut(MessageEvent)>);
+            let onclose = Closure::wrap(Box::new(move |event: CloseEvent| {
+                let _ = incoming_tx.send(BrowserDirectoryFrame::Closed(Some(event.code())));
+            }) as Box<dyn FnMut(CloseEvent)>);
             socket.set_onmessage(Some(onmessage.as_ref().unchecked_ref()));
-            Ok(BrowserWsConnection { socket, _onmessage: onmessage, incoming_rx })
+            socket.set_onclose(Some(onclose.as_ref().unchecked_ref()));
+            Ok(BrowserWsConnection { socket, _onmessage: onmessage, _onclose: onclose, incoming_rx })
         }
     }
 
     pub struct BrowserWsConnection {
         socket: WebSocket,
         _onmessage: Closure<dyn FnMut(MessageEvent)>,
-        incoming_rx: tokio::sync::mpsc::UnboundedReceiver<String>,
+        _onclose: Closure<dyn FnMut(CloseEvent)>,
+        incoming_rx: tokio::sync::mpsc::UnboundedReceiver<BrowserDirectoryFrame>,
     }
 
     impl DirectoryWsConnection for BrowserWsConnection {
@@ -1517,9 +1759,10 @@ pub mod browser {
 
         fn try_recv_text(&mut self) -> Result<DirectoryWsPoll, TransportError> {
             match self.incoming_rx.try_recv() {
-                Ok(text) => Ok(DirectoryWsPoll::Text(text)),
+                Ok(BrowserDirectoryFrame::Text(text)) => Ok(DirectoryWsPoll::Text(text)),
+                Ok(BrowserDirectoryFrame::Closed(code)) => Ok(DirectoryWsPoll::Closed(code)),
                 Err(tokio::sync::mpsc::error::TryRecvError::Empty) => Ok(DirectoryWsPoll::Pending),
-                Err(tokio::sync::mpsc::error::TryRecvError::Disconnected) => Ok(DirectoryWsPoll::Closed),
+                Err(tokio::sync::mpsc::error::TryRecvError::Disconnected) => Ok(DirectoryWsPoll::Closed(None)),
             }
         }
 
@@ -1587,6 +1830,7 @@ pub mod test_support {
     // `type Ws = FakeWs;` associated type.
     pub struct FakeWs {
         frames: VecDeque<Result<Option<String>, TransportError>>,
+        close_frame: Option<Option<u16>>,
         closes: Option<Arc<AtomicUsize>>,
         sends: Option<Arc<AtomicUsize>>,
     }
@@ -1594,7 +1838,12 @@ pub mod test_support {
     impl FakeWs {
         /// 🧪️ Creates a late-dial socket whose close is observable by the cancellation law.
         pub fn with_close_observer(closes: Arc<AtomicUsize>) -> Self {
-            Self { frames: VecDeque::new(), closes: Some(closes), sends: None }
+            Self { frames: VecDeque::new(), close_frame: None, closes: Some(closes), sends: None }
+        }
+
+        /// 🛑️ Creates a socket whose next receive preserves one close code.
+        pub fn with_close_code(code: u16) -> Self {
+            Self { frames: VecDeque::new(), close_frame: Some(Some(code)), closes: None, sends: None }
         }
     }
 
@@ -1611,9 +1860,12 @@ pub mod test_support {
         }
 
         fn try_recv_text(&mut self) -> Result<DirectoryWsPoll, TransportError> {
+            if let Some(code) = self.close_frame.take() {
+                return Ok(DirectoryWsPoll::Closed(code));
+            }
             match self.frames.pop_front() {
                 Some(Ok(Some(text))) => Ok(DirectoryWsPoll::Text(text)),
-                Some(Ok(None)) => Ok(DirectoryWsPoll::Closed),
+                Some(Ok(None)) => Ok(DirectoryWsPoll::Closed(None)),
                 Some(Err(error)) => Err(error),
                 None => Ok(DirectoryWsPoll::Pending),
             }
@@ -1667,14 +1919,14 @@ pub mod test_support {
             if self.cancel_after_open.load(Ordering::SeqCst) {
                 ctx.cancel.cancel_now();
             }
-            Ok(FakeWs { frames, closes: Some(self.ws_closes.clone()), sends: Some(self.ws_sends.clone()) })
+            Ok(FakeWs { frames, close_frame: None, closes: Some(self.ws_closes.clone()), sends: Some(self.ws_sends.clone()) })
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::test_support::FakeTransport;
+    use super::test_support::{FakeTransport, FakeWs};
     use super::*;
     use semio_framework_async::{CancelToken, TraceId};
     use std::sync::atomic::{AtomicUsize, Ordering};
@@ -1685,6 +1937,103 @@ mod tests {
 
     fn authenticated_client(transport: FakeTransport, capability: &str) -> Arc<DirectoryClient<FakeTransport>> {
         Arc::new(DirectoryClient::authenticated(transport, Arc::new(LocalHubCredential::test("http://hub.local", capability))))
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn directory_event_page_preserves_canonical_bytes_bounds_and_cancels_before_io() {
+        let capability = format!("session.v1.{}.{}", "a".repeat(32), "b".repeat(64));
+        let mut page = DirectoryEventPageV1 {
+            schema: "semio.directory.event-page.v1".into(),
+            session_binding_sha256: "c".repeat(64),
+            authorization_generation: 9,
+            after_seq_exclusive: 3,
+            through_seq_inclusive: 5,
+            has_more: true,
+            events: Vec::new(),
+            receipt_sha256: String::new(),
+        };
+        page.receipt_sha256 = semio_framework_hash::sha256_hex(page.canonical_unsigned_json().as_bytes());
+        let canonical = crate::os_pack::json::to_json_string(&page);
+        let transport = FakeTransport::default();
+        transport.push_response(Ok(HttpResponse { status: 200, body: canonical.as_bytes().to_vec() })).await;
+        let client = authenticated_client(transport.clone(), &capability);
+        let retained = client.event_page(&root_ctx(), 3).await.expect("canonical page");
+        assert_eq!(retained.canonical_json(), canonical);
+        assert_eq!(retained.session_binding_sha256(), page.session_binding_sha256);
+        assert_eq!(retained.authorization_generation(), 9);
+        assert_eq!(retained.after_seq_exclusive(), 3);
+        assert_eq!(retained.through_seq_inclusive(), 5);
+        assert!(retained.has_more());
+        assert_eq!(retained.receipt_sha256(), page.receipt_sha256);
+        let mut bootstrap = DirectoryEventPageBootstrapV1::new(7, 3).expect("bootstrap owner");
+        let first_ack = bootstrap.present(retained.clone()).expect("first pending page");
+        let mut forged_ack = first_ack.clone();
+        forged_ack.receipt_sha256 = "d".repeat(64);
+        assert!(bootstrap.acknowledge(&forged_ack).is_err());
+        assert_eq!(bootstrap.after(), 3);
+        assert_eq!(bootstrap.acknowledge(&first_ack).expect("first Home ACK"), DirectoryBootstrapTransition::Fetch { after: 5 });
+        let second = CanonicalDirectoryEventPageV1 {
+            canonical_json: "{}".into(),
+            session_binding_sha256: page.session_binding_sha256.clone(),
+            authorization_generation: page.authorization_generation,
+            after_seq_exclusive: 5,
+            through_seq_inclusive: 8,
+            has_more: false,
+            receipt_sha256: "e".repeat(64),
+        };
+        let second_ack = bootstrap.present(second).expect("second pending page");
+        assert_eq!(bootstrap.acknowledge(&second_ack).expect("final Home ACK"), DirectoryBootstrapTransition::Live { since: 8 });
+        assert_eq!(bootstrap.wake(false), Some(8));
+        assert_eq!(bootstrap.wake(false), None, "a dirty burst cannot duplicate the page fetch");
+
+        let mut rejected = DirectoryEventPageBootstrapV1::new(7, 3).expect("retry owner");
+        let rejected_ack = rejected.present(retained.clone()).expect("pending retry page");
+        assert_eq!(rejected.reject(7, &rejected_ack.receipt_sha256).expect("exact rejection"), 3);
+        rejected.close();
+        assert!(rejected.present(retained.clone()).is_err());
+        let requests = transport.requests.lock().unwrap();
+        assert_eq!(requests.len(), 1);
+        assert_eq!(requests[0].method, HttpMethod::Get);
+        assert_eq!(requests[0].url, "http://hub.local/directory/event-page/v1?after=3");
+        assert_eq!(requests[0].bearer.as_deref(), Some(capability.as_str()));
+        drop(requests);
+
+        let cancelled_transport = FakeTransport::default();
+        cancelled_transport.push_response(Ok(HttpResponse { status: 200, body: canonical.as_bytes().to_vec() })).await;
+        let cancelled_client = authenticated_client(cancelled_transport.clone(), &capability);
+        let cancelled_ctx = root_ctx();
+        cancelled_ctx.cancel.cancel_now();
+        assert!(matches!(cancelled_client.event_page(&cancelled_ctx, 3).await, Err(DirectoryClientError::Cancelled)));
+        assert!(cancelled_transport.requests.lock().unwrap().is_empty());
+
+        let oversized_transport = FakeTransport::default();
+        oversized_transport.push_response(Ok(HttpResponse { status: 200, body: vec![b'x'; DIRECTORY_EVENT_PAGE_MAX_BYTES + 1] })).await;
+        assert!(matches!(authenticated_client(oversized_transport, &capability).event_page(&root_ctx(), 0).await, Err(DirectoryClientError::Decode(_))));
+
+        let noncanonical_transport = FakeTransport::default();
+        noncanonical_transport.push_response(Ok(HttpResponse { status: 200, body: format!("{canonical} ").into_bytes() })).await;
+        assert!(matches!(authenticated_client(noncanonical_transport, &capability).event_page(&root_ctx(), 3).await, Err(DirectoryClientError::Decode(_))));
+
+        let unsafe_transport = FakeTransport::default();
+        assert!(matches!(authenticated_client(unsafe_transport.clone(), &capability).event_page(&root_ctx(), DOCUMENT_OPEN_MAX_SAFE_INTEGER + 1).await, Err(DirectoryClientError::Decode(_))));
+        assert!(unsafe_transport.requests.lock().unwrap().is_empty());
+
+        let wake: DirectoryStreamMessage = crate::os_pack::json::from_json_str(
+            &serde_json::json!({ "kind": "event", "event": { "seq": 99, "id": "wake", "hlc": { "physicalMs": 1, "logical": 0 }, "actor": { "kind": "system", "id": "sys" }, "body": { "kind": "space.archived", "spaceId": "sp-1" }, "recordedAtMs": 1 } }).to_string(),
+        )
+        .expect("wakeup event");
+        let mut acknowledged = client.stream_acknowledged(3).expect("acknowledged stream");
+        acknowledged.track(&wake);
+        acknowledged.track(&DirectoryStreamMessage::Heartbeat { head_seq: 101 });
+        assert_eq!(acknowledged.since(), 3, "observed wakeups never advance the committed cursor");
+        acknowledged.acknowledge(5).expect("exact Home ACK");
+        assert_eq!(acknowledged.since(), 5);
+        assert!(acknowledged.acknowledge(4).is_err());
+        assert!(acknowledged.acknowledge(DOCUMENT_OPEN_MAX_SAFE_INTEGER + 1).is_err());
+
+        let mut observed = client.stream(3);
+        observed.track(&wake);
+        assert_eq!(observed.since(), 99, "legacy observed-frontier stream remains explicit");
     }
 
     #[test]
@@ -1784,7 +2133,7 @@ mod tests {
     }
 
     async fn push_document_plan(transport: &FakeTransport, space_id: &str, document_id: &str, schema: &str, surface_id: &str) -> String {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/📇️directory/📄️document-open-plan-v1.json")).expect("neutral plan fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("neutral plan fixture");
         let mut plan = fixture["validPlan"].clone();
         plan["expiresAtUnixMs"] = serde_json::json!(u64::try_from(wall_now_ms()).expect("wall clock") + 20_000);
         plan["scope"] = serde_json::json!({ "spaceId": space_id, "documentId": document_id });
@@ -1842,6 +2191,10 @@ mod tests {
         assert_eq!(admission.authority.package.plugin_id, "s.gis:地図");
         assert_eq!(admission.authority.package.package_id, "s.gis.gismap:codec");
         assert_eq!(admission.authority.package.version, "1.0.0:β");
+        assert_eq!(
+            admission.authority.parent_dialect,
+            DocumentOpenParentDialectV1 { artifact_kind: "s.gis:gismap".into(), standard: "1".into(), subset: "*".into() }
+        );
         assert_eq!(admission.authority.surface.app_id, "app.gis");
         assert_eq!(admission.authority.surface.window_kind_id, "window.document");
         assert_eq!(admission.authority.surface.renderer_target, DocumentOpenRendererTargetV1::React);
@@ -1946,6 +2299,38 @@ mod tests {
     async fn ws_url_switches_scheme_and_encodes_query() {
         assert_eq!(directory_ws_url("http://127.0.0.1:8787", 0), "ws://127.0.0.1:8787/directory/socket/v1?since=0");
         assert_eq!(directory_ws_url("https://hub.example", 42), "wss://hub.example/directory/socket/v1?since=42");
+        assert_eq!(
+            directory_scoped_ws_url("https://hub.example", &DocumentScope::new("space /a", "document#b"), 7),
+            "wss://hub.example/directory/spaces/space%20%2Fa/documents/document%23b/socket/v1?since=7"
+        );
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn scoped_stream_close_4401_is_terminal_and_never_redials() {
+        let client = Arc::new(authenticated_client(FakeTransport::default(), "tok"));
+        let scope = DocumentScope::new("space-a", "document-a");
+        let mut stream = client.stream_scoped(scope.clone(), 9);
+        let DirectoryStreamTurn::DialScoped { scope: dial_scope, since, .. } = stream.turn(&root_ctx(), 0) else { panic!("scoped stream must dial exact scope") };
+        assert_eq!(dial_scope, scope);
+        assert_eq!(since, 9);
+        assert!(matches!(stream.complete_dial(0, Ok(FakeWs::with_close_code(4401))), DirectoryStreamTurn::Idle));
+        assert!(matches!(stream.turn(&root_ctx(), 1), DirectoryStreamTurn::Revoked(revoked) if revoked == scope));
+        assert!(matches!(stream.turn(&root_ctx(), u64::MAX), DirectoryStreamTurn::Closed));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn scoped_stream_issues_and_dials_the_same_encoded_scope() {
+        let transport = FakeTransport::default();
+        push_grant(&transport).await;
+        transport.push_ws(Ok(std::collections::VecDeque::new())).await;
+        let client = authenticated_client(transport.clone(), "tok");
+        let scope = DocumentScope::new("space /a", "document#b");
+        let _connection = client.open_scoped_stream_ws(&root_ctx(), &scope, 7, 100).expect("scoped socket opens");
+        let requests = transport.requests.lock().unwrap();
+        assert_eq!(requests.len(), 1);
+        assert_eq!(requests[0].url, "http://hub.local/directory/spaces/space%20%2Fa/documents/document%23b/socket-grants");
+        assert!(requests[0].body.is_empty());
+        assert_eq!(transport.ws_urls.lock().unwrap().as_slice(), ["ws://hub.local/directory/spaces/space%20%2Fa/documents/document%23b/socket/v1?since=7"]);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1971,7 +2356,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn space_exposes_the_durable_document_descriptor() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/📇️directory/📄️document-descriptor.json")).expect("descriptor fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📇️directory/🪪️document-descriptor.json")).expect("descriptor fixture");
         let descriptor = fixture.get("valid").expect("valid descriptor").clone();
         let transport = FakeTransport::default();
         transport
@@ -1979,17 +2364,20 @@ mod tests {
                 FakeTransport::json_response(
                     200,
                     &serde_json::json!({
-                        "id": "space-a",
-                        "name": "Fixture",
-                        "kind": "studio",
-                        "visibility": "private",
-                        "ownerUserId": "user-owner",
-                        "role": "author",
-                        "memberCount": 1,
-                        "documentCount": 1,
-                        "activeConnections": 0,
-                        "createdAtMs": 1,
-                        "updatedAtMs": 2,
+                        "access": "author",
+                        "space": {
+                            "id": "space-a",
+                            "name": "Fixture",
+                            "kind": "studio",
+                            "visibility": "private",
+                            "ownerUserId": "user-owner",
+                            "role": "author",
+                            "memberCount": 1,
+                            "documentCount": 1,
+                            "activeConnections": 0,
+                            "createdAtMs": 1,
+                            "updatedAtMs": 2
+                        },
                         "members": [],
                         "documents": [{ "descriptor": descriptor, "headSeq": 7, "commitSeq": 6, "epoch": 2 }],
                         "invites": []
@@ -2001,9 +2389,10 @@ mod tests {
         let client = authenticated_client(transport.clone(), "member-token");
 
         let detail = client.space(&root_ctx(), "space-a").await.expect("space detail decodes");
-        assert_eq!(detail.documents[0].descriptor.document_id, "shared-document");
-        assert_eq!(detail.documents[0].descriptor.owner.plugin_id, "s.gis");
-        assert_eq!(detail.documents[0].descriptor.bootstrap_frontier.head_seq, 7);
+        let DirectorySpaceDetailV1::Author { documents, .. } = detail else { panic!("author projection") };
+        assert_eq!(documents[0].descriptor.document_id, "shared-document");
+        assert_eq!(documents[0].descriptor.owner.plugin_id, "s.gis");
+        assert_eq!(documents[0].descriptor.bootstrap_frontier.head_seq, 7);
         let requests = transport.requests.lock().unwrap();
         assert_eq!(requests[0].bearer.as_deref(), Some("member-token"));
     }
@@ -2178,7 +2567,7 @@ mod tests {
     async fn cancellation_after_socket_open_closes_before_socket_hello() {
         let transport = FakeTransport::default();
         push_grant(&transport).await;
-        transport.push_ws(Ok(VecDeque::new())).await;
+        transport.push_ws(Ok(std::collections::VecDeque::new())).await;
         transport.cancel_after_open.store(true, Ordering::SeqCst);
         let client = authenticated_client(transport.clone(), "tok");
 

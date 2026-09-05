@@ -77,8 +77,6 @@ pub fn widget_tree_label(widget: &Widget) -> String {
 //#region 🔹Artifact
 /// 🧬️ Full flow artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.flow.flow")]
 pub struct FlowArtifact {
@@ -87,7 +85,7 @@ pub struct FlowArtifact {
     #[state(artifact)]
     pub camera: CameraJson,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.flow")]
+    #[child(kind = "s.stdio.semio")]
     pub content: FlowContentChild,
     #[state(presence)]
     pub selected_node_ids: Vec<String>,
@@ -267,7 +265,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for FlowAnalyzerAnalysis {
         type Parts = FlowParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.flow", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.flow.flow", standard: StandardId("1"), subset: SubsetId("*") };
 
         fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium

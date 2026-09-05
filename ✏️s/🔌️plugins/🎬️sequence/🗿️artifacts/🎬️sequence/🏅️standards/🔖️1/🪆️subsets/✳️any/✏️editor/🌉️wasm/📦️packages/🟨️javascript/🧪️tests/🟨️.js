@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const editorRoot = new URL("../../../", import.meta.url);
 const schema = JSON.parse(readFileSync(fileURLToPath(new URL("🧬️schema/🧪️retained-actions/🔣️.json", editorRoot)), "utf8"));
-const fixture = JSON.parse(readFileSync(fileURLToPath(new URL("🧪️fixtures/🧪️retained-actions/🔣️.json", editorRoot)), "utf8"));
+const fixture = JSON.parse(readFileSync(fileURLToPath(new URL("🧪️fixtures/📌️retained-actions/🔣️.json", editorRoot)), "utf8"));
 const source = readFileSync(fileURLToPath(new URL("../🦀️.rs", editorRoot)), "utf8");
 const validate = new Ajv2020({ strict: true }).compile(schema);
 

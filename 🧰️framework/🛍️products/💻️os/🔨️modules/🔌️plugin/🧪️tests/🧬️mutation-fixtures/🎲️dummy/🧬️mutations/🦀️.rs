@@ -2,7 +2,7 @@
 pub mod set_dummy_count;
 pub(crate) use set_dummy_count::SetDummyCount;
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, dsl::Mutations)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = super::DummySnapshot, diff = super::DummyDiff, schema = "plugin.testkit.dummy")]

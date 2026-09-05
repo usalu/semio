@@ -1,5 +1,0 @@
-# unbind-node-camera mutation facet.
-input GltfUnbindNodeCameraPayloadV1 {
-  node: Int!
-}
-type GltfUnbindNodeCameraMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

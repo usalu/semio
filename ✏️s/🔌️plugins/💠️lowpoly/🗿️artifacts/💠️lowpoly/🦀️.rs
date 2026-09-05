@@ -322,29 +322,29 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.lowpoly.standard.v1", "standard", "1", &[], None),
-        ("s.lowpoly.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.lowpoly.schema.artifact", "schema", "s.lowpoly.lowpoly", &[("schema", "s.lowpoly.lowpoly")], None),
-        ("s.lowpoly.inference.artifact", "inference", "s.lowpoly.lowpoly.inference", &[("schema", "s.lowpoly.lowpoly.inference")], None),
-        ("s.lowpoly.composer.native", "composer", "s.lowpoly@1/*", &[("dialect", "s.lowpoly@1/*")], None),
-        ("s.lowpoly.composer.format-1", "composer", "s.stdio.las@1.0/*", &[("dialect", "s.stdio.las@1.0/*")], None),
-        ("s.lowpoly.composer.format-2", "composer", "s.stdio.ply@1.0/*", &[("dialect", "s.stdio.ply@1.0/*")], None),
-        ("s.lowpoly.composer.format-3", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
-        ("s.lowpoly.composer.format-4", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.lowpoly.composer.format-5", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
-        ("s.lowpoly.composer.format-6", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
-        ("s.lowpoly.composer.format-7", "composer", "s.stdio.gltf@2.0/*", &[("dialect", "s.stdio.gltf@2.0/*")], None),
-        ("s.lowpoly.composer.format-8", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
-        ("s.lowpoly.grammar.1", "grammar", "lowpoly.document", &[("grammar", "lowpoly.document")], None),
-        ("s.lowpoly.grammar.2", "grammar", "lowpoly.op", &[("grammar", "lowpoly.op")], None),
-        ("s.lowpoly.grammar.3", "grammar", "lowpoly.diff", &[("grammar", "lowpoly.diff")], None),
-        ("s.lowpoly.grammar.4", "grammar", "lowpoly.pack", &[("grammar", "lowpoly.pack")], None),
-        ("s.lowpoly.grammar.5", "grammar", "lowpoly.spr", &[("grammar", "lowpoly.spr")], None),
-        ("s.lowpoly.codec.document-1", "codec", "lowpoly.document:lowpoly", &[("codec", "lowpoly.document"), ("extension", "lowpoly")], None),
-        ("s.lowpoly.localization.en", "localization", "Lowpoly", &[], Some(("en", "Lowpoly"))),
-        ("s.lowpoly.localization.de", "localization", "Niedrigpolygon", &[], Some(("de", "Niedrigpolygon"))),
+        ("s.lowpoly.lowpoly.standard.v1", "standard", "1", &[], None),
+        ("s.lowpoly.lowpoly.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.lowpoly.lowpoly.schema.artifact", "schema", "s.lowpoly.lowpoly", &[("schema", "s.lowpoly.lowpoly")], None),
+        ("s.lowpoly.lowpoly.inference.artifact", "inference", "s.lowpoly.lowpoly.inference", &[("schema", "s.lowpoly.lowpoly.inference")], None),
+        ("s.lowpoly.lowpoly.composer.native", "composer", "s.lowpoly.lowpoly@1/*", &[("dialect", "s.lowpoly.lowpoly@1/*")], None),
+        ("s.lowpoly.lowpoly.composer.format-1", "composer", "s.stdio.las@1.0/*", &[("dialect", "s.stdio.las@1.0/*")], None),
+        ("s.lowpoly.lowpoly.composer.format-2", "composer", "s.stdio.ply@1.0/*", &[("dialect", "s.stdio.ply@1.0/*")], None),
+        ("s.lowpoly.lowpoly.composer.format-3", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.lowpoly.lowpoly.composer.format-4", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.lowpoly.lowpoly.composer.format-5", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
+        ("s.lowpoly.lowpoly.composer.format-6", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
+        ("s.lowpoly.lowpoly.composer.format-7", "composer", "s.stdio.gltf@2.0/*", &[("dialect", "s.stdio.gltf@2.0/*")], None),
+        ("s.lowpoly.lowpoly.composer.format-8", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
+        ("s.lowpoly.lowpoly.grammar.1", "grammar", "lowpoly.document", &[("grammar", "lowpoly.document")], None),
+        ("s.lowpoly.lowpoly.grammar.2", "grammar", "lowpoly.op", &[("grammar", "lowpoly.op")], None),
+        ("s.lowpoly.lowpoly.grammar.3", "grammar", "lowpoly.diff", &[("grammar", "lowpoly.diff")], None),
+        ("s.lowpoly.lowpoly.grammar.4", "grammar", "lowpoly.pack", &[("grammar", "lowpoly.pack")], None),
+        ("s.lowpoly.lowpoly.grammar.5", "grammar", "lowpoly.spr", &[("grammar", "lowpoly.spr")], None),
+        ("s.lowpoly.lowpoly.codec.document-1", "codec", "lowpoly.document:lowpoly", &[("codec", "lowpoly.document"), ("codec-extension", "16:lowpoly.document:lowpoly")], None),
+        ("s.lowpoly.lowpoly.localization.en", "localization", "Lowpoly", &[], Some(("en", "Lowpoly"))),
+        ("s.lowpoly.lowpoly.localization.de", "localization", "Niedrigpolygon", &[], Some(("de", "Niedrigpolygon"))),
     ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.lowpoly")?);
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.lowpoly.lowpoly")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
         for (namespace, value) in *claims {

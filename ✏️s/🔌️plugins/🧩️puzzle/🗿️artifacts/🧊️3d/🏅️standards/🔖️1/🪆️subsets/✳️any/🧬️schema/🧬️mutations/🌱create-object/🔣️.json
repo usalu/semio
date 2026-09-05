@@ -5,7 +5,7 @@
   "displayName": "Create Object",
   "emoji": "🌱",
   "aggregateVariant": "CreateObject",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "create-object",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

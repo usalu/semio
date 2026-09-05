@@ -2280,7 +2280,7 @@ mod tests {
 
     #[test]
     fn space_default_example_dsl_round_trips() {
-        let text = include_str!("📚️examples/🎬️demo.space");
+        let text = include_str!("📚️examples/🪐️demo.space");
         let parsed = <SpaceSnapshot as ArtifactDsl>::parse_dsl(text).expect("parse default .space example");
         store::test_support::assert_dsl_round_trip(&parsed);
     }

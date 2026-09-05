@@ -7,7 +7,7 @@ fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../🔣️.
 fn operation(delta: i32) -> DependencyTestOp { DependencyTestOp::AddValue(AddValue { delta }) }
 
 pub(super) fn assert_add_value_contract(descriptor: &str) {
-    assert_eq!(serde_json::to_value(AddValue::DESCRIPTOR).expect("descriptor JSON"), serde_json::from_str::<serde_json::Value>(descriptor).expect("owned descriptor JSON"));
+    assert_eq!(serde_json::Value::from(protocol::ToValue::to_value(&AddValue::DESCRIPTOR)), serde_json::from_str::<serde_json::Value>(descriptor).expect("owned descriptor JSON"));
     assert!(AddValue::DESCRIPTOR.validate().is_ok());
     assert_eq!(operation(5).descriptor(), &AddValue::DESCRIPTOR);
     assert_eq!(<DependencyTestOp as Mutation<DependencyTestSnapshot>>::DESCRIPTORS.len(), 1);
@@ -23,7 +23,7 @@ fn actual_descriptor_provenance() {
     assert_eq!(provenance.source_path, format!("{}/🦀️.rs", provenance.owner));
     assert_eq!(provenance.descriptor_path, format!("{}/🔣️.json", provenance.owner));
     assert!(provenance.owner.ends_with("/🧬️mutations/➕️add-value"));
-    let scope = protocol::MutationLeafSourceScope { workspace_token: provenance.workspace_token, mutation_root: provenance.mutation_root, taxonomy_path: provenance.taxonomy_path, source_filename: "🦀️.rs", descriptor_filename: "🔣️.json" };
+    let scope = protocol::MutationLeafSourceScope { workspace_token: provenance.workspace_token, mutation_root: provenance.mutation_root, owner_layout: protocol::MutationOwnerLayout::Flat, taxonomy_path: provenance.taxonomy_path, mutation_payload_facet: "🦠️mutation", source_filename: "🦀️.rs", descriptor_filename: "🔣️.json" };
     assert!(protocol::validate_mutation_leaf_source(&AddValue::DESCRIPTOR, &provenance, &scope).is_ok());
     let mut invalid = provenance;
     invalid.source_path = "elsewhere/🦀️.rs";

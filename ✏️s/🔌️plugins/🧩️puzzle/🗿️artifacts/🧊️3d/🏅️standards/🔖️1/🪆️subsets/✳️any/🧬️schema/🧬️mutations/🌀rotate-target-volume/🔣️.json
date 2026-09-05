@@ -5,7 +5,7 @@
   "displayName": "Rotate Target Volume",
   "emoji": "🌀",
   "aggregateVariant": "RotateTargetVolume",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "rotate-target-volume",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

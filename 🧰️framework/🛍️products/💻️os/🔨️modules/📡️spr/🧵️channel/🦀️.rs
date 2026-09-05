@@ -16,7 +16,7 @@
 
 //#region 🔖️Version
 /// @emoji 🔢️ The channel wire format's own version, pinned against the shared cross-language
-/// fixture `channel-version.json` so a half-done bump fails a test instead of drifting silently.
+/// fixture `🔖️channel-version.json` so a half-done bump fails a test instead of drifting silently.
 /// Channel v12 (`📓️design-abi.md` §2 "`exchange` collapse") retires the `AppCommand::Hello` /
 /// `AppFrame::Welcome` handshake entirely — lifecycle now arrives through the reactor ABI's
 /// `Event::InstanceOpen`/`InstanceClose`, so this constant is no longer carried on the wire by any
@@ -3264,15 +3264,15 @@ mod tests {
         }
     }
 
-    /// @emoji 📡️ The wire version is owned by `🧫️fixtures/📡️channel/channel-version.json`, not by
+    /// 📡️ The wire version is owned by `🧫️fixtures/📡️channel/🔖️channel-version.json`, not by
     /// either language's constant, so a bump that updates only one host fails here instead of at
     /// runtime — the drift this guard was added for was a live `APP_CHANNEL_VERSION = 8` in
     /// TypeScript against `CHANNEL_VERSION = 10` in Rust. The TS twin asserts the same file.
     #[semio_framework_async_macros::async_test]
     async fn channel_version_matches_the_shared_cross_language_pin() {
-        let json = include_str!("../../../🧫️fixtures/📡️channel/channel-version.json");
-        let pin: serde_json::Value = serde_json::from_str(json).expect("channel-version.json must parse");
-        let pinned = pin.get("channelVersion").and_then(serde_json::Value::as_u64).expect("channel-version.json must carry channelVersion");
+        let json = include_str!("../../../🧫️fixtures/📡️channel/🔖️channel-version.json");
+        let pin: serde_json::Value = serde_json::from_str(json).expect("🔖️channel-version.json must parse");
+        let pinned = pin.get("channelVersion").and_then(serde_json::Value::as_u64).expect("🔖️channel-version.json must carry channelVersion");
         assert_eq!(u64::from(CHANNEL_VERSION), pinned, "CHANNEL_VERSION and the shared cross-language pin disagree — bump both, plus APP_CHANNEL_VERSION in 🟦️.ts");
     }
 
@@ -3282,12 +3282,12 @@ mod tests {
     /// a change to either side's encode/decode that shifts these bytes fails on exactly one side.
     #[semio_framework_async_macros::async_test]
     async fn channel_transaction_fixtures_match_shared_cross_language_json_vectors() {
-        let command_json = include_str!("../../../🧫️fixtures/📡️channel/app-command-transaction.json");
-        let frame_json = include_str!("../../../🧫️fixtures/📡️channel/app-frame-transaction.json");
-        let command_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(command_json).expect("app-command-transaction.json must parse");
-        let frame_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(frame_json).expect("app-frame-transaction.json must parse");
-        assert_eq!(command_vectors.len(), 6, "app-command-transaction.json vector count changed");
-        assert_eq!(frame_vectors.len(), 4, "app-frame-transaction.json vector count changed");
+        let command_json = include_str!("../../../🧫️fixtures/📡️channel/🧾️app-command-transaction.json");
+        let frame_json = include_str!("../../../🧫️fixtures/📡️channel/📨️app-frame-transaction.json");
+        let command_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(command_json).expect("🧾️app-command-transaction.json must parse");
+        let frame_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(frame_json).expect("📨️app-frame-transaction.json must parse");
+        assert_eq!(command_vectors.len(), 6, "🧾️app-command-transaction.json vector count changed");
+        assert_eq!(frame_vectors.len(), 4, "📨️app-frame-transaction.json vector count changed");
 
         for (label, value) in channel_command_fixture_corpus().await {
             if let Some(expected) = command_vectors.get(label) {
@@ -3309,9 +3309,9 @@ mod tests {
     /// `AppFrame` variants were added for opening, so only the command-side vector file exists.
     #[semio_framework_async_macros::async_test]
     async fn channel_opening_fixtures_match_shared_cross_language_json_vectors() {
-        let command_json = include_str!("../../../🧫️fixtures/📡️channel/app-command-opening.json");
-        let command_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(command_json).expect("app-command-opening.json must parse");
-        assert_eq!(command_vectors.len(), 4, "app-command-opening.json vector count changed");
+        let command_json = include_str!("../../../🧫️fixtures/📡️channel/🚪️app-command-opening.json");
+        let command_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(command_json).expect("🚪️app-command-opening.json must parse");
+        assert_eq!(command_vectors.len(), 4, "🚪️app-command-opening.json vector count changed");
 
         for (label, value) in channel_command_fixture_corpus().await {
             if let Some(expected) = command_vectors.get(label) {
@@ -3329,12 +3329,12 @@ mod tests {
     /// `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/`.
     #[semio_framework_async_macros::async_test]
     async fn channel_merge_fixtures_match_shared_cross_language_json_vectors() {
-        let command_json = include_str!("../../../🧫️fixtures/📡️channel/app-command-merge.json");
-        let frame_json = include_str!("../../../🧫️fixtures/📡️channel/app-frame-merge.json");
-        let command_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(command_json).expect("app-command-merge.json must parse");
-        let frame_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(frame_json).expect("app-frame-merge.json must parse");
-        assert_eq!(command_vectors.len(), 3, "app-command-merge.json vector count changed");
-        assert_eq!(frame_vectors.len(), 4, "app-frame-merge.json vector count changed");
+        let command_json = include_str!("../../../🧫️fixtures/📡️channel/🔀️app-command-merge.json");
+        let frame_json = include_str!("../../../🧫️fixtures/📡️channel/📢️app-frame-merge.json");
+        let command_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(command_json).expect("🔀️app-command-merge.json must parse");
+        let frame_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(frame_json).expect("📢️app-frame-merge.json must parse");
+        assert_eq!(command_vectors.len(), 3, "🔀️app-command-merge.json vector count changed");
+        assert_eq!(frame_vectors.len(), 4, "📢️app-frame-merge.json vector count changed");
 
         for (label, value) in channel_command_fixture_corpus().await {
             if let Some(expected) = command_vectors.get(label) {

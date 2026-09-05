@@ -1,0 +1,24 @@
+{
+  "delivery": {
+    "$schema": "./🧬️catalog.schema.json",
+    "version": 1,
+    "collections": [{ "catalog": "📦️sources/📇️catalog.json", "root": "📦️sources", "output": "🏗️models" }],
+    "entries": [{ "url": "/mesh/🥽️fallback.glb", "source": "🥽️placeholder/🧊️mesh.glb", "path": "🥽️placeholder/🧊️mesh.glb" }]
+  },
+  "catalogs": {
+    "📦️sources/📇️catalog.json": {
+      "$schema": "./🧬️catalog.schema.json",
+      "version": 1,
+      "entries": [
+        { "url": "/mesh/🏠️house.glb", "path": "🏠️house/🧊️shape.glb" },
+        { "url": "/mesh/💥️collision.glb", "path": "🏠️house/💥️hull.glb" }
+      ]
+    }
+  },
+  "expected": [
+    { "url": "/mesh/🏠️house.glb", "source": "📦️sources/🏠️house/🧊️shape.glb", "path": "🏗️models/🏠️house/🧊️shape.glb" },
+    { "url": "/mesh/💥️collision.glb", "source": "📦️sources/🏠️house/💥️hull.glb", "path": "🏗️models/🏠️house/💥️hull.glb" },
+    { "url": "/mesh/🥽️fallback.glb", "source": "🥽️placeholder/🧊️mesh.glb", "path": "🥽️placeholder/🧊️mesh.glb" }
+  ],
+  "unknown": ["/mesh/missing.glb", "/mesh/🏠️🏠️house.glb", "/mesh/../🧊️shape.glb", "/mesh/%2e%2e/🧊️shape.glb", "/mesh/🏠️house.glb?alternate=true"]
+}

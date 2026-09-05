@@ -13,7 +13,7 @@
 //! being copied into each subset's own `🦀️oracle.rs`. The split is deliberate:
 //!
 //! * [`part21`] knows Part-21 instances, arguments and header records, and nothing about
-//!   conformance classes. `🪆️subsets/✳️base` — whose vocabulary IS the Part-21 grammar — uses only
+//!   conformance classes. `🪆️subsets/🧱️base` — whose vocabulary IS the Part-21 grammar — uses only
 //!   this half.
 //! * [`ladder`] knows ISO 10303-214 §4.3: which `*_SHAPE_REPRESENTATION` type belongs to which
 //!   conformance class, and what the three class-neutral edits do. The six `✳️ccN` subsets use both
@@ -54,9 +54,9 @@
 //! is that paragraph as an assertion: it fails the moment a fifth class joins the interior with a
 //! different list, or an edge class grows a verb its own ceiling cannot support.
 //!
-//! @see 🪆️subsets/✳️cc1/🦀️oracle.rs — config data only, the class that admits no
+//! @see 🪆️subsets/1️⃣cc1/🦀️oracle.rs — config data only, the class that admits no
 //!      representation at all.
-//! @see 🪆️subsets/✳️cc6/🦀️oracle.rs — advanced B-rep, the class the committed fixture
+//! @see 🪆️subsets/6️⃣cc6/🦀️oracle.rs — advanced B-rep, the class the committed fixture
 //!      already conforms to.
 
 //#region 🔖️Part21
@@ -153,7 +153,7 @@ pub mod part21 {
     /// `📐️hexagonal-cut-concrete-forest-left-ap214.stp` carries an ST-Developer line break INSIDE a
     /// string literal (`'…at asserted c<LF>onnectivities'`, entity #829), which this repository's
     /// own writer re-emits as the conformant `\X2\000A\X0\` — the same value, and 23 of 23
-    /// `mutate-step-ap214` parity comparisons apart until this wave. The real IfcOpenShell
+    /// `🟠️mutate-step-ap214` parity comparisons apart until this wave. The real IfcOpenShell
     /// `🏗️nakagin-capsule-tower.ifc` carries the same problem the other way round, as `'\\'`.
     ///
     /// Written from scratch here, NOT by calling `crate::artifacts::step::…::engine::part21`: a
@@ -689,7 +689,7 @@ pub mod ladder {
     /// 👁️ The conformance-class projection every `✳️ccN` case is compared by: the schema declaration,
     /// the whole ladder census, the count of instances above the class ceiling, and the product
     /// identity chain. It reports exactly the three axes `check_ccN_conformance` reads and nothing
-    /// else — a projection that claimed the whole entity graph would be the `✳️base` subset's
+    /// else — a projection that claimed the whole entity graph would be the `🧱️base` subset's
     /// projection wearing a conformance class's name, and would drown every class-level difference
     /// in 1,396 entities of unrelated geometry.
     pub fn project(bytes: &[u8], max_rung: u8) -> Result<Json, String> {

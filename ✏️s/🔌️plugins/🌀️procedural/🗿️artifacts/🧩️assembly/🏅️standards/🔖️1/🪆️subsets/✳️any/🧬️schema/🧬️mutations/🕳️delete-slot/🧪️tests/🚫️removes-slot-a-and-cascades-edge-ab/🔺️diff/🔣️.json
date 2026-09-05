@@ -1,0 +1,16 @@
+{
+  "schema": null,
+  "seed": null,
+  "slotsRemoved": [
+    "slot-a"
+  ],
+  "slotsUpserted": [],
+  "edgesRemoved": [
+    "edge-ab"
+  ],
+  "edgesUpserted": [],
+  "weightsRemoved": [],
+  "weightsUpserted": [],
+  "rulesRemoved": [],
+  "rulesUpserted": []
+}

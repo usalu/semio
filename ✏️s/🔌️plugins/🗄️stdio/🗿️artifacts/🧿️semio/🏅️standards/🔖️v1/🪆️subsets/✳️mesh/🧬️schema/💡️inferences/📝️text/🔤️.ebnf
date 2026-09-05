@@ -1,3 +1,0 @@
-(* ebnf s.stdio.semio.mesh.inference *)
-document = header, body ;
-header = 'schema', space, 's.stdio.semio.mesh.inference', newline ;

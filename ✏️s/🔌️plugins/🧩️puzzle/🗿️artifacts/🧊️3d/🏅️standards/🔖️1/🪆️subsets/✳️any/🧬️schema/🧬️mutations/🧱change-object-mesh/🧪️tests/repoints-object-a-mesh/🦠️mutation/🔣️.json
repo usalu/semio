@@ -1,5 +1,0 @@
-{
-  "mutation": "changeObjectMesh",
-  "id": "object-a",
-  "newMeshUrl": "mesh://alpha-lod2"
-}

@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/stdio/gltf/2.0/mutation/camera",
+  "title": "glTF Camera Mutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "create-camera"
+        },
+        "payload": {
+          "$ref": "🎥️camera/🌱️create/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "delete-camera"
+        },
+        "payload": {
+          "$ref": "🎥️camera/🗑️delete/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "move-camera"
+        },
+        "payload": {
+          "$ref": "🎥️camera/🚚️move/🧬️.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "reorder-cameras"
+        },
+        "payload": {
+          "$ref": "🎥️camera/🔀️reorder/🧬️.schema.json"
+        }
+      }
+    }
+  ]
+}

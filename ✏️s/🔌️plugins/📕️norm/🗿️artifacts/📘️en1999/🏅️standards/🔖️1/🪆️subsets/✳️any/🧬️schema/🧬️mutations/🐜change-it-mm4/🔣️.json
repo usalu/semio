@@ -5,7 +5,7 @@
   "displayName": "Change It Mm4",
   "emoji": "🐜",
   "aggregateVariant": "ChangeITMm4",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

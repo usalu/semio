@@ -29,7 +29,7 @@ pub use icon_name_gen::IconName;
 // `icon_name_gen` above — that generated file is marked "do not edit" at its own top line. See
 // `🦀️icon_name_value.rs`'s own docstring for why this is a separate mount instead of a `#[value]`
 // attribute on the derive. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[path = "🦀️icon_name_value.rs"]
+#[path = "🔣️icon_name_value.rs"]
 mod icon_name_value;
 
 //#region 🔖️UiAxes
@@ -42,54 +42,54 @@ pub use ui_axes_gen::{Locale, Terminology};
 // added to `ui_axes_gen` above — that generated file is marked "do not edit" at its own top line.
 // See `🦀️locale_terminology_value.rs`'s own docstring for why this is a separate mount instead of
 // a `#[value]` attribute on the derive. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[path = "🦀️locale_terminology_value.rs"]
+#[path = "🌐️locale_terminology_value.rs"]
 mod locale_terminology_value;
 //#endregion 🔖️UiAxes
 
 //#region 🔖️Label
-#[path = "🦀️label.rs"]
+#[path = "🎗️label.rs"]
 mod label_impl;
 pub use label_impl::*;
 //#endregion 🔖️Label
 
 // #region component
 // 🧩️ Declarative UI component model (declarative `UiNode` tree, scene records, `SurfaceKind`, `WindowLayout`/`WindowEngagement`/`WindowMeasure`, `UtilityNode`) — moved verbatim from framework/core/rs/lib.rs; JSON wire format is byte-identical to the pre-move version (see the inline `*_wire_format_tests` mods). Ungated (default features) so wasm32-wasip2 program builds stay dependency-clean; must never reference `semio_framework`.
-#[path = "🦀️component.rs"]
+#[path = "🧩️component.rs"]
 pub mod component;
 // #endregion component
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "🦀️arena.rs"]
+#[path = "🕳️arena.rs"]
 pub mod arena;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "🦀️tree.rs"]
+#[path = "🌲️tree.rs"]
 pub mod tree;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "🦀️reconcile.rs"]
+#[path = "🔁️reconcile.rs"]
 pub mod reconcile;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "🦀️chrome.rs"]
+#[path = "🎛️chrome.rs"]
 pub mod chrome;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "🦀️cursor.rs"]
+#[path = "🖱️cursor.rs"]
 pub mod cursor;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "🦀️draw.rs"]
+#[path = "✍️draw.rs"]
 pub mod draw;
 
 /// 🧩️ Target-neutral half of `draw.rs` (`DrawList` + its CPU accumulation API, `mesh_content_version`,
 /// `paint_selection_marquee`) and of `widgets.rs`'s `gizmo` submodule (placement/tip-geometry/
 /// hit-test math) — mounted unconditionally so `wasm32-wasip2` program components can use them
 /// without `wgpu-engine`. See this file's top docstring.
-#[path = "🦀️draw_types.rs"]
+#[path = "📋️draw_types.rs"]
 pub mod draw_types;
 
-#[path = "🦀️geometry.rs"]
+#[path = "📐️geometry.rs"]
 pub mod geometry;
 
 /// 🗺️ Reusable minimap-navigator layout math — panel/viewport placement, content-fit checks, and
@@ -104,75 +104,75 @@ pub mod geometry;
 /// dag board depend on `ui_wgpu` WITHOUT the heavyweight `engine` feature. The dag board's own
 /// `paint_minimap_widget` (the actual `vello::Scene` fill/stroke calls, keyed off DAG-specific node types)
 /// stays where it is — that part is genuinely backend- and app-specific, not portable geometry.
-#[path = "🦀️minimap.rs"]
+#[path = "🗺️minimap.rs"]
 pub mod minimap;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "🦀️gpu.rs"]
+#[path = "🖥️gpu.rs"]
 pub mod gpu;
 
 /// 🧩️ 100% target-neutral (job-driven CPU staging/admission state machine for GPU uploads — zero
 /// `wgpu::`/`bytemuck`/etc reference anywhere in the file, confirmed by grep). Mounted
 /// unconditionally; its one browser-only item (`OffscreenPresentToken`) already carries its own
 /// `not(target_env = "p2")` item-level gate.
-#[path = "🦀️prepared.rs"]
+#[path = "📦️prepared.rs"]
 pub mod prepared;
 
 /// 🧩️ 100% target-neutral (hit-testing/pointer/keyboard input state — zero `wgpu::` reference
 /// anywhere in the file, confirmed by grep). Mounted unconditionally.
-#[path = "🦀️input.rs"]
+#[path = "⌨️input.rs"]
 pub mod input;
 
 /// 🧩️ 100% target-neutral (bounded action reservation/queue — zero `wgpu::` reference anywhere in
 /// the file, confirmed by grep). Mounted unconditionally.
-#[path = "🦀️action.rs"]
+#[path = "🧾️action.rs"]
 pub mod action;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "🦀️layout.rs"]
+#[path = "🧮️layout.rs"]
 pub mod layout;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "🦀️flex.rs"]
+#[path = "📏️flex.rs"]
 pub mod flex;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "🦀️mounted_layout.rs"]
+#[path = "🧵️mounted_layout.rs"]
 pub mod mounted_layout;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "🦀️shaders.rs"]
+#[path = "🧊️shaders.rs"]
 pub mod shaders;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "🦀️text.rs"]
+#[path = "🖋️text.rs"]
 pub mod text;
 
-#[path = "🦀️theme.rs"]
+#[path = "🎨️theme.rs"]
 pub mod theme;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "🦀️paint.rs"]
+#[path = "🖌️paint.rs"]
 pub mod paint;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "🦀️events.rs"]
+#[path = "🎯️events.rs"]
 pub mod events;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "🦀️scene_slots.rs"]
+#[path = "🎬️scene_slots.rs"]
 pub mod scene_slots;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "🦀️shell.rs"]
+#[path = "🐚️shell.rs"]
 pub mod shell;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "🦀️engine.rs"]
+#[path = "⚙️engine.rs"]
 pub mod engine;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/☑️Select/🎯️targets/🧊️wgpu/🦀️.rs"]
+#[path = "../../../../🧱️elements/🔽️Select/🎯️targets/🧊️wgpu/🦀️.rs"]
 mod select;
 
 #[cfg(feature = "wgpu-engine")]
@@ -184,7 +184,7 @@ mod button;
 mod input_element;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/🎚️Toggle/🎯️targets/🧊️wgpu/🦀️.rs"]
+#[path = "../../../../🧱️elements/🔀️Toggle/🎯️targets/🧊️wgpu/🦀️.rs"]
 mod toggle;
 
 #[cfg(feature = "wgpu-engine")]
@@ -204,11 +204,11 @@ mod stepper;
 mod ring;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/🔣️IconSelector/🎯️targets/🧊️wgpu/🦀️.rs"]
+#[path = "../../../../🧱️elements/🎴️IconSelector/🎯️targets/🧊️wgpu/🦀️.rs"]
 mod icon_selector;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/🪵️Tree/🎯️targets/🧊️wgpu/🦀️.rs"]
+#[path = "../../../../🧱️elements/🌳️Tree/🎯️targets/🧊️wgpu/🦀️.rs"]
 mod tree_element;
 
 // 👥️ `PresenceBar` (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 2-F) builds
@@ -219,14 +219,14 @@ mod tree_element;
 pub mod presence_bar;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "🦀️widgets.rs"]
+#[path = "🎚️widgets.rs"]
 pub mod widgets;
 
 // 🌉️ Pre-existing exclusion (kept through the revert above): `target_os = "wasi"` is TRUE for
 // `wasm32-wasip2`, and `host.rs` is the browser/native clipboard-and-input host bridge with no
 // wasip2 arm of its own.
 #[cfg(all(feature = "wgpu-engine", not(target_os = "wasi")))]
-#[path = "🦀️host.rs"]
+#[path = "🪟️host.rs"]
 pub mod host;
 
 // #region re-exports

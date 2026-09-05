@@ -41,20 +41,12 @@
         {
           "status": 200,
           "body": {
-            "id": "space-a",
-            "name": "Public but not authorized",
-            "kind": "studio",
-            "visibility": "public",
-            "ownerUserId": "user-owner",
-            "role": null,
-            "memberCount": 1,
-            "documentCount": 0,
-            "activeConnections": 0,
-            "createdAtMs": 1,
-            "updatedAtMs": 2,
-            "members": [{ "userId": "user-owner", "email": "owner@example.invalid", "displayName": "Owner", "role": "author" }],
-            "documents": [],
-            "invites": []
+            "access": "public",
+            "space": {
+              "id": "space-a", "name": "Public but not authorized", "kind": "studio", "visibility": "public",
+              "memberCount": 1, "documentCount": 0, "createdAtMs": 1, "updatedAtMs": 2
+            },
+            "documents": []
           }
         }
       ],
@@ -76,17 +68,12 @@
         {
           "status": 200,
           "body": {
-            "id": "space-a",
-            "name": "Authorized",
-            "kind": "studio",
-            "visibility": "private",
-            "ownerUserId": "user-a",
-            "role": "author",
-            "memberCount": 1,
-            "documentCount": 1,
-            "activeConnections": 0,
-            "createdAtMs": 1,
-            "updatedAtMs": 2,
+            "access": "author",
+            "space": {
+              "id": "space-a", "name": "Authorized", "kind": "studio", "visibility": "private",
+              "ownerUserId": "user-a", "role": "author", "memberCount": 1, "documentCount": 1,
+              "activeConnections": 0, "createdAtMs": 1, "updatedAtMs": 2
+            },
             "members": [{ "userId": "user-a", "email": "a@example.invalid", "displayName": "A", "role": "author" }],
             "documents": [
               {
@@ -137,17 +124,12 @@
         {
           "status": 200,
           "body": {
-            "id": "space-a",
-            "name": "Wrong row mixed in",
-            "kind": "studio",
-            "visibility": "private",
-            "ownerUserId": "user-a",
-            "role": "author",
-            "memberCount": 1,
-            "documentCount": 1,
-            "activeConnections": 0,
-            "createdAtMs": 1,
-            "updatedAtMs": 2,
+            "access": "author",
+            "space": {
+              "id": "space-a", "name": "Wrong row mixed in", "kind": "studio", "visibility": "private",
+              "ownerUserId": "user-a", "role": "author", "memberCount": 1, "documentCount": 1,
+              "activeConnections": 0, "createdAtMs": 1, "updatedAtMs": 2
+            },
             "members": [{ "userId": "user-a", "email": "a@example.invalid", "displayName": "A", "role": "author" }],
             "documents": [
               {

@@ -1,0 +1,10 @@
+{
+  "huffmanTables": {
+    "removed": [
+      {
+        "class": "dc",
+        "id": 1
+      }
+    ]
+  }
+}

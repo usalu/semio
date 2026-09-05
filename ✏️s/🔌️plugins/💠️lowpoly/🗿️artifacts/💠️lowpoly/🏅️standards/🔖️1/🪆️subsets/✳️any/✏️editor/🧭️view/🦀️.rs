@@ -6,7 +6,7 @@
 //! 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the mesh domain's selection/hover now
 //! lives in the framework's `InteractionState`, never in `LowpolyConfig` — see `🔖️MeshDomain` below for
 //! the target-id scheme (`"lowpoly-document.<objectId>[.<granularity>.<id>]"`, the SAME ids the Document
-//! panel tree (`📌️panels/📄️artifact`) already renders, so a click there and the framework's `UiTree`
+//! panel tree (`📌️panels/🗿️artifact`) already renders, so a click there and the framework's `UiTree`
 //! presence auto-stamp share one id space) and `selection_from_interaction`, the boundary that turns a
 //! resolved `InteractionView` into the engine's `LowpolySelection`.
 

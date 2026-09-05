@@ -1,0 +1,8 @@
+module Stdio_txt_snapshot;
+
+public type Document = unit {
+    magic:     bytes &size=8 &requires=(self.magic == b"\x89SEM\x0d\x0a\x1a\x0a");
+    token_len: uint32;
+    token:     bytes &size=self.token_len;   # "plugin.artifact.component vN"
+    body:      bytes &eod;                    # UTF-8 text body: lines + line_ending(s)
+};

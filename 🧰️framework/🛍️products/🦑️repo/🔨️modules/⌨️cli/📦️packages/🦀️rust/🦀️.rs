@@ -15,7 +15,7 @@ pub mod terminal_dashboard_daemon;
 #[path = "../../../../🎮️commands/🛝️playground-development-session/🦀️.rs"]
 pub mod playground_development_session;
 
-#[path = "../../../../🎮️commands/🧭️cli-usage-presentation/🦀️.rs"]
+#[path = "../../../../🎮️commands/⌨️cli-usage-presentation/🦀️.rs"]
 pub mod cli_usage_presentation;
 
 #[path = "../../../../🎮️commands/📇️playground-catalog-query/🦀️.rs"]
@@ -24,7 +24,7 @@ pub mod playground_catalog_query;
 #[path = "../../../../🎮️commands/📜️root-script-delegation/🦀️.rs"]
 pub mod root_script_delegation;
 
-#[path = "../../../../🎮️commands/🧭️command-tree-discovery/🦀️.rs"]
+#[path = "../../../../🎮️commands/🌳️command-tree-discovery/🦀️.rs"]
 pub mod command_tree_discovery;
 
 #[path = "../../../../🎮️commands/🎛️terminal-dashboard/🦀️.rs"]

@@ -7,7 +7,7 @@ import { defineConfig } from "vitest/config";
 const dir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = resolve(dir, "../../..");
 
-/** @emoji 🧪️ Vitest for `os-hub-ts` — the whole suite lives in `🧪️index.test.ts`, gated behind
+/** @emoji 🧪️ Vitest for `os-hub-ts` — the whole suite lives in `🤝️index.test.ts`, gated behind
  * `HUB_E2E=1` (see that file's own doc). Aliases `@semio-tech/framework-os` to its real source
  * file, matching every other vite/vitest config in this repo. */
 export default defineConfig({
@@ -18,7 +18,7 @@ export default defineConfig({
   test: {
     name: "os-hub-ts",
     environment: "node",
-    include: ["🧪️index.test.ts"],
+    include: ["🤝️index.test.ts"],
     passWithNoTests: false,
   },
 });

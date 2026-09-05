@@ -1,0 +1,14 @@
+{
+  "mutation": "createStep",
+  "step": {
+    "id": "step-log",
+    "kind": "log.print",
+    "params": {
+      "message": "hello sequence"
+    },
+    "x": 0.0,
+    "y": 0.0,
+    "slot": null,
+    "collapsed": false
+  }
+}

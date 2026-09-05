@@ -1,7 +1,0 @@
-syntax = "proto3";
-package semio.s_stdio_pdf_1_7_ua.mutation.set_mark_info;
-
-// 🏷️ Direct set-mark-info protobuf payload.
-message SetMarkInfoMutation {
-  bool marked = 1;
-}

@@ -29,7 +29,7 @@ ports = { react = 6083, wgpu = 6183 }
 engines = ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"]
 
 # 🎪️ The `verfolgen` demonstrator row moved to
-# ✏️s/🔌️plugins/🎪️demonstrator/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml — see that
+# ✏️s/🔌️plugins/🎪️demonstrator/🪪️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml — see that
 # crate's docstring (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT). The `/osm`+`/vt` asset rows below
 # stay here too (copies also live on the bundle crate) since the standalone `gis2d` dev variant needs
 # them independently of the demonstrator.
@@ -59,6 +59,10 @@ cache = "terrarium-dem"
 crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
+[[test]]
+name = "native_codecs"
+path = "../../📇️native-codecs/🧪️tests/🦀️.rs"
+
 [features]
 # 🔌️ The WASM component entry point (`plugin_exports!` → `#[no_mangle]`
 # `semio_plugin_install_bundle`). Default-on so this plugin builds as its own component, and
@@ -69,6 +73,7 @@ default = ["plugin-entry"]
 plugin-entry = []
 
 [dependencies]
+semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 framework_surface = { path = "../../../../../🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", package = "semio-framework-surface", default-features = false }

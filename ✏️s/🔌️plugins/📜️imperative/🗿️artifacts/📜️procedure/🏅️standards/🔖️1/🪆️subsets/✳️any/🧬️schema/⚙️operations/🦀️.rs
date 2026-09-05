@@ -7,7 +7,7 @@ use crate::artifacts::procedure::{ProcedureSnapshot, Path, PathRef, Step};
 /// 📥️ Decodes this facet's internally-tagged (`{"mutation": "createStep", …}`, camelCase payload
 /// fields) JSON projection — exactly the shape the committed
 /// `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` specification vectors and
-/// `mutate-procedure-1`'s own `Examples` payloads carry — into a real [`ProcedureMutation`]. The
+/// `🛟️mutate-procedure-1`'s own `Examples` payloads carry — into a real [`ProcedureMutation`]. The
 /// test adapter cannot name this crate's private `dsl`/`protocol`/`store` extern-crate aliases (the
 /// generated host links only `semio-repo-test-host` and this crate), so the bridge belongs here
 /// rather than there.
@@ -19,7 +19,7 @@ pub fn decode_procedure_mutation_json(text: &str) -> Result<ProcedureMutation, S
 /// (a `{"steps": [...]}` `Path`). An imperative document persists only a content-addressed HANDLE,
 /// and the working scene is an exact child owner, so a decoded `⬅️before` stands for no program
 /// until its own child is materialized — exactly what each direct leaf's `cached_program()` does.
-/// `mutate-procedure-1` needs the same materialization from outside, where neither `Path` nor its
+/// `🛟️mutate-procedure-1` needs the same materialization from outside, where neither `Path` nor its
 /// `Dictionary`/`Value` argument types
 /// can be constructed, so the program travels as JSON and is decoded here.
 pub fn seed_procedure_flow_json(snapshot: &mut ProcedureSnapshot, program_json: &str) -> Result<(), String> {

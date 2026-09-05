@@ -5,7 +5,7 @@
   "displayName": "Replace Text Chunk",
   "emoji": "✏️",
   "aggregateVariant": "ReplaceTextChunk",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "replace-text-chunk",
   "binaryTag": 13,
   "invertibility": "explicit-mutation",

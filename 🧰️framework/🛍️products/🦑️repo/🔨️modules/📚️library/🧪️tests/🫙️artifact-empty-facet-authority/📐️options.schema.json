@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Independent Current Options Facet Ownership Oracle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["sourcePath", "fileKindId"],
+  "properties": {
+    "fileKindId": { "const": "markdown" },
+    "sourcePath": {
+      "enum": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/☑️options/📌️.empty.md",
+        "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎭️modes/🌐️main/🪟️windows/🔄️workflow/☑️options/📌️.empty.md",
+        "✏️s/🔌️plugins/🪐️space/🧩️extensions/🪟️windows/☑️options/📌️.empty.md"
+      ]
+    }
+  }
+}

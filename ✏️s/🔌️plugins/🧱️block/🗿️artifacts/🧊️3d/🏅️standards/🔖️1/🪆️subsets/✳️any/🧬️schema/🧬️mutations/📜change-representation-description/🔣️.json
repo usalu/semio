@@ -5,7 +5,7 @@
   "displayName": "Change Representation Description",
   "emoji": "📜",
   "aggregateVariant": "ChangeRepresentationDescription",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-representation-description",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

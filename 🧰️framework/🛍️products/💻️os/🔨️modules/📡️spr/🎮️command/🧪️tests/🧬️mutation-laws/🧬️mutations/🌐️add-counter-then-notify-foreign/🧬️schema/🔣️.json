@@ -9,10 +9,10 @@
       ],
       "properties": {
         "delta": {
-          "$ref": "../../../🧬️schema/🔣️.json#/$defs/I64"
+          "$ref": "../../../📐️schema/🔣️.json#/$defs/I64"
         },
         "foreignCount": {
-          "$ref": "../../../🧬️schema/🔣️.json#/$defs/U8"
+          "$ref": "../../../📐️schema/🔣️.json#/$defs/U8"
         }
       }
     }

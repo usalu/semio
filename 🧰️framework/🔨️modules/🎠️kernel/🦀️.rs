@@ -515,7 +515,7 @@ pub enum Effect {
     },
     /// @emoji ⏪️ Asks the shell to redispatch a shell-owned command (dock/theme/locale/panel chrome)
     /// whose real mutation and its inverse both live client-side — the plugin has no access to that
-    /// state, so `revertToCommand` on a `Shell`-kind history row bubbles the row's stored inverse out
+    /// state, so `revertToCommand` on a `🐚️Shell`-kind history row bubbles the row's stored inverse out
     /// here instead of replaying it internally the way a `View`-kind row does (see
     /// `NOTE_SHELL_COMMAND_ACTION_ID` and `VcsArtifactApp::dispatch_action`'s `REVERT_TO_COMMAND_ACTION_ID`
     /// arm). The shell is expected to redispatch `action_id`/`args` through its normal command funnel,
@@ -1847,7 +1847,7 @@ impl TurnResult {
 }
 
 #[cfg(test)]
-#[path = "📤️return/📦️content/🧪️dialects/🦀️.rs"]
+#[path = "📤️return/📦️content/🗣️dialects/🦀️.rs"]
 mod return_content_dialect_tests;
 
 #[path = "📤️return/📦️content/🦀️.rs"]
@@ -1857,7 +1857,7 @@ pub mod return_content;
 pub mod return_message;
 
 #[cfg(test)]
-#[path = "📤️return/📦️content/🧪️framing/🦀️.rs"]
+#[path = "📤️return/📦️content/🖼️framing/🦀️.rs"]
 mod return_content_framing_tests;
 
 #[cfg(test)]
@@ -1881,7 +1881,7 @@ mod ui_turn_patch_tests {
 
     #[test]
     fn ui_turn_patch_owner_drop_hands_back_without_waiting_for_arena() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
         let mut owner = UiTurnPatches::default();
         owner.try_push_ui_patch(patch(1)).unwrap();
         let key = owner.retirement.unwrap();
@@ -1901,7 +1901,7 @@ mod ui_turn_patch_tests {
 
     #[test]
     fn ui_turn_patch_owner_normal_close_does_not_wait_for_arena() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
         let (send, receive) = std::sync::mpsc::channel();
         let (waited, worker) = with_ui_turn_patch_retire_arena(|_| {
             let worker = std::thread::spawn(move || { close_ui_turn_patch_owner_one(); send.send(()).unwrap(); });
@@ -1914,7 +1914,7 @@ mod ui_turn_patch_tests {
     #[test]
     fn ui_turn_patch_owner_typed_descendants_preserve_exact_one_byte_grants() {
         use semio_framework_ui_contract as ui;
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
         for grant in fixture["byteGrants"].as_array().unwrap() {
             let surface = fixture["surface"].as_str().unwrap();
             let text = fixture["payload"].as_str().unwrap();
@@ -2055,7 +2055,7 @@ mod ui_turn_patch_tests {
 
     #[test]
     fn ui_turn_patch_transport_producer_drop_hands_back_without_waiting_for_arena() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
         let mut owner = UiTurnPatches::default();
         owner.try_push_ui_patch(patch(7)).unwrap();
         let producer = UiTurnPatchTransportProducer::try_new(700_011, owner).unwrap();
@@ -2077,7 +2077,7 @@ mod ui_turn_patch_tests {
 
     #[test]
     fn ui_turn_patch_transport_lease_drop_hands_back_without_waiting_for_arena() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
         let mut owner = UiTurnPatches::default();
         owner.try_push_ui_patch(patch(8)).unwrap();
         let mut producer = UiTurnPatchTransportProducer::try_new(700_012, owner).unwrap();
@@ -2101,7 +2101,7 @@ mod ui_turn_patch_tests {
 
     #[test]
     fn ui_turn_patch_transport_normal_close_does_not_wait_for_arena() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
         let (send, receive) = std::sync::mpsc::channel();
         let (waited, worker) = with_ui_turn_patch_transport_arena(|_| {
             let worker = std::thread::spawn(move || { close_ui_turn_patch_transport_one().unwrap(); send.send(()).unwrap(); });
@@ -2113,7 +2113,7 @@ mod ui_turn_patch_tests {
 
     #[test]
     fn ui_turn_patch_transport_session_close_waits_for_exact_external_handback() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
         let mut producer = UiTurnPatchTransportProducer::try_new(700_013, UiTurnPatches::default()).unwrap();
         let key = producer.key;
         assert!(matches!(close_ui_turn_patch_transport_session_one(700_013).unwrap(), UiTurnPatchTransportProgress::Pending { .. }));
@@ -2133,7 +2133,7 @@ mod ui_turn_patch_tests {
 
     #[test]
     fn ui_turn_patch_transport_poison_retains_exact_owner_until_explicit_test_recovery() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
         let mut producer = UiTurnPatchTransportProducer::try_new(700_015, UiTurnPatches::default()).unwrap();
         assert_eq!(producer.drive_one(700_015, false, false), UiTurnPatchTransportStep::Ready);
         let key = producer.key;
@@ -2153,7 +2153,7 @@ mod ui_turn_patch_tests {
     #[test]
     fn ui_turn_patch_transport_handback_reports_exact_typed_descendant_bytes() {
         use semio_framework_ui_contract as ui;
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
         let surface = fixture["surface"].as_str().unwrap();
         let text = fixture["payload"].as_str().unwrap();
         let mut patch = UiPatch { surface: ui::SurfaceId::try_from(surface).unwrap(), base_revision: ui::UiRevision(0), revision: ui::UiRevision(1), ops: Default::default() };

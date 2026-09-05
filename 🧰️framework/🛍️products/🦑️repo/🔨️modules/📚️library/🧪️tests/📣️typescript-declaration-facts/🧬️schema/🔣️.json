@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["schemaVersion", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "cases": { "type": "array", "minItems": 9, "items": { "$ref": "#/$defs/case" } }
+  },
+  "$defs": {
+    "span": {
+      "type": "object",
+      "required": ["start", "end"],
+      "additionalProperties": false,
+      "properties": { "start": { "type": "integer", "minimum": 0 }, "end": { "type": "integer", "minimum": 0 } }
+    },
+    "structure": {
+      "type": "object",
+      "required": ["form", "members", "unresolved"],
+      "additionalProperties": false,
+      "properties": {
+        "form": { "enum": ["object", "union", "reference", "enum", "class", "unresolved"] },
+        "members": { "type": "array", "items": { "type": "string" } },
+        "unresolved": { "type": ["string", "null"] }
+      }
+    },
+    "declaration": {
+      "type": "object",
+      "required": ["kind", "name", "exported", "modulePath", "span", "structure"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["type", "interface", "enum", "class", "variable"] },
+        "name": { "type": "string" },
+        "exported": { "type": "boolean" },
+        "modulePath": { "type": "array", "items": { "type": "string" } },
+        "span": { "$ref": "#/$defs/span" },
+        "structure": { "$ref": "#/$defs/structure" }
+      }
+    },
+    "alias": {
+      "type": "object",
+      "required": ["relation", "typeOnly", "imported", "local", "moduleSpecifier", "modulePath", "span"],
+      "additionalProperties": false,
+      "properties": {
+        "relation": { "enum": ["import", "reexport"] },
+        "typeOnly": { "type": "boolean" },
+        "imported": { "type": "string" },
+        "local": { "type": "string" },
+        "moduleSpecifier": { "type": "string" },
+        "modulePath": { "type": "array", "items": { "type": "string" } },
+        "span": { "$ref": "#/$defs/span" }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "required": ["completeness", "declarations", "aliases", "diagnostics"],
+      "additionalProperties": false,
+      "properties": {
+        "completeness": { "enum": ["complete", "incomplete"] },
+        "declarations": { "type": "array", "items": { "$ref": "#/$defs/declaration" } },
+        "aliases": { "type": "array", "items": { "$ref": "#/$defs/alias" } },
+        "diagnostics": { "type": "array", "items": { "$ref": "#/$defs/diagnostic" } }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "required": ["code", "span"],
+      "additionalProperties": false,
+      "properties": {
+        "code": { "enum": ["parse-error", "unresolved-conditional-type", "unresolved-mapped-type", "unresolved-computed-property", "unresolved-jsx", "unresolved-expression", "unresolved-object-spread", "unresolved-heritage", "unsupported-function-local", "unsupported-default-or-namespace-import", "unsupported-import-equals", "unsupported-export-star", "unsupported-binding-pattern", "unsupported-anonymous-default-class", "unsupported-module-statement", "unsupported-type-node", "unsupported-class-member-body", "unsupported-ambient-module-body", "unsupported-recovery-suffix"] },
+        "span": { "$ref": "#/$defs/span" }
+      }
+    },
+    "case": {
+      "type": "object",
+      "required": ["id", "language", "sourceLines", "expected"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "language": { "enum": ["ts", "tsx"] },
+        "sourceLines": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "expected": { "$ref": "#/$defs/expected" }
+      }
+    }
+  }
+}

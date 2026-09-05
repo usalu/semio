@@ -1,0 +1,249 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UI Resident Original Page Binding Oracle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "builderFields",
+    "witnessFields",
+    "pageDomain",
+    "admissionGrants",
+    "admissionPhases",
+    "closeGrants",
+    "closePhases",
+    "faults",
+    "hostile",
+    "stream",
+    "laws",
+    "producer",
+    "childResults",
+    "producerFaults"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "builderFields": {
+      "const": [
+        "head",
+        "tail",
+        "writer"
+      ]
+    },
+    "witnessFields": {
+      "const": [
+        "original",
+        "phase"
+      ]
+    },
+    "pageDomain": {
+      "const": {
+        "bytes": 160,
+        "slots": 3,
+        "owners": 3
+      }
+    },
+    "admissionGrants": {
+      "const": [
+        296,
+        64,
+        64,
+        64,
+        264,
+        64,
+        104,
+        88,
+        32,
+        296,
+        64,
+        64,
+        64,
+        264,
+        64,
+        64,
+        64,
+        64,
+        64
+      ]
+    },
+    "admissionPhases": {
+      "const": [
+        "bootstrap",
+        "cell-observation",
+        "claim",
+        "claim-observation",
+        "record",
+        "record-observation",
+        "state",
+        "shell-install",
+        "witness",
+        "storage-bootstrap",
+        "storage-observation",
+        "storage-claim",
+        "storage-claim-observation",
+        "storage-page",
+        "storage-result",
+        "builder-install",
+        "builder-observation",
+        "finalize",
+        "publication"
+      ]
+    },
+    "closeGrants": {
+      "const": [
+        64,
+        64,
+        64,
+        256,
+        264,
+        64,
+        296,
+        64,
+        64,
+        64,
+        64,
+        64,
+        264,
+        64,
+        64,
+        296,
+        64
+      ]
+    },
+    "closePhases": {
+      "const": [
+        "capture",
+        "builder-detach",
+        "builder-observation",
+        "scrub",
+        "intrinsic-unlink",
+        "intrinsic-result-alias",
+        "intrinsic-cell",
+        "storage-observation",
+        "domain-unlink",
+        "record-begin",
+        "record-detach",
+        "detach-observation",
+        "record-close",
+        "cell-begin",
+        "result-alias",
+        "cell-close",
+        "parent-observation"
+      ]
+    },
+    "faults": {
+      "const": [
+        {
+          "method": "install",
+          "after": false
+        },
+        {
+          "method": "install",
+          "after": true
+        },
+        {
+          "method": "detach",
+          "after": false
+        },
+        {
+          "method": "detach",
+          "after": true
+        }
+      ]
+    },
+    "hostile": {
+      "const": [
+        "foreign-builder",
+        "foreign-page",
+        "forged-witness",
+        "before-close-slot",
+        "retired-page",
+        "replacement-page",
+        "short-grant"
+      ]
+    },
+    "stream": {
+      "const": {
+        "length": 257,
+        "windows": [
+          256,
+          1
+        ],
+        "maxDestinationPages": 1,
+        "sourceConsumptionAtFirstWindow": 0
+      }
+    },
+    "laws": {
+      "const": [
+        "strong-parent-before-builder-install",
+        "no-wrapper-page-allocation",
+        "builder-empty-before-page-refund",
+        "reader-before-builder-before-intrinsic-close",
+        "same-original-witness",
+        "no-eof-from-empty-window"
+      ]
+    },
+    "producer": {
+      "const": {
+        "fragmentCapture": 128,
+        "pageObservation": 64,
+        "allocation": 256,
+        "allocationObservation": 64,
+        "sourceRead": 1,
+        "destinationWrite": 1,
+        "seal": 64,
+        "sealObservation": 64,
+        "inputDetach": 128
+      }
+    },
+    "childResults": {
+      "const": [
+        {
+          "kind": "blocked",
+          "bytes": 0,
+          "actual": false,
+          "expected": "blocked"
+        },
+        {
+          "kind": "rejected",
+          "bytes": 4096,
+          "actual": false,
+          "expected": "rejected"
+        },
+        {
+          "kind": "complete",
+          "bytes": 4096,
+          "actual": true,
+          "expected": "pending"
+        },
+        {
+          "kind": "complete",
+          "bytes": 4097,
+          "actual": true,
+          "expected": "rejected"
+        }
+      ]
+    },
+    "producerFaults": {
+      "const": [
+        {
+          "method": "source-read",
+          "after": false
+        },
+        {
+          "method": "source-read",
+          "after": true
+        },
+        {
+          "method": "destination-write",
+          "after": false
+        },
+        {
+          "method": "destination-write",
+          "after": true
+        }
+      ]
+    }
+  }
+}

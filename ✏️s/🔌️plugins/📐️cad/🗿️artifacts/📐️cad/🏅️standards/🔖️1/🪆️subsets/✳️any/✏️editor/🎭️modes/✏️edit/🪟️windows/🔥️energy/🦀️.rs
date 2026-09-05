@@ -39,7 +39,7 @@ pub fn definition() -> WindowKindDefinition {
     }
 }
 
-/// 🎚️ The live chrome measures for this window, collected from the mode's `🎚️options/*` components.
+/// 🎚️ The live chrome measures for this window, collected from the mode's `☑️options/*` components.
 pub fn window_measures(runtime: &CadPlayRuntime, is_de: bool) -> Vec<WindowMeasure> {
     vec![options::projection::measure(runtime, PANE), options::sun::measure(runtime), options::dislocate::measure(runtime.dislocate_options(WINDOW_KIND_ID), is_de)]
 }

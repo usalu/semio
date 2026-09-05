@@ -1,0 +1,13 @@
+dialect grammar
+grammar en1994.op
+extension en1994
+use family-sheet
+start mutation
+
+artifact-mark = "norm.en1994-op"
+mutation = artifact-mark op-stmt+
+op-stmt = "set-field" field+ | "patch-field" field+ | "remove-field" field+
+field = ("en1994-basis" | "en1994-combination" | "en1994-partial-factor" | "en1994-verdict" | "en1994-annex" | "en1994-actor" | "started" | "actor") "=" value
+value = TEXT | INT | FLOAT | BOOL | QUANTITY
+QUANTITY = FLOAT UNIT | INT UNIT
+UNIT = IDENT

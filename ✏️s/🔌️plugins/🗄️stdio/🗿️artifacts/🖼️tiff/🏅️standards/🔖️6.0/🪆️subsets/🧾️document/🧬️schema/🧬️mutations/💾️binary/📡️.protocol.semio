@@ -1,0 +1,10 @@
+dialect protocol
+protocol stdio.tiff.mutations
+version 1
+schema stdio.tiff.op
+start op
+
+# Direct identities: change-byte-order=2, insert-ifd=3, remove-ifd=4, replace-tag=5, remove-tag=6, replace-pixels=7
+framing record
+header fixed 2
+chain payload bytes

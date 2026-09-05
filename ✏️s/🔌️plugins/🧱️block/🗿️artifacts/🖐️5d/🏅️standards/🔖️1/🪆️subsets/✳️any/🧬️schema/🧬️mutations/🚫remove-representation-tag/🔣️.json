@@ -5,7 +5,7 @@
   "displayName": "Remove Representation Tag",
   "emoji": "🚫",
   "aggregateVariant": "RemoveRepresentationTag",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "remove-representation-tag",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

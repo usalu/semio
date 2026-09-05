@@ -1,5 +1,5 @@
 //! 🧵️ WASM backbone worker — browser-side `ArtifactHost` actor relaying the same protocol as
-//! `framework/product/os/core/js/🟦️backbone-worker.ts`, without materializing snapshots.
+//! `🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts`, without materializing snapshots.
 
 use crate::os_store::sync::{
     backbone_worker_wire::{self, BackboneWorkerRequest, BackboneWorkerResponse},
@@ -10,6 +10,7 @@ use wasm_bindgen::prelude::*;
 //#region 🔖️Worker
 struct DocumentEntry {
     cmd_tx: ArtifactMailboxSender,
+    document_key: crate::os_store::sync::ArtifactDocumentKey,
 }
 
 fn install_worker_panic_hook() {
@@ -42,11 +43,13 @@ impl BackboneWorkerHost {
         match request {
             BackboneWorkerRequest::Open { document_id, schema, bindings, watch_external, actor } => {
                 let config = crate::os_store::sync::ArtifactActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: watch_external.unwrap_or(true), actor };
-                self.host.close(&document_id);
-                let channels = self.host.open(config);
-                let mut events = self.host.subscribe(&document_id);
+                if let Some(previous) = self.documents.remove(&document_id) {
+                    self.host.close_key(&previous.document_key);
+                }
+                let channels = self.host.open(config).await;
+                let mut events = self.host.subscribe_key(&channels.document_key).await;
                 let cmd_tx = channels.cmd_tx.clone();
-                self.documents.insert(document_id.clone(), DocumentEntry { cmd_tx });
+                self.documents.insert(document_id.clone(), DocumentEntry { cmd_tx, document_key: channels.document_key });
                 semio_framework_async::browser::spawn_local(async move {
                     loop {
                         match events.recv().await {
@@ -62,9 +65,10 @@ impl BackboneWorkerHost {
                 });
             }
             BackboneWorkerRequest::Close { document_id } => {
-                self.host.send(&document_id, ArtifactActorMsg::Detach);
-                self.host.close(&document_id);
-                self.documents.remove(&document_id);
+                if let Some(entry) = self.documents.remove(&document_id) {
+                    self.host.send_key(&entry.document_key, ArtifactActorMsg::Detach).await;
+                    self.host.close_key(&entry.document_key);
+                }
             }
             BackboneWorkerRequest::Send { document_id, message } => {
                 if let Some(entry) = self.documents.get(&document_id) {

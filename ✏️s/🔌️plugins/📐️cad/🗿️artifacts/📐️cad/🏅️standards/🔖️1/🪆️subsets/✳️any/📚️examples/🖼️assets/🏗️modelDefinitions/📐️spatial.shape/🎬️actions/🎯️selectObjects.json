@@ -1,0 +1,40 @@
+{
+  "schema": "spatial.action",
+  "id": "selection.selectObjects",
+  "version": "1.0.0",
+  "label": "SelectObjects",
+  "steps": [
+    {
+      "operation": "kernel.call",
+      "function": "spatial.selection.apply",
+      "args": {
+        "operation": {
+          "kind": "const",
+          "value": "selectKinds"
+        },
+        "seedTargets": {
+          "kind": "path",
+          "root": "params",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "seedTargets"
+            }
+          ]
+        },
+        "kinds": {
+          "kind": "const",
+          "value": ["object"]
+        }
+      },
+      "assignTo": "result"
+    },
+    {
+      "operation": "return",
+      "result": {
+        "kind": "var",
+        "name": "result"
+      }
+    }
+  ]
+}

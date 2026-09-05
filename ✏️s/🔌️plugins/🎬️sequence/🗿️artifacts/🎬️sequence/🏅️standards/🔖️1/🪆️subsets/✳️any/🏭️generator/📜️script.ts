@@ -21,7 +21,7 @@
 //   bun 📜️script.ts generate                      # build both engines and write the CSV/JSON fixture pairs
 //   bun 📜️script.ts manifests                     # (re)write 🧫️fixtures/🔣️.json
 //
-// @see ../../../../../🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🏭️generator/📜️script.ts
+// @see ../../../../../🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏭️generator/📜️script.ts
 //      — the carrier generator this file mirrors in CLI shape and manifest fields.
 
 //#endregion 🧲️Header
@@ -36,23 +36,42 @@ import { dirname, join } from "node:path";
 //#region 🧭️Paths
 const here = dirname(Bun.fileURLToPath(import.meta.url));
 const subset = join(here, "..");
-const fixtures = join(subset, "🧫️fixtures");
-const csvEngine = join(here, "🦀️csv-engine");
-const jsonEngine = join(here, "🦀️json-engine");
+const subsets = join(subset, "..");
+const step = join(subsets, "🪜️step");
+const dependency = join(subsets, "🔗️dependency");
+const stepFixtures = join(step, "🧫️fixtures");
+const dependencyFixtures = join(dependency, "🧫️fixtures");
+const csvEngine = join(here, "📊️csv-engine");
+const jsonEngine = join(here, "🧾️json-engine");
 const target = process.env.CARGO_TARGET_DIR;
 const CSV_KINDS = ["create-step", "delete-step", "duplicate-step", "edit-step-params"] as const;
 const JSON_KINDS = ["change-step-collapsed", "connect-steps", "disconnect-steps", "move-step"] as const;
+const CSV_DIRECTORIES = {
+  "create-step": "🌱️create-step",
+  "delete-step": "🗑️delete-step",
+  "duplicate-step": "🧬️duplicate-step",
+  "edit-step-params": "🔧️edit-step-params",
+} as const;
+const JSON_DESTINATIONS = {
+  "change-step-collapsed": { subset: "step", fixtures: stepFixtures, directory: "🗂️change-step-collapsed" },
+  "connect-steps": { subset: "dependency", fixtures: dependencyFixtures, directory: "🔗️connect-steps" },
+  "disconnect-steps": { subset: "dependency", fixtures: dependencyFixtures, directory: "✂️disconnect-steps" },
+  "move-step": { subset: "step", fixtures: stepFixtures, directory: "📍️move-step" },
+} as const;
 //#endregion 🧭️Paths
 
 //#region 🏭️Generate
+const runEngine = (engine: string, output: string): void => {
+  const targetDir = target ?? join(engine, "target");
+  const built = spawnSync("cargo", ["build", "--release", "--offline", "--target-dir", targetDir], { cwd: engine, stdio: "inherit" });
+  if (built.status !== 0) throw new Error(`${engine} build failed`);
+  const run = spawnSync(join(targetDir, "release", "generate"), [output], { stdio: "inherit" });
+  if (run.status !== 0) throw new Error(`${engine} fixture generation failed`);
+};
+
 const generate = (): void => {
-  for (const engine of [csvEngine, jsonEngine]) {
-    const targetDir = target ?? join(engine, "target");
-    const built = spawnSync("cargo", ["build", "--release", "--offline", "--target-dir", targetDir], { cwd: engine, stdio: "inherit" });
-    if (built.status !== 0) throw new Error(`${engine} build failed`);
-    const run = spawnSync(join(targetDir, "release", "generate"), [fixtures], { stdio: "inherit" });
-    if (run.status !== 0) throw new Error(`${engine} fixture generation failed`);
-  }
+  runEngine(csvEngine, stepFixtures);
+  runEngine(jsonEngine, subsets);
 };
 //#endregion 🏭️Generate
 
@@ -61,20 +80,21 @@ const digest = (path: string): string => `sha256:${createHash("sha256").update(r
 
 const manifests = (): void => {
   const csvEntries = CSV_KINDS.flatMap((kind) => {
-    const dir = join(fixtures, kind);
+    const directory = CSV_DIRECTORIES[kind];
+    const dir = join(stepFixtures, directory);
     if (!existsSync(dir)) return [];
     return [{
       schema: "semio.repository-test.fixture/v2",
       id: `sequence-csv-${kind}`,
       class: "third-party-generated",
-      target: { artifact: "s.sequence.sequence", standard: "1", subset: "any" },
+      target: { artifact: "s.sequence.sequence", standard: "1", subset: "step" },
       mutation: kind,
       outcome: "applied",
       // 📐️A CSV grid carries no geometry; the contract still requires the block to be declared.
       units: { length: "none", angle: "none", handedness: "none", up: "none" },
-      files: ["before.csv", "after.csv"].map((name) => ({
-        role: name === "before.csv" ? "input-csv" : "expected-csv",
-        path: `../🧫️fixtures/${kind}/${name}`,
+      files: ["⬅️before.csv", "➡️after.csv"].map((name) => ({
+        role: name === "⬅️before.csv" ? "input-csv" : "expected-csv",
+        path: `../🧫️fixtures/${directory}/${name}`,
         mediaType: "text/csv",
         sha256: digest(join(dir, name)),
         bytes: statSync(join(dir, name)).size,
@@ -101,19 +121,20 @@ const manifests = (): void => {
     }];
   });
   const jsonEntries = JSON_KINDS.flatMap((kind) => {
-    const dir = join(fixtures, kind);
+    const destination = JSON_DESTINATIONS[kind];
+    const dir = join(destination.fixtures, destination.directory);
     if (!existsSync(dir)) return [];
     return [{
       schema: "semio.repository-test.fixture/v2",
       id: `sequence-json-${kind}`,
       class: "third-party-generated",
-      target: { artifact: "s.sequence.sequence", standard: "1", subset: "any" },
+      target: { artifact: "s.sequence.sequence", standard: "1", subset: destination.subset },
       mutation: kind,
       outcome: "applied",
       units: { length: "unitless", angle: "radian", handedness: "none", up: "none" },
-      files: ["before.json", "after.json"].map((name) => ({
-        role: name === "before.json" ? "expected-before-json" : "expected-after-json",
-        path: `../🧫️fixtures/${kind}/${name}`,
+      files: ["⬅️before.json", "➡️after.json"].map((name) => ({
+        role: name === "⬅️before.json" ? "expected-before-json" : "expected-after-json",
+        path: `../🧫️fixtures/${destination.directory}/${name}`,
         mediaType: "application/json",
         sha256: digest(join(dir, name)),
         bytes: statSync(join(dir, name)).size,
@@ -140,15 +161,16 @@ const manifests = (): void => {
     }];
   });
   const entries = [...csvEntries, ...jsonEntries];
-  writeFileSync(join(fixtures, "🔣️.json"), `${JSON.stringify(entries, null, 2)}\n`);
-  // 🧾️The REGISTRY reads `fixtureManifests` off the contribution file itself (`loadOracleRegistry`
-  // parses it there, not from `🧫️fixtures/🔣️.json`), so the generated block is merged into
-  // the catalog too — the standalone file stays as the generator's reviewable output.
-  const catalogPath = join(subset, "🧪️oracle", "🔣️.json");
-  const catalog = JSON.parse(readFileSync(catalogPath, "utf8"));
-  const keep = (catalog.fixtureManifests ?? []).filter((entry: { family?: string }) => entry.family !== "sequence-csv-carrier" && entry.family !== "sequence-json-carrier");
-  catalog.fixtureManifests = [...keep, ...entries];
-  writeFileSync(catalogPath, `${JSON.stringify(catalog, null, 2)}\n`);
+  for (const owner of [step, dependency]) {
+    const ownerSubset = owner === step ? "step" : "dependency";
+    const ownedEntries = entries.filter((entry) => entry.target.subset === ownerSubset);
+    writeFileSync(join(owner, "🧫️fixtures", "🔣️.json"), `${JSON.stringify(ownedEntries, null, 2)}\n`);
+    const catalogPath = join(owner, "🔮️oracle", "🔣️.json");
+    const catalog = JSON.parse(readFileSync(catalogPath, "utf8"));
+    const keep = (catalog.fixtureManifests ?? []).filter((entry: { family?: string }) => entry.family !== "sequence-csv-carrier" && entry.family !== "sequence-json-carrier");
+    catalog.fixtureManifests = [...keep, ...ownedEntries];
+    writeFileSync(catalogPath, `${JSON.stringify(catalog, null, 2)}\n`);
+  }
   console.log(`${entries.length} fixture manifest(s) written and registered in 🔣️oracle.json`);
 };
 //#endregion 🧾️Manifests

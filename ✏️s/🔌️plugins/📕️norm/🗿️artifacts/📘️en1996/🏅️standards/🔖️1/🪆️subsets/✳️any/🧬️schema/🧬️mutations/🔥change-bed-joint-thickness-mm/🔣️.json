@@ -5,7 +5,7 @@
   "displayName": "Change Bed Joint Thickness Mm",
   "emoji": "🔥",
   "aggregateVariant": "ChangeBedJointThicknessMm",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

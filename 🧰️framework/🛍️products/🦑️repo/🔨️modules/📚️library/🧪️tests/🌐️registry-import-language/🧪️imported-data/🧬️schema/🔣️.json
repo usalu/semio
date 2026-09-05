@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Registry Compiler Input Dependency Authority",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "contractId", "selection", "dataGrammar", "fallback", "cases", "graph"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contractId": { "const": "registry-compiler-input-dependencies-v1" },
+    "selection": { "const": "physical-extension-and-requested-role" },
+    "dataGrammar": { "const": "strict-json" },
+    "fallback": { "const": "none" },
+    "cases": {
+      "type": "array", "minItems": 12, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "path", "role", "source"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "path": { "$ref": "#/definitions/path" },
+          "role": { "enum": ["implementation-entry", "static-import"] },
+          "source": { "type": "string" },
+          "error": { "enum": ["language is not supported", "imported JSON is invalid"] },
+          "expected": {
+            "type": "object", "additionalProperties": false, "required": ["kind", "imports"],
+            "properties": { "kind": { "enum": ["module", "json-data"] }, "imports": { "type": "array", "uniqueItems": true, "items": { "type": "string" } } }
+          }
+        },
+        "oneOf": [{ "properties": { "expected": {}, "error": false }, "required": ["expected"] }, { "properties": { "error": {}, "expected": false }, "required": ["error"] }]
+      }
+    },
+    "graph": {
+      "type": "object", "additionalProperties": false, "required": ["entries", "dataPath", "files"],
+      "properties": {
+        "entries": { "const": ["📜️script.ts"] },
+        "dataPath": { "const": "🧩️module/🔣️.json" },
+        "files": {
+          "type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true,
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["path", "mode", "content"],
+            "properties": { "path": { "$ref": "#/definitions/path" }, "mode": { "type": "integer", "minimum": 0, "maximum": 4095 }, "content": { "type": "string" } }
+          }
+        }
+      }
+    }
+  },
+  "definitions": { "path": { "type": "string", "minLength": 1, "pattern": "^(?!/)(?!.*\\\\)(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\u0000]+$" } }
+}

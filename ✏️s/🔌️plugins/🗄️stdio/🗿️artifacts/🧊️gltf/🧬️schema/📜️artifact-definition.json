@@ -8,8 +8,8 @@
   ],
   "standards": [
     {
-      "id": "s.stdio.gltf.standard.2.0",
-      "revision": "2.0",
+      "id": "s.stdio.gltf.standard.2-0",
+      "revision": "2-0",
       "normative_source": null,
       "publication_date": null,
       "source_checksum": null,
@@ -20,16 +20,16 @@
   ],
   "profiles": [
     {
-      "id": "s.stdio.gltf.standard.2.0.profile.any",
-      "standard": "s.stdio.gltf.standard.2.0",
+      "id": "s.stdio.gltf.standard.2-0.profile.any",
+      "standard": "s.stdio.gltf.standard.2-0",
       "profile": "any",
       "status": "unimplemented"
     }
   ],
   "source_dialects": [
     {
-      "id": "s.stdio.gltf.standard.2.0.dialect.source",
-      "standard": "s.stdio.gltf.standard.2.0",
+      "id": "s.stdio.gltf.standard.2-0.dialect.source",
+      "standard": "s.stdio.gltf.standard.2-0",
       "dialect": "source",
       "registered_code_points": [],
       "status": "unimplemented"
@@ -37,8 +37,8 @@
   ],
   "representations": [
     {
-      "id": "s.stdio.gltf.standard.2.0.representation.document",
-      "standard": "s.stdio.gltf.standard.2.0",
+      "id": "s.stdio.gltf.standard.2-0.representation.document",
+      "standard": "s.stdio.gltf.standard.2-0",
       "representation": "document",
       "mimes": ["model/gltf+json"],
       "extensions": [".gltf"],
@@ -49,46 +49,47 @@
     }
   ],
   "codecs": [
+    { "id": "s.stdio.gltf.standard.2-0.codec.native-document.v1", "status": "implemented", "from": "s.stdio.gltf.standard.2-0.dialect.source", "to": "s.stdio.gltf.standard.2-0.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.gltf.v1", "artifact_kind": "s.stdio.gltf", "document_schema": "stdio.gltf", "extension": "gltf", "pack_schema_hash": "b10e15cf930fe4e7e99655f70bd3087d1ba2bb6fbb53345fe0a9924bdcd202d8", "runtime_capability_id": "s.stdio.gltf.standard.2-0.codec.codec-stdio-gltf-extension-gltf.v1" } },
     {
-      "id": "s.stdio.gltf.standard.2.0.codec.inference-binary.v1",
+      "id": "s.stdio.gltf.standard.2-0.codec.inference-binary.v1",
       "status": "unimplemented",
-      "from": "s.stdio.gltf.standard.2.0.dialect.source",
-      "to": "s.stdio.gltf.standard.2.0.dialect.source",
+      "from": "s.stdio.gltf.standard.2-0.dialect.source",
+      "to": "s.stdio.gltf.standard.2-0.dialect.source",
       "executable_registration": false
     },
     {
-      "id": "s.stdio.gltf.standard.2.0.codec.inference-text.v1",
+      "id": "s.stdio.gltf.standard.2-0.codec.inference-text.v1",
       "status": "unimplemented",
-      "from": "s.stdio.gltf.standard.2.0.dialect.source",
-      "to": "s.stdio.gltf.standard.2.0.dialect.source",
+      "from": "s.stdio.gltf.standard.2-0.dialect.source",
+      "to": "s.stdio.gltf.standard.2-0.dialect.source",
       "executable_registration": false
     },
     {
-      "id": "s.stdio.gltf.standard.2.0.codec.artifact-export.v1",
+      "id": "s.stdio.gltf.standard.2-0.codec.artifact-export.v1",
       "status": "unimplemented",
-      "from": "s.stdio.gltf.standard.2.0.dialect.source",
-      "to": "s.stdio.gltf.standard.2.0.dialect.source",
+      "from": "s.stdio.gltf.standard.2-0.dialect.source",
+      "to": "s.stdio.gltf.standard.2-0.dialect.source",
       "executable_registration": false
     },
     {
-      "id": "s.stdio.gltf.standard.2.0.codec.artifact-import.v1",
+      "id": "s.stdio.gltf.standard.2-0.codec.artifact-import.v1",
       "status": "unimplemented",
-      "from": "s.stdio.gltf.standard.2.0.dialect.source",
-      "to": "s.stdio.gltf.standard.2.0.dialect.source",
+      "from": "s.stdio.gltf.standard.2-0.dialect.source",
+      "to": "s.stdio.gltf.standard.2-0.dialect.source",
       "executable_registration": false
     },
     {
-      "id": "s.stdio.gltf.standard.2.0.codec.mutation-binary.v1",
+      "id": "s.stdio.gltf.standard.2-0.codec.mutation-binary.v1",
       "status": "unimplemented",
-      "from": "s.stdio.gltf.standard.2.0.dialect.source",
-      "to": "s.stdio.gltf.standard.2.0.dialect.source",
+      "from": "s.stdio.gltf.standard.2-0.dialect.source",
+      "to": "s.stdio.gltf.standard.2-0.dialect.source",
       "executable_registration": false
     },
     {
-      "id": "s.stdio.gltf.standard.2.0.codec.mutation-text.v1",
+      "id": "s.stdio.gltf.standard.2-0.codec.mutation-text.v1",
       "status": "unimplemented",
-      "from": "s.stdio.gltf.standard.2.0.dialect.source",
-      "to": "s.stdio.gltf.standard.2.0.dialect.source",
+      "from": "s.stdio.gltf.standard.2-0.dialect.source",
+      "to": "s.stdio.gltf.standard.2-0.dialect.source",
       "executable_registration": false
     }
   ],
@@ -198,22 +199,22 @@
   ],
   "runtime_capabilities": [
     {
-      "id": "s.stdio.gltf.runtime.codec.codec-stdio-gltf-extension-gltf.v1",
+      "id": "s.stdio.gltf.standard.2-0.codec.codec-stdio-gltf-extension-gltf.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec:stdio.gltf|extension:gltf",
+      "descriptor": "runtime-capability:codec:codec-extension:10:stdio.gltf:gltf|codec:stdio.gltf",
       "claims": [
         {
           "namespace": "codec",
           "value": "stdio.gltf"
         },
         {
-          "namespace": "extension",
-          "value": "gltf"
+          "namespace": "codec-extension",
+          "value": "10:stdio.gltf:gltf"
         }
       ]
     },
     {
-      "id": "s.stdio.gltf.runtime.composer.dialect-s-stdio-gltf-2-0.v1",
+      "id": "s.stdio.gltf.composer.dialect-s-stdio-gltf-2-0.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.gltf@2.0/*",
       "claims": [
@@ -224,7 +225,7 @@
       ]
     },
     {
-      "id": "s.stdio.gltf.runtime.grammar.grammar-stdio-gltf.v1",
+      "id": "s.stdio.gltf.grammar.grammar-stdio-gltf.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.gltf",
       "claims": [
@@ -235,7 +236,7 @@
       ]
     },
     {
-      "id": "s.stdio.gltf.runtime.grammar.grammar-stdio-gltf-diff.v1",
+      "id": "s.stdio.gltf.grammar.grammar-stdio-gltf-diff.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.gltf.diff",
       "claims": [
@@ -246,7 +247,7 @@
       ]
     },
     {
-      "id": "s.stdio.gltf.runtime.grammar.grammar-stdio-gltf-op.v1",
+      "id": "s.stdio.gltf.grammar.grammar-stdio-gltf-op.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.gltf.op",
       "claims": [
@@ -257,7 +258,7 @@
       ]
     },
     {
-      "id": "s.stdio.gltf.runtime.grammar.grammar-stdio-gltf-pack.v1",
+      "id": "s.stdio.gltf.grammar.grammar-stdio-gltf-pack.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.gltf.pack",
       "claims": [
@@ -268,7 +269,7 @@
       ]
     },
     {
-      "id": "s.stdio.gltf.runtime.grammar.grammar-stdio-gltf-spr.v1",
+      "id": "s.stdio.gltf.grammar.grammar-stdio-gltf-spr.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.gltf.spr",
       "claims": [
@@ -279,7 +280,7 @@
       ]
     },
     {
-      "id": "s.stdio.gltf.runtime.inference.schema-s-stdio-gltf-inference.v1",
+      "id": "s.stdio.gltf.inference.schema-s-stdio-gltf-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:s.stdio.gltf.inference",
       "claims": [
@@ -290,7 +291,7 @@
       ]
     },
     {
-      "id": "s.stdio.gltf.runtime.representation.mime-model-gltf-json-extension-gltf.v1",
+      "id": "s.stdio.gltf.standard.2-0.representation.mime-model-gltf-json-extension-gltf",
       "category": "representation",
       "descriptor": "runtime-capability:representation:mime:model/gltf+json|extension:.gltf",
       "claims": [
@@ -305,7 +306,7 @@
       ]
     },
     {
-      "id": "s.stdio.gltf.runtime.schema.schema-s-stdio-gltf.v1",
+      "id": "s.stdio.gltf.schema.schema-s-stdio-gltf.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.gltf",
       "claims": [
@@ -323,7 +324,7 @@
     "redistribution_status": "unknown",
     "clauses_or_features": [],
     "profiles": [
-      "s.stdio.gltf.standard.2.0.profile.any"
+      "s.stdio.gltf.standard.2-0.profile.any"
     ],
     "registered_code_points": [],
     "read": "unimplemented",

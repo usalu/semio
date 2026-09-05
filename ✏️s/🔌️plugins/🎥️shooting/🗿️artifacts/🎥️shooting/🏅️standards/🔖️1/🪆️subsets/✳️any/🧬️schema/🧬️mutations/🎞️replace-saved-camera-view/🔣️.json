@@ -5,7 +5,7 @@
   "displayName": "Replace Saved Camera View",
   "emoji": "🎞️",
   "aggregateVariant": "ReplaceSavedCameraView",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

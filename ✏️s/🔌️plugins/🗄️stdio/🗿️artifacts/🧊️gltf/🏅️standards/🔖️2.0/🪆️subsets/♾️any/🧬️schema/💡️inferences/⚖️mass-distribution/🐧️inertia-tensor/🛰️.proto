@@ -1,0 +1,15 @@
+// 💡️ inertia-tensor glTF inference leaf binary facet.
+syntax = "proto3";
+
+package stdio.gltf.inference;
+
+message GltfInertiaTensorInferenceV1 {
+  string id = 1;
+  uint32 algorithm_version = 2;
+  string cache_key = 3;
+  string validity = 4;
+  string quality = 5;
+  repeated string diagnostic_ids = 6;
+  repeated string provenance = 7;
+  bytes value_json = 8;
+}

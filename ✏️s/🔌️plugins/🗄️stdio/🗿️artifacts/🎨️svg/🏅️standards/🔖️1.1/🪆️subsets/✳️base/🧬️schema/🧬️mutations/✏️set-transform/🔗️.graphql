@@ -1,2 +1,0 @@
-# 🧬 set-transform/SetTransform
-input SetTransformPayload { path: [Int!]! transform: [MutationPayload!] }

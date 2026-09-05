@@ -14,5 +14,5 @@ export const ARCHITECT_MODE_REPORT = "report" as const;
 export * as adjacencyWindow from "./🎭️modes/✏️edit/🪟️windows/↔️adjacency/🟦️";
 export * as graphWindow from "./🎭️modes/✏️edit/🪟️windows/🕸️graph/🟦️";
 export * as registerWindow from "./🎭️modes/✏️edit/🪟️windows/📋️register/🟦️";
-export * as reportWindow from "./🎭️modes/✏️edit/🪟️windows/📄️report/🟦️";
+export * as reportWindow from "./🎭️modes/✏️edit/🪟️windows/📓️report/🟦️";
 export * as traceWindow from "./🎭️modes/✏️edit/🪟️windows/🧭️trace/🟦️";

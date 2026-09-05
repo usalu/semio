@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeT1S",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newT1S"
+  ],
+  "properties": {
+    "newT1S": {
+      "type": "number"
+    }
+  }
+}

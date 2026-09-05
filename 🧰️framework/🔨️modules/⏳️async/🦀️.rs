@@ -582,7 +582,7 @@ const LANE_COUNT: usize = 6;
 /// actor-crate analogue (HTTP fetch threads, DB storage blocking I/O, the epoch-ticker replacement).
 /// No shipped `Serialize`/`Deserialize`: same repo-wide zero-production-call-site finding as
 /// [`CancelState`] — the one exception is `Deserialize`, kept `#[cfg(test)]`-only because
-/// `⏱️cooperative`'s fixture-driven suite parses `Lane` out of a JSON test corpus; `serde` is a
+/// `🤝️cooperative`'s fixture-driven suite parses `Lane` out of a JSON test corpus; `serde` is a
 /// dev-dependency only, so this never reaches the `wasm32-wasip2` guest link path.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(test, derive(serde::Deserialize))]
@@ -1595,11 +1595,12 @@ mod native_pool {
     /// the calling worker thread — no atomics needed, since no other thread ever touches them.
     /// `UNIT_COST` is [`Lane::Interactive`]'s own weight (the maximum), so the highest-weight lane
     /// is serviced every single scan while lower-weight lanes accrue deficit proportionally slower
-    /// and are serviced roughly every `UNIT_COST / weight` scans — bounded, never starved.
+    /// and are serviced roughly every `UNIT_COST / weight` scans. One selection completes at most
+    /// `UNIT_COST` rounds before returning idle, so eligible queued work never parks merely to accrue deficit.
     fn select_and_pop<'a>(inner: &'a PoolInner, my_index: usize, cursor: &mut usize, deficits: &mut [i64; LANE_COUNT]) -> Option<(Lane, Job, Option<LowPriorityPermit<'a>>)> {
         const UNIT_COST: i64 = Lane::Interactive.weight() as i64;
         let my = &inner.workers[my_index];
-        for _ in 0..LANE_COUNT {
+        for _ in 0..LANE_COUNT * UNIT_COST as usize {
             let lane = Lane::ALL[*cursor];
             *cursor = (*cursor + 1) % LANE_COUNT;
             let mut queue = my.queues[lane.index()].lock().unwrap_or_else(PoisonError::into_inner);
@@ -1835,6 +1836,39 @@ mod native_pool {
             }
         }
     }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn native_drr_finishes_eligible_deficit_frontier_before_idle() {
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("🤝️cooperative/🧪️fixture/🔣️.json")).unwrap();
+            let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+            let (started_tx, started_rx) = std::sync::mpsc::channel();
+            let (release_tx, release_rx) = std::sync::mpsc::channel();
+            pool.submit(Lane::Interactive, Box::new(move || {
+                started_tx.send(()).unwrap();
+                release_rx.recv_timeout(Duration::from_secs(5)).unwrap();
+            }));
+            started_rx.recv_timeout(Duration::from_secs(2)).unwrap();
+            for case in fixture["cases"].as_array().unwrap() {
+                let lane: Lane = serde_json::from_value(case["lane"].clone()).unwrap();
+                assert_eq!(u64::from(lane.weight()), case["weight"].as_u64().unwrap());
+                pool.try_submit(lane, Box::new(|| {})).ok().expect("isolated lane admission");
+                let mut cursor = 0;
+                let mut deficits = [0; LANE_COUNT];
+                let (selected, job, permit) = select_and_pop(&pool.inner, 0, &mut cursor, &mut deficits).expect("eligible queued work must accrue deficit before idle parking");
+                assert_eq!(selected, lane);
+                assert_eq!(deficits[lane.index()], case["deficits"].as_array().unwrap().last().unwrap().as_i64().unwrap());
+                job();
+                drop(permit);
+                assert!(select_and_pop(&pool.inner, 0, &mut cursor, &mut deficits).is_none());
+            }
+            release_tx.send(()).unwrap();
+            pool.shutdown();
+        }
+    }
 }
 //#endregion 🧵️WorkerPoolNative
 
@@ -1911,7 +1945,7 @@ mod wasm_pool {
     /// this target. Same public surface as the native pool ([`WorkerPool::new`]/`submit`/
     /// `worker_count`/`active_workers`/`occupancy`/`permits`/`timer`/`now_ms`/`shutdown`), PLUS
     /// [`WorkerPool::pump`], which the host (the browser's Web Worker running this WASM module — see
-    /// `🧰️framework/🛍️products/💻️os/🟦️backbone-worker.ts`) must call repeatedly to make progress:
+    /// `🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts`) must call repeatedly to make progress:
     /// each call runs AT MOST one DRR-selected job and fires due timers, then returns whether more
     /// work remains. Running one job per `pump` call (rather than looping internally until a time
     /// budget expires, which this crate cannot measure on plain `wasm32-unknown-unknown` — no clock,
@@ -2086,7 +2120,7 @@ mod wasm_pool {
 
     #[cfg(test)]
     mod cooperative_tests {
-        include!("⏱️cooperative/🦀️.rs");
+        include!("🤝️cooperative/🦀️.rs");
     }
 }
 //#endregion 🧵️WorkerPoolWasm

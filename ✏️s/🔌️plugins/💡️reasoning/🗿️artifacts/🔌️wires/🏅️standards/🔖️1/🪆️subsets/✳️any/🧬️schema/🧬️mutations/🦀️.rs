@@ -75,7 +75,7 @@ pub use super::set_node_root::{set_node_root, SetNodeRoot};
 
 /// 🏷️ Kebab-case spelling of every [`WiresMutation`] variant, in declaration order — the vocabulary
 /// the `wires-1-any` mutation catalog (`../../🔣️oracle.json`) declares and
-/// `mutate-wires-1`'s exhaustive case measures itself against. There is deliberately no
+/// `📡️mutate-wires-1`'s exhaustive case measures itself against. There is deliberately no
 /// `no-mutation` and no `set-snapshot`: the six generic leaves this facet used to carry
 /// (`➕add-node`, `➖remove-node`, `✂️remove-edge`, `➕add-relationship`, `🖼️set-snapshot`,
 /// `🩹patch-node`) were deleted in the same trueing pass that produced these ten, and whole-document
@@ -88,7 +88,7 @@ pub const KINDS: &[&str] = &["create-node", "delete-node", "move-node", "resize-
 /// 📥️ Decodes this facet's internally-tagged (`{"mutation": "moveNode", …}`, camelCase payload
 /// fields) JSON projection — exactly the shape the committed
 /// `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` specification vectors and
-/// `mutate-wires-1`'s own `Examples` payloads carry — into a real [`WiresMutation`]. The test
+/// `📡️mutate-wires-1`'s own `Examples` payloads carry — into a real [`WiresMutation`]. The test
 /// adapter cannot name this crate's private `dsl`/`protocol`/`store` extern-crate aliases (the
 /// generated host links only `semio-repo-test-host` and this crate), so the bridge belongs here
 /// rather than there.
@@ -124,7 +124,7 @@ mod tests {
 
     /// 🏷️ The three declarations of this vocabulary — the enum, [`KINDS`] and the committed catalog
     /// — must agree, in spelling AND in order. The framework never parses Rust, so without this
-    /// test `KINDS` could drift from the enum and the catalog could keep measuring `mutate-wires-1`
+    /// test `KINDS` could drift from the enum and the catalog could keep measuring `📡️mutate-wires-1`
     /// against a vocabulary the artifact no longer has.
     #[test]
     fn kinds_match_the_enum_and_the_catalog() {
@@ -133,7 +133,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔮️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

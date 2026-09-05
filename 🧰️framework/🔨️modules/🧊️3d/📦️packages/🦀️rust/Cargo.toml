@@ -22,7 +22,7 @@ path = "🦀️.rs"
 # `brep` feature gating it) REMOVED too in ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME wave
 # 1: `⚙️engine` itself — its last remaining content was the neutral `Vec3`/`Aabb`/`ParamDomain`/
 # `FaceGroup`/`MeshTransfer`/`PointClassification` contract types, which never used os-kernel —
-# moved out to stdio's own `✳️brep/🧬️schema/⚙️engine/🔖️contract`, and this crate no longer mounts
+# moved out to stdio's own `🧊️brep/🧬️schema/⚙️engine/🔖️contract`, and this crate no longer mounts
 # any `⚙️engine` module at all.
 
 [dependencies]

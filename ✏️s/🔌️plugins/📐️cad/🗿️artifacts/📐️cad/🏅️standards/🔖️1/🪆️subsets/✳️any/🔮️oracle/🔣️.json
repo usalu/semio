@@ -1,0 +1,726 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution. `CadMutation` is a semio-NATIVE vocabulary carried in `.dsl.semio`/`.pack.semio`, so no oracle is registered and the decision below records what stands in for one.",
+  "oracles": [
+    {
+      "id": "cad-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "version": "",
+      "capabilities": [
+        "cad-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "A second implementation of the `s.cad.cad` document and all twenty typed mutations, in Python, at `../../../../../🧪️tests/mutate-cad-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json` (the members and which of them are optional), rules 1, 2 and 7 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and the twenty committed `(before, mutation, diff, outcome, after)` quintets — which are the only statement of four things: that a `create-<slot>-model` verb carries its child id EXPLICITLY rather than content-addressing it; that it REHANDLES an occupied slot instead of refusing; that a `delete-<slot>-model` REMOVES the member from the document rather than nulling it; and that `replace-reference-media` rewrites five members of one reference and leaves its placement and flags alone. The reference also implements the child-target wire spelling `\"<artifactId>!<artifactKind>@<standard>/<subset>\"` in both directions, because the mutation payloads carry it as one string while the snapshot carries it expanded — a reader that never split it could not reproduce a single `create-` vector. It imports nothing from this repository and transliterates none of its Rust. This registration SUPERSEDES the `cad-mutation-semantics` no-oracle decision, whose argument — that the child-slot lifecycle \"IS this subset's specification, not a fact an external library could confirm or refute\", and that a general-purpose CAD or JSON-patch crate would be a worse reference than none — was refuted in this same wave by `mutate-gismap-1`, which took a Python second implementation over this same carrier. The old decision was right that a third-party CAD library is the wrong reference and wrong that the only alternative is no reference; a second implementation written from this subset's own schemas is neither. ALL TWENTY KINDS ARE ADJUDICATED AND NONE IS REFUSED: every child id in this vocabulary is supplied by the caller, so unlike `s.block.3d`'s `catalog` or `s.architect.program`'s `knowledge`/`benchmarks`, nothing here depends on a content-addressing function no specification states. ONE CEILING ON WHAT THIS COMPARISON ESTABLISHES: the SUBJECT half does not run this subset's codec — `../../../../../🧪️tests/mutate-cad-1/🦀️.rs` links no plugin crate and replays the committed vectors — so today it establishes that an independent implementation of the specification computes the committed after-snapshots, not yet our codec against a second producer. A `cad_mutation_report_json` bridge beside the mutation enum closes it; it is not added here for two reasons, and neither is that the verb is hard: it is PRODUCTION code in a crate this test-side pass deliberately does not touch, and it could not be verified end to end today anyway. `parity` was not measured for any case in this pass: the single-case probe `parity exhaustive --owner 🗒️note --case mutate-note-1` was killed at the runner's OWN 900 s per-case budget while still COMPILING the generated subject host — the runner's message names the cause, shared cargo target-dir lock contention from a concurrent session — and then threw `spawnSync cargo ETIMEDOUT` out of `runProbe` with no summary line at all. `📓️w14-final-audit.md` §5.3 measured the underlying blocker one day earlier (`unresolved import component::component_persistent_local` in `semio-framework-plugin`, which sits in every generated host's dependency graph); this pass did NOT re-verify whether that is still the state, and says so rather than repeating it as fact. This subset's own plugin crate compiles clean at `cargo check --lib`. This case also reads no real-world artifact: all 100 of its fixtures are handcrafted specification vectors. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `cad-1-mutate`'s external-oracle requirement for its 20-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 20 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.cad.cad",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "s.cad.cad",
+              "reason": "No third-party library in any ecosystem reads or writes this repository's own document format, per this entry's own rationale; the ecosystem's package index was searched by name and by domain keywords with no match."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md; ../🧬️schema/📸️snapshot/🔣️.json; .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md; ../../../../../🧪️tests/mutate-cad-1/🦀️.rs; 📓️w14-final-audit.md; 🔒️dependencies.json",
+        "fixtureCoverage": {
+          "vectors": 20,
+          "capabilitiesCovered": [
+            "cad-1-mutate"
+          ]
+        }
+      }
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "cad-1-any",
+      "capability": "cad-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-active-model-definition",
+          "sourceMutationDirectoryName": "🎯change-active-model-definition",
+          "mutationDirectoryName": "🎯change-active-model-definition",
+          "scenarios": [
+            {
+              "id": "switches-the-active-pane-to-the-building-model",
+              "directoryName": "🧪️switches-the-active-pane-to-the-building-model"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-reference-hidden",
+          "sourceMutationDirectoryName": "👁️change-reference-hidden",
+          "mutationDirectoryName": "👁️change-reference-hidden",
+          "scenarios": [
+            {
+              "id": "hides-the-shape-reference",
+              "directoryName": "🧪️hides-the-shape-reference"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-reference-locked",
+          "sourceMutationDirectoryName": "🔒change-reference-locked",
+          "mutationDirectoryName": "🔒change-reference-locked",
+          "scenarios": [
+            {
+              "id": "unlocks-the-shape-reference",
+              "directoryName": "🧪️unlocks-the-shape-reference"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-reference-width",
+          "sourceMutationDirectoryName": "📏change-reference-width",
+          "mutationDirectoryName": "📏change-reference-width",
+          "scenarios": [
+            {
+              "id": "widens-the-shape-reference-plane",
+              "directoryName": "🧪️widens-the-shape-reference-plane"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-building-model",
+          "sourceMutationDirectoryName": "🏢create-building-model",
+          "mutationDirectoryName": "🏢create-building-model",
+          "scenarios": [
+            {
+              "id": "rehandles-the-occupied-building-slot",
+              "directoryName": "🧪️rehandles-the-occupied-building-slot"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-drawing",
+          "sourceMutationDirectoryName": "📐️create-drawing",
+          "mutationDirectoryName": "📐️create-drawing",
+          "scenarios": [
+            {
+              "id": "appends-drawing-2",
+              "directoryName": "🧪️appends-drawing-2"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-energy-model",
+          "sourceMutationDirectoryName": "⚡create-energy-model",
+          "mutationDirectoryName": "⚡create-energy-model",
+          "scenarios": [
+            {
+              "id": "rehandles-the-occupied-energy-slot",
+              "directoryName": "🧪️rehandles-the-occupied-energy-slot"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-node",
+          "sourceMutationDirectoryName": "➕create-node",
+          "mutationDirectoryName": "➕create-node",
+          "scenarios": [
+            {
+              "id": "appends-node-3",
+              "directoryName": "🧪️appends-node-3"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-shape-model",
+          "sourceMutationDirectoryName": "🧱create-shape-model",
+          "mutationDirectoryName": "🧱create-shape-model",
+          "scenarios": [
+            {
+              "id": "rehandles-the-occupied-shape-slot",
+              "directoryName": "🧪️rehandles-the-occupied-shape-slot"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-structure-classic-model",
+          "sourceMutationDirectoryName": "🏛️create-structure-classic-model",
+          "mutationDirectoryName": "🏛️create-structure-classic-model",
+          "scenarios": [
+            {
+              "id": "rehandles-the-occupied-structure-classic-slot",
+              "directoryName": "🧪️rehandles-the-occupied-structure-classic-slot"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-building-model",
+          "sourceMutationDirectoryName": "💥delete-building-model",
+          "mutationDirectoryName": "💥delete-building-model",
+          "scenarios": [
+            {
+              "id": "vacates-the-building-slot",
+              "directoryName": "🧪️vacates-the-building-slot"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-drawing",
+          "sourceMutationDirectoryName": "🧹delete-drawing",
+          "mutationDirectoryName": "🧹delete-drawing",
+          "scenarios": [
+            {
+              "id": "removes-drawing-1",
+              "directoryName": "🧪️removes-drawing-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-energy-model",
+          "sourceMutationDirectoryName": "🔌delete-energy-model",
+          "mutationDirectoryName": "🔌delete-energy-model",
+          "scenarios": [
+            {
+              "id": "vacates-the-energy-slot",
+              "directoryName": "🧪️vacates-the-energy-slot"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-node",
+          "sourceMutationDirectoryName": "🗑️delete-node",
+          "mutationDirectoryName": "🗑️delete-node",
+          "scenarios": [
+            {
+              "id": "removes-node-2",
+              "directoryName": "🧪️removes-node-2"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-shape-model",
+          "sourceMutationDirectoryName": "🧨delete-shape-model",
+          "mutationDirectoryName": "🧨delete-shape-model",
+          "scenarios": [
+            {
+              "id": "vacates-the-shape-slot",
+              "directoryName": "🧪️vacates-the-shape-slot"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-structure-classic-model",
+          "sourceMutationDirectoryName": "💣delete-structure-classic-model",
+          "mutationDirectoryName": "💣delete-structure-classic-model",
+          "scenarios": [
+            {
+              "id": "vacates-the-structure-classic-slot",
+              "directoryName": "🧪️vacates-the-structure-classic-slot"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-reference",
+          "sourceMutationDirectoryName": "📍move-reference",
+          "mutationDirectoryName": "📍move-reference",
+          "scenarios": [
+            {
+              "id": "moves-the-shape-reference-off-origin",
+              "directoryName": "🧪️moves-the-shape-reference-off-origin"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-node",
+          "sourceMutationDirectoryName": "🏷️rename-node",
+          "mutationDirectoryName": "🏷️rename-node",
+          "scenarios": [
+            {
+              "id": "relabels-the-root-node",
+              "directoryName": "🧪️relabels-the-root-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-reference-media",
+          "sourceMutationDirectoryName": "🖇️replace-reference-media",
+          "mutationDirectoryName": "🖇️replace-reference-media",
+          "scenarios": [
+            {
+              "id": "reattaches-the-shape-reference-to-a-new-plan",
+              "directoryName": "🧪️reattaches-the-shape-reference-to-a-new-plan"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-references",
+          "sourceMutationDirectoryName": "📎replace-references",
+          "mutationDirectoryName": "📎replace-references",
+          "scenarios": [
+            {
+              "id": "swaps-the-shape-reference-list",
+              "directoryName": "🧪️swaps-the-shape-reference-list"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "create-shape-model",
+        "delete-shape-model",
+        "create-building-model",
+        "delete-building-model",
+        "create-energy-model",
+        "delete-energy-model",
+        "create-structure-classic-model",
+        "delete-structure-classic-model",
+        "create-drawing",
+        "delete-drawing",
+        "create-node",
+        "delete-node",
+        "rename-node",
+        "change-reference-hidden",
+        "change-reference-locked",
+        "change-reference-width",
+        "move-reference",
+        "replace-reference-media",
+        "replace-references",
+        "change-active-model-definition"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.cad.cad",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-active-model-definition",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-active-model-definition",
+            "bridgeVersion": 1,
+            "variant": "ChangeActiveModelDefinition"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "document"
+        },
+        {
+          "id": "change-reference-hidden",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-reference-hidden",
+            "bridgeVersion": 1,
+            "variant": "ChangeReferenceHidden"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "reference"
+        },
+        {
+          "id": "change-reference-locked",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-reference-locked",
+            "bridgeVersion": 1,
+            "variant": "ChangeReferenceLocked"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "reference"
+        },
+        {
+          "id": "change-reference-width",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-reference-width",
+            "bridgeVersion": 1,
+            "variant": "ChangeReferenceWidth"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "reference"
+        },
+        {
+          "id": "create-building-model",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-building-model",
+            "bridgeVersion": 1,
+            "variant": "CreateBuildingModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "building"
+        },
+        {
+          "id": "create-drawing",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-drawing",
+            "bridgeVersion": 1,
+            "variant": "CreateDrawing"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "drawing"
+        },
+        {
+          "id": "create-energy-model",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-energy-model",
+            "bridgeVersion": 1,
+            "variant": "CreateEnergyModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "energy"
+        },
+        {
+          "id": "create-node",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-node",
+            "bridgeVersion": 1,
+            "variant": "CreateNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "node"
+        },
+        {
+          "id": "create-shape-model",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-shape-model",
+            "bridgeVersion": 1,
+            "variant": "CreateShapeModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "shape"
+        },
+        {
+          "id": "create-structure-classic-model",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-structure-classic-model",
+            "bridgeVersion": 1,
+            "variant": "CreateStructureClassicModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "structure"
+        },
+        {
+          "id": "delete-building-model",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-building-model",
+            "bridgeVersion": 1,
+            "variant": "DeleteBuildingModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "building"
+        },
+        {
+          "id": "delete-drawing",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-drawing",
+            "bridgeVersion": 1,
+            "variant": "DeleteDrawing"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "drawing"
+        },
+        {
+          "id": "delete-energy-model",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-energy-model",
+            "bridgeVersion": 1,
+            "variant": "DeleteEnergyModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "energy"
+        },
+        {
+          "id": "delete-node",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-node",
+            "bridgeVersion": 1,
+            "variant": "DeleteNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "node"
+        },
+        {
+          "id": "delete-shape-model",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-shape-model",
+            "bridgeVersion": 1,
+            "variant": "DeleteShapeModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "shape"
+        },
+        {
+          "id": "delete-structure-classic-model",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-structure-classic-model",
+            "bridgeVersion": 1,
+            "variant": "DeleteStructureClassicModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "structure"
+        },
+        {
+          "id": "move-reference",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-reference",
+            "bridgeVersion": 1,
+            "variant": "MoveReference"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "reference"
+        },
+        {
+          "id": "rename-node",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-node",
+            "bridgeVersion": 1,
+            "variant": "RenameNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "node"
+        },
+        {
+          "id": "replace-reference-media",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-reference-media",
+            "bridgeVersion": 1,
+            "variant": "ReplaceReferenceMedia"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "reference"
+        },
+        {
+          "id": "replace-references",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-references",
+            "bridgeVersion": 1,
+            "variant": "ReplaceReferences"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "reference"
+        }
+      ]
+    }
+  ]
+}

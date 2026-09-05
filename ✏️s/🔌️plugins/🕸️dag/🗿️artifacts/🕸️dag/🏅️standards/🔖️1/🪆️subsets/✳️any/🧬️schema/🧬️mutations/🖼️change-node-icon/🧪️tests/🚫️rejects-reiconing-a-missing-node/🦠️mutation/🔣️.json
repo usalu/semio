@@ -1,0 +1,5 @@
+{
+  "mutation": "changeNodeIcon",
+  "id": "node-a",
+  "newIcon": "spark"
+}

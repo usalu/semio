@@ -1,0 +1,108 @@
+[
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "sequence-json-connect-steps",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.sequence.sequence",
+      "standard": "1",
+      "subset": "dependency"
+    },
+    "mutation": "connect-steps",
+    "outcome": "applied",
+    "units": {
+      "length": "unitless",
+      "angle": "radian",
+      "handedness": "none",
+      "up": "none"
+    },
+    "files": [
+      {
+        "role": "expected-before-json",
+        "path": "../🧫️fixtures/🔗️connect-steps/⬅️before.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:a6d7316cf3ecae03c395883a76eadfd1c03366e1c296e6699dac87eb83fb0d37",
+        "bytes": 702
+      },
+      {
+        "role": "expected-after-json",
+        "path": "../🧫️fixtures/🔗️connect-steps/➡️after.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:3420a4651cae4c768d2f806455d140e5cad17f416f309f7cbea1c397aefbbb0f",
+        "bytes": 768
+      }
+    ],
+    "generator": {
+      "oracle": "serde-json-sequence-carrier-reader",
+      "packageVersion": "1",
+      "engineFamily": "serde-json",
+      "engineVersion": "1",
+      "command": "bun ✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate",
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "MIT OR Apache-2.0 (serde_json)",
+      "attribution": "Serialized with serde_json; no semio mutation code participates in the expectation",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-sequence-carrier-v1",
+    "reproducible": true,
+    "family": "sequence-json-carrier",
+    "notes": "Complete {schema, steps, edges} JSON carrier pair for connect-steps; the standalone serde_json generator asserts the semantic projections differ."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "sequence-json-disconnect-steps",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.sequence.sequence",
+      "standard": "1",
+      "subset": "dependency"
+    },
+    "mutation": "disconnect-steps",
+    "outcome": "applied",
+    "units": {
+      "length": "unitless",
+      "angle": "radian",
+      "handedness": "none",
+      "up": "none"
+    },
+    "files": [
+      {
+        "role": "expected-before-json",
+        "path": "../🧫️fixtures/✂️disconnect-steps/⬅️before.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:a6d7316cf3ecae03c395883a76eadfd1c03366e1c296e6699dac87eb83fb0d37",
+        "bytes": 702
+      },
+      {
+        "role": "expected-after-json",
+        "path": "../🧫️fixtures/✂️disconnect-steps/➡️after.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:4faa815b3e9e9335f56686b12d85db6c649afea2fe2a74aab03b8a06b0d0f01d",
+        "bytes": 634
+      }
+    ],
+    "generator": {
+      "oracle": "serde-json-sequence-carrier-reader",
+      "packageVersion": "1",
+      "engineFamily": "serde-json",
+      "engineVersion": "1",
+      "command": "bun ✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate",
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "MIT OR Apache-2.0 (serde_json)",
+      "attribution": "Serialized with serde_json; no semio mutation code participates in the expectation",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-sequence-carrier-v1",
+    "reproducible": true,
+    "family": "sequence-json-carrier",
+    "notes": "Complete {schema, steps, edges} JSON carrier pair for disconnect-steps; the standalone serde_json generator asserts the semantic projections differ."
+  }
+]

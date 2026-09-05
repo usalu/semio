@@ -37,23 +37,23 @@ mod structural_correspondence_tests {
         {
             let kind = "change-exaggeration";
             let variant = "ChangeExaggeration";
-            let directory = "🎚change-exaggeration";
+            let directory = "🎚️change-exaggeration";
             let tag = 0;
             let outcomes = &["applied", "warning"][..];
-            let owner = mutation_root.join("🎚change-exaggeration");
+            let owner = mutation_root.join("🎚️change-exaggeration");
             let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
             let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid descriptor");
             assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
             assert!(!source.contains(concat!("::", "mutation::")));
             assert_eq!(descriptor["semanticKind"], kind);
             assert_eq!(descriptor["aggregateVariant"], variant);
-            assert_eq!(descriptor["payloadSchema"], "🔣️.schema.json");
+            assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
             assert_eq!(descriptor["textOpcode"], kind);
             assert_eq!(descriptor["binaryTag"], tag);
             assert_eq!(descriptor["outcomeClasses"], serde_json::json!(outcomes));
             assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]));
             {
-                assert!(owner.join("🔣️.schema.json").is_file());
+                assert!(owner.join("🧬️.schema.json").is_file());
             }
             {
                 assert!(owner.join("🟦️.ts").is_file());
@@ -85,13 +85,13 @@ mod structural_correspondence_tests {
             assert!(!source.contains(concat!("::", "mutation::")));
             assert_eq!(descriptor["semanticKind"], kind);
             assert_eq!(descriptor["aggregateVariant"], variant);
-            assert_eq!(descriptor["payloadSchema"], "🔣️.schema.json");
+            assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
             assert_eq!(descriptor["textOpcode"], kind);
             assert_eq!(descriptor["binaryTag"], tag);
             assert_eq!(descriptor["outcomeClasses"], serde_json::json!(outcomes));
             assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]));
             {
-                assert!(owner.join("🔣️.schema.json").is_file());
+                assert!(owner.join("🧬️.schema.json").is_file());
             }
             {
                 assert!(owner.join("🟦️.ts").is_file());

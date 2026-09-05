@@ -1,0 +1,8 @@
+{
+  "status": "rejected",
+  "code": "mutation.target-missing",
+  "path": [
+    "tiles",
+    "t-ghost"
+  ]
+}

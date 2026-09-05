@@ -1,0 +1,30 @@
+; 🔺 Structured 21-slot diff frame in GltfDiff declaration order.
+document = asset scene scenes nodes meshes accessors buffer-views buffers buffer-bytes materials textures images samplers skins animations cameras extensions-used extensions-required extensions extras source-form
+asset = option-blob
+scene = tri-varint
+scenes = option-blob
+nodes = option-blob
+meshes = option-blob
+accessors = option-blob
+buffer-views = option-blob
+buffers = option-blob
+buffer-bytes = option-blob
+materials = option-blob
+textures = option-blob
+images = option-blob
+samplers = option-blob
+skins = option-blob
+animations = option-blob
+cameras = option-blob
+extensions-used = option-blob
+extensions-required = option-blob
+extensions = tri-blob
+extras = tri-blob
+source-form = option-byte
+option-blob = %x00 / (%x01 varint bytes)
+tri-blob = %x00 / %x01 / (%x02 varint bytes)
+tri-varint = %x00 / %x01 / (%x02 varint)
+option-byte = %x00 / (%x01 OCTET)
+varint = 1*10OCTET
+bytes = *OCTET
+; Each varint is unsigned LEB128 and binds the immediately following byte payload.

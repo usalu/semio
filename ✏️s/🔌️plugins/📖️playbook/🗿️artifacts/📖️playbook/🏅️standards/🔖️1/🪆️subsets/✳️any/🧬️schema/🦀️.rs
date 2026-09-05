@@ -213,7 +213,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for PlaybookAnalyzerAnalysis {
         type Parts = PlaybookParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.playbook", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.playbook.playbook", standard: StandardId("1"), subset: SubsetId("*") };
 
         fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium

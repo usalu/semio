@@ -9,7 +9,7 @@ pub use set_locale::SetLocale;
 //#endregion 🧬️Leaves
 //#region 🧬️Aggregate
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, dsl::DslOps, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields))]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = Gis3dConfig, diff = Gis3dConfigDiff, schema = "gis.gis3dcfg")]

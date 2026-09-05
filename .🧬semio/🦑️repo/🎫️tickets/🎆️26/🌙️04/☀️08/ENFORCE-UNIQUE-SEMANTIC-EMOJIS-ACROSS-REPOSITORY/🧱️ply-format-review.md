@@ -1,0 +1,15 @@
+# Polygon File Format Hand Review
+
+PLY currently shares `☁️` with LAS at the Stdio artifact level. LAS is specifically the point-cloud carrier, so it keeps that identity. The inspected PLY snapshot explicitly models an ordered sequence of named `element` blocks, typed property declarations and rows; it rejects the earlier mesh-only assumption. The handpicked identity is therefore `🧱️ply`, representing those data-building blocks rather than a generic cloud or polygon icon.
+
+The pre-move census contains 13 physical owners and 209 files: main Stdio, two Semio mesh carriers, and paired Procedural, GIS, Lowpoly, Remodel and Puzzle 3D carriers. `🧱️ply` is absent from every affected file-and-directory sibling namespace. The baseline (`🗑️generated/ply-family-before.json`) contains every source-file length and SHA-256; the read-only incoming review is `ply-incoming-review.txt`. Root owns the main, Semio and Procedural trees. Hub owns the GIS, Lowpoly, Remodel and Puzzle trees after its active Architect compilation completes.
+
+The inspected main tree has 296 entries/187 files and 30 strict findings before repair. Its hand choices are `☑️options`, `🔮️oracle`, `🧱️mutate-ply-1-0`, and `🌐️pattern-sphere` for the connected spherical geometry. Eight mutation fixture groups mirror their actual operations: `🧱️add-element`, `🚮️remove-element`, `📥️insert-row`, `📤️remove-row`, `🏷️set-row-property`, `💬️insert-comment`, `🗑️remove-comment`, and `🎚️set-format`, each with distinct `⬅️before.json` and `➡️after.json`. The production snapshot leaf becomes `📸️set-snapshot`; the three already meaningful production emojis missing only their presentation selector are normalized exactly. No move is automated from this list.
+
+## Verified Result
+
+All 13 physical owners are now `🧱️ply`: the main Stdio owner, paired Semio and Procedural carriers, and the paired GIS, Lowpoly, Remodel and Puzzle 3D carriers. The final byte audit covers 209 files: 194 retain their full SHA-256 and 15 contain only their exact reviewed identity/reference updates. No original owner is missing, no old `☁️ply` path remains outside the ticket, and no selected `🧱️` identity collides in an affected sibling namespace. Evidence is retained in `🗑️generated/ply-family-final-byte-audit.json`.
+
+The main tree now has 296 entries and 187 files with zero strict findings and zero unknown semantic roles. The eight canonical mutation fixture pairs all resolve and agree. Thirty-seven explicit Rust mounts in nine source files resolve to current owners. The uncached shared naming/source-authority run passes 32 tests and 1,145 assertions. Evidence is retained in `🗑️generated/ply-final-naming-resolved.json`, `🗑️generated/ply-fixture-verify.txt`, `🗑️generated/ply-family-mounts.json`, and `🗑️generated/ply-naming-tests.txt`.
+
+This is a naming and source-authority result, not a native PLY codec qualification. The broader Stdio crate still has unrelated current compilation blockers, so no native PLY pass is claimed. Payload-schema coverage remains a separate source-contract review and is not inferred from the naming checks.

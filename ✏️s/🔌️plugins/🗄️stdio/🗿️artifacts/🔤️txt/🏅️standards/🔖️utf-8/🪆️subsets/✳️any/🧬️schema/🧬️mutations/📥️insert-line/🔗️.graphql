@@ -1,0 +1,2 @@
+# 🧬 canonical insert-line/InsertLine
+input InsertLinePayload { index: TxtMutationUInt32V1! text: String! }

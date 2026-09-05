@@ -5,6 +5,33 @@
     "default": ["{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*.rs", "{projectRoot}/**/*"]
   },
   "targets": {
+    "map-create-region-group-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts map-create-region-group-check",
+        "forwardAllArgs": true
+      }
+    },
+    "map-create-region-group-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts map-create-region-group-native-check",
+        "forwardAllArgs": true
+      }
+    },
+    "native-codec-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts native-codec-check",
+        "forwardAllArgs": true
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

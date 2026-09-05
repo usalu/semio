@@ -48,7 +48,9 @@
       "status": "declared"
     }
   ],
-  "codecs": [],
+  "codecs": [
+    { "id": "s.stdio.csv.standard.rfc4180.codec.native-document.v1", "status": "implemented", "from": "s.stdio.csv.standard.rfc4180.dialect.source", "to": "s.stdio.csv.standard.rfc4180.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.csv.v1", "artifact_kind": "stdio.csv", "document_schema": "stdio.csv", "extension": "csv", "pack_schema_hash": "a4810543b9f45e25228b492f1f2e188db09d9331c1ef5fd14cced527a2878a17", "runtime_capability_id": "s.stdio.csv.standard.rfc4180.codec.codec-stdio-csv-extension-csv.v1" } }
+  ],
   "mutations": [],
   "inferences": [],
   "resources": [
@@ -83,22 +85,22 @@
   ],
   "runtime_capabilities": [
     {
-      "id": "s.stdio.csv.runtime.codec.codec-stdio-csv-extension-csv.v1",
+      "id": "s.stdio.csv.standard.rfc4180.codec.codec-stdio-csv-extension-csv.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec:stdio.csv|extension:csv",
+      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.csv:csv|codec:stdio.csv",
       "claims": [
         {
           "namespace": "codec",
           "value": "stdio.csv"
         },
         {
-          "namespace": "extension",
-          "value": "csv"
+          "namespace": "codec-extension",
+          "value": "9:stdio.csv:csv"
         }
       ]
     },
     {
-      "id": "s.stdio.csv.runtime.composer.dialect-s-stdio-csv-rfc4180.v1",
+      "id": "s.stdio.csv.composer.dialect-s-stdio-csv-rfc4180.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.csv@rfc4180/*",
       "claims": [
@@ -109,7 +111,7 @@
       ]
     },
     {
-      "id": "s.stdio.csv.runtime.grammar.grammar-stdio-csv.v1",
+      "id": "s.stdio.csv.grammar.grammar-stdio-csv.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.csv",
       "claims": [
@@ -120,7 +122,7 @@
       ]
     },
     {
-      "id": "s.stdio.csv.runtime.grammar.grammar-stdio-csv-diff.v1",
+      "id": "s.stdio.csv.grammar.grammar-stdio-csv-diff.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.csv.diff",
       "claims": [
@@ -131,7 +133,7 @@
       ]
     },
     {
-      "id": "s.stdio.csv.runtime.grammar.grammar-stdio-csv-op.v1",
+      "id": "s.stdio.csv.grammar.grammar-stdio-csv-op.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.csv.op",
       "claims": [
@@ -142,7 +144,7 @@
       ]
     },
     {
-      "id": "s.stdio.csv.runtime.grammar.grammar-stdio-csv-pack.v1",
+      "id": "s.stdio.csv.grammar.grammar-stdio-csv-pack.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.csv.pack",
       "claims": [
@@ -153,7 +155,7 @@
       ]
     },
     {
-      "id": "s.stdio.csv.runtime.grammar.grammar-stdio-csv-spr.v1",
+      "id": "s.stdio.csv.grammar.grammar-stdio-csv-spr.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.csv.spr",
       "claims": [
@@ -164,7 +166,7 @@
       ]
     },
     {
-      "id": "s.stdio.csv.runtime.inference.schema-s-stdio-csv-inference.v1",
+      "id": "s.stdio.csv.inference.schema-s-stdio-csv-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:s.stdio.csv.inference",
       "claims": [
@@ -175,7 +177,7 @@
       ]
     },
     {
-      "id": "s.stdio.csv.runtime.representation.mime-text-csv-extension-csv.v1",
+      "id": "s.stdio.csv.standard.rfc4180.representation.mime-text-csv-extension-csv",
       "category": "representation",
       "descriptor": "runtime-capability:representation:mime:text/csv|extension:.csv",
       "claims": [
@@ -190,7 +192,7 @@
       ]
     },
     {
-      "id": "s.stdio.csv.runtime.schema.schema-s-stdio-csv.v1",
+      "id": "s.stdio.csv.schema.schema-s-stdio-csv.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.csv",
       "claims": [

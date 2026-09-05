@@ -1,7 +1,0 @@
-syntax = "proto3";
-package semio.s_stdio_pdf_1_7.mutation.remove_page;
-
-// 🗑️ Direct remove-page protobuf payload.
-message RemovePageMutation {
-  uint64 index = 1;
-}

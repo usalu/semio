@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.svg.mutation;
+// remove-element/RemoveElement
+message RemoveElementPayload { bytes parent = 1; uint64 index = 2; }

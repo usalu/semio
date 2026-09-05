@@ -1,0 +1,11 @@
+# Extension Mirror Import Review
+
+The 26 materialized extension component JavaScript files received 108 hand-authored static import edits. Their dependency path is now `../../plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/`. The public route segment `plugin-modules` deliberately remains literal: Vite serves that URL from the separately named physical directory. The compiler-required JavaScript, declaration, and WebAssembly companion basenames are preserved by exact tool contracts.
+
+The before/after audit verifies every imported binding, alias, ordering and basename, and all 26 non-import body SHA-256 values. All checks pass. The patch tool initially removed one existing terminal blank line per file; exact EOF repairs restored those bytes, after which all 26 body hashes matched without whitespace normalization. No body code, WebAssembly or declarations changed in this step.
+
+The shared Actor shard-worker constant and its adjacent output-path documentation now point to `/plugin-modules/🧵️shard/🟨️shard-worker.js`. The parallel development-tree repair completed the producer, physical vendor/shard paths and 56 plugin component imports. Its transport check passed for all 345 imports and 12 actual middleware payloads, with Node/WebCrypto hashes and equality against the ten installed vendor modules. Canonical worker generation and freshness checks also passed after the cutover. The broader development suite and historical dist mirrors remain separately tracked; this is not an end-to-end application completion claim.
+
+The diagnostic evidence is `🗑️generated/extension-imports-before.json` and `extension-imports-after.json`. No generated rename script or bulk substitution was used.
+
+The coordinated public-route cutover subsequently changed all 108 imports in these 26 files to `../../🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/`. All 26 non-import body hashes still match the original baseline, including terminal blank lines; import count, order and bindings are unchanged. Evidence: `🗑️generated/extension-route-after.json`. The Actor worker URL and three Styling MIME fixture labels now use the same public namespace, and the Styling runtime-prefix list was updated exactly. Middleware/runtime transport verification is owned by the parallel development review and is not inferred from these byte checks.

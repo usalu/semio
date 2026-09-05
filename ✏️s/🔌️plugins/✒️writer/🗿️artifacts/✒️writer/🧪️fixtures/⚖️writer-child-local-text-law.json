@@ -1,0 +1,11 @@
+{
+  "$schema": "./🧬️writer-child-local-text.schema.json",
+  "schemaVersion": 1,
+  "maximumCases": 4,
+  "cases": [
+    { "law": "cloneIdentity", "first": "alpha", "second": "", "expected": "alpha" },
+    { "law": "instanceIsolation", "first": "left", "second": "right", "expected": "left|right" },
+    { "law": "abaIsolation", "first": "generation-a", "second": "generation-b", "expected": "generation-a|generation-b" },
+    { "law": "wireOmission", "first": "ephemeral", "second": "", "expected": "" }
+  ]
+}

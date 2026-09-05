@@ -11,7 +11,7 @@
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json
 
 //#region 🔖️Modules
-#[path = "../../🧬️protocol/🦀️.rs"]
+#[path = "../../📡️protocol/🦀️.rs"]
 pub mod protocol;
 
 #[path = "../../🏃️runner/🦀️.rs"]

@@ -26,6 +26,7 @@ pub async fn plugin() -> Result<Plugin<ArchitectApps>, semio_framework_plugin::P
     Plugin::<ArchitectApps>::builder("architect")
         .label("Architect")
         .version("0.1.0")
+        .package_id("semio:architect")
         .artifact(crate::artifacts::program::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .editor::<crate::editor::architect::ArchitectPlayApp>(crate::editor::architect::create_architect_app())
         .editor_mutation_roster::<crate::editor::architect::ArchitectPlayApp>()

@@ -1,9 +1,0 @@
-dialect grammar
-
-grammar stdio.gltf.mutations
-start op
-comment none
-
-# The payload is canonical JSON for the visible aggregate, represented as lower-case hex so the
-# grammar remains generic and every operation identity stays owned by its aggregate variant.
-op = "gltf-mutation" "payload" "=" hex

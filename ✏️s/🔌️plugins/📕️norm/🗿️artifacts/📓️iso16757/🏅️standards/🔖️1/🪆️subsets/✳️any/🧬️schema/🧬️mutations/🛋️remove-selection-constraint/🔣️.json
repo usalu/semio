@@ -5,7 +5,7 @@
   "displayName": "Remove Selection Constraint",
   "emoji": "🛋️",
   "aggregateVariant": "RemoveSelectionConstraint",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

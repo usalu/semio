@@ -1,0 +1,5 @@
+{
+  "mutation": "renameBlock",
+  "id": "blk-table",
+  "newName": "Measurements"
+}

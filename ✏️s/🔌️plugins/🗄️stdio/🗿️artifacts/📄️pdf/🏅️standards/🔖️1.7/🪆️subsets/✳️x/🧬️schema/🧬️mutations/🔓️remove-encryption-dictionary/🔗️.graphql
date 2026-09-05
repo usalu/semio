@@ -1,5 +1,0 @@
-# 🔓️ Direct remove-encryption-dictionary GraphQL payload.
-input RemoveEncryptionDictionaryMutationInput {
-  version: Int!
-  revision: Int!
-}

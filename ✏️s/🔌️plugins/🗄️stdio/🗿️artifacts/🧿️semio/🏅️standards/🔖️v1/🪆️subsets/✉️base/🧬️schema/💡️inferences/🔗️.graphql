@@ -1,0 +1,10 @@
+# 💡️ Semio envelope inference schema — the wrapped subset's dispatch tag/ordinal.
+
+type SemioInference {
+  kind: SemioKind! @derived
+}
+
+type SemioKind {
+  tag: String!
+  ordinal: Int!
+}

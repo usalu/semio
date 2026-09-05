@@ -1,0 +1,201 @@
+syntax = "proto3";
+package semio.s.norm.din16798.diff;
+
+message Din16798Diff {
+  // @state artifact
+  optional Din16798Artifact artifact = 1;
+  // @state artifact
+  optional string annex = 2;
+  // @state artifact
+  optional string occupancy = 3;
+  // @state artifact
+  optional string comfort_category = 4;
+  // @state artifact
+  optional double t_op_c = 5;
+  // @state artifact
+  optional double rh_percent = 6;
+  // @state artifact
+  optional double air_speed_m_s = 7;
+  // @state artifact
+  optional double theta_rm_c = 8;
+  // @state artifact
+  optional double co2_ppm = 9;
+  // @state artifact
+  optional double df_percent = 10;
+  // @state artifact
+  optional double l_aeq_db = 11;
+  // @state artifact
+  optional uint32 persons = 12;
+  // @state artifact
+  optional string ida_class = 13;
+  // @state artifact
+  optional double ventilation_m3_h = 14;
+  // @state artifact
+  optional double floor_area_m2 = 15;
+  // @state artifact
+  optional uint32 bedrooms = 16;
+  // @state artifact
+  optional double dwelling_ventilation_m3_h = 17;
+  // @state artifact
+  optional uint32 occupants = 18;
+  // @state artifact
+  optional double residential_ventilation_m3_h = 19;
+  // @state artifact
+  optional double sfp_w_m3_s = 20;
+  // @state artifact
+  optional uint32 sfp_required_class = 21;
+  // @state artifact
+  optional double heat_recovery_eta = 22;
+  // @state artifact
+  optional double heat_recovery_eta_min = 23;
+  // @state artifact
+  optional string system_type = 24;
+  // @state artifact
+  optional uint32 years_since_inspection = 25;
+  // @state artifact
+  optional double humidification_required_kg_h = 26;
+  // @state artifact
+  optional double humidification_provided_kg_h = 27;
+  // @state artifact
+  optional double fan_q_v_m3_s = 28;
+  // @state artifact
+  optional double fan_t_run_h = 29;
+  // @state artifact
+  optional double fan_energy_reference_kwh = 30;
+  // @state artifact
+  optional double night_setback_k = 31;
+  // @state artifact
+  optional double hr_m_dot_kg_s = 32;
+  // @state artifact
+  optional double hr_cp_j_kgk = 33;
+  // @state artifact
+  optional double hr_delta_t_c = 34;
+  // @state artifact
+  optional double hr_t_h = 35;
+  // @state artifact
+  optional double hr_savings_reference_kwh = 36;
+  // @state artifact
+  optional double n50_h_inv = 37;
+  // @state artifact
+  optional double volume_m3 = 38;
+  // @state artifact
+  optional double infiltration_allowance_m3_h = 39;
+  // @state artifact
+  optional double cellar_area_m2 = 40;
+  // @state artifact
+  optional double cellar_ventilation_m3_h = 41;
+  // @state artifact
+  optional double h_tr_w_k = 42;
+  // @state artifact
+  optional double h_ve_w_k = 43;
+  // @state artifact
+  optional double theta_e_c = 44;
+  // @state artifact
+  optional double theta_set_c = 45;
+  // @state artifact
+  optional double cooling_delta_t_h = 46;
+  // @state artifact
+  optional double cooling_gains_kwh = 47;
+  // @state artifact
+  optional double cooling_utilization_factor = 48;
+  // @state artifact
+  optional double cooling_reference_kwh = 49;
+  // @state artifact
+  optional string chiller_type = 50;
+  // @state artifact
+  optional double eer_actual = 51;
+  // @state artifact
+  optional double q_c_kwh = 52;
+  // @state artifact
+  optional double generation_reference_kwh = 53;
+  // @state artifact
+  optional double data_center_supply_c = 54;
+  // @state artifact
+  optional double h_st_w_k = 55;
+  // @state artifact
+  optional double theta_st_c = 56;
+  // @state artifact
+  optional double theta_amb_c = 57;
+  // @state artifact
+  optional double storage_t_h = 58;
+  // @state artifact
+  optional double storage_allowance_kwh = 59;
+  // @state artifact
+  optional double dhw_delivery_c = 60;
+  // @state artifact
+  optional string duct_class = 61;
+  // @state artifact
+  optional double duct_test_pressure_pa = 62;
+  // @state artifact
+  optional double duct_leakage_m3_s_m2 = 63;
+  // @state presence
+  optional uint32 selected_check_index = 64;
+}
+
+message Din16798Artifact {
+  string annex = 1;
+  string occupancy = 2;
+  string comfort_category = 3;
+  double t_op_c = 4;
+  double rh_percent = 5;
+  double air_speed_m_s = 6;
+  double theta_rm_c = 7;
+  double co2_ppm = 8;
+  double df_percent = 9;
+  double l_aeq_db = 10;
+  uint32 persons = 11;
+  string ida_class = 12;
+  double ventilation_m3_h = 13;
+  double floor_area_m2 = 14;
+  uint32 bedrooms = 15;
+  double dwelling_ventilation_m3_h = 16;
+  uint32 occupants = 17;
+  double residential_ventilation_m3_h = 18;
+  double sfp_w_m3_s = 19;
+  uint32 sfp_required_class = 20;
+  double heat_recovery_eta = 21;
+  double heat_recovery_eta_min = 22;
+  string system_type = 23;
+  uint32 years_since_inspection = 24;
+  double humidification_required_kg_h = 25;
+  double humidification_provided_kg_h = 26;
+  double fan_q_v_m3_s = 27;
+  double fan_t_run_h = 28;
+  double fan_energy_reference_kwh = 29;
+  double night_setback_k = 30;
+  double hr_m_dot_kg_s = 31;
+  double hr_cp_j_kgk = 32;
+  double hr_delta_t_c = 33;
+  double hr_t_h = 34;
+  double hr_savings_reference_kwh = 35;
+  double n50_h_inv = 36;
+  double volume_m3 = 37;
+  double infiltration_allowance_m3_h = 38;
+  double cellar_area_m2 = 39;
+  double cellar_ventilation_m3_h = 40;
+  double h_tr_w_k = 41;
+  double h_ve_w_k = 42;
+  double theta_e_c = 43;
+  double theta_set_c = 44;
+  double cooling_delta_t_h = 45;
+  double cooling_gains_kwh = 46;
+  double cooling_utilization_factor = 47;
+  double cooling_reference_kwh = 48;
+  string chiller_type = 49;
+  double eer_actual = 50;
+  double q_c_kwh = 51;
+  double generation_reference_kwh = 52;
+  double data_center_supply_c = 53;
+  double h_st_w_k = 54;
+  double theta_st_c = 55;
+  double theta_amb_c = 56;
+  double storage_t_h = 57;
+  double storage_allowance_kwh = 58;
+  double dhw_delivery_c = 59;
+  string duct_class = 60;
+  double duct_test_pressure_pa = 61;
+  double duct_leakage_m3_s_m2 = 62;
+  optional uint32 selected_check_index = 63;
+}
+
+message Din16798StringList { repeated string values = 1; }

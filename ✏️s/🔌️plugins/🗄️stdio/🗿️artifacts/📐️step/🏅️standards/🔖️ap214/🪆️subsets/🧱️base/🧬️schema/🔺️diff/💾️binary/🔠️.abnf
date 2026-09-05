@@ -1,0 +1,3 @@
+; abnf stdio.step diff
+document = payload
+payload = *OCTET

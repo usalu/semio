@@ -5,7 +5,7 @@
   "displayName": "Create Energy Model",
   "emoji": "⚡",
   "aggregateVariant": "CreateEnergyModel",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "create-energy-model",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

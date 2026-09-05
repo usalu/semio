@@ -5,7 +5,7 @@
   "displayName": "Create Route",
   "emoji": "🛣️",
   "aggregateVariant": "CreateRoute",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "create-route",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

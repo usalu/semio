@@ -129,7 +129,7 @@ impl FromValue for EquationGraphDsl {
 }
 
 /// 📌️ `EquationGraphDsl`/`EquationEdgeDsl` above are the DSL-only shape the `SetArtifact`
-/// app command's own payload uses (`🎮️commands/📄️set-artifact/🦀️.rs`) — that command still
+/// app command's own payload uses (`🎮️commands/🗿️set-artifact/🦀️.rs`) — that command still
 /// carries a WHOLE graph as one gesture (routed onto the granular `ReplaceGraph`/`ReplacePoints`
 /// mutations, never a banned whole-snapshot replace), so it kept its own `#[derive(dsl::DslRecord)]`
 /// wire shape. The former `EquationSnapshotDsl` mirror — the snapshot's OWN codec — is gone:

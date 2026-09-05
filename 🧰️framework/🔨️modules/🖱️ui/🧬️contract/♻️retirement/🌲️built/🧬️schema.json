@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "grants", "maximumPages", "payloadFields", "stackOrder", "chain", "foreignPage", "binding", "menu", "extraPayloadBytes", "ownership"],
+  "properties": {
+    "version": { "const": 1 },
+    "grants": { "const": [1, 64, 4096] },
+    "maximumPages": { "const": 384 },
+    "payloadFields": { "const": ["key", "component", "layout", "style", "activity", "disabled", "accessibility", "bindings", "menu"] },
+    "stackOrder": { "const": ["rejected_children", "children"] },
+    "chain": { "const": { "pages": 384, "nodes": 385, "ordinaryPages": 192, "rejectedPages": 192, "observerDepth": 64 } },
+    "foreignPage": { "const": { "ownedPages": 383, "queuedPages": 1, "cursor": 0, "nodes": 1 } },
+    "binding": { "const": { "trigger": "activate", "action": { "scope": "s", "name": "n", "version": 1 }, "args": { "x": ["🌊"] }, "capability": "c" } },
+    "menu": { "const": { "id": "m", "args": { "x": ["🌊"] } } },
+    "extraPayloadBytes": { "const": 30 },
+    "ownership": { "const": { "zeroGrantAdvances": false, "contentionWaits": false, "globalQueueAdvances": false, "foreignOwnerConsumed": false, "ordinaryAndRejectedRetired": true, "partialDropCompletes": false, "safeAbandon": false } }
+  }
+}

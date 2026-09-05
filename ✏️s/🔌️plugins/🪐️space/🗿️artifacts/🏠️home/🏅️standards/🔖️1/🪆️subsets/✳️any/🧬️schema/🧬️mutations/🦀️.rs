@@ -34,13 +34,13 @@ mod structural_correspondence_tests {
         assert!(!source.contains(concat!("::", "mutation::")));
         assert_eq!(descriptor["semanticKind"], "change-catalog-generation");
         assert_eq!(descriptor["aggregateVariant"], "ChangeCatalogGeneration");
-        assert_eq!(descriptor["payloadSchema"], "🔣️.schema.json");
+        assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
         assert_eq!(descriptor["textOpcode"], "change-catalog-generation");
         assert_eq!(descriptor["binaryTag"], 0);
         assert_eq!(descriptor["outcomeClasses"], pack::json!(["applied", "warning"]));
         assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]));
         {
-            assert!(owner.join("🔣️.schema.json").is_file());
+            assert!(owner.join("🧬️.schema.json").is_file());
         }
         {
             assert!(owner.join("🟦️.ts").is_file());

@@ -5,7 +5,7 @@
   "displayName": "Change Title",
   "emoji": "✏️",
   "aggregateVariant": "ChangeTitle",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-title",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

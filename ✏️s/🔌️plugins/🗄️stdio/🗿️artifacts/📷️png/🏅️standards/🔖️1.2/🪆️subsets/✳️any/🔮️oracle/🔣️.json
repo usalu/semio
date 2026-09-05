@@ -1,0 +1,1873 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution to the repository test platform, distinct from the shared ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json manifest: that file registers the `png` reference crate under the `png-raster` capability its own create-and-round-trip-png case exercises; this file registers the SAME package under a distinct id and the `png-1-2-mutate` capability this subset's exhaustive mutation case (`mutate-png-1-2`) actually tags, per the wave 7 fleet brief's oracle-registration gotcha (reusing the shared entry fails the contract with `oracle-capability-mismatch`).",
+  "oracles": [
+    {
+      "id": "png-png-1-2-mutate",
+      "ecosystem": "rust",
+      "package": "png",
+      "version": "0.18",
+      "capabilities": [
+        "png-1-2-mutate-second-implementation"
+      ],
+      "comparisonProfiles": [
+        "semantic-raster-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/image-rs/image-png",
+      "rationale": "🫥️ RECLASSIFIED. The third-party crate here does REAL codec work — it decodes the artifact and will reject a malformed one — but that is not what the mutation test turns on. What the OUTPUT OF A MUTATION SHOULD BE is computed by this owner's own `🦀️.rs`, whose `apply_kind` dispatch is a second implementation of this subset's mutation semantics. Its own doc comment says so: it \"deliberately mirrors\" the production `diff` rather than diverging from it. Both halves of the comparison therefore read the same specification, and a misreading of it produces two agreeing wrong answers.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\", and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation`: a required SUPPLEMENT, never a substitute. A qualifying third-party reference for the mutation semantics is still owed.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "productionDebt": {
+        "reachableFrom": [
+          "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs"
+        ],
+        "owner": "🧰️framework/🛍️products/💻️os/🖥️host",
+        "plan": "Same pre-existing production reachability the shared ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json `png` entry already records (the OS host rasterizes SVG to PNG through this crate) — the dependency-classification gate classifies by reachability, not manifest placement, so registering the SAME package under a second id/capability here surfaces the same debt a second time rather than hiding it. Phase 7 target: once the OS host's PNG writing moves behind ✏️s/🔌️plugins/🗄️stdio's own encode_png, both this entry and the shared one lose their productionDebt and testOnly becomes a fact."
+      },
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "png",
+        "implementation": "png Rust PNG encoder/decoder",
+        "version": "0.18"
+      },
+      "productionReachable": true,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "png-png-1-2-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "png",
+      "version": "0.18.1",
+      "engine": {
+        "family": "png",
+        "implementation": "png reader",
+        "version": "0.18.1"
+      },
+      "capabilities": [
+        "png-1-2-mutate"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionDebt": {
+        "reachableFrom": [
+          "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs",
+          "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🖼️images/🦀️.rs"
+        ],
+        "owner": "🧰️framework/🛍️products/💻️os/🖥️host",
+        "plan": "Same pre-existing production reachability the sibling `png-png-1-2-mutate` entry already records against the OS host path — the dependency-classification gate classifies by reachability, not manifest placement, so registering the SAME package under a THIRD id/capability here surfaces the same debt again rather than hiding it. This entry additionally names remodel's own image-editing engine, a second real, non-test `png::Encoder`/`png::Decoder` call site the sibling entry does not list. Phase 7 target unchanged: once the OS host's PNG writing moves behind ✏️s/🔌️plugins/🗄️stdio's own encode_png and remodel's image engine does the same, every one of these entries loses its productionDebt and testOnly becomes a fact."
+      },
+      "productionReachable": true,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "rationale": "📖️ A READER, and that is the whole point of registering it separately.\n\nThis subset also carries a `🦀️.rs` that COMPUTES what each mutation should produce. That entry is registered `cross-semio-implementation` and does not discharge anything, because both halves of such a comparison descend from one reading of the specification.\n\nThis entry is a different mechanism. The expected state is not computed at all — it is COMMITTED, as the `after` half of a byte-reproducible fixture written directly by `png` 0.18.1's own `Encoder`/`Writer`. `png` then decodes both sides with its own `Decoder`, and the comparison is over what it recovered. The probes say so in their own header: \"Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should.\"\n\nSo the judge is a third-party implementation of the format, and nothing in this repository predicts the answer it is judging. That is what makes it qualifying where the sibling `png-png-1-2-mutate` entry is not.\n\nPRODUCTION REACHABLE, measured rather than copied from the sibling entry's own claim: `🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs` uses `png::{BitDepth, ColorType, Encoder}` directly to rasterize SVG to PNG for a real, registered OS media-export handler (`register_os_media_export_handler_kind(artifact_kind, \"png\", ...)`); `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🖼️images/🦀️.rs` uses `png::Encoder`/`png::Decoder` directly in its own (non-test) image-editing engine. All three of `os/host`, `remodel` and `lowpoly`'s own `Cargo.toml` declare `png = \"0.17.16\"` as a real, non-optional, non-dev dependency. `🔒️dependencies.json`'s repo-root entry for `png` (`productionReachable: false`, version `0.17.16`) is STALE against this source evidence and against this subset's own pre-existing `png-png-1-2-mutate` registration, which already records `productionReachable: true` with a `productionDebt` naming the same OS host path — not corrected here because touching a shared, generated, repo-root ledger is out of this ticket's PNG-only scope, but the discrepancy is recorded so it is not mistaken for agreement.\n\n12 of this subset's 15 declared kinds are witnessable through `png::Info`'s public fields (`width`, `height`, `bit_depth`, `color_type`, `interlaced`, `palette`, `trns`, `gama_chunk`, `chrm_chunk`, `srgb`, `pixel_dims`, `bkgd`, `uncompressed_latin1_text`) plus the decoded pixel sample buffer for `replace-pixels`. Three are not: `png::Info` 0.18.1 has no `tIME` field at all, and the decoder skips unrecognised ancillary chunks entirely rather than surfacing them (`src/decoder/stream.rs`'s own `SkippedAncillaryChunk`, with no public accessor) — `change-timestamp`, `insert-unknown-chunk` and `remove-unknown-chunk` are registered `png-1-2-mutate-uncarried` rather than discharged. Full research: `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️png-reader-witnessability.md`, independently re-verified against the vendored crate source (`~/.cargo/registry/src/*/png-0.18.1/`) while building this retrofit.",
+      "comparisonProfiles": [
+        "semantic-raster-v1"
+      ]
+    },
+    {
+      "id": "pillow-png-1-2-chunk-reader",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "Pillow",
+      "version": "11.3.0",
+      "source": {
+        "repository": "https://github.com/python-pillow/Pillow",
+        "license": "MIT-CMU"
+      },
+      "engine": {
+        "family": "pillow",
+        "implementation": "Pillow 11.3.0 PngImagePlugin.ChunkStream (CRC-checked chunk walk)",
+        "version": "11.3.0"
+      },
+      "capabilities": [
+        "png-1-2-mutate-chunk"
+      ],
+      "comparisonProfiles": [
+        "semantic-png-chunk-v1"
+      ],
+      "license": "MIT-CMU",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://python-pillow.org",
+      "rationale": "📖️ A SECOND reader, at the CHUNK level the first one does not model.\n\n`png` 0.18 models a DECODED image: it has no `tIME` field and its stream skips unrecognised ancillary chunks outright. A peer session's crate research established that and this ticket re-verified it, which is why `change-timestamp`, `insert-unknown-chunk` and `remove-unknown-chunk` were recorded `-uncarried` against it. Honest about `png`, and not a claim about PNG readers generally.\n\nPillow's `PngImagePlugin.ChunkStream` walks the chunk sequence and validates every CRC, so each chunk is observable by type, order and payload — `tIME` and a private ancillary chunk included. Pillow also WRITES both via `PngInfo.add`, so writer and reader are one library, the precedent gif already sets here (its Encoder writes, its Decoder judges).\n\n`IDAT` payloads are projected by LENGTH only: they are compressed pixel data, none of these three kinds changes them, and projecting megabytes of deflate stream would add cost without adding discrimination. Every other chunk carries its full payload."
+    }
+  ],
+  "noOracleDecisions": [
+    {
+      "id": "png-tIME-and-unknown-ancillary-chunks-uncarried",
+      "capabilities": [
+        "png-1-2-mutate-uncarried"
+      ],
+      "rationale": "The `png` 0.18.1 reader cannot witness three of this subset's fifteen kinds, for a crate-API reason rather than a carrier-export reason (contrast `sequence`'s `csv` case, where the export itself never writes the field). `change-timestamp`: `png::Info` has no `tIME` field in this version — confirmed absent from `src/common.rs`. `insert-unknown-chunk`/`remove-unknown-chunk`: the decoder's own `SkippedAncillaryChunk` path discards any chunk type it does not recognise before it ever reaches `Info`, and no public accessor exposes what was skipped. All three fixtures are still built — `png-codec`'s `Writer::write_chunk` raw escape hatch writes real tIME/unknown-chunk bytes for both `before` and `after` — so the byte-level material exists and is committed; what is missing is a public read path in this specific crate version to compare it back. See `📓️png-reader-witnessability.md` for the line-level crate-source evidence.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-png-1-2-v1",
+      "description": "PNG 1.2 documents compared structurally through `png` 0.18.1's own decode: the four normative IHDR fields (width, height, bitDepth, colorType) plus interlaced; the palette as an ordered list of RGB triples (palette index is pixel-sample identity for an Indexed image); tRNS, gAMA (as its exact scaled integer, never a lossy float), cHRM (all eight scaled-integer coordinates), the sRGB rendering intent, pHYs, bKGD and every tEXt chunk as an ordered list of (keyword, text) pairs — all kept as real typed values so a diff names the exact field, per this fleet's own opaque-payload precedent. The decoded pixel sample buffer projects as a size+digest pair rather than raw bytes, the same treatment `semantic-avi-v1` gives a movi chunk payload. Distinct from the repository-wide `semantic-raster-v1` profile (defined in `✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json`), which explicitly IGNORES gamma and ancillary chunks — this profile exists because this subset's mutation vocabulary is made almost entirely of the fields that one deliberately canonicalizes away.",
+      "arrays": "ordered",
+      "ignoreKeys": [],
+      "pipeline": "png-1-2-crate-compare-v1"
+    },
+    {
+      "id": "semantic-png-chunk-v1",
+      "description": "The PNG chunk sequence in ORDER — type, length and full payload for every chunk except IDAT, whose compressed pixel payload is projected by length only because none of these kinds changes it."
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "png-1-2-any",
+      "capability": "png-1-2-mutate",
+      "standardDirectoryName": "🔖️1.2",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-header",
+          "sourceMutationDirectoryName": "📐️change-header",
+          "mutationDirectoryName": "📐️change-header",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-palette",
+          "sourceMutationDirectoryName": "🎨️replace-palette",
+          "mutationDirectoryName": "🎨️replace-palette",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-transparency",
+          "sourceMutationDirectoryName": "👁️change-transparency",
+          "mutationDirectoryName": "👁️change-transparency",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-gamma",
+          "sourceMutationDirectoryName": "🌗️change-gamma",
+          "mutationDirectoryName": "🌗️change-gamma",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-chromaticities",
+          "sourceMutationDirectoryName": "🌈️change-chromaticities",
+          "mutationDirectoryName": "🌈️change-chromaticities",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-srgb-intent",
+          "sourceMutationDirectoryName": "🖌️change-srgb-intent",
+          "mutationDirectoryName": "🖌️change-srgb-intent",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-physical-dims",
+          "sourceMutationDirectoryName": "📏️change-physical-dims",
+          "mutationDirectoryName": "📏️change-physical-dims",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-timestamp",
+          "sourceMutationDirectoryName": "🕰️change-timestamp",
+          "mutationDirectoryName": "🕰️change-timestamp",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-background",
+          "sourceMutationDirectoryName": "🖼️change-background",
+          "mutationDirectoryName": "🖼️change-background",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-text-chunk",
+          "sourceMutationDirectoryName": "📥️insert-text-chunk",
+          "mutationDirectoryName": "📥️insert-text-chunk",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-text-chunk",
+          "sourceMutationDirectoryName": "🗑️remove-text-chunk",
+          "mutationDirectoryName": "🗑️remove-text-chunk",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-text-chunk",
+          "sourceMutationDirectoryName": "✏️replace-text-chunk",
+          "mutationDirectoryName": "✏️replace-text-chunk",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-pixels",
+          "sourceMutationDirectoryName": "🔲️replace-pixels",
+          "mutationDirectoryName": "🔲️replace-pixels",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-unknown-chunk",
+          "sourceMutationDirectoryName": "📦️insert-unknown-chunk",
+          "mutationDirectoryName": "📦️insert-unknown-chunk",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-unknown-chunk",
+          "sourceMutationDirectoryName": "📤️remove-unknown-chunk",
+          "mutationDirectoryName": "📤️remove-unknown-chunk",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "change-header",
+        "replace-palette",
+        "change-transparency",
+        "change-gamma",
+        "change-chromaticities",
+        "change-srgb-intent",
+        "change-physical-dims",
+        "change-timestamp",
+        "change-background",
+        "insert-text-chunk",
+        "remove-text-chunk",
+        "replace-text-chunk",
+        "replace-pixels",
+        "insert-unknown-chunk",
+        "remove-unknown-chunk"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "id": "png-import",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "png",
+      "version": "0.18.1",
+      "engine": {
+        "family": "png",
+        "implementation": "png-codec (png 0.18.1)",
+        "version": "png@0.18.1"
+      },
+      "capabilities": [
+        "png.crate.import"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
+        "png-import"
+      ],
+      "rationale": "An INDEPENDENT reader (png-codec's own use of `png::Decoder`) accepts both files at all. Nothing downstream means anything if one of them does not parse.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Run against every generated fixture this session (15 recipes, 30 files) — bothImport true in every case; confirmed directly for change-gamma-applied/⬅️before.png and change-gamma-applied/➡️after.png.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "reads-a-real-png",
+            "met": true,
+            "detail": "decodes the PNG signature, IHDR, and every ancillary chunk this crate version surfaces through png::Decoder::read_info"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "png-codec depends only on png 0.18.1, resolved from the local cargo registry cache via --offline; no network during execution"
+          }
+        ]
+      }
+    },
+    {
+      "id": "png-project",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "png",
+      "version": "0.18.1",
+      "engine": {
+        "family": "png",
+        "implementation": "png-codec (png 0.18.1)",
+        "version": "png@0.18.1"
+      },
+      "capabilities": [
+        "png.crate.project"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
+        "png-project"
+      ],
+      "rationale": "The typed projection semantic-png-1-2-v1 is measured against — header fields, palette, trns, gamma (exact scaled integer), chromaticities, srgb intent, physical dims, background, every tEXt chunk in order, and the decoded pixel buffer as size+digest.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Run against replace-palette-applied/➡️after.png: reports width 4, height 2, colorType \"indexed\", hasPalette true, with the projection's palette array holding the four replaced RGB triples ([255,255,0], [0,255,255], [255,0,255], [32,32,32]) verbatim.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "small-fields-stay-typed",
+            "met": true,
+            "detail": "palette entries, gamma, chromaticities, physical dims, header fields and tEXt keyword/text pairs project as their real values, matching semantic-png-1-2-v1's own field-level treatment"
+          },
+          {
+            "id": "opaque-pixel-payload",
+            "met": true,
+            "detail": "the decoded pixel sample buffer projects as size+digest, never raw bytes"
+          }
+        ]
+      }
+    },
+    {
+      "id": "png-compare",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "png",
+      "version": "0.18.1",
+      "engine": {
+        "family": "png",
+        "implementation": "png-codec (png 0.18.1)",
+        "version": "png@0.18.1"
+      },
+      "capabilities": [
+        "png.crate.compare"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
+        "png-compare"
+      ],
+      "rationale": "Structural equality over two independently-decoded projections — the GATING comparison. Computes no mutation semantics, only structural equality of two already-existing byte blobs.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways this session with real measured numbers: change-gamma-applied's ⬅️before.png vs itself (byte-identical pair) -> {equal:true, diffCount:0}; change-gamma-applied's ⬅️before.png vs ➡️after.png (gAMA deliberately differs, 45455 vs 100000) -> {equal:false, diffCount:1, diffs:[\"$.gamma: 45455 \\u2260 100000\"]}.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "identical before/before bytes compare equal:true, diffCount:0"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "a single deliberately-wrong field (gAMA) compares equal:false, diffCount:1, and the diff names the exact field path"
+          }
+        ]
+      }
+    },
+    {
+      "id": "png-chunk-project",
+      "kind": "external-process",
+      "ecosystem": "python",
+      "package": "Pillow",
+      "version": "11.3.0",
+      "engine": {
+        "family": "pillow",
+        "implementation": "Pillow 11.3.0 PngImagePlugin.ChunkStream",
+        "version": "11.3.0"
+      },
+      "capabilities": [
+        "png.chunk.project"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT-CMU",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
+        "png-chunk-project"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 3 kinds: (before,before) -> equal:true for 3/3; (before,after) -> equal:false for 3/3. Observability is also enforced at generation time: the generator refuses to write a pair whose chunk projection does not move. The reader validates every chunk CRC, so a fixture with a corrupted chunk would be refused rather than silently projected.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "3/3 kinds: identical (before,before) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "3/3 kinds: the kind's own (before,after) compares equal:false"
+          },
+          {
+            "id": "witnesses-what-the-png-crate-cannot",
+            "met": true,
+            "detail": "tIME has no field in png 0.18 and unrecognised ancillary chunks are skipped by its stream"
+          },
+          {
+            "id": "validates-chunk-crcs",
+            "met": true,
+            "detail": "ChunkStream.crc is called for every chunk, so a corrupted fixture is refused rather than projected"
+          },
+          {
+            "id": "reads-only",
+            "met": true,
+            "detail": "The probes walk and compare; neither applies a mutation nor predicts one"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "Pillow is installed locally; the reader runs with no network"
+          }
+        ]
+      }
+    },
+    {
+      "id": "png-chunk-compare",
+      "kind": "external-process",
+      "ecosystem": "python",
+      "package": "Pillow",
+      "version": "11.3.0",
+      "engine": {
+        "family": "pillow",
+        "implementation": "Pillow 11.3.0 PngImagePlugin.ChunkStream",
+        "version": "11.3.0"
+      },
+      "capabilities": [
+        "png.chunk.compare"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT-CMU",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
+        "png-chunk-compare"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 3 kinds: (before,before) -> equal:true for 3/3; (before,after) -> equal:false for 3/3. Observability is also enforced at generation time: the generator refuses to write a pair whose chunk projection does not move. The reader validates every chunk CRC, so a fixture with a corrupted chunk would be refused rather than silently projected.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "3/3 kinds: identical (before,before) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "3/3 kinds: the kind's own (before,after) compares equal:false"
+          },
+          {
+            "id": "witnesses-what-the-png-crate-cannot",
+            "met": true,
+            "detail": "tIME has no field in png 0.18 and unrecognised ancillary chunks are skipped by its stream"
+          },
+          {
+            "id": "validates-chunk-crcs",
+            "met": true,
+            "detail": "ChunkStream.crc is called for every chunk, so a corrupted fixture is refused rather than projected"
+          },
+          {
+            "id": "reads-only",
+            "met": true,
+            "detail": "The probes walk and compare; neither applies a mutation nor predicts one"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "Pillow is installed locally; the reader runs with no network"
+          }
+        ]
+      }
+    }
+  ],
+  "comparisonPipelines": [
+    {
+      "id": "png-1-2-crate-compare-v1",
+      "description": "Reads the subject's produced PNG and the fixture's own expected PNG with an independent png-codec projection, then compares their ordered projections. GATING.",
+      "stages": [
+        {
+          "probe": "png-import",
+          "description": "An independent reader accepts both files.",
+          "inputs": [
+            "expected-png",
+            "actual-png"
+          ],
+          "assertions": {
+            "bothImport": true
+          }
+        },
+        {
+          "probe": "png-compare",
+          "description": "Structural equality — the operative equality.",
+          "inputs": [
+            "expected-png",
+            "actual-png"
+          ],
+          "assertions": {
+            "equal": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "png-1-2-chunk-compare-v1",
+      "description": "Chunk-level equality through Pillow's CRC-checked chunk walk. GATING for the three kinds png 0.18 does not model.",
+      "stages": [
+        {
+          "probe": "png-chunk-project",
+          "description": "An independent chunk-level reader accepts both files and validates every CRC.",
+          "inputs": [
+            "expected-before-png",
+            "expected-after-png"
+          ],
+          "assertions": {
+            "bothImport": true
+          }
+        },
+        {
+          "probe": "png-chunk-compare",
+          "description": "Ordered equality over the chunk sequence — the operative equality.",
+          "inputs": [
+            "expected-before-png",
+            "expected-after-png"
+          ],
+          "assertions": {
+            "equal": true
+          }
+        }
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.png",
+      "standard": "1.2",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1.2",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-background",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-background",
+            "bridgeVersion": 1,
+            "variant": "ChangeBackgroundMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "png-png-1-2-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "change-chromaticities",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-chromaticities",
+            "bridgeVersion": 1,
+            "variant": "ChangeChromaticitiesMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "png-png-1-2-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "change-gamma",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-gamma",
+            "bridgeVersion": 1,
+            "variant": "ChangeGammaMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "png-png-1-2-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "change-header",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-header",
+            "bridgeVersion": 1,
+            "variant": "ChangeHeaderMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "png-png-1-2-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "change-physical-dims",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-physical-dims",
+            "bridgeVersion": 1,
+            "variant": "ChangePhysicalDimsMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "png-png-1-2-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "change-srgb-intent",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-srgb-intent",
+            "bridgeVersion": 1,
+            "variant": "ChangeSrgbIntentMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "png-png-1-2-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "change-timestamp",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-timestamp",
+            "bridgeVersion": 1,
+            "variant": "ChangeTimestampMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate-chunk",
+              "qualifyingKind": "third-party-library",
+              "oracle": "pillow-png-1-2-chunk-reader"
+            }
+          ]
+        },
+        {
+          "id": "change-transparency",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-transparency",
+            "bridgeVersion": 1,
+            "variant": "ChangeTransparencyMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "png-png-1-2-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "insert-text-chunk",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-text-chunk",
+            "bridgeVersion": 1,
+            "variant": "InsertTextChunkMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "png-png-1-2-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "insert-unknown-chunk",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-unknown-chunk",
+            "bridgeVersion": 1,
+            "variant": "InsertUnknownChunkMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate-chunk",
+              "qualifyingKind": "third-party-library",
+              "oracle": "pillow-png-1-2-chunk-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-text-chunk",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-text-chunk",
+            "bridgeVersion": 1,
+            "variant": "RemoveTextChunkMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "png-png-1-2-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-unknown-chunk",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-unknown-chunk",
+            "bridgeVersion": 1,
+            "variant": "RemoveUnknownChunkMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate-chunk",
+              "qualifyingKind": "third-party-library",
+              "oracle": "pillow-png-1-2-chunk-reader"
+            }
+          ]
+        },
+        {
+          "id": "replace-palette",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-palette",
+            "bridgeVersion": 1,
+            "variant": "ReplacePaletteMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "png-png-1-2-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "replace-pixels",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-pixels",
+            "bridgeVersion": 1,
+            "variant": "ReplacePixelsMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "png-png-1-2-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "replace-text-chunk",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-text-chunk",
+            "bridgeVersion": 1,
+            "variant": "ReplaceTextChunkMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "png-png-1-2-mutate-reader"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "change-header-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.png",
+        "standard": "1.2",
+        "subset": "any"
+      },
+      "mutation": "change-header",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-png",
+          "path": "../🧫️fixtures/📐️change-header-applied/⬅️before.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:93ff8de4d7f99a1c0c54aa795bc9a4eda1abcc7ea38932d0d471677ccea70775",
+          "bytes": 82
+        },
+        {
+          "role": "expected-after-png",
+          "path": "../🧫️fixtures/📐️change-header-applied/➡️after.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:8c3ab645a32c2b60513aa38414053527a0f48167d9e7130f84c9132b01f1f431",
+          "bytes": 79
+        }
+      ],
+      "generator": {
+        "oracle": "png-png-1-2-mutate-reader",
+        "packageVersion": "0.18.1",
+        "engineFamily": "png",
+        "engineVersion": "0.18.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-header-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (png)",
+        "attribution": "Generated with png (MIT OR Apache-2.0) via the standalone png-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-png-1-2-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Whole-value IHDR replace: width/height change (4x2 -> 6x2), colour type/bit depth/interlace held fixed."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "replace-palette-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.png",
+        "standard": "1.2",
+        "subset": "any"
+      },
+      "mutation": "replace-palette",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-png",
+          "path": "../🧫️fixtures/🎨️replace-palette-applied/⬅️before.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:7cfe9e4891460b1192c4d53ee057d1a22688497feed05614c383079f4d82d9cb",
+          "bytes": 97
+        },
+        {
+          "role": "expected-after-png",
+          "path": "../🧫️fixtures/🎨️replace-palette-applied/➡️after.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:48d1a1377a0e8759946421d8f31ad29b1db0917e9c5510e11ba04535f7abf7e9",
+          "bytes": 97
+        }
+      ],
+      "generator": {
+        "oracle": "png-png-1-2-mutate-reader",
+        "packageVersion": "0.18.1",
+        "engineFamily": "png",
+        "engineVersion": "0.18.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only replace-palette-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (png)",
+        "attribution": "Generated with png (MIT OR Apache-2.0) via the standalone png-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-png-1-2-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Whole-value PLTE replace over an Indexed base; index bytes (pixels) untouched."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "change-transparency-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.png",
+        "standard": "1.2",
+        "subset": "any"
+      },
+      "mutation": "change-transparency",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-png",
+          "path": "../🧫️fixtures/👁️change-transparency-applied/⬅️before.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:93ff8de4d7f99a1c0c54aa795bc9a4eda1abcc7ea38932d0d471677ccea70775",
+          "bytes": 82
+        },
+        {
+          "role": "expected-after-png",
+          "path": "../🧫️fixtures/👁️change-transparency-applied/➡️after.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:5fd4f0f6d74f2405ae5db8cdd32fd478dd7be1d3327b9b4cd7c904b66243e6db",
+          "bytes": 100
+        }
+      ],
+      "generator": {
+        "oracle": "png-png-1-2-mutate-reader",
+        "packageVersion": "0.18.1",
+        "engineFamily": "png",
+        "engineVersion": "0.18.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-transparency-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (png)",
+        "attribution": "Generated with png (MIT OR Apache-2.0) via the standalone png-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-png-1-2-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "tRNS color-key add over an RGB (non-alpha) base."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "change-gamma-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.png",
+        "standard": "1.2",
+        "subset": "any"
+      },
+      "mutation": "change-gamma",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-png",
+          "path": "../🧫️fixtures/🌗️change-gamma-applied/⬅️before.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:8787406a3ec6cbc56eb25bce5110bff29848628ed9fe4abe008333eb839339fb",
+          "bytes": 98
+        },
+        {
+          "role": "expected-after-png",
+          "path": "../🧫️fixtures/🌗️change-gamma-applied/➡️after.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:650d770c1d3dbd4e098b4d38a995c82402553093e55812dd677f2d9113cb5109",
+          "bytes": 98
+        }
+      ],
+      "generator": {
+        "oracle": "png-png-1-2-mutate-reader",
+        "packageVersion": "0.18.1",
+        "engineFamily": "png",
+        "engineVersion": "0.18.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-gamma-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (png)",
+        "attribution": "Generated with png (MIT OR Apache-2.0) via the standalone png-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-png-1-2-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "gAMA replace (1/2.2 -> 1.0, scaled x100000)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "change-chromaticities-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.png",
+        "standard": "1.2",
+        "subset": "any"
+      },
+      "mutation": "change-chromaticities",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-png",
+          "path": "../🧫️fixtures/🌈️change-chromaticities-applied/⬅️before.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:d63b98db422d925eb1503a4e2aa0cd9e57e043b31674284403d773a6be3740d5",
+          "bytes": 126
+        },
+        {
+          "role": "expected-after-png",
+          "path": "../🧫️fixtures/🌈️change-chromaticities-applied/➡️after.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:0a847c8e13aec557837291f5c5812c5ab69448198b39163ef50c2339478bc033",
+          "bytes": 126
+        }
+      ],
+      "generator": {
+        "oracle": "png-png-1-2-mutate-reader",
+        "packageVersion": "0.18.1",
+        "engineFamily": "png",
+        "engineVersion": "0.18.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-chromaticities-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (png)",
+        "attribution": "Generated with png (MIT OR Apache-2.0) via the standalone png-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-png-1-2-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "cHRM replace (sRGB primaries -> an arbitrary other primary/white-point set)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "change-srgb-intent-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.png",
+        "standard": "1.2",
+        "subset": "any"
+      },
+      "mutation": "change-srgb-intent",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-png",
+          "path": "../🧫️fixtures/🖌️change-srgb-intent-applied/⬅️before.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:72da4d275c2499873017b9efd13a163b7f48aeb62ff7577bd6ecfe393ccab1a3",
+          "bytes": 95
+        },
+        {
+          "role": "expected-after-png",
+          "path": "../🧫️fixtures/🖌️change-srgb-intent-applied/➡️after.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:1be2ea3379ef4263d5feebf03f26fe9e2a3a5604a84e5e37e2ab1d2172db0448",
+          "bytes": 95
+        }
+      ],
+      "generator": {
+        "oracle": "png-png-1-2-mutate-reader",
+        "packageVersion": "0.18.1",
+        "engineFamily": "png",
+        "engineVersion": "0.18.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-srgb-intent-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (png)",
+        "attribution": "Generated with png (MIT OR Apache-2.0) via the standalone png-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-png-1-2-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "sRGB rendering intent replace (Perceptual -> RelativeColorimetric)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "change-physical-dims-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.png",
+        "standard": "1.2",
+        "subset": "any"
+      },
+      "mutation": "change-physical-dims",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-png",
+          "path": "../🧫️fixtures/📏️change-physical-dims-applied/⬅️before.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:5ce68c930e29936836280c8c74caf2a38b968ac6eaa42e7052bc87b6440f7ff8",
+          "bytes": 103
+        },
+        {
+          "role": "expected-after-png",
+          "path": "../🧫️fixtures/📏️change-physical-dims-applied/➡️after.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:6f8b5054adc115dd2a956576acc0cf8ac9183eb19ed8c5ddf7d909e68631ce0e",
+          "bytes": 103
+        }
+      ],
+      "generator": {
+        "oracle": "png-png-1-2-mutate-reader",
+        "packageVersion": "0.18.1",
+        "engineFamily": "png",
+        "engineVersion": "0.18.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-physical-dims-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (png)",
+        "attribution": "Generated with png (MIT OR Apache-2.0) via the standalone png-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-png-1-2-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "pHYs replace (2835x2835 px/m -> 1000x4000, unit Unspecified)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "change-timestamp-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.png",
+        "standard": "1.2",
+        "subset": "any"
+      },
+      "mutation": "change-timestamp",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-png",
+          "path": "../🧫️fixtures/🕰️change-timestamp-applied/⬅️before.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:f44e076d7b58e27b10dae57930ed72244b81b820231c6fcaad0e2fc6c4856e23",
+          "bytes": 101
+        },
+        {
+          "role": "expected-after-png",
+          "path": "../🧫️fixtures/🕰️change-timestamp-applied/➡️after.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:63de5a220527b5cdbd3f5447fc577170aa1ffd5d01c8d6ab1ca1ad35f1ec5b78",
+          "bytes": 101
+        }
+      ],
+      "generator": {
+        "oracle": "png-png-1-2-mutate-reader",
+        "packageVersion": "0.18.1",
+        "engineFamily": "png",
+        "engineVersion": "0.18.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-timestamp-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (png)",
+        "attribution": "Generated with png (MIT OR Apache-2.0) via the standalone png-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-png-1-2-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "tIME replace with a FIXED, hand-chosen 7-byte payload — never wall-clock. UNCARRIED: png::Info 0.18.1 has no tIME field."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "change-background-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.png",
+        "standard": "1.2",
+        "subset": "any"
+      },
+      "mutation": "change-background",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-png",
+          "path": "../🧫️fixtures/🖼️change-background-applied/⬅️before.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:8669431652e85c25558e5ad2956e0a256989e32846bcb2a2fa1391b7127162e2",
+          "bytes": 100
+        },
+        {
+          "role": "expected-after-png",
+          "path": "../🧫️fixtures/🖼️change-background-applied/➡️after.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:e8d9b09c69ca9b5380c80996349692fc4e8ca15bd08bb6b92f6d2afd7d101c8f",
+          "bytes": 100
+        }
+      ],
+      "generator": {
+        "oracle": "png-png-1-2-mutate-reader",
+        "packageVersion": "0.18.1",
+        "engineFamily": "png",
+        "engineVersion": "0.18.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only change-background-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (png)",
+        "attribution": "Generated with png (MIT OR Apache-2.0) via the standalone png-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-png-1-2-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "bKGD replace, written through png::Writer::write_chunk's raw escape hatch (the encoder has no bKGD setter at all)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-text-chunk-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.png",
+        "standard": "1.2",
+        "subset": "any"
+      },
+      "mutation": "insert-text-chunk",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-png",
+          "path": "../🧫️fixtures/📥️insert-text-chunk-applied/⬅️before.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:93ff8de4d7f99a1c0c54aa795bc9a4eda1abcc7ea38932d0d471677ccea70775",
+          "bytes": 82
+        },
+        {
+          "role": "expected-after-png",
+          "path": "../🧫️fixtures/📥️insert-text-chunk-applied/➡️after.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:dfc065b824ecbea564557ea495a17af0eabfce8243b5a9d4289c3aa7aaa36533",
+          "bytes": 122
+        }
+      ],
+      "generator": {
+        "oracle": "png-png-1-2-mutate-reader",
+        "packageVersion": "0.18.1",
+        "engineFamily": "png",
+        "engineVersion": "0.18.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only insert-text-chunk-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (png)",
+        "attribution": "Generated with png (MIT OR Apache-2.0) via the standalone png-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-png-1-2-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "No tEXt chunk -> one (keyword \"Comment\")."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-text-chunk-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.png",
+        "standard": "1.2",
+        "subset": "any"
+      },
+      "mutation": "remove-text-chunk",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-png",
+          "path": "../🧫️fixtures/🗑️remove-text-chunk-applied/⬅️before.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:dfc065b824ecbea564557ea495a17af0eabfce8243b5a9d4289c3aa7aaa36533",
+          "bytes": 122
+        },
+        {
+          "role": "expected-after-png",
+          "path": "../🧫️fixtures/🗑️remove-text-chunk-applied/➡️after.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:93ff8de4d7f99a1c0c54aa795bc9a4eda1abcc7ea38932d0d471677ccea70775",
+          "bytes": 82
+        }
+      ],
+      "generator": {
+        "oracle": "png-png-1-2-mutate-reader",
+        "packageVersion": "0.18.1",
+        "engineFamily": "png",
+        "engineVersion": "0.18.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only remove-text-chunk-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (png)",
+        "attribution": "Generated with png (MIT OR Apache-2.0) via the standalone png-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-png-1-2-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "One tEXt chunk -> none."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "replace-text-chunk-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.png",
+        "standard": "1.2",
+        "subset": "any"
+      },
+      "mutation": "replace-text-chunk",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-png",
+          "path": "../🧫️fixtures/✏️replace-text-chunk-applied/⬅️before.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:5f08a3abfc2e2e79ad0a13abe67336c3eecff9a5f9dfaaf663085f9157677bca",
+          "bytes": 114
+        },
+        {
+          "role": "expected-after-png",
+          "path": "../🧫️fixtures/✏️replace-text-chunk-applied/➡️after.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:89be28e98ea5817e31d5084a1dbebd7b358be5374f6a78a4fbf915dbef2ffd73",
+          "bytes": 113
+        }
+      ],
+      "generator": {
+        "oracle": "png-png-1-2-mutate-reader",
+        "packageVersion": "0.18.1",
+        "engineFamily": "png",
+        "engineVersion": "0.18.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only replace-text-chunk-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (png)",
+        "attribution": "Generated with png (MIT OR Apache-2.0) via the standalone png-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-png-1-2-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The one tEXt chunk's text is replaced, keyword held fixed."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "replace-pixels-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.png",
+        "standard": "1.2",
+        "subset": "any"
+      },
+      "mutation": "replace-pixels",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-png",
+          "path": "../🧫️fixtures/🔲️replace-pixels-applied/⬅️before.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:93ff8de4d7f99a1c0c54aa795bc9a4eda1abcc7ea38932d0d471677ccea70775",
+          "bytes": 82
+        },
+        {
+          "role": "expected-after-png",
+          "path": "../🧫️fixtures/🔲️replace-pixels-applied/➡️after.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:0593f730ccc7ea6c715af48ce45a3354f280fa3e52247a6a96b34f4a196b0491",
+          "bytes": 82
+        }
+      ],
+      "generator": {
+        "oracle": "png-png-1-2-mutate-reader",
+        "packageVersion": "0.18.1",
+        "engineFamily": "png",
+        "engineVersion": "0.18.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only replace-pixels-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (png)",
+        "attribution": "Generated with png (MIT OR Apache-2.0) via the standalone png-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-png-1-2-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Same header, disjoint pixel sample bytes (byte-inverted)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-unknown-chunk-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.png",
+        "standard": "1.2",
+        "subset": "any"
+      },
+      "mutation": "insert-unknown-chunk",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-png",
+          "path": "../🧫️fixtures/📦️insert-unknown-chunk-applied/⬅️before.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:93ff8de4d7f99a1c0c54aa795bc9a4eda1abcc7ea38932d0d471677ccea70775",
+          "bytes": 82
+        },
+        {
+          "role": "expected-after-png",
+          "path": "../🧫️fixtures/📦️insert-unknown-chunk-applied/➡️after.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:7841719f610d4e56467a2c14ad0643bb9b16973531845dd024fd9fc95b4ea86d",
+          "bytes": 97
+        }
+      ],
+      "generator": {
+        "oracle": "png-png-1-2-mutate-reader",
+        "packageVersion": "0.18.1",
+        "engineFamily": "png",
+        "engineVersion": "0.18.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only insert-unknown-chunk-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (png)",
+        "attribution": "Generated with png (MIT OR Apache-2.0) via the standalone png-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-png-1-2-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "No unrecognised chunk -> one private ancillary chunk (fourcc prVt). UNCARRIED: the decoder skips unrecognised ancillary chunks entirely."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-unknown-chunk-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.png",
+        "standard": "1.2",
+        "subset": "any"
+      },
+      "mutation": "remove-unknown-chunk",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-png",
+          "path": "../🧫️fixtures/📤️remove-unknown-chunk-applied/⬅️before.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:7841719f610d4e56467a2c14ad0643bb9b16973531845dd024fd9fc95b4ea86d",
+          "bytes": 97
+        },
+        {
+          "role": "expected-after-png",
+          "path": "../🧫️fixtures/📤️remove-unknown-chunk-applied/➡️after.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:93ff8de4d7f99a1c0c54aa795bc9a4eda1abcc7ea38932d0d471677ccea70775",
+          "bytes": 82
+        }
+      ],
+      "generator": {
+        "oracle": "png-png-1-2-mutate-reader",
+        "packageVersion": "0.18.1",
+        "engineFamily": "png",
+        "engineVersion": "0.18.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only remove-unknown-chunk-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (png)",
+        "attribution": "Generated with png (MIT OR Apache-2.0) via the standalone png-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-png-1-2-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "One unrecognised chunk -> none. UNCARRIED for the same reason."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "chunk-change-timestamp",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.png",
+        "standard": "1.2",
+        "subset": "any"
+      },
+      "mutation": "change-timestamp",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-png",
+          "path": "../🧫️fixtures/📅️change-timestamp/⬅️before.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:b7b8ca69615237a448ce9a63dc814e915168fa82d6d522a1b6856ecc6ecc2e5e",
+          "bytes": 103
+        },
+        {
+          "role": "expected-after-png",
+          "path": "../🧫️fixtures/📅️change-timestamp/➡️after.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:f342af57e54ad6d9cb22b8301634a8c1ca709d99637ff6a75c939c8d4a914f77",
+          "bytes": 103
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "pillow-png-1-2-chunk-reader",
+        "packageVersion": "11.3.0",
+        "engineFamily": "pillow",
+        "engineVersion": "11.3.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts chunks",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-png-chunk-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A Pillow-written PNG pair differing only in the chunk this kind touches. The png crate, this subset's other reader, has no tIME field and skips unrecognised ancillary chunks, so it cannot witness either. Observability was checked through the Pillow ChunkStream reader before the pair was written.",
+      "comparisonPipeline": "png-1-2-chunk-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "chunk-insert-unknown-chunk",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.png",
+        "standard": "1.2",
+        "subset": "any"
+      },
+      "mutation": "insert-unknown-chunk",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-png",
+          "path": "../🧫️fixtures/➕️insert-unknown-chunk/⬅️before.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:b7b8ca69615237a448ce9a63dc814e915168fa82d6d522a1b6856ecc6ecc2e5e",
+          "bytes": 103
+        },
+        {
+          "role": "expected-after-png",
+          "path": "../🧫️fixtures/➕️insert-unknown-chunk/➡️after.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:4a3778c55cb6d91a88ca2968ac8363669b0de58920f2be06e730970dc7992c5a",
+          "bytes": 136
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "pillow-png-1-2-chunk-reader",
+        "packageVersion": "11.3.0",
+        "engineFamily": "pillow",
+        "engineVersion": "11.3.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts chunks",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-png-chunk-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A Pillow-written PNG pair differing only in the chunk this kind touches. The png crate, this subset's other reader, has no tIME field and skips unrecognised ancillary chunks, so it cannot witness either. Observability was checked through the Pillow ChunkStream reader before the pair was written.",
+      "comparisonPipeline": "png-1-2-chunk-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "chunk-remove-unknown-chunk",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.png",
+        "standard": "1.2",
+        "subset": "any"
+      },
+      "mutation": "remove-unknown-chunk",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-png",
+          "path": "../🧫️fixtures/➖️remove-unknown-chunk/⬅️before.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:4a3778c55cb6d91a88ca2968ac8363669b0de58920f2be06e730970dc7992c5a",
+          "bytes": 136
+        },
+        {
+          "role": "expected-after-png",
+          "path": "../🧫️fixtures/➖️remove-unknown-chunk/➡️after.png",
+          "mediaType": "image/png",
+          "sha256": "sha256:b7b8ca69615237a448ce9a63dc814e915168fa82d6d522a1b6856ecc6ecc2e5e",
+          "bytes": 103
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "pillow-png-1-2-chunk-reader",
+        "packageVersion": "11.3.0",
+        "engineFamily": "pillow",
+        "engineVersion": "11.3.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts chunks",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-png-chunk-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A Pillow-written PNG pair differing only in the chunk this kind touches. The png crate, this subset's other reader, has no tIME field and skips unrecognised ancillary chunks, so it cannot witness either. Observability was checked through the Pillow ChunkStream reader before the pair was written.",
+      "comparisonPipeline": "png-1-2-chunk-compare-v1"
+    }
+  ]
+}

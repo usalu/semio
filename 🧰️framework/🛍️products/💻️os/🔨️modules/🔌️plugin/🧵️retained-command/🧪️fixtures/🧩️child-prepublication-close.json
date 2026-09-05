@@ -1,0 +1,16 @@
+{
+  "schema": "retained-command-child-prepublication-close/v1",
+  "maximumItems": 1,
+  "maximumBytes": 4,
+  "children": [
+    { "id": "first", "slot": "slot-ä", "childId": "child-α", "value": "雪" },
+    { "id": "second", "slot": "slot-β", "childId": "child-二", "value": "💥" }
+  ],
+  "expectedRetirementOrder": ["second", "first"],
+  "zeroGrantPreservesOwner": true,
+  "parentReleasedBeforeChildren": false,
+  "completionRejections": ["duplicate", "busy"],
+  "rejectionReturnsOwner": true,
+  "existingCompletionUntouched": true,
+  "boundedFactoryPublishesChild": false
+}

@@ -5,7 +5,7 @@
   "displayName": "Set Line Ending",
   "emoji": "🔀",
   "aggregateVariant": "SetLineEnding",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "set-line-ending",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

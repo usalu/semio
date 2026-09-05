@@ -96,7 +96,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/💾️binary/🦀️.rs"]
                                     pub mod binary;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/retags-the-playground-document-schema/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/📅️retags-the-playground-document-schema/🦀️.rs"]
                                     mod tests_retags_the_playground_document_schema;
                                 }
                             }
@@ -303,7 +303,7 @@ pub mod viewer {
 //#endregion 👁️Viewer
 
 //#region 🛂️Manifest
-#[path = "../../🛂️manifest/🎪️demonstrator/🦀️.rs"]
+#[path = "../../🪪️manifest/🎪️demonstrator/🦀️.rs"]
 mod manifest;
 // 🎪️ Unconditional, unlike the six bundled panes' own `plugin-entry`-gated exports: this crate
 // IS the single terminal wasm component (nothing depends on it as a lib), so it always owns the

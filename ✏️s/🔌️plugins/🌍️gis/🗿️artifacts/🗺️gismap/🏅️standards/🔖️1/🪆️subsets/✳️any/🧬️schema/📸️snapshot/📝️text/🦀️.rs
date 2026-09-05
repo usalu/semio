@@ -54,7 +54,7 @@ mod tests {
     /// round trip — it stays a float simply because that is the fixture's actual data shape.
     #[semio_framework_async_macros::async_test]
     async fn gis_map_document_dsl_round_trips_synthetic_value_shapes() {
-        let dsl_of = |value: serde_json::Value| dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null);
+        let dsl_of = |value: serde_json::Value| dsl::DslValue::from(value);
         let document = GisMapSnapshot {
             positions: vec![MapFeature {
                 id: "p1".into(),

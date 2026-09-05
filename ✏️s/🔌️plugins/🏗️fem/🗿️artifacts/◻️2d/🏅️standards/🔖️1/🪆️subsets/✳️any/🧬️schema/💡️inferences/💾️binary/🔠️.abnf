@@ -1,3 +1,0 @@
-; abnf fem.fem2d.inference
-document = payload
-payload = *OCTET

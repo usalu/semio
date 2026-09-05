@@ -1,0 +1,38 @@
+{
+  "mutation": "replacePriorityRecord",
+  "priorityRecord": {
+    "id": "priority-record-a",
+    "name": "Priority Record A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "subjectId": "",
+    "subjectKind": "Replaced Priority Record A",
+    "rankedPriority": "preferred",
+    "rank": null,
+    "weight": null,
+    "rationale": null,
+    "decisionId": null,
+    "stakeholderIds": [],
+    "effectiveFrom": null,
+    "effectiveUntil": null,
+    "reviewCycle": null,
+    "dependencies": [],
+    "conflicts": [],
+    "scoringMethod": null,
+    "score": null,
+    "criteria": [],
+    "approvedBy": null,
+    "approvalDate": null,
+    "rankingNotes": []
+  }
+}

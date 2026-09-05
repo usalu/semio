@@ -5,7 +5,7 @@
   "displayName": "Move Reference",
   "emoji": "🎯",
   "aggregateVariant": "MoveReference",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "move-reference",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

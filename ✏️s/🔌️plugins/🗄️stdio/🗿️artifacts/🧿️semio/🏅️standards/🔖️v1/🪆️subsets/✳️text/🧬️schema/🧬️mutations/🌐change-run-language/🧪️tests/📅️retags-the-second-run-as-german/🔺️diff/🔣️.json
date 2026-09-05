@@ -1,0 +1,16 @@
+{
+  "runs": {
+    "values": [
+      {
+        "language": "en",
+        "content": "Hello",
+        "marks": []
+      },
+      {
+        "language": "de",
+        "content": "Welt",
+        "marks": []
+      }
+    ]
+  }
+}

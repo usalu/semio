@@ -1,5 +1,5 @@
 //! 🚚️ Main-window utility — Relocate: drag an object to a new world position and auto-attract it
-//! onto whatever compatible vortex ends up within the proximity radius (see `🎮️commands/🔄️translate-selection`'s
+//! onto whatever compatible vortex ends up within the proximity radius (see `🎮️commands/🚀️translate-selection`'s
 //! `world_relocate`). It carries no Utility Options of its own — the proximity radius it honours is a
 //! whole-app setting on the ⚙️settings panel.
 

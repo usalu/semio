@@ -1,0 +1,93 @@
+{
+  "capacitySchema": "semio.value.resident.capacity.v1",
+  "pageBytes": 256,
+  "allocation": {
+    "requiresExactReservation": true,
+    "partialPageCharge": 256,
+    "copyBytesPerStep": 1,
+    "metadataReleaseIsSeparate": true
+  },
+  "identity": {
+    "instance": [
+      "exactPrivateOwner",
+      "exactActivationObject",
+      "activationGenerationU64",
+      "instanceIdU32",
+      "guestLifetimeU64"
+    ],
+    "oneScopePerInstanceOwner": true,
+    "hostPoolSharedAcrossInstances": true
+  },
+  "ownership": {
+    "pool": "Original Shard-held shell and strongly registered exact lifetime scopes",
+    "instance": "Original field-owned payloads and one admitted seven-word child slot",
+    "payload": "Original builder, one-page streaming window, preinstalled reader and evidence capsule; each has its own neutral admission and record",
+    "page": "Full 256-byte intrinsic backing plus exact state, record and admission; no public capture bypass",
+    "consumer": "Reader installed in the original payload and builder before exposure; private intrinsic alias separately admitted before byte access"
+  },
+  "transitions": [
+    {
+      "operation": "bindInstance",
+      "declaration": "📨️slot/🤝️contract.json"
+    },
+    {
+      "operation": "beginPayload",
+      "declaration": "📦️payload/🤝️contract.json"
+    },
+    {
+      "operation": "beginBuilder",
+      "declaration": "🏗️builder/🤝️contract.json"
+    },
+    {
+      "operation": "beginPage",
+      "declaration": "📃️page/🤝️contract.json"
+    },
+    {
+      "operation": "pageBinding",
+      "declaration": "📃️page/🔗️binding/🤝️contract.json"
+    },
+    {
+      "operation": "beginReader",
+      "declaration": "📖️reader/🤝️contract.json"
+    },
+    {
+      "operation": "beginEvidence",
+      "declaration": "🧾️evidence/🤝️contract.json"
+    },
+    {
+      "operation": "cancelInput",
+      "declaration": "🧾️evidence/🚫️cancellation/🤝️contract.json"
+    },
+    {
+      "operation": "copyInput",
+      "declaration": "🧾️evidence/📋️copied/🤝️contract.json"
+    }
+  ],
+  "close": {
+    "activationRequired": false,
+    "oneChildPerStep": true,
+    "callerThrowRetainsWriter": true,
+    "rawInputAckReleasesCredit": false,
+    "publicationReleasesCredit": false,
+    "garbageCollectionIsDischarge": false,
+    "operationRevocationPreservesReadUntilParentClose": true,
+    "parentOwnsAllIssuedReaderRetirement": true,
+    "firstUnknownFaultRemainsCharged": true,
+    "liveAliasesRemainReadableUntilPayloadClose": true
+  },
+  "finalInstanceWitness": {
+    "requiresEmptyUiDescendants": true,
+    "requiresEmptyResidentRosters": true,
+    "requiresAllIssuedReadersRetired": true,
+    "requiresSeparateScopeRelease": true,
+    "counterOnlyAuthorityAccepted": false
+  },
+  "composition": {
+    "defaultCapacity": null,
+    "deriveFromMaxPatchBytes": false,
+    "deriveFromStepBudget": false,
+    "physicalHeapCertification": false,
+    "originalShardLedgerRequired": true,
+    "parallelUiCapacity": false
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/space/1/any/mutations/create-artifact",
+  "title": "CreateArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["artifact"],
+  "properties": {"artifact": {"$ref": "#/$defs/SpaceArtifactRow"}},
+  "$defs": {
+    "SpaceArtifactRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kindId", "schema", "dialect", "createdAtMs", "createdBy", "updatedAtMs", "updatedBy"],
+      "properties": {
+        "id": {"type": "string"},
+        "name": {"type": "string"},
+        "kindId": {"type": "string"},
+        "schema": {"type": "string"},
+        "dialect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["artifactKind", "standard", "subset"],
+          "properties": {"artifactKind": {"type": "string"}, "standard": {"type": "string"}, "subset": {"type": "string"}}
+        },
+        "createdAtMs": {"type": "integer", "minimum": 0},
+        "createdBy": {"type": "string"},
+        "updatedAtMs": {"type": "integer", "minimum": 0},
+        "updatedBy": {"type": "string"}
+      }
+    }
+  }
+}

@@ -3,7 +3,7 @@
 //! 🔁️ SHARED BY BOTH WINDOWS: the 2D board window and the 3D world window bind the identical `brush`
 //! utility id, so the definition is declared ONCE here (under the 2D window, the first binder) and
 //! `🪟️windows/🧊️3d`'s own `definition()` references this same module rather than duplicating it.
-//! Its live options are the mode-level `🎭️modes/✏️edit/🎚️options/🖌️brush` measure group, tagged with
+//! Its live options are the mode-level `🎭️modes/✏️edit/☑️options/🖌️brush` measure group, tagged with
 //! this utility's id.
 
 use semio_framework_plugin::{LocalizedLabel, UtilityDefinition};

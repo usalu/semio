@@ -22,7 +22,7 @@ aliases = ["process 3d"]
 ports = { react = 6022, wgpu = 6122 }
 
 # 🎪️ The `bearbeiten` demonstrator row moved to
-# ✏️s/🔌️plugins/🎪️demonstrator/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml — see that
+# ✏️s/🔌️plugins/🎪️demonstrator/🪪️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml — see that
 # crate's docstring (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT).
 
 [lib]
@@ -50,7 +50,7 @@ semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨
 semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 serde_json.workspace = true
 base64_codec = { path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
-framework_hash = { package = "semio-framework-hash", path = "../../../../../🧰️framework/🔨️modules/🔢️hash/📦️packages/🦀️rust" }
+framework_hash = { package = "semio-framework-hash", path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

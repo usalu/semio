@@ -1,0 +1,50 @@
+[package]
+name = "semio-framework-plugin-describe"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Build-time descriptor emitter: instantiates a built plugin/extension component once and writes its static PackageDescriptor (🛂️.descriptor.semio + 🔣️.json), never called at runtime"
+
+[package.metadata.semio]
+role = "tool"
+id = "plugin-describe"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[[bin]]
+name = "semio-framework-plugin-describe"
+path = "📦️main.rs"
+
+[dependencies]
+# 🛂️ `PackageDescriptor`/`ContributionSet`/`PackageHashes` (packet A3, this crate = `🛂️manifest`
+# mounted inside `semio_framework`).
+semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+# 🔁️ direct dependency (not just transitive through `semio-framework`) so this crate can declare its
+# own `extern crate semio_framework_os_kernel as store;` / `as dsl;` aliases — the same pattern every
+# plugin crate's own `🦀️.rs` already uses (see `🔌️plugin/📦️packages/🦀️rust/🦀️.rs`) — for
+# `store::pack_rt::{encode_wire_value,decode_wire_value}` / `dsl::{to_dsl_value,from_dsl_value}`.
+semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-plugin-host = { path = "../../../🖥️host/📦️packages/🦀️rust" }
+# 🐎️ `world actor`'s only DECLARED import is `pure` (log/now-ms/trace-span, `📜️wit/📜️pure.wit`),
+# but a real `wasm32-wasip2` build also imports `wasi:io/poll` and friends TRANSITIVELY through the
+# Rust target's own runtime shim, so satisfying `pure` alone fails instantiation on every genuinely
+# built plugin. `wasmtime-wasi` is therefore required, not optional — the earlier note here reasoned
+# from the WIT world and was disproved the first time a real component was instantiated.
+# 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `component-model-async` —
+# `describe()` is `async func` and `world actor` imports `host-async`, so `Config::
+# wasm_component_model_async`, `Store::run_concurrent` and `Accessor` are all required here.
+wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "component-model-async"] }
+wasmtime-wasi = "47.0.3"
+semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+# ⏳️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `block_on` for `📦️main.rs`, the
+# process entry point — R4 allow-list clause 1 (binary / `main` executor entry points).
+semio-framework-async = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+serde = { workspace = true }
+serde_json = { workspace = true }

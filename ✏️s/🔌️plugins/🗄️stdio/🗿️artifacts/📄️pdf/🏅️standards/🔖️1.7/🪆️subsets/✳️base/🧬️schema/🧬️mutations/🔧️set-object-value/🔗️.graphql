@@ -1,5 +1,0 @@
-# 🔧️ Direct set-object-value GraphQL payload.
-input SetObjectValueMutationInput {
-  id: String
-  value: String
-}

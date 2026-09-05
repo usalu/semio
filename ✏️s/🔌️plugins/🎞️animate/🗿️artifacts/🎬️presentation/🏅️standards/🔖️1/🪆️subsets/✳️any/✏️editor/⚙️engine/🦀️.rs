@@ -2,7 +2,7 @@
 //! `PresentationSnapshot` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES: relocated wholesale
 //! from the deleted artifact-tree `⚙️engine` — an artifact is a schema + io, never an engine; behaviour
 //! belongs to the app that edits it). Hosts the static-site compiler (`compiler`, real filesystem
-//! writes), the scene-based presentation document types (`slide`), and headless video export
+//! writes), the scene-based presentation document types (`🎞️slide`), and headless video export
 //! (`🔖️VideoExport`) — plus, as sibling `<topic>/🦀️.rs` files mirroring this taxonomy node's
 //! own subdirs, the Manim-class animation core (`⏱️rate`, `🎛️config`, `🎞️animation`, `📷️camera`,
 //! `🎬️scene`, `📐️geometry`, `🔤️text`) and the headless video renderer (`🎥️video`). Both were their own

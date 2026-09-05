@@ -1,0 +1,20 @@
+{
+  "schema": "spatial.action",
+  "id": "building.building.placeRoofFrom2PointsAndHeight",
+  "version": "1.0.0",
+  "label": "Place Roof From 2 Points And Height",
+  "steps": [
+    {
+      "operation": "kernel.call",
+      "function": "spatial.action.capability",
+      "assignTo": "result"
+    },
+    {
+      "operation": "return",
+      "result": {
+        "kind": "var",
+        "name": "result"
+      }
+    }
+  ]
+}

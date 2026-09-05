@@ -27,7 +27,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `En1997Snapshot -> UiNode` read: recomputes the compliance report straight off the document
 /// (the same pure inference the editor's results window renders through `NormHost`), then tables it.
-pub fn render(document: &En1997Snapshot) -> UiNode {
+pub fn render(document: &En1997Snapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let report = crate::artifacts::en1997::standards::v1::subsets::any::schema::inferences::evaluate(document);
     TableWindowKit::render(&TableView { columns: crate::app_surface::report_table_columns(), rows: crate::app_surface::report_table_rows(&report) })
 }

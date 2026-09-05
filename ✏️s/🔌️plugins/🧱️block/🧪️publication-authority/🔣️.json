@@ -1,16 +1,39 @@
 {
   "schema": "semio.app.publication-authority.v1",
-  "owner": "Block5dPlayApp",
-  "source": "🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-  "routes": [
-    { "id": "patchPartKind", "lane": "Artifact" },
-    { "id": "addGripKind", "lane": "Artifact" },
-    { "id": "removeGripKind", "lane": "Artifact" },
-    { "id": "addGrip", "lane": "Artifact" },
-    { "id": "removeGrip", "lane": "Artifact" },
-    { "id": "setActiveExample", "lane": "Artifact" },
-    { "id": "edit", "lane": "Artifact" }
-  ],
-  "laws": { "bounded": true, "cancel": true, "replay": true, "freshness": true, "ack": true, "incrementalClose": true },
-  "ui": { "locales": ["en", "de"], "accessibleLabels": true, "customizableUi": true }
+  "apps": [
+    {
+      "owner": "Block2dPlayApp",
+      "toolIdsConstant": "BLOCK2D_RETAINED_TOOL_IDS",
+      "source": "🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "routes": [
+        { "id": "patchNodeKind", "lane": "Artifact" },
+        { "id": "addHandleKind", "lane": "Artifact" },
+        { "id": "removeHandleKind", "lane": "Artifact" },
+        { "id": "addHandle", "lane": "Artifact" },
+        { "id": "removeHandle", "lane": "Artifact" },
+        { "id": "addCompatibilityRule", "lane": "Artifact" },
+        { "id": "removeCompatibilityRule", "lane": "Artifact" },
+        { "id": "setActiveExample", "lane": "Artifact" },
+        { "id": "edit", "lane": "Artifact" }
+      ],
+      "laws": { "bounded": true, "cancel": true, "replay": true, "freshness": true, "ack": true, "incrementalClose": true },
+      "ui": { "locales": ["en", "de"], "accessibleLabels": true, "customizableUi": true }
+    },
+    {
+      "owner": "Block5dPlayApp",
+      "toolIdsConstant": "BLOCK5D_RETAINED_TOOL_IDS",
+      "source": "🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "routes": [
+        { "id": "patchPartKind", "lane": "Artifact" },
+        { "id": "addGripKind", "lane": "Artifact" },
+        { "id": "removeGripKind", "lane": "Artifact" },
+        { "id": "addGrip", "lane": "Artifact" },
+        { "id": "removeGrip", "lane": "Artifact" },
+        { "id": "setActiveExample", "lane": "Artifact" },
+        { "id": "edit", "lane": "Artifact" }
+      ],
+      "laws": { "bounded": true, "cancel": true, "replay": true, "freshness": true, "ack": true, "incrementalClose": true },
+      "ui": { "locales": ["en", "de"], "accessibleLabels": true, "customizableUi": true }
+    }
+  ]
 }

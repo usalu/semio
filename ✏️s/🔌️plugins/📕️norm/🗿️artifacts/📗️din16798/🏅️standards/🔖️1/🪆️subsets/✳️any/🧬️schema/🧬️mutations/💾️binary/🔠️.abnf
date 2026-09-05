@@ -1,3 +1,0 @@
-; abnf stdio.json mutations
-document = payload
-payload = *OCTET

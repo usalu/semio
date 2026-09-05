@@ -49,7 +49,7 @@ pub enum PresentationMutation {
 /// the language-neutral test platform is measured against. It is duplicated in exactly two other
 /// places on purpose: this subset's own oracle manifest catalog `presentation-1-any`
 /// (`../../🔣️oracle.json`), which the completeness gate counts, and the
-/// `mutate-presentation-1` case adapter, which must not link this crate in the oracle role.
+/// `🧭️mutate-presentation-1` case adapter, which must not link this crate in the oracle role.
 /// [`tests::kinds_match_the_enum_and_the_catalog`] is what keeps all three honest.
 pub const KINDS: &[&str] = &["resize-source-frame", "replace-source", "create-tile", "delete-tile", "delete-tiles", "rename-tile", "resize-tile-crop", "reorder-tiles", "replace-tiles"];
 //#endregion 🔖️Mutations
@@ -234,7 +234,7 @@ mod tests {
     fn kinds_match_the_enum_and_the_catalog() {
         let declared: Vec<&str> = <PresentationMutation as SemanticMutation<PresentationSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
         assert_eq!(KINDS, declared.as_slice(), "KINDS must name every PresentationMutation variant, in declaration order, spelled as its own MutationKind::SEMANTICS.kind");
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔮️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in this subset's committed oracle manifest catalog presentation-1-any");
         }
@@ -255,7 +255,7 @@ pub fn inverse_presentation_mutation(snapshot: &PresentationSnapshot, mutation: 
 }
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"CreateTile": { … }}`) JSON projection — the
-/// shape the `mutate-presentation-1` case's `Examples` rows carry — into a real [`PresentationMutation`]. A
+/// shape the `🧭️mutate-presentation-1` case's `Examples` rows carry — into a real [`PresentationMutation`]. A
 /// thin first-party `dsl::os_pack::json` wrapper, so the test adapter reads the committed feature row
 /// instead of re-declaring it as a Rust literal beside it.
 pub fn decode_presentation_mutation_json(text: &str) -> Result<PresentationMutation, String> {

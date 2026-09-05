@@ -37,6 +37,7 @@ pub fn plugin() -> Result<Plugin<NoteApps>, semio_framework_plugin::PluginAssemb
     Plugin::<NoteApps>::builder("note")
         .label("Note")
         .version("0.1.0")
+        .package_id("semio:note")
         .declare_artifact(crate::artifacts::note::artifact())
         .editor_mutation_roster::<crate::editor::note::NotePlayApp>()
         .viewer_mutation_roster::<crate::viewer::note::NoteViewer>()

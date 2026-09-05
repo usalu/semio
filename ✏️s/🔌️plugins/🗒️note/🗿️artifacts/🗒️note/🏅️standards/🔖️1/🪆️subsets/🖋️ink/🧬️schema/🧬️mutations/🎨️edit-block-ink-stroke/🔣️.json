@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🎨️edit-block-ink-stroke",
+  "semanticKind": "edit-block-ink-stroke",
+  "displayName": "Edit Block Ink Stroke",
+  "emoji": "🎨️",
+  "aggregateVariant": "EditBlockInkStroke",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "edit-block-ink-stroke",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "error",
+    "info",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema"
+  ]
+}

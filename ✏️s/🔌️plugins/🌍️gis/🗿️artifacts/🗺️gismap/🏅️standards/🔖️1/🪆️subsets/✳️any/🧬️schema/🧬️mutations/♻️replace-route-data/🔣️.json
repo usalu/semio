@@ -5,7 +5,7 @@
   "displayName": "Replace Route Data",
   "emoji": "♻️",
   "aggregateVariant": "ReplaceRouteData",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "replace-route-data",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

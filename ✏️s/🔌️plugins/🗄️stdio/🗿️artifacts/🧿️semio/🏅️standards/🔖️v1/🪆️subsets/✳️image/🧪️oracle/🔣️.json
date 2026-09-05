@@ -80,8 +80,8 @@
         },
         {
           "mutationId": "remove-frame",
-          "sourceMutationDirectoryName": "📄remove-frame",
-          "mutationDirectoryName": "📄remove-frame",
+          "sourceMutationDirectoryName": "🚫️remove-frame",
+          "mutationDirectoryName": "🚫️remove-frame",
           "scenarios": [
             {
               "id": "removes-the-leading-frame",

@@ -1,6 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/s.stdio.semio.cad/snapshot/text.json",
-  "title": "SemioCadSnapshotText",
-  "description": "Whitespace-tolerant ASCII hex dump of serde_json::to_vec(SemioCadSnapshot), preceded by the semio preamble line; see ../🔣️.json for the decoded JSON's real schema.",
-  "type": "string"
-}

@@ -169,7 +169,7 @@ function shippedModelDefinitionAssets(): ModelDefinitionAssetModules {
   }
   // 🩹 Base was stale `./asset/modelDefinition` (ASCII, singular — pre-dates the emoji/plural asset-tree rename;
   // never matched anything, and being relative-without-`./` even threw a vite:import-glob parse error). Real tree:
-  // `🖼️assets/🏗️modelDefinitions/<modelDefinition>/{🎬️actions,🎬️interactions,🗂️typologies/*/🔣️typology.json,
+  // `🖼️assets/🏗️modelDefinitions/<modelDefinition>/{🎬️actions,🕹️interactions,🗂️typologies/*/🔣️typology.json,
   // 🏷️attributeDefinitions,🔧️propertyDefinitions,🏷️propertyKinds,📊️statDefinitions,🔀️transformations,🔣️modelDefinition.json}`.
   shippedModelDefinitionAssetsCache.current = {
     typologies: import.meta.glob(["../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🗂️typologies/**/🔣️typology.json"], {
@@ -177,7 +177,7 @@ function shippedModelDefinitionAssets(): ModelDefinitionAssetModules {
       import: "default",
     }) as Record<string, unknown>,
     actions: import.meta.glob("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🎬️actions/*.json", { eager: true, import: "default" }) as Record<string, unknown>,
-    interactions: import.meta.glob("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🎬️interactions/*.json", { eager: true, import: "default" }) as Record<string, unknown>,
+    interactions: import.meta.glob("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🕹️interactions/*.json", { eager: true, import: "default" }) as Record<string, unknown>,
     manifests: import.meta.glob("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🔣️modelDefinition.json", { eager: true, import: "default" }) as Record<string, unknown>,
     extensions: import.meta.glob("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🔣️extension.json", { eager: true, import: "default" }) as Record<string, unknown>,
     attributes: import.meta.glob("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🏷️attributeDefinitions/*.json", { eager: true, import: "default" }) as Record<string, unknown>,

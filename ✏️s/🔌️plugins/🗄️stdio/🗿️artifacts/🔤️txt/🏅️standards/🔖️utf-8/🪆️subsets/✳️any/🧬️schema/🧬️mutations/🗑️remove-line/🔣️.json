@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-line",
+  "semanticKind": "remove-line",
+  "displayName": "Remove Line",
+  "emoji": "🗑️",
+  "aggregateVariant": "RemoveLine",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "remove-line",
+  "binaryTag": 4,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": ["applied", "error"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]
+}

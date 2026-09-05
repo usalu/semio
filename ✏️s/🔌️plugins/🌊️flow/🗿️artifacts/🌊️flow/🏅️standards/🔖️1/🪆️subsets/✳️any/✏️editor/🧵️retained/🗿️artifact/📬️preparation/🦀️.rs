@@ -1,6 +1,7 @@
 //! 📬️ Flow-owned construction, portable identity, and Store-owned canonical sealing are distinct frontiers.
 
-use super::{recipe::{MutationRetirementFactory, Recipe}, snapshot::SnapshotRetirementFactory, SceneHash};
+use super::{recipe::Recipe, SceneHash};
+use crate::artifacts::flow::retirement::{MutationRetirementFactory, SnapshotRetirementFactory};
 use super::super::{bytes::{edit_id_byte, edit_id_length, TextCopy}, Owner, Retirement};
 use super::super::super::{FlowMutation, FlowSnapshot, FlowWorkingScene, FLOW_STORE_MAX_MUTATION_ITEMS, FLOW_STORE_MAX_TEXT_BYTES};
 use std::{mem::ManuallyDrop, sync::Arc};
@@ -138,7 +139,7 @@ impl store::ArtifactStoreOneItemPreparation<FlowSnapshot, FlowMutation> for Prep
                 let index = (state.phase - 100) as usize;
                 let copy = state.text.get_or_insert_with(TextCopy::default);
                 let bytes = match index {
-                    3 => {
+                    3 | 4 => {
                         const PREFIX: &[u8] = b"flow-content-sha256-";
                         let digest = state.digest.unwrap();
                         copy.advance_ascii(PREFIX.len() + 64, |position| {
@@ -146,14 +147,13 @@ impl store::ArtifactStoreOneItemPreparation<FlowSnapshot, FlowMutation> for Prep
                         }, grant.maximum_bytes)?
                     }
                     8 | 9 => {
-                        let sequence = state.authority.as_ref().unwrap().next_sequence_number();
+                        let sequence = state.authority.as_ref().unwrap().next_sequence_number() as u64;
                         copy.advance_ascii(edit_id_length(sequence, index == 9), |position| edit_id_byte(sequence, position, index == 9), grant.maximum_bytes)?
                     }
                     _ => {
                         let source = match index {
                             0 => state.base.as_ref().unwrap().get().schema.as_str(),
                             1 | 2 => state.authority.as_ref().unwrap().actor(),
-                            4 => "flow-content",
                             5 => "s.stdio.semio", 6 => "v1", 7 => "flow", _ => unreachable!(),
                         };
                         copy.advance(source, grant.maximum_bytes)?
@@ -265,15 +265,12 @@ mod tests {
                     let scene = super::super::recipe::tests::source(&label);
                     let content = crate::artifacts::flow::flow_content_child_handle_and_cache(scene.widgets, scene.synapses, scene.layout);
                     let initial = FlowSnapshot { schema: "flow".into(), camera: flow::CameraJson::default(), content };
-                    let initial_scene = initial.content.local_owner::<FlowWorkingScene>().unwrap(); let baseline = serde_json::to_value(&*initial_scene).unwrap(); drop(initial_scene);
+                    let initial_scene = initial.content.local_owner::<FlowWorkingScene>().unwrap(); let baseline = serde_json::Value::from(dsl::ToValue::to_value(&*initial_scene)); drop(initial_scene);
                     let envelope = store::create_document_envelope::<FlowSnapshot, FlowMutation>("flow.flow", "retained-recipe", initial, None);
                     let mut store = store::ArtifactStore::new(envelope).await.unwrap();
-                    store.install_member_store_owners_exact(store::MemberStoreOwners::new(
-                        Arc::new(SnapshotRetirementFactory), Arc::new(SnapshotRetirementFactory), Arc::new(MutationRetirementFactory),
-                        Box::new(store::ArtifactStoreCursorDisposer::<FlowSnapshot, FlowMutation>::new()),
-                    ));
+                    store.install_member_store_owners_exact(crate::artifacts::flow::retirement::store_owners());
                     let generation = store.generation_now();
-                    let mutation = serde_json::from_value(row["mutation"].clone()).unwrap();
+                    let mutation = dsl::FromValue::from_value(dsl::DslValue::from(row["mutation"].clone())).unwrap();
                     let mut publication = store.begin_apply_one(semio_framework_job::OperationId(1), generation, store.content_revision_now(), "flow-test".into(), mutation, None, store::HistoryLane::Document, Some(&PreparationFactory)).unwrap();
                     let mut finished = false; let mut published = false; let mut previous = 0;
                     for step in 0..500_000 {
@@ -286,7 +283,7 @@ mod tests {
                     }
                     assert!(finished);
                     {
-                        let snapshot = store.snapshot().unwrap(); let scene = snapshot.content.local_owner::<FlowWorkingScene>().unwrap(); let json = serde_json::to_value(&*scene).unwrap();
+                        let snapshot = store.snapshot().unwrap(); let scene = snapshot.content.local_owner::<FlowWorkingScene>().unwrap(); let json = serde_json::Value::from(dsl::ToValue::to_value(&*scene));
                         if !published { assert_eq!(json, baseline); }
                         else {
                             assert_eq!(json["widgets"].as_array().unwrap().iter().map(|widget| widget["id"].clone()).collect::<Vec<_>>(), *row["widgets"].as_array().unwrap());

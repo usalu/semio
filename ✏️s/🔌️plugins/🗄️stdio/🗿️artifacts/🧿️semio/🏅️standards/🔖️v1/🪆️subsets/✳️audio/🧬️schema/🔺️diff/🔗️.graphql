@@ -1,5 +1,0 @@
-# 🧬️ SemioAudioDiff
-type SemioAudioDiff {
-  schema: String
-  bytes: String
-}

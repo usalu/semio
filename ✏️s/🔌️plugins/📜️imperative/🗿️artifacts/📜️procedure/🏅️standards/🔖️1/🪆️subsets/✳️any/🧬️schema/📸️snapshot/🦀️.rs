@@ -215,7 +215,7 @@ impl store::ArtifactPack for ProcedureSnapshot {
 
 //#region 🌉️ExternalCodecBridge
 /// 📤️ Renders an [`ProcedureSnapshot`] as this facet's own camelCase JSON projection — the
-/// comparison surface `mutate-procedure-1`'s scenarios are measured through, and the shape the
+/// comparison surface `🛟️mutate-procedure-1`'s scenarios are measured through, and the shape the
 /// committed `../🧬️mutations/<slug>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
 /// specification vectors are written in. It carries `flow` and `text` as content-addressed HANDLES,
 /// never as content, which is what makes it a usable observability surface here: the `flow` handle
@@ -228,7 +228,7 @@ pub fn encode_procedure_snapshot_json(snapshot: &ProcedureSnapshot) -> String {
 }
 
 /// 📥️ The inverse of [`encode_procedure_snapshot_json`] — decodes those committed specification
-/// vectors into real [`ProcedureSnapshot`] values, so `mutate-procedure-1`'s adapter reads the
+/// vectors into real [`ProcedureSnapshot`] values, so `🛟️mutate-procedure-1`'s adapter reads the
 /// committed fixture rather than re-declaring it as a Rust literal beside it.
 pub fn decode_procedure_snapshot_json(text: &str) -> Result<ProcedureSnapshot, String> {
     dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
@@ -236,7 +236,7 @@ pub fn decode_procedure_snapshot_json(text: &str) -> Result<ProcedureSnapshot, S
 
 /// 📝️ Parses `.imperative.dsl.semio` text into an [`ProcedureSnapshot`] — a named, non-async
 /// pass-through of this type's own `store::ArtifactDsl` impl above, whose trait and error type are
-/// both unnameable outside this crate, so `mutate-procedure-1`'s `identity-round-trip` scenario
+/// both unnameable outside this crate, so `🛟️mutate-procedure-1`'s `identity-round-trip` scenario
 /// reaches the real committed artifact (`../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`)
 /// through this instead.
 pub fn parse_procedure_dsl(text: &str) -> Result<ProcedureSnapshot, String> {

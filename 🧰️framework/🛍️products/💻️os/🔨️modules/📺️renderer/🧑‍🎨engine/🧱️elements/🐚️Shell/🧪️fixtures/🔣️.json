@@ -1,0 +1,9 @@
+[
+  { "name": "initial boot", "session": false, "error": null, "plugin": "installing", "supervisor": null, "loading": true },
+  { "name": "failed boot", "session": false, "error": "catalog-authority", "plugin": "failed", "supervisor": null, "loading": false },
+  { "name": "failed reload", "session": true, "error": "catalog-authority", "plugin": "reloading", "supervisor": null, "loading": false },
+  { "name": "crashed before session", "session": false, "error": null, "plugin": "loaded", "supervisor": "crashed", "loading": false },
+  { "name": "quarantined during reload", "session": true, "error": null, "plugin": "reloading", "supervisor": "quarantined", "loading": false },
+  { "name": "ready", "session": true, "error": null, "plugin": "loaded", "supervisor": "running", "loading": false },
+  { "name": "active reload", "session": true, "error": null, "plugin": "reloading", "supervisor": "restarting", "loading": true }
+]

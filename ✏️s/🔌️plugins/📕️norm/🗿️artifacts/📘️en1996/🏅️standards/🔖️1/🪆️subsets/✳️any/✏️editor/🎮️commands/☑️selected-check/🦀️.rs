@@ -37,7 +37,7 @@ mod tests {
         let config = NormConfig::default();
         let emit = handle(&SetSelectedCheckIndex { index: Some(4) }, &ArtifactView::new(&projection, &HistoryView::empty()), &ConfigView { snapshot: &config }).expect("handle");
         assert!(emit.artifact_mutations.is_empty(), "a view action must never emit document operations");
-        assert_eq!(emit.config_mutations, vec![NormConfigMutation::SetSelectedCheckIndex { index: Some(4) }]);
+        assert_eq!(emit.config_mutations, vec![NormConfigMutation::ChangeSelectedCheckIndex(crate::config::ChangeSelectedCheckIndex { index: Some(4) })]);
     }
 }
 //#endregion 🧪️Tests

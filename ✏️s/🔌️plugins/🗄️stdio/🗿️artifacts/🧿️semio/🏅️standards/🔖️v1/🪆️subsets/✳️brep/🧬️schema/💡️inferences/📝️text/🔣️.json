@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/s/stdio/semio/brep/inference/text.json",
-  "title": "SemioBrepInferenceText",
-  "type": "object"
-}

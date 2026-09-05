@@ -1,4 +1,0 @@
-# 🗑️ Direct remove-dpart-metadata GraphQL payload.
-input RemoveDpartMetadataMutationInput {
-  _unit: Boolean
-}

@@ -1,0 +1,890 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution: a mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so `s.stdio.semio.animation`'s oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.animation` is a semio-NATIVE format, so its reference is a second IMPLEMENTATION written in another language from the committed grammars rather than a third-party package.",
+  "oracles": [
+    {
+      "id": "semio-animation-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "capabilities": [
+        "semio-v1-animation-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "No third-party library in any ecosystem reads or writes semio's own `.dsl.semio` envelope, so the second producer THE STANDARD requires is a second IMPLEMENTATION in another language. `../../../../🧪️tests/mutate-semio-animation/🐍️component.py` is that implementation: the `semio <envelope-id>.dsl v1` preamble, the whole `document = artifact-mark schema-line timelines-line` grammar in both directions — `timeline`, `option-name`, `channel`, `target`, `property = t|r|s|w|c:<hex>`, `interpolation = l|s|c`, `keyframe` and `value = S|V|Q|W` included — and all thirteen verbs of this subset's vocabulary together with their inverses, written in Python from `../🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`, `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` and the envelope section of `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`, importing nothing from and transliterating nothing of the Rust it judges. Two leaves the grammar states by reference were settled from its own notes and pinned by byte-exact re-emission: `hex` is the framework macro, so `77616c6b` is `walk` and `6f706163697479` is `opacity`, and `number = INT | FLOAT` prints through Rust's `{v}` Display, which drops the fractional part of an integral value — the committed walk cycle carries both spellings. `package` is deliberately the empty string: the implementation needs no distribution, so it contributes nothing to `🔒️dependencies.json` and nothing to the import-purity probe. The interchange-reader route was surveyed again and still rejected on the merits rather than for absence — `gif` 0.13 exposes per-frame delays alone, and `pygltflib`/`gltf-transform` judge glTF's `channel` + `sampler` accessor indirection while this snapshot resolves that model into owned keyframes, so nine of the thirteen kinds would have had nothing to compare against.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-animation-mutate`'s external-oracle requirement for its 13-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 1 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.stdio.semio",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "s.stdio.semio",
+              "reason": "No third-party library in any ecosystem reads or writes this repository's own document format, per this entry's own rationale; the ecosystem's package index was searched by name and by domain keywords with no match."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".dsl.semio; ../🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio; ../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio; 🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs; 🔒️dependencies.json",
+        "fixtureCoverage": {
+          "vectors": 12,
+          "capabilitiesCovered": [
+            "semio-v1-animation-mutate"
+          ]
+        }
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "semio-v1-animation",
+      "capability": "semio-v1-animation-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "🎞️animation",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📸️set-snapshot",
+          "mutationDirectoryName": "📸️set-snapshot",
+          "scenarios": [
+            {
+              "id": "steps-the-spin-channel-and-appends-a-keyframe",
+              "directoryName": "🌀️steps-the-spin-channel-and-appends-a-keyframe"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "set-snapshot",
+        "insert-timeline",
+        "remove-timeline",
+        "set-timeline-name",
+        "insert-channel",
+        "remove-channel",
+        "set-channel-target",
+        "set-channel-interpolation",
+        "insert-keyframe",
+        "remove-keyframe",
+        "set-keyframe-time",
+        "set-keyframe-value"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "animation",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "🎞️animation",
+      "mutations": [
+        {
+          "id": "insert-channel",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-channel",
+            "bridgeVersion": 1,
+            "variant": "InsertChannel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-keyframe",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-keyframe",
+            "bridgeVersion": 1,
+            "variant": "InsertKeyframe"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-timeline",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-timeline",
+            "bridgeVersion": 1,
+            "variant": "InsertTimeline"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-channel",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-channel",
+            "bridgeVersion": 1,
+            "variant": "RemoveChannel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-keyframe",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-keyframe",
+            "bridgeVersion": 1,
+            "variant": "RemoveKeyframe"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-timeline",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-timeline",
+            "bridgeVersion": 1,
+            "variant": "RemoveTimeline"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-channel-interpolation",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-channel-interpolation",
+            "bridgeVersion": 1,
+            "variant": "SetChannelInterpolation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-channel-target",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-channel-target",
+            "bridgeVersion": 1,
+            "variant": "SetChannelTarget"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-keyframe-time",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-keyframe-time",
+            "bridgeVersion": 1,
+            "variant": "SetKeyframeTime"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-keyframe-value",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-keyframe-value",
+            "bridgeVersion": 1,
+            "variant": "SetKeyframeValue"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-timeline-name",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-timeline-name",
+            "bridgeVersion": 1,
+            "variant": "SetTimelineName"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-channel-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "animation"
+      },
+      "mutation": "insert-channel",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/📻insert-channel-applied/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:303ddb761edaeba201c286890c017c385dfe3642c14e7bf78a52656810b1b6c5",
+          "bytes": 2270
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/📻insert-channel-applied/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:1116b3ec66ac9775244d2dad2695673356fa921265eeff103c5ac5864c136fd2",
+          "bytes": 2687
+        }
+      ],
+      "generator": {
+        "oracle": "semio-animation-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "Generated by this subset's own registered `verified-native-second-implementation` oracle (semio-animation-python-independent) — an independent Python second implementation of this subset's mutation vocabulary, NOT a third-party package (no third-party library in any ecosystem reads or writes semio's own .dsl.semio format); `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture, not a claim of third-party origin.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applied insert-channel (payload {\"kind\": \"insert-channel\", \"params\": {\"timelineIndex\": 0, \"index\": 4, \"channel\": {\"target\": {\"node\": \"rig\", \"property\": {\"kind\": \"custom\", \"name\": \"opacity\"}}, \"interpolation\": \"linear\", \"keyframes\": [{\"t\": 0.0, \"value\": {\"kind\": \"scalar\", \"value\": 1.0}}]}}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-keyframe-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "animation"
+      },
+      "mutation": "insert-keyframe",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/🔑insert-keyframe-applied/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:303ddb761edaeba201c286890c017c385dfe3642c14e7bf78a52656810b1b6c5",
+          "bytes": 2270
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/🔑insert-keyframe-applied/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:cf083ba5c947408ec938bdb52d57d0d1a95133e644f19f0e8cec1add61734aa9",
+          "bytes": 2525
+        }
+      ],
+      "generator": {
+        "oracle": "semio-animation-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "Generated by this subset's own registered `verified-native-second-implementation` oracle (semio-animation-python-independent) — an independent Python second implementation of this subset's mutation vocabulary, NOT a third-party package (no third-party library in any ecosystem reads or writes semio's own .dsl.semio format); `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture, not a claim of third-party origin.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applied insert-keyframe (payload {\"kind\": \"insert-keyframe\", \"params\": {\"timelineIndex\": 0, \"channelIndex\": 0, \"index\": 2, \"keyframe\": {\"t\": 11.0, \"value\": {\"kind\": \"vec3\", \"value\": {\"x\": 1.0, \"y\": 0.0, \"z\": 0.0}}}}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-timeline-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "animation"
+      },
+      "mutation": "insert-timeline",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/🎬insert-timeline-applied/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:303ddb761edaeba201c286890c017c385dfe3642c14e7bf78a52656810b1b6c5",
+          "bytes": 2270
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/🎬insert-timeline-applied/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:f7e20643b3b0e8745e8f4d2c0a2c2ecf6a6de8051838f1d15057d97afd4db0f6",
+          "bytes": 4490
+        }
+      ],
+      "generator": {
+        "oracle": "semio-animation-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "Generated by this subset's own registered `verified-native-second-implementation` oracle (semio-animation-python-independent) — an independent Python second implementation of this subset's mutation vocabulary, NOT a third-party package (no third-party library in any ecosystem reads or writes semio's own .dsl.semio format); `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture, not a claim of third-party origin.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applied insert-timeline (payload {\"kind\": \"insert-timeline\", \"params\": {\"index\": 1, \"timeline\": {\"name\": \"inserted-timeline\", \"channels\": [{\"target\": {\"node\": \"hip\", \"property\": {\"kind\": \"translation\"}}, \"interpolation\": \"linear\", \"keyframes\": [{\"t\": 0.0, \"value\": {\"kind\": \"vec3\", \"value\": {\"x\": 0.0, \"y\": 0.0, \"z\": 0.0}}}, {\"t\": 1.0, \"value\": {\"kind\": \"vec3\", \"value\": {\"x\": 1.0, \"y\": 0.0, \"z\": 0.0}}}]}, {\"target\": {\"node\": \"spine\", \"property\": {\"kind\": \"rotation\"}}, \"interpolation\": \"cubicSpline\", \"keyframes\": [{\"t\": 0.5, \"value\": {\"kind\": \"quat\", \"value\": {\"x\": 0.0, \"y\": 0.0, \"z\": 0.0, \"w\": 1.0}}}]}, {\"target\": {\"node\": \"face\", \"property\": {\"kind\": \"weights\"}}, \"interpolation\": \"step\", \"keyframes\": [{\"t\": 0.0, \"value\": {\"kind\": \"weights\", \"values\": [0.0, 1.0, 0.5]}}]}, {\"target\": {\"node\": \"rig\", \"property\": {\"kind\": \"custom\", \"name\": \"opacity\"}}, \"interpolation\": \"linear\", \"keyframes\": [{\"t\": 0.0, \"value\": {\"kind\": \"scalar\", \"value\": 1.0}}]}]}}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-channel-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "animation"
+      },
+      "mutation": "remove-channel",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/🗑️remove-channel-applied/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:303ddb761edaeba201c286890c017c385dfe3642c14e7bf78a52656810b1b6c5",
+          "bytes": 2270
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/🗑️remove-channel-applied/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:1ec50ca331585da44f86767d8b1acbc80e943c23825847843bed6a70e4e6c6dd",
+          "bytes": 1853
+        }
+      ],
+      "generator": {
+        "oracle": "semio-animation-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "Generated by this subset's own registered `verified-native-second-implementation` oracle (semio-animation-python-independent) — an independent Python second implementation of this subset's mutation vocabulary, NOT a third-party package (no third-party library in any ecosystem reads or writes semio's own .dsl.semio format); `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture, not a claim of third-party origin.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applied remove-channel (payload {\"kind\": \"remove-channel\", \"params\": {\"timelineIndex\": 0, \"index\": 3}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-keyframe-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "animation"
+      },
+      "mutation": "remove-keyframe",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/🔓remove-keyframe-applied/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:303ddb761edaeba201c286890c017c385dfe3642c14e7bf78a52656810b1b6c5",
+          "bytes": 2270
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/🔓remove-keyframe-applied/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:cf6ca626f63210cbb18a0cfbbb0124257fa589cac056e0533c8b44dd3c0c323c",
+          "bytes": 2016
+        }
+      ],
+      "generator": {
+        "oracle": "semio-animation-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "Generated by this subset's own registered `verified-native-second-implementation` oracle (semio-animation-python-independent) — an independent Python second implementation of this subset's mutation vocabulary, NOT a third-party package (no third-party library in any ecosystem reads or writes semio's own .dsl.semio format); `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture, not a claim of third-party origin.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applied remove-keyframe (payload {\"kind\": \"remove-keyframe\", \"params\": {\"timelineIndex\": 0, \"channelIndex\": 0, \"index\": 1}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-timeline-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "animation"
+      },
+      "mutation": "remove-timeline",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/🧹remove-timeline-applied/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:303ddb761edaeba201c286890c017c385dfe3642c14e7bf78a52656810b1b6c5",
+          "bytes": 2270
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/🧹remove-timeline-applied/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:fefdce829781d9caf6d209c01ae3c74da503081d4b5e80e6e099964fc63297dc",
+          "bytes": 61
+        }
+      ],
+      "generator": {
+        "oracle": "semio-animation-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "Generated by this subset's own registered `verified-native-second-implementation` oracle (semio-animation-python-independent) — an independent Python second implementation of this subset's mutation vocabulary, NOT a third-party package (no third-party library in any ecosystem reads or writes semio's own .dsl.semio format); `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture, not a claim of third-party origin.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applied remove-timeline (payload {\"kind\": \"remove-timeline\", \"params\": {\"index\": 0}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-channel-interpolation-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "animation"
+      },
+      "mutation": "set-channel-interpolation",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/📈set-channel-interpolation-applied/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:303ddb761edaeba201c286890c017c385dfe3642c14e7bf78a52656810b1b6c5",
+          "bytes": 2270
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/📈set-channel-interpolation-applied/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b35fbeec9ca254f0b185a2cfed404ecd2addad877754f7e76bad98646be70c3f",
+          "bytes": 2268
+        }
+      ],
+      "generator": {
+        "oracle": "semio-animation-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "Generated by this subset's own registered `verified-native-second-implementation` oracle (semio-animation-python-independent) — an independent Python second implementation of this subset's mutation vocabulary, NOT a third-party package (no third-party library in any ecosystem reads or writes semio's own .dsl.semio format); `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture, not a claim of third-party origin.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applied set-channel-interpolation (payload {\"kind\": \"set-channel-interpolation\", \"params\": {\"timelineIndex\": 0, \"index\": 0, \"interpolation\": \"step\"}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-channel-target-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "animation"
+      },
+      "mutation": "set-channel-target",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/🎯set-channel-target-applied/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:303ddb761edaeba201c286890c017c385dfe3642c14e7bf78a52656810b1b6c5",
+          "bytes": 2270
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/🎯set-channel-target-applied/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:83a3b6fad43b1d2bc3bdcbea17eb86207428a90b9f8800de513f642cf7302a57",
+          "bytes": 2280
+        }
+      ],
+      "generator": {
+        "oracle": "semio-animation-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "Generated by this subset's own registered `verified-native-second-implementation` oracle (semio-animation-python-independent) — an independent Python second implementation of this subset's mutation vocabulary, NOT a third-party package (no third-party library in any ecosystem reads or writes semio's own .dsl.semio format); `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture, not a claim of third-party origin.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applied set-channel-target (payload {\"kind\": \"set-channel-target\", \"params\": {\"timelineIndex\": 0, \"index\": 0, \"target\": {\"node\": \"inserted-node\", \"property\": {\"kind\": \"translation\"}}}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-keyframe-time-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "animation"
+      },
+      "mutation": "set-keyframe-time",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/🕐set-keyframe-time-applied/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:303ddb761edaeba201c286890c017c385dfe3642c14e7bf78a52656810b1b6c5",
+          "bytes": 2270
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/🕐set-keyframe-time-applied/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:0721c8eb2b9011a9e9592f2a66579e339eeeace939b2793aafdcbbbd30e571fd",
+          "bytes": 2269
+        }
+      ],
+      "generator": {
+        "oracle": "semio-animation-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "Generated by this subset's own registered `verified-native-second-implementation` oracle (semio-animation-python-independent) — an independent Python second implementation of this subset's mutation vocabulary, NOT a third-party package (no third-party library in any ecosystem reads or writes semio's own .dsl.semio format); `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture, not a claim of third-party origin.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applied set-keyframe-time (payload {\"kind\": \"set-keyframe-time\", \"params\": {\"timelineIndex\": 0, \"channelIndex\": 0, \"index\": 0, \"t\": 42}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-keyframe-value-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "animation"
+      },
+      "mutation": "set-keyframe-value",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/🔢set-keyframe-value-applied/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:303ddb761edaeba201c286890c017c385dfe3642c14e7bf78a52656810b1b6c5",
+          "bytes": 2270
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/🔢set-keyframe-value-applied/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:fe5175334a099ff67c22802eaadfc43e6d8c6c83ae1f64a8e8ff96a2295ee8b7",
+          "bytes": 2270
+        }
+      ],
+      "generator": {
+        "oracle": "semio-animation-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "Generated by this subset's own registered `verified-native-second-implementation` oracle (semio-animation-python-independent) — an independent Python second implementation of this subset's mutation vocabulary, NOT a third-party package (no third-party library in any ecosystem reads or writes semio's own .dsl.semio format); `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture, not a claim of third-party origin.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applied set-keyframe-value (payload {\"kind\": \"set-keyframe-value\", \"params\": {\"timelineIndex\": 0, \"channelIndex\": 0, \"index\": 0, \"value\": {\"kind\": \"vec3\", \"value\": {\"x\": 9.0, \"y\": 9.0, \"z\": 9.0}}}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-timeline-name-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "animation"
+      },
+      "mutation": "set-timeline-name",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/🏷️set-timeline-name-applied/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:303ddb761edaeba201c286890c017c385dfe3642c14e7bf78a52656810b1b6c5",
+          "bytes": 2270
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/🏷️set-timeline-name-applied/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:08510630366626ac99f985bfac63eaf34e5541279db3cf4d632d653dba48139e",
+          "bytes": 2278
+        }
+      ],
+      "generator": {
+        "oracle": "semio-animation-python-independent",
+        "packageVersion": "n/a",
+        "engineFamily": "cpython",
+        "engineVersion": "3",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-semio-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "AGPL-3.0-only",
+        "attribution": "Generated by this subset's own registered `verified-native-second-implementation` oracle (semio-animation-python-independent) — an independent Python second implementation of this subset's mutation vocabulary, NOT a third-party package (no third-party library in any ecosystem reads or writes semio's own .dsl.semio format); `class: third-party-generated` is used only because it is the schema's own closest-fitting enum value for a generator-produced fixture, not a claim of third-party origin.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Applied set-timeline-name (payload {\"kind\": \"set-timeline-name\", \"params\": {\"index\": 0, \"name\": \"renamed-walk\"}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
+    }
+  ]
+}

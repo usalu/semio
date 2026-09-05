@@ -40,15 +40,35 @@
       "id": "s.stdio.step.standard.ap214.representation.document",
       "standard": "s.stdio.step.standard.ap214",
       "representation": "document",
-      "mimes": ["model/step"],
-      "extensions": [".step"],
+      "mimes": [
+        "model/step"
+      ],
+      "extensions": [
+        ".step"
+      ],
       "is_binary": false,
       "aliases": [],
       "neutral": true,
       "status": "declared"
     }
   ],
-  "codecs": [],
+  "codecs": [
+    {
+      "id": "s.stdio.step.standard.ap214.codec.native-document.v1",
+      "status": "implemented",
+      "from": "s.stdio.step.standard.ap214.dialect.source",
+      "to": "s.stdio.step.standard.ap214.dialect.source",
+      "executable_registration": true,
+      "native_factory": {
+        "factory_id": "stdio.native.step.v1",
+        "artifact_kind": "stdio.step",
+        "document_schema": "stdio.step",
+        "extension": "step",
+        "pack_schema_hash": "7955ba193d890463155c4da998bfcaa1a126c9b7d53fef90998843a85d1d1ad5",
+        "runtime_capability_id": "s.stdio.step.standard.ap214.codec.codec-stdio-step-extension-step.v1"
+      }
+    }
+  ],
   "mutations": [],
   "inferences": [],
   "resources": [
@@ -83,22 +103,22 @@
   ],
   "runtime_capabilities": [
     {
-      "id": "s.stdio.step.runtime.codec.codec-stdio-step-extension-step.v1",
+      "id": "s.stdio.step.standard.ap214.codec.codec-stdio-step-extension-step.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec:stdio.step|extension:step",
+      "descriptor": "runtime-capability:codec:codec-extension:10:stdio.step:step|codec:stdio.step",
       "claims": [
         {
           "namespace": "codec",
           "value": "stdio.step"
         },
         {
-          "namespace": "extension",
-          "value": "step"
+          "namespace": "codec-extension",
+          "value": "10:stdio.step:step"
         }
       ]
     },
     {
-      "id": "s.stdio.step.runtime.composer.dialect-s-stdio-step-ap214.v1",
+      "id": "s.stdio.step.composer.dialect-s-stdio-step-ap214.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.step@ap214/*",
       "claims": [
@@ -109,7 +129,7 @@
       ]
     },
     {
-      "id": "s.stdio.step.runtime.composer.dialect-s-stdio-step-ap214-cc1.v1",
+      "id": "s.stdio.step.composer.dialect-s-stdio-step-ap214-cc1.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.step@ap214/cc1",
       "claims": [
@@ -120,7 +140,7 @@
       ]
     },
     {
-      "id": "s.stdio.step.runtime.composer.dialect-s-stdio-step-ap214-cc2.v1",
+      "id": "s.stdio.step.composer.dialect-s-stdio-step-ap214-cc2.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.step@ap214/cc2",
       "claims": [
@@ -131,7 +151,7 @@
       ]
     },
     {
-      "id": "s.stdio.step.runtime.composer.dialect-s-stdio-step-ap214-cc3.v1",
+      "id": "s.stdio.step.composer.dialect-s-stdio-step-ap214-cc3.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.step@ap214/cc3",
       "claims": [
@@ -142,7 +162,7 @@
       ]
     },
     {
-      "id": "s.stdio.step.runtime.composer.dialect-s-stdio-step-ap214-cc4.v1",
+      "id": "s.stdio.step.composer.dialect-s-stdio-step-ap214-cc4.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.step@ap214/cc4",
       "claims": [
@@ -153,7 +173,7 @@
       ]
     },
     {
-      "id": "s.stdio.step.runtime.composer.dialect-s-stdio-step-ap214-cc5.v1",
+      "id": "s.stdio.step.composer.dialect-s-stdio-step-ap214-cc5.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.step@ap214/cc5",
       "claims": [
@@ -164,7 +184,7 @@
       ]
     },
     {
-      "id": "s.stdio.step.runtime.composer.dialect-s-stdio-step-ap214-cc6.v1",
+      "id": "s.stdio.step.composer.dialect-s-stdio-step-ap214-cc6.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.step@ap214/cc6",
       "claims": [
@@ -175,7 +195,7 @@
       ]
     },
     {
-      "id": "s.stdio.step.runtime.grammar.grammar-stdio-step.v1",
+      "id": "s.stdio.step.grammar.grammar-stdio-step.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.step",
       "claims": [
@@ -186,7 +206,7 @@
       ]
     },
     {
-      "id": "s.stdio.step.runtime.grammar.grammar-stdio-step-diff.v1",
+      "id": "s.stdio.step.grammar.grammar-stdio-step-diff.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.step.diff",
       "claims": [
@@ -197,7 +217,7 @@
       ]
     },
     {
-      "id": "s.stdio.step.runtime.grammar.grammar-stdio-step-op.v1",
+      "id": "s.stdio.step.grammar.grammar-stdio-step-op.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.step.op",
       "claims": [
@@ -208,7 +228,7 @@
       ]
     },
     {
-      "id": "s.stdio.step.runtime.grammar.grammar-stdio-step-pack.v1",
+      "id": "s.stdio.step.grammar.grammar-stdio-step-pack.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.step.pack",
       "claims": [
@@ -219,7 +239,7 @@
       ]
     },
     {
-      "id": "s.stdio.step.runtime.grammar.grammar-stdio-step-spr.v1",
+      "id": "s.stdio.step.grammar.grammar-stdio-step-spr.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.step.spr",
       "claims": [
@@ -230,7 +250,7 @@
       ]
     },
     {
-      "id": "s.stdio.step.runtime.inference.schema-s-stdio-step-inference.v1",
+      "id": "s.stdio.step.inference.schema-s-stdio-step-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:s.stdio.step.inference",
       "claims": [
@@ -241,7 +261,7 @@
       ]
     },
     {
-      "id": "s.stdio.step.runtime.representation.mime-model-step-extension-step.v1",
+      "id": "s.stdio.step.standard.ap214.representation.mime-model-step-extension-step",
       "category": "representation",
       "descriptor": "runtime-capability:representation:mime:model/step|extension:.step",
       "claims": [
@@ -256,7 +276,7 @@
       ]
     },
     {
-      "id": "s.stdio.step.runtime.schema.schema-s-stdio-step.v1",
+      "id": "s.stdio.step.schema.schema-s-stdio-step.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.step",
       "claims": [
@@ -267,67 +287,67 @@
       ]
     },
     {
-      "id": "s.stdio.step.runtime.subset-validator.dialect-s-stdio-step-ap214-cc1.v1",
+      "id": "s.stdio.step.subset-validator.validated-dialect-s-stdio-step-ap214-cc1.v1",
       "category": "subset-validator",
-      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.step@ap214/cc1",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.step@ap214/cc1",
       "claims": [
         {
-          "namespace": "dialect",
+          "namespace": "validated-dialect",
           "value": "s.stdio.step@ap214/cc1"
         }
       ]
     },
     {
-      "id": "s.stdio.step.runtime.subset-validator.dialect-s-stdio-step-ap214-cc2.v1",
+      "id": "s.stdio.step.subset-validator.validated-dialect-s-stdio-step-ap214-cc2.v1",
       "category": "subset-validator",
-      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.step@ap214/cc2",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.step@ap214/cc2",
       "claims": [
         {
-          "namespace": "dialect",
+          "namespace": "validated-dialect",
           "value": "s.stdio.step@ap214/cc2"
         }
       ]
     },
     {
-      "id": "s.stdio.step.runtime.subset-validator.dialect-s-stdio-step-ap214-cc3.v1",
+      "id": "s.stdio.step.subset-validator.validated-dialect-s-stdio-step-ap214-cc3.v1",
       "category": "subset-validator",
-      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.step@ap214/cc3",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.step@ap214/cc3",
       "claims": [
         {
-          "namespace": "dialect",
+          "namespace": "validated-dialect",
           "value": "s.stdio.step@ap214/cc3"
         }
       ]
     },
     {
-      "id": "s.stdio.step.runtime.subset-validator.dialect-s-stdio-step-ap214-cc4.v1",
+      "id": "s.stdio.step.subset-validator.validated-dialect-s-stdio-step-ap214-cc4.v1",
       "category": "subset-validator",
-      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.step@ap214/cc4",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.step@ap214/cc4",
       "claims": [
         {
-          "namespace": "dialect",
+          "namespace": "validated-dialect",
           "value": "s.stdio.step@ap214/cc4"
         }
       ]
     },
     {
-      "id": "s.stdio.step.runtime.subset-validator.dialect-s-stdio-step-ap214-cc5.v1",
+      "id": "s.stdio.step.subset-validator.validated-dialect-s-stdio-step-ap214-cc5.v1",
       "category": "subset-validator",
-      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.step@ap214/cc5",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.step@ap214/cc5",
       "claims": [
         {
-          "namespace": "dialect",
+          "namespace": "validated-dialect",
           "value": "s.stdio.step@ap214/cc5"
         }
       ]
     },
     {
-      "id": "s.stdio.step.runtime.subset-validator.dialect-s-stdio-step-ap214-cc6.v1",
+      "id": "s.stdio.step.subset-validator.validated-dialect-s-stdio-step-ap214-cc6.v1",
       "category": "subset-validator",
-      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.step@ap214/cc6",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.step@ap214/cc6",
       "claims": [
         {
-          "namespace": "dialect",
+          "namespace": "validated-dialect",
           "value": "s.stdio.step@ap214/cc6"
         }
       ]

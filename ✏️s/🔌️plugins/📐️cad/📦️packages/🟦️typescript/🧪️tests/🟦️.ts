@@ -22,7 +22,7 @@ const DOMAIN_FILES = [
   `${ARTIFACT_EDITOR_ENGINE}/🎰️stately/🟦️.ts`,
   `${ARTIFACT_EDITOR_ENGINE}/🏃️runtime/🟦️.ts`,
   `${ARTIFACT_EDITOR_ENGINE}/🎬️actions/🟦️.ts`,
-  `${ARTIFACT_EDITOR_ENGINE}/📄️artifact/🟦️.ts`,
+  `${ARTIFACT_EDITOR_ENGINE}/🗿️artifact/🟦️.ts`,
   "../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️.ts",
   "../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts",
   "../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts",

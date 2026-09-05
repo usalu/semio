@@ -1,0 +1,80 @@
+\title{Semio Report Template}
+\author{Semio Team}
+\date{\today}
+\subtitle{Unified printable report format}
+\addbibresource{📚️references.bib}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\begin{Panel}[anchor=top-right, x=1cm, y=5cm, width=5.5cm]
+  Semio print framework with frosted glass panels
+\end{Panel}
+
+\chapter{Introduction}
+The semio print stack renders branded documents with window chrome, panels, and registers
+
+\section{Architecture}
+\begin{Window}[title=Print Pipeline]
+  Templates compile through Tectonic with semio LaTeX packages and token-driven styling
+\end{Window}
+
+\subsection{Chrome Themes}
+Light and dark themes resolve foreground, border, and fill aliases at document start
+
+\paragraph{Token Pipeline}
+Run \texttt{bun ./📜️script.ts generate} to refresh \texttt{semio-tokens.sty}
+
+\chapter{Results}
+\begin{Blockquote}
+  Key findings are presented in bordered boxes with sharp corners and semio brand colors
+\end{Blockquote}
+
+\begin{Figure}[title=Hierarchy Demo, height=3cm, anchor=center, justify=center, text-size=12pt]
+  Window numbering uses the parent hierarchy plus a letter index \cite{semio2026,expl32024}
+\end{Figure}
+\begin{Photo}[title=Logo Cover Demo, height=4cm, image-fit=cover, anchor=center]
+  \SemioImage{../../🖼️assets/🎞️demo-strip.png}
+\end{Photo}
+\begin{Photo}[title=Cover Anchor NW, height=4cm, image-fit=cover, anchor=nw]
+  \SemioImage{../../🖼️assets/🎞️demo-strip.png}
+\end{Photo}
+\begin{Photo}[title=Cover Anchor SE, height=4cm, image-fit=cover, anchor=se]
+  \SemioImage{../../🖼️assets/🎞️demo-strip.png}
+\end{Photo}
+\begin{Photo}[title=Cover Anchor W, height=4cm, image-fit=cover, anchor=w]
+  \SemioImage{../../🖼️assets/🎞️demo-strip.png}
+\end{Photo}
+\begin{Photo}[title=Cover Anchor E, height=4cm, image-fit=cover, anchor=e]
+  \SemioImage{../../🖼️assets/🎞️demo-strip.png}
+\end{Photo}
+\begin{Image}[title=Logo Contain Demo, height=4cm, anchor=sw]
+  \SemioImage[fit=contain]{../../🖼️assets/🎞️demo-strip.png}
+\end{Image}
+
+\begin{WindowArrangement}[height=30mm]
+  \begin{WindowRow}
+    \WindowItem[0.3]{
+      \begin{Photo}[title=Cover In Item, image-fit=cover, anchor=center]
+        \SemioImage{../../🖼️assets/🎞️demo-strip.png}
+      \end{Photo}
+    }
+    \WindowItem[0.7]{
+      \begin{Blockquote}
+        In-item cover checkpoint: this image must render exactly once, filling its 0.3-width slot without spilling below the 30mm row
+      \end{Blockquote}
+    }
+  \end{WindowRow}
+\end{WindowArrangement}
+
+\chapter{Conclusion}
+The print technology keeps reports consistent with the semio design language
+
+\makeappendices
+\appendixinput[MD]{Messdaten}{📎️report.appendix.tex}
+\appendixchapter{Verzeichnisse}
+\makeregisters
+
+\end{document}

@@ -8,7 +8,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { closestCenter, DndContext, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
-import { type UiLabel } from "../🏷️UiLabel/🟦️.tsx";
+import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { Scrollable } from "../📜️Scrollable/🟦️.tsx";

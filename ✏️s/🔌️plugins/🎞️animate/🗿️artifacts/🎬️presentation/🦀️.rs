@@ -308,63 +308,63 @@ mod tests {
 //#region 🔖️Declaration
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    ArtifactDefinition::new(ArtifactIdentity::parse("s.presentation")?)
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.animate.presentation")?)
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.presentation.schema.artifact")?, ArtifactCapabilityKind::schema())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.animate.presentation.schema.artifact")?, ArtifactCapabilityKind::schema())
                 .descriptor(b"s.animate.presentation")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.animate.presentation")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.presentation.inference.artifact")?, ArtifactCapabilityKind::inference())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.animate.presentation.inference.artifact")?, ArtifactCapabilityKind::inference())
                 .descriptor(b"s.animate.presentation.inference")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.animate.presentation.inference")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.presentation.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.presentation@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.presentation@1/*")?)?,
+            ArtifactCapability::new(ArtifactIdentity::parse("s.animate.presentation.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.animate.presentation@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.animate.presentation@1/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.presentation.composer.pptx")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.animate.presentation.composer.pptx")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.pptx@ecma-376/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.pptx@ecma-376/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.presentation.composer.svg")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.animate.presentation.composer.svg")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.svg@1.1/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.svg@1.1/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.presentation.composer.pdf")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.animate.presentation.composer.pdf")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.pdf@1.4/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.pdf@1.4/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.presentation.composer.md")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.animate.presentation.composer.md")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.md@commonmark/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.md@commonmark/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.presentation.composer.png")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.animate.presentation.composer.png")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.png@1.2/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.png@1.2/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.presentation.composer.json")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.animate.presentation.composer.json")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.json@rfc8259/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.presentation.codec.document")?, ArtifactCapabilityKind::codec())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.animate.presentation.codec.document")?, ArtifactCapabilityKind::codec())
                 .descriptor(b"animate.presentation:presentation")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "animate.presentation")?)?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "presentation")?)?,
+                .claim(ArtifactIdentityClaim::codec_extension("animate.presentation", "presentation")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.presentation.localization.en")?, ArtifactCapabilityKind::localization())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.animate.presentation.localization.en")?, ArtifactCapabilityKind::localization())
                 .descriptor(b"Animate Presentation")?
                 .localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Animate Presentation")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.presentation.localization.de")?, ArtifactCapabilityKind::localization())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.animate.presentation.localization.de")?, ArtifactCapabilityKind::localization())
                 .descriptor(b"Animate Presentation")?
                 .localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Animate Presentation")?)?,
         )

@@ -7,9 +7,9 @@
 
 // 🏭️ Third-party fixture generator for `s.note.note@1/✳️any`.
 //
-// Every BEFORE/AFTER byte pair is built by `../🦀️note-oracle-codec` — a standalone Rust binary that
+// Every BEFORE/AFTER byte pair is built by `./🦀️note-oracle-codec` — a standalone Rust binary that
 // links `dxf` 0.6, `quick-xml` 0.42 and `lopdf` 0.44 DIRECTLY (the SAME crates already registered as
-// this subset's oracle in `../🔣️oracle.json`), never note's own (currently non-building)
+// this subset's oracle in `../🔮️oracle/🔣️.json`), never note's own (currently non-building)
 // production serializers. This file only marshals: it shells out to `cargo run`, computes digests
 // over what the crate wrote, and emits/merges the `fixtureManifests` index — exactly the split
 // `…✳️mesh/🏭️generator/📜️script.ts` and `…✳️cad/🏭️generator/📜️script.ts` already use.
@@ -17,15 +17,15 @@
 // Generation and execution are SEPARATE operations: a normal test run must never be able to rewrite
 // the expectation it is measured against.
 //
-//   bun 📜️script.ts generate [--only <recipe-id>]...   — writes 🧫️fixtures/<recipe>/{before,after}.<ext>
+//   bun 📜️script.ts generate [--only <recipe-id>]...   — writes each subset's handpicked physical fixture paths
 //   bun 📜️script.ts manifests [--only <recipe-id>]...  — emits the fixtureManifests block to stdout
 //
 // `SEMIO_FIXTURE_OUT` (set by `test fixture generate|reproduce`) is a FIXTURES ROOT; every recipe
 // writes `<root>/<recipe>/<file>`. Absent it, the committed 🧫️fixtures directory is the root.
 //
-// @see ../🦀️note-oracle-codec/src/recipes.rs — the 16 recipes (one per witnessable mutation)
+// @see ./🦀️note-oracle-codec/🧫️recipes/🦀️.rs — the 16 recipes (one per witnessable mutation)
 // @see ../🔬️probes/📜️script.ts — the sibling that reads/compares what this file writes
-// @see ../🔣️oracle.json — the fixtureManifests this file's `manifests` output is pasted into
+// @see ../🔮️oracle/🔣️.json — the fixtureManifests this file's `manifests` output is pasted into
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️note-1-any-fixture-corpus.md
 
 //#endregion 🧲️Header
@@ -38,37 +38,38 @@ import { dirname, join } from "node:path";
 
 //#region 🧬️Contract
 type FixtureFile = { role: string; path: string; mediaType: string; sha256: string; bytes: number };
+type Recipe = { id: string; mutation: string; subset: string; subsetDirectoryName: string; directoryName: string; files: readonly { carrier: "dxf" | "svg" | "pdf"; before: string; after: string }[] };
 
 /** 🎯️ id, mutation kind, and which of dxf/svg/pdf carriers this recipe covers — MIRRORS
- * `🦀️note-oracle-codec/src/recipes.rs::recipes()`. Duplicated here (never imported — TS cannot import
+ * `🦀️note-oracle-codec/🧫️recipes/🦀️.rs::recipes()`. Duplicated here (never imported — TS cannot import
  * Rust) so this file can compute file roles/paths/media-types without re-invoking the crate to ask;
  * kept in the SAME order and content as the Rust source, which is the single source of truth for what
  * bytes actually get written. A recipe added on one side and not the other is caught immediately by
  * `generate` (the crate refuses an unknown `--only` id) or by `fixture reproduce` (a missing file).
  */
-const RECIPES: readonly { id: string; mutation: string; carriers: readonly ("dxf" | "svg" | "pdf")[] }[] = [
-  { id: "retitles-the-document", mutation: "rename-note", carriers: ["pdf"] },
-  { id: "adds-the-diagram-asset", mutation: "create-asset", carriers: ["svg"] },
-  { id: "swaps-the-logo-payload", mutation: "replace-asset-payload", carriers: ["svg"] },
-  { id: "removes-the-logo-asset", mutation: "delete-asset", carriers: ["svg"] },
-  { id: "creates-an-ink-block", mutation: "create-block", carriers: ["dxf", "svg"] },
-  { id: "deletes-the-intro-text-block", mutation: "delete-block", carriers: ["svg", "pdf"] },
-  { id: "deletes-the-ink-and-text-blocks", mutation: "delete-blocks", carriers: ["dxf", "svg", "pdf"] },
-  { id: "duplicates-the-ink-block", mutation: "duplicate-block", carriers: ["dxf", "svg"] },
-  { id: "duplicates-the-ink-and-text-blocks", mutation: "duplicate-blocks", carriers: ["dxf", "svg", "pdf"] },
-  { id: "drags-the-callout-group-subtree", mutation: "drag-blocks", carriers: ["svg"] },
-  { id: "moves-the-math-block", mutation: "move-block", carriers: ["svg"] },
-  { id: "resizes-the-image-block", mutation: "resize-block", carriers: ["svg"] },
-  { id: "hides-the-intro-text-block", mutation: "change-block-visible", carriers: ["svg"] },
-  { id: "edits-the-intro-paragraph", mutation: "edit-block-text", carriers: ["pdf", "svg"] },
-  { id: "thickens-the-sketch-stroke", mutation: "change-block-ink-width", carriers: ["svg"] },
-  { id: "redraws-the-sketch-polyline", mutation: "edit-block-ink-stroke", carriers: ["dxf", "svg"] },
+const RECIPES: readonly Recipe[] = [
+  { id: "retitles-the-document", mutation: "rename-note", subset: "document", subsetDirectoryName: "📜️document", directoryName: "🏷️retitles-the-document", files: [{ carrier: "pdf", before: "⬅️before.pdf", after: "➡️after.pdf" }] },
+  { id: "adds-the-diagram-asset", mutation: "create-asset", subset: "asset", subsetDirectoryName: "🖼️asset", directoryName: "➕️adds-the-diagram-asset", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
+  { id: "swaps-the-logo-payload", mutation: "replace-asset-payload", subset: "asset", subsetDirectoryName: "🖼️asset", directoryName: "🔁️swaps-the-logo-payload", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
+  { id: "removes-the-logo-asset", mutation: "delete-asset", subset: "asset", subsetDirectoryName: "🖼️asset", directoryName: "🗑️removes-the-logo-asset", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
+  { id: "creates-an-ink-block", mutation: "create-block", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "🖋️creates-an-ink-block", files: [{ carrier: "dxf", before: "🖊️before.dxf", after: "📐️after.dxf" }, { carrier: "svg", before: "🖼️before.svg", after: "🎨️after.svg" }] },
+  { id: "deletes-the-intro-text-block", mutation: "delete-block", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "✂️deletes-the-intro-text-block", files: [{ carrier: "svg", before: "🖼️before.svg", after: "🎨️after.svg" }, { carrier: "pdf", before: "📖️before.pdf", after: "📕️after.pdf" }] },
+  { id: "deletes-the-ink-and-text-blocks", mutation: "delete-blocks", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "🗑️deletes-the-ink-and-text-blocks", files: [{ carrier: "dxf", before: "🖊️before.dxf", after: "📐️after.dxf" }, { carrier: "svg", before: "🖼️before.svg", after: "🎨️after.svg" }, { carrier: "pdf", before: "📖️before.pdf", after: "📕️after.pdf" }] },
+  { id: "duplicates-the-ink-block", mutation: "duplicate-block", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "📋️duplicates-the-ink-block", files: [{ carrier: "dxf", before: "🖊️before.dxf", after: "📐️after.dxf" }, { carrier: "svg", before: "🖼️before.svg", after: "🎨️after.svg" }] },
+  { id: "duplicates-the-ink-and-text-blocks", mutation: "duplicate-blocks", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "👥️duplicates-the-ink-and-text-blocks", files: [{ carrier: "dxf", before: "🖊️before.dxf", after: "📐️after.dxf" }, { carrier: "svg", before: "🖼️before.svg", after: "🎨️after.svg" }, { carrier: "pdf", before: "📖️before.pdf", after: "📕️after.pdf" }] },
+  { id: "drags-the-callout-group-subtree", mutation: "drag-blocks", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "🤏️drags-the-callout-group-subtree", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
+  { id: "moves-the-math-block", mutation: "move-block", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "🚚️moves-the-math-block", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
+  { id: "resizes-the-image-block", mutation: "resize-block", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "↔️resizes-the-image-block", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
+  { id: "hides-the-intro-text-block", mutation: "change-block-visible", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "🙈️hides-the-intro-text-block", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
+  { id: "edits-the-intro-paragraph", mutation: "edit-block-text", subset: "text", subsetDirectoryName: "📝️text", directoryName: "✏️edits-the-intro-paragraph", files: [{ carrier: "pdf", before: "📖️before.pdf", after: "📕️after.pdf" }, { carrier: "svg", before: "🖼️before.svg", after: "🎨️after.svg" }] },
+  { id: "thickens-the-sketch-stroke", mutation: "change-block-ink-width", subset: "ink", subsetDirectoryName: "🖋️ink", directoryName: "🖊️thickens-the-sketch-stroke", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
+  { id: "redraws-the-sketch-polyline", mutation: "edit-block-ink-stroke", subset: "ink", subsetDirectoryName: "🖋️ink", directoryName: "🎨️redraws-the-sketch-polyline", files: [{ carrier: "dxf", before: "🖊️before.dxf", after: "📐️after.dxf" }, { carrier: "svg", before: "🖼️before.svg", after: "🎨️after.svg" }] },
 ] as const;
 
 const MEDIA_TYPE: Record<string, string> = { dxf: "image/vnd.dxf", svg: "image/svg+xml", pdf: "application/pdf" };
 const CRATE_DIR = join(import.meta.dir, "🦀️note-oracle-codec");
+const SUBSETS_DIR = join(import.meta.dir, "..", "..");
 const COMMITTED_FIXTURES = join(import.meta.dir, "..", "🧫️fixtures");
-const FIXTURE_PATH_PREFIX = "../🧫️fixtures/";
 const ORACLE_BY_CARRIER: Record<string, string> = { dxf: "dxf-crate-note-ink-reader", svg: "quick-xml-note-drawing-reader", pdf: "lopdf-note-text-reader" };
 const ENGINE_BY_CARRIER: Record<string, { family: string; version: string; packageVersion: string }> = {
   dxf: { family: "dxf-rs", version: "0.6", packageVersion: "0.6" },
@@ -91,23 +92,24 @@ function runCodec(args: readonly string[]): { status: number | null; stderr: str
   return { status: run.status, stderr: (run.stderr ?? "").trim() };
 }
 
-async function fixtureManifestFor(recipe: (typeof RECIPES)[number], outDir: string): Promise<Record<string, unknown>> {
-  const dir = join(outDir, recipe.id);
+async function fixtureManifestFor(recipe: Recipe, outDir: string, committed: boolean): Promise<Record<string, unknown>> {
+  const dir = committed ? join(outDir, recipe.subsetDirectoryName, "🧫️fixtures", recipe.directoryName) : join(outDir, recipe.id);
   const files: FixtureFile[] = [];
-  for (const carrier of recipe.carriers) {
+  for (const physical of recipe.files) {
+    const carrier = physical.carrier;
     for (const label of ["before", "after"] as const) {
-      const filename = `${label}.${carrier}`;
+      const filename = physical[label];
       const path = join(dir, filename);
       const bytes = readFileSync(path);
-      files.push({ role: `${label}-${carrier}`, path: `${FIXTURE_PATH_PREFIX}${recipe.id}/${filename}`, mediaType: MEDIA_TYPE[carrier]!, sha256: await sha256(bytes), bytes: bytes.length });
+      files.push({ role: `${label}-${carrier}`, path: `../🧫️fixtures/${recipe.directoryName}/${filename}`, mediaType: MEDIA_TYPE[carrier]!, sha256: await sha256(bytes), bytes: bytes.length });
     }
   }
-  const primaryCarrier = recipe.carriers[0]!;
+  const primaryCarrier = recipe.files[0]!.carrier;
   return {
     schema: "semio.repository-test.fixture/v2",
     id: recipe.id,
     class: "third-party-generated",
-    target: { artifact: "s.note.note", standard: "1", subset: "any" },
+    target: { artifact: "s.note.note", standard: "1", subset: recipe.subset },
     mutation: recipe.mutation,
     outcome: "applied",
     units: { length: "unitless", angle: "degree", handedness: "right", up: "y" },
@@ -124,14 +126,14 @@ async function fixtureManifestFor(recipe: (typeof RECIPES)[number], outDir: stri
     provenance: {
       source: "generated",
       license: "MIT",
-      attribution: `Built and written by the ${recipe.carriers.map((c) => ({ dxf: "dxf 0.6", svg: "quick-xml 0.42", pdf: "lopdf 0.44" })[c]).join(" + ")} crate(s) — no byte of ${recipe.carriers.join("/").toUpperCase()} here originates in this repository.`,
+      attribution: `Built and written by the ${recipe.files.map(({ carrier }) => ({ dxf: "dxf 0.6", svg: "quick-xml 0.42", pdf: "lopdf 0.44" })[carrier]).join(" + ")} crate(s) — no byte of ${recipe.files.map(({ carrier }) => carrier).join("/").toUpperCase()} here originates in this repository.`,
       security: "scanned-clean",
       privacy: "no-personal-data",
     },
     comparisonProfile: { dxf: "semantic-note-dxf-ink-v1", svg: "semantic-note-svg-drawing-v1", pdf: "semantic-note-pdf-text-v1" }[primaryCarrier],
     reproducible: true,
-    family: recipe.carriers.join("+"),
-    notes: `Witnesses ${recipe.mutation} via the ${recipe.carriers.join("+")} carrier(s) — see 📓️note-1-any-fixture-corpus.md for why exactly these carriers and not the others declared for this mutation kind.`,
+    family: recipe.files.map(({ carrier }) => carrier).join("+"),
+    notes: `Witnesses ${recipe.mutation} via the ${recipe.files.map(({ carrier }) => carrier).join("+")} carrier(s) — see 📓️note-1-any-fixture-corpus.md for why exactly these carriers and not the others declared for this mutation kind.`,
   };
 }
 
@@ -149,10 +151,11 @@ async function main(argv: readonly string[]): Promise<number> {
     console.error(`[note generator] unknown recipe(s) ${unknown.join(", ")} — known: ${RECIPES.map((r) => r.id).join(", ")}`);
     return 2;
   }
-  const outDir = process.env.SEMIO_FIXTURE_OUT ?? COMMITTED_FIXTURES;
+  const committed = process.env.SEMIO_FIXTURE_OUT === undefined;
+  const outDir = process.env.SEMIO_FIXTURE_OUT ?? SUBSETS_DIR;
   mkdirSync(outDir, { recursive: true });
 
-  const codecArgs = ["generate", "--out", outDir, ...only.flatMap((id) => ["--only", id])];
+  const codecArgs = ["generate", "--out", outDir, ...(committed ? ["--physical-directories"] : []), ...only.flatMap((id) => ["--only", id])];
   const result = runCodec(codecArgs);
   if (result.status !== 0) {
     console.error(`[note generator] note-oracle-codec exited ${result.status}: ${result.stderr.split("\n").slice(-12).join("\n")}`);
@@ -162,8 +165,8 @@ async function main(argv: readonly string[]): Promise<number> {
   const selected = only.length === 0 ? RECIPES : RECIPES.filter((r) => only.includes(r.id));
   const manifests: Record<string, unknown>[] = [];
   for (const recipe of selected) {
-    manifests.push(await fixtureManifestFor(recipe, outDir));
-    console.error(`[note generator] ${recipe.id} (${recipe.carriers.join("+")})`);
+    manifests.push(await fixtureManifestFor(recipe, outDir, committed));
+    console.error(`[note generator] ${recipe.id} (${recipe.files.map(({ carrier }) => carrier).join("+")})`);
   }
 
   if (command === "manifests") {
@@ -174,7 +177,7 @@ async function main(argv: readonly string[]): Promise<number> {
   // 🧬️A NARROWED run MERGES into the manifest index; it does not replace it — same guard
   // `…✳️mesh/🏭️generator/📜️script.ts` uses, for the same incident (a sequence of `--only` runs
   // silently destroying every other fixture's manifest record while leaving its files on disk).
-  const indexPath = join(outDir, "🔣️.json");
+  const indexPath = committed ? join(COMMITTED_FIXTURES, "🔣️.json") : join(outDir, "🔣️.json");
   const previous = (() => {
     if (only.length === 0 || !existsSync(indexPath)) return [];
     try {
@@ -183,8 +186,14 @@ async function main(argv: readonly string[]): Promise<number> {
       return [];
     }
   })();
-  const produced = new Set(manifests.map((m) => m.id as string));
-  const merged = [...previous.filter((m) => !produced.has(m.id as string)), ...manifests].sort((a, b) => String(a.id).localeCompare(String(b.id)));
+  const indexed = committed
+    ? manifests.map((manifest) => {
+        const recipe = RECIPES.find(({ id }) => id === manifest.id)!;
+        return { ...manifest, files: (manifest.files as FixtureFile[]).map((file) => ({ ...file, path: file.path.replace("../🧫️fixtures/", `../../${recipe.subsetDirectoryName}/🧫️fixtures/`) })) };
+      })
+    : manifests;
+  const produced = new Set(indexed.map((m) => m.id as string));
+  const merged = [...previous.filter((m) => !produced.has(m.id as string)), ...indexed].sort((a, b) => String(a.id).localeCompare(String(b.id)));
   mkdirSync(dirname(indexPath), { recursive: true });
   writeFileSync(indexPath, `${JSON.stringify(merged, null, 2)}\n`);
   console.error(`[note generator] ${manifests.length}/${selected.length} bundle(s) generated into ${outDir}${only.length > 0 ? ` (merged into ${merged.length} total)` : ""}`);

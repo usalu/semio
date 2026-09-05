@@ -1,0 +1,32 @@
+//! 🔢️ `apply-value` — authored as its own mutation leaf. Routes this envelope's own dispatch to
+//! `stdio.semio`'s Value subset: `diff`/`inverse` delegate straight through to
+//! `SemioValueMutation`'s own already-real `Mutation` impl (via `agg_diff`/`agg_inverse`, lifted
+//! verbatim from the former hand-rolled `impl Mutation`), never re-deriving that subset's own
+//! per-field logic — the envelope routes, it does not redefine.
+
+use super::*;
+
+//#region 🔖️Payload
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
+pub struct ApplyValue {
+    pub(crate) mutation: SemioValueMutation,
+}
+
+impl protocol::MutationKind<SemioSnapshot, SemioMutation> for ApplyValue {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "apply", entity: "value", kind: "apply-value", record: "ApplyValue" };
+
+    fn diff(&self, base: &SemioSnapshot) -> protocol::MutationOutcome<<SemioMutation as protocol::Mutation<SemioSnapshot>>::Diff> {
+        agg_diff(&SemioMutation::ApplyValue(self.clone()), base)
+    }
+    fn inverse(&self, base: &SemioSnapshot) -> Vec<SemioMutation> {
+        agg_inverse(&SemioMutation::ApplyValue(self.clone()), base)
+    }
+    fn label(&self) -> String {
+        "value".to_string()
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+//#endregion 🔖️Payload

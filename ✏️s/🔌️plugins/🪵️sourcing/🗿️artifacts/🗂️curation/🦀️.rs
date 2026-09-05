@@ -257,25 +257,25 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.curation.standard.v1", "standard", "1", &[], None),
-        ("s.curation.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.curation.schema.artifact", "schema", "s.sourcing.curation", &[("schema", "s.sourcing.curation")], None),
-        ("s.curation.inference.artifact", "inference", "s.sourcing.curation.inference", &[("schema", "s.sourcing.curation.inference")], None),
-        ("s.curation.composer.zip", "composer", "s.stdio.zip@2.0/*", &[("dialect", "s.stdio.zip@2.0/*")], None),
-        ("s.curation.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
-        ("s.curation.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.curation.composer.stl", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
-        ("s.curation.composer.obj", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
-        ("s.curation.grammar.document", "grammar", "sourcing.curation", &[("grammar", "sourcing.curation")], None),
-        ("s.curation.grammar.op", "grammar", "sourcing.curation.op", &[("grammar", "sourcing.curation.op")], None),
-        ("s.curation.grammar.diff", "grammar", "sourcing.curation.diff", &[("grammar", "sourcing.curation.diff")], None),
-        ("s.curation.grammar.pack", "grammar", "curation.pack", &[("grammar", "curation.pack")], None),
-        ("s.curation.grammar.spr", "grammar", "curation.spr", &[("grammar", "curation.spr")], None),
-        ("s.curation.codec.document.v1", "codec", "sourcing.curation/v1:curation", &[("codec", "sourcing.curation/v1"), ("extension", "curation")], None),
-        ("s.curation.localization.en", "localization", "Sourcing", &[], Some(("en", "Sourcing"))),
-        ("s.curation.localization.de", "localization", "Beschaffung", &[], Some(("de", "Beschaffung"))),
+        ("s.sourcing.curation.standard.v1", "standard", "1", &[], None),
+        ("s.sourcing.curation.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.sourcing.curation.schema.artifact", "schema", "s.sourcing.curation", &[("schema", "s.sourcing.curation")], None),
+        ("s.sourcing.curation.inference.artifact", "inference", "s.sourcing.curation.inference", &[("schema", "s.sourcing.curation.inference")], None),
+        ("s.sourcing.curation.composer.zip", "composer", "s.stdio.zip@2.0/*", &[("dialect", "s.stdio.zip@2.0/*")], None),
+        ("s.sourcing.curation.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.sourcing.curation.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.sourcing.curation.composer.stl", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
+        ("s.sourcing.curation.composer.obj", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
+        ("s.sourcing.curation.grammar.document", "grammar", "sourcing.curation", &[("grammar", "sourcing.curation")], None),
+        ("s.sourcing.curation.grammar.op", "grammar", "sourcing.curation.op", &[("grammar", "sourcing.curation.op")], None),
+        ("s.sourcing.curation.grammar.diff", "grammar", "sourcing.curation.diff", &[("grammar", "sourcing.curation.diff")], None),
+        ("s.sourcing.curation.grammar.pack", "grammar", "curation.pack", &[("grammar", "curation.pack")], None),
+        ("s.sourcing.curation.grammar.spr", "grammar", "curation.spr", &[("grammar", "curation.spr")], None),
+        ("s.sourcing.curation.codec.document.v1", "codec", "sourcing.curation/v1:curation", &[("codec", "sourcing.curation/v1"), ("codec-extension", "20:sourcing.curation/v1:curation")], None),
+        ("s.sourcing.curation.localization.en", "localization", "Sourcing", &[], Some(("en", "Sourcing"))),
+        ("s.sourcing.curation.localization.de", "localization", "Beschaffung", &[], Some(("de", "Beschaffung"))),
     ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.curation")?);
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.sourcing.curation")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
         for (namespace, value) in *claims {

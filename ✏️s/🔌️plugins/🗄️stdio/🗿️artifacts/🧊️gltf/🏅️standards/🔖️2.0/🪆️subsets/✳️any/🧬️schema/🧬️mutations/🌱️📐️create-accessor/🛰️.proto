@@ -1,4 +1,0 @@
-syntax = "proto3";
-package stdio.gltf.mutation;
-message GltfCreateAccessorPayloadV1 { uint32 position = 1; uint32 component_type = 2; uint32 count = 3; string kind = 4; }
-message GltfCreateAccessorMutationV1 { string id = 1; uint32 version = 2; repeated string touched_paths = 3; GltfCreateAccessorPayloadV1 payload = 4; }

@@ -1,0 +1,52 @@
+{
+  "$schema": "./🧬️package-catalog.schema.json",
+  "schemaVersion": 1,
+  "kind": "canonical-wgpu-package",
+  "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu",
+  "packageRelativePath": "📦️packages/🦀️rust",
+  "identity": {
+    "cargoPackageName": "semio-framework-os-renderer-wgpu",
+    "nodePackageName": "@semio-tech/framework-renderer-wgpu",
+    "nxProjectName": "@semio-tech/framework-renderer-wgpu"
+  },
+  "entryPaths": {
+    "cargoLibrary": "📚️library/🦀️.rs",
+    "cargoBinary": "💾️binary/🦀️.rs",
+    "cargoBuild": "build.rs",
+    "nodeLibrary": "🟦️typescript/📚️library/🟦️.ts"
+  },
+  "artifacts": [
+    {
+      "id": "build-adapter",
+      "relativePath": "📦️packages/🦀️rust/🏗️builder/🦀️.rs",
+      "targetRelativePath": "🏗️builder/🦀️.rs",
+      "language": "rust",
+      "role": "declaration",
+      "content": "//! 🏗️ Renderer build package adapter.\n\ninclude!(\"../../../🏗️builder/🦀️.rs\");\n"
+    },
+    {
+      "id": "binary-adapter",
+      "relativePath": "📦️packages/🦀️rust/💾️binary/🦀️.rs",
+      "targetRelativePath": "⌨️native-entrypoint/🦀️.rs",
+      "language": "rust",
+      "role": "declaration",
+      "content": "//! ⌨️ Native renderer binary package adapter.\n\ninclude!(\"../../../⌨️native-entrypoint/🦀️.rs\");\n"
+    },
+    {
+      "id": "typescript-adapter",
+      "relativePath": "📦️packages/🦀️rust/🟦️typescript/📚️library/🟦️.ts",
+      "targetRelativePath": "🎬️renderer-boot/🟦️.ts",
+      "language": "typescript",
+      "role": "declaration",
+      "content": "/** 🧊️ Renderer package adapter. */\nexport * from \"../../../../🎬️renderer-boot/🟦️.ts\";\n"
+    },
+    {
+      "id": "renderer-registration",
+      "relativePath": "🧊️renderer/📇️registry/🦀️.rs",
+      "targetRelativePath": null,
+      "language": "rust",
+      "role": "implementation",
+      "content": "//! 📇️ Renderer macro registration.\n\n#[cfg(not(target_os = \"wasi\"))]\n#[macro_export]\nmacro_rules! action_args_json {\n    ($($tt:tt)*) => {\n        semio_framework::optional_json_to_dsl(Some(serde_json::json!($($tt)*)))\n    };\n}\n\n"
+    }
+  ]
+}

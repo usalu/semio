@@ -14,7 +14,7 @@ use protocol::{Mutation, MutationDiff, OpText};
 /// csv's/gif89a's hand-rolled paths document; hand-rolling below reuses `TsvDiff`'s
 /// `pub(crate)` grammar primitives instead).
 //#region 🔖️Leaves
-#[path = "📄set-snapshot/🦀️.rs"]
+#[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🔚set-trailing-newline/🦀️.rs"]
 pub mod set_trailing_newline;
@@ -48,7 +48,7 @@ pub enum TsvMutation {
 }
 
 /// 🧾️ Kebab-case spelling of every `TsvMutation` variant, in declaration order — the exhaustive
-/// mutation catalog `tsv-iana-any` (`../../🔣️oracle.json`) is measured against this
+/// mutation catalog `tsv-iana-any` (`../../🔮️oracle/🔣️.json`) is measured against this
 /// exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
 pub const KINDS: &[&str] = &["set-snapshot", "set-trailing-newline", "set-line-ending", "insert-row", "remove-row", "set-cell"];
 //#endregion 🔖️Mutations
@@ -459,7 +459,7 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/renames-the-alpha-row-and-switches-to-crlf/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/✏️renames-the-alpha-row-and-switches-to-crlf/🦀️.rs"]
     mod tests_set_snapshot_renames_the_alpha_row_and_switches_to_crlf;
 }
 //#endregion 🧪️FixtureTests

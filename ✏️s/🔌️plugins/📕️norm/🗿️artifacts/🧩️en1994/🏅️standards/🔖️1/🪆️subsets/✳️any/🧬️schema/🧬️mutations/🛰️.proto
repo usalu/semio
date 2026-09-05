@@ -1,0 +1,49 @@
+syntax = "proto3";
+package semio.s.norm.en1994.mutation;
+
+message En1994Mutation {
+  // @state artifact
+  string annex = 1;
+  // @state artifact
+  double m_ed_knm = 2;
+  // @state artifact
+  double v_ed_kn = 3;
+  // @state artifact
+  double m_pla = 4;
+  // @state artifact
+  double m_pl_rd = 5;
+  // @state artifact
+  double eta = 6;
+  // @state artifact
+  double v_l_rd = 7;
+  // @state artifact
+  double insulation_thickness_mm = 8;
+  // @state artifact
+  string fire_rating = 9;
+  // @state artifact
+  string deck_type = 10;
+  // @state artifact
+  double delta_sigma_mpa = 11;
+  // @state artifact
+  string fatigue_detail = 12;
+  // @state artifact
+  double d_mm = 13;
+  // @state artifact
+  double h_sc_mm = 14;
+  // @state artifact
+  double f_ck_mpa = 15;
+  // @state artifact
+  double f_u_mpa = 16;
+  // @state artifact
+  double e_cm_mpa = 17;
+  // @state artifact
+  double v_ed_per_stud_kn = 18;
+  // @state artifact
+  double span_m = 19;
+  // @state artifact
+  double f_y_mpa = 20;
+  // @state artifact
+  double n_cycles_stud = 21;
+  // @state artifact
+  double delta_tau_stud_mpa = 22;
+}

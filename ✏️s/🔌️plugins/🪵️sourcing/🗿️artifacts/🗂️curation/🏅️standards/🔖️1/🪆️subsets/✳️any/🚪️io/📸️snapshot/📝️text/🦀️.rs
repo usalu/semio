@@ -50,7 +50,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn demo_stock_example_preserves_authored_content_against_json_oracle() {
-        let expected: Vec<crate::artifacts::curation::ObjectKind> = serde_json::from_str(include_str!("../../../📚️examples/🎬️demo/🧪️expected-stock.json")).unwrap();
+        let expected: Vec<crate::artifacts::curation::ObjectKind> = serde_json::from_str(include_str!("../../../📚️examples/🎬️demo/📦️expected-stock.json")).unwrap();
         let document = parse_dsl(DEMO_STOCK_TEXT).expect("authored stock must parse without an empty fallback");
         assert_eq!(crate::artifacts::curation::stock_of(&document), expected);
         assert_eq!(crate::artifacts::curation::stock_of(&crate::artifacts::curation::schema::default_document()), expected);

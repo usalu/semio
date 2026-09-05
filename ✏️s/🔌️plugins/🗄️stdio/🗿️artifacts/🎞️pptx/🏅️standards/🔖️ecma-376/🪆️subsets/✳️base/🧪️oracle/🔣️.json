@@ -71,8 +71,8 @@
       "vectors": [
         {
           "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📄set-snapshot",
-          "mutationDirectoryName": "📄set-snapshot",
+          "sourceMutationDirectoryName": "🟤️set-snapshot",
+          "mutationDirectoryName": "🟤️set-snapshot",
           "scenarios": [
             {
               "id": "retitles-and-lowers-the-title-placeholder",

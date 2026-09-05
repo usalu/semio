@@ -1,0 +1,18 @@
+{
+  "schema": "semio.spr.retained-record-observation/v1",
+  "grants": [1, 7, 4096],
+  "headerHex": "895350520d0a1a0a0100000001000000010000006fdee5cf0000000000000000",
+  "cases": [
+    { "id": "before-flags", "kind": 3, "flags": 2, "rawHex": "", "payloadHex": "010000", "repeat": 0, "at": 34, "cancel": false, "corruptCrc": false, "error": null, "observation": null },
+    { "id": "exact-header", "kind": 3, "flags": 2, "rawHex": "", "payloadHex": "010000", "repeat": 0, "at": 35, "cancel": false, "corruptCrc": false, "error": null, "observation": { "frameStart": 32, "payloadStart": 35, "payloadEnd": 38, "frameEnd": 46, "kind": 3, "flags": 2, "rawBytes": null } },
+    { "id": "inside-trailer", "kind": 3, "flags": 2, "rawHex": "", "payloadHex": "010000", "repeat": 0, "at": 45, "cancel": false, "corruptCrc": false, "error": null, "observation": { "frameStart": 32, "payloadStart": 35, "payloadEnd": 38, "frameEnd": 46, "kind": 3, "flags": 2, "rawBytes": null } },
+    { "id": "complete-frame-clears", "kind": 3, "flags": 2, "rawHex": "", "payloadHex": "010000", "repeat": 0, "at": 46, "cancel": false, "corruptCrc": false, "error": null, "observation": null },
+    { "id": "empty-payload", "kind": 64, "flags": 2, "rawHex": "", "payloadHex": "", "repeat": 0, "at": 35, "cancel": false, "corruptCrc": false, "error": null, "observation": { "frameStart": 32, "payloadStart": 35, "payloadEnd": 35, "frameEnd": 43, "kind": 64, "flags": 2, "rawBytes": null } },
+    { "id": "multi-byte-body", "kind": 64, "flags": 2, "rawHex": "", "payloadHex": "", "repeat": 128, "at": 36, "cancel": false, "corruptCrc": false, "error": null, "observation": { "frameStart": 32, "payloadStart": 36, "payloadEnd": 164, "frameEnd": 172, "kind": 64, "flags": 2, "rawBytes": null } },
+    { "id": "raw-length-pending", "kind": 64, "flags": 7, "rawHex": "8001", "payloadHex": "", "repeat": 0, "at": 36, "cancel": false, "corruptCrc": false, "error": null, "observation": null },
+    { "id": "raw-length-complete", "kind": 64, "flags": 7, "rawHex": "8001", "payloadHex": "", "repeat": 0, "at": 37, "cancel": false, "corruptCrc": false, "error": null, "observation": { "frameStart": 32, "payloadStart": 37, "payloadEnd": 37, "frameEnd": 45, "kind": 64, "flags": 7, "rawBytes": 128 } },
+    { "id": "cancelled-header", "kind": 3, "flags": 2, "rawHex": "", "payloadHex": "010000", "repeat": 0, "at": 35, "cancel": true, "corruptCrc": false, "error": "cancelled", "observation": null },
+    { "id": "invalid-trailer", "kind": 3, "flags": 2, "rawHex": "", "payloadHex": "010000", "repeat": 0, "at": 46, "cancel": false, "corruptCrc": true, "error": "frame", "observation": null },
+    { "id": "invalid-flags", "kind": 3, "flags": 130, "rawHex": "", "payloadHex": "010000", "repeat": 0, "at": 35, "cancel": false, "corruptCrc": false, "error": "frame", "observation": null }
+  ]
+}

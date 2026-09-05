@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeObjectKindVariant",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "newVariant": {
+      "type": "string"
+    }
+  }
+}

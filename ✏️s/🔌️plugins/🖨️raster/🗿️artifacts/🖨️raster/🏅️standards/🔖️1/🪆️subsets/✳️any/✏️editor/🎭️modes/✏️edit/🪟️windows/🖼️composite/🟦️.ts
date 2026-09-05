@@ -3,8 +3,8 @@
  * payload plus the brush/eraser chrome measures a mutation-capable surface carries (absent from the
  * viewer's read-only twin, see `👁️viewer/…/🟦️.ts`). */
 
-export * as brushOptions from "./🎚️options/🖌️brush/🟦️";
-export * as eraserOptions from "./🎚️options/🧽️eraser/🟦️";
+export * as brushOptions from "./☑️options/🖌️brush/🟦️";
+export * as eraserOptions from "./☑️options/🧽️eraser/🟦️";
 
 /** ✏️ The Composite window's typed view-model — mirrors the Rust `render()` boundary's inputs plus
  * its config-derived `window_measures()` chrome. */

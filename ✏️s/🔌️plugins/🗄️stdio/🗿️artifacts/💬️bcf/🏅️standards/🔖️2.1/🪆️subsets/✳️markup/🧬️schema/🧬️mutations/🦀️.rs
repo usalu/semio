@@ -13,7 +13,7 @@
 //! variant wraps none. Every former `None => vec![BcfMutation::NoMutation]` inverse fallback below
 //! is now `None => Vec::new()` (no inverse steps needed for a mutation that never found its
 //! target), mirroring `tiff`'s own `RemoveTileTags`/`RemoveStripOffsets` "_ => return Vec::new()"
-//! precedent (`../../../../🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🧬️schema/🧬️mutations/🦀️.rs`).
+//! precedent (`../../../../🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🧬️schema/🧬️mutations/🦀️.rs`).
 
 use crate::artifacts::bcf::schema::diff::{
     dec_bcf_snapshot_bin, dec_camera_bin, dec_comment_bin, dec_components_bin, dec_topic_bin, dec_viewpoint_bin, enc_bcf_snapshot_bin, enc_camera_bin, enc_comment_bin, enc_components_bin, enc_topic_bin, enc_viewpoint_bin, read_bytes_lp, read_str_lp,
@@ -43,7 +43,7 @@ use protocol::Mutation;
 /// check (§3b). `OpText`/`OpBinary` hand-rolled below, reusing the diff module's `pub(crate)`
 /// grammar primitives.
 //#region 🔖️Leaves
-#[path = "📄set-snapshot/🦀️.rs"]
+#[path = "🟤️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🔢set-version/🦀️.rs"]
 pub mod set_version;
@@ -656,7 +656,7 @@ mod kinds_tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/closes-the-clash-topic-and-answers-its-comment/🦀️.rs"]
+    #[path = "🟤️set-snapshot/🧪️tests/🛟️closes-the-clash-topic-and-answers-its-comment/🦀️.rs"]
     mod tests_set_snapshot_closes_the_clash_topic_and_answers_its_comment;
 }
 //#endregion 🧪️FixtureTests

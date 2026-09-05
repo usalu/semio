@@ -1,0 +1,29 @@
+{
+  "requests": [
+    { "target": "/🖼️assets/README.md", "path": "README.md" },
+    { "target": "/%F0%9F%96%BC%EF%B8%8Fassets/README.md?cache=1", "path": "README.md" },
+    { "target": "/🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/🗜️compressed.woff2", "path": "🔤️fonts/🚀️anta/🏛️latin/📖️regular/🗜️compressed.woff2" },
+    { "target": "/asset/README.md", "path": null },
+    { "target": "/🖼️assets-other/README.md", "path": null },
+    { "target": "/🖼️assets", "path": null },
+    { "target": "/🖼️assets/", "path": null },
+    { "target": "/🖼️assets/../README.md", "path": null },
+    { "target": "/🖼️assets/%2e%2e/README.md", "path": null },
+    { "target": "/🖼️assets/./README.md", "path": null },
+    { "target": "/🖼️assets//README.md", "path": null },
+    { "target": "/🖼️assets/%252e%252e/README.md", "path": null },
+    { "target": "/🖼️assets/🔤️fonts%2FREADME.md", "path": null },
+    { "target": "/🖼️assets/🔤️fonts%5CREADME.md", "path": null },
+    { "target": "/🖼️assets/🔤️fonts\\README.md", "path": null },
+    { "target": "/🖼️assets/%00README.md", "path": null },
+    { "target": "/🖼️assets/%E0%A4%A", "path": null },
+    { "target": "https://example.invalid/🖼️assets/README.md", "path": null }
+  ],
+  "invalidAuthorities": [
+    { "$schema": "./🧬️delivery.schema.json", "version": 1, "directoryName": "asset" },
+    { "$schema": "./🧬️delivery.schema.json", "version": 1, "directoryName": "🖼️🗂️assets" },
+    { "$schema": "./🧬️delivery.schema.json", "version": 1, "directoryName": "🖼️assets", "alias": "asset" },
+    { "$schema": "./🧬️delivery.schema.json", "version": 2, "directoryName": "🖼️assets" },
+    { "version": 1, "directoryName": "🖼️assets" }
+  ]
+}

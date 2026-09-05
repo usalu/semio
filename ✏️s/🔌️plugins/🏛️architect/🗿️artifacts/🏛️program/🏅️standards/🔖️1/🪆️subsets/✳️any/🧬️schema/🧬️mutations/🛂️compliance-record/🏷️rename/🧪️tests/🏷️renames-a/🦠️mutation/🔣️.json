@@ -1,0 +1,5 @@
+{
+  "mutation": "renameComplianceRecord",
+  "id": "compliance-record-a",
+  "newName": "Renamed Compliance Record A"
+}

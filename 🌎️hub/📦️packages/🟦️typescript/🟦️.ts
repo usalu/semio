@@ -3,7 +3,7 @@
  * 🌎️ `os-hub-ts` — a Bun integration-test harness for the real `os-hub` binary (ticket
  * 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS, lane 3-E). Boots the compiled
  * binary on a scanned free port against a temp `OS_HUB_DATA`, polls a real endpoint for
- * readiness, and hands back a handle `🧪️index.test.ts` drives with two independent
+ * readiness, and hands back a handle `🤝️index.test.ts` drives with two independent
  * `@semio-tech/framework-os` `DirectoryClient`s plus raw document-WS wire frames. Never `cargo
  * run`s (a wrapper process would complicate teardown) — spawns the prebuilt debug binary
  * directly, so `stop()` is a plain signal to one process, no process tree to chase.

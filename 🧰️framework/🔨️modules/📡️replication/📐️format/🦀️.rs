@@ -14,6 +14,9 @@
 //! regardless of `kind`, giving callers `RecordFrame::kind` and `flags & FRAME_FLAG_CRITICAL` to
 //! implement that policy themselves.
 
+#[path = "🔎️verification/🦀️.rs"]
+pub mod retained;
+
 use crate::codec::{CompressionCodec, PackError};
 use crate::source::{PackSink, PackSource};
 use crate::wire::{frame_flags, ProtocolError, ProtocolLimits, RecordHasher, FRAME_FLAG_COMPRESSED, FRAME_FLAG_CRITICAL};

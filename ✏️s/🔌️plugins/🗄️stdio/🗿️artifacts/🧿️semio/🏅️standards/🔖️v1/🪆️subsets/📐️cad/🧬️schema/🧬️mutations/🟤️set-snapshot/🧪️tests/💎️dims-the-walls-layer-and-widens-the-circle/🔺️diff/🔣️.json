@@ -1,0 +1,30 @@
+{
+  "layers": {
+    "modified": [
+      {
+        "key": "WALLS",
+        "diff": {
+          "colorIndex": 3,
+          "visible": false
+        }
+      }
+    ]
+  },
+  "entities": {
+    "modified": [
+      {
+        "key": "h-1",
+        "diff": {
+          "entity": {
+            "kind": "circle",
+            "center": {
+              "x": 5.0,
+              "y": 5.0
+            },
+            "radius": 4.0
+          }
+        }
+      }
+    ]
+  }
+}

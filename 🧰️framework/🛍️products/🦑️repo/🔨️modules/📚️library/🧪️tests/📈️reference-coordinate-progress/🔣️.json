@@ -1,0 +1,533 @@
+{
+  "schemaVersion": 1,
+  "contract": "reference-coordinate-progress-v1",
+  "semantics": {
+    "phase": "incoming-coordinate-roots",
+    "current": "fully-classified-directory-prefix",
+    "pending": "one-event-before-existing-candidate-cancellation-check-and-io",
+    "empty": "one-zero-of-zero-event",
+    "terminal": "total-of-total-without-path-only-after-success-and-final-cancellation-check",
+    "sort": "depth-ascending-then-utf8-byte-order",
+    "resultSort": "depth-descending-then-utf8-byte-order",
+    "skipped": "included-in-total-and-progress-without-new-filesystem-access",
+    "opaqueRoots": [
+      "compose",
+      "temp/compose"
+    ],
+    "observer": "unchanged-fifth-argument"
+  },
+  "registration": {
+    "target": "test-reference-coordinate-progress",
+    "command": "reference-coordinate-progress",
+    "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️reference-coordinate-progress.ts",
+    "launchName": "🧹clean🧩️taxonomy📈️reference-coordinate-progress",
+    "group": "4_gate",
+    "order": 410.21,
+    "nxCommand": "bun nx run @semio-tech/repo-lib:test-reference-coordinate-progress --skip-nx-cache"
+  },
+  "cases": [
+    {
+      "id": "empty",
+      "operation": "plan",
+      "paths": [],
+      "nodes": {},
+      "expected": {
+        "directories": [],
+        "visited": [],
+        "roots": [],
+        "markerProbes": [],
+        "observers": [],
+        "error": null
+      }
+    },
+    {
+      "id": "one-parent-and-duplicate-path",
+      "operation": "plan",
+      "paths": [
+        "pkg/b.ts",
+        "pkg/a.ts",
+        "pkg/a.ts"
+      ],
+      "nodes": {},
+      "expected": {
+        "directories": [
+          "pkg"
+        ],
+        "visited": [
+          "pkg"
+        ],
+        "roots": [],
+        "markerProbes": [
+          "pkg/.git"
+        ],
+        "observers": [
+          "pkg/.git"
+        ],
+        "error": null
+      }
+    },
+    {
+      "id": "depth-then-byte-order",
+      "operation": "plan",
+      "paths": [
+        "beta/x.ts",
+        "alpha/deep/y.ts",
+        "alpha/z.ts"
+      ],
+      "nodes": {},
+      "expected": {
+        "directories": [
+          "alpha",
+          "beta",
+          "alpha/deep"
+        ],
+        "visited": [
+          "alpha",
+          "beta",
+          "alpha/deep"
+        ],
+        "roots": [],
+        "markerProbes": [
+          "alpha/.git",
+          "beta/.git",
+          "alpha/deep/.git"
+        ],
+        "observers": [
+          "alpha/.git",
+          "beta/.git",
+          "alpha/deep/.git"
+        ],
+        "error": null
+      }
+    },
+    {
+      "id": "nested-root-skips-descendant-marker",
+      "operation": "plan",
+      "paths": [
+        "nested/a.ts",
+        "nested/deep/b.ts",
+        "plain/c.ts"
+      ],
+      "nodes": {
+        "nested/.git": {
+          "kind": "directory",
+          "gitRoot": true
+        },
+        "nested/deep/.git": {
+          "kind": "symlink"
+        }
+      },
+      "expected": {
+        "directories": [
+          "nested",
+          "plain",
+          "nested/deep"
+        ],
+        "visited": [
+          "nested",
+          "plain",
+          "nested/deep"
+        ],
+        "roots": [
+          "nested"
+        ],
+        "markerProbes": [
+          "nested/.git",
+          "plain/.git"
+        ],
+        "observers": [
+          "nested/.git",
+          "plain/.git"
+        ],
+        "error": null
+      }
+    },
+    {
+      "id": "opaque-and-git-segments-still-count-without-access",
+      "operation": "plan",
+      "paths": [
+        "compose/opaque.ts",
+        "temp/compose/opaque.ts",
+        "pkg/.git/internal.ts"
+      ],
+      "nodes": {},
+      "expected": {
+        "directories": [
+          "compose",
+          "pkg",
+          "temp",
+          "pkg/.git",
+          "temp/compose"
+        ],
+        "visited": [
+          "compose",
+          "pkg",
+          "temp",
+          "pkg/.git",
+          "temp/compose"
+        ],
+        "roots": [],
+        "markerProbes": [
+          "pkg/.git",
+          "temp/.git"
+        ],
+        "observers": [
+          "pkg/.git",
+          "temp/.git"
+        ],
+        "error": null
+      }
+    },
+    {
+      "id": "fake-marker-file",
+      "operation": "plan",
+      "paths": [
+        "pkg/a.ts"
+      ],
+      "nodes": {
+        "pkg/.git": {
+          "kind": "file",
+          "content": "not a Git pointer\n"
+        }
+      },
+      "expected": {
+        "directories": [
+          "pkg"
+        ],
+        "visited": [
+          "pkg"
+        ],
+        "roots": [],
+        "markerProbes": [
+          "pkg/.git"
+        ],
+        "observers": [
+          "pkg/.git"
+        ],
+        "error": null
+      }
+    },
+    {
+      "id": "gitdir-file-keeps-exact-observers",
+      "operation": "plan",
+      "paths": [
+        "nested/a.ts"
+      ],
+      "nodes": {
+        "nested/.git": {
+          "kind": "file",
+          "content": "gitdir: ../git-store\n",
+          "gitRoot": true
+        },
+        "git-store": {
+          "kind": "directory"
+        }
+      },
+      "expected": {
+        "directories": [
+          "nested"
+        ],
+        "visited": [
+          "nested"
+        ],
+        "roots": [
+          "nested"
+        ],
+        "markerProbes": [
+          "nested/.git"
+        ],
+        "observers": [
+          "nested/.git",
+          "git-store"
+        ],
+        "error": null
+      }
+    },
+    {
+      "id": "calling-repository-gitdir-is-not-a-nested-root",
+      "operation": "plan",
+      "paths": [
+        "nested/a.ts"
+      ],
+      "nodes": {
+        "nested/.git": {
+          "kind": "file",
+          "content": "gitdir: ../.git\n",
+          "gitRoot": true
+        }
+      },
+      "expected": {
+        "directories": [
+          "nested"
+        ],
+        "visited": [
+          "nested"
+        ],
+        "roots": [],
+        "markerProbes": [
+          "nested/.git"
+        ],
+        "observers": [
+          "nested/.git",
+          ".git"
+        ],
+        "error": null
+      }
+    },
+    {
+      "id": "symlink-marker-has-no-terminal",
+      "operation": "plan",
+      "paths": [
+        "pkg/a.ts"
+      ],
+      "nodes": {
+        "pkg/.git": {
+          "kind": "symlink"
+        }
+      },
+      "expected": {
+        "directories": [
+          "pkg"
+        ],
+        "visited": [
+          "pkg"
+        ],
+        "roots": null,
+        "markerProbes": [
+          "pkg/.git"
+        ],
+        "observers": [],
+        "error": "Reference repository marker is a symlink: pkg/.git"
+      }
+    },
+    {
+      "id": "symlink-owner-has-no-marker-access",
+      "operation": "plan",
+      "paths": [
+        "nested/deep/a.ts"
+      ],
+      "nodes": {
+        "nested": {
+          "kind": "symlink"
+        }
+      },
+      "expected": {
+        "directories": [
+          "nested",
+          "nested/deep"
+        ],
+        "visited": [
+          "nested"
+        ],
+        "roots": null,
+        "markerProbes": [],
+        "observers": [],
+        "error": "Reference repository marker has a non-directory or symlink ancestor: nested"
+      }
+    },
+    {
+      "id": "missing-gitdir-has-no-terminal",
+      "operation": "plan",
+      "paths": [
+        "pkg/a.ts"
+      ],
+      "nodes": {
+        "pkg/.git": {
+          "kind": "file",
+          "content": "gitdir: ../missing\n"
+        }
+      },
+      "expected": {
+        "directories": [
+          "pkg"
+        ],
+        "visited": [
+          "pkg"
+        ],
+        "roots": null,
+        "markerProbes": [
+          "pkg/.git"
+        ],
+        "observers": [
+          "pkg/.git",
+          "missing"
+        ],
+        "error": "Reference repository gitdir is not a local directory: pkg/.git"
+      }
+    },
+    {
+      "id": "opaque-gitdir-rejected-before-access",
+      "operation": "plan",
+      "paths": [
+        "pkg/a.ts"
+      ],
+      "nodes": {
+        "pkg/.git": {
+          "kind": "file",
+          "content": "gitdir: ../compose/secret\n"
+        }
+      },
+      "expected": {
+        "directories": [
+          "pkg"
+        ],
+        "visited": [
+          "pkg"
+        ],
+        "roots": null,
+        "markerProbes": [
+          "pkg/.git"
+        ],
+        "observers": [
+          "pkg/.git"
+        ],
+        "error": "Reference repository gitdir is inside an opaque path: compose/secret"
+      }
+    },
+    {
+      "id": "cancel-before-start",
+      "operation": "plan",
+      "paths": [
+        "pkg/a.ts"
+      ],
+      "nodes": {},
+      "expected": {
+        "directories": [
+          "pkg"
+        ],
+        "visited": [],
+        "roots": null,
+        "markerProbes": [],
+        "observers": [],
+        "error": "Taxonomy operation cancelled"
+      },
+      "cancel": {
+        "when": "before-start"
+      }
+    },
+    {
+      "id": "cancel-from-first-pending-callback",
+      "operation": "plan",
+      "paths": [
+        "pkg/a.ts"
+      ],
+      "nodes": {},
+      "expected": {
+        "directories": [
+          "pkg"
+        ],
+        "visited": [
+          "pkg"
+        ],
+        "roots": null,
+        "markerProbes": [],
+        "observers": [],
+        "error": "Taxonomy operation cancelled"
+      },
+      "cancel": {
+        "when": "pending",
+        "path": "pkg"
+      }
+    },
+    {
+      "id": "cancel-from-empty-callback",
+      "operation": "plan",
+      "paths": [],
+      "nodes": {},
+      "expected": {
+        "directories": [],
+        "visited": [],
+        "roots": null,
+        "markerProbes": [],
+        "observers": [],
+        "error": "Taxonomy operation cancelled"
+      },
+      "cancel": {
+        "when": "empty"
+      }
+    },
+    {
+      "id": "cancel-before-next-marker",
+      "operation": "plan",
+      "paths": [
+        "a/x.ts",
+        "b/y.ts"
+      ],
+      "nodes": {},
+      "expected": {
+        "directories": [
+          "a",
+          "b"
+        ],
+        "visited": [
+          "a",
+          "b"
+        ],
+        "roots": null,
+        "markerProbes": [
+          "a/.git"
+        ],
+        "observers": [
+          "a/.git"
+        ],
+        "error": "Taxonomy operation cancelled"
+      },
+      "cancel": {
+        "when": "observer",
+        "path": "a/.git"
+      }
+    },
+    {
+      "id": "cancel-after-last-marker-prevents-terminal",
+      "operation": "plan",
+      "paths": [
+        "pkg/a.ts"
+      ],
+      "nodes": {},
+      "expected": {
+        "directories": [
+          "pkg"
+        ],
+        "visited": [
+          "pkg"
+        ],
+        "roots": null,
+        "markerProbes": [
+          "pkg/.git"
+        ],
+        "observers": [
+          "pkg/.git"
+        ],
+        "error": "Taxonomy operation cancelled"
+      },
+      "cancel": {
+        "when": "observer",
+        "path": "pkg/.git"
+      }
+    },
+    {
+      "id": "apply-operation",
+      "operation": "apply",
+      "paths": [
+        "pkg/a.ts"
+      ],
+      "nodes": {},
+      "expected": {
+        "directories": [
+          "pkg"
+        ],
+        "visited": [
+          "pkg"
+        ],
+        "roots": [],
+        "markerProbes": [
+          "pkg/.git"
+        ],
+        "observers": [
+          "pkg/.git"
+        ],
+        "error": null
+      }
+    }
+  ]
+}

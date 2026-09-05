@@ -2,7 +2,7 @@ use super::*;
 use super::component_compare::ValueFrame;
 
 //#region 🧪️TypedComparison
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap() }
 
 #[test]
 fn retained_component_compare_frame_storage_matches_exact_bounded_domains() {
@@ -49,7 +49,7 @@ fn compare(left: crate::Component, right: crate::Component, grant: usize) -> boo
 #[test]
 fn retained_component_compare_matches_all_native_variants_and_hostile_values() {
     let fixture = fixture();
-    let components: serde_json::Value = serde_json::from_str(include_str!("../../♻️retirement/🌳️typed/🧪️components.json")).unwrap();
+    let components: serde_json::Value = serde_json::from_str(include_str!("../../♻️retirement/🌳️typed/🧩️components.json")).unwrap();
     for grant in fixture["grants"].as_array().unwrap() {
         for row in components["cases"].as_array().unwrap() {
             let left: crate::Component = serde_json::from_value(row["component"].clone()).unwrap();

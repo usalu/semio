@@ -1,6 +1,6 @@
 //#region 📨️ReturnResponseContract
 import { ACTOR_RETURN_RESULT_MAXIMUM_BYTES, ActorReturnResultFraming, encodeActorReturnResult, type ActorReturnResult, type ActorReturnResultProjection } from "../🟦️.ts";
-import { createActorBytePage } from "../../📄️page/🟦️.ts";
+import { createActorBytePage } from "../../📃️page/🟦️.ts";
 export type ActorReturnTransportFault = "requestRefused" | "executionFault" | "resultFault";
 type ResponseAuthority = { readonly activationGeneration: bigint; readonly transportRequestSequence: number };
 export type ActorReturnResponseHeader = ResponseAuthority & { readonly kind: "result" | "fault" };
@@ -147,9 +147,9 @@ if (import.meta.vitest) {
   };
   it("ActorReturnResponseFraming uses canonical vectors with no payload copies or backing escape", async () => {
     const api = await import("./🟦️.ts");
-    const { default: schema } = await import("./📄️framing/🧬️schema.json"); const { default: framing } = await import("./📄️framing/🧪️fixture/🔣️.json");
-    const { default: fixture } = await import("./🧪️fixture/🔣️.json"); const { default: returned } = await import("../🧪️fixture/🔣️.json");
-    const { default: returnedSchema } = await import("../🧬️schema.json"); const { default: lifetime } = await import("../../🚪️lifetime/🧬️schema.json"); const { default: page } = await import("../../📄️page/🧬️schema.json");
+    const { default: schema } = await import("./🌿️framing/🧬️schema.json"); const { default: framing } = await import("./🌿️framing/🧪️fixture/🔣️.json");
+    const { default: fixture } = await import("./🧪️fixture/🔣️.json"); const { default: returned } = await import("../🧫️fixture/🔣️.json");
+    const { default: returnedSchema } = await import("../🧬️schema.json"); const { default: lifetime } = await import("../../🚪️lifetime/🧬️schema.json"); const { default: page } = await import("../../📃️page/🧬️schema.json");
     const { default: Ajv } = await import("ajv"); const uint = await oracle();
     const ajv = new Ajv({ strict: true }).addSchema(lifetime).addSchema(page).addSchema(returnedSchema).addSchema(schema);
     expect(ajv.validate(schema, framing)).toBe(true);
@@ -182,7 +182,7 @@ if (import.meta.vitest) {
   });
   it("ActorReturnResponseFraming keeps malformed bodies and incomplete authority failed", async () => {
     const api = await import("./🟦️.ts"); const { default: fixture } = await import("./🧪️fixture/🔣️.json");
-    const { default: returned } = await import("../🧪️fixture/🔣️.json");
+    const { default: returned } = await import("../🧫️fixture/🔣️.json");
     const reject = (bytes: readonly number[]) => {
       const parser = new api.ActorReturnResponseFraming();
       expect(() => { for (const byte of bytes) parser.push(byte); parser.finish(); }).toThrow();
@@ -216,7 +216,7 @@ if (import.meta.vitest) {
     const { default: schema } = await import("./🎟️credit/📋️metadata/📥️inbox/🧬️schema.json"); const { default: fixture } = await import("./🎟️credit/📋️metadata/📥️inbox/🧪️fixture/🔣️.json");
     const { default: Ajv } = await import("ajv"); const { default: ts } = await import("typescript"); const { readFileSync } = await import("node:fs");
     const validate = new Ajv({ strict: true }).compile(schema); expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-    const shardPath = new URL("../../🧵️shard-client/🟦️.ts", import.meta.url);
+    const shardPath = new URL("../../📮️shard-client/🟦️.ts", import.meta.url);
     const shard = ts.createSourceFile(shardPath.pathname, readFileSync(shardPath, "utf8"), ts.ScriptTarget.Latest, true);
     const totals = new Map<string, { bytes: bigint; slots: bigint; owners: bigint }>();
     for (const row of fixture.layouts) {
@@ -326,7 +326,7 @@ if (import.meta.vitest) {
     const { default: resident } = await import("../../../🌱️value/💾️resident/🧬️schema.json");
     const { default: Ajv } = await import("ajv"); const { default: ts } = await import("typescript"); const { readFileSync } = await import("node:fs");
     const ajv = new Ajv({ strict: true }).addSchema(resident); const validate = ajv.compile(schema); expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-    const paths = { output: "../../🪪️activation/🚪️instance/📥️output/🟦️.ts", shard: "../../🧵️shard-client/🟦️.ts", response: "./🟦️.ts", result: "../🟦️.ts" };
+    const paths = { output: "../../🪪️activation/🚪️instance/📥️output/🟦️.ts", shard: "../../📮️shard-client/🟦️.ts", response: "./🟦️.ts", result: "../🟦️.ts" };
     const totals = new Map<string, { bytes: bigint; slots: bigint; owners: bigint }>();
     for (const layout of fixture.layouts) {
       const path = paths[layout.source as keyof typeof paths]; const parsed = ts.createSourceFile(path, readFileSync(new URL(path, import.meta.url), "utf8"), ts.ScriptTarget.Latest, true);
@@ -354,9 +354,9 @@ if (import.meta.vitest) {
   it("ActorReturnResponse declaration matches strict schemas and independent envelope encoding", async () => {
     const { default: schema } = await import("./🧬️schema.json");
     const { default: fixture } = await import("./🧪️fixture/🔣️.json");
-    const { default: fixtureSchema } = await import("./🧪️schema/🔣️.json");
+    const { default: fixtureSchema } = await import("./📐️schema/🔣️.json");
     const { default: lifetime } = await import("../../🚪️lifetime/🧬️schema.json");
-    const { default: page } = await import("../../📄️page/🧬️schema.json");
+    const { default: page } = await import("../../📃️page/🧬️schema.json");
     const { default: returned } = await import("../🧬️schema.json");
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv({ strict: true }).addSchema(lifetime).addSchema(page).addSchema(returned).addSchema(schema);
@@ -375,10 +375,10 @@ if (import.meta.vitest) {
   it("ActorReturnResponseCredit declaration validates exact one-reply and retained-fault transitions", async () => {
     const { default: schema } = await import("./🎟️credit/🧬️schema.json");
     const { default: fixture } = await import("./🎟️credit/🧪️fixture/🔣️.json");
-    const { default: fixtureSchema } = await import("./🎟️credit/🧪️schema/🔣️.json");
+    const { default: fixtureSchema } = await import("./🎟️credit/📐️schema/🔣️.json");
     const { default: response } = await import("./🧬️schema.json");
     const { default: lifetime } = await import("../../🚪️lifetime/🧬️schema.json");
-    const { default: page } = await import("../../📄️page/🧬️schema.json");
+    const { default: page } = await import("../../📃️page/🧬️schema.json");
     const { default: returned } = await import("../🧬️schema.json");
     const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
     const ajv = new Ajv({ strict: true }).addSchema(lifetime).addSchema(page).addSchema(returned).addSchema(response).addSchema(schema);
@@ -461,8 +461,8 @@ if (import.meta.vitest) {
   it("ActorReturnResponse maximum page is exact and decoder rejects non-owning backings", async () => {
     const api = await import("./🟦️.ts");
     const { default: fixture } = await import("./🧪️fixture/🔣️.json");
-    const { default: returned } = await import("../🧪️fixture/🔣️.json");
-    const { createActorBytePage } = await import("../../📄️page/🟦️.ts");
+    const { default: returned } = await import("../🧫️fixture/🔣️.json");
+    const { createActorBytePage } = await import("../../📃️page/🟦️.ts");
     const row = returned.pageResultVectors[fixture.maximumPage.sharedPageVector]!;
     const bytes = Uint8Array.from({ length: row.pageLength }, (_, index) => (index * 37 + 11) % 256);
     const result = { kind: "page" as const, receipt: hydrate(row.receipt), page: createActorBytePage(bytes) };

@@ -1,5 +1,0 @@
-# 📥️ insert-page payload.
-input Pdf14PageInput { width: Float! height: Float! text: String! }
-input InsertPageInput {
-  index: Pdf14Index!
-  page: Pdf14PageInput!

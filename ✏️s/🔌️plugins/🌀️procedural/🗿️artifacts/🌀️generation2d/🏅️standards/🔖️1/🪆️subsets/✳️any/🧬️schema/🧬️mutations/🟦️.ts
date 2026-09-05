@@ -3,16 +3,16 @@
  * replace-widget/replace-synapse) have no TS triad leaves. `Generation2dMutation` carries only
  * `#[derive(dsl::Mutations)]` — no `#[serde(tag = ...)]` — so it serializes with serde's default
  * EXTERNALLY TAGGED shape: `{ "<PascalCaseVariantName>": { ...leaf-struct-fields } }`, confirmed by
- * the committed `🌱create-widget/🧪️tests/*​/🦠️mutation/🔣️.json` fixture
+ * the committed `🌱️create-widget/🧪️tests/*​/🦠️mutation/🔣️.json` fixture
  * (`{"CreateWidget":{"index":2,"widget":{...}}}`). */
-import type { ChangeSchema } from "./🔤change-schema/🦠️mutation/🟦️.ts";
+import type { ChangeSchema } from "./🔤️change-schema/🦠️mutation/🟦️.ts";
 import type { ClearWidgetLayout } from "./🧹clear-widget-layout/🦠️mutation/🟦️.ts";
-import type { ConnectSynapse } from "./🔗connect-synapse/🦠️mutation/🟦️.ts";
-import type { CreateWidget } from "./🌱create-widget/🦠️mutation/🟦️.ts";
+import type { ConnectSynapse } from "./🔗️connect-synapse/🦠️mutation/🟦️.ts";
+import type { CreateWidget } from "./🌱️create-widget/🦠️mutation/🟦️.ts";
 import type { DeleteWidget } from "./🗑️delete-widget/🦠️mutation/🟦️.ts";
 import type { DisconnectSynapse } from "./✂️disconnect-synapse/🦠️mutation/🟦️.ts";
-import type { MoveWidget } from "./📍move-widget/🦠️mutation/🟦️.ts";
-import type { UpdateCamera } from "./🎛set-camera/🦠️mutation/🟦️.ts";
+import type { MoveWidget } from "./📍️move-widget/🦠️mutation/🟦️.ts";
+import type { UpdateCamera } from "./🎛️set-camera/🦠️mutation/🟦️.ts";
 
 export type Generation2dMutation =
   | { CreateWidget: CreateWidget }

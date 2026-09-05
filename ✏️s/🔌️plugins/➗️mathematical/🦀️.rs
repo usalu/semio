@@ -37,6 +37,7 @@ pub async fn plugin() -> Result<Plugin<MathematicalApps>, semio_framework_plugin
     Plugin::<MathematicalApps>::builder("mathematical")
         .label("Mathematical")
         .version("0.1.0")
+        .package_id("semio:mathematical")
         .declare_artifact(crate::artifacts::equation::artifact())
         .editor_mutation_roster::<crate::editor::equation::EquationPlayApp>()
         .viewer_mutation_roster::<crate::viewer::equation::EquationViewer>()

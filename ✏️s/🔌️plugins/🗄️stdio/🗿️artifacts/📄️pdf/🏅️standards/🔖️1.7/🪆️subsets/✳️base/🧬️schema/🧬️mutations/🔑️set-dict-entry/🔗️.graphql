@@ -1,7 +1,0 @@
-# 🔑️ Direct set-dict-entry GraphQL payload.
-input SetDictEntryMutationInput {
-  id: String
-  path: [String!]
-  key: String
-  value: String
-}

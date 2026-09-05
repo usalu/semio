@@ -773,7 +773,7 @@ struct WorldEnvironmentRecord {
 
 //#region TerrainStyle
 /// 🌐️⛰️ `World3dScene.terrainJson` mirror — GIS-3D terrain style/source descriptor consumed by
-/// `WorldTerrainLayer` in the React reference. `color_ramp`/`min_zoom`/`max_zoom` are parsed but
+/// `🗺️WorldTerrainLayer` in the React reference. `color_ramp`/`min_zoom`/`max_zoom` are parsed but
 /// not branched on, mirroring the React reference (single hardcoded hypsometric ramp; zoom bounds
 /// fixed inside `framework_surface_terrain::tiles`) — not a gap, a faithful match of upstream.
 #[derive(Clone, Debug, Deserialize, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -7524,7 +7524,7 @@ fn step_world_placeholder_mesh(state: &mut World3dState) {
 
 //#region WorldMeshBuffers
 /// 🧱️ Infinite-owned flat render-buffer twin of the renderer's `WorldMeshData` (see
-/// `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️.tsx`
+/// `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx`
 /// ~line 98). Ephemeral view state, not document content: the document owns mesh content through
 /// the artifact system, this is only the wire shape the viewport deserializes and rasterizes.
 #[derive(Clone, Debug, PartialEq, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -11657,10 +11657,10 @@ mod tests {
                 && browser.contains("host.take_cursor_wake_directive().is_some()")
         }
 
-        let glue = include_str!("../../📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
-        let host = include_str!("../../📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🏠️os-host/🦀️.rs");
-        let native = include_str!("../../📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
-        let browser = include_str!("../../📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️browser-worker/🦀️.rs");
+        let glue = include_str!("../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
+        let host = include_str!("../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏠️os-host/🦀️.rs");
+        let native = include_str!("../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
+        let browser = include_str!("../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs");
         assert!(exact(glue, host, native, browser));
         assert!(!exact(&glue.replace("World3dBuildContext::new(runtime.world_cursor_wake_authority())", "World3dBuildContext::default()"), host, native, browser));
         for (name, start, end) in [
@@ -12929,8 +12929,8 @@ mod tests {
 
     #[test]
     fn renderer_world_consumers_use_only_fixed_intent_ingress() {
-        let glue = include_str!("../../📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
-        let shell = include_str!("../../📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🎯️targets/🧊️wgpu/🦀️.rs");
+        let glue = include_str!("../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
+        let shell = include_str!("../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs");
         for source in [glue, shell] {
             assert!(source.contains("enqueue_world3d_event"));
             assert!(!source.contains("handle_world3d_pointer_button"));

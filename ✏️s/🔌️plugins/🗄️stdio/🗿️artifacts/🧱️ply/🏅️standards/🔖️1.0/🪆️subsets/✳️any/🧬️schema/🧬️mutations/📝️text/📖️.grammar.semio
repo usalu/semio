@@ -1,0 +1,58 @@
+dialect grammar
+grammar stdio.ply.mutations
+start op
+
+# 🎫️26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION FG3: real one-line
+# `print_op`/`parse_op` form this artifact's hand-rolled `OpText` (../🦀️.rs
+# `print_ply_mutation`/`parse_ply_mutation`) emits — kebab-case keyword + space-separated
+# kebab-case `arg=value` tokens, one match arm per `PlyMutation` variant (no `DslVariants`
+# scaffolding — nothing here derives it, `#[derive(dsl::DslOps)]` is confirmed rejected, see the
+# module doc comment's real `cargo check` citation). This REPLACES the pre-Phase-2 placeholder
+# this file used to contain, which described a `serde_json::to_string`-shaped JSON object line —
+# stale since F6 already replaced the real `OpText`/`OpBinary` impls with this hand-rolled
+# grammar; the placeholder never matched what `print_op` actually emits.
+#
+# Reuses the sibling `../../🔺️diff/📝️text/📖️.grammar.semio`'s own `ply-value`/
+# `ply-property`/`element-value`/`row-value`/`format-tag` shapes verbatim (this artifact's own
+# hand-rolled Rust codec reuses `PlyDiff`'s grammar primitives the identical way — see
+# `../🦀️.rs`'s own module doc comment) — RESTATED here rather than referenced, per the
+# recipe's own "cross-artifact/cross-facet `use` doesn't resolve at walk time yet" rule (§2.1;
+# same honest-restatement precedent zip's OPC family and svg's own xml-derived grammar establish).
+comment none
+
+op = set-snapshot-op | set-format-op | insert-comment-op | remove-comment-op | add-element-op | remove-element-op | insert-row-op | remove-row-op | set-row-property-op
+
+set-snapshot-op = "set-snapshot" "snapshot" "=" snapshot-value
+set-format-op = "set-format" "format" "=" format-tag
+insert-comment-op = "insert-comment" "index" "=" INT "comment" "=" hex
+remove-comment-op = "remove-comment" "index" "=" INT
+add-element-op = "add-element" "index" "=" INT "element" "=" element-value
+remove-element-op = "remove-element" "name" "=" hex
+insert-row-op = "insert-row" "element-name" "=" hex "index" "=" INT "row" "=" row-value
+remove-row-op = "remove-row" "element-name" "=" hex "index" "=" INT
+set-row-property-op = "set-row-property" "element-name" "=" hex "row-index" "=" INT "property-name" "=" hex "value" "=" ply-value
+
+format-tag = "a" | "l" | "b"
+
+# `PlySnapshot` — positional `[schema,format,[comments],[elements]]` tuple — `enc_snapshot`/
+# `dec_snapshot` (../🦀️.rs).
+snapshot-value = "[" hex "," format-tag "," "[" comment-list? "]" "," "[" element-list? "]" "]"
+comment-list = hex {"," hex}*
+element-list = element-value {"," element-value}*
+
+# `PlyElement` — positional `[name,count,[properties],[rows]]` tuple.
+element-value = "[" hex "," INT "," "[" property-list? "]" "," "[" row-list? "]" "]"
+property-list = ply-property {"," ply-property}*
+ply-property = "S" "[" hex "," scalar-kind "]" | "L" "[" hex "," scalar-kind "," scalar-kind "]"
+scalar-kind = "c" | "C" | "s" | "w" | "i" | "u" | "f" | "d"
+
+row-list = row-value {"," row-value}*
+row-value = "[" value-list? "]"
+value-list = ply-value {"," ply-value}*
+
+number = INT | FLOAT
+ply-value = "c" "[" INT "]" | "C" "[" INT "]" | "s" "[" INT "]" | "w" "[" INT "]" | "i" "[" INT "]" | "u" "[" INT "]" | "f" "[" number "]" | "d" "[" number "]" | "L" "[" value-list? "]"
+
+# `hex` (bare `hex`, deliberately NOT defined as a production) is the framework's built-in `hex`
+# MACRO — see the sibling diff grammar's own doc comment, and `📖️grammar-recipe.md` §1.3(f)/§3
+# pitfall #2, for why a hand-rolled `{INT|IDENT}*` production is wrong here.

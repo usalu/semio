@@ -11,7 +11,7 @@
         "repository-tooling"
       ],
       "users": [
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/package.json"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false
     },
@@ -159,7 +159,7 @@
       "users": [
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json"
       ],
       "productionReachable": true
     },
@@ -240,7 +240,7 @@
         "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
         "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/package.json"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false
     },
@@ -291,8 +291,8 @@
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false
@@ -312,8 +312,8 @@
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false
@@ -329,7 +329,7 @@
         "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
         "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json"
       ],
       "productionReachable": false
     },
@@ -361,7 +361,7 @@
         "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
         "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/package.json"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false
     },
@@ -619,7 +619,7 @@
         "production-runtime"
       ],
       "users": [
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json"
       ],
       "productionReachable": true
     },
@@ -749,7 +749,7 @@
       ],
       "users": [
         "package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/package.json"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false
     },
@@ -779,8 +779,8 @@
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": true
@@ -799,8 +799,8 @@
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": true
@@ -905,7 +905,7 @@
       "users": [
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json"
       ],
       "productionReachable": true,
       "oracleIds": [
@@ -990,10 +990,10 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/package.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
@@ -1030,7 +1030,7 @@
         "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false
@@ -1066,10 +1066,10 @@
         "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/package.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json"
       ],
@@ -1428,7 +1428,7 @@
         "production-runtime"
       ],
       "users": [
-        "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
     },
@@ -1458,7 +1458,7 @@
         "🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
     },
@@ -1471,7 +1471,7 @@
       ],
       "users": [
         "🌎️hub/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/🔢️hash/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": false
     },
@@ -1484,11 +1484,11 @@
       ],
       "users": [
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/🖱️ui/🖼️render/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
     },
@@ -1555,7 +1555,7 @@
       "users": [
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️header/🏭️generator/🦀️engine/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🔬️probes/🦀️oracle-probe/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🔬️probes/🦀️oracle-probe/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🔬️probes/🦀️oracle-probe/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🦀️note-oracle-codec/Cargo.toml"
       ],
@@ -1620,7 +1620,7 @@
       ],
       "users": [
         "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
     },
@@ -1632,9 +1632,9 @@
         "test-oracle"
       ],
       "users": [
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🔬️probes/🦀️reader/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️base/🏭️generator/🦀️engine/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️base/🔬️probes/🦀️extension-reader/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🔬️probes/🦀️reader/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/🦀️engine/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔬️probes/🦀️extension-reader/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": false,
@@ -1655,8 +1655,8 @@
         "test-oracle"
       ],
       "users": [
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🔬️probes/🦀️resource-reader/Cargo.toml",
-        "🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/Cargo.toml"
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔬️probes/🦀️resource-reader/Cargo.toml",
+        "🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": false,
       "oracleIds": [
@@ -1705,10 +1705,10 @@
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🏭️generator/🦀️jpeg-jfif-codec/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/🦀️image-bmp-codec/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/📐️intrinsic-size/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🔨️modules/📏️intrinsic-size/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true,
       "oracleIds": [
@@ -1738,7 +1738,7 @@
         "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
     },
@@ -1808,18 +1808,18 @@
         "test-oracle"
       ],
       "users": [
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🏭️generator/🦀️lopdf-engine/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️base/🏭️generator/🦀️lopdf-engine/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🏭️generator/🦀️lopdf-engine/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🏭️generator/🦀️lopdf-engine/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/🦀️engine/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/🦀️lopdf-engine/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🏭️generator/🦀️lopdf-engine/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🏭️generator/🦀️lopdf-engine/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🏭️generator/🦀️lopdf-engine/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🏭️generator/🦀️lopdf-engine/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🏭️generator/🦀️lopdf-engine/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🔬️probes/🦀️oracle-probe/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🏭️generator/🦀️lopdf-engine/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️base/🏭️generator/🦀️lopdf-engine/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🏭️generator/🦀️lopdf-engine/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🏭️generator/🦀️lopdf-engine/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🏭️generator/🦀️engine/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🏭️generator/⚖️lopdf-engine/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🏭️generator/🦀️lopdf-engine/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🏭️generator/🦀️lopdf-engine/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/🦀️lopdf-engine/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/🦀️lopdf-engine/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/🦀️lopdf-engine/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🔬️probes/🦀️oracle-probe/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🦀️note-oracle-codec/Cargo.toml"
       ],
@@ -1910,7 +1910,7 @@
         "production-runtime"
       ],
       "users": [
-        "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
     },
@@ -1923,7 +1923,7 @@
       ],
       "users": [
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/🖱️ui/🖼️render/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
     },
@@ -1993,7 +1993,7 @@
         "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/🦀️png-codec/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/🖼️pixels/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true,
@@ -2030,10 +2030,10 @@
       ],
       "users": [
         "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/🦀️oracle-probe/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️base/🏭️generator/🦀️quick-xml-svg-codec/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✳️base/🏭️generator/🦀️quick-xml-oracle-codec/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🏭️generator/🦀️svg-engine/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🔬️probes/🦀️oracle-probe/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/🦀️quick-xml-svg-codec/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🏭️generator/🦀️quick-xml-oracle-codec/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏗️generator/🖼️svg-engine/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🔬️probes/🦀️oracle-probe/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🦀️note-oracle-codec/Cargo.toml"
       ],
@@ -2084,9 +2084,9 @@
       ],
       "users": [
         "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
     },
@@ -2098,7 +2098,7 @@
         "production-runtime"
       ],
       "users": [
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
@@ -2123,7 +2123,7 @@
         "test-oracle"
       ],
       "users": [
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️hdrl/🏭️generator/🦀️riff-avi-codec/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/🦀️riff-avi-codec/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": false,
@@ -2259,10 +2259,10 @@
         "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/📐️intrinsic-size/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🔨️modules/📏️intrinsic-size/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/Cargo.toml",
@@ -2275,8 +2275,8 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/Cargo.toml",
@@ -2284,7 +2284,7 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️scale/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/Cargo.toml"
       ],
@@ -2331,11 +2331,11 @@
         "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️base/🏭️generator/🦀️serde-json-engine/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🏭️generator/🦀️json-engine/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏗️generator/🦀️json-engine/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🏭️generator/🦀️json-engine/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🏭️generator/🦀️json-engine/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🏭️generator/🦀️json-engine/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🏭️generator/🦀️json-engine/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏗️generator/🔣️json-engine/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/🦀️json-engine/Cargo.toml",
         "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/Cargo.toml",
@@ -2352,14 +2352,14 @@
         "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/📐️intrinsic-size/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🔨️modules/📏️intrinsic-size/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/🖱️ui/🖼️render/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust/Cargo.toml",
@@ -2373,8 +2373,8 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/Cargo.toml",
@@ -2382,7 +2382,7 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️scale/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/Cargo.toml"
       ],
@@ -2472,7 +2472,7 @@
       ],
       "users": [
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/🖱️ui/🖼️render/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
     },
@@ -2503,7 +2503,7 @@
       ],
       "users": [
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/🖱️ui/🖼️render/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
     },
@@ -2515,8 +2515,8 @@
         "test-oracle"
       ],
       "users": [
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️document/🏭️generator/🦀️tiff-ifd-codec/Cargo.toml",
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️document/🔬️probes/🦀️byte-order-reader/Cargo.toml"
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/🦀️tiff-ifd-codec/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔬️probes/🦀️byte-order-reader/Cargo.toml"
       ],
       "productionReachable": false,
       "oracleIds": [
@@ -2533,7 +2533,7 @@
         "production-runtime"
       ],
       "users": [
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
@@ -2569,7 +2569,7 @@
         "🌎️hub/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml",
@@ -2651,9 +2651,9 @@
         "test-runner"
       ],
       "users": [
-        "🧰️framework/🔨️modules/📐️intrinsic-size/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🔨️modules/📏️intrinsic-size/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🔤️typeset/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
@@ -2668,7 +2668,7 @@
       "users": [
         "🧰️framework/🔨️modules/🖌️raster/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
     },
@@ -2703,7 +2703,7 @@
         "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
     },
@@ -2716,7 +2716,7 @@
         "test-runner"
       ],
       "users": [
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/Cargo.toml"
       ],
@@ -2730,7 +2730,7 @@
         "production-runtime"
       ],
       "users": [
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
@@ -2749,7 +2749,7 @@
         "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
     },
@@ -2763,7 +2763,7 @@
       "users": [
         "🧰️framework/🔨️modules/🖌️raster/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
     },
@@ -2775,7 +2775,7 @@
         "production-runtime"
       ],
       "users": [
-        "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
     },
@@ -2789,7 +2789,7 @@
       "users": [
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
     },
@@ -2802,8 +2802,8 @@
       ],
       "users": [
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️scale/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
     },

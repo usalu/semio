@@ -9,8 +9,8 @@ import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runV
 type AdminEntryGraph = { readonly version: number; readonly html: string; readonly manifest: string; readonly entry: string; readonly laws: readonly string[] };
 
 function verifyAdminEntryGraph(root: string): void {
-  const fixture = JSON.parse(readFileSync(resolve(root, "🧪️tests/🔣️entry-graph.json"), "utf8")) as AdminEntryGraph;
-  const schema = JSON.parse(readFileSync(resolve(root, "🧪️tests/🔣️entry-graph.schema.json"), "utf8")) as { readonly required: readonly string[]; readonly properties: { readonly version: { readonly const: number }; readonly laws: { readonly minItems: number; readonly maxItems: number } } };
+  const fixture = JSON.parse(readFileSync(resolve(root, "🧪️tests/🚪️entry-graph.json"), "utf8")) as AdminEntryGraph;
+  const schema = JSON.parse(readFileSync(resolve(root, "🧪️tests/📐️entry-graph.schema.json"), "utf8")) as { readonly required: readonly string[]; readonly properties: { readonly version: { readonly const: number }; readonly laws: { readonly minItems: number; readonly maxItems: number } } };
   assert.equal(fixture.version, schema.properties.version.const);
   assert.deepEqual(Object.keys(fixture).sort(), [...schema.required].sort());
   assert.equal(fixture.laws.length, schema.properties.laws.minItems);
@@ -41,8 +41,8 @@ function verifyAdminEntryGraph(root: string): void {
 type AdminStylesheetGraph = { readonly version: number; readonly stylesheet: string; readonly imports: readonly string[]; readonly sources: readonly string[]; readonly shared: { readonly manifest: string; readonly export: string; readonly canonical: string }; readonly laws: readonly string[] };
 
 function verifyAdminStylesheetGraph(root: string): void {
-  const fixture = JSON.parse(readFileSync(resolve(root, "🧪️tests/🔣️stylesheet-graph.json"), "utf8")) as AdminStylesheetGraph;
-  const schema = JSON.parse(readFileSync(resolve(root, "🧪️tests/🔣️stylesheet-graph.schema.json"), "utf8")) as { readonly required: readonly string[]; readonly properties: { readonly version: { readonly const: number }; readonly laws: { readonly minItems: number; readonly maxItems: number } } };
+  const fixture = JSON.parse(readFileSync(resolve(root, "🧪️tests/🎨️stylesheet-graph.json"), "utf8")) as AdminStylesheetGraph;
+  const schema = JSON.parse(readFileSync(resolve(root, "🧪️tests/🧵️stylesheet-graph.schema.json"), "utf8")) as { readonly required: readonly string[]; readonly properties: { readonly version: { readonly const: number }; readonly laws: { readonly minItems: number; readonly maxItems: number } } };
   assert.equal(fixture.version, schema.properties.version.const);
   assert.deepEqual(Object.keys(fixture).sort(), [...schema.required].sort());
   assert.equal(fixture.laws.length, schema.properties.laws.minItems);

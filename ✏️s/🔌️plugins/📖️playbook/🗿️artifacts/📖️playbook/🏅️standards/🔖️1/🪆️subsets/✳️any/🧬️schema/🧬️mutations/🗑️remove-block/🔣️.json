@@ -5,7 +5,7 @@
   "displayName": "Remove Block",
   "emoji": "🗑️",
   "aggregateVariant": "RemoveBlock",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "remove-block",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

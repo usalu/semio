@@ -1,8 +1,0 @@
-syntax = "proto3";
-package semio.s_stdio_pdf_1_7_vt.mutation.remove_media_annotation;
-
-// ⏹️ Direct remove-media-annotation protobuf payload.
-message RemoveMediaAnnotationMutation {
-  string subtype = 1;
-  string title = 2;
-}

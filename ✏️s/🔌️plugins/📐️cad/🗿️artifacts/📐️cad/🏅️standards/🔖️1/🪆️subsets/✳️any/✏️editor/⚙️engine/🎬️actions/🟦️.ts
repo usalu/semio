@@ -10,7 +10,7 @@ import { AnchorAttachment, AnchorRecord, AnchorRef, EdgeRef, EffectSpec, Expr, E
 import { capabilityActionSpecJson, ensureTypologyObjectFromCreateDiff } from "../🧬️typology/🟦️.ts";
 import { EMPTY_MODEL_DIFF, EdgeRecordDiff, KernelQueryContext, ModelDiff, SpatialKernel, SpatialPreviewKernel, VertexRecordDiff, isEmptyModelDiff } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
 import { modelDefinitionActionCatalog } from "../📔️registry/🟦️.ts";
-import type { InteractionRuntime } from "../📄️artifact/🟦️.ts";
+import type { InteractionRuntime } from "../🗿️artifact/🟦️.ts";
 
 
 
@@ -1874,7 +1874,7 @@ export function resolveDisplay(spec: InteractionSpec, state: string, context: Re
 // #endregion 📦️🎬️actions
 
 // #region 🧪️Tests
-import { buildBoxInteractionSpec } from "../📄️artifact/🟦️.ts";
+import { buildBoxInteractionSpec } from "../🗿️artifact/🟦️.ts";
 
 const __actionsTestRuntime = import.meta.vitest ? await import("../🏃️runtime/🟦️.ts") : null;
 const __actionsTestKernel = import.meta.vitest ? await import("../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️.ts") : null;

@@ -1,4 +1,0 @@
-# 🧺️ Direct remove-font-file GraphQL payload.
-input RemoveFontFileMutationInput {
-  descriptorOrdinal: Int!
-}

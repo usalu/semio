@@ -1,0 +1,33 @@
+module Stdio_dwg_ac1024_inference;
+
+type Varint = unit {
+    octets: uint8[] &until(($$ & 0x80) == 0);
+};
+
+type Symbol = unit {
+    length: Varint;
+    text: bytes;
+};
+
+type Document = unit {
+    symbol_count: Varint;
+    symbols: Symbol[];
+    root: RecordFields;
+};
+
+type RecordFields = unit {
+    count: Varint;
+    fields: RecordField[];
+};
+
+type RecordField = unit {
+    ordinal: Varint;
+    value: FieldValue;
+};
+
+type FieldValue = unit {
+    tag: uint8;
+    integer: Varint &if=(tag == 0x04 || tag == 0x06);
+    inline_text: Symbol &if=(tag == 0x07);
+    record: RecordFields &if=(tag == 0x0d);
+};

@@ -2,12 +2,16 @@
 
 use super::*;
 
-#[path = "🌳️typed/🦀️component.rs"]
+#[path = "🌳️typed/🧱️component.rs"]
 mod typed;
 pub(crate) use typed::{UiTypedRetire, UiTypedRetirementCursor};
 #[path = "📮️handback/🦀️.rs"]
 mod handback;
 pub(crate) use handback::{UiArenaHandback, UiArenaHandbacks};
+
+#[path = "🌲️built/🦀️.rs"]
+mod built;
+pub use built::BuiltTreeRetirement;
 
 static UI_VALUE_HANDBACKS: UiArenaHandbacks<UI_VALUE_ADMISSION_SLOTS, 4> = UiArenaHandbacks::new();
 

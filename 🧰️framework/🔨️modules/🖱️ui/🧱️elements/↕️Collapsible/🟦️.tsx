@@ -8,7 +8,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { Slot } from "../../🔨️modules/🏷️class-name-composition/🟦️.tsx";
+import { Slot } from "../../🔨️modules/🏷️class-name-composition/🪆️slot.tsx";
 import { interactiveControlTransitionClass, interactiveHoverClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
 // #endregion 🔌️Adapters
 

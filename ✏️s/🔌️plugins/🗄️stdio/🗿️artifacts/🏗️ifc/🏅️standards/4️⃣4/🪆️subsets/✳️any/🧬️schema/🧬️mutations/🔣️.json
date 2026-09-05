@@ -1,0 +1,18 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.ifc/mutations.json",
+  "title": "IfcMutation",
+  "type": "object",
+  "required": ["mutation"],
+  "oneOf": [
+    { "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "snapshot.json" } }, "required": ["snapshot"] },
+    { "properties": { "mutation": { "const": "setFileDescription" }, "values": { "type": "array", "items": { "$ref": "snapshot.json#/definitions/IfcValue" } } }, "required": ["values"] },
+    { "properties": { "mutation": { "const": "setFileName" }, "values": { "type": "array", "items": { "$ref": "snapshot.json#/definitions/IfcValue" } } }, "required": ["values"] },
+    { "properties": { "mutation": { "const": "setFileSchema" }, "values": { "type": "array", "items": { "$ref": "snapshot.json#/definitions/IfcValue" } } }, "required": ["values"] },
+    { "properties": { "mutation": { "const": "insertEntity" }, "index": { "type": "integer", "minimum": 0 }, "entity": { "$ref": "snapshot.json#/definitions/IfcEntity" } }, "required": ["index", "entity"] },
+    { "properties": { "mutation": { "const": "removeEntity" }, "id": { "type": "integer", "minimum": 0 } }, "required": ["id"] },
+    { "properties": { "mutation": { "const": "setEntityName" }, "id": { "type": "integer", "minimum": 0 }, "name": { "type": "string" } }, "required": ["id", "name"] },
+    { "properties": { "mutation": { "const": "setEntityArg" }, "id": { "type": "integer", "minimum": 0 }, "index": { "type": "integer", "minimum": 0 }, "value": { "$ref": "snapshot.json#/definitions/IfcValue" } }, "required": ["id", "index", "value"] },
+    { "properties": { "mutation": { "const": "insertEntityArg" }, "id": { "type": "integer", "minimum": 0 }, "index": { "type": "integer", "minimum": 0 }, "value": { "$ref": "snapshot.json#/definitions/IfcValue" } }, "required": ["id", "index", "value"] },
+    { "properties": { "mutation": { "const": "removeEntityArg" }, "id": { "type": "integer", "minimum": 0 }, "index": { "type": "integer", "minimum": 0 } }, "required": ["id", "index"] }
+  ]
+}

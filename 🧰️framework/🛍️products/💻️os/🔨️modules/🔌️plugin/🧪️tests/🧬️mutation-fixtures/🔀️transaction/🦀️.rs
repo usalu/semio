@@ -201,6 +201,7 @@ async fn transaction_manifest() -> crate::app::App {
 struct TxnApp;
 
 impl ArtifactApp for TxnApp {
+    const DIALECT: crate::Dialect = crate::Dialect { artifact_kind: "s.test.transaction", standard: crate::StandardId("1"), subset: crate::SubsetId::ANY };
     const APP_ID: &'static str = "testkit-txn";
     const DOCUMENT_SCHEMA: &'static str = "semio.testkit-txn/v1";
     type Snapshot = TxnSnapshot;
@@ -279,6 +280,7 @@ fn close_transaction_store_roots(app: &mut VcsArtifactApp<TxnApp>) {
         if app.close_terminal_is_empty() { return; }
         match app.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("fixture app close") {
             crate::app::PluginCloseStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES),
+            crate::app::PluginCloseStep::AwaitingInput { reason } => panic!("fixture close awaited input: {reason}"),
             crate::app::PluginCloseStep::Blocked { reason } => panic!("fixture close blocked: {reason}"),
             crate::app::PluginCloseStep::Complete => break,
         }

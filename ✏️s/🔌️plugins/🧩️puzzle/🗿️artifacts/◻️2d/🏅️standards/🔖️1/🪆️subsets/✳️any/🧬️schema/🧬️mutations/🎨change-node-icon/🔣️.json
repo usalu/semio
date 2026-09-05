@@ -5,7 +5,7 @@
   "displayName": "Change Node Icon",
   "emoji": "🎨",
   "aggregateVariant": "ChangeNodeIcon",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-node-icon",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

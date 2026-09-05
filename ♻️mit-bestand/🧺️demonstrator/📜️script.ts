@@ -2,10 +2,10 @@
 /** 🧭️ `@semio-tech/mit-bestand-demonstrator` task router: `bun ./📜️script.ts <dev|build> [args…]`. */
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCmd, runCmdStatus, runViteBunxDev, runVitest, spawnDaemon, waitForHttpUrl, withViteConfigLoader } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { buildEngineWasm, buildPlugins, ensurePluginRegistry } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts";
-import { PLAYGROUND_BUILD_TARGETS } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts";
-import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️plugins.ts";
-import { DEMONSTRATOR_PANES, demonstratorPaneRuntimeVariant } from "./🟦️brand.ts";
+import { buildEngineWasm, buildPlugins, ensurePluginRegistry } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts";
+import { PLAYGROUND_BUILD_TARGETS } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts";
+import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
+import { DEMONSTRATOR_PANES, demonstratorPaneRuntimeVariant } from "./🪧️brand.ts";
 
 const demonstratorRoot = import.meta.dir;
 
@@ -141,7 +141,7 @@ class TestScript extends BundleScript {
       await this.runAcceptancePlaywright();
       return;
     }
-    runVitest(this.root, rest, "🧪️vitest.config.ts");
+    runVitest(this.root, rest, "⚡️vitest.config.ts");
   }
 
   /** 🎪️ Demonstrator-local analog of root `📜️script.ts`'s `runStorybookPlaywright()` — the demonstrator is
@@ -159,7 +159,7 @@ class TestScript extends BundleScript {
     });
     try {
       await waitForHttpUrl(baseUrl, 180_000);
-      runCmd("bunx", ["playwright", "test", "--config", join(this.root, "🧪️playwright.config.ts")], {
+      runCmd("bunx", ["playwright", "test", "--config", join(this.root, "🎭️playwright.config.ts")], {
         cwd: this.repoRoot,
         env: {
           ...process.env,

@@ -1,0 +1,11 @@
+# 💡️ enclosed-volume glTF inference leaf GraphQL facet.
+type GltfEnclosedVolumeInferenceV1 {
+  id: ID!
+  algorithmVersion: Int!
+  cacheKey: String!
+  validity: String!
+  quality: String!
+  diagnostics: [String!]!
+  provenance: [String!]!
+  valueJson: String!
+}

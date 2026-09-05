@@ -1,7 +1,7 @@
 use super::*;
 
 //#region 🧪️BindingCopyLaws
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap() }
 
 fn source(count: usize) -> crate::UiNodeBindings {
     let scope = fixture()["scope"].as_str().unwrap().to_owned();

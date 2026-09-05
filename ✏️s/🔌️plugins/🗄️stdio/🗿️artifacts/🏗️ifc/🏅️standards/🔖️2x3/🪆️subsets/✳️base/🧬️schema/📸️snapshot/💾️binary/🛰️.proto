@@ -1,3 +1,0 @@
-syntax = "proto3";
-package semio.stdio_ifc_2x3.snapshot_binary;
-message Artifact { string schema = 1; bytes payload = 2; }

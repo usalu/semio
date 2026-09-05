@@ -5,7 +5,7 @@
   "displayName": "Change Pile N Profiles",
   "emoji": "🌲",
   "aggregateVariant": "ChangePileNProfiles",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

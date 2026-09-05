@@ -49,23 +49,23 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    ArtifactDefinition::new(ArtifactIdentity::parse("s.space")?)
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.space.space")?)
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.space.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.space.space")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.space.space")?)?,
+            ArtifactCapability::new(ArtifactIdentity::parse("s.space.space.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.space.space")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.space.space")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.space.composer.native")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.space.space.composer.native")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.space.space@1/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.space.space@1/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.space.codec.document")?, ArtifactCapabilityKind::codec())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.space.space.codec.document")?, ArtifactCapabilityKind::codec())
                 .descriptor(b"s.space:sspace")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "s.space")?)?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "sspace")?)?,
+                .claim(ArtifactIdentityClaim::codec_extension("s.space", "sspace")?)?,
         )?
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.space.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Artifacts")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Artifacts")?)?)?
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.space.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Artefakte")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Artefakte")?)?)
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.space.space.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Artifacts")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Artifacts")?)?)?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.space.space.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Artefakte")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Artefakte")?)?)
 }
 
 /// 🔖️ Assembles s.space's typed runtime declaration.

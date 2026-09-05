@@ -14,7 +14,7 @@
 //!   a landing pad rather than a live path: the mounted host (`🖥️host/🦀️.rs`'s
 //!   `WasmtimeRuntime`) answers every `host-async` import with a typed `host-async.poll-backed`
 //!   fault, because a poll-shaped turn has no point at which such a future could resolve. The
-//!   runtime that serves them for real is built on `🖥️host/⏳️imports/🦀️.rs`'s `AsyncActorHostState`.
+//!   runtime that serves them for real is built on `🖥️host/📥️imports/🦀️.rs`'s `AsyncActorHostState`.
 //!
 //! Both arms build/consume the SAME `*-params` records `effects.wit`/`host-async` share via
 //! `use effects.{...}` — the host side's `🖥️host/🦀️schema-parity.rs` (4/4) verifies this

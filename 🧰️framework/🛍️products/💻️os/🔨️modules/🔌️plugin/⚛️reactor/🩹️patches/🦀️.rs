@@ -1075,7 +1075,7 @@ mod tests {
 
     #[test]
     fn mounted_output_admission_cancel_and_drop_keep_the_original_close_generation() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️fixture/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧫️fixture/🔣️.json")).unwrap();
         let fixture = &fixture["cancelledAdmission"];
         for drop_grant in [false, true] {
             let tracker = PatchTracker::new();
@@ -1095,7 +1095,7 @@ mod tests {
 
     #[test]
     fn mounted_output_admission_refuses_before_tree_when_shared_output_pool_is_full() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️fixture/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧫️fixture/🔣️.json")).unwrap();
         let mut outputs = semio_framework_ui_runtime::SurfaceReconcileOutputs::default();
         let mut reservations = Vec::new();
         for generation in 1..=fixture["entrySlots"].as_u64().unwrap() {
@@ -1115,7 +1115,7 @@ mod tests {
 
     #[test]
     fn mounted_output_admission_partial_producer_step_unwind_retains_original_slot_and_box() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️fixture/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧫️fixture/🔣️.json")).unwrap();
         let tracker = PatchTracker::new();
         reserve(&tracker, ui_contract::SurfaceId::try_from("72:producer-unwind").unwrap()).unwrap().commit_source(leaf("root", "owned-é").root).unwrap();
         let (index, rejected_index, generation, pointer) = {
@@ -1141,7 +1141,7 @@ mod tests {
 
     #[test]
     fn mounted_output_admission_incomplete_producer_sources_preserve_remaining_owners() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️fixture/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧫️fixture/🔣️.json")).unwrap();
         let tracker = PatchTracker::new();
         reserve(&tracker, ui_contract::SurfaceId::try_from("73:producer-source").unwrap()).unwrap().commit_source(leaf("owned-root", "é").root).unwrap();
         let (index, generation, pointer, reconciler) = {
@@ -1175,7 +1175,7 @@ mod tests {
 
     #[test]
     fn mounted_output_admission_direct_receiver_preserves_captured_lifetime_generation_and_callback_roots() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️fixture/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧫️fixture/🔣️.json")).unwrap();
         let law = &fixture["capturedLifetime"];
         let instance = law["instance"].as_u64().unwrap() as u32;
         let key = NativeCloseKey::fixture(instance, law["original"].as_u64().unwrap());
@@ -1237,7 +1237,7 @@ mod tests {
 
     #[test]
     fn mounted_output_admission_concurrent_trackers_share_one_fixed_pool_without_overadmission() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️fixture/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧫️fixture/🔣️.json")).unwrap();
         let law = &fixture["concurrentAdmission"];
         let mut occupied = SurfaceReconcileOutputs::default();
         let mut reservations = Vec::new();
@@ -1326,7 +1326,7 @@ mod tests {
             }
             builder.try_children(value["children"].as_array().into_iter().flatten().map(row)).ok().unwrap().try_build().unwrap()
         }
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️document-surface.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/📃️document-surface.json")).unwrap();
         assert_eq!(ui_contract::UI_NODE_BINDINGS as u64, fixture["limits"]["nodeBindings"].as_u64().unwrap());
         assert_eq!(semio_framework_ui_runtime::SurfaceReconcileLimits::default().max_bytes as u64, fixture["limits"]["surfaceBytes"].as_u64().unwrap());
         assert_eq!(semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES as u64, fixture["limits"]["pageBytes"].as_u64().unwrap());
@@ -1354,7 +1354,7 @@ mod tests {
     #[test]
     fn mounted_settings_controls_publish_with_authored_fields() {
         use ui_contract::{Buildable, HasBase, HasChildren};
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️settings-surface.json")).expect("language-neutral settings");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🎚️settings-surface.json")).expect("language-neutral settings");
         let fields = fixture["fields"].as_array().unwrap();
         let children = fields.iter().map(|field| {
             let id = field["id"].as_str().unwrap();
@@ -1387,7 +1387,7 @@ mod tests {
     #[test]
     fn mounted_catalogue_publishes_every_section_beyond_thirty_two_nodes() {
         use ui_contract::{Buildable, HasBase, HasChildren};
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️catalogue-surface.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🗂️catalogue-surface.json")).unwrap();
         let rows = fixture["rowsPerSection"].as_u64().unwrap();
         let mut expected = std::collections::BTreeSet::new();
         let sections = fixture["sections"].as_array().unwrap().iter().map(|section| {
@@ -1428,7 +1428,7 @@ mod tests {
 
     #[test]
     fn mounted_catalogue_reports_producer_failure_once_before_cleanup() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️catalogue-surface.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🗂️catalogue-surface.json")).unwrap();
         let failure = &fixture["failure"];
         let key = failure["key"].as_str().unwrap();
         let mut root = leaf("catalogue", "Catalogue").root;
@@ -1452,7 +1452,7 @@ mod tests {
 
     #[test]
     fn mounted_catalogue_reports_reconcile_capacity_without_leaking_owners() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️catalogue-surface.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🗂️catalogue-surface.json")).unwrap();
         let failure = &fixture["capacityFailure"];
         assert_eq!(ui_contract::UI_DOCUMENT_NODES as u64, failure["nodeLimit"].as_u64().unwrap());
         let mut root = leaf("catalogue", "Catalogue").root;
@@ -1482,7 +1482,7 @@ mod tests {
     #[test]
     fn mounted_sources_publish_every_window_and_panel_tree() {
         use ui_contract::{Buildable, HasBase, HasChildren};
-        let fixtures: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️mounted-surfaces.json")).expect("language-neutral surface fixtures");
+        let fixtures: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🪟️mounted-surfaces.json")).expect("language-neutral surface fixtures");
         let fixtures = fixtures.as_array().expect("surface list");
         let tracker = PatchTracker::new();
         for fixture in fixtures {
@@ -1595,7 +1595,7 @@ mod tests {
 
     #[test]
     fn mounted_reservation_precedes_tree_and_cap_plus_one_returns_exact_owner() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️fixture/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧫️fixture/🔣️.json")).unwrap();
         let law = &fixture["residentCapacity"];
         let aggregate = semio_framework_ui_runtime::SURFACE_RECONCILE_AGGREGATE_BYTES;
         let limits = semio_framework_ui_runtime::SurfaceReconcileLimits::default();
@@ -1718,7 +1718,7 @@ mod tests {
 
     #[test]
     fn close_retires_ready_deferred_unadmitted_active_and_terminal_owners_without_stale_publish() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️surface-close.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🚪️surface-close.json")).unwrap();
         let instance = fixture["instance"].as_u64().unwrap() as u32;
         let surface = |key: &str| fixture["surfaces"][key].as_str().unwrap();
         let tracker = PatchTracker::new();

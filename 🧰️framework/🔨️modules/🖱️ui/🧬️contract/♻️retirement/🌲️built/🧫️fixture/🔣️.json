@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "grants": [1, 64, 4096],
+  "maximumPages": 384,
+  "payloadFields": ["key", "component", "layout", "style", "activity", "disabled", "accessibility", "bindings", "menu"],
+  "stackOrder": ["rejected_children", "children"],
+  "chain": { "pages": 384, "nodes": 385, "ordinaryPages": 192, "rejectedPages": 192, "observerDepth": 64 },
+  "foreignPage": { "ownedPages": 383, "queuedPages": 1, "cursor": 0, "nodes": 1 },
+  "binding": { "trigger": "activate", "action": { "scope": "s", "name": "n", "version": 1 }, "args": { "x": ["🌊"] }, "capability": "c" },
+  "menu": { "id": "m", "args": { "x": ["🌊"] } },
+  "extraPayloadBytes": 30,
+  "ownership": { "zeroGrantAdvances": false, "contentionWaits": false, "globalQueueAdvances": false, "foreignOwnerConsumed": false, "ordinaryAndRejectedRetired": true, "partialDropCompletes": false, "safeAbandon": false }
+}

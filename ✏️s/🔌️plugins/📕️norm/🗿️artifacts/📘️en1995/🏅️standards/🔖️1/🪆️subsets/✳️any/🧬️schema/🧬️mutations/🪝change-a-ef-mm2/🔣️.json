@@ -5,7 +5,7 @@
   "displayName": "Change A Ef Mm2",
   "emoji": "🪝",
   "aggregateVariant": "ChangeAEfMm2",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

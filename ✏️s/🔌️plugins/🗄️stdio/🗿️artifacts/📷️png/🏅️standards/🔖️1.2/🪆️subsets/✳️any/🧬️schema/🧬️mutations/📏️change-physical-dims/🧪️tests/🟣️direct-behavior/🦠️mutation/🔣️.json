@@ -1,0 +1,10 @@
+{
+  "mutation": "change-physical-dims",
+  "payload": {
+    "phys": {
+      "ppuX": 96,
+      "ppuY": 96,
+      "unitIsMeter": false
+    }
+  }
+}

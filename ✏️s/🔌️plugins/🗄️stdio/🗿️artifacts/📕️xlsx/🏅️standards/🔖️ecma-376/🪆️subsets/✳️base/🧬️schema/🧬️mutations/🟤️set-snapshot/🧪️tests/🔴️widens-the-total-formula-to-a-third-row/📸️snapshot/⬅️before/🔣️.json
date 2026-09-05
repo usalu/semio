@@ -1,0 +1,51 @@
+{
+  "schema": "stdio.xlsx",
+  "opc": {
+    "parts": [],
+    "contentTypes": {
+      "defaults": [
+        [
+          "xml",
+          "application/xml"
+        ],
+        [
+          "rels",
+          "application/vnd.openxmlformats-package.relationships+xml"
+        ]
+      ],
+      "overrides": [
+        [
+          "/xl/workbook.xml",
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"
+        ]
+      ]
+    },
+    "relationships": {},
+    "comment": ""
+  },
+  "workbook": {
+    "sheets": [
+      {
+        "name": "Sheet1",
+        "cells": [
+          {
+            "row": 4,
+            "col": 1,
+            "value": {
+              "kind": "formula",
+              "expr": "SUM(B1:B2)"
+            }
+          },
+          {
+            "row": 5,
+            "col": 1,
+            "value": {
+              "kind": "empty"
+            }
+          }
+        ]
+      }
+    ],
+    "sharedStrings": []
+  }
+}

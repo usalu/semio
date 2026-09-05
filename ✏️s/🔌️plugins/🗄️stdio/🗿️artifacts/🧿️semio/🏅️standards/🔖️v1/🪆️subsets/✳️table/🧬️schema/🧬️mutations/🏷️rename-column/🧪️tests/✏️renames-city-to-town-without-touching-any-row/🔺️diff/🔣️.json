@@ -1,0 +1,10 @@
+{
+  "columns": {
+    "values": [
+      {
+        "name": "town",
+        "kind": "str"
+      }
+    ]
+  }
+}

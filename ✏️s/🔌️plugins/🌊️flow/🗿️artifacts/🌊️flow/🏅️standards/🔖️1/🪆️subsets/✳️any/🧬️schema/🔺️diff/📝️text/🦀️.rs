@@ -156,8 +156,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn move_widgets_diff_touches_only_the_content_slot() {
         let base = FlowSnapshot::default();
-        let operation = FlowMutation::MoveWidgets(crate::artifacts::flow::schema::mutations::move_widgets::mutation::MoveWidgets { entries: vec![flow::FlowLayoutEntry { id: "slider".into(), layout: Some(flow::WidgetLayout { x: 3.0, y: 4.0 }) }] });
-        let diff: FlowDiff = operation.diff(&base);
+        let operation = FlowMutation::MoveWidgets(crate::artifacts::flow::schema::mutations::move_widgets::MoveWidgets { entries: vec![flow::FlowLayoutEntry { id: "slider".into(), layout: Some(flow::WidgetLayout { x: 3.0, y: 4.0 }) }] });
+        let outcome = operation.diff(&base);
+        let diff = outcome.diff();
         assert!(diff.content.is_some(), "MoveWidgets must produce a content diff: {diff:?}");
         assert!(diff.artifact.is_none(), "MoveWidgets must not replace the whole artifact: {diff:?}");
         let after = diff.apply(&base).expect("valid mutation diff");

@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/stdio.step/diff/text.json",
-  "title": "StepDiffText",
-  "type": "object"
-}

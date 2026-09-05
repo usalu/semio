@@ -1,0 +1,34 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0"
+    },
+    "materials": [
+      {
+        "pbrMetallicRoughness": {
+          "baseColorTexture": {
+            "index": 1
+          }
+        }
+      },
+      {
+        "pbrMetallicRoughness": {
+          "baseColorTexture": {
+            "index": 0
+          }
+        }
+      }
+    ],
+    "textures": [
+      {
+        "name": "normal"
+      },
+      {
+        "name": "albedo"
+      }
+    ]
+  },
+  "buffers": [],
+  "sourceForm": "json"
+}

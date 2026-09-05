@@ -1,0 +1,16 @@
+syntax = "proto3";
+package semio.s.stdio.semio.animation.inference;
+
+// 💡️ Semio animation inference schema — keyframe-derived playback duration.
+
+message SemioAnimationInference {
+  // @derived
+  SemioAnimationDuration duration = 1;
+}
+
+message SemioAnimationDuration {
+  double duration_seconds = 1;
+  uint32 timeline_count = 2;
+  uint32 channel_count = 3;
+  uint32 keyframe_count = 4;
+}

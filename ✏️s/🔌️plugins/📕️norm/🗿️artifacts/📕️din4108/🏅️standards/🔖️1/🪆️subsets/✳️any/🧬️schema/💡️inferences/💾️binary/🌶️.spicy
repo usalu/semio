@@ -1,4 +1,0 @@
-module Norm_din4108_inference;
-type Document = unit {
-    payload: bytes &eod;
-};

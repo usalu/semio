@@ -1,0 +1,187 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Authored Draw Source Scenario",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "contractId", "owner", "members", "consumers", "oracle", "retention", "producerContext", "launchSeed", "catalogContext", "cargoModuleRoot", "cadConsumerMount"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contractId": { "const": "draw-source-scenario-input-v1" },
+    "producerContext": { "const": {
+      "generatorId": "plugin-registry",
+      "compilerRoots": ["📜️script.ts"],
+      "workspaceInputs": ["package.json", "nx.json", "📋️project.json", ".gitignore"],
+      "runtimePackages": ["nx", "@nx/js", "@nxlv/python"],
+      "authority": "current-exact-no-follow-static-closure",
+      "workspaceBindings": "fixture-local",
+      "initialOutputs": "actual-generator-before-baseline",
+      "registryNodeCount": 10
+    } },
+    "launchSeed": {
+      "allOf": [
+        { "$ref": "#/definitions/input" },
+        { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": ".vscode/🧩️launch.seed.jsonc" }, "format": { "const": "jsonc" } } }
+      ]
+    },
+    "catalogContext": {
+      "type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true,
+      "items": { "$ref": "#/definitions/input" },
+      "allOf": [
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "✏️s/🔌️plugins/🧪️draw-fixture-host/📦️packages/🦀️rust/Cargo.toml" }, "format": { "const": "toml" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "✏️s/🔌️plugins/🧪️draw-fixture-host/📦️packages/🦀️rust/📚️library/🦀️.rs" }, "format": { "const": "rust" } } } }
+      ]
+    },
+    "cargoModuleRoot": {
+      "allOf": [
+        { "$ref": "#/definitions/input" },
+        {
+          "type": "object",
+          "required": ["path", "format", "content"],
+          "properties": {
+            "path": { "const": "📦️packages/🦀️rust/📚️library/🦀️.rs" },
+            "format": { "const": "rust" },
+            "content": { "const": "#[path = \"../../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️.rs\"]\nmod cad_interaction_spec;\n" }
+          }
+        }
+      ]
+    },
+    "cadConsumerMount": {
+      "const": {
+        "sourcePath": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts",
+        "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts",
+        "meaning": "unchanged-live-cad-bytes-in-authored-canonical-fixture-context"
+      }
+    },
+    "owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactId", "standardVersion", "subsetId", "commandDirectoryName"],
+      "properties": {
+        "artifactId": { "const": "🖍️draw" },
+        "standardVersion": { "const": "1" },
+        "subsetId": { "const": "any" },
+        "commandDirectoryName": { "const": "🖱️canvas-pointer-down" }
+      }
+    },
+    "members": {
+      "type": "array",
+      "minItems": 11,
+      "maxItems": 11,
+      "uniqueItems": true,
+      "allOf": [
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml" }, "format": { "const": "toml" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/✨️macros/📦️packages/🦀️rust/📋️project.json" }, "format": { "const": "json" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/✨️macros/📦️packages/🦀️rust/📜️script.ts" }, "format": { "const": "typescript" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/✨️macros/📦️packages/🦀️rust/🦀️.rs" }, "format": { "const": "rust" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/✨️macros/🦀️.rs" }, "format": { "const": "rust" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/📦️packages/🦀️rust/Cargo.toml" }, "format": { "const": "toml" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/📦️packages/🦀️rust/📋️project.json" }, "format": { "const": "json" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/📦️packages/🦀️rust/📜️script.ts" }, "format": { "const": "typescript" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/📦️packages/🦀️rust/🦀️.rs" }, "format": { "const": "rust" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/🦀️.rs" }, "format": { "const": "rust" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🦀️.rs" }, "format": { "const": "rust" } } } }
+      ],
+      "items": { "$ref": "#/definitions/input" }
+    },
+    "consumers": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "allOf": [
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "Cargo.toml" }, "format": { "const": "toml" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "../../🖍️draw-source-scenario/🧬️schema/🔣️.json" }, "format": { "const": "json" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "📦️packages/🦀️rust/Cargo.toml" }, "format": { "const": "toml" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🧪️tests/🦀️reference.rs" }, "format": { "const": "rust" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "📜️script.ts" }, "format": { "const": "typescript" } } } }
+      ],
+      "items": { "$ref": "#/definitions/input" }
+    },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["parentSegments", "recordFilename", "disposition", "cases", "fixtureOwnerSegments", "transactionTicketSegments"],
+      "properties": {
+        "fixtureOwnerSegments": { "const": ["🧪️tests"] },
+        "transactionTicketSegments": { "const": [".🧬semio", "🦑️repo", "🎫️tickets", "🎆️26", "🌙️08", "☀️27", "DRAW-SOURCE-SCENARIOS"] },
+        "parentSegments": { "const": ["📓️draw-source-scenarios", "🧪️runs"] },
+        "recordFilename": { "const": "📝️.md" },
+        "disposition": { "const": "retain-all-until-reviewed" },
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "allowed", "creates"],
+            "properties": {
+              "kind": { "enum": ["directory", "symlink", "file", "missing", "unreadable"] },
+              "allowed": { "type": "boolean" },
+              "creates": { "enum": [0, 1] }
+            }
+          }
+        }
+      }
+    },
+    "oracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceDirectoryCount", "destinationDirectoryCount", "destinationNodeCount", "configuration", "workspaceMemberCount", "dependencyUserCount", "projectCwdCount", "workspaceGlobCount", "rootCollectionCount", "externalModuleCount", "activatedGeneratorIds", "cargoModuleMount"],
+      "properties": {
+        "sourceDirectoryCount": { "const": 7 },
+        "destinationDirectoryCount": { "const": 9 },
+        "destinationNodeCount": { "const": 20 },
+        "configuration": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "sourceEntry", "destinationEntry"],
+            "properties": {
+              "path": { "type": "string", "minLength": 1 },
+              "sourceEntry": { "const": "🦀️.rs" },
+              "destinationEntry": { "const": "📚️library/🦀️.rs" }
+            }
+          }
+        },
+        "workspaceMemberCount": { "const": 2 },
+        "dependencyUserCount": { "const": 8 },
+        "projectCwdCount": { "const": 8 },
+        "workspaceGlobCount": { "const": 2 },
+        "rootCollectionCount": { "const": 1 },
+        "externalModuleCount": { "const": 1 },
+        "activatedGeneratorIds": { "const": ["plugin-registry"] },
+        "cargoModuleMount": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["manifestPath", "packageName", "libraryEntry", "moduleName", "moduleTarget", "canonicalModuleTarget"],
+          "properties": {
+            "manifestPath": { "const": "📦️packages/🦀️rust/Cargo.toml" },
+            "packageName": { "const": "draw-source-consumer" },
+            "libraryEntry": { "const": "📚️library/🦀️.rs" },
+            "moduleName": { "const": "cad_interaction_spec" },
+            "moduleTarget": { "const": "../../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️.rs" },
+            "canonicalModuleTarget": { "const": "../../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️.rs" }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "format", "content"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$" },
+        "format": { "enum": ["json", "jsonc", "toml", "typescript", "rust"] },
+        "content": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

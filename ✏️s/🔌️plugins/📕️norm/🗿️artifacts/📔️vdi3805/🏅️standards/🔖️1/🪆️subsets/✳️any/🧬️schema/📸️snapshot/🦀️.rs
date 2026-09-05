@@ -51,7 +51,7 @@ impl Default for Vdi3805Snapshot {
 
 //#region 🌉️ExternalCodecBridge
 /// 📤️ The canonical JSON projection of a [`Vdi3805Snapshot`] — the surface
-/// `../../../../../🧪️tests/mutate-vdi3805-1` is compared through under `ordered-json-v1`.
+/// `../../../../../🧪️tests/🟣️mutate-vdi3805-1` is compared through under `ordered-json-v1`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_vdi3805_snapshot_json(snapshot: &Vdi3805Snapshot) -> String {
     pack::json::to_json_string(snapshot)

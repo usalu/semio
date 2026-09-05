@@ -1,0 +1,16 @@
+[package]
+name = "semio-icon-builder-check"
+version = "0.0.0"
+edition = "2021"
+publish = false
+build = false
+
+[workspace]
+
+[[bin]]
+name = "infinite-icon-builder"
+path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/build.rs"
+
+[dependencies]
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

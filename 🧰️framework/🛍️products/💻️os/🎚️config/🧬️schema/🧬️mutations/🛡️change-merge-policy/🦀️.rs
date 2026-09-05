@@ -103,7 +103,7 @@ pub fn inverse_merge_policy_config_mutation_steps(mutation: &MergePolicyConfigMu
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/tightens-the-authority-to-vigilant/🦀️.rs"]
+#[path = "🧪️tests/🪪️tightens-the-authority-to-vigilant/🦀️.rs"]
 mod tests_tightens_the_authority_to_vigilant;
 
 #[cfg(test)]

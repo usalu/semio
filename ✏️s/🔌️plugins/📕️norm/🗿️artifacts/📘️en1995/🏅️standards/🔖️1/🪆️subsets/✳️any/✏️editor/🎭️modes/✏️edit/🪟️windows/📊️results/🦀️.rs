@@ -17,7 +17,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(host: &NormHost<En1995Family>) -> UiNode {
+pub fn render(host: &NormHost<En1995Family>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     crate::app_surface::render_report(host.report())
 }
 //#endregion 🔖️Render

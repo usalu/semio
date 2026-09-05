@@ -1803,7 +1803,7 @@ impl FragmentRegistry {
         if let Ok(g) = parse_grammar(include_str!("../👪️family/🎬️scene/📖️.grammar.semio")) {
             reg.insert("family-scene", g);
         }
-        if let Ok(g) = parse_grammar(include_str!("../👪️family/🧑‍🍳️recipe/📖️.grammar.semio")) {
+        if let Ok(g) = parse_grammar(include_str!("../👪️family/🧑‍🍳recipe/📖️.grammar.semio")) {
             reg.insert("family-recipe", g);
         }
         reg
@@ -2698,7 +2698,7 @@ mod tests {
     /// 🌾️ Walks every handcrafted `📖️.grammar.semio` shipped under `✏️s/🔌️plugins` and
     /// asserts it parses and compiles into a `Recognizer`. This is the runtime guard for the
     /// normative grammar sources: it needs only `parse_grammar`/`Recognizer` from this crate, so
-    /// unlike `🧪️fixture-sweep`'s `m5_handcrafted_grammar_conformance` it does not pull the plugin
+    /// unlike `🧹️fixture-sweep`'s `m5_handcrafted_grammar_conformance` it does not pull the plugin
     /// crates in as dev-dependencies and therefore stays runnable while those are mid-migration.
     #[semio_framework_async_macros::async_test]
     async fn every_shipped_grammar_semio_parses_and_compiles() {
@@ -2977,7 +2977,7 @@ field body bytes
 
     #[semio_framework_async_macros::async_test]
     async fn self_hosting_protocol_grammar_semio_parses_as_grammar() {
-        let source = include_str!("📖️protocol.grammar.semio");
+        let source = include_str!("📡️protocol.grammar.semio");
         let parsed = parse_grammar(source).expect("protocol.grammar.semio must parse as dialect grammar");
         assert_eq!(parsed.dialect, SemioDialect::Grammar);
         assert_eq!(parsed.id, "protocol");

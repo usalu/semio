@@ -24,7 +24,7 @@ use protocol::{Mutation, OpText};
 /// position among the parent's children); every other path-carrying variant's `path` addresses the
 /// target node itself.
 //#region 🔖️Leaves
-#[path = "📄set-snapshot/🦀️.rs"]
+#[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "📜set-doctype/🦀️.rs"]
 pub mod set_doctype;
@@ -32,15 +32,15 @@ pub mod set_doctype;
 pub mod insert_node;
 #[path = "➖remove-node/🦀️.rs"]
 pub mod remove_node;
-#[path = "🏷set-element-name/🦀️.rs"]
+#[path = "🏷️set-element-name/🦀️.rs"]
 pub mod set_element_name;
 #[path = "🔖set-attribute/🦀️.rs"]
 pub mod set_attribute;
-#[path = "✍set-text/🦀️.rs"]
+#[path = "✍️set-text/🦀️.rs"]
 pub mod set_text;
 #[path = "💬set-comment/🦀️.rs"]
 pub mod set_comment;
-#[path = "📝set-raw-text/🦀️.rs"]
+#[path = "⌨️set-raw-text/🦀️.rs"]
 pub mod set_raw_text;
 //#endregion 🔖️Leaves
 
@@ -715,7 +715,7 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/declares-the-document-language-on-the-root-html-element/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/🧩️declares-the-document-language-on-the-root-html-element/🦀️.rs"]
     mod tests_set_snapshot_declares_the_document_language_on_the_root_html_element;
 }
 //#endregion 🧪️FixtureTests

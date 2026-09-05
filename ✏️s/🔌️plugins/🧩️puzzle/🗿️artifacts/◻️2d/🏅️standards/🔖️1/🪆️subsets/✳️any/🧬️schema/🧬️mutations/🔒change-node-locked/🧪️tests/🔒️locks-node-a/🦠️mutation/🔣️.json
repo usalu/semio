@@ -1,0 +1,5 @@
+{
+  "mutation": "changeNodeLocked",
+  "id": "node-a",
+  "newLocked": true
+}

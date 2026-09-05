@@ -6,15 +6,15 @@
 //#region 🔌️Adapters
 import { ephemeralBox } from "@semio-tech/framework";
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { type Dirent, chmodSync, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { type Dirent, chmodSync, closeSync, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readSync, realpathSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
 import { availableParallelism, devNull, homedir, tmpdir } from "node:os";
-import { basename, dirname, join, normalize, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import { fixedContractFilename, loadTaxonomy, taxonomyRelativePathIsExcluded } from "../../🔍️discovery/🟦️.ts";
 //#endregion 🔌️Adapters
 
-import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts";
+import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts";
 
 export type PlaygroundHostKind = string;
 
@@ -650,7 +650,7 @@ export type LayeringReference = Readonly<{ file: string; area: string; count: nu
 export type LayeringBaseline = Readonly<{ schemaVersion: number; allowed: Readonly<Record<string, number>> }>;
 
 /** 🏛️ Repo-relative path of the committed layering baseline. */
-export const LAYERING_BASELINE_REL_PATH = "🔒️layering.json";
+export const LAYERING_BASELINE_REL_PATH = "🧅️layering.json";
 
 const LAYERING_SCANNED_EXTENSIONS = new Set([".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs", ".rs", ".go", ".py", ".cs", ".json", ".toml", ".yml", ".yaml"]);
 const LAYERING_SKIPPED_DIRS = new Set(["node_modules", ".git", ".nx", ".venv", "target", "dist", "build", "out", "__pycache__", "obj", "bin", "storybook-static", "🎫️tickets", "⚡️cache", "🤖️generated"]);
@@ -1863,6 +1863,251 @@ export function runProbe(cmd: string, args: string[], opts: RunCmdOpts = {}): Ru
   };
 }
 
+/** 🦀️ One explicit Cargo package/target and nonempty exact law selection. */
+export type ExactCargoLawGroup = {
+  package: string;
+  target: { kind: "lib"; name?: string } | { kind: "test" | "bin"; name: string };
+  laws: readonly string[];
+  cargoArgs?: readonly string[];
+};
+export type ExactCargoLawStage = "build" | "list" | "native";
+export type ExactCargoLawProcessResult = RunProbeResult & { reason?: "exit" | "timeout" | "cancelled" | "output-limit" | "spawn-error" };
+export type ExactCargoLawProcessOptions = {
+  cwd: string; env: NodeJS.ProcessEnv; budgetMs: number; maxOutputBytes: number;
+  stdoutPath: string; stderrPath: string; cancelled: () => boolean;
+};
+/** 🔌️ Owned process/fingerprint port permits deterministic hostile runner laws without compiling Cargo. */
+export type ExactCargoLawPort = {
+  probe: (command: string, args: string[], options: ExactCargoLawProcessOptions) => Promise<ExactCargoLawProcessResult>;
+  fingerprint: (path: string) => { path: string; sha256: string };
+};
+export type ExactCargoLawOptions = {
+  cwd: string; groups: readonly ExactCargoLawGroup[]; manifestPath?: string; cargoArgs?: readonly string[];
+  env?: NodeJS.ProcessEnv; artifactDir?: string; buildBudgetMs?: number; listBudgetMs?: number; lawBudgetMs?: number;
+  cancelled?: () => boolean;
+  progress?: (event: { stage: ExactCargoLawStage; package: string; law?: string; artifactDir: string }) => void;
+};
+export type ExactCargoLawReceipt = {
+  package: string; target: ExactCargoLawGroup["target"]; executable: string; sha256: string;
+  laws: readonly string[]; assertions: number; artifactDir: string; cargoTargetDir: string;
+};
+
+export const EXACT_CARGO_ACTIVE_LEASE_DIRECTORY_PREFIX = ".exact-cargo-laws-active-";
+export const EXACT_CARGO_ACTIVE_LEASE_MANIFEST = "lease.json";
+export const EXACT_CARGO_ACTIVE_LEASE_MAX_AGE_MS = 120_000;
+
+/** 🧭️ Finds the nearest ticket-generated ancestor required by an exact Cargo evidence path. */
+function exactCargoGeneratedRoot(path: string): string {
+  let cursor = resolve(path);
+  while (basename(cursor) !== "🗑️generated") {
+    const parent = dirname(cursor);
+    if (parent === cursor) throw new Error("Exact Cargo evidence path has no ticket-generated ancestor");
+    cursor = parent;
+  }
+  return cursor;
+}
+
+/** 🛡️ Recognizes only a fresh lease owned by a live exact-Cargo runner process. */
+export function exactCargoGeneratedOutputHasLiveLease(root: string): boolean {
+  const stack = [{ path: root, depth: 0 }];
+  while (stack.length > 0) {
+    const current = stack.pop()!;
+    let names: string[];
+    try { names = readdirSync(current.path); } catch { continue; }
+    for (const name of names) {
+      const path = join(current.path, name);
+      let state;
+      try { state = lstatSync(path); } catch { continue; }
+      if (!state.isDirectory() || state.isSymbolicLink()) continue;
+      if (name.startsWith(EXACT_CARGO_ACTIVE_LEASE_DIRECTORY_PREFIX)) {
+        const manifestPath = join(path, EXACT_CARGO_ACTIVE_LEASE_MANIFEST);
+        try {
+          const manifestState = lstatSync(manifestPath);
+          if (!manifestState.isFile() || manifestState.isSymbolicLink() || manifestState.size > 128 || Date.now() - manifestState.mtimeMs > EXACT_CARGO_ACTIVE_LEASE_MAX_AGE_MS || manifestState.mtimeMs - Date.now() > 5_000) continue;
+          const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as { version?: unknown; pid?: unknown };
+          if (manifest.version !== 1 || !Number.isSafeInteger(manifest.pid) || Number(manifest.pid) < 1) continue;
+          try { process.kill(Number(manifest.pid), 0); return true; } catch (error) { if ((error as NodeJS.ErrnoException).code === "EPERM") return true; }
+        } catch { continue; }
+      } else if (current.depth < 4) stack.push({ path, depth: current.depth + 1 });
+    }
+  }
+  return false;
+}
+
+/** 💓 Holds a fresh process-bound lease until the exact Cargo run reaches a terminal result. */
+function beginExactCargoLease(artifactRoot: string): () => void {
+  const leaseRoot = mkdtempSync(join(artifactRoot, EXACT_CARGO_ACTIVE_LEASE_DIRECTORY_PREFIX));
+  const manifestPath = join(leaseRoot, EXACT_CARGO_ACTIVE_LEASE_MANIFEST);
+  const heartbeat = (): void => { try { writeFileSync(manifestPath, JSON.stringify({ version: 1, pid: process.pid }), { mode: 0o600 }); } catch {} };
+  heartbeat();
+  const timer = setInterval(heartbeat, 10_000);
+  timer.unref?.();
+  return () => { clearInterval(timer); rmSync(leaseRoot, { recursive: true, force: true }); };
+}
+
+/** 🚫️ Preserves the precise failing stage and actual child status independently of assertion parsing. */
+export class ExactCargoLawError extends Error {
+  constructor(readonly stage: ExactCargoLawStage, readonly status: number | null, readonly signal: NodeJS.Signals | null, readonly artifactDir: string, detail: string) {
+    super(`exact Cargo law ${stage} failed: status=${status} signal=${signal ?? "none"} artifacts=${artifactDir}; ${detail}`);
+  }
+}
+
+function exactCargoExecutableFingerprint(path: string): { path: string; sha256: string } {
+  if (!isAbsolute(path) || lstatSync(path).isSymbolicLink()) throw new Error("Cargo executable must be one absolute regular file");
+  const canonical = realpathSync(path);
+  const descriptor = openSync(canonical, "r");
+  try {
+    const before = fstatSync(descriptor);
+    if (!before.isFile() || before.size <= 0 || before.size > 8 * 1024 ** 3 || (process.platform !== "win32" && (before.mode & 0o111) === 0)) throw new Error("Cargo executable size or type denied");
+    const digest = createHash("sha256");
+    const buffer = Buffer.alloc(64 * 1024);
+    let count = 0;
+    while (true) {
+      const length = readSync(descriptor, buffer);
+      if (length === 0) break;
+      digest.update(buffer.subarray(0, length));
+      count += length;
+      if (count > before.size) throw new Error("Cargo executable changed while hashing");
+    }
+    const after = fstatSync(descriptor);
+    if (count !== before.size || after.size !== before.size || after.mtimeMs !== before.mtimeMs || after.ino !== before.ino) throw new Error("Cargo executable changed while hashing");
+    return { path: canonical, sha256: digest.digest("hex") };
+  } finally { closeSync(descriptor); }
+}
+
+/** 📥️ Captures a bounded process into caller-owned evidence files and terminates its tree on timeout or cancellation. */
+export async function runExactCargoLawProcess(command: string, args: string[], options: ExactCargoLawProcessOptions): Promise<ExactCargoLawProcessResult> {
+  const stdout = openSync(options.stdoutPath, "wx", 0o600);
+  const stderr = openSync(options.stderrPath, "wx", 0o600);
+  return await new Promise(resolveResult => {
+    let reason: ExactCargoLawProcessResult["reason"] = "exit";
+    let count = 0;
+    let finished = false;
+    const child = spawn(command, args, { cwd: options.cwd, env: options.env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
+    const terminate = (cause: NonNullable<ExactCargoLawProcessResult["reason"]>): void => {
+      if (reason !== "exit") return;
+      reason = cause;
+      if (child.pid) killBudgetTree(child.pid);
+    };
+    const append = (descriptor: number, bytes: Buffer): void => {
+      const remaining = Math.max(0, options.maxOutputBytes - count);
+      if (remaining) writeSync(descriptor, bytes.subarray(0, remaining));
+      count += bytes.length;
+      if (count > options.maxOutputBytes) terminate("output-limit");
+    };
+    child.stdout?.on("data", bytes => append(stdout, bytes));
+    child.stderr?.on("data", bytes => append(stderr, bytes));
+    const timer = setTimeout(() => terminate("timeout"), options.budgetMs);
+    const cancel = setInterval(() => { if (options.cancelled()) terminate("cancelled"); }, 100);
+    child.on("error", error => { reason = "spawn-error"; append(stderr, Buffer.from(error.message)); });
+    child.on("close", (status, signal) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      clearInterval(cancel);
+      closeSync(stdout);
+      closeSync(stderr);
+      resolveResult({ status, signal, reason, stdout: readFileSync(options.stdoutPath, "utf8"), stderr: readFileSync(options.stderrPath, "utf8") });
+    });
+  });
+}
+
+/** 🧪️ Compiles each explicit target once and executes only its hash-bound, exact-listed native laws. */
+export async function runExactCargoLaws(options: ExactCargoLawOptions, port: ExactCargoLawPort = { probe: runExactCargoLawProcess, fingerprint: exactCargoExecutableFingerprint }): Promise<readonly ExactCargoLawReceipt[]> {
+  const configuredEnv = options.env ?? process.env;
+  const artifactRoot = options.artifactDir ?? configuredEnv.SEMIO_TEST_ARTIFACT_DIR;
+  if (!artifactRoot || !isAbsolute(artifactRoot) || !artifactRoot.split(/[\\/]/u).includes("🗑️generated")) throw new Error("Exact Cargo laws require an absolute ticket-generated artifactDir or SEMIO_TEST_ARTIFACT_DIR");
+  const cargoTargetDir = configuredEnv.CARGO_TARGET_DIR ?? join(artifactRoot, "cargo-target");
+  if (!isAbsolute(cargoTargetDir) || !cargoTargetDir.split(/[\\/]/u).includes("🗑️generated")) throw new Error("Exact Cargo laws require an absolute ticket-generated Cargo target");
+  if (exactCargoGeneratedRoot(artifactRoot) !== exactCargoGeneratedRoot(cargoTargetDir)) throw new Error("Exact Cargo evidence and target must share one ticket-generated root");
+  const env = { ...configuredEnv, CARGO_TARGET_DIR: cargoTargetDir };
+  if (!isAbsolute(options.cwd) || !options.groups.length || options.groups.length > 64) throw new Error("Exact Cargo laws require a bounded nonempty target list and absolute cwd");
+  const groupKeys = options.groups.map(group => JSON.stringify([group.package, group.target.kind, group.target.name ?? ""]));
+  if (new Set(groupKeys).size !== groupKeys.length) throw new Error("Exact Cargo groups must combine laws for the same package/target");
+  for (const group of options.groups) {
+    if (!group.package || !group.laws.length || group.laws.length > 256 || new Set(group.laws).size !== group.laws.length || group.laws.some(law => !/^[A-Za-z_][A-Za-z0-9_:]*$/u.test(law))) throw new Error("Exact Cargo law identities must be nonempty and unique");
+  }
+  mkdirSync(artifactRoot, { recursive: true });
+  const endLease = beginExactCargoLease(artifactRoot);
+  try {
+  const runRoot = mkdtempSync(join(artifactRoot, "exact-cargo-laws-"));
+  const cancelled = options.cancelled ?? (() => false);
+  const receipts: ExactCargoLawReceipt[] = [];
+  const checkedBudget = (value: number): number => {
+    if (!Number.isSafeInteger(value) || value < 1 || value > 24 * 60 * 60 * 1000) throw new Error("Exact Cargo budget must be finite and positive");
+    return value;
+  };
+  for (const [index, group] of options.groups.entries()) {
+    const groupRoot = join(runRoot, String(index).padStart(2, "0"));
+    mkdirSync(groupRoot);
+    let stage: ExactCargoLawStage = "build";
+    let last: ExactCargoLawProcessResult = { status: null, signal: null, stdout: "", stderr: "" };
+    const fail = (detail: string): never => { throw new ExactCargoLawError(stage, last.status, last.signal, groupRoot, detail); };
+    const checkpoint = (): void => { if (cancelled()) fail("cancelled"); };
+    const capture = async (next: ExactCargoLawStage, command: string, args: string[], budget: number, name: string): Promise<ExactCargoLawProcessResult> => {
+      stage = next;
+      checkpoint();
+      options.progress?.({ stage, package: group.package, ...(next === "native" ? { law: args[0] } : {}), artifactDir: groupRoot });
+      const stdoutPath = join(groupRoot, `${name}.stdout`);
+      const stderrPath = join(groupRoot, `${name}.stderr`);
+      last = await port.probe(command, args, { cwd: options.cwd, env, budgetMs: checkedBudget(budget), maxOutputBytes: next === "build" ? 256 * 1024 * 1024 : 8 * 1024 * 1024, stdoutPath, stderrPath, cancelled });
+      if (!existsSync(stdoutPath)) writeFileSync(stdoutPath, last.stdout, { flag: "wx", mode: 0o600 });
+      if (!existsSync(stderrPath)) writeFileSync(stderrPath, last.stderr, { flag: "wx", mode: 0o600 });
+      writeFileSync(join(groupRoot, `${name}.json`), JSON.stringify({ command, args, cargoTargetDir, status: last.status, signal: last.signal, reason: last.reason ?? "exit" }), { flag: "wx", mode: 0o600 });
+      checkpoint();
+      return last;
+    };
+    const target = group.target.kind === "lib" ? ["--lib"] : [`--${group.target.kind}`, group.target.name];
+    const cargoArgs = [...options.cargoArgs ?? [], ...group.cargoArgs ?? []];
+    if (cargoArgs.some(arg => ["--", "--test", "--bin", "--lib", "-p", "--package", "--no-run", "--message-format", "--target-dir", "--manifest-path"].includes(arg) || ["--message-format=", "--target-dir=", "--manifest-path="].some(prefix => arg.startsWith(prefix)))) fail("Cargo target/control arguments are helper-owned");
+    const built = await capture("build", "cargo", ["test", "--manifest-path", options.manifestPath ?? "Cargo.toml", "-p", group.package, ...target, ...cargoArgs, "--no-run", "--message-format=json"], options.buildBudgetMs ?? buildBudgetMs(), "build");
+    const messages = built.stdout.split("\n").flatMap(line => { try { return [JSON.parse(line)]; } catch { return []; } });
+    const errors = messages.filter(message => message.reason === "compiler-message" && message.message?.level === "error").map(message => message.message.rendered ?? message.message.message);
+    if (built.status !== 0 || built.signal !== null || (built.reason && built.reason !== "exit")) fail(`${built.reason ?? "exit"}; ${(errors.length ? errors.slice(0, 3).join("\n") : built.stderr).slice(0, 6000)}`);
+    const artifacts = messages.filter(message => message.reason === "compiler-artifact" && message.profile?.test === true && typeof message.executable === "string");
+    if (artifacts.length !== 1) fail(`expected one Cargo executable artifact, got ${artifacts.length}`);
+    const artifact = artifacts[0];
+    const packageId = String(artifact.package_id);
+    const packageName = packageId.includes("#") ? packageId.slice(packageId.lastIndexOf("#") + 1).split("@")[0] : packageId.split(" ")[0];
+    const kinds = artifact.target?.kind;
+    if (packageName !== group.package || !Array.isArray(kinds) || !kinds.some(kind => group.target.kind === "lib" ? ["lib", "rlib", "dylib", "cdylib", "staticlib", "proc-macro"].includes(kind) : kind === group.target.kind) || (group.target.name && artifact.target?.name !== group.target.name) || !isAbsolute(artifact.executable)) fail("Cargo executable package/target/path does not match the explicit group");
+    const fingerprint = (): { path: string; sha256: string } => {
+      try { return port.fingerprint(artifact.executable); } catch (error) { return fail(String(error)); }
+    };
+    const initial = fingerprint();
+    const verify = (): void => {
+      checkpoint();
+      const current = fingerprint();
+      if (current.path !== initial.path || current.sha256 !== initial.sha256) fail("Cargo executable changed after its build receipt");
+    };
+    if (!isAbsolute(initial.path) || !/^[0-9a-f]{64}$/u.test(initial.sha256)) fail("Cargo executable fingerprint is invalid");
+    writeFileSync(join(groupRoot, "executable.json"), JSON.stringify({ package: group.package, target: group.target, ...initial }), { flag: "wx", mode: 0o600 });
+    verify();
+    const listed = await capture("list", initial.path, ["--list"], options.listBudgetMs ?? 60_000, "list");
+    verify();
+    if (listed.status !== 0 || listed.signal !== null || (listed.reason && listed.reason !== "exit")) fail(`list ${listed.reason ?? "exit"}; ${listed.stderr.slice(0, 4000)}`);
+    const discovered = listed.stdout.split(/\r?\n/u).filter(line => line.endsWith(": test")).map(line => line.slice(0, -6));
+    const laws = group.laws.map(selector => {
+      const matches = discovered.filter(name => name === selector || name.endsWith(`::${selector}`));
+      if (matches.length !== 1) fail(`expected exactly one ${selector}, selected=${matches.length}`);
+      return matches[0]!;
+    });
+    if (new Set(laws).size !== laws.length) fail("Law selectors resolve to the same native assertion");
+    for (const [lawIndex, law] of laws.entries()) {
+      verify();
+      const result = await capture("native", initial.path, [law, "--exact", "--test-threads=1", "--show-output"], options.lawBudgetMs ?? 60_000, `law-${lawIndex}`);
+      verify();
+      const terminals = [...result.stdout.matchAll(/^test result: ok\. (\d+) passed; (\d+) failed; (\d+) ignored;/gm)];
+      if (result.status !== 0 || result.signal !== null || (result.reason && result.reason !== "exit") || terminals.length !== 1 || terminals[0]?.[1] !== "1" || terminals[0]?.[2] !== "0" || terminals[0]?.[3] !== "0" || !result.stdout.split(/\r?\n/u).includes(`test ${law} ... ok`)) fail(`native assertion ${law} did not pass exactly once; ${(result.stdout + result.stderr).slice(-6000)}`);
+    }
+    const receipt = { package: group.package, target: group.target, executable: initial.path, sha256: initial.sha256, laws, assertions: laws.length, artifactDir: groupRoot, cargoTargetDir };
+    writeFileSync(join(groupRoot, "receipt.json"), JSON.stringify(receipt), { flag: "wx", mode: 0o600 });
+    receipts.push(receipt);
+  }
+  return receipts;
+  } finally { endLease(); }
+}
+
 export interface SpawnDaemonHandle {
   child: ChildProcess;
   kill: () => void;
@@ -2465,13 +2710,13 @@ export function playgroundPlayViteDefine(extra: Record<string, string> = {}): Re
 //#region 🖥️FrameworkOsPlaygroundDev
 /**
  * 📚️ Loads the generated framework OS playground catalog (variant/plugin/aliases/ports rows).
- * Reads `🧰️/🛍️/💻️/🔨️/plugin/📦️/🟦️/registry/generated/🔣️playgrounds.json` directly (rather than a static
+ * Reads the registry owner's `🤖️generated/🎠️playgrounds.json` directly (rather than a static
  * TS import of the gitignored generated module) so this shared kernel never fails to load on a
  * fresh clone before `bun nx run @semio-tech/plugin-registry:generate` has ever run — callers get
  * an empty catalog in that case instead of a hard module-resolution error.
  */
 export function loadFrameworkOsPlaygroundCatalog(): readonly PlaygroundVariant[] {
-  const catalogPath = join(getWorkspaceRoot(), "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔣️playgrounds.json");
+  const catalogPath = join(getWorkspaceRoot(), "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎠️playgrounds.json");
   if (!existsSync(catalogPath)) return [];
   return JSON.parse(readFileSync(catalogPath, "utf8")) as readonly PlaygroundVariant[];
 }
@@ -2877,6 +3122,7 @@ export function runWasmPackWebBuild(opts: {
   logPrefix: string;
   pkg: WasmPackWebPkg;
   wasmBaseName: string;
+  outputDirectory?: string;
   /** When true, build with atomics + `-Z build-std` for wasm-bindgen-rayon thread pools. */
   threads?: boolean;
   /** Optional Cargo feature flags passed to wasm-pack / cargo build. */
@@ -2888,9 +3134,10 @@ export function runWasmPackWebBuild(opts: {
   shipProfile?: string;
 
 }): void {
-  const { rsDir, skipEnvVar, logPrefix, pkg, wasmBaseName, threads = false, cargoFeatures = [], noDefaultFeatures = false, shipProfile = "release" } = opts;
+  const { rsDir, skipEnvVar, logPrefix, pkg, wasmBaseName, outputDirectory = "pkg", threads = false, cargoFeatures = [], noDefaultFeatures = false, shipProfile = "release" } = opts;
+  if (!outputDirectory || /[/\\:*?"<>|\u0000]|[. ]$/u.test(outputDirectory)) throw new Error("WASM outputDirectory must be one portable literal directory name");
   const profile = semioBuildMode() === "ship" ? shipProfile : "dev";
-  const pkgDir = join(rsDir, "pkg");
+  const pkgDir = join(rsDir, outputDirectory);
   const wasmPath = join(pkgDir, `${wasmBaseName}_bg.wasm`);
   const packProfileArgs = profile === "release" ? (["--release"] as const) : profile === "dev" ? (["--dev"] as const) : (["--profile", profile] as const);
   const cargoProfileArgs = profile === "release" ? (["--release"] as const) : profile === "dev" ? (["--dev"] as const) : (["--profile", profile] as const);
@@ -2900,7 +3147,7 @@ export function runWasmPackWebBuild(opts: {
     return;
   }
   if (!wasmPackInputsStale(rsDir, wasmPath)) {
-    console.log(`[${logPrefix}] pkg/${wasmBaseName}_bg.wasm up to date → skipping wasm-pack build`);
+    console.log(`[${logPrefix}] ${outputDirectory}/${wasmBaseName}_bg.wasm up to date → skipping wasm-pack build`);
     if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
     const snippetFiles = wasmPackSnippetFiles(pkgDir);
     const pkgJson = {
@@ -2914,7 +3161,7 @@ export function runWasmPackWebBuild(opts: {
     return;
   }
   const buildLabel = threads ? "cargo build (threaded) + wasm-bindgen" : "wasm-pack build";
-  console.log(`[${logPrefix}] ${buildLabel} ${packProfileArgs.join(" ")} --target web --out-dir pkg --out-name ${wasmBaseName} --no-pack`);
+  console.log(`[${logPrefix}] ${buildLabel} ${packProfileArgs.join(" ")} --target web --out-dir ${outputDirectory} --out-name ${wasmBaseName} --no-pack`);
   const t0 = Date.now();
   const featureArgs = [...(noDefaultFeatures ? (["--no-default-features"] as const) : []), ...cargoFeatures.flatMap((feature) => ["--features", feature])];
   let status: number;
@@ -2933,10 +3180,10 @@ export function runWasmPackWebBuild(opts: {
       process.exit(status);
     }
     if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
-    status = runCmdStatus(resolveWasmBindgenBin(), [cargoWasm, "--out-dir", "pkg", "--typescript", "--target", "web", "--out-name", wasmBaseName], { cwd: rsDir, env: { ...process.env }, budgetMs: buildBudgetMs() });
+    status = runCmdStatus(resolveWasmBindgenBin(), [cargoWasm, "--out-dir", outputDirectory, "--typescript", "--target", "web", "--out-name", wasmBaseName], { cwd: rsDir, env: { ...process.env }, budgetMs: buildBudgetMs() });
   } else {
     const localWasmPack = resolveWorkspaceBin("wasm-pack", rsDir);
-    const buildArgs = ["build", ...packProfileArgs, "--target", "web", "--out-dir", "pkg", "--out-name", wasmBaseName, "--no-pack", ...(featureArgs.length > 0 ? ["--", ...featureArgs] : [])];
+    const buildArgs = ["build", ...packProfileArgs, "--target", "web", "--out-dir", outputDirectory, "--out-name", wasmBaseName, "--no-pack", ...(featureArgs.length > 0 ? ["--", ...featureArgs] : [])];
     if (localWasmPack) {
       status = runCmdStatus(process.execPath, [localWasmPack, ...buildArgs], { cwd: rsDir, env: { ...process.env }, budgetMs: buildBudgetMs() });
     } else {
@@ -2971,9 +3218,12 @@ export function runWasmPackWebBuild(opts: {
 
 const EXTENSION_COMPONENT_WASM_TARGET = "wasm32-wasip2";
 
-/** @emoji 🪶️ Cargo profile for wasip2 extension components — mirrors os dev `pluginWasmProfile`. */
-function extensionComponentWasmProfile(): string {
-  return process.env.SEMIO_PLUGIN_PROFILE ?? (semioBuildMode() === "ship" ? "wasm-release" : "dev");
+/** 🛡️ Explicit WASI-only link profiles; native dev and publication identity stay separate. */
+export function selectComponentWasmProfile(mode: SemioBuildMode, override?: string): "wasm-dev" | "wasm-release" {
+  if (mode !== "dev" && mode !== "ship") throw new Error("invalid component build mode");
+  const profile = override ?? (mode === "ship" ? "wasm-release" : "wasm-dev");
+  if (profile !== "wasm-dev" && profile !== "wasm-release") throw new Error("SEMIO_PLUGIN_PROFILE must be wasm-dev or wasm-release");
+  return profile;
 }
 
 function parseCargoTomlStringArray(block: string, key: string): string[] {
@@ -3029,15 +3279,15 @@ export async function runExtensionComponentPackage(opts: {
   const rsDir = resolve(opts.rsDir);
   const manifestPath = join(rsDir, "Cargo.toml");
   const parsed = parseExtensionCargoManifest(manifestPath, repoRoot);
-  const profile = extensionComponentWasmProfile();
+  const profile = selectComponentWasmProfile(semioBuildMode(), process.env.SEMIO_PLUGIN_PROFILE);
   const logPrefix = opts.logPrefix ?? parsed.componentPackageId;
   if (runCmdStatus("cargo", ["build", "-p", parsed.packageName, "--target", EXTENSION_COMPONENT_WASM_TARGET, "--profile", profile], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
     throw new Error(`extension component build failed: ${parsed.packageName}`);
   }
-  const wasmArtifact = join(repoRoot, "target", EXTENSION_COMPONENT_WASM_TARGET, cargoProfileDir(profile), `${parsed.packageName.replace(/-/g, "_")}.wasm`);
+  const wasmArtifact = join(resolve(repoRoot, process.env.CARGO_TARGET_DIR ?? "target"), EXTENSION_COMPONENT_WASM_TARGET, cargoProfileDir(profile), `${parsed.packageName.replace(/-/g, "_")}.wasm`);
   if (!existsSync(wasmArtifact)) throw new Error(`missing wasm artifact ${wasmArtifact}`);
   const componentWasm = new Uint8Array(readFileSync(wasmArtifact));
-  const { packExtensionPackage } = await import("../../../../../💻️os/🔨️modules/🔌️plugin/🏪️store/📜️store.ts");
+  const { packExtensionPackage } = await import("../../../../../💻️os/🔨️modules/🔌️plugin/🏪️store/📥️store.ts");
   const manifest = {
     extensionId: parsed.componentPackageId,
     label: parsed.description,

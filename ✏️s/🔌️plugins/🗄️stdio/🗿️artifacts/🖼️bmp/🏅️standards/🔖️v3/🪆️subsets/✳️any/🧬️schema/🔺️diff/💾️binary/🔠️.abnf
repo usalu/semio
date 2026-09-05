@@ -1,5 +1,0 @@
-; abnf stdio.bmp diff (binary) — the generic serde-derived binary encoding: raw UTF-8 JSON
-; bytes of BmpDiff, NOT wrapped in the shared `.semio` envelope (contrast with
-; ../../📸️snapshot/💾️binary/).
-document = payload
-payload = *OCTET   ; UTF-8 JSON object per sibling ../📝️text/📖️.grammar.semio

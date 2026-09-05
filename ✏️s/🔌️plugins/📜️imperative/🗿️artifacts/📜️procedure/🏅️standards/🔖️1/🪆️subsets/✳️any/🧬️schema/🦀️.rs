@@ -169,7 +169,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for ProcedureAnalyzerAnalysis {
         type Parts = ProcedureParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.procedure", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.imperative.procedure", standard: StandardId("1"), subset: SubsetId("*") };
 
         async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium

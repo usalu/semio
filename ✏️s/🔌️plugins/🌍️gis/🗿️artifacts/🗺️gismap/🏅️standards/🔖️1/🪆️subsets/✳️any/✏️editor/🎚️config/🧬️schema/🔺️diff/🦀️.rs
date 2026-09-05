@@ -6,7 +6,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔺️Payload
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default, deny_unknown_fields))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct Gis2dConfigDelta {
@@ -21,7 +21,7 @@ pub struct Gis2dConfigDelta {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Gis2dConfigDiff {

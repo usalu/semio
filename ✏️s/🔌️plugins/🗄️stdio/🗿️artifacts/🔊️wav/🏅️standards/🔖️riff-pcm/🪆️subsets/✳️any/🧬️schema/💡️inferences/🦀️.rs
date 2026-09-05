@@ -2,7 +2,7 @@
 //! 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING). Directory shape
 //! mirrors `🧬️mutations/`: this file is the family-root assembly (never mod's/includes the slug
 //! dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
-//! inference gets its own `<emoji><slug>/` child (currently: `⏱duration/`, derived from the real
+//! inference gets its own `<emoji><slug>/` child (currently: `⏱️duration/`, derived from the real
 //! `fmt ` chunk's `sampleRate`/`channels` plus the real decoded `data` sample count).
 
 use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
@@ -13,7 +13,7 @@ use super::duration::{compute_wav_duration, WavDuration};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a wav snapshot. One field per named inference under
-/// `💡️inferences/` (currently: `duration`, backed by the `⏱duration/` slug dir).
+/// `💡️inferences/` (currently: `duration`, backed by the `⏱️duration/` slug dir).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.wav.inference")]

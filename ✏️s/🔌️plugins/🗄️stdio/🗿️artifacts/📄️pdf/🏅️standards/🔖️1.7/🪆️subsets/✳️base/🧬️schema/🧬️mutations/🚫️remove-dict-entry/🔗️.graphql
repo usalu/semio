@@ -1,6 +1,0 @@
-# 🚫️ Direct remove-dict-entry GraphQL payload.
-input RemoveDictEntryMutationInput {
-  id: String
-  path: [String!]
-  key: String
-}

@@ -197,7 +197,7 @@ impl store::ArtifactPack for SemioValueSnapshot {
 
 //#region 🌉️ExternalCodecBridge
 /// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
-/// `stdio.semio.value` — the shape `mutate-semio-value` compares under `ordered-json-v1`, derived
+/// `stdio.semio.value` — the shape `🍊️mutate-semio-value` compares under `ordered-json-v1`, derived
 /// from the snapshot type itself rather than hand-written a second time in the adapter, where it
 /// could drift away from the type it claims to project. A thin `pack::to_json_string` wrapper
 /// (first-party, over `ToValue`/`DslValue`). Mirrors `✳️table`'s and `✳️flow`'s own bridges.
@@ -218,7 +218,7 @@ pub fn decode_semio_value_snapshot_json(text: &str) -> Result<SemioValueSnapshot
 //#region 🔖️Wire
 /// 📝️ Parses `stdio.semio.value` DSL text into a [`SemioValueSnapshot`] — a named pass-through of
 /// this snapshot's own `store::ArtifactDsl` impl above, whose trait and error type are both
-/// unnameable outside this crate, so `mutate-semio-value`'s `identity-round-trip` scenario reaches
+/// unnameable outside this crate, so `🍊️mutate-semio-value`'s `identity-round-trip` scenario reaches
 /// the real committed artifact (`../../../../✳️base/📚️examples/🕸️graph/🖼️assets/🗣️.dsl.semio`)
 /// through this instead.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

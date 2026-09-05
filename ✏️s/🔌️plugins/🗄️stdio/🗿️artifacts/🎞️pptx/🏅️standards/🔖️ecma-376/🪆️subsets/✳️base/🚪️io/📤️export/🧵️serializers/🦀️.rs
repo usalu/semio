@@ -209,7 +209,7 @@ fn fresh_rel_id(taken: &mut Vec<String>) -> String {
 
 /// 🔗️ `ppt/presentation.xml`'s relationship list, regenerated for the slide list this snapshot
 /// carries while PRESERVING every relationship the package was read with that this codec does not
-/// own (`presProps`, `viewProps`, `tableStyles`, `notesMaster`, `theme`, …). Only the `slide`
+/// own (`presProps`, `viewProps`, `tableStyles`, `notesMaster`, `theme`, …). Only the `🎞️slide`
 /// pointers are rebuilt, each reusing the id and the declared type URI of the pointer it replaces,
 /// so the list keeps its original order and a Strict package keeps its `purl.oclc.org/ooxml` types.
 /// Returns the slide-master relationship id, the per-slide relationship ids in slide order, and the

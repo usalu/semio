@@ -154,29 +154,29 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.block5d.standard.v1", "standard", "1", &[], None),
-        ("s.block5d.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.block5d.schema.artifact", "schema", "s.block.block5d", &[("schema", "s.block.block5d")], None),
-        ("s.block5d.inference.artifact", "inference", "s.block.block5d.inference", &[("schema", "s.block.block5d.inference")], None),
-        ("s.block5d.composer.native", "composer", "s.block5d@1/*", &[("dialect", "s.block5d@1/*")], None),
-        ("s.block5d.composer.format-1", "composer", "s.stdio.zip@2.0/*", &[("dialect", "s.stdio.zip@2.0/*")], None),
-        ("s.block5d.composer.format-2", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
-        ("s.block5d.composer.format-3", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.block5d.composer.format-4", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
-        ("s.block5d.composer.format-5", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
-        ("s.block5d.grammar.1", "grammar", "block.block5d", &[("grammar", "block.block5d")], None),
-        ("s.block5d.grammar.2", "grammar", "block.block5d.op", &[("grammar", "block.block5d.op")], None),
-        ("s.block5d.grammar.3", "grammar", "block.block5d.diff", &[("grammar", "block.block5d.diff")], None),
-        ("s.block5d.grammar.4", "grammar", "5d.pack", &[("grammar", "5d.pack")], None),
-        ("s.block5d.grammar.5", "grammar", "5d.spr", &[("grammar", "5d.spr")], None),
+        ("s.block.block5d.standard.v1", "standard", "1", &[], None),
+        ("s.block.block5d.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.block.block5d.schema.artifact", "schema", "s.block.block5d", &[("schema", "s.block.block5d")], None),
+        ("s.block.block5d.inference.artifact", "inference", "s.block.block5d.inference", &[("schema", "s.block.block5d.inference")], None),
+        ("s.block.block5d.composer.native", "composer", "s.block.block5d@1/*", &[("dialect", "s.block.block5d@1/*")], None),
+        ("s.block.block5d.composer.format-1", "composer", "s.stdio.zip@2.0/*", &[("dialect", "s.stdio.zip@2.0/*")], None),
+        ("s.block.block5d.composer.format-2", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.block.block5d.composer.format-3", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.block.block5d.composer.format-4", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
+        ("s.block.block5d.composer.format-5", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
+        ("s.block.block5d.grammar.1", "grammar", "block.block5d", &[("grammar", "block.block5d")], None),
+        ("s.block.block5d.grammar.2", "grammar", "block.block5d.op", &[("grammar", "block.block5d.op")], None),
+        ("s.block.block5d.grammar.3", "grammar", "block.block5d.diff", &[("grammar", "block.block5d.diff")], None),
+        ("s.block.block5d.grammar.4", "grammar", "5d.pack", &[("grammar", "5d.pack")], None),
+        ("s.block.block5d.grammar.5", "grammar", "5d.spr", &[("grammar", "5d.spr")], None),
         // 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Block5dPlayApp>>()` derives
         // its extension claim from `<Block5dSnapshot as store::ArtifactDsl>::EXTENSION`
         // (`…/🧬️schema/📸️snapshot/🦀️.rs`), which is `"block5d"`, not `"block"`.
-        ("s.block5d.codec.document-1", "codec", "block.5d:block5d", &[("codec", "block.5d"), ("extension", "block5d")], None),
-        ("s.block5d.localization.en", "localization", "5D Block", &[], Some(("en", "5D Block"))),
-        ("s.block5d.localization.de", "localization", "5D-Baustein", &[], Some(("de", "5D-Baustein"))),
+        ("s.block.block5d.codec.document-1", "codec", "block.5d:block5d", &[("codec", "block.5d"), ("codec-extension", "8:block.5d:block5d")], None),
+        ("s.block.block5d.localization.en", "localization", "5D Block", &[], Some(("en", "5D Block"))),
+        ("s.block.block5d.localization.de", "localization", "5D-Baustein", &[], Some(("de", "5D-Baustein"))),
     ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.block5d")?);
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.block.block5d")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
         for (namespace, value) in *claims {

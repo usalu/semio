@@ -1,0 +1,23 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.ply/mutation.json",
+  "title": "PlyMutation",
+  "type": "object",
+  "required": ["mutation"],
+  "properties": {
+    "mutation": {
+      "type": "string",
+      "enum": ["setSnapshot", "setFormat", "insertComment", "removeComment", "addElement", "removeElement", "insertRow", "removeRow", "setRowProperty"]
+    }
+  },
+  "oneOf": [
+    { "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "snapshot.json" } }, "required": ["snapshot"] },
+    { "properties": { "mutation": { "const": "setFormat" }, "format": { "type": "string", "enum": ["ascii", "binaryLittleEndian", "binaryBigEndian"] } }, "required": ["format"] },
+    { "properties": { "mutation": { "const": "insertComment" }, "index": { "type": "integer" }, "comment": { "type": "string" } }, "required": ["index", "comment"] },
+    { "properties": { "mutation": { "const": "removeComment" }, "index": { "type": "integer" } }, "required": ["index"] },
+    { "properties": { "mutation": { "const": "addElement" }, "index": { "type": "integer" }, "element": {} }, "required": ["index", "element"] },
+    { "properties": { "mutation": { "const": "removeElement" }, "name": { "type": "string" } }, "required": ["name"] },
+    { "properties": { "mutation": { "const": "insertRow" }, "elementName": { "type": "string" }, "index": { "type": "integer" }, "row": {} }, "required": ["elementName", "index", "row"] },
+    { "properties": { "mutation": { "const": "removeRow" }, "elementName": { "type": "string" }, "index": { "type": "integer" } }, "required": ["elementName", "index"] },
+    { "properties": { "mutation": { "const": "setRowProperty" }, "elementName": { "type": "string" }, "rowIndex": { "type": "integer" }, "propertyName": { "type": "string" }, "value": {} }, "required": ["elementName", "rowIndex", "propertyName", "value"] }
+  ]
+}

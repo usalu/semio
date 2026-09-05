@@ -1,0 +1,47 @@
+{
+  "$schema": "./🧬️catalog.schema.json",
+  "version": 1,
+  "encodings": { "ttf": "🔤️outline.ttf", "woff": "🌐️web.woff", "woff2": "🗜️compressed.woff2" },
+  "weights": { "🪶️light": 300, "📖️regular": 400, "⚖️medium": 500, "🖋️semibold": 600, "🏋️bold": 700 },
+  "families": [
+    {
+      "directory": "🚀️anta", "family": "Anta", "weights": ["📖️regular"],
+      "subsets": [
+        { "directory": "🏛️latin", "sourceSubset": "latin" },
+        { "directory": "➕️latin-ext", "sourceSubset": "latin-ext" },
+        { "directory": "🧮️math", "sourceSubset": "math" },
+        { "directory": "🔣️symbols", "sourceSubset": "symbols" }
+      ]
+    },
+    {
+      "directory": "🧱️kelly-slab", "family": "Kelly Slab", "weights": ["📖️regular"],
+      "subsets": [
+        { "directory": "🏛️latin", "sourceSubset": "latin" },
+        { "directory": "➕️latin-ext", "sourceSubset": "latin-ext" },
+        { "directory": "🪆️cyrillic", "sourceSubset": "cyrillic" }
+      ]
+    },
+    {
+      "directory": "⌨️share-tech-mono", "family": "Share Tech Mono", "weights": ["📖️regular"],
+      "subsets": [{ "directory": "🏛️latin", "sourceSubset": "latin" }]
+    },
+    {
+      "directory": "😀️noto-emoji", "family": "Noto Emoji", "weights": ["🪶️light", "📖️regular", "⚖️medium", "🖋️semibold", "🏋️bold"],
+      "subsets": [
+        { "directory": "🌍️regions", "sourceSubset": "0" },
+        { "directory": "🚩️flags", "sourceSubset": "1" },
+        { "directory": "🔣️symbols", "sourceSubset": "2" },
+        { "directory": "🧰️objects", "sourceSubset": "3" },
+        { "directory": "🎯️activities", "sourceSubset": "4" },
+        { "directory": "🧳️travel", "sourceSubset": "5" },
+        { "directory": "🍽️food", "sourceSubset": "6" },
+        { "directory": "🌿️nature", "sourceSubset": "7" },
+        { "directory": "🧑️people", "sourceSubset": "8" },
+        { "directory": "😀️faces", "sourceSubset": "9" },
+        { "directory": "🔗️joined-forms", "sourceSubset": "10" },
+        { "directory": "🪉️supplement", "sourceSubset": "11" },
+        { "directory": "🌐️complete", "sourceSubset": null }
+      ]
+    }
+  ]
+}

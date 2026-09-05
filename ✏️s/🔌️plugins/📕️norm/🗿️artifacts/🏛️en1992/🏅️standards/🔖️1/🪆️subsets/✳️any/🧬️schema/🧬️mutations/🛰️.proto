@@ -1,0 +1,75 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation;
+
+message En1992Mutation {
+  // @state artifact
+  string annex = 1;
+  // @state artifact
+  double m_ed_knm = 2;
+  // @state artifact
+  double v_ed_kn = 3;
+  // @state artifact
+  double f_ck = 4;
+  // @state artifact
+  double b_mm = 5;
+  // @state artifact
+  double d_mm = 6;
+  // @state artifact
+  double a_s_mm2 = 7;
+  // @state artifact
+  double f_yk = 8;
+  // @state artifact
+  double rho_l = 9;
+  // @state artifact
+  double n_ed_kn = 10;
+  // @state artifact
+  double p_kn = 11;
+  // @state artifact
+  double a_c_mm2 = 12;
+  // @state artifact
+  bool use_fem = 13;
+  // @state artifact
+  double span_m = 14;
+  // @state artifact
+  double udl_kn_m = 15;
+  // @state artifact
+  string fire_rating = 16;
+  // @state artifact
+  double provided_axis_distance_mm = 17;
+  // @state artifact
+  double bridge_sigma_c_mpa = 18;
+  // @state artifact
+  double bridge_delta_sigma_s_mpa = 19;
+  // @state artifact
+  string tightness_class = 20;
+  // @state artifact
+  double hd_over_h = 21;
+  // @state artifact
+  double liquid_sigma_s_mpa = 22;
+  // @state artifact
+  double liquid_rho_p_eff = 23;
+  // @state artifact
+  double liquid_f_ct_eff_mpa = 24;
+  // @state artifact
+  double liquid_e_s_mpa = 25;
+  // @state artifact
+  double liquid_s_r_max_mm = 26;
+  // @state artifact
+  double anchor_h_ef_mm = 27;
+  // @state artifact
+  bool anchor_cracked = 28;
+  // @state artifact
+  double anchor_f_uk_mpa = 29;
+  // @state artifact
+  double anchor_f_yk_mpa = 30;
+  // @state artifact
+  double anchor_a_s_mm2 = 31;
+  // @state artifact
+  double anchor_d_mm = 32;
+  // @state artifact
+  double anchor_c1_mm = 33;
+  // @state artifact
+  double anchor_n_ed_kn = 34;
+  // @state artifact
+  double anchor_v_ed_kn = 35;
+}

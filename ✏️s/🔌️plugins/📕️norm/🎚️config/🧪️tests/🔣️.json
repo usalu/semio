@@ -1,0 +1,53 @@
+{
+  "contractId": "semio.norm.config-mutation/v1",
+  "cases": [
+    { "id": "select", "before": null, "payload": { "index": 5 }, "after": 5, "warning": false },
+    { "id": "clear", "before": 5, "payload": { "index": null }, "after": null, "warning": false },
+    { "id": "same-selection", "before": 5, "payload": { "index": 5 }, "after": 5, "warning": true },
+    { "id": "missing-clears", "before": 5, "payload": {}, "after": null, "warning": false },
+    { "id": "maximum-index", "before": null, "payload": { "index": 4294967295 }, "after": 4294967295, "warning": false }
+  ],
+  "invalid": [ { "index": -1 }, { "index": 4294967296 }, { "index": 0.5 }, { "index": "5" }, { "index": null, "unexpected": true } ],
+  "text": [
+    { "id": "clear", "wire": "change-selected-check-index", "accepted": true, "after": null },
+    { "id": "zero", "wire": "change-selected-check-index index=0", "accepted": true, "after": 0 },
+    { "id": "select", "wire": "change-selected-check-index index=5", "accepted": true, "after": 5 },
+    { "id": "whitespace", "wire": " \tchange-selected-check-index\tindex = 5  ", "accepted": true, "after": 5 },
+    { "id": "maximum", "wire": "change-selected-check-index index=4294967295", "accepted": true, "after": 4294967295 },
+    { "id": "unknown-field", "wire": "change-selected-check-index index=5 unexpected=0", "accepted": false },
+    { "id": "duplicate-field", "wire": "change-selected-check-index index=5 index=6", "accepted": false },
+    { "id": "second-operation", "wire": "change-selected-check-index index=5 change-selected-check-index", "accepted": false },
+    { "id": "trailing-token", "wire": "change-selected-check-index index=5 garbage", "accepted": false },
+    { "id": "overflow", "wire": "change-selected-check-index index=4294967296", "accepted": false },
+    { "id": "negative", "wire": "change-selected-check-index index=-1", "accepted": false },
+    { "id": "fraction", "wire": "change-selected-check-index index=0.5", "accepted": false },
+    { "id": "null-is-not-an-unsigned-token", "wire": "change-selected-check-index index=null", "accepted": false }
+  ],
+  "binary": [
+    { "id": "clear", "hex": "01000000", "accepted": true, "after": null },
+    { "id": "zero", "hex": "01000001000400", "accepted": true, "after": 0 },
+    { "id": "select", "hex": "01000001000405", "accepted": true, "after": 5 },
+    { "id": "maximum", "hex": "010000010004ffffffff0f", "accepted": true, "after": 4294967295 },
+    { "id": "trailing-byte", "hex": "0100000100040500", "accepted": false },
+    { "id": "unknown-field", "hex": "01000001010405", "accepted": false },
+    { "id": "duplicate-field", "hex": "01000002000405000406", "accepted": false },
+    { "id": "nonminimal-ordinal", "hex": "0180000000", "accepted": false },
+    { "id": "nonminimal-symbol-count", "hex": "0100800000", "accepted": false },
+    { "id": "nonminimal-field-count", "hex": "0100008000", "accepted": false },
+    { "id": "nonminimal-field-id", "hex": "0100000180000405", "accepted": false },
+    { "id": "nonminimal-value", "hex": "0100000100048500", "accepted": false },
+    { "id": "unused-symbol", "hex": "010001016100", "accepted": false },
+    { "id": "explicit-absent", "hex": "010000010000", "accepted": false },
+    { "id": "overflow", "hex": "0100000100048080808010", "accepted": false },
+    { "id": "ordinal-truncation", "hex": "0180808080100000", "accepted": false },
+    { "id": "wrong-ordinal", "hex": "01010000", "accepted": false },
+    { "id": "wrong-format", "hex": "00000000", "accepted": false },
+    { "id": "truncated-0", "hex": "", "accepted": false },
+    { "id": "truncated-1", "hex": "01", "accepted": false },
+    { "id": "truncated-2", "hex": "0100", "accepted": false },
+    { "id": "truncated-3", "hex": "010000", "accepted": false },
+    { "id": "truncated-4", "hex": "01000001", "accepted": false },
+    { "id": "truncated-5", "hex": "0100000100", "accepted": false },
+    { "id": "truncated-6", "hex": "010000010004", "accepted": false }
+  ]
+}

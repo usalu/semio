@@ -33,6 +33,7 @@ pub fn plugin() -> Result<Plugin<TrinityApps>, semio_framework_plugin::PluginAss
     Plugin::<TrinityApps>::builder("trinity")
         .label("Trinity")
         .version("0.1.0")
+        .package_id("semio:trinity")
         .declare_artifact(crate::artifacts::jack::artifact())
         .declare_artifact(crate::artifacts::rewriting::artifact())
         .editor_mutation_roster::<crate::editor::jack::TrinityJackPlayApp>()

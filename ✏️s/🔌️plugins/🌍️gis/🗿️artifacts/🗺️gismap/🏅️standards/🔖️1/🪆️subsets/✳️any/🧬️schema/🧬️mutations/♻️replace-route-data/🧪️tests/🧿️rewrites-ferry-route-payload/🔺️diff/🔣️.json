@@ -1,0 +1,29 @@
+{
+  "artifact": null,
+  "positions": null,
+  "routes": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "route-ferry",
+        "patch": {
+          "data": {
+            "kind": "ferry",
+            "lengthKm": 13.75,
+            "seasonal": true
+          }
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "regions": null,
+  "layerVisibility": null,
+  "layerStrokeScale": null,
+  "cameraJson": null,
+  "renderMode": null,
+  "vectorStyle": null,
+  "lodMode": null,
+  "locale": null
+}

@@ -5,7 +5,7 @@
   "displayName": "Change Parameter Binding",
   "emoji": "🔧️",
   "aggregateVariant": "ChangeParameterBinding",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-parameter-binding",
   "binaryTag": 3,
   "invertibility": "explicit-mutation",

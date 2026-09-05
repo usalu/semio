@@ -1,0 +1,3 @@
+module Stdio_tiff_mutation;
+# Direct tags: change-byte-order=2, insert-ifd=3, remove-ifd=4, replace-tag=5, remove-tag=6, replace-pixels=7
+public type Mutation = unit { format: uint8; tag: uint8; payload: bytes &eod; };

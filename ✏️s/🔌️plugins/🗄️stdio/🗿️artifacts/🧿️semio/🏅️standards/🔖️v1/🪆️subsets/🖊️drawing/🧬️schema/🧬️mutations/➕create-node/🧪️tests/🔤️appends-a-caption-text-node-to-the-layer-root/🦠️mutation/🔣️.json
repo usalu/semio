@@ -1,0 +1,18 @@
+{
+  "CreateNode": {
+    "parent": {
+      "layer": 0,
+      "path": []
+    },
+    "index": 3,
+    "node": {
+      "kind": "text",
+      "value": "Caption",
+      "at": {
+        "x": 2.0,
+        "y": 20.0
+      },
+      "style": "primary"
+    }
+  }
+}

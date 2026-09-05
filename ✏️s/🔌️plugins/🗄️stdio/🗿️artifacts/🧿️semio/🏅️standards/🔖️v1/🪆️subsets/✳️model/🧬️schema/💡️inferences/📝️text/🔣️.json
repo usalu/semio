@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/s/stdio/semio/model/inference/text.json",
-  "title": "SemioModelInferenceText",
-  "type": "object"
-}

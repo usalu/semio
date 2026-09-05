@@ -57,6 +57,22 @@
         "command": "bun ./📜️script.ts canonical-pair-check"
       }
     },
+    "inference-discovery-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts inference-discovery-oracle"
+      }
+    },
+    "inference-discovery-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts inference-discovery-check"
+      }
+    },
     "dev": {
       "executor": "nx:run-commands",
       "options": {

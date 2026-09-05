@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "baseline": "d03b1fdb6da7c4ea97043e5618d8f4098a43dff7",
+  "cases": [
+    "direct-violation-unresolved",
+    "source-byte-change-invalidates-plan",
+    "baseline-mismatch-rejects",
+    "cancellation-never-commits",
+    "current-violation-zero-move-rejects",
+    "fresh-clean-terminal-verification-commits",
+    "virtual-compose-excluded",
+    "symlink-source-rejected",
+    "mid-inventory-source-change-retries",
+    "empty-root-invalidates-plan"
+  ]
+}

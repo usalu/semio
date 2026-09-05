@@ -47,6 +47,11 @@ There are other agents working on other logical, even if they work on the same f
 
 ---
 
+Use the main chat with Fable 5.1 High for main plan coordination, use multiple Opus 5 High agents for task execution, use multiple Sonnet 5 High agents for read-only exploration.
+Always use a work fleet of maximum possible parallel agents.
+There are other agents working on other logical, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
+
+---
 
 Use the main chat with Opus 5 High for main plan coordination, use multiple Sonnet 5 High agents for task execution, use multiple Haiku 4.5 agents for read-only exploration.
 Always use a work fleet of maximum possible parallel agents.
@@ -571,7 +576,19 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
-Under packages should only be 
+Use as many parallel agents as possible for each different file tree and handpick every emoji.
+By no means make again the horrible edits polluting the workspace more rather than cleaning it over some terrible scripts or anything alike.
+
+e.g. violations
+🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/🧪️🧬️🌾️🌾️schema/🔣️.json # not single emoji
+🌎️hub/🗿️artifact-authority/🗂️chunk-cas/🦀️.rs # generic and not unique among siblings
+🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/tests/🌾flatten-with-skip.rs # missing emoji
+
+
+---
+
+Under packages should only be the package declaration but no actual implementation.
+The implementation is inside a domain driven folder taxonomy above the package.
 
 ---
 

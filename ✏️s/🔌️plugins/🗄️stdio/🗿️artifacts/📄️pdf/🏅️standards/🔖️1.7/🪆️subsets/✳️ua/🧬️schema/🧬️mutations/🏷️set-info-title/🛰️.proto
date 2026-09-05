@@ -1,7 +1,0 @@
-syntax = "proto3";
-package semio.s_stdio_pdf_1_7_ua.mutation.set_info_title;
-
-// 🏷️ Direct set-info-title protobuf payload.
-message SetInfoTitleMutation {
-  string title = 1;
-}

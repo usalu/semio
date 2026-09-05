@@ -1,8 +1,8 @@
 // #region 🧲️Header
 // 💻️ .storybook/stories/framework/hosts/WorldTerrainLayer.stories.tsx
-// Specs: Host the framework renderer's `WorldTerrainLayer` (chunked DEM-tile terrain mesh) against the real
+// Specs: Host the framework renderer's `🗺️WorldTerrainLayer` (chunked DEM-tile terrain mesh) against the real
 // prebuilt `framework/surface/terrain/rs` `TerrainSession` WASM engine.
-// Summary: `WorldTerrainLayer` renders bare r3f primitives (`<group>`/`<mesh>`) — normally mounted inside
+// Summary: `🗺️WorldTerrainLayer` renders bare r3f primitives (`<group>`/`<mesh>`) — normally mounted inside
 // `World3dHost`'s own `<WorldCanvas>` — so this story wraps it in a standalone `@react-three/fiber` `<Canvas>`.
 // The DEM tile URL template is intentionally storybook-relative/missing: `TerrainTileRenderer` catches fetch
 // failures into a `tileMiss` set (never throws), so the layer renders an empty (but real, wasm-backed) mesh

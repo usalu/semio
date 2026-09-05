@@ -5,7 +5,7 @@
   "displayName": "Replace Model",
   "emoji": "♻️",
   "aggregateVariant": "ReplaceModel",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "replace-model",
   "binaryTag": 0,
   "invertibility": "self",

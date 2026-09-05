@@ -1950,7 +1950,7 @@ impl ArtifactEditor for CadPlayApp {
     }
 
     /// 🪟️ Keyed by the 4 fixed window-KIND ids; each window collects its own measures from the edit
-    /// mode's `🎚️options/*` components.
+    /// mode's `☑️options/*` components.
     fn window_measures(_doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let runtime = cad_runtime_from_config(cfg.snapshot);
         let is_de = cad_is_de_locale(cfg.snapshot);
@@ -2454,7 +2454,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retained_factory_proofs_activate_the_real_cad_manifest_and_close_under_the_production_grant() {
-        let fixture: Value = protocol::json::parse(include_str!("../🧪️retained-jobs/🔣️.json")).expect("CAD activation fixture");
+        let fixture: Value = protocol::json::parse(include_str!("../🗄️retained-jobs/🔣️.json")).expect("CAD activation fixture");
         let activation = &fixture["activation"];
         let controller = activation["controller"].as_str().expect("controller");
         let bus = semio_framework::ActionBus::new();
@@ -2528,7 +2528,7 @@ mod tests {
 
     #[test]
     fn retained_route_fixture_matches_the_exact_owner_manifest_and_laws() {
-        let fixture: Value = protocol::json::parse(include_str!("../🧪️retained-jobs/🔣️.json")).expect("CAD retained route fixture");
+        let fixture: Value = protocol::json::parse(include_str!("../🗄️retained-jobs/🔣️.json")).expect("CAD retained route fixture");
         let routes = fixture.get("routes").and_then(Value::as_array).expect("route array");
         let route_ids = routes.iter().map(|route| route.get("id").and_then(Value::as_str).expect("route id")).collect::<std::collections::BTreeSet<_>>();
         let command_ids = every_command()
@@ -3525,7 +3525,7 @@ mod tests {
         config = config_after(&emit, &config);
         assert!(cad_runtime_from_config(&config).engagement_session.is_some());
 
-        // 🔣️box.json's default boxMode is "point" (length/width prompt); select diagonal mode (key
+        // 📦️box.json's default boxMode is "point" (length/width prompt); select diagonal mode (key
         // "d") to reach the classic two-corner-click flow.
         config.engagement_input = "d".into();
         let emit = drive_with_config(&app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })), &config);
@@ -3541,7 +3541,7 @@ mod tests {
         let emit = drive_with_config(&app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })), &config);
         config = config_after(&emit, &config);
 
-        // 🔣️box.json's `set.height` only records the height (state stays first_corner_height); an
+        // 📦️box.json's `set.height` only records the height (state stays first_corner_height); an
         // explicit `confirm` (Enter) is needed to reach `ready`, box's commit.fromStates.
         config.engagement_input = "Confirm".into();
         let emit = drive_with_config(&app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })), &config);

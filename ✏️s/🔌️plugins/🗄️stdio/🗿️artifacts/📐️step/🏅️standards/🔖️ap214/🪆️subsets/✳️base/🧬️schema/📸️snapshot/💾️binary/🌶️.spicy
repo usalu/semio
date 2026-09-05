@@ -1,4 +1,0 @@
-module Stdio_step_snapshot;
-type Document = unit {
-    payload: bytes &eod;
-};

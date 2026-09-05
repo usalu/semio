@@ -5,7 +5,7 @@
   "displayName": "Add Step",
   "emoji": "➕",
   "aggregateVariant": "AddStep",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "add-step",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

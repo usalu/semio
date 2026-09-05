@@ -48,7 +48,9 @@
       "status": "declared"
     }
   ],
-  "codecs": [],
+  "codecs": [
+    { "id": "s.stdio.dxf.standard.r12.codec.native-document.v1", "status": "implemented", "from": "s.stdio.dxf.standard.r12.dialect.source", "to": "s.stdio.dxf.standard.r12.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.dxf.v1", "artifact_kind": "stdio.dxf", "document_schema": "stdio.dxf", "extension": "dxf", "pack_schema_hash": "b0d5eb41ea2a3e261d99cb7387688720c225d74dad1b4d260b35e8ca28b9fd99", "runtime_capability_id": "s.stdio.dxf.standard.r12.codec.codec-stdio-dxf-extension-dxf.v1" } }
+  ],
   "mutations": [],
   "inferences": [],
   "resources": [
@@ -83,22 +85,22 @@
   ],
   "runtime_capabilities": [
     {
-      "id": "s.stdio.dxf.runtime.codec.codec-stdio-dxf-extension-dxf.v1",
+      "id": "s.stdio.dxf.standard.r12.codec.codec-stdio-dxf-extension-dxf.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec:stdio.dxf|extension:dxf",
+      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.dxf:dxf|codec:stdio.dxf",
       "claims": [
         {
           "namespace": "codec",
           "value": "stdio.dxf"
         },
         {
-          "namespace": "extension",
-          "value": "dxf"
+          "namespace": "codec-extension",
+          "value": "9:stdio.dxf:dxf"
         }
       ]
     },
     {
-      "id": "s.stdio.dxf.runtime.composer.dialect-s-stdio-dxf-r12.v1",
+      "id": "s.stdio.dxf.composer.dialect-s-stdio-dxf-r12.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.dxf@r12/*",
       "claims": [
@@ -109,7 +111,7 @@
       ]
     },
     {
-      "id": "s.stdio.dxf.runtime.grammar.grammar-stdio-dxf.v1",
+      "id": "s.stdio.dxf.grammar.grammar-stdio-dxf.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.dxf",
       "claims": [
@@ -120,7 +122,7 @@
       ]
     },
     {
-      "id": "s.stdio.dxf.runtime.grammar.grammar-stdio-dxf-diff.v1",
+      "id": "s.stdio.dxf.grammar.grammar-stdio-dxf-diff.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.dxf.diff",
       "claims": [
@@ -131,7 +133,7 @@
       ]
     },
     {
-      "id": "s.stdio.dxf.runtime.grammar.grammar-stdio-dxf-op.v1",
+      "id": "s.stdio.dxf.grammar.grammar-stdio-dxf-op.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.dxf.op",
       "claims": [
@@ -142,7 +144,7 @@
       ]
     },
     {
-      "id": "s.stdio.dxf.runtime.grammar.grammar-stdio-dxf-pack.v1",
+      "id": "s.stdio.dxf.grammar.grammar-stdio-dxf-pack.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.dxf.pack",
       "claims": [
@@ -153,7 +155,7 @@
       ]
     },
     {
-      "id": "s.stdio.dxf.runtime.grammar.grammar-stdio-dxf-spr.v1",
+      "id": "s.stdio.dxf.grammar.grammar-stdio-dxf-spr.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.dxf.spr",
       "claims": [
@@ -164,7 +166,7 @@
       ]
     },
     {
-      "id": "s.stdio.dxf.runtime.inference.schema-s-stdio-dxf-inference.v1",
+      "id": "s.stdio.dxf.inference.schema-s-stdio-dxf-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:s.stdio.dxf.inference",
       "claims": [
@@ -175,7 +177,7 @@
       ]
     },
     {
-      "id": "s.stdio.dxf.runtime.representation.mime-image-vnd-dxf-extension-dxf.v1",
+      "id": "s.stdio.dxf.standard.r12.representation.mime-image-vnd-dxf-extension-dxf",
       "category": "representation",
       "descriptor": "runtime-capability:representation:mime:image/vnd.dxf|extension:.dxf",
       "claims": [
@@ -190,7 +192,7 @@
       ]
     },
     {
-      "id": "s.stdio.dxf.runtime.schema.schema-s-stdio-dxf.v1",
+      "id": "s.stdio.dxf.schema.schema-s-stdio-dxf.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.dxf",
       "claims": [

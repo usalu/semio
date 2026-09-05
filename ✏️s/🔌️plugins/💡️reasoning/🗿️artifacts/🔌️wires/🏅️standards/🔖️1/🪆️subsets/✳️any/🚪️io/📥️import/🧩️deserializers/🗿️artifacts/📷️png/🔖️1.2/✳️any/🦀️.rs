@@ -5,7 +5,7 @@
 //! to bytes and then tried to decode THOSE bytes as a `WiresSnapshot` pack (falling back to
 //! `WiresSnapshot::parse_dsl` on failure) — a confused type-pun, same class as the sibling `🎨️svg`
 //! leaf's bug. No real raster-image<->wires-graph mapping exists — this is now an honest
-//! not-yet-implemented stub, the same treatment `📄️txt` already had. `IoFidelity::Lossy`.
+//! not-yet-implemented stub, the same treatment `🔤️txt` already had. `IoFidelity::Lossy`.
 
 use crate::artifacts::wires::WiresSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;

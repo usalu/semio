@@ -22,7 +22,7 @@ pub type Block2dStore = store::ArtifactStore<Block2dSnapshot, Block2dMutation>;
 /// create/delete/rename/change/move, set-like compatibility-rule/attribute/author add/remove, the
 /// board camera's pan/zoom, and the session meta description. The old whole-document-replace and
 /// no-op sentinel variants are gone — whole-document loads (examples, DSL text edit) now decompose
-/// into this vocabulary (see the editor's `🎮️commands/🎨️set-active-example/🦀️.rs`'s
+/// into this vocabulary (see the editor's `🎮️commands/🎬️set-active-example/🦀️.rs`'s
 /// `replace_document_operations`).
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum, dsl::Mutations)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -61,7 +61,7 @@ pub enum Block2dMutation {
 //#region 🏷️Kinds
 /// 🏷️ The kebab-case spelling of every [`Block2dMutation`] variant, in declaration order — the exact
 /// vocabulary the `block-2d-1-any` mutation catalog (`../../🔣️oracle.json`) declares and
-/// the `mutate-block-2d-1` exhaustive case measures itself against. The framework never parses Rust, so
+/// the `🧩️mutate-block-2d-1` exhaustive case measures itself against. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
 pub const KINDS: &[&str] = &[
     "rename-node-kind",
@@ -397,7 +397,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔮️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

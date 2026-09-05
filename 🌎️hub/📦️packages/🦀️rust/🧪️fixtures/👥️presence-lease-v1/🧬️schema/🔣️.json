@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "limits", "vectors"],
+  "properties": {
+    "schema": { "const": "semio.hub.presence-lease/v1" },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ttlMs", "maximumItems", "maximumEntryBytes", "maximumBytes"],
+      "properties": {
+        "ttlMs": { "const": 15000 },
+        "maximumItems": { "const": 64 },
+        "maximumEntryBytes": { "const": 4096 },
+        "maximumBytes": { "const": 262144 }
+      }
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 16,
+      "items": { "$ref": "#/$defs/vector" }
+    }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "operation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "scope", "actor", "liveId", "nowMs"],
+          "properties": {
+            "kind": { "const": "install" },
+            "scope": { "$ref": "#/$defs/text" },
+            "actor": { "$ref": "#/$defs/text" },
+            "liveId": { "$ref": "#/$defs/text" },
+            "nowMs": { "type": "integer", "minimum": 0, "maximum": 1000000 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "scope", "actor", "liveId", "nowMs", "peerTag", "peerBytes"],
+          "properties": {
+            "kind": { "const": "refresh" },
+            "scope": { "$ref": "#/$defs/text" },
+            "actor": { "$ref": "#/$defs/text" },
+            "liveId": { "$ref": "#/$defs/text" },
+            "nowMs": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+            "peerTag": { "type": "string", "maxLength": 64 },
+            "peerBytes": { "type": "integer", "minimum": 0, "maximum": 8192 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "scope", "actor", "liveId", "nowMs"],
+          "properties": {
+            "kind": { "enum": ["tick", "close"] },
+            "scope": { "$ref": "#/$defs/text" },
+            "actor": { "$ref": "#/$defs/text" },
+            "liveId": { "$ref": "#/$defs/text" },
+            "nowMs": { "type": "integer", "minimum": 0, "maximum": 1000000 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "scope", "count", "peerBytes", "nowMs"],
+          "properties": {
+            "kind": { "const": "fill" },
+            "scope": { "$ref": "#/$defs/text" },
+            "count": { "type": "integer", "minimum": 1, "maximum": 64 },
+            "peerBytes": { "type": "integer", "minimum": 0, "maximum": 4096 },
+            "nowMs": { "type": "integer", "minimum": 0, "maximum": 1000000 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": { "kind": { "const": "restart" } }
+        }
+      ]
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "count", "bytes", "actors"],
+      "properties": {
+        "scope": { "$ref": "#/$defs/text" },
+        "count": { "type": "integer", "minimum": 0, "maximum": 64 },
+        "bytes": { "type": "integer", "minimum": 0, "maximum": 262144 },
+        "actors": { "type": "array", "maxItems": 64, "items": { "$ref": "#/$defs/text" } }
+      }
+    },
+    "vector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "operations", "expected"],
+      "properties": {
+        "name": { "$ref": "#/$defs/text" },
+        "operations": { "type": "array", "minItems": 1, "maxItems": 80, "items": { "$ref": "#/$defs/operation" } },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["outcomes", "fanoutCount", "final", "socketStillLive", "durableWrites", "directoryRecipients"],
+          "properties": {
+            "outcomes": { "type": "array", "minItems": 1, "maxItems": 80, "items": { "enum": ["published", "no-change", "rejected", "restarted"] } },
+            "fanoutCount": { "type": "integer", "minimum": 0, "maximum": 80 },
+            "final": { "type": "array", "maxItems": 8, "items": { "$ref": "#/$defs/summary" } },
+            "socketStillLive": { "type": "boolean" },
+            "durableWrites": { "const": 0 },
+            "directoryRecipients": { "type": "array", "maxItems": 1, "uniqueItems": true, "items": { "const": "member" } }
+          }
+        }
+      }
+    }
+  }
+}

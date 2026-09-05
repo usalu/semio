@@ -1,3 +1,0 @@
-syntax = "proto3";
-package semio.s.stdio.pdf.1.7.inference_text;
-message Artifact { string schema = 1; bytes payload = 2; }

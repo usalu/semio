@@ -1,8 +1,0 @@
-syntax = "proto3";
-package semio.stdio_xml.snapshot_text;
-
-// 📝️ Envelope-wrapped well-formed XML document text (UTF-8).
-message Artifact {
-  string schema = 1;
-  string xml_text = 2;
-}

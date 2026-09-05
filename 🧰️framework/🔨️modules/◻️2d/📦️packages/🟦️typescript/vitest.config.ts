@@ -9,7 +9,7 @@ export default {
   root,
   resolve: {
     alias: {
-      "@semio-tech/flow-core": resolve(root, "../../../🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core.js"),
+      "@semio-tech/flow-core": resolve(root, "../../../🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/flow_core.js"),
     },
   },
   test: {

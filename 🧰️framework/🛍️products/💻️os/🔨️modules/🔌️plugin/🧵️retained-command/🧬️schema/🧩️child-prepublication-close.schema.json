@@ -1,0 +1,33 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "maximumItems", "maximumBytes", "children", "expectedRetirementOrder", "zeroGrantPreservesOwner", "parentReleasedBeforeChildren", "completionRejections", "rejectionReturnsOwner", "existingCompletionUntouched", "boundedFactoryPublishesChild"],
+  "properties": {
+    "schema": { "const": "retained-command-child-prepublication-close/v1" },
+    "maximumItems": { "const": 1 },
+    "maximumBytes": { "const": 4 },
+    "children": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "slot", "childId", "value"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "slot": { "type": "string", "minLength": 1 },
+          "childId": { "type": "string", "minLength": 1 },
+          "value": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "expectedRetirementOrder": { "const": ["second", "first"] },
+    "zeroGrantPreservesOwner": { "const": true },
+    "parentReleasedBeforeChildren": { "const": false },
+    "completionRejections": { "const": ["duplicate", "busy"] },
+    "rejectionReturnsOwner": { "const": true },
+    "existingCompletionUntouched": { "const": true },
+    "boundedFactoryPublishesChild": { "const": false }
+  }
+}

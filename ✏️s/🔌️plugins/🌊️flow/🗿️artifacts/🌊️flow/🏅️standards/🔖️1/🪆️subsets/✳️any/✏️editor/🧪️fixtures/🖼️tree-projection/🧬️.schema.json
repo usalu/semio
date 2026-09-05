@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contractId", "maximumDepth", "maximumNodes", "retirementSteps", "retirementProbe", "cases"],
+  "properties": {
+    "contractId": { "const": "semio.fixture.tree-projection/v1" },
+    "maximumDepth": { "const": 64 },
+    "maximumNodes": { "const": 384 },
+    "retirementSteps": { "const": 12672 },
+    "retirementProbe": {
+      "type": "object", "additionalProperties": false,
+      "required": ["reservedPages", "childCapacity", "ownedNodes", "closeSteps", "supersededLimit", "error", "terminalEmpty"],
+      "properties": {
+        "reservedPages": { "const": 384 }, "childCapacity": { "const": 32 }, "ownedNodes": { "const": 12257 },
+        "closeSteps": { "const": 12641 }, "supersededLimit": { "const": 8192 },
+        "error": { "const": "rejected-children" }, "terminalEmpty": { "const": true }
+      }
+    },
+    "cases": { "type": "array", "minItems": 4, "maxItems": 4, "items": {
+      "type": "object", "additionalProperties": false, "required": ["id", "input"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "input": { "$ref": "#/definitions/node" },
+        "expected": { "$ref": "#/definitions/node" },
+        "error": { "enum": ["duplicate-key", "rejected-children"] }
+      },
+      "minProperties": 3,
+      "maxProperties": 3,
+      "oneOf": [{ "properties": { "expected": {} }, "required": ["expected"] }, { "properties": { "error": {} }, "required": ["error"] }]
+    } }
+  },
+  "definitions": {
+    "node": {
+      "type": "object", "additionalProperties": false, "required": ["key", "component", "children"],
+      "properties": {
+        "key": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "rejected": { "type": "boolean" },
+        "component": { "oneOf": [
+          { "type": "object", "additionalProperties": false, "required": ["type"], "properties": { "type": { "const": "container" } } },
+          { "type": "object", "additionalProperties": false, "required": ["type", "value"], "properties": { "type": { "const": "text" }, "value": { "type": "string", "maxLength": 64 } } }
+        ] },
+        "children": { "type": "array", "maxItems": 32, "items": { "$ref": "#/definitions/node" } }
+      }
+    }
+  }
+}

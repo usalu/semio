@@ -5,7 +5,7 @@
  * types/functions only, no external runtime libraries; same semantics, same field names (camelCase
  * mirrors Rust's `#[serde(rename_all = "camelCase")]`), same function names in camelCase. */
 import type { IconName } from "@semio-tech/assets";
-import type { LocalizedLabel } from "../🛂️manifest/🤖️generated/🟦️ui-axes.ts";
+import type { LocalizedLabel } from "../🛂️manifest/🤖️generated/🎚️ui-axes.ts";
 export type { IconName, LocalizedLabel };
 
 // #region 🔖️Definition

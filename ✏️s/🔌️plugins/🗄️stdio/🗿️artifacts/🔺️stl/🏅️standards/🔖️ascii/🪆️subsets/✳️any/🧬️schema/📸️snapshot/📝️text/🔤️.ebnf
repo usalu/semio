@@ -1,0 +1,13 @@
+(* ASCII STL wire grammar (https://en.wikipedia.org/wiki/STL_(file_format)). Bare text: the
+   `semio stdio.stl.dsl v1` preamble line and its trailing newline are stripped by
+   `store::semio_format::split_text_preamble` BEFORE this grammar's `solid` production runs. *)
+solid = "solid", [ name ], { facet }, "endsolid", [ name ] ;
+facet = "facet", "normal", vector3,
+        "outer", "loop",
+        vertex, vertex, vertex,
+        "endloop",
+        "endfacet" ;
+vertex = "vertex", vector3 ;
+vector3 = real, real, real ;
+name = { letter | digit | "_" | "-" | "." } ;
+real = [ "-" ], digit, { digit }, [ ".", digit, { digit } ], [ ( "e" | "E" ), [ "-" | "+" ], digit, { digit } ] ;

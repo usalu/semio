@@ -538,7 +538,7 @@ pub fn round_trip_layout_dsl(text: &str) -> Result<String, String> {
 //#region 🔖️Kinds
 /// 🏷️ Kebab-case spelling of every `LayoutMutation` variant, in declaration order — the vocabulary
 /// the `layout-1-any` catalog (`../../🔣️oracle.json`) declares and the
-/// `mutate-layout-1` exhaustive case measures itself against. The order is the document's own
+/// `📐️mutate-layout-1` exhaustive case measures itself against. The order is the document's own
 /// layering: three root scalars first, then the `pages` pool, then `stories`, then `links`, then the
 /// per-page `frames` nested one level below a page. `kinds_match_the_enum_and_the_catalog` below is
 /// what keeps this list honest against the enum, since the framework never parses Rust.
@@ -588,7 +588,7 @@ mod kinds_catalog_tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔮️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed layout-1-any catalog");
         }

@@ -5,10 +5,10 @@ use crate::editor::flow::config::FlowConfig;
 use crate::editor::flow::host_from_snapshot;
 use crate::editor::flow::modes::edit::windows::main::options;
 use crate::editor::flow::terminology::FlowPlayLabels;
-use crate::editor::flow::FLOW_PLAY_APP_ID;
 use flow::{dag::DagFixture, flow_backed_node_graph_extras, FlowEvalSession};
-use semio_framework_plugin::{build_node_graph_scene, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
-use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
+use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
+use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport};
 
 //#region 🔖️Constants
 pub const FLOW_PLAY_WINDOW_MAIN: &str = "flow-main";
@@ -39,7 +39,7 @@ pub fn definition() -> WindowKindDefinition {
     }
 }
 
-/// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
+/// 🎚️ The live chrome measures for this window, collected from its `☑️options/*` components.
 pub fn window_measures(config: &FlowConfig, labels: &FlowPlayLabels) -> Vec<WindowMeasure> {
     vec![options::lod::measure(config, labels), options::proximity::measure(config, labels), options::grid::measure(config, labels)]
 }
@@ -80,7 +80,7 @@ pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, V
 //#endregion 🔖️Workflow
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession) -> UiNode {
+pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession) -> UiAssemblyResult<BuiltNode> {
     let host = host_from_snapshot(fixture, config, session);
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
     let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
@@ -92,22 +92,19 @@ pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSes
     let selection: Vec<String> = Vec::new();
     let flow_extras = flow_backed_node_graph_extras(&fixture.to_fixture(), &config.lod_mode, config.proximity_distance, config.grid_visible, config.grid_snap_enabled, config.grid_factor, Some(session));
     let preview_off_json = if config.preview_off_node_ids.is_empty() { None } else { serde_json::to_string(&config.preview_off_node_ids).ok() };
-    build_node_graph_scene(
-        FLOW_PLAY_SURFACE_MAIN,
-        FLOW_PLAY_APP_ID,
-        NodeGraphScene {
-            editable: Some(true),
-            operators: flow_extras.operators,
-            capabilities_json: flow_extras.capabilities_json,
-            lod_json: flow_extras.lod_json,
-            fixture_json: flow_extras.fixture_json.or(fixture_json),
-            eval_json: flow_extras.eval_json,
-            status_json: flow_extras.status_json,
-            selection,
-            preview_off_json,
-            ..NodeGraphScene::base(nodes, edges, viewport)
-        },
-    )
+    let scene = NodeGraphScene {
+        editable: Some(true),
+        operators: flow_extras.operators,
+        capabilities_json: flow_extras.capabilities_json,
+        lod_json: flow_extras.lod_json,
+        fixture_json: flow_extras.fixture_json.or(fixture_json),
+        eval_json: flow_extras.eval_json,
+        status_json: flow_extras.status_json,
+        selection,
+        preview_off_json,
+        ..NodeGraphScene::base(nodes, edges, viewport)
+    };
+    scene_surface(FLOW_PLAY_SURFACE_MAIN, ContractSurfaceKind::NodeGraph, &scene)
 }
 //#endregion 🔖️Render
 
@@ -125,14 +122,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_node_graph_scene() {
-        let mut app = flow_app();
-        assert!(render_body(&mut app, FLOW_PLAY_BODY_MAIN).contains("node-graph"));
+        let mut app = flow_app().await;
+        assert!(render_body(&mut app, FLOW_PLAY_BODY_MAIN).await.contains("node-graph"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn window_measures_surface_lod_proximity_and_grid() {
-        let mut app = flow_app();
-        let measures = main_window_measures(&mut app);
+        let mut app = flow_app().await;
+        let measures = main_window_measures(&mut app).await;
         assert_eq!(measures.len(), 3);
         assert!(measures.iter().any(|measure| matches!(measure, WindowMeasure::Slider { id, .. } if id == "flow-play-measures.proximity")));
         assert!(measures.iter().any(|measure| matches!(measure, WindowMeasure::Group { id, .. } if id == "flow-play-measures.grid")));

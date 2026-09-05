@@ -5,4 +5,4 @@
  * standard/subset-scoped paths. */
 export * as sequence_schema from "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts";
 export * as sequence_io from "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🟦️.ts";
-export { createSequenceBrowserFeatures } from "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/📦️packages/🟨️javascript/🟨️sequence-browser.js";
+export { createSequenceBrowserFeatures } from "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/📦️packages/🟨️javascript/🌐️sequence-browser.js";

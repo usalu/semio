@@ -1,0 +1,8 @@
+# move-sampler typed mutation facet.
+enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
+scalar GltfCameraProjectionV1
+input GltfMoveSamplerPayloadV1 {
+  index: Int!
+  position: Int!
+}
+type GltfMoveSamplerMutationV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfMoveSamplerPayloadV1! }

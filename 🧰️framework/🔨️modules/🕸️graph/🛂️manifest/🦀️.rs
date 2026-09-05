@@ -11,7 +11,7 @@ pub use generated::*;
 // 🌉️ Hand-written `ToValue`/`FromValue` for every `generated::*` manifest enum above — see that
 // file's own header docstring for why it lives here rather than as `#[derive(...)]` on the
 // machine-generated sources themselves.
-include!("🦀️generated-value-bridge.rs");
+include!("🌉️generated-value-bridge.rs");
 
 pub use crate::manifest::Manifest as GraphManifest;
 
@@ -805,6 +805,16 @@ mod tests {
         block_on_test(async {
             let m = manifest_by_id("nakagin").expect("nakagin");
             assert!(m.node_kind("Balcony").is_some());
+        });
+    }
+
+    #[test]
+    fn flow_dag_manifest_resolves_from_the_permission_prefixed_source() {
+        block_on_test(async {
+            let m = manifest_by_id("flow-dag").expect("flow-dag");
+            assert_eq!(m.id, "flow-dag");
+            assert!(m.node_kind("computation").is_some());
+            assert_eq!(flow_dag::FlowDagNodeKind::parse("appInstance"), Ok(flow_dag::FlowDagNodeKind::AppInstance));
         });
     }
 

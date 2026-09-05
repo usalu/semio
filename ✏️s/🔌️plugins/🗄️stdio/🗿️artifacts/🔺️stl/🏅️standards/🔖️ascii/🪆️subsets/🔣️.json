@@ -1,0 +1,11 @@
+{
+  "artifact": "s.stdio.stl",
+  "standard": "ascii",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained stl ascii"
+    }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.stdio.stl@ascii` is this plugin's own self-contained ASCII STL mesh file — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (set-snapshot, set-solid-name, insert-triangle, remove-triangle, set-triangle-normal, set-triangle-vertices, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
+}

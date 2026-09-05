@@ -5,7 +5,7 @@
   "displayName": "Change Part Anchor",
   "emoji": "⚓",
   "aggregateVariant": "ChangePartAnchor",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-part-anchor",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

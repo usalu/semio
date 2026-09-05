@@ -1,7 +1,7 @@
 //! ✏️ Puzzle 3d play app — the `edit` mode: the dual-pane default layout (an orthographic Top pane
 //! on the left third, a three-point Perspective pane on the right two thirds — two INSTANCES of the
 //! one `🪟️windows/🧊️main` window kind) plus the mode-level Fill tool. The per-window chrome options
-//! every instance shares live in `🎚️options/*`.
+//! every instance shares live in `☑️options/*`.
 
 use crate::editor::puzzle3d::modes::edit::tools::fill;
 use crate::editor::puzzle3d::modes::edit::windows::main;

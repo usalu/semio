@@ -1,0 +1,7 @@
+/** 🦠️ delete-camera executable structural glTF command. */
+import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
+export const GltfDeleteCameraDescriptor = { id: 's.stdio.gltf.mutation.delete-camera.v1', version: 1, touchedPathPattern: 'document/cameras', referencePolicy: 'all typed camera references are remapped, repaired, or rejected' } as const;
+export interface GltfDeleteCameraPayload { index: number }
+export const validateGltfDeleteCamera = (payload: GltfDeleteCameraPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.cameras.length, 'document/cameras'); if (index) return index;  return undefined; };
+export const applyGltfDeleteCamera = (base: GltfSnapshot, payload: GltfDeleteCameraPayload): GltfStructuralResult => { const rejection = validateGltfDeleteCamera(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); remove(next, 'cameras', payload.index); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/cameras', String(error)) }; } };

@@ -1,9 +1,0 @@
-syntax = "proto3";
-package semio.stdio.pdf.v1_4.mutations;
-
-// 📐️ resize-page payload.
-message ResizePage {
-  uint64 index = 1;
-  double width = 2;
-  double height = 3;
-}

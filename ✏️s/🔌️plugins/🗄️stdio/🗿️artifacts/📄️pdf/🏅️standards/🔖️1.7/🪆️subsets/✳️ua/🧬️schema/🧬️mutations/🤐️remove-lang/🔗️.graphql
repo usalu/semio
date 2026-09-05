@@ -1,4 +1,0 @@
-# 🤐️ Direct remove-lang GraphQL payload.
-input RemoveLangMutationInput {
-  _unit: Boolean
-}

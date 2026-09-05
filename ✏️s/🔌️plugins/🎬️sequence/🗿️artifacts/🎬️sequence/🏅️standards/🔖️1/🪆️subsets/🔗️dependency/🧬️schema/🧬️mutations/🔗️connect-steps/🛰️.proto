@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.s.sequence.sequence.mutation;
+
+message ConnectSteps {
+  string id = 1;
+  string from = 2;
+  string to = 3;
+}

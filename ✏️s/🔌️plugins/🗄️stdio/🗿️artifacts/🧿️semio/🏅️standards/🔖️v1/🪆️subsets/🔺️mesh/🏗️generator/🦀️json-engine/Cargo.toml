@@ -1,0 +1,28 @@
+# 🧭️ Own workspace root: never joins the repository's root workspace, whose root manifest is a shared,
+# contended file.
+#
+# 🚫️ DEPENDS ON `serde_json` AND NOTHING ELSE. `SemioMeshSnapshot::materials` is an INLINE
+# `Vec<SemioMaterial>` directly in this subset's own JSON export (`🔺️mesh/🧬️schema/📸️snapshot/🦀️.rs`),
+# so `create-material` — a caller-supplied full `SemioMaterial` appended with no computed field, a
+# duplicate `id` already present in `base` being the ONLY guarded case (`create-material/🦀️.rs`'s own
+# doc comment) — is a carrier-level fact a third-party JSON implementation can witness in full, the
+# identical discriminator `✳️document/🏭️generator/🦀️json-engine` already establishes for
+# `insert-image`.
+[workspace]
+
+[package]
+name = "semio-mesh-json-engine"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "generate"
+path = "src/🏗️generate.rs"
+
+[lib]
+name = "semio_mesh_json"
+path = "src/lib.rs"
+
+[dependencies]
+serde_json = "1"

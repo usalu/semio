@@ -1,7 +1,0 @@
-{
-  "status": "rejected",
-  "code": "gltf.mutation.relation-absent",
-  "path": [
-    "document/scenes/0/nodes"
-  ]
-}

@@ -1,9 +1,9 @@
 //#region 📥️OwnedInputContract
-import { OwnedShardReturn, OwnedShardReturnPage, type ShardActorActivationLease } from "../../../../🎭️actor/🧵️shard-client/🟦️.ts";
+import { OwnedShardReturn, OwnedShardReturnPage, type ShardActorActivationLease } from "../../../../🎭️actor/📮️shard-client/🟦️.ts";
 import { actorInstanceLifetimeEquals, type ActorInstanceLifetime } from "../../../../🎭️actor/🚪️lifetime/🟦️.ts";
 import type { ActorUiPatchReceipt } from "../../../../🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
 import type { OwnedUiInstance } from "../../../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
-import { OwnedUiOperationPayloadBuilder, OwnedUiOperationInputCopied, OwnedUiOperationInputCancelled } from "../../../../🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📄️pages/🟦️.ts";
+import { OwnedUiOperationPayloadBuilder, OwnedUiOperationInputCopied, OwnedUiOperationInputCancelled } from "../../../../🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts";
 import { OwnedUiResidentPayload, OwnedUiResidentPayloadSourceRelease, OwnedUiResidentBuilderRetirement, type OwnedUiResidentInstance } from "../../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts";
 import { KernelReturnContentFraming, KernelReturnUiOperationHeader, type KernelReturnUiFieldName } from "../🟦️.ts";
 

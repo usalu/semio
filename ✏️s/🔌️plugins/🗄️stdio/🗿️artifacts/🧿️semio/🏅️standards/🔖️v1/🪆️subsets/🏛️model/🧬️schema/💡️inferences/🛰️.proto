@@ -1,0 +1,21 @@
+syntax = "proto3";
+package semio.s.stdio.semio.model.inference;
+
+// 💡️ Semio model inference schema — position envelope over spatial nodes + elements.
+
+message SemioModelInference {
+  // @derived
+  SemioModelBounds bounds = 1;
+}
+
+message SemioModelBounds {
+  SemioPoint3 min = 1;
+  SemioPoint3 max = 2;
+  uint32 entity_count = 3;
+}
+
+message SemioPoint3 {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}

@@ -5,7 +5,7 @@
   "displayName": "Change Domain",
   "emoji": "🌐",
   "aggregateVariant": "ChangeDomain",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-domain",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

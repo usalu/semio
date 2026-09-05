@@ -672,30 +672,30 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.raster.standard.v1", "standard", "1", &[], None),
-        ("s.raster.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.raster.schema.artifact", "schema", "s.raster.raster", &[("schema", "s.raster.raster")], None),
-        ("s.raster.inference.artifact", "inference", "s.raster.raster.inference", &[("schema", "s.raster.raster.inference")], None),
-        ("s.raster.composer.native", "composer", "s.raster@1/*", &[("dialect", "s.raster@1/*")], None),
-        ("s.raster.composer.format-1", "composer", "s.stdio.gif@87a/*", &[("dialect", "s.stdio.gif@87a/*")], None),
-        ("s.raster.composer.format-2", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
-        ("s.raster.composer.format-3", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
-        ("s.raster.composer.format-4", "composer", "s.stdio.jpg@jfif-1.01/*", &[("dialect", "s.stdio.jpg@jfif-1.01/*")], None),
-        ("s.raster.composer.format-5", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
-        ("s.raster.composer.format-6", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.raster.composer.format-7", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
-        ("s.raster.composer.format-8", "composer", "s.stdio.bmp@v3/*", &[("dialect", "s.stdio.bmp@v3/*")], None),
-        ("s.raster.composer.format-9", "composer", "s.stdio.tiff@6.0/*", &[("dialect", "s.stdio.tiff@6.0/*")], None),
-        ("s.raster.grammar.1", "grammar", "raster.document", &[("grammar", "raster.document")], None),
-        ("s.raster.grammar.2", "grammar", "raster.op", &[("grammar", "raster.op")], None),
-        ("s.raster.grammar.3", "grammar", "raster.document.diff", &[("grammar", "raster.document.diff")], None),
-        ("s.raster.grammar.4", "grammar", "raster.pack", &[("grammar", "raster.pack")], None),
-        ("s.raster.grammar.5", "grammar", "raster.spr", &[("grammar", "raster.spr")], None),
-        ("s.raster.codec.document-1", "codec", "raster.document:raster", &[("codec", "raster.document"), ("extension", "raster")], None),
-        ("s.raster.localization.en", "localization", "Raster", &[], Some(("en", "Raster"))),
-        ("s.raster.localization.de", "localization", "Raster", &[], Some(("de", "Raster"))),
+        ("s.raster.raster.standard.v1", "standard", "1", &[], None),
+        ("s.raster.raster.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.raster.raster.schema.artifact", "schema", "s.raster.raster", &[("schema", "s.raster.raster")], None),
+        ("s.raster.raster.inference.artifact", "inference", "s.raster.raster.inference", &[("schema", "s.raster.raster.inference")], None),
+        ("s.raster.raster.composer.native", "composer", "s.raster.raster@1/*", &[("dialect", "s.raster.raster@1/*")], None),
+        ("s.raster.raster.composer.format-1", "composer", "s.stdio.gif@87a/*", &[("dialect", "s.stdio.gif@87a/*")], None),
+        ("s.raster.raster.composer.format-2", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
+        ("s.raster.raster.composer.format-3", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
+        ("s.raster.raster.composer.format-4", "composer", "s.stdio.jpg@jfif-1.01/*", &[("dialect", "s.stdio.jpg@jfif-1.01/*")], None),
+        ("s.raster.raster.composer.format-5", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.raster.raster.composer.format-6", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.raster.raster.composer.format-7", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
+        ("s.raster.raster.composer.format-8", "composer", "s.stdio.bmp@v3/*", &[("dialect", "s.stdio.bmp@v3/*")], None),
+        ("s.raster.raster.composer.format-9", "composer", "s.stdio.tiff@6.0/*", &[("dialect", "s.stdio.tiff@6.0/*")], None),
+        ("s.raster.raster.grammar.1", "grammar", "raster.document", &[("grammar", "raster.document")], None),
+        ("s.raster.raster.grammar.2", "grammar", "raster.op", &[("grammar", "raster.op")], None),
+        ("s.raster.raster.grammar.3", "grammar", "raster.document.diff", &[("grammar", "raster.document.diff")], None),
+        ("s.raster.raster.grammar.4", "grammar", "raster.pack", &[("grammar", "raster.pack")], None),
+        ("s.raster.raster.grammar.5", "grammar", "raster.spr", &[("grammar", "raster.spr")], None),
+        ("s.raster.raster.codec.document-1", "codec", "raster.document:raster", &[("codec", "raster.document"), ("codec-extension", "15:raster.document:raster")], None),
+        ("s.raster.raster.localization.en", "localization", "Raster", &[], Some(("en", "Raster"))),
+        ("s.raster.raster.localization.de", "localization", "Raster", &[], Some(("de", "Raster"))),
     ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.raster")?);
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.raster.raster")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
         for (namespace, value) in *claims {

@@ -5,7 +5,7 @@
   "displayName": "Replace Object Vortex",
   "emoji": "🔌",
   "aggregateVariant": "ReplaceObjectVortex",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "replace-object-vortex",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

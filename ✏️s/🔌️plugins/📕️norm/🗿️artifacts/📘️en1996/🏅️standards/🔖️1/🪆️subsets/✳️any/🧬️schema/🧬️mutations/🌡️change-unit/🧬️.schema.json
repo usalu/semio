@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeUnit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newUnit"
+  ],
+  "properties": {
+    "newUnit": {
+      "type": "string"
+    }
+  }
+}

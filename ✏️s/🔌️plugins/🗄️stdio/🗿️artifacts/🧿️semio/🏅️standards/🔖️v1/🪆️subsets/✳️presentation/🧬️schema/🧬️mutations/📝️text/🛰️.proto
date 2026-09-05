@@ -1,4 +1,0 @@
-syntax = "proto3";
-package stdio.semio.presentation.mutations.text;
-message Arg { string name = 1; string value = 2; }
-message Line { string keyword = 1; repeated Arg args = 2; }

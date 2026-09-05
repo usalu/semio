@@ -35,6 +35,7 @@ pub fn plugin() -> Result<Plugin<EnergyApps>, PluginAssemblyError> {
     Plugin::<EnergyApps>::builder("energy")
         .label("Energy")
         .version("0.1.0")
+        .package_id("semio:energy")
         .artifact(crate::artifacts::model::declaration().map_err(PluginAssemblyError::definition)?)
         .editor::<crate::editor::model::EnergyModelEditor>(crate::editor::model::create_energy_model_editor())
         .editor_mutation_roster::<crate::editor::model::EnergyModelEditor>()

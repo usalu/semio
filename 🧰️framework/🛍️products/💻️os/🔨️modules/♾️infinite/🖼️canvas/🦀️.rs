@@ -811,7 +811,7 @@ pub use renderer::{append_svg_document, SvgDocument};
 pub use renderer::{opaque_scene_retirement_status, publish_opaque_scene_retirement, reserve_opaque_scene_retirement, BlendMode, Cap, Color, FillRule, OpaqueSceneRetirementToken, Paint, RasterImage, Rgba8, Scene, Stroke};
 // #endregion 🔖️Renderer
 
-/// 📐️ First-party intrinsic-dimension reader (`🧰️framework/🔨️modules/📐️intrinsic-size`) — the
+/// 📐️ First-party intrinsic-dimension reader (`🧰️framework/🔨️modules/📏️intrinsic-size`) — the
 /// `wasm32-wasip2` arms of `icon_codec::decode_raster_icon_bytes` and
 /// `svg_icon::svg_icon_content_bounds_from_str` use it instead of `image`/`usvg` so those two
 /// dimension-only call sites stop pulling the ~50-crate SVG/raster pipeline onto the guest
@@ -912,7 +912,7 @@ pub mod theme {
 pub mod icon_assets {
     //! @emoji 📎️ Static bytes for icon rendering; `include_bytes!` paths are relative to this `lib.rs` file.
 
-    pub static NOTO_COLOR_EMOJI_SUBSET_TTF: &[u8] = include_bytes!("🖼️assets/🔤️NotoColorEmoji-subset.ttf");
+    pub static NOTO_COLOR_EMOJI_SUBSET_TTF: &[u8] = include_bytes!("🖼️assets/😀️NotoColorEmoji-subset.ttf");
 
     pub static MAP_LABEL_SANS_TTF: &[u8] = include_bytes!("🖼️assets/🔤️MapLabelSans.ttf");
 }
@@ -1881,7 +1881,7 @@ pub use metabolism_icon_name_gen::MetabolismIconName;
 // 🌉️ Hand-written `ToValue`/`FromValue` for `IconName`/`MetabolismIconName` — see that file's own
 // header docstring for why it lives here rather than as `#[derive(...)]` on the machine-generated
 // sources themselves.
-include!("🦀️icon-name-value-bridge.rs");
+include!("🌉️icon-name-value-bridge.rs");
 
 pub mod icon_codec {
     // #region icon_codec
@@ -1893,7 +1893,7 @@ pub mod icon_codec {
     use std::sync::Arc;
 
     mod icon_shortcodes {
-        include!(concat!(env!("OUT_DIR"), "/icon_shortcode_match.rs"));
+        include!(concat!(env!("OUT_DIR"), "/🔎️shortcodes.rs"));
     }
 
     /// 🔍️ Optional lookup for domain-themed SVG icons (e.g. puzzle metabolism table).

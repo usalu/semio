@@ -1,1 +1,0 @@
-{"schema":"semio.flow.session-retirement","grants":[1,64,4096],"text":{"text":"🌊","repeat":4096,"reservedCapacity":65536},"preview":{"text":"高","repeat":1600},"expected":{"releasedBytes":42405,"terminalOwners":0,"zeroGrant":"blocked"}}

@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/react/host-identity-bootstrap-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contractVersion", "identity", "bootstrap"],
+  "properties": {
+    "contractVersion": { "const": 1 },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["aliases", "apps", "expected"],
+      "properties": {
+        "aliases": { "$ref": "#/$defs/aliases" },
+        "apps": { "type": "array", "minItems": 3, "maxItems": 16, "items": { "$ref": "#/$defs/app" } },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["landingAppId", "hostAppId"],
+          "properties": { "landingAppId": { "type": "string", "minLength": 1 }, "hostAppId": { "type": "string", "minLength": 1 } }
+        }
+      }
+    },
+    "bootstrap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["progress", "failure", "rebootstrap", "expected"],
+      "properties": {
+        "progress": { "$ref": "#/$defs/progress" },
+        "failure": { "$ref": "#/$defs/failure" },
+        "rebootstrap": { "$ref": "#/$defs/rebootstrap" },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["en", "de", "rebootstrapEn"],
+          "properties": {
+            "en": { "type": "string", "minLength": 1 },
+            "de": { "type": "string", "minLength": 1 },
+            "rebootstrapEn": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "aliases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["landingAppId", "hostAppId"],
+      "properties": {
+        "landingAppId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "hostAppId": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "app": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role", "dialect"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "role": { "enum": ["editor", "viewer"] },
+        "dialect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["artifactKind"],
+          "properties": { "artifactKind": { "type": "string", "minLength": 1, "maxLength": 256 } }
+        }
+      }
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "documentId", "receivedBytes", "totalBytes", "receivedChunks", "totalChunks"],
+      "properties": {
+        "kind": { "const": "artifact-bootstrap-progress" },
+        "documentId": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "receivedBytes": { "type": "integer", "minimum": 0, "maximum": 67108864 },
+        "totalBytes": { "type": "integer", "minimum": 1, "maximum": 67108864 },
+        "receivedChunks": { "type": "integer", "minimum": 0, "maximum": 4096 },
+        "totalChunks": { "type": "integer", "minimum": 1, "maximum": 4096 }
+      }
+    },
+    "failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "documentId", "code", "message", "retryable"],
+      "properties": {
+        "kind": { "const": "artifact-bootstrap-failed" },
+        "documentId": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "code": { "enum": ["cancelled", "deadline-exceeded", "invalid-bootstrap", "transport-failure"] },
+        "message": { "type": "string", "maxLength": 4096 },
+        "retryable": { "type": "boolean" }
+      }
+    },
+    "rebootstrap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "documentId", "message", "retryable"],
+      "properties": {
+        "kind": { "const": "artifact-rebootstrap-required" },
+        "documentId": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "message": { "type": "string", "maxLength": 4096 },
+        "retryable": { "const": true }
+      }
+    }
+  }
+}

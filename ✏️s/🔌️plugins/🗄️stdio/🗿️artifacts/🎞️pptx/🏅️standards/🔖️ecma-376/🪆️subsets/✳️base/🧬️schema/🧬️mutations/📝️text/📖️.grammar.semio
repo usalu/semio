@@ -50,7 +50,7 @@ slides-list = "[" slide-item* "]"
 slide-item = slide ","?
 
 # ── Restated whole-item value shapes (identical to this artifact's own `../🔺️diff/📝️text` sibling
-# grammar's own `shape`/`paragraph`/`run`/`slide` productions, restated here per-facet since
+# grammar's own `shape`/`paragraph`/`run`/`🎞️slide` productions, restated here per-facet since
 # grammar files don't cross-reference -- same shape `enc_shape`/`enc_slide` in
 # `../🔺️diff/🦀️.rs` produce, reused by `../🦀️.rs`'s `OpText` impl too, per that
 # file's own doc comment "reuses `PptxDiff`'s `pub(crate)` grammar primitives"). ─────────────────

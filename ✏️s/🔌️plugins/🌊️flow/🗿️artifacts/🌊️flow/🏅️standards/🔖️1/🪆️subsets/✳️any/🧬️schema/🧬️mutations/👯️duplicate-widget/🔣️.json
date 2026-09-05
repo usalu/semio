@@ -5,7 +5,7 @@
   "displayName": "Duplicate Widget",
   "emoji": "👯️",
   "aggregateVariant": "DuplicateWidget",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "plan",

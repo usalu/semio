@@ -1,0 +1,101 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own mutation-catalog contribution to the repository test platform -- registers the load slice of the s.fem.3d@1 mutation vocabulary (moved here from the artifact-level ✳️any catalog, ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). The shared whole-document io/oracle/generator machinery, and every mutation's own manifest/fixture record, stay centralized at the artifact's ✳️any substrate; this file exists so the load vocabulary directory has a claiming catalog of its own.",
+  "mutationCatalogs": [
+    {
+      "id": "fem3d-1-load",
+      "capability": "fem3d-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️load",
+      "vectors": [
+        {
+          "mutationId": "add-load",
+          "sourceMutationDirectoryName": "➕️add-load",
+          "mutationDirectoryName": "➕️add-load",
+          "scenarios": [
+            {
+              "id": "lays-an-area-pressure-over-the-roof-slab",
+              "directoryName": "🧪️lays-an-area-pressure-over-the-roof-slab"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-load-case-self-weight",
+          "sourceMutationDirectoryName": "⚖️change-load-case-self-weight",
+          "mutationDirectoryName": "⚖️change-load-case-self-weight",
+          "scenarios": [
+            {
+              "id": "switches-self-weight-off-for-the-dead-case",
+              "directoryName": "🧪️switches-self-weight-off-for-the-dead-case"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-combination",
+          "sourceMutationDirectoryName": "🔗️create-combination",
+          "mutationDirectoryName": "🔗️create-combination",
+          "scenarios": [
+            {
+              "id": "appends-a-serviceability-combination-keyed-by-case-id",
+              "directoryName": "🧪️appends-a-serviceability-combination-keyed-by-case-id"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-load-case",
+          "sourceMutationDirectoryName": "📋️create-load-case",
+          "mutationDirectoryName": "📋️create-load-case",
+          "scenarios": [
+            {
+              "id": "appends-a-wind-case-pushing-on-the-column-head",
+              "directoryName": "🧪️appends-a-wind-case-pushing-on-the-column-head"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-combination",
+          "sourceMutationDirectoryName": "✂️delete-combination",
+          "mutationDirectoryName": "✂️delete-combination",
+          "scenarios": [
+            {
+              "id": "removes-the-serviceability-combination-and-keeps-both-cases",
+              "directoryName": "🧪️removes-the-serviceability-combination-and-keeps-both-cases"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-load-case",
+          "sourceMutationDirectoryName": "🗑️delete-load-case",
+          "mutationDirectoryName": "🗑️delete-load-case",
+          "scenarios": [
+            {
+              "id": "removes-the-wind-case-together-with-its-load",
+              "directoryName": "🧪️removes-the-wind-case-together-with-its-load"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-load",
+          "sourceMutationDirectoryName": "➖️remove-load",
+          "mutationDirectoryName": "➖️remove-load",
+          "scenarios": [
+            {
+              "id": "drops-the-trailing-member-udl-from-the-dead-case",
+              "directoryName": "🧪️drops-the-trailing-member-udl-from-the-dead-case"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "create-load-case",
+        "delete-load-case",
+        "add-load",
+        "remove-load",
+        "change-load-case-self-weight",
+        "create-combination",
+        "delete-combination"
+      ]
+    }
+  ]
+}

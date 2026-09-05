@@ -1,0 +1,32 @@
+//! 🔧 `change-as-mm2` payload — changes the En1992 document's `a_s_mm2` (EN 1992 input).
+
+
+use crate::artifacts::en1992::En1992Snapshot;
+use crate::artifacts::en1992::diff::En1992Diff;
+use crate::artifacts::en1992::mutations::En1992Mutation;
+//#region 🔖️ChangeASMm2
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[mutation_leaf(contract = ::protocol)]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct ChangeASMm2 {
+    pub new_a_s_mm2: f64,
+}
+
+impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeASMm2 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "as-mm2", kind: "change-as-mm2", record: "ChangedASMm2" };
+
+    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+        super::diff::diff(self, base)
+    }
+
+    fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
+        super::inverse::inverse(self, base)
+    }
+
+    fn label(&self) -> String {
+        format!("Change a s mm2 to {:?}", self.new_a_s_mm2)
+    }
+}
+//#endregion 🔖️ChangeASMm2

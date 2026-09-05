@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RenameGovernance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newFramework"
+  ],
+  "properties": {
+    "newFramework": {
+      "type": "string"
+    }
+  }
+}

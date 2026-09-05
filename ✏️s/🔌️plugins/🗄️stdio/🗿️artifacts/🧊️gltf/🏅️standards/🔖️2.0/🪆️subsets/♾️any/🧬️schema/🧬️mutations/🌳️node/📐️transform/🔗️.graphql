@@ -1,0 +1,6 @@
+# change-node-transform mutation facet.
+input GltfTransformNodePayloadV1 {
+  node: Int!
+  transform: GltfNodeTransformInput!
+}
+type GltfTransformNodeMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

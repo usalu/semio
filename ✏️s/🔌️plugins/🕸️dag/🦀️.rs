@@ -28,6 +28,7 @@ pub async fn plugin() -> Result<Plugin<DagApps>, semio_framework_plugin::PluginA
     Plugin::<DagApps>::builder("dag")
         .label("DAG")
         .version("0.1.0")
+        .package_id("semio:dag")
         .declare_artifact(crate::artifacts::dag::artifact())
         .editor_mutation_roster::<crate::editor::dag::DagPlayApp>()
         .viewer_mutation_roster::<crate::viewer::dag::DagViewer>()

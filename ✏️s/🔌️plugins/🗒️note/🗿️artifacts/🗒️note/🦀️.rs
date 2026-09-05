@@ -21,10 +21,10 @@ use std::collections::BTreeMap;
 pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.note.standard.v1", "standard", "1", &[], None),
-        ("s.note.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.note.schema.artifact", "schema", "s.note.note", &[("schema", "s.note.note")], None),
-        ("s.note.inference.artifact", "inference", "s.note.note.inference", &[("schema", "s.note.note.inference")], None),
+        ("s.note.note.standard.v1", "standard", "1", &[], None),
+        ("s.note.note.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.note.note.schema.artifact", "schema", "s.note.note", &[("schema", "s.note.note")], None),
+        ("s.note.note.inference.artifact", "inference", "s.note.note.inference", &[("schema", "s.note.note.inference")], None),
         // 🐛️ Pre-existing gap (found while verifying ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-
         // PLUGIN-RUNTIME E2-builder-descriptor's proof migration: `Plugin::builder("note")...
         // try_build()` was silently failing assembly — `PluginAssemblyError{code:"artifact-
@@ -40,23 +40,23 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
         // native self-composer's claim never matched anything. Added here rather than removing the
         // native composer from `entries()`: the self-composer is real, load-bearing behaviour
         // (`rebuild_native_snapshot` is the shared decode path every `EXPORT_*` composer calls).
-        ("s.note.composer.note", "composer", "s.note@1/*", &[("dialect", "s.note@1/*")], None),
-        ("s.note.composer.svg", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
-        ("s.note.composer.pdf", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
-        ("s.note.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
-        ("s.note.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.note.composer.dwg", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
-        ("s.note.composer.dxf", "composer", "s.stdio.dxf@r12/*", &[("dialect", "s.stdio.dxf@r12/*")], None),
-        ("s.note.grammar.document", "grammar", "note.document", &[("grammar", "note.document")], None),
-        ("s.note.grammar.op", "grammar", "note.op", &[("grammar", "note.op")], None),
-        ("s.note.grammar.diff", "grammar", "note.diff", &[("grammar", "note.diff")], None),
-        ("s.note.grammar.pack", "grammar", "note.pack", &[("grammar", "note.pack")], None),
-        ("s.note.grammar.spr", "grammar", "note.spr", &[("grammar", "note.spr")], None),
-        ("s.note.codec.document.v1", "codec", "note.document:note", &[("codec", "note.document"), ("extension", "note")], None),
-        ("s.note.localization.en", "localization", "Note", &[], Some(("en", "Note"))),
-        ("s.note.localization.de", "localization", "Notiz", &[], Some(("de", "Notiz"))),
+        ("s.note.note.composer.note", "composer", "s.note.note@1/*", &[("dialect", "s.note.note@1/*")], None),
+        ("s.note.note.composer.svg", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
+        ("s.note.note.composer.pdf", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
+        ("s.note.note.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.note.note.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.note.note.composer.dwg", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
+        ("s.note.note.composer.dxf", "composer", "s.stdio.dxf@r12/*", &[("dialect", "s.stdio.dxf@r12/*")], None),
+        ("s.note.note.grammar.document", "grammar", "note.document", &[("grammar", "note.document")], None),
+        ("s.note.note.grammar.op", "grammar", "note.op", &[("grammar", "note.op")], None),
+        ("s.note.note.grammar.diff", "grammar", "note.diff", &[("grammar", "note.diff")], None),
+        ("s.note.note.grammar.pack", "grammar", "note.pack", &[("grammar", "note.pack")], None),
+        ("s.note.note.grammar.spr", "grammar", "note.spr", &[("grammar", "note.spr")], None),
+        ("s.note.note.codec.document.v1", "codec", "note.document:note", &[("codec", "note.document"), ("codec-extension", "13:note.document:note")], None),
+        ("s.note.note.localization.en", "localization", "Note", &[], Some(("en", "Note"))),
+        ("s.note.note.localization.de", "localization", "Notiz", &[], Some(("de", "Notiz"))),
     ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.note")?);
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.note.note")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
         for (namespace, value) in *claims {

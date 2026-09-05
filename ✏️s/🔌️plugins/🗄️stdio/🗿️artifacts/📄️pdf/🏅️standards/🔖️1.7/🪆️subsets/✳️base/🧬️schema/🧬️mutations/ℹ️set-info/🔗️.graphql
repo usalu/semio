@@ -1,4 +1,0 @@
-# ℹ️ Direct set-info GraphQL payload.
-input SetInfoMutationInput {
-  info: String
-}

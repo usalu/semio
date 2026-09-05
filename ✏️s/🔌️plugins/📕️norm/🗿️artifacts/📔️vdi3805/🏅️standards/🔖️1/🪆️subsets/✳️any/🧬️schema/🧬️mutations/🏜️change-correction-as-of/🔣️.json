@@ -5,7 +5,7 @@
   "displayName": "Change Correction As Of",
   "emoji": "🏜️",
   "aggregateVariant": "ChangeCorrectionAsOf",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

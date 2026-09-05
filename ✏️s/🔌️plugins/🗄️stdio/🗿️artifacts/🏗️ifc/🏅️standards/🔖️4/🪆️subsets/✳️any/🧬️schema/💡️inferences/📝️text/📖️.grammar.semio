@@ -1,9 +1,0 @@
-dialect grammar
-grammar stdio.ifc.inference
-extension ifc.inference
-start document
-
-document = header body
-header = "schema" SP "s.stdio.ifc.inference" NL
-body = payload NL?
-payload = OCTET+

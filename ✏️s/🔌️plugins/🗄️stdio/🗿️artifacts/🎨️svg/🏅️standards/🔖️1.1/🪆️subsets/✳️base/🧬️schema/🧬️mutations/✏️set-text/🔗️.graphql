@@ -1,2 +1,0 @@
-# 🧬 set-text/SetText
-input SetTextPayload { path: [Int!]! text: String! }

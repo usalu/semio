@@ -1,5 +1,0 @@
-# 🔒️ Direct insert-encryption-dictionary GraphQL payload.
-input InsertEncryptionDictionaryMutationInput {
-  version: Int!
-  revision: Int!
-}

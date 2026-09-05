@@ -101,7 +101,7 @@ pub fn generation2d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescri
         mutations: schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
-            graphql: include_str!("🧬️mutations/🔗️.graphql"),
+            graphql: include_str!("🧬️mutations/🕸️.graphql"),
             json_schema: include_str!("🧬️mutations/🔣️.json"),
             proto: include_str!("🧬️mutations/🛰️.proto"),
         },
@@ -174,7 +174,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for Generation2dAnalyzerAnalysis {
         type Parts = Generation2dParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.generation2d", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.procedural.generation2d", standard: StandardId("1"), subset: SubsetId("*") };
 
         fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium

@@ -48,7 +48,9 @@
       "status": "declared"
     }
   ],
-  "codecs": [],
+  "codecs": [
+    { "id": "s.stdio.avi.standard.1-0.codec.native-document.v1", "status": "implemented", "from": "s.stdio.avi.standard.1-0.dialect.source", "to": "s.stdio.avi.standard.1-0.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.avi.v1", "artifact_kind": "stdio.avi", "document_schema": "stdio.avi", "extension": "semio", "pack_schema_hash": "de0d04905741068debee64bacacaf53197ac57741bd12991074e49f34ab9c690", "runtime_capability_id": "s.stdio.avi.standard.1-0.codec.codec-stdio-avi-extension-semio.v1" } }
+  ],
   "mutations": [],
   "inferences": [],
   "resources": [
@@ -83,22 +85,22 @@
   ],
   "runtime_capabilities": [
     {
-      "id": "s.stdio.avi.runtime.codec.codec-stdio-avi-extension-semio.v1",
+      "id": "s.stdio.avi.standard.1-0.codec.codec-stdio-avi-extension-semio.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec:stdio.avi|extension:semio",
+      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.avi:semio|codec:stdio.avi",
       "claims": [
         {
           "namespace": "codec",
           "value": "stdio.avi"
         },
         {
-          "namespace": "extension",
-          "value": "semio"
+          "namespace": "codec-extension",
+          "value": "9:stdio.avi:semio"
         }
       ]
     },
     {
-      "id": "s.stdio.avi.runtime.composer.dialect-s-stdio-avi-1-0.v1",
+      "id": "s.stdio.avi.composer.dialect-s-stdio-avi-1-0.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.avi@1.0/*",
       "claims": [
@@ -109,7 +111,7 @@
       ]
     },
     {
-      "id": "s.stdio.avi.runtime.inference.schema-s-stdio-avi-inference.v1",
+      "id": "s.stdio.avi.inference.schema-s-stdio-avi-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:s.stdio.avi.inference",
       "claims": [
@@ -120,7 +122,7 @@
       ]
     },
     {
-      "id": "s.stdio.avi.runtime.representation.mime-video-x-msvideo-extension-avi.v1",
+      "id": "s.stdio.avi.standard.1-0.representation.mime-video-x-msvideo-extension-avi",
       "category": "representation",
       "descriptor": "runtime-capability:representation:mime:video/x-msvideo|extension:.avi",
       "claims": [
@@ -135,7 +137,7 @@
       ]
     },
     {
-      "id": "s.stdio.avi.runtime.schema.schema-s-stdio-avi.v1",
+      "id": "s.stdio.avi.schema.schema-s-stdio-avi.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.avi",
       "claims": [

@@ -5,7 +5,7 @@
   "displayName": "Create Curated Item",
   "emoji": "🌱",
   "aggregateVariant": "CreateCuratedItem",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "create-curated-item",
   "binaryTag": 0,
   "invertibility": "explicit-mutation",

@@ -407,7 +407,7 @@ export async function ensureDrawingWasmLoaded(): Promise<DrawingWasmModule> {
     const { fileURLToPath } = await import("node:url");
     const here = dirname(fileURLToPath(import.meta.url));
     const mod = (await import("./🟦️")) as DrawingWasmModule;
-    mod.initSync?.({ module: readFileSync(join(here, "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core_bg.wasm")) });
+    mod.initSync?.({ module: readFileSync(join(here, "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/flow_core_bg.wasm")) });
     drawingWasm.current = mod;
     return mod;
   }

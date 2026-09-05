@@ -1,0 +1,35 @@
+syntax = "proto3";
+package stdio.gltf.mutation.asset;
+import "🪪️asset/📝️change-description/🛰️.proto";
+import "🪪️asset/🧩️change-extensions/🛰️.proto";
+import "🪪️asset/🧾️change-extras/🛰️.proto";
+import "🪪️asset/🔖️version/🛰️.proto";
+import "📃️document/🧩️change-extensions/🛰️.proto";
+import "📃️document/📝️change-extras/🛰️.proto";
+import "📣️used-extension/➕️add/🛰️.proto";
+import "✅️required-extension/🚚️move/🛰️.proto";
+import "📣️used-extension/🚚️move/🛰️.proto";
+import "✅️required-extension/🔀️reorder/🛰️.proto";
+import "📣️used-extension/🔀️reorder/🛰️.proto";
+import "✅️required-extension/➕️add/🛰️.proto";
+import "✅️required-extension/➖️remove/🛰️.proto";
+import "📣️used-extension/➖️remove/🛰️.proto";
+
+message GltfAssetMutation {
+  oneof mutation {
+    GltfChangeAssetDescriptiveMetadataMutationV1 change_asset_descriptive_metadata = 1;
+    GltfChangeAssetExtensionDataMutationV1 change_asset_extension_data = 2;
+    GltfChangeAssetExtraDataMutationV1 change_asset_extra_data = 3;
+    GltfChangeAssetVersionMutationV1 change_asset_version = 4;
+    GltfChangeDocumentExtensionDataMutationV1 change_document_extension_data = 5;
+    GltfChangeDocumentExtraDataMutationV1 change_document_extra_data = 6;
+    GltfDeclareUsedExtensionMutationV1 add_used_extension = 7;
+    GltfMoveRequiredExtensionMutationV1 move_required_extension = 8;
+    GltfMoveUsedExtensionMutationV1 move_used_extension = 9;
+    GltfReorderRequiredExtensionsMutationV1 reorder_required_extensions = 10;
+    GltfReorderUsedExtensionsMutationV1 reorder_used_extensions = 11;
+    GltfRequireExtensionMutationV1 add_required_extension = 12;
+    GltfUnrequireExtensionMutationV1 remove_required_extension = 13;
+    GltfWithdrawUsedExtensionMutationV1 remove_used_extension = 14;
+  }
+}

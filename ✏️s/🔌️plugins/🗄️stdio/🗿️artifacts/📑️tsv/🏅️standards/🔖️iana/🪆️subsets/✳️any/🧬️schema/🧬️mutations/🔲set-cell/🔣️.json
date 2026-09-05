@@ -5,7 +5,7 @@
   "displayName": "Set Cell",
   "emoji": "🔲",
   "aggregateVariant": "SetCell",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "set-cell",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

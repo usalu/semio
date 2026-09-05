@@ -1,8 +1,0 @@
-{
-  "mutation": "createAsset",
-  "key": "asset-sketch",
-  "asset": {
-    "mime": "image/jpeg",
-    "data": "c2tldGNo"
-  }
-}

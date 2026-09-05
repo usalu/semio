@@ -1,3 +1,0 @@
-(* ebnf norm.din4108.mutations *)
-document = header, body ;
-header = 'schema', space, 'norm.din4108.mutations', newline ;

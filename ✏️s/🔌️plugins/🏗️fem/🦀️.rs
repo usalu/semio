@@ -37,6 +37,7 @@ pub fn plugin() -> Result<Plugin<FemApps>, semio_framework_plugin::PluginAssembl
     Plugin::<FemApps>::builder("fem")
         .label("FEM")
         .version("0.1.0")
+        .package_id("semio:fem")
         .declare_artifact(crate::artifacts::fem2d::artifact())
         .declare_artifact(crate::artifacts::fem3d::artifact())
         .editor_mutation_roster::<crate::editor::fem2d::Fem2dPlayApp>()

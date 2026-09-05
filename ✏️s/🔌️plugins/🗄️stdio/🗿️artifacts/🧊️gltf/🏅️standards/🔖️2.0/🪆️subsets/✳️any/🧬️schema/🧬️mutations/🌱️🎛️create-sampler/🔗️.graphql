@@ -1,7 +1,0 @@
-# create-sampler typed mutation facet.
-enum GltfAccessorKindV1 { SCALAR VEC2 VEC3 VEC4 MAT2 MAT3 MAT4 }
-scalar GltfCameraProjectionV1
-input GltfCreateSamplerPayloadV1 {
-  position: Int!
-}
-type GltfCreateSamplerMutationV1 { id: ID!, version: Int!, touchedPaths: [String!]!, payload: GltfCreateSamplerPayloadV1! }

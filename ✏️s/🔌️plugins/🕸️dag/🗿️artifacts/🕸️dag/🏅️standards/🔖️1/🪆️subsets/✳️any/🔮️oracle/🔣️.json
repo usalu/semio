@@ -1,0 +1,524 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution. `dag.dag` is a semio-NATIVE port-directed computation graph whose nodes and edges live in a composed `s.stdio.semio.graph` child, so no oracle is registered and the evidence rests on the committed per-kind rejection vectors plus the inverse law over the real committed example document (see noOracleDecisions).",
+  "oracles": [
+    {
+      "id": "dag-1-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "capabilities": [
+        "dag-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "🐍️ No third-party library reads or writes dag.dag's .dag.dsl.semio carrier — a port-directed computation graph whose edge endpoints are node@port strings no generic graph format has an opinion about. The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../../../🧪️tests/mutate-dag-1/🐍️component.py, written from this subset's own committed ../🧬️schema/📸️snapshot/🔣️.json and each mutation's 🧬️.schema.json, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's create/delete/rename/change/move/resize/replace/connect/disconnect/reorder verb entries. It imports nothing from the Rust it judges and transliterates none of it. DagSnapshot persists neither nodes nor edges (one content-addressed child handle only), so no committed fixture carries a decodable graph; all fourteen committed vectors are rejections and this reference reproduces exactly that closed table (thirteen target-missing, one duplicate-id, reorder-nodes self-contained from its own order list) rather than claiming to model a graph it cannot see. All fourteen kinds' forward and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan — all twenty-eight passed on the first run.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.dag.dag",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "rust/crates.io",
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "generic graph crates (e.g. petgraph)",
+              "reason": "No generic graph format holds an opinion about an edge whose endpoints are node@port strings owned by two separate nodes, per this subsets own domain shape."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md; ../🧬️schema/📸️snapshot/🔣️.json; each mutation's own 🧬️.schema.json",
+        "fixtureCoverage": {
+          "vectors": 14,
+          "capabilitiesCovered": [
+            "dag-1-mutate"
+          ]
+        }
+      }
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "dag-1-any",
+      "capability": "dag-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-node-abbreviation",
+          "sourceMutationDirectoryName": "🔡change-node-abbreviation",
+          "mutationDirectoryName": "🔡change-node-abbreviation",
+          "scenarios": [
+            {
+              "id": "rejects-reabbreviating-a-missing-node",
+              "directoryName": "🧪️rejects-reabbreviating-a-missing-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-icon",
+          "sourceMutationDirectoryName": "🖼️change-node-icon",
+          "mutationDirectoryName": "🖼️change-node-icon",
+          "scenarios": [
+            {
+              "id": "rejects-reiconing-a-missing-node",
+              "directoryName": "🧪️rejects-reiconing-a-missing-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-name",
+          "sourceMutationDirectoryName": "🔤change-node-name",
+          "mutationDirectoryName": "🔤change-node-name",
+          "scenarios": [
+            {
+              "id": "rejects-renaming-the-label-of-a-missing-node",
+              "directoryName": "🧪️rejects-renaming-the-label-of-a-missing-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-operator-kind",
+          "sourceMutationDirectoryName": "🧮change-node-operator-kind",
+          "mutationDirectoryName": "🧮change-node-operator-kind",
+          "scenarios": [
+            {
+              "id": "rejects-rebinding-the-operator-of-a-missing-node",
+              "directoryName": "🧪️rejects-rebinding-the-operator-of-a-missing-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "connect-nodes",
+          "sourceMutationDirectoryName": "🤝️connect-nodes",
+          "mutationDirectoryName": "🤝️connect-nodes",
+          "scenarios": [
+            {
+              "id": "rejects-a-missing-source-node",
+              "directoryName": "🧪️rejects-a-missing-source-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-node",
+          "sourceMutationDirectoryName": "🌱create-node",
+          "mutationDirectoryName": "🌱create-node",
+          "scenarios": [
+            {
+              "id": "rejects-a-duplicate-node-id",
+              "directoryName": "🧪️rejects-a-duplicate-node-id"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-node",
+          "sourceMutationDirectoryName": "🗑️delete-node",
+          "mutationDirectoryName": "🗑️delete-node",
+          "scenarios": [
+            {
+              "id": "rejects-deleting-a-missing-node",
+              "directoryName": "🧪️rejects-deleting-a-missing-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "disconnect-nodes",
+          "sourceMutationDirectoryName": "✂️disconnect-nodes",
+          "mutationDirectoryName": "✂️disconnect-nodes",
+          "scenarios": [
+            {
+              "id": "rejects-disconnecting-a-missing-edge",
+              "directoryName": "🧪️rejects-disconnecting-a-missing-edge"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-node",
+          "sourceMutationDirectoryName": "↔️move-node",
+          "mutationDirectoryName": "↔️move-node",
+          "scenarios": [
+            {
+              "id": "rejects-moving-a-missing-node",
+              "directoryName": "🧪️rejects-moving-a-missing-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-node",
+          "sourceMutationDirectoryName": "🏷️rename-node",
+          "mutationDirectoryName": "🏷️rename-node",
+          "scenarios": [
+            {
+              "id": "rejects-renaming-a-missing-node",
+              "directoryName": "🧪️rejects-renaming-a-missing-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-nodes",
+          "sourceMutationDirectoryName": "🔀reorder-nodes",
+          "mutationDirectoryName": "🔀reorder-nodes",
+          "scenarios": [
+            {
+              "id": "rejects-a-duplicate-id-in-the-order",
+              "directoryName": "🧪️rejects-a-duplicate-id-in-the-order"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-node-kind",
+          "sourceMutationDirectoryName": "🔁replace-node-kind",
+          "mutationDirectoryName": "🔁replace-node-kind",
+          "scenarios": [
+            {
+              "id": "rejects-rekinding-a-missing-node",
+              "directoryName": "🧪️rejects-rekinding-a-missing-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-node-properties",
+          "sourceMutationDirectoryName": "🗃️replace-node-properties",
+          "mutationDirectoryName": "🗃️replace-node-properties",
+          "scenarios": [
+            {
+              "id": "rejects-repropertying-a-missing-node",
+              "directoryName": "🧪️rejects-repropertying-a-missing-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "resize-node",
+          "sourceMutationDirectoryName": "📐resize-node",
+          "mutationDirectoryName": "📐resize-node",
+          "scenarios": [
+            {
+              "id": "rejects-resizing-a-missing-node",
+              "directoryName": "🧪️rejects-resizing-a-missing-node"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "create-node",
+        "delete-node",
+        "rename-node",
+        "change-node-name",
+        "move-node",
+        "resize-node",
+        "change-node-icon",
+        "change-node-abbreviation",
+        "change-node-operator-kind",
+        "replace-node-kind",
+        "replace-node-properties",
+        "reorder-nodes",
+        "connect-nodes",
+        "disconnect-nodes"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.dag.dag",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-node-abbreviation",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-abbreviation",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeAbbreviation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-node-icon",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-icon",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeIcon"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-node-name",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-name",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeName"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-node-operator-kind",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-operator-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeOperatorKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "connect-nodes",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "connect-nodes",
+            "bridgeVersion": 1,
+            "variant": "ConnectNodes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-node",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-node",
+            "bridgeVersion": 1,
+            "variant": "CreateNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-node",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-node",
+            "bridgeVersion": 1,
+            "variant": "DeleteNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "disconnect-nodes",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "disconnect-nodes",
+            "bridgeVersion": 1,
+            "variant": "DisconnectNodes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "move-node",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-node",
+            "bridgeVersion": 1,
+            "variant": "MoveNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "rename-node",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-node",
+            "bridgeVersion": 1,
+            "variant": "RenameNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "reorder-nodes",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-nodes",
+            "bridgeVersion": 1,
+            "variant": "ReorderNodes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "replace-node-kind",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-node-kind",
+            "bridgeVersion": 1,
+            "variant": "ReplaceNodeKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "replace-node-properties",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-node-properties",
+            "bridgeVersion": 1,
+            "variant": "ReplaceNodeProperties"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "resize-node",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "resize-node",
+            "bridgeVersion": 1,
+            "variant": "ResizeNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

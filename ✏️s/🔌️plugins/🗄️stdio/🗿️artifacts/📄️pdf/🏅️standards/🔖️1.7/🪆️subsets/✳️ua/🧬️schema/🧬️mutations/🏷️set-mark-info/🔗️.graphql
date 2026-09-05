@@ -1,4 +1,0 @@
-# 🏷️ Direct set-mark-info GraphQL payload.
-input SetMarkInfoMutationInput {
-  marked: Boolean!
-}

@@ -22,6 +22,7 @@ pub fn plugin() -> Result<Plugin<AnimateApps>, PluginAssemblyError> {
     Plugin::<AnimateApps>::builder("animate")
         .label("Animate")
         .version("0.1.0")
+        .package_id("semio:animate")
         .declare_artifact(crate::artifacts::presentation::artifact::<AnimateApps>())
         .editor_mutation_roster::<crate::editor::animate::AnimatePresentationPlayApp>()
         .viewer_mutation_roster::<crate::viewer::animate::AnimatePresentationViewer>()

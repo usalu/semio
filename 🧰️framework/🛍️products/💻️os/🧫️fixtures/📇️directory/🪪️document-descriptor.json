@@ -1,0 +1,68 @@
+{
+  "valid": {
+    "spaceId": "space-a",
+    "documentId": "shared-document",
+    "artifactKind": "s.gis.gismap",
+    "artifactSchema": "s.gis.gismap@1/*",
+    "owner": {
+      "pluginId": "s.gis",
+      "packageId": "s.gis.gismap",
+      "version": "1.0.0",
+      "packageHash": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    "packSchemaHash": "1111111111111111111111111111111111111111111111111111111111111111",
+    "bootstrapVersion": 1,
+    "bootstrapFrontier": {
+      "headSeq": 7,
+      "commitSeq": 7,
+      "epoch": 2
+    },
+    "bootstrapSnapshotHash": "3333333333333333333333333333333333333333333333333333333333333333"
+  },
+  "canonical": "{\"spaceId\":\"space-a\",\"documentId\":\"shared-document\",\"artifactKind\":\"s.gis.gismap\",\"artifactSchema\":\"s.gis.gismap@1/*\",\"owner\":{\"pluginId\":\"s.gis\",\"packageId\":\"s.gis.gismap\",\"version\":\"1.0.0\",\"packageHash\":\"2222222222222222222222222222222222222222222222222222222222222222\"},\"packSchemaHash\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"bootstrapVersion\":1,\"bootstrapFrontier\":{\"headSeq\":7,\"commitSeq\":7,\"epoch\":2},\"bootstrapSnapshotHash\":\"3333333333333333333333333333333333333333333333333333333333333333\"}",
+  "conflictingSchemaHash": {
+    "spaceId": "space-a",
+    "documentId": "shared-document",
+    "artifactKind": "s.gis.gismap",
+    "artifactSchema": "s.gis.gismap@1/*",
+    "owner": {
+      "pluginId": "s.gis",
+      "packageId": "s.gis.gismap",
+      "version": "1.0.0",
+      "packageHash": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    "packSchemaHash": "4444444444444444444444444444444444444444444444444444444444444444",
+    "bootstrapVersion": 1,
+    "bootstrapFrontier": {
+      "headSeq": 7,
+      "commitSeq": 7,
+      "epoch": 2
+    },
+    "bootstrapSnapshotHash": "3333333333333333333333333333333333333333333333333333333333333333"
+  },
+  "crossSpaceSameDocument": {
+    "spaceId": "space-b",
+    "documentId": "shared-document",
+    "artifactKind": "s.gis.gismap",
+    "artifactSchema": "s.gis.gismap@1/*",
+    "owner": {
+      "pluginId": "s.gis",
+      "packageId": "s.gis.gismap",
+      "version": "1.0.0",
+      "packageHash": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    "packSchemaHash": "1111111111111111111111111111111111111111111111111111111111111111",
+    "bootstrapVersion": 1,
+    "bootstrapFrontier": {
+      "headSeq": 0,
+      "commitSeq": 0,
+      "epoch": 0
+    },
+    "bootstrapSnapshotHash": "5555555555555555555555555555555555555555555555555555555555555555"
+  },
+  "revokedReader": {
+    "spaceId": "space-a",
+    "documentId": "shared-document",
+    "userId": "reader-revoked"
+  }
+}

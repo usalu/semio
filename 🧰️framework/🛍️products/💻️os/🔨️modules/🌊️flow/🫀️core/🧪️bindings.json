@@ -1,0 +1,6 @@
+{
+  "outputDirectory": "🕸️bindings",
+  "owners": ["📦️packages/🦀️rust", "🫀️core"],
+  "companions": ["flow_core.js", "flow_core.d.ts", "flow_core_bg.wasm", "flow_core_bg.wasm.d.ts"],
+  "invalidDirectories": ["", ".", "..", "../bindings", "a/b", "a\\b", "/bindings", "C:bindings", "bindings.", "bindings ", "bad\u0000name"]
+}

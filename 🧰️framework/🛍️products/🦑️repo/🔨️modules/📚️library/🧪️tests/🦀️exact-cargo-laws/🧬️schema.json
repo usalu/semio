@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "package",
+    "target",
+    "laws",
+    "executableBytesHex",
+    "executableSha256",
+    "nativeArguments",
+    "capturedOutput",
+    "activeLease",
+    "cases"
+  ],
+  "properties": {
+    "nativeArguments": { "const": ["--exact", "--test-threads=1", "--show-output"] },
+    "capturedOutput": { "const": "[DEBUG] retained native owner reached its terminal witness" },
+    "activeLease": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["directoryPrefix", "manifestName", "version", "heartbeatMaxAgeMs"],
+      "properties": {
+        "directoryPrefix": { "const": ".exact-cargo-laws-active-" },
+        "manifestName": { "const": "lease.json" },
+        "version": { "const": 1 },
+        "heartbeatMaxAgeMs": { "const": 120000 }
+      }
+    },
+    "schema": {
+      "const": "semio.repo.exact-cargo-laws/v1"
+    },
+    "package": {
+      "const": "fixture-package"
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "name"
+      ],
+      "properties": {
+        "kind": {
+          "const": "test"
+        },
+        "name": {
+          "const": "fixture_laws"
+        }
+      }
+    },
+    "laws": {
+      "const": [
+        "first_law",
+        "nested::second_law"
+      ]
+    },
+    "executableBytesHex": {
+      "const": "616263"
+    },
+    "executableSha256": {
+      "const": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 19,
+      "maxItems": 19,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "mutation",
+          "expected",
+          "builds",
+          "assertions"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "mutation": {
+            "enum": [
+              "none",
+              "debug-output",
+              "terminal-spoof",
+              "build-exit",
+              "missing-artifact",
+              "duplicate-artifact",
+              "wrong-target",
+              "relative-executable",
+              "missing-law",
+              "duplicate-law",
+              "ignored-law",
+              "native-exit",
+              "zero-pass",
+              "two-pass",
+              "hash-after-list",
+              "hash-after-law",
+              "cancel-before",
+              "cancel-after-build",
+              "outside-cargo-target"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "passed",
+              "denied"
+            ]
+          },
+          "builds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "assertions": {
+            "enum": [
+              0,
+              2
+            ]
+          }
+        }
+      }
+    }
+  }
+}

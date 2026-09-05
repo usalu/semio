@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "requiredFactoryOperations", "inputBytes", "requestIdentityBytes", "derivedIdentityBytes", "limits", "input", "authority", "parent", "selected", "operations", "operationLifecycle", "cases"],
+  "properties": {
+    "schema": { "const": "semio.plugin.public-member-open-handoff/v1" },
+    "requiredFactoryOperations": { "const": 18 }, "inputBytes": { "const": 274 }, "requestIdentityBytes": { "const": 37 }, "derivedIdentityBytes": { "const": 72 },
+    "limits": { "const": { "operations": 64, "abortRetirements": 64, "childMembers": 64, "rootRetirements": 64 } },
+    "input": { "$ref": "#/$defs/input" }, "authority": { "const": { "operation": 7, "generation": 11, "expiresAt": 1000, "now": 1 } }, "parent": { "$ref": "#/$defs/parent" }, "selected": { "$ref": "#/$defs/declaration" },
+    "operations": { "type": "array", "minItems": 18, "maxItems": 18, "items": { "$ref": "#/$defs/operation" } },
+    "operationLifecycle": { "type": "array", "minItems": 8, "maxItems": 8, "items": { "$ref": "#/$defs/lifecycle" } },
+    "cases": { "type": "array", "minItems": 20, "maxItems": 20, "items": { "$ref": "#/$defs/case" } }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1, "maxLength": 256 }, "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]+$" },
+    "dialect": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/$defs/text" } },
+    "declaration": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "$ref": "#/$defs/text" } },
+    "input": { "type": "object", "additionalProperties": false, "required": ["slot", "childId", "dialect", "sealed", "inputBytes"], "properties": {
+      "slot": { "const": "content" }, "childId": { "const": "flow-member" }, "dialect": { "const": ["s.stdio.semio", "v1", "flow"] }, "sealed": { "const": true }, "inputBytes": { "const": 274 }
+    } },
+    "parent": { "type": "object", "additionalProperties": false, "required": ["id", "dialect", "generation", "contentGeneration", "projection"], "properties": {
+      "id": { "const": "flow-parent" }, "dialect": { "const": ["s.flow.flow", "1", "*"] }, "generation": { "const": 23 }, "contentGeneration": { "const": 3 },
+      "projection": { "type": "object", "additionalProperties": false, "required": ["slot", "childId", "dialect"], "properties": { "slot": { "const": "content" }, "childId": { "const": "flow-member" }, "dialect": { "const": ["s.stdio.semio", "v1", "flow"] } } }
+    } },
+    "operation": { "type": "object", "additionalProperties": false, "required": ["subset", "support", "terminal", "handoffs", "retiredInputBytes", "publications"], "properties": {
+      "subset": { "$ref": "#/$defs/name" }, "support": { "enum": ["flow", "unsupported"] }, "terminal": { "enum": ["ready", "decode"] },
+      "handoffs": { "enum": [0, 1] }, "retiredInputBytes": { "enum": [0, 274] }, "publications": { "const": 0 }
+    } },
+    "lifecycle": { "type": "object", "additionalProperties": false, "required": ["id", "stage", "event", "terminal", "handoffs", "retiredInputBytes", "publications"], "properties": {
+      "id": { "$ref": "#/$defs/name" }, "stage": { "enum": ["snapshot", "history", "selection", "dictionary", "replay", "initialize", "ready"] },
+      "event": { "enum": ["none", "cancel", "operation", "generation", "expired", "close", "repeat"] },
+      "terminal": { "enum": ["ready", "cancelled", "stale", "expired", "closed"] }, "handoffs": { "enum": [0, 1] },
+      "retiredInputBytes": { "enum": [0, 274] }, "publications": { "const": 0 }
+    } },
+    "case": { "type": "object", "additionalProperties": false, "required": ["id", "mutation", "error", "retainedBy", "identityBytes", "reservations", "handoffs", "publications", "creates", "retiredInputBytes"], "properties": {
+      "id": { "$ref": "#/$defs/name" }, "mutation": { "enum": ["none", "wrong-slot", "wrong-child", "wrong-kind", "wrong-standard", "wrong-subset", "parent-dialect", "projection", "unsealed", "empty", "expired", "operation-capacity", "abort-capacity", "member-capacity", "root-capacity", "cancel-before", "cancel-after", "parent-generation", "factory-reject", "repeat-take"] },
+      "error": { "enum": [null, "identity", "unsealed", "empty", "expired", "capacity", "cancelled", "stale"] }, "retainedBy": { "enum": ["caller", "app", "factory"] },
+      "identityBytes": { "enum": [37, 72] }, "reservations": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "enum": [0, 1] } },
+      "handoffs": { "enum": [0, 1] }, "publications": { "const": 0 }, "creates": { "const": 0 }, "retiredInputBytes": { "type": "integer", "minimum": 0, "maximum": 274 }
+    } }
+  }
+}

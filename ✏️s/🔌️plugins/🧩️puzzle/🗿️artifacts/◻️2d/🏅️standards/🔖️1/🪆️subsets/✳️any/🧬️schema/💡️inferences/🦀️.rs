@@ -2,7 +2,7 @@
 //! (ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING). Directory
 //! shape mirrors `🧬️mutations/`: this file is the family-root assembly (never mod's/includes the
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
-//! inference gets its own `<emoji><slug>/` child (currently: `🎛flat-position/`, the same
+//! inference gets its own `<emoji><slug>/` child (currently: `🎛️flat-position/`, the same
 //! graph-BFS-derived positioning concept `🧊️3d`'s own `🎛flat-position/` and `🔱️trinity/🔌️jack`'s own
 //! `🎛flat-position/` carry for their artifacts — here reusing the existing
 //! `⚙️engine/📐️layout::fastened_layout_snapshot` compose-parity math directly rather than
@@ -17,7 +17,7 @@ use super::flat_position::{compute_flat_position, Puzzle2dFlatPosition};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a puzzle2d snapshot. One field per named inference under
-/// `💡️inferences/` (currently: `flatPosition`, backed by the `🎛flat-position/` slug dir).
+/// `💡️inferences/` (currently: `flatPosition`, backed by the `🎛️flat-position/` slug dir).
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle2d.inference")]
@@ -115,7 +115,7 @@ mod tests {
 use crate::artifacts::puzzle2d::{Puzzle2dNode, Puzzle2dNodeAnchor};
 /// 🔗️ Rehomed from the deleted `⚙️engine/📐️layout` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1e): compose-parity fastened layout, pure derived
-/// compute over a `Puzzle2dSnapshot` — sole consumer is `🎛flat-position`'s own `compute_flat_position`
+/// compute over a `Puzzle2dSnapshot` — sole consumer is `🎛️flat-position`'s own `compute_flat_position`
 /// (see that file's own `use super::fastened_layout_snapshot;`), so it lives at the inference family
 /// root rather than being duplicated into the slug dir.
 use crate::artifacts::puzzle3d::schema::inferences::flatten::{DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS};

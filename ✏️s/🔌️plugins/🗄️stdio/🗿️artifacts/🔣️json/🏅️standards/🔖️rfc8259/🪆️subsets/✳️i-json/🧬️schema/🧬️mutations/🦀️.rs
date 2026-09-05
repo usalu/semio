@@ -72,7 +72,7 @@ impl JsonIJsonRoot {
 /// 📐️ Typed content mutation for `s.stdio.json@rfc8259/i-json` — see this file's header for what
 /// each variant owes to RFC 7493 and which four are inherited from the ✳️any sibling unchanged.
 //#region 🔖️Leaves
-#[path = "📄set-snapshot/🦀️.rs"]
+#[path = "🟤️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🌳set-top-level/🦀️.rs"]
 pub mod set_top_level;
@@ -458,7 +458,7 @@ mod tests {
         assert_eq!(members.iter().map(|member| member.key.as_str()).collect::<Vec<_>>(), vec!["revision", "title", "tags"]);
     }
 
-    /// ↩️ The metamorphic law every `inverse-<kind>` scenario of `mutate-json-rfc8259-i-json` rests
+    /// ↩️ The metamorphic law every `inverse-<kind>` scenario of `🐺️mutate-json-rfc8259-i-json` rests
     /// on, proved here for all nine kinds against one snapshot rather than only end-to-end.
     #[test]
     fn applying_a_mutation_and_then_its_inverse_restores_the_snapshot() {

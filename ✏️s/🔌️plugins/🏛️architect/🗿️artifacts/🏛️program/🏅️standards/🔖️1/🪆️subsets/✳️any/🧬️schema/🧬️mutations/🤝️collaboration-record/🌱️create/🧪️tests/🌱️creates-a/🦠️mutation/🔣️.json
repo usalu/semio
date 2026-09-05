@@ -1,0 +1,37 @@
+{
+  "mutation": "createCollaborationRecord",
+  "collaborationRecord": {
+    "id": "collaboration-record-a",
+    "name": "Collaboration Record A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "sessionType": "",
+    "title": "",
+    "participants": [],
+    "facilitatorId": null,
+    "startTime": null,
+    "endTime": null,
+    "location": null,
+    "agenda": [],
+    "outcomes": [],
+    "actionItems": [],
+    "decisionIds": [],
+    "issueIds": [],
+    "documentIds": [],
+    "recordingRef": null,
+    "feedback": [],
+    "followUpDate": null,
+    "workshopId": null,
+    "surveyId": null
+  }
+}

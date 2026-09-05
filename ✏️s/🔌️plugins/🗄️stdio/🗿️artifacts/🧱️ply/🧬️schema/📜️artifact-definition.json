@@ -1,0 +1,225 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.ply",
+  "artifact": "ply",
+  "directory": "🧱️ply",
+  "dependencies": [
+    "s.stdio.txt"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.ply.standard.1-0",
+      "revision": "1-0",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.ply.standard.1-0.profile.any",
+      "standard": "s.stdio.ply.standard.1-0",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.ply.standard.1-0.dialect.source",
+      "standard": "s.stdio.ply.standard.1-0",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.ply.standard.1-0.representation.document",
+      "standard": "s.stdio.ply.standard.1-0",
+      "representation": "document",
+      "mimes": ["model/ply"],
+      "extensions": [".ply"],
+      "is_binary": false,
+      "aliases": [],
+      "neutral": true,
+      "status": "declared"
+    }
+  ],
+  "codecs": [
+    { "id": "s.stdio.ply.standard.1-0.codec.native-document.v1", "status": "implemented", "from": "s.stdio.ply.standard.1-0.dialect.source", "to": "s.stdio.ply.standard.1-0.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.ply.v1", "artifact_kind": "stdio.ply", "document_schema": "stdio.ply", "extension": "ply", "pack_schema_hash": "42ed85cd84beceab5a85f3d9784d66af517c0e85c843058411b52cb0b03cb40a", "runtime_capability_id": "s.stdio.ply.standard.1-0.codec.codec-stdio-ply-extension-ply.v1" } }
+  ],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.ply.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.ply.localization.en",
+      "locale": "en",
+      "name": "Polygon File Format",
+      "description": "Polygon File Format artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.ply.localization.de",
+      "locale": "de",
+      "name": "Polygondateiformat",
+      "description": "Polygondateiformat-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.ply.conformance-suite.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.ply.standard.1-0.codec.codec-stdio-ply-extension-ply.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.ply:ply|codec:stdio.ply",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.ply"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "9:stdio.ply:ply"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ply.composer.dialect-s-stdio-ply-1-0.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.ply@1.0/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.ply@1.0/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ply.grammar.grammar-stdio-ply.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.ply",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.ply"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ply.grammar.grammar-stdio-ply-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.ply.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.ply.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ply.grammar.grammar-stdio-ply-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.ply.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.ply.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ply.grammar.grammar-stdio-ply-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.ply.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.ply.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ply.grammar.grammar-stdio-ply-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.ply.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.ply.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ply.inference.schema-s-stdio-ply-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.ply.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.ply.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ply.standard.1-0.representation.mime-model-ply-extension-ply",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:model/ply|extension:.ply",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "model/ply"
+        },
+        {
+          "namespace": "extension",
+          "value": ".ply"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ply.schema.schema-s-stdio-ply.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.ply",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.ply"
+        }
+      ]
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.ply.standard.1-0.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

@@ -9,7 +9,7 @@
 //! trueing pass, `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`) — the pre-migration grouped directories
 //! (`📦assets`, `📸shots`, `🎥saved-cameras`, `☀️patch-scene` hosting multiple kinds each) were
 //! split one-kind-per-dir, and the two mismatched slugs (`↔️translate-assets`→`↔️drag-assets`,
-//! `📷set-shot-camera`→`📷replace-shot-camera`) and the orphan `📄set-snapshot` scaffold were
+//! `📷set-shot-camera`→`📷replace-shot-camera`) and the orphan `🟤️set-snapshot` scaffold were
 //! retired.
 
 use crate::artifacts::shooting::diff::ShootingDiff;
@@ -61,7 +61,7 @@ pub enum ShootingMutation {
 /// the language-neutral test platform is measured against. It is duplicated in exactly two other
 /// places on purpose: this subset's own oracle manifest catalog `shooting-1-any`
 /// (`../../🔣️oracle.json`), which the completeness gate counts, and the
-/// `mutate-shooting-1` case adapter, which must not link this crate in the oracle role.
+/// `🐧️mutate-shooting-1` case adapter, which must not link this crate in the oracle role.
 /// [`tests::kinds_match_the_enum_and_the_catalog`] is what keeps all three honest.
 pub const KINDS: &[&str] = &[
     "create-asset",
@@ -114,7 +114,7 @@ pub fn inverse_shooting_mutation(snapshot: &ShootingSnapshot, mutation: &Shootin
 
 //#region 🔖️CaseBridges
 /// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "createAsset", …}`) JSON projection
-/// — the shape the `mutate-shooting-1` case's `Examples` rows carry, and the shape every committed
+/// — the shape the `🐧️mutate-shooting-1` case's `Examples` rows carry, and the shape every committed
 /// per-kind leaf fixture under `<kind>/🧪️tests/*/🦠️mutation/🔣️.json` already is — into a real
 /// [`ShootingMutation`], via this crate's own `dsl::os_pack::json` parser/bridge (no `serde_json`).
 pub fn decode_shooting_mutation_json(text: &str) -> Result<ShootingMutation, String> {
@@ -582,7 +582,7 @@ mod tests {
     fn kinds_match_the_enum_and_the_catalog() {
         let declared: Vec<&str> = <ShootingMutation as protocol::SemanticMutation<ShootingSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
         assert_eq!(KINDS, declared.as_slice(), "KINDS must name every ShootingMutation variant, in declaration order, spelled as its own MutationKind::SEMANTICS.kind");
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔮️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in this subset's committed oracle manifest catalog shooting-1-any");
         }

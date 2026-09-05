@@ -1,0 +1,14 @@
+syntax = "proto3";
+package semio.s_stdio_dxf.artifact;
+
+import "snapshot.proto"; // DxfHeaderVar, DxfTables, DxfOtherTable, DxfBlock, DxfEntity
+
+// 🧬️ DxfArtifact schema facet — full artifact state, same persisted fields as DxfSnapshot.
+message DxfArtifact {
+  string schema = 1;
+  repeated semio.s_stdio_dxf.snapshot.DxfHeaderVar header_vars = 2;
+  semio.s_stdio_dxf.snapshot.DxfTables tables = 3;
+  repeated semio.s_stdio_dxf.snapshot.DxfOtherTable other_tables = 4;
+  repeated semio.s_stdio_dxf.snapshot.DxfBlock blocks = 5;
+  repeated semio.s_stdio_dxf.snapshot.DxfEntity entities = 6;
+}

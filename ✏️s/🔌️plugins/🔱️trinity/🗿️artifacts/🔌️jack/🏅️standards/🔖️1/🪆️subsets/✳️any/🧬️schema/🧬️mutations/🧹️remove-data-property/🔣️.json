@@ -5,7 +5,7 @@
   "displayName": "Remove Data Property",
   "emoji": "🧹️",
   "aggregateVariant": "RemoveDataProperty",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "remove-data-property",
   "binaryTag": 7,
   "invertibility": "explicit-mutation",

@@ -5,7 +5,7 @@
   "displayName": "Change Layer Adjustment Kind",
   "emoji": "🎚️",
   "aggregateVariant": "ChangeLayerAdjustmentKind",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

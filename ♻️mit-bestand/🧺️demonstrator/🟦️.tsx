@@ -28,7 +28,7 @@ import { PLUGIN_CATALOG } from "@semio-tech/plugin-registry/catalog";
 import { FrameworkOsShell, resolveShellLocks, resolveShellDefaults } from "@semio-tech/framework-renderer-react";
 import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-js";
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "./⚛️footer.tsx";
-import { DEMONSTRATOR_LOCALE, DEMONSTRATOR_PANES, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION, ENTWERFEN_MIT_BESTAND_LOGO_SVG, demonstratorPaneBootVariants, scheduleDemonstratorIdle, type DemonstratorPaneSpec } from "./🟦️brand.ts";
+import { DEMONSTRATOR_LOCALE, DEMONSTRATOR_PANES, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION, ENTWERFEN_MIT_BESTAND_LOGO_SVG, demonstratorPaneBootVariants, scheduleDemonstratorIdle, type DemonstratorPaneSpec } from "./🪧️brand.ts";
 import "./🎨️globals.css";
 
 // 🎪️ Page-owning (single React root, no `ShellScope` of its own) — plain browser storage is correct;
@@ -36,7 +36,7 @@ import "./🎨️globals.css";
 const demonstratorStorage = createBrowserStoragePort();
 
 bootstrapElementsSurfaceChromeDocument(readStoredUiChromeAppearance(demonstratorStorage));
-// 🇩🇪️ The whole demonstrator is German-locked (see 🟦️brand.ts) — resolve synchronously before the
+// 🇩🇪️ The whole demonstrator is German-locked (see 🪧️brand.ts) — resolve synchronously before the
 // first render so the landing page's own chrome (Skip/Back/Next/Done) never flashes English.
 initUiLocaleSync(DEMONSTRATOR_LOCALE);
 

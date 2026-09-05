@@ -1,0 +1,10 @@
+{
+  "mutation": "createSupport",
+  "support": {
+    "id": "s2",
+    "nodeId": "n2",
+    "fixed": [
+      "Ty"
+    ]
+  }
+}

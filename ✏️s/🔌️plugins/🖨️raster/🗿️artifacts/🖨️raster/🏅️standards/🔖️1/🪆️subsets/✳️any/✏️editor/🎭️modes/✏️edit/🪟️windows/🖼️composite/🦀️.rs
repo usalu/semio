@@ -35,7 +35,7 @@ pub fn definition() -> WindowKindDefinition {
     }
 }
 
-/// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
+/// 🎚️ The live chrome measures for this window, collected from its `☑️options/*` components.
 pub fn window_measures(config: &RasterConfig) -> Vec<WindowMeasure> {
     vec![options::brush::measure(config), options::eraser::measure(config)]
 }

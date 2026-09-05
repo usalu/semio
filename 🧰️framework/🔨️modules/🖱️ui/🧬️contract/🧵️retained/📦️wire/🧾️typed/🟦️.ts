@@ -507,7 +507,7 @@ export class RetainedUiChildIdsCursor {
 //#region 🧪️PrivateOwnershipProbe
 if (import.meta.vitest) {
   const { it, expect } = import.meta.vitest;
-  const { default: fixture } = await import("../🧪️fixtures/🔣️fields.json");
+      const { default: fixture } = await import("../🧪️fixtures/🏷️fields/🔣️.json");
 
   function prepared<P extends Profile>(kind: P, value: unknown): OwnedUiPayload<RetainedUiTypedValues[P]> {
     const builder = new Builder();

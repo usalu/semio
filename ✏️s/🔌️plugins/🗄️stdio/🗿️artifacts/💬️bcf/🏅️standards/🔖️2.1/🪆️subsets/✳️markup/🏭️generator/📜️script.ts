@@ -19,7 +19,7 @@
 //
 //   bun 📜️script.ts generate --only <fixture-id>
 //
-// @see ../../../../🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🏭️generator/📜️script.ts — the sibling
+// @see ../../../../🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts — the sibling
 //      generator this file's CLI shape is mirrored from
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/
 

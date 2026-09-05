@@ -20,7 +20,6 @@ path = "🦀️.rs"
 [features]
 default = ["deflate"]
 deflate = ["semio-framework-replication/deflate", "semio-framework-pack/deflate"]
-dsl-fixture-sweep-full = []
 # 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet terra-directory-and-run): the native
 # `📇️directory/🔌️client`'s `NativeDirectoryTransport` routes its HTTP calls through
 # `semio-framework-os-services`'s `HttpPool`/`ComputePool` (bounded, cancellable, deadline-aware).
@@ -58,7 +57,7 @@ semio-framework-io-base64 = { path = "../../../../🔨️modules/🚪️io/🔤�
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 ureq = { version = "2", optional = true }
-semio-framework-hash = { path = "../../../../🔨️modules/🔢️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-job = { workspace = true }
 
 # 🌉️ Browser-only bridges reached through this crate's mounted modules (`🪪️identity`'s
@@ -70,7 +69,7 @@ semio-framework-job = { workspace = true }
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = "0.3.83"
 wasm-bindgen = "0.2.106"
-web-sys = { version = "0.3.98", features = ["Window", "Storage", "console", "WebSocket", "MessageEvent", "BinaryType", "Request", "RequestInit", "Response", "Headers"] }
+web-sys = { version = "0.3.98", features = ["Window", "Storage", "console", "WebSocket", "MessageEvent", "CloseEvent", "BinaryType", "Request", "RequestInit", "Response", "Headers"] }
 
 # 🧵️ Host-only tokio + zip, presentation on native AND browser wasm32, absent only from the shipped
 # `wasm32-wasip2` component target — `target_arch = "wasm32"` is TRUE for wasm32-wasip2 too, so the
@@ -124,37 +123,5 @@ name = "semio"
 path = "../../🔨️modules/🧬️semio/📦️bin.rs"
 
 [dev-dependencies]
+blake3 = "1.8.2"
 semio-framework-async-macros = { path = "../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
-# 🧪️ `dsl-fixture-sweep-full` fan-in — every plugin/app crate `🔨️modules/🗣️dsl/🧪️fixture-sweep`
-# derives an `ArtifactDsl` example fixture check against (see that file's module doc comment).
-# Test-only: none of these ever become a real (non-dev) dependency of this crate.
-block = { path = "../../../../../✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust", package = "semio-s-plugin-block" }
-cad_document = { path = "../../../../../✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust", package = "semio-s-plugin-cad" }
-dag_app = { path = "../../../../../✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust", package = "semio-s-plugin-dag" }
-draw = { path = "../../../../../✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust", package = "semio-s-plugin-draw" }
-fem = { path = "../../../../../✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust", package = "semio-s-plugin-fem" }
-flow_app = { path = "../../🔨️modules/🌊️flow/📦️packages/🦀️rust", package = "semio-framework-os-flow" }
-gis = { path = "../../../../../✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust", package = "semio-s-plugin-gis" }
-# 🏠️ `home` is the `space` plugin's own `home` artifact (`✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home`) —
-# unrelated to the `semio_framework_os::space` module below (`SpaceSnapshot`/`CollectionSnapshot`).
-home = { path = "../../../../../✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust", package = "semio-s-plugin-space" }
-imperative = { path = "../../../../../✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust", package = "semio-s-plugin-imperative" }
-layout = { path = "../../../../../✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust", package = "semio-s-plugin-layout" }
-lowpoly = { path = "../../../../../✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust", package = "semio-s-plugin-lowpoly" }
-mathematical = { path = "../../../../../✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust", package = "semio-s-plugin-mathematical" }
-norm = { path = "../../../../../✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", package = "semio-s-plugin-norm" }
-note_app = { path = "../../../../../✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust", package = "semio-s-plugin-note" }
-presentation = { path = "../../../../../✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust", package = "semio-s-plugin-animate" }
-procedural = { path = "../../../../../✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust", package = "semio-s-plugin-procedural" }
-process_3d = { path = "../../../../../✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust", package = "semio-s-plugin-process" }
-puzzle = { path = "../../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", package = "semio-s-plugin-puzzle" }
-raster = { path = "../../../../../✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust", package = "semio-s-plugin-raster" }
-reasoning_mindmap_plugin = { path = "../../../../../✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust", package = "semio-s-plugin-reasoning-mindmap" }
-remodel = { path = "../../../../../✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust", package = "semio-s-plugin-remodel" }
-semio_framework_os = { path = "../../🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
-sequence = { path = "../../../../../✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust", package = "semio-s-plugin-sequence" }
-shooting = { path = "../../../../../✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust", package = "semio-s-plugin-shooting" }
-sourcing = { path = "../../../../../✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust", package = "semio-s-plugin-sourcing" }
-trinity = { path = "../../../../../✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust", package = "semio-s-plugin-trinity" }
-vcs_app = { path = "../../../../../✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust", package = "semio-s-plugin-vcs" }
-writer = { path = "../../../../../✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust", package = "semio-s-plugin-writer" }

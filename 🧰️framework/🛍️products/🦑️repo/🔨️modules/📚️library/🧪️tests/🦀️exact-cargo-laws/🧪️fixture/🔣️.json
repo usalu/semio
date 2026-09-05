@@ -1,0 +1,157 @@
+{
+  "schema": "semio.repo.exact-cargo-laws/v1",
+  "package": "fixture-package",
+  "target": {
+    "kind": "test",
+    "name": "fixture_laws"
+  },
+  "laws": [
+    "first_law",
+    "nested::second_law"
+  ],
+  "executableBytesHex": "616263",
+  "executableSha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+  "nativeArguments": ["--exact", "--test-threads=1", "--show-output"],
+  "capturedOutput": "[DEBUG] retained native owner reached its terminal witness",
+  "activeLease": {
+    "directoryPrefix": ".exact-cargo-laws-active-",
+    "manifestName": "lease.json",
+    "version": 1,
+    "heartbeatMaxAgeMs": 120000
+  },
+  "cases": [
+    {
+      "id": "captured-debug-output",
+      "mutation": "debug-output",
+      "expected": "passed",
+      "builds": 1,
+      "assertions": 2
+    },
+    {
+      "id": "captured-terminal-spoof",
+      "mutation": "terminal-spoof",
+      "expected": "denied",
+      "builds": 1,
+      "assertions": 0
+    },
+    {
+      "id": "one-build-two-exact-laws",
+      "mutation": "none",
+      "expected": "passed",
+      "builds": 1,
+      "assertions": 2
+    },
+    {
+      "id": "build-exit",
+      "mutation": "build-exit",
+      "expected": "denied",
+      "builds": 1,
+      "assertions": 0
+    },
+    {
+      "id": "missing-artifact",
+      "mutation": "missing-artifact",
+      "expected": "denied",
+      "builds": 1,
+      "assertions": 0
+    },
+    {
+      "id": "duplicate-artifact",
+      "mutation": "duplicate-artifact",
+      "expected": "denied",
+      "builds": 1,
+      "assertions": 0
+    },
+    {
+      "id": "wrong-target",
+      "mutation": "wrong-target",
+      "expected": "denied",
+      "builds": 1,
+      "assertions": 0
+    },
+    {
+      "id": "relative-executable",
+      "mutation": "relative-executable",
+      "expected": "denied",
+      "builds": 1,
+      "assertions": 0
+    },
+    {
+      "id": "missing-law",
+      "mutation": "missing-law",
+      "expected": "denied",
+      "builds": 1,
+      "assertions": 0
+    },
+    {
+      "id": "duplicate-law",
+      "mutation": "duplicate-law",
+      "expected": "denied",
+      "builds": 1,
+      "assertions": 0
+    },
+    {
+      "id": "ignored-law",
+      "mutation": "ignored-law",
+      "expected": "denied",
+      "builds": 1,
+      "assertions": 0
+    },
+    {
+      "id": "native-exit",
+      "mutation": "native-exit",
+      "expected": "denied",
+      "builds": 1,
+      "assertions": 0
+    },
+    {
+      "id": "zero-pass",
+      "mutation": "zero-pass",
+      "expected": "denied",
+      "builds": 1,
+      "assertions": 0
+    },
+    {
+      "id": "two-pass",
+      "mutation": "two-pass",
+      "expected": "denied",
+      "builds": 1,
+      "assertions": 0
+    },
+    {
+      "id": "hash-after-list",
+      "mutation": "hash-after-list",
+      "expected": "denied",
+      "builds": 1,
+      "assertions": 0
+    },
+    {
+      "id": "hash-after-law",
+      "mutation": "hash-after-law",
+      "expected": "denied",
+      "builds": 1,
+      "assertions": 0
+    },
+    {
+      "id": "cancel-before",
+      "mutation": "cancel-before",
+      "expected": "denied",
+      "builds": 0,
+      "assertions": 0
+    },
+    {
+      "id": "cancel-after-build",
+      "mutation": "cancel-after-build",
+      "expected": "denied",
+      "builds": 1,
+      "assertions": 0
+    },
+    {
+      "id": "outside-cargo-target",
+      "mutation": "outside-cargo-target",
+      "expected": "denied",
+      "builds": 0,
+      "assertions": 0
+    }
+  ]
+}

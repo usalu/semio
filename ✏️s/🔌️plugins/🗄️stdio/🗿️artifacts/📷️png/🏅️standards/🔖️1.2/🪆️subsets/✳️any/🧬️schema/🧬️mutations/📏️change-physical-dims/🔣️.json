@@ -5,7 +5,7 @@
   "displayName": "Change Physical Dims",
   "emoji": "📏️",
   "aggregateVariant": "ChangePhysicalDims",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-physical-dims",
   "binaryTag": 8,
   "invertibility": "explicit-mutation",

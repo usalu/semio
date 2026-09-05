@@ -18,6 +18,71 @@
     ]
   },
   "targets": {
+    "public-member-open-handoff-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts public-member-open-handoff-check", "cwd": "{projectRoot}", "forwardAllArgs": true }
+    },
+    "public-member-open-handoff-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts public-member-open-handoff-source", "cwd": "{projectRoot}", "forwardAllArgs": true }
+    },
+    "member-factory-identity-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts member-factory-identity-check", "cwd": "{projectRoot}", "forwardAllArgs": true }
+    },
+    "member-history-record-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts member-history-record-check", "cwd": "{projectRoot}", "forwardAllArgs": true }
+    },
+    "member-history-foundation-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts member-history-foundation-check", "cwd": "{projectRoot}", "forwardAllArgs": true }
+    },
+    "member-history-dictionary-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts member-history-dictionary-check", "cwd": "{projectRoot}", "forwardAllArgs": true }
+    },
+    "member-history-id-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts member-history-id-check", "cwd": "{projectRoot}", "forwardAllArgs": true }
+    },
+    "member-history-input-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts member-history-input-check", "cwd": "{projectRoot}", "forwardAllArgs": true }
+    },
+    "member-history-identity-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts member-history-identity-source", "cwd": "{projectRoot}", "forwardAllArgs": true }
+    },
+    "member-open-protocol-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts member-open-protocol-check", "cwd": "{projectRoot}", "forwardAllArgs": true }
+    },
+    "document-retirement-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts document-retirement-check", "cwd": "{projectRoot}", "forwardAllArgs": true }
+    },
+    "persistence-contract-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts persistence-contract-check", "cwd": "{projectRoot}", "forwardAllArgs": true }
+    },
+    "media-projection-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts media-projection-check", "cwd": "{projectRoot}", "forwardAllArgs": true }
+    },
     "check": {
       "executor": "nx:run-commands",
       "options": {

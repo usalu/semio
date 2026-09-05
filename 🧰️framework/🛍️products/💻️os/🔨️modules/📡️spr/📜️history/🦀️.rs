@@ -8,6 +8,9 @@
 //! them, but never interprets operation semantics (that is `protocol_command`'s concern, a sibling
 //! crate this one does not depend on).
 
+#[path = "🛂️identity/🦀️.rs"]
+pub(crate) mod identity;
+
 use crate::os_dsl::schema::{FieldSpec, FieldValue, JoinMode, ParseOptions, RecordLayout, RecordSpec, RecordValue, Shape};
 use crate::os_pack::{ByteReader, ByteWriter, CodecId, PackSink};
 use crate::os_spr::format::{Blake3Hasher, FrameCursor, RecoveryMode, ReverseFrameCursor, SprWriter, VerificationLevel, WriteOptions, HEADER_SIZE};
@@ -2311,15 +2314,16 @@ mod tests {
         assert_eq!(decoded.messages, Vec::new());
     }
 
-    /// 🔢️ Byte-parity oracle for `write_op_meta`/`read_op_meta`'s canonical-JSON `origin` encoding
-    /// (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-
-    /// ARTIFACTS/🔍️research/📓️dslvalue-integer-fidelity.md` names this call site as the one still
-    /// needing PROOF, not just a claim, before `serde_json::to_string`/`from_str` could be swapped
-    /// for `os_pack::json::to_json_string`/`from_json_str` — `MutationOrigin`/`PayloadHash` are
-    /// numeric-field-bearing (`payload_hash: [u8; 32]`) and this is a FROZEN `.spr` binary field.
-    /// This test proves the two encoders produce byte-IDENTICAL text for a `Contributed` origin
-    /// (the variant carrying `PayloadHash`) — until this passes, the two call sites above correctly
-    /// stay on `serde_json`.
+    #[derive(Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    struct ContributedOriginOracle {
+        kind: String,
+        plugin_id: String,
+        mutation_id: String,
+        payload_hash: [u8; 32],
+    }
+
+    /// 🔢️ Checks canonical origin bytes against an independent test-only serde representation.
     #[semio_framework_async_macros::async_test]
     async fn mutation_origin_canonical_json_is_byte_identical_between_serde_json_and_pack_json() {
         let origin = crate::os_spr::MutationOrigin::Contributed {
@@ -2327,13 +2331,19 @@ mod tests {
             mutation_id: crate::os_spr::SchemaId("mesh/v1".to_string()),
             payload_hash: crate::os_spr::PayloadHash(core::array::from_fn(|index| index as u8)),
         };
-        let via_serde = serde_json::to_string(&origin).expect("serde_json encodes MutationOrigin");
+        let oracle = ContributedOriginOracle {
+            kind: "contributed".to_string(),
+            plugin_id: "s.stdio.mesh".to_string(),
+            mutation_id: "mesh/v1".to_string(),
+            payload_hash: core::array::from_fn(|index| index as u8),
+        };
+        let via_serde = serde_json::to_string(&oracle).expect("serde_json encodes independent origin oracle");
         let via_pack = crate::os_pack::json::to_json_string(&origin);
-        assert_eq!(via_serde, via_pack, "canonical origin encoding must be byte-identical to preserve already-written .spr files");
+        assert_eq!(via_serde, via_pack, "canonical origin bytes must match the independent oracle");
         assert!(via_pack.contains("\"payloadHash\":[0,1,2,"), "got {via_pack} — payload_hash bytes must stay bare integers, never x.0");
-        let round_trip_serde: crate::os_spr::MutationOrigin = serde_json::from_str(&via_serde).expect("serde_json decodes its own output");
-        let round_trip_pack: crate::os_spr::MutationOrigin = crate::os_pack::json::from_json_str(&via_pack).expect("pack::json decodes its own output");
-        assert_eq!(round_trip_serde, origin);
+        let round_trip_serde: ContributedOriginOracle = serde_json::from_str(&via_pack).expect("serde_json decodes first-party origin bytes");
+        let round_trip_pack: crate::os_spr::MutationOrigin = crate::os_pack::json::from_json_str(&via_serde).expect("pack::json decodes independent origin bytes");
+        assert_eq!(round_trip_serde, oracle);
         assert_eq!(round_trip_pack, origin);
     }
 

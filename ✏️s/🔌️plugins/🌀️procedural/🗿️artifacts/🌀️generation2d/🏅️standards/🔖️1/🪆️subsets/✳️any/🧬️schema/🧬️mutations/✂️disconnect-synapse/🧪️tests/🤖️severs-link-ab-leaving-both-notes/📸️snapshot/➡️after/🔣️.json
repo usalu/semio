@@ -1,0 +1,41 @@
+{
+  "fixture": {
+    "schema": "flow.fixture",
+    "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+    },
+    "widgets": [
+      {
+        "kind": "inputNote",
+        "id": "note-a",
+        "text": "Alpha"
+      },
+      {
+        "kind": "inputNote",
+        "id": "note-b",
+        "text": "Beta"
+      }
+    ],
+    "synapses": [],
+    "layout": {
+      "note-a": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    }
+  },
+  "generation": {
+    "generations": [
+      {
+        "id": "gen-1",
+        "name": "Baseline",
+        "values": {
+          "height": 3.0
+        }
+      }
+    ],
+    "selectedGenerationId": "gen-1"
+  }
+}

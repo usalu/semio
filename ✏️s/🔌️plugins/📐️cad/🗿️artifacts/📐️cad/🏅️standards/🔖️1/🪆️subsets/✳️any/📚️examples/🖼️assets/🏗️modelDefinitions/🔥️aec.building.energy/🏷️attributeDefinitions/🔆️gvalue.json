@@ -1,0 +1,15 @@
+{
+  "schema": "spatial.attribute",
+  "id": "spatial.shape.gvalue",
+  "version": "1.0.0",
+  "label": "G-Value",
+  "description": "Authored solar energy transmittance for window surfaces.",
+  "field": "gValue",
+  "targets": ["object"],
+  "value": {
+    "kind": "string"
+  },
+  "geometrySelector": {
+    "kinds": ["object"]
+  }
+}

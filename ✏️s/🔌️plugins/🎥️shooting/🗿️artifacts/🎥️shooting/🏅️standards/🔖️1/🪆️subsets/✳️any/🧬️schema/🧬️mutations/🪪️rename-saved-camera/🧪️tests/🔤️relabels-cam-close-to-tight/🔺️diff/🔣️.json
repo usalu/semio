@@ -1,0 +1,34 @@
+{
+  "artifact": null,
+  "schema": null,
+  "assets": null,
+  "savedCameras": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "cam-close",
+        "patch": {
+          "label": "Tight",
+          "camera": null
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "scene": null,
+  "shots": null,
+  "activeShotId": null,
+  "activeAssetId": null,
+  "emblem": null,
+  "selectedShotIds": null,
+  "activeUtilityId": null,
+  "defaultShotFormat": null,
+  "defaultShotShape": null,
+  "defaultAssetFormat": null,
+  "centerModel": null,
+  "fitRevision": null,
+  "cameraDraftLabel": null,
+  "camera": null,
+  "locale": null
+}

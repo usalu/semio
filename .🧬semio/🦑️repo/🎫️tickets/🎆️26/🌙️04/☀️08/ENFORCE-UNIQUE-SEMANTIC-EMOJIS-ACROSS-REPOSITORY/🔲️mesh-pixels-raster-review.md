@@ -1,0 +1,9 @@
+# Mesh, Pixels, and Raster Hand Review
+
+The exact scopes are framework modules `🔺️mesh`, `🔲️pixels`, and `🖌️raster`. No nested AGENTS instructions exist in these trees. No physical name needed changing: each source leaf uses one meaningful language-format marker, package directories identify their ownership/language, the scoped script has its script identity, and the Nx project manifest retains its registered fixed identity. Literal Cargo manifests remain reserved. All entries were inspected without omitting any dependency or generated subtree.
+
+The physical audit found one entry / one governed in mesh, five entries / four governed in pixels, and seven entries / six governed in raster. All three have zero missing, multiple, generic, sibling-duplicate, or semantic-directory-role findings.
+
+The mesh TypeScript source owns shared component-scene payloads and context-menu organization. Four stale documentation references were corrected to the actual UI component module, I18n union, and renderer host collection. No executable logic or type shape changed. Its context-menu implementation is exercised by the framework package's existing quick suite; a fresh rerun after the documentation corrections passed 88 tests.
+
+Pixels owns PNG/zlib decoding, encoding, and pixel-buffer operations; its existing differential tests compare both encode/decode directions with the independent `png` crate. Raster owns first-party vector-scene values and a bounded GPU-backed rasterizer interface. Native verification through the workspace Nx runner with an isolated ticket Cargo target passed 12 pixels tests and 3 raster tests. A separate uncaptured raster GPU test rerun passed in 1.57 seconds without its explicit `[DEBUG] no wgpu adapter` skip diagnostic: the actual pixel-count/covered-center assertions ran. Scoped whitespace checks passed. No modifying Git commands, rename scripts, or replacement scripts were used.

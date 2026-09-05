@@ -18,9 +18,9 @@
   },
   "exports": {
     ".": "./🟦️.ts",
-    "./🎨️ui.css": "../../🎨️ui.css",
+    "./🖌️ui.css": "../../🖌️ui.css",
     "./🎨️palette.css": "../../🎨️palette.css",
-    "./tailwind.config": "./🎨️tailwind.config.ts",
+    "./tailwind.config": "./tailwind.config.ts",
     "./tokens.generated": "../../🤖️generated/🟦️tokens.generated.ts"
   },
   "dependencies": {

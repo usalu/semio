@@ -1,7 +1,7 @@
 use super::*;
 
 //#region 🧪️PatchHandoff
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap() }
 fn ready() -> SurfaceReconcileReadyPatch {
     let fixture = fixture();
     let generation = fixture["generation"].as_u64().unwrap();

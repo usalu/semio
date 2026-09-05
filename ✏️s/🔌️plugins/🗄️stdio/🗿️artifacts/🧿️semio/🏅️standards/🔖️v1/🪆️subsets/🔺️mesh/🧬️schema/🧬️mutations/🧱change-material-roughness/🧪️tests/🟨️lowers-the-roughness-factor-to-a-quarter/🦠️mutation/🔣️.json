@@ -1,0 +1,6 @@
+{
+  "ChangeMaterialRoughness": {
+    "id": "mat-a",
+    "new_roughness": 0.25
+  }
+}

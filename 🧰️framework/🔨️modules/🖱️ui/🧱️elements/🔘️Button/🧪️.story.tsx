@@ -10,7 +10,7 @@
 
 import { Button } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "../../🧪️🐨️story.ts";
+import type { Meta, StoryObj } from "../../🧪️story.ts";
 
 // 🔘️#region 🔤️Button
 const Plus = createIconComponent("plus");

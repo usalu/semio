@@ -1,3 +1,0 @@
-(* ebnf stdio.step snapshot *)
-document = header, body ;
-header = 'schema', space, 'stdio.step', newline ;

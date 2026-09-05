@@ -12,7 +12,7 @@
 import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { basename, dirname, join, relative } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, exportAnimatedSvgToMp4 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, exportAnimatedSvgToMp4, leadingEmojiIdentity } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 type OwnedSvgElement = {
   getAttribute(name: string): string | null;
@@ -76,18 +76,49 @@ function escapeRustString(value: string): string {
 //#endregion 🔧️SvgNormalize
 
 //#region 📦️Catalog
-function readCatalogSvgs(iconsDir: string): Record<string, string> {
+/** 🪪️ Keeps public icon identities independent of their handpicked source paths. */
+export function catalogSvgSources(paths: readonly string[]): readonly { id: string; path: string }[] {
+  const ids = new Set<string>();
+  return paths.map((path) => {
+    const parts = path.split("/");
+    const names = parts.map((part, index) => {
+      const { emoji, rest, first } = leadingEmojiIdentity(part);
+      const pattern = index === parts.length - 1 ? /^[a-zA-Z0-9]+(?:[-_][a-zA-Z0-9]+)*\.svg$/u : /^[a-zA-Z0-9]+(?:[-_][a-zA-Z0-9]+)*$/u;
+      if (!emoji || emoji !== first || !pattern.test(rest)) throw new Error(`Invalid icon source path: ${path}`);
+      return rest;
+    });
+    const id = names.at(-1)!.slice(0, -4);
+    if (ids.has(id)) throw new Error(`Duplicate icon identity: ${id}`);
+    ids.add(id);
+    return { id, path };
+  });
+}
+
+function readCatalogSources(iconsDir: string): readonly { id: string; path: string }[] {
   if (!existsSync(iconsDir)) {
-    throw new Error(`Missing UI icon catalog directory: ${iconsDir}`);
+    throw new Error(`Missing icon catalog directory: ${iconsDir}`);
   }
-  const svgFiles = readdirSync(iconsDir).filter((name) => name.endsWith(".svg"));
-  if (svgFiles.length === 0) {
-    throw new Error(`UI icon catalog is empty: ${iconsDir}`);
+  const paths: string[] = [];
+  const walk = (dir: string): void => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (dir === iconsDir && entry.name === "🤖️generated") continue;
+      const path = join(dir, entry.name);
+      if (entry.isSymbolicLink()) throw new Error(`Linked icon source is not admitted: ${path}`);
+      if (entry.isDirectory()) walk(path);
+      else if (entry.isFile() && entry.name.endsWith(".svg")) paths.push(relative(iconsDir, path).replaceAll("\\", "/"));
+    }
+  };
+  walk(iconsDir);
+  if (paths.length === 0) {
+    throw new Error(`Icon catalog is empty: ${iconsDir}`);
   }
+  return catalogSvgSources(paths.sort());
+}
+
+function readCatalogSvgs(iconsDir: string, sources: readonly { id: string; path: string }[]): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const file of svgFiles) {
-    const id = basename(file, ".svg").replace(/^\p{Extended_Pictographic}\uFE0F?/u, "");
-    out[id] = normalizeCatalogSvg(readFileSync(join(iconsDir, file), "utf8"));
+  for (const { id, path } of sources) {
+    out[id] = normalizeCatalogSvg(readFileSync(join(iconsDir, path), "utf8"));
   }
   return out;
 }
@@ -152,7 +183,8 @@ ${dictEntries}
   return { path: join(generatedDir, "🔷️Icons.cs"), content: body };
 }
 
-function renderRust(icons: Record<string, string>, generatedDir: string): readonly AssetArtifact[] {
+function renderRust(icons: Record<string, string>, generatedDir: string, sources: readonly { id: string; path: string }[]): readonly AssetArtifact[] {
+  const sourcePaths = new Map(sources.map(({ id, path }) => [id, path]));
   const ids = Object.keys(icons).sort();
   const variants = ids.map((id) => {
     const variant = iconIdToRustVariant(id);
@@ -162,11 +194,10 @@ function renderRust(icons: Record<string, string>, generatedDir: string): readon
   const fromStrArms = ids.map((id) => `            "${id}" => Some(Self::${iconIdToRustVariant(id)}),`).join("\n");
   const allEntries = ids.map((id) => `    IconName::${iconIdToRustVariant(id)},`).join("\n");
   const svgArms = ids.map((id) => {
-    const safe = id.replace(/[^a-zA-Z0-9]/g, "_");
-    return `        IconName::${iconIdToRustVariant(id)} => Some(include_str!("🔣️icon_svgs/🔣️${safe}.svg")),`;
+    return `        IconName::${iconIdToRustVariant(id)} => Some(include_str!("🖼️icon_svgs/${sourcePaths.get(id)!}")),`;
   }).join("\n");
-  const svgDir = join(generatedDir, "🔣️icon_svgs");
-  const svgs = ids.map((id) => ({ path: join(svgDir, `🔣️${id.replace(/[^a-zA-Z0-9]/g, "_")}.svg`), content: icons[id]! }));
+  const svgDir = join(generatedDir, "🖼️icon_svgs");
+  const svgs = ids.map((id) => ({ path: join(svgDir, sourcePaths.get(id)!), content: icons[id]! }));
   const body = `// Generated by asset/script.ts — do not edit.
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
@@ -309,19 +340,19 @@ function renderCatalogReadme(assetsDir: string, ids: readonly string[]): AssetAr
   const list = sorted.map((id) => `- \`${id}\``).join("\n");
   const body = `# UI assets
 
-Shared fonts, cursors, lists, and UI chrome icons served at \`/asset/*\`.
+Shared fonts, cursors, lists, and UI chrome icons served at \`/🖼️assets/*\`.
 
 ## Icons
 
-Chrome icons are committed SVGs under \`icon/\`. Many were originally derived from [Lucide](https://lucide.dev) (**ISC License**); source: https://github.com/lucide-icons/lucide
+Chrome icons are committed SVGs grouped by subject under \`🔣️icons/\`. Each source has one handpicked emoji; its public icon id is independent of that path. Many were originally derived from [Lucide](https://lucide.dev) (**ISC License**); source: https://github.com/lucide-icons/lucide
 
-Add or edit SVGs under \`icon/\`, then run **build ui assets** (\`bun ./📜️script.ts generate all\`).
+Add or edit SVGs under \`🔣️icons/\`, then run the assets build launch configuration (\`bun nx run @semio-tech/assets:build\`). Generated Rust SVG copies retain the exact source paths.
 
 ### Catalog icon ids
 
 ${list}
 `;
-  return { path: join(assetsDir, "📃️readme", "📝️.md"), content: body };
+  return { path: join(assetsDir, "README.md"), content: body };
 }
 
 /** @emoji 🔖️ Renders universal shortcode bindings from the explicit external emoji snapshot. */
@@ -364,7 +395,7 @@ export function shortcodeCatalogKey(code: string): ShortcodeCatalogName | undefi
   return (SHORTCODE_CATALOG as readonly string[]).includes(key) ? (key as ShortcodeCatalogName) : undefined;
 }
 `;
-  return { path: join(generatedDir, "🟦️shortcodes.ts"), content: tsBody };
+  return { path: join(generatedDir, "🔤️shortcodes.ts"), content: tsBody };
 }
 //#endregion 🧬️Codegen
 
@@ -378,12 +409,13 @@ function catalogDirs(assetsDir: string): { iconsDir: string; generatedDir: strin
 function renderCatalogArtifacts(target: string): readonly AssetArtifact[] {
   const assetsDir = assetsRoot();
   const { iconsDir, generatedDir } = catalogDirs(assetsDir);
-  const icons = readCatalogSvgs(iconsDir);
+  const sources = readCatalogSources(iconsDir);
+  const icons = readCatalogSvgs(iconsDir, sources);
   const artifacts: AssetArtifact[] = [renderCatalogReadme(assetsDir, Object.keys(icons))];
   if (target === "js" || target === "all") artifacts.push(renderJs(icons, generatedDir));
   if (target === "net" || target === "all") artifacts.push(renderCs(icons, generatedDir));
   if (target === "py" || target === "all") artifacts.push(renderPy(icons, generatedDir));
-  if (target === "rust" || target === "all") artifacts.push(...renderRust(icons, generatedDir));
+  if (target === "rust" || target === "all") artifacts.push(...renderRust(icons, generatedDir, sources));
   if (target === "all") artifacts.push(renderShortcodes(icons, generatedDir));
   return artifacts;
 }
@@ -412,16 +444,10 @@ function runGenerateAll(): void {
 
 
 //#region 📦️Catalog
-function readMetabolismSvgs(iconsDir: string): Record<string, string> {
-  if (!existsSync(iconsDir)) {
-    throw new Error(`Missing metabolism icon directory: ${iconsDir}`);
-  }
-  const svgFiles = readdirSync(iconsDir).filter((name) => name.endsWith(".svg"));
+function readMetabolismSvgs(iconsDir: string, sources: readonly { id: string; path: string }[]): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const file of svgFiles) {
-    // 🔣️ Strip emoji filename prefixes from the emoji-layout rename (e.g. `🔣️capsule_s.svg` → `capsule_s`).
-    const id = basename(file, ".svg").replace(/^\p{Extended_Pictographic}\uFE0F?/u, "");
-    out[id] = readFileSync(join(iconsDir, file), "utf8").trim();
+  for (const { id, path } of sources) {
+    out[id] = readFileSync(join(iconsDir, path), "utf8").trim();
   }
   return out;
 }
@@ -453,18 +479,20 @@ export function isMetabolismIconName(key: string): key is MetabolismIconName {
   return { path: join(generatedDir, "🟦️metabolism_icons.ts"), content: body };
 }
 
-function renderRustMetabolism(icons: Record<string, string>, generatedDir: string): readonly AssetArtifact[] {
+function renderRustMetabolism(icons: Record<string, string>, generatedDir: string, sources: readonly { id: string; path: string }[]): readonly AssetArtifact[] {
   const ids = Object.keys(icons).sort();
   const variants = ids.map((id) => `    #[serde(rename = "${id}")]\n    ${iconIdToRustVariant(id)},`).join("\n");
   const asStrArms = ids.map((id) => `            Self::${iconIdToRustVariant(id)} => "${id}",`).join("\n");
   const fromStrArms = ids.map((id) => `            "${id}" => Some(Self::${iconIdToRustVariant(id)}),`).join("\n");
   const allEntries = ids.map((id) => `    MetabolismIconName::${iconIdToRustVariant(id)},`).join("\n");
+  const paths = new Map(sources.map(({ id, path }) => [id, path]));
   const svgArms = ids.map((id) => {
-    const safe = id.replace(/[^a-zA-Z0-9]/g, "_");
-    return `        MetabolismIconName::${iconIdToRustVariant(id)} => Some(include_str!("🌱️metabolism_svgs/🔣️${safe}.svg")),`;
+    const path = paths.get(id);
+    if (!path) throw new Error(`Missing metabolism icon source: ${id}`);
+    return `        MetabolismIconName::${iconIdToRustVariant(id)} => Some(include_str!("🌱️metabolism_svgs/${path}")),`;
   }).join("\n");
   const svgDir = join(generatedDir, "🌱️metabolism_svgs");
-  const svgs = ids.map((id) => ({ path: join(svgDir, `🔣️${id.replace(/[^a-zA-Z0-9]/g, "_")}.svg`), content: icons[id]! }));
+  const svgs = ids.map((id) => ({ path: join(svgDir, paths.get(id)!), content: icons[id]! }));
   const body = `// Generated by asset/script.ts — do not edit.
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
@@ -518,8 +546,9 @@ function renderMetabolismArtifacts(): readonly AssetArtifact[] {
   const assetsDir = assetsRoot();
   const iconsDir = join(assetsDir, "🌱️metabolism/🔣️icons");
   const generatedDir = join(assetsDir, "🌱️metabolism/🔣️icons/🤖️generated");
-  const icons = readMetabolismSvgs(iconsDir);
-  return [renderJsMetabolism(icons, generatedDir), ...renderRustMetabolism(icons, generatedDir)];
+  const sources = readCatalogSources(iconsDir);
+  const icons = readMetabolismSvgs(iconsDir, sources);
+  return [renderJsMetabolism(icons, generatedDir), ...renderRustMetabolism(icons, generatedDir, sources)];
 }
 
 function runMetabolismGenerate(): void {
@@ -556,13 +585,13 @@ function assetOutputRoots(): readonly string[] {
   const root = assetsRoot();
   const generated = join(root, "🔣️icons/🤖️generated");
   return [
-    join(root, "📃️readme", "📝️.md"),
+    join(root, "README.md"),
     join(root, "🌱️metabolism/🔣️icons/🤖️generated"),
     join(generated, "🐍️icons.py"),
-    join(generated, "🔣️icon_svgs"),
+    join(generated, "🖼️icon_svgs"),
     join(generated, "🔷️Icons.cs"),
     join(generated, "🟦️icons.ts"),
-    join(generated, "🟦️shortcodes.ts"),
+    join(generated, "🔤️shortcodes.ts"),
     join(generated, "🦀️icon_name.rs"),
   ];
 }
@@ -687,7 +716,7 @@ class CheckGeneratedScript extends BundleScript {
 
 //#region 🌟️LogoCodegen
 // Folded from the former standalone `@semio-tech/logos` package (never consumed externally — see
-// package-survival rule) — generates the animated `🔣️logo_generated.svg` from checked-in keyframes.
+// package-survival rule) — generates `🎞️animation/⚡️animated.svg` from checked-in keyframes.
 
 //#region ⚙️Kinds
 interface LogoTransformData {
@@ -870,22 +899,28 @@ function createLogoAnimatedSVG(keyframes: LogoKeyframeData[], outputPath: string
 //#endregion 📻️AnimatedSvgOutput
 
 //#region 🚀️LogoCommands
+/** 🎞️Resolves the six handpicked animation keyframes in their authored order. */
+export function logoKeyframePaths(logoDir: string): string[] {
+  return [
+    "🎞️animation/1️⃣one/🖋️vector.svg",
+    "🎞️animation/2️⃣two/🖋️vector.svg",
+    "🎞️animation/3️⃣three/🖋️vector.svg",
+    "🎞️animation/4️⃣four/🖋️vector.svg",
+    "🎞️animation/5️⃣five/🖋️vector.svg",
+    "🎞️animation/6️⃣six/🖋️vector.svg",
+  ].map((path) => join(logoDir, path));
+}
+
 function runLogoGenerate(): void {
   const logoDir = join(assetsRoot(), "🪧️logos");
   const keyframes: LogoKeyframeData[] = [];
-  for (let index = 1; index <= 6; index += 1) {
-    const filePath = join(logoDir, `logo_${index}.svg`);
-    if (existsSync(filePath)) {
-      console.log(`Parsing ${filePath}...`);
-      keyframes.push(parseLogoSvgFile(filePath));
-    }
-  }
-  if (keyframes.length === 0) {
-    throw new Error("No logo keyframe SVG files were found.");
+  for (const filePath of logoKeyframePaths(logoDir)) {
+    console.log(`Parsing ${filePath}...`);
+    keyframes.push(parseLogoSvgFile(filePath));
   }
   console.log(`Found ${keyframes.length} keyframes`);
   console.log(`Will generate ${generateLogoKeyframeSequence(keyframes).length} animation frames`);
-  createLogoAnimatedSVG(keyframes, join(logoDir, "🔣️logo_generated.svg"));
+  createLogoAnimatedSVG(keyframes, join(logoDir, "🎞️animation/⚡️animated.svg"));
 }
 
 class GenerateLogoScript extends BundleScript {
@@ -897,8 +932,8 @@ class GenerateLogoScript extends BundleScript {
 class ExportLogoScript extends BundleScript {
   async run(): Promise<void> {
     const logoDir = join(assetsRoot(), "🪧️logos");
-    const inputPath = join(logoDir, "🔣️logo_generated.svg");
-    const outputPath = join(logoDir, "🎬️.mp4");
+    const inputPath = join(logoDir, "🎞️animation/⚡️animated.svg");
+    const outputPath = join(logoDir, "🎞️animation/🎬️animation.mp4");
     console.log(`Exporting ${inputPath} to ${outputPath}...`);
     await exportAnimatedSvgToMp4(inputPath, outputPath);
     console.log(`Successfully exported logo to MP4: ${outputPath}`);

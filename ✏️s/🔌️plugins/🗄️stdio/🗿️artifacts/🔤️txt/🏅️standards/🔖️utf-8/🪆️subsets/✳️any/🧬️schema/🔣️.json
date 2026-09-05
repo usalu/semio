@@ -1,0 +1,26 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.txt/artifact.json",
+  "title": "TxtArtifact",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "lines": {
+      "type": "array",
+      "items": { "type": "string" },
+      "x-semio-state": "artifact"
+    },
+    "trailingNewline": {
+      "type": "boolean",
+      "x-semio-state": "artifact"
+    },
+    "lineEnding": {
+      "type": "string",
+      "enum": ["lf", "crLf"],
+      "x-semio-state": "artifact"
+    }
+  },
+  "required": ["schema", "lines", "trailingNewline", "lineEnding"]
+}

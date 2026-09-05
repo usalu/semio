@@ -16,10 +16,10 @@ pub mod effects;
 // actor`'s `interface host-async` import layer — 24 `async func` imports the guest can actually await, plus
 // the `emit`/`emit-patch` one-way doors. Reuses `effects::AsyncServices`/`RouterEffectHandler`
 // (above) as the real backends it awaits directly — see that module's own doc for the routing rule.
-#[path = "⏳️imports/🦀️.rs"]
+#[path = "📥️imports/🦀️.rs"]
 pub mod imports;
 // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-runtime-rewrite): `WasmtimeAsyncRuntime` — one
-// pooled `tokio::spawn`ed task per actor, driving `⏳️imports/🦀️.rs`'s host-async import layer against a
+// pooled `tokio::spawn`ed task per actor, driving `📥️imports/🦀️.rs`'s host-async import layer against a
 // real `Store<AsyncActorHostState>` under `component-model-async`. See that module's own doc.
 #[path = "⏳️runtime/🦀️.rs"]
 pub mod runtime;
@@ -337,7 +337,7 @@ pub struct BudgetLimiter {
 /// first real plugin died at its SECOND core instance with `resource limit exceeded: instance count
 /// too high at 2`. Every budget in the scale bench except the pure-JS registry parse failed on that
 /// one line — the runtime could not instantiate ANY real component, and nothing had noticed because
-/// the only path that had ever instantiated one (the `📇️describe` emitter) installs no limiter at
+/// the only path that had ever instantiated one (the `🖨️describe` emitter) installs no limiter at
 /// all. Sized to bound a hostile component while leaving ordinary composition room; re-measure
 /// rather than re-guess if a legitimate component ever trips it.
 impl Default for BudgetLimiter {
@@ -413,6 +413,11 @@ pub async fn store_compiled_component(component: &Component, path: &Path) -> std
 }
 
 #[cfg(test)]
+fn minimal_component_without_actor_world() -> &'static [u8] {
+    b"\0asm\x0d\0\x01\0"
+}
+
+#[cfg(test)]
 mod shared_wasmtime_engine_tests {
     use super::*;
 
@@ -466,14 +471,9 @@ mod shared_wasmtime_engine_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn compiled_component_round_trips_through_cache_for_a_real_wasm_file() {
-        let wasm_path = Path::new("🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules/stdio/semio_s_plugin_stdio_component.core.wasm");
-        if !wasm_path.exists() {
-            return;
-        }
+    async fn compiled_component_round_trips_through_cache_for_a_deterministic_component() {
         let (engine, _pooling_active) = build_shared_engine(SharedEngineConfig::default()).await.expect("engine builds");
-        let wasm_bytes = std::fs::read(wasm_path).expect("read real stdio.wasm");
-        let component = Component::from_binary(&engine, &wasm_bytes).expect("compile real stdio.wasm as a component");
+        let component = Component::from_binary(&engine, minimal_component_without_actor_world()).expect("compile deterministic component");
         let cache_dir = std::env::temp_dir().join(format!("semio-compiled-cache-test-{}", std::process::id()));
         let cache_path = compiled_cache_path(&cache_dir, &shared_engine_config_hash(&SharedEngineConfig::default(), true).await, &[3u8; 32]).await;
         assert!(load_compiled_component(&engine, &cache_path).await.is_none(), "cache must start empty");
@@ -1660,7 +1660,7 @@ pub(crate) mod actor_bindings {
     // value (verified by grep before removing the derive — every `.clone()` near a `wit_*`
     // constructor is on the KERNEL-side `String`/`Vec<u8>` being moved INTO it).
     //
-    // 🧬️ This is the crate's ONE `bindgen!` invocation for `semio:framework` — `⏳️imports/🦀️.rs`'s 24
+    // 🧬️ This is the crate's ONE `bindgen!` invocation for `semio:framework` — `📥️imports/🦀️.rs`'s 24
     // `host-async` implementations re-export this module rather than generating a second, nominally
     // distinct copy of every type (which is what the two-world split forced before the collapse).
     wasmtime::component::bindgen!({
@@ -1791,7 +1791,7 @@ impl wit_host_async::Host for ActorHostState {
 /// `turn-result` and delivering an `event.completed` on a LATER `poll`. There is no point in the
 /// turn at which such a future could complete, so failing loudly with a typed fault is the only
 /// honest answer — silently parking would deadlock the turn, and trapping would kill the actor.
-/// The runtime that DOES serve these awaits is the one built on `⏳️imports/🦀️.rs`'s
+/// The runtime that DOES serve these awaits is the one built on `📥️imports/🦀️.rs`'s
 /// `AsyncActorHostState` (24 real implementations, dispatching straight onto `AsyncServices`),
 /// mounted by the `async-plugin-runtime` packet.
 async fn poll_backed_direct_await_fault(name: &str) -> Vec<u8> {
@@ -2773,33 +2773,20 @@ mod wasmtime_runtime_tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn compile_accepts_a_real_component_and_caches_it() {
-        let wasm_path = Path::new("🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules/stdio/semio_s_plugin_stdio_component.core.wasm");
-        if !wasm_path.exists() {
-            return;
-        }
+    async fn compile_accepts_a_deterministic_component_and_caches_it() {
         let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("engine builds");
-        let bytes = std::fs::read(wasm_path).expect("read real stdio.wasm");
         let package = PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([9u8; 32]) };
-        let compiled = runtime.compile(&package, &bytes).await.expect("a real wasip2 component compiles even though it does not export the new `actor` world yet");
+        let compiled = runtime.compile(&package, minimal_component_without_actor_world()).await.expect("a deterministic component compiles even though it does not export the `actor` world");
         assert!(compiled.component.is_some());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn instantiate_rejects_a_component_that_does_not_export_the_actor_world() {
-        // 🧬️ No `.wasm` in this repo exports `world actor` yet (A2's guest SDK rewrite / the W3
-        // plugin migrations haven't landed) — this asserts the HONEST negative: `instantiate`
-        // rejects a real, valid, but wrong-ABI component rather than silently mis-binding it.
-        let wasm_path = Path::new("🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules/stdio/semio_s_plugin_stdio_component.core.wasm");
-        if !wasm_path.exists() {
-            return;
-        }
         let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("engine builds");
-        let bytes = std::fs::read(wasm_path).expect("read real stdio.wasm");
         let package = PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([10u8; 32]) };
-        let compiled = runtime.compile(&package, &bytes).await.expect("compiles as a component");
+        let compiled = runtime.compile(&package, minimal_component_without_actor_world()).await.expect("compiles as a component");
         let budget = Budget { fuel: 1_000_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
-        let error = runtime.instantiate(&compiled, RuntimeActorId(1), &[], &budget).await.expect_err("stdio.wasm does not export `reactor`/`jobs`/`checkpoint`/`describe`");
+        let error = runtime.instantiate(&compiled, RuntimeActorId(1), &[], &budget).await.expect_err("minimal component does not export `reactor`/`jobs`/`checkpoint`/`describe`");
         let _ = error;
     }
 
@@ -4978,7 +4965,7 @@ mod guest_cold_relay_tests {
     use semio_framework_job::InteractiveJob;
 
     fn relay_lifecycle_fixture() -> serde_json::Value {
-        serde_json::from_str(include_str!("🧫️fixtures/🔣️relay-lifecycle.json")).expect("relay lifecycle fixture")
+        serde_json::from_str(include_str!("🧫️fixtures/♻️relay-lifecycle.json")).expect("relay lifecycle fixture")
     }
 
     #[test]
@@ -5082,7 +5069,7 @@ mod guest_cold_relay_tests {
     /// enough for the native test stack on every supported architecture.
     #[test]
     fn mounted_relay_stack_authority_matches_the_neutral_fixture() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️stack-authority.json")).expect("stack authority fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🧱️stack-authority.json")).expect("stack authority fixture");
         let maximum = fixture["maximumInlineBytes"].as_u64().expect("maximum inline bytes") as usize;
         let registry = fixture["registries"].as_array().expect("registry rows").iter().find(|row| row["id"] == "guest-relay-mounted").expect("mounted relay row");
         assert_eq!(fixture["schemaVersion"], 1);
@@ -6041,7 +6028,7 @@ mod runtime_metrics_publisher_tests {
     /// the crate-purity grep this repo's acceptance criteria runs unconditionally over `component.rs`
     /// files (this one is the HOST, not the pure `🎭️actor` crate, but the same discipline is followed
     /// here since the file is right next to it and easy to mistake for one).
-    const SCALE_FIXTURE_REGISTRY_JSON: &str = include_str!("../../../🧫️fixtures/🔌️scale/🤖️generated/🧪️registry/🔣️.json");
+    const SCALE_FIXTURE_REGISTRY_JSON: &str = include_str!("../../../🧫️fixtures/⚖️scale/🤖️generated/📇️registry/🔣️.json");
 
     #[derive(serde::Deserialize)]
     struct ScaleFixtureRegistry {
@@ -7944,7 +7931,7 @@ mod microsecond_clock_tests {
 
     #[test]
     fn microsecond_owned_wasi_clock_is_real_nanoseconds_with_checked_unsigned_range() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🔨️modules/🧵️job/⏱️budget/🧪️clock.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🔨️modules/🧵️job/⏱️budget/🕰️clock.json")).unwrap();
         for law in fixture["wasi"].as_array().unwrap() {
             let nanoseconds = law["nanoseconds"].as_str().unwrap().parse::<u128>().unwrap();
             let duration = std::time::Duration::new((nanoseconds / 1_000_000_000) as u64, (nanoseconds % 1_000_000_000) as u32);
@@ -9301,30 +9288,14 @@ mod tests {
     //#endregion 🔖️IoRouterW1d
 
     //#region 🔖️IoRouterPostTurnRelay
-    /// 🧬️ B1b: real-wasm-component coverage of `WasmPluginRuntime`'s deletion — same convention
-    /// `wasmtime_runtime_tests` already established (`compile` succeeds against a real, valid,
-    /// pre-migration component; `instantiate` against `world actor` correctly REJECTS it, since no
-    /// `.wasm` in this repo exports `world actor` yet — A2's guest SDK migration landed the WIT/SDK
-    /// side but no PLUGIN has rebuilt onto it, that is W3's job per `📌️important.md`'s sequencing
-    /// section). This is the honest replacement for the old
-    /// `wasm_plugin_runtime_loads_real_plugin_component_if_present` test, which asserted the
-    /// opposite (a real load SUCCEEDING) against the OLD `plugin-world` ABI that no longer exists.
     #[semio_framework_async_macros::async_test]
-    async fn wasmtime_runtime_compiles_real_stdio_and_cad_but_neither_exports_actor_yet() {
-        let stdio_path = Path::new("🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules/stdio/semio_s_plugin_stdio_component.core.wasm");
-        let cad_path = Path::new("🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules/cad/semio_s_plugin_cad_component.core.wasm");
-        if !stdio_path.exists() || !cad_path.exists() {
-            // 🧊️ Same convention as every other real-component test in this file: stays green on a
-            // fresh clone / no-wasm-toolchain CI run.
-            return;
-        }
+    async fn wasmtime_runtime_keeps_wrong_abi_components_isolated_by_package() {
         let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("engine builds");
         let budget = Budget { fuel: 1_000_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
-        for (name, path) in [("stdio", stdio_path), ("cad", cad_path)] {
-            let bytes = std::fs::read(path).unwrap_or_else(|error| panic!("read real {name}.wasm: {error}"));
+        for name in ["stdio", "cad"] {
             let package = PackageRef { package: PackageId(name.to_string()), hash: PackageHash([name.len() as u8; 32]) };
-            let compiled = runtime.compile(&package, &bytes).await.unwrap_or_else(|error| panic!("real {name}.wasm compiles as a component: {error}"));
-            let error = runtime.instantiate(&compiled, RuntimeActorId(1), &[], &budget).await.expect_err(&format!("{name}.wasm does not export `reactor`/`jobs`/`checkpoint`/`describe` yet"));
+            let compiled = runtime.compile(&package, minimal_component_without_actor_world()).await.unwrap_or_else(|error| panic!("{name} component compiles: {error}"));
+            let error = runtime.instantiate(&compiled, RuntimeActorId(1), &[], &budget).await.expect_err(&format!("{name} component does not export `reactor`/`jobs`/`checkpoint`/`describe`"));
             let _ = error;
         }
     }

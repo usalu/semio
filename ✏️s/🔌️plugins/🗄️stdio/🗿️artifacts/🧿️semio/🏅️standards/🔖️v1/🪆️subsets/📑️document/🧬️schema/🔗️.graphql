@@ -1,0 +1,8 @@
+# Full artifact state, mirrors SemioDocumentSnapshot field for field (see
+# 📸️snapshot/🔗️.graphql for the real per-field types).
+type SemioDocumentArtifact {
+  schema: String! @state(class: ARTIFACT)
+  styles: [DocStyle!]! @state(class: ARTIFACT)
+  images: [DocImage!]! @state(class: ARTIFACT)
+  blocks: [DocBlock!]! @state(class: ARTIFACT)
+}

@@ -529,7 +529,7 @@ impl store::ArtifactPack for SemioGraphSnapshot {
 
 //#region 🌉️ExternalCodecBridge
 /// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
-/// `s.stdio.semio.graph` — the shape `mutate-semio-graph` compares under `ordered-json-v1`, derived from the
+/// `s.stdio.semio.graph` — the shape `🌳️mutate-semio-graph` compares under `ordered-json-v1`, derived from the
 /// snapshot type itself rather than hand-written a second time in the adapter, where it could drift
 /// away from the type it claims to project. Node and edge identity travels as a NEWTYPE (`{"value": "b"}`), not as a bare string, so a
 /// hand-written adapter projection has to reproduce that wrapper at every reference site or compare
@@ -543,7 +543,7 @@ pub fn encode_semio_graph_snapshot_json(snapshot: &SemioGraphSnapshot) -> String
 
 /// 📥️ The `pack::from_json_str` inverse of [`encode_semio_graph_snapshot_json`] — decodes the
 /// committed `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
-/// specification vectors into real [`SemioGraphSnapshot`] values, so `mutate-semio-graph`'s adapter reads the
+/// specification vectors into real [`SemioGraphSnapshot`] values, so `🌳️mutate-semio-graph`'s adapter reads the
 /// committed fixture instead of re-declaring it as a Rust literal beside it. Reaching `pack` from
 /// that adapter is impossible — the generated test host links only this crate — which is why the
 /// bridge belongs here rather than there.
@@ -556,7 +556,7 @@ pub fn decode_semio_graph_snapshot_json(text: &str) -> Result<SemioGraphSnapshot
 //#region 🔖️Wire
 /// 📝️ Parses `s.stdio.semio.graph` DSL text into a [`SemioGraphSnapshot`] — a named pass-through of this snapshot's own
 /// `store::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
-/// crate, so `mutate-semio-graph`'s `identity-round-trip` scenario reaches the real committed
+/// crate, so `🌳️mutate-semio-graph`'s `identity-round-trip` scenario reaches the real committed
 /// artifact (`../../📚️examples/🕸️wires/🖼️assets/🗣️.dsl.semio`) through this instead.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_graph_dsl(text: &str) -> Result<SemioGraphSnapshot, String> {

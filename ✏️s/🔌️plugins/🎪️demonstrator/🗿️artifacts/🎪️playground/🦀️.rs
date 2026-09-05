@@ -8,10 +8,8 @@ pub const PLAYGROUND_DOCUMENT_SCHEMA: &str = "playground.playground";
 /// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1 — the one `Dialect`
 /// coordinate `PlaygroundEditor`/`PlaygroundViewer` (`✏️editor`/`👁️viewer`) both read `DIALECT` off,
 /// lives at the ARTIFACT root (not under either surface) so a viewer file can read it without ever
-/// importing through the sibling editor module. `artifact_kind` is the 3-part schema id
-/// `PlaygroundArtifact`/`PlaygroundSnapshot` are keyed under (`#[artifact_schema(id = "…")]`), not the
-/// 2-part `ArtifactIdentity::parse("s.playground")` string `definition()` above uses for a different,
-/// older composer/registration purpose.
+/// importing through the sibling editor module. The root, definition and native dialect share
+/// one plugin-owned identity; the document payload schema remains independently named.
 pub const PLAYGROUND_DIALECT: Dialect = Dialect { artifact_kind: "s.demonstrator.playground", standard: StandardId("1"), subset: SubsetId::ANY };
 //#endregion 🔖️Dialect
 
@@ -49,24 +47,24 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.playground.standard.v1", "standard", "1", &[], None),
-        ("s.playground.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.playground.schema.artifact", "schema", "s.demonstrator.playground", &[("schema", "s.demonstrator.playground")], None),
-        ("s.playground.inference.artifact", "inference", "s.demonstrator.playground.inference", &[("schema", "s.demonstrator.playground.inference")], None),
-        ("s.playground.composer.native", "composer", "s.playground@1/*", &[("dialect", "s.playground@1/*")], None),
-        ("s.playground.composer.format-1", "composer", "s.stdio.zip@2.0/*", &[("dialect", "s.stdio.zip@2.0/*")], None),
-        ("s.playground.composer.format-2", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None),
-        ("s.playground.composer.format-3", "composer", "s.stdio.xlsx@ecma-376/*", &[("dialect", "s.stdio.xlsx@ecma-376/*")], None),
-        ("s.playground.composer.format-4", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.playground.grammar.1", "grammar", "playground.document", &[("grammar", "playground.document")], None),
-        ("s.playground.grammar.2", "grammar", "playground.op", &[("grammar", "playground.op")], None),
-        ("s.playground.grammar.3", "grammar", "playground.diff", &[("grammar", "playground.diff")], None),
-        ("s.playground.grammar.4", "grammar", "playground.pack", &[("grammar", "playground.pack")], None),
-        ("s.playground.grammar.5", "grammar", "playground.spr", &[("grammar", "playground.spr")], None),
-        ("s.playground.localization.en", "localization", "Playground", &[], Some(("en", "Playground"))),
-        ("s.playground.localization.de", "localization", "Spielplatz", &[], Some(("de", "Spielplatz"))),
+        ("s.demonstrator.playground.standard.v1", "standard", "1", &[], None),
+        ("s.demonstrator.playground.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.demonstrator.playground.schema.artifact", "schema", "s.demonstrator.playground", &[("schema", "s.demonstrator.playground")], None),
+        ("s.demonstrator.playground.inference.artifact", "inference", "s.demonstrator.playground.inference", &[("schema", "s.demonstrator.playground.inference")], None),
+        ("s.demonstrator.playground.composer.native", "composer", "s.demonstrator.playground@1/*", &[("dialect", "s.demonstrator.playground@1/*")], None),
+        ("s.demonstrator.playground.composer.format-1", "composer", "s.stdio.zip@2.0/*", &[("dialect", "s.stdio.zip@2.0/*")], None),
+        ("s.demonstrator.playground.composer.format-2", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None),
+        ("s.demonstrator.playground.composer.format-3", "composer", "s.stdio.xlsx@ecma-376/*", &[("dialect", "s.stdio.xlsx@ecma-376/*")], None),
+        ("s.demonstrator.playground.composer.format-4", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.demonstrator.playground.grammar.1", "grammar", "playground.document", &[("grammar", "playground.document")], None),
+        ("s.demonstrator.playground.grammar.2", "grammar", "playground.op", &[("grammar", "playground.op")], None),
+        ("s.demonstrator.playground.grammar.3", "grammar", "playground.diff", &[("grammar", "playground.diff")], None),
+        ("s.demonstrator.playground.grammar.4", "grammar", "playground.pack", &[("grammar", "playground.pack")], None),
+        ("s.demonstrator.playground.grammar.5", "grammar", "playground.spr", &[("grammar", "playground.spr")], None),
+        ("s.demonstrator.playground.localization.en", "localization", "Playground", &[], Some(("en", "Playground"))),
+        ("s.demonstrator.playground.localization.de", "localization", "Spielplatz", &[], Some(("de", "Spielplatz"))),
     ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.playground")?);
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.demonstrator.playground")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
         for (namespace, value) in *claims {

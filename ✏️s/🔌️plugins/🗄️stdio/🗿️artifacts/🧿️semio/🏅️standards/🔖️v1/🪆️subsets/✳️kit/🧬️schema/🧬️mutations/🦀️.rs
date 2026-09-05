@@ -54,7 +54,7 @@ pub enum SemioKitMutation {
 
 /// 🏷️ Kebab-case spelling of every `SemioKitMutation` variant, in declaration order — the
 /// vocabulary the `semio-v1-kit` mutation catalog (`../../🔣️oracle.json`) declares and
-/// `mutate-semio-kit`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
+/// `🌻️mutate-semio-kit`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
 /// the_catalog` below is what keeps this list honest against the enum, since the framework never
 /// parses Rust.
 pub const KINDS: &[&str] = &[
@@ -88,7 +88,7 @@ pub fn apply_semio_kit_mutation(snapshot: &mut SemioKitSnapshot, mutation: &Semi
 
 /// ↩️ Computes `mutation`'s own inverse against `base` — thin wrapper around `protocol::Mutation::
 /// inverse` so external Rust callers that cannot name this crate's private `protocol` extern-crate
-/// item (e.g. `mutate-semio-kit`'s test adapter, whose `@id-inverse` scenario needs a mutation's
+/// item (e.g. `🌻️mutate-semio-kit`'s test adapter, whose `@id-inverse` scenario needs a mutation's
 /// own computed inverse and cannot `use protocol::Mutation;` itself) can still exercise the
 /// inverse-law scenario `apply_semio_kit_mutation` alone can't reach.
 pub fn inverse_semio_kit_mutation(mutation: &SemioKitMutation, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
@@ -301,35 +301,35 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "🆕add-design/🧪️tests/adds-an-empty-roof-design/🦀️.rs"]
+    #[path = "🆕add-design/🧪️tests/🌳️adds-an-empty-roof-design/🦀️.rs"]
     mod tests_add_design_adds_an_empty_roof_design;
-    #[path = "➕add-type/🧪️tests/appends-a-slab-type-to-the-catalogue/🦀️.rs"]
+    #[path = "➕add-type/🧪️tests/📇️appends-a-slab-type-to-the-catalogue/🦀️.rs"]
     mod tests_add_type_appends_a_slab_type_to_the_catalogue;
-    #[path = "🔗bind-representation/🧪️tests/binds-a-second-representation-to-an-existing-type/🦀️.rs"]
+    #[path = "🔗bind-representation/🧪️tests/🔗️binds-a-second-representation-to-an-existing-type/🦀️.rs"]
     mod tests_bind_representation_binds_a_second_representation_to_an_existing_type;
-    #[path = "📌change-representation-pin/🧪️tests/repins-the-representation-from-head-to-a-checkpoint/🦀️.rs"]
+    #[path = "📌change-representation-pin/🧪️tests/✅️repins-the-representation-from-head-to-a-checkpoint/🦀️.rs"]
     mod tests_change_representation_pin_repins_the_representation_from_head_to_a_checkpoint;
-    #[path = "🏛️create-model/🧪️tests/attaches-a-second-model-child/🦀️.rs"]
+    #[path = "🏛️create-model/🧪️tests/🏛️attaches-a-second-model-child/🦀️.rs"]
     mod tests_create_model_attaches_a_second_model_child;
-    #[path = "🏗️create-object/🧪️tests/attaches-a-second-object-child/🦀️.rs"]
+    #[path = "🏗️create-object/🧪️tests/🪄️attaches-a-second-object-child/🦀️.rs"]
     mod tests_create_object_attaches_a_second_object_child;
-    #[path = "🏷️create-properties/🧪️tests/attaches-a-properties-child-to-a-kit-that-has-none/🦀️.rs"]
+    #[path = "🏷️create-properties/🧪️tests/🧭️attaches-a-properties-child-to-a-kit-that-has-none/🦀️.rs"]
     mod tests_create_properties_attaches_a_properties_child_to_a_kit_that_has_none;
-    #[path = "💣delete-model/🧪️tests/detaches-the-only-model-child-and-keeps-the-object-child/🦀️.rs"]
+    #[path = "💣delete-model/🧪️tests/🏛️detaches-the-only-model-child-and-keeps-the-object-child/🦀️.rs"]
     mod tests_delete_model_detaches_the_only_model_child_and_keeps_the_object_child;
-    #[path = "🪓delete-object/🧪️tests/detaches-the-only-object-child-and-keeps-the-model-child/🦀️.rs"]
+    #[path = "🪓delete-object/🧪️tests/🏛️detaches-the-only-object-child-and-keeps-the-model-child/🦀️.rs"]
     mod tests_delete_object_detaches_the_only_object_child_and_keeps_the_model_child;
-    #[path = "🚫delete-properties/🧪️tests/detaches-the-properties-child-and-leaves-every-other-collection-alone/🦀️.rs"]
+    #[path = "🚫delete-properties/🧪️tests/🌴️detaches-the-properties-child-and-leaves-every-other-collection-alone/🦀️.rs"]
     mod tests_delete_properties_detaches_the_properties_child_and_leaves_every_other_collection_alone;
-    #[path = "🖊️edit-design/🧪️tests/replaces-the-designs-pieces-and-connections-in-one-step/🦀️.rs"]
+    #[path = "🖊️edit-design/🧪️tests/🧿️replaces-the-designs-pieces-and-connections-in-one-step/🦀️.rs"]
     mod tests_edit_design_replaces_the_designs_pieces_and_connections_in_one_step;
-    #[path = "🗑️remove-design/🧪️tests/removes-the-only-design-together-with-its-pieces/🦀️.rs"]
+    #[path = "🗑️remove-design/🧪️tests/🚫️removes-the-only-design-together-with-its-pieces/🦀️.rs"]
     mod tests_remove_design_removes_the_only_design_together_with_its_pieces;
-    #[path = "➖remove-type/🧪️tests/removes-the-column-type-and-keeps-the-beam-type/🦀️.rs"]
+    #[path = "➖remove-type/🧪️tests/🚫️removes-the-column-type-and-keeps-the-beam-type/🦀️.rs"]
     mod tests_remove_type_removes_the_column_type_and_keeps_the_beam_type;
-    #[path = "✏️rename-type/🧪️tests/renames-the-beam-type-without-recategorising-it/🦀️.rs"]
+    #[path = "✏️rename-type/🧪️tests/✏️renames-the-beam-type-without-recategorising-it/🦀️.rs"]
     mod tests_rename_type_renames_the_beam_type_without_recategorising_it;
-    #[path = "✂️unbind-representation/🧪️tests/unbinds-the-leading-representation-and-keeps-the-trailing-one/🦀️.rs"]
+    #[path = "✂️unbind-representation/🧪️tests/🔗️unbinds-the-leading-representation-and-keeps-the-trailing-one/🦀️.rs"]
     mod tests_unbind_representation_unbinds_the_leading_representation_and_keeps_the_trailing_one;
 }
 //#endregion 🧪️FixtureTests

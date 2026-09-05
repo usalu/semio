@@ -8,7 +8,7 @@ use schema::ArtifactSchema;
 /// 📸️ Persisted flow document snapshot (persistent fields of the artifact). Ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`flow→C:flow`, the canonical editor for stdio's
 /// `flow` subset): the inline `widgets`/`synapses`/`layout` content fields are replaced by a fixed
-/// composed `s.stdio.semio.flow` CHILD slot — the flow plugin no longer defines its own node-graph
+/// composed `s.stdio.semio@v1/flow` CHILD slot — the flow plugin no longer defines its own node-graph
 /// content model, it composes stdio's `flow` subset instead. `camera` stays inline: it is pure
 /// editor viewport state with no counterpart in `SemioFlowSnapshot`.
 ///
@@ -16,8 +16,6 @@ use schema::ArtifactSchema;
 /// host/kernel document type. This plugin snapshot converts at the host boundary via
 /// `to_fixture`/`from_fixture`, now bridging through the composed child + working-scene cache.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.flow.flow")]
 pub struct FlowSnapshot {
@@ -26,7 +24,7 @@ pub struct FlowSnapshot {
     #[state(artifact)]
     pub camera: CameraJson,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio.flow")]
+    #[child(kind = "s.stdio.semio")]
     pub content: FlowContentChild,
 }
 //#endregion 🔹Snapshot

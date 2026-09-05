@@ -37,7 +37,7 @@ use std::collections::HashMap;
 /// `XlsxSnapshot`/`XlsxSheet`. `OpText`/`OpBinary` hand-rolled below, reusing `XlsxDiff`'s
 /// `pub(crate)` grammar primitives (`enc_str`/`enc_cell_value`/`enc_sheet`/`split_top_level`/...).
 //#region 🔖️Leaves
-#[path = "📄set-snapshot/🦀️.rs"]
+#[path = "🟤️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "➕insert-sheet/🦀️.rs"]
 pub mod insert_sheet;
@@ -1131,7 +1131,7 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/widens-the-total-formula-to-a-third-row/🦀️.rs"]
+    #[path = "🟤️set-snapshot/🧪️tests/🔴️widens-the-total-formula-to-a-third-row/🦀️.rs"]
     mod tests_set_snapshot_widens_the_total_formula_to_a_third_row;
 }
 //#endregion 🧪️FixtureTests

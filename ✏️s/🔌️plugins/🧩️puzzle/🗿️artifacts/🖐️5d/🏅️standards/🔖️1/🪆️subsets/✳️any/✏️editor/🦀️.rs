@@ -38,7 +38,7 @@ use semio_framework_plugin::{
 // 🕹️ `InteractionView` — see 🧊️3d/🦀️.rs's identical import comment (missing top-level
 // re-export from `semio_framework_plugin`, flagged to the coordinator, not fixed here).
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, JobPayloadAdmissionFault, JobPayloadCloseStep, JobPayloadStream, Operation, RetainedJobPayload, RetainedJobPayloadWriter, StepContext, StepOutcome};
-use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::app::{ArtifactToolCompletionRejection, InteractionView};
 use serde::{Deserialize, Serialize};
 use dsl::os_pack::json::{from_json_str, object, parse, to_json_string, to_string, Object, Value};
 use std::cell::RefCell;
@@ -380,7 +380,7 @@ pub struct Puzzle5dDocument {
 /// document JSON, matching `Puzzle5dPlaySnapshot`'s own still-`serde_json::Value` boundary), so this
 /// routes through the framework's pre-existing `DslValue -> serde_json::Value` bridge and the
 /// struct's own unconditional `Deserialize` instead. Needed because
-/// `🎮️commands/🛍️set-fixture-json` round-trips this type through `dsl::os_pack::json::from_json_str`.
+/// `🎮️commands/🧪️set-fixture-json` round-trips this type through `dsl::os_pack::json::from_json_str`.
 impl dsl::FromValue for Puzzle5dDocument {
     fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
         serde_json::from_value(serde_json::Value::from(&value)).map_err(|error| dsl::ValueError::new(error.to_string()))
@@ -1778,6 +1778,148 @@ mod puzzle5d_retained_retirement_laws {
         assert!(!strict_import_source(&import.replacen("Puzzle5dImportStage::CatalogMutation", "Puzzle5dImportStage::Complete", 1)));
         assert!(!strict_import_source(&import.replacen("self.nested_cursor, self.decoded_items", "0, 0", 1)));
     }
+
+    fn completion_rejection(kind: Puzzle5dCompletionOwnerKind, emit: Emit<Puzzle5dMutation, Puzzle5dConfigMutation, NoDraftMutation>) -> Puzzle5dPendingCompletionRejection {
+        let mut fault = Fault::from("injected completion rejection");
+        fault.scope.plugin_id = Some("s.puzzle".repeat(32));
+        Puzzle5dPendingCompletionRejection::new(
+            kind,
+            ArtifactToolCompletionRejection {
+                emit: Ok(emit),
+                ephemeral: EphemeralEmit {
+                    presence: vec![Puzzle5dPresenceMutation::Snapshot { presence: Puzzle5dPresence { active_utility_id: "select".repeat(32), ..Default::default() } }],
+                    transient: Vec::new(),
+                },
+                fault,
+            },
+        )
+    }
+
+    fn close_completion_rejection(owner: &mut Puzzle5dPendingCompletionRejection) -> usize {
+        assert!(matches!(owner.close_step(0, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 })));
+        assert!(owner.owner.is_some(), "zero-item close must preserve the exact rejection owner");
+        let mut turns = 0usize;
+        loop {
+            match owner.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).expect("bounded completion rejection close") {
+                PluginCloseStep::Pending { released_items, released_bytes } => {
+                    assert!(released_items <= 1);
+                    assert!(released_bytes <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                    turns += 1;
+                }
+                PluginCloseStep::Complete => break,
+                PluginCloseStep::Blocked { reason } => panic!("completion rejection close blocked: {reason}"),
+                PluginCloseStep::AwaitingInput { .. } => panic!("completion rejection close cannot await input"),
+            }
+            assert!(turns < 100_000, "completion rejection close did not converge");
+        }
+        assert!(owner.owner.is_none());
+        turns
+    }
+
+    #[test]
+    fn copy_completion_rejection_retains_and_incrementally_closes_clipboard_ephemeral_and_fault_owners() {
+        let fragment = ClipboardFragment {
+            schema: PUZZLE5D_SCHEMA.repeat(32),
+            media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Design },
+            dsl_text: "part".repeat(256),
+            pack_bytes: Some(vec![7; 31]),
+            source_app: PUZZLE5D_PLAY_APP_ID.repeat(32),
+            label: "copy".repeat(32),
+        };
+        let mut owner = completion_rejection(Puzzle5dCompletionOwnerKind::Copy, Emit { effects: vec![Effect::ClipboardWrite { fragment }], ..Default::default() });
+        assert!(close_completion_rejection(&mut owner) > 100, "clipboard strings must not collapse into one owner drop");
+    }
+
+    #[test]
+    fn cut_completion_rejection_retains_and_incrementally_closes_exact_cut_mutations() {
+        let emit = Emit {
+            artifact_mutations: vec![
+                crate::artifacts::puzzle5d::mutations::disconnect_grips("fastener".repeat(64)),
+                crate::artifacts::puzzle5d::mutations::delete_part("part".repeat(64)),
+            ],
+            ..Default::default()
+        };
+        let mut owner = completion_rejection(Puzzle5dCompletionOwnerKind::Cut, emit);
+        assert!(close_completion_rejection(&mut owner) > 100);
+    }
+
+    #[test]
+    fn paste_completion_rejection_retains_original_flattened_mutation_vector_until_bounded_close() {
+        let part = crate::artifacts::puzzle5d::Puzzle5dPart {
+            id: "part".repeat(64),
+            part_kind: Some("kind".repeat(64)),
+            part_2d: crate::artifacts::puzzle5d::Puzzle5dPart2d { text: Some("text".repeat(64)), ..Default::default() },
+            grips: vec![crate::artifacts::puzzle5d::Puzzle5dGrip {
+                id: "grip".repeat(64),
+                grip_kind: Some("socket".repeat(64)),
+                grip_2d: Default::default(),
+                grip_3d: Default::default(),
+            }],
+            ..Default::default()
+        };
+        let emit = Emit::mutations(vec![
+            crate::artifacts::puzzle5d::mutations::create_part(part, None),
+            crate::artifacts::puzzle5d::mutations::connect_grips(
+                "fastener".repeat(64),
+                "part:source".repeat(32),
+                "part:target".repeat(32),
+                Some("fixed".repeat(32)),
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+            ),
+        ]);
+        let original = emit.artifact_mutations.as_ptr();
+        let mut owner = completion_rejection(Puzzle5dCompletionOwnerKind::Paste, emit);
+        let retained = owner.owner.as_ref().and_then(|rejected| rejected.emit.as_ref().ok()).expect("retained paste emit");
+        assert_eq!(retained.artifact_mutations.as_ptr(), original, "paste must retain the completion-returned mutation vector without reconstruction");
+        assert!(close_completion_rejection(&mut owner) > 100);
+    }
+
+    #[test]
+    fn import_completion_rejection_never_repages_and_closes_catalog_mutations_incrementally() {
+        let emit = Emit::mutations(vec![
+            crate::artifacts::puzzle5d::mutations::connect_kind_compatibility(
+                "source".repeat(64),
+                "target".repeat(64),
+                true,
+                true,
+                crate::artifacts::puzzle5d::Puzzle5dCompatSpecificity::General,
+            ),
+            crate::artifacts::puzzle5d::mutations::replace_kind_catalogs(Some(crate::artifacts::puzzle5d::Puzzle5dKindCatalogs {
+                parts: vec![crate::artifacts::puzzle5d::Puzzle5dCatalogPartKind { id: "catalog-part".repeat(64), ..Default::default() }],
+                ..Default::default()
+            })),
+        ]);
+        let original = emit.artifact_mutations.as_ptr();
+        let mut owner = completion_rejection(Puzzle5dCompletionOwnerKind::Import, emit);
+        let retained = owner.owner.as_ref().and_then(|rejected| rejected.emit.as_ref().ok()).expect("retained import emit");
+        assert_eq!(retained.artifact_mutations.as_ptr(), original, "import must retain the completion-returned flattened vector rather than re-page it");
+        assert!(close_completion_rejection(&mut owner) > 100);
+    }
+
+    #[test]
+    fn completion_rejection_guards_precede_all_four_prepare_and_publish_paths() {
+        let source = include_str!("🦀️.rs");
+        for (job, next, guard) in [
+            ("\nstruct Puzzle5dCopyJob {", "\nstruct Puzzle5dCutJob {", "puzzle5d copy completion remains rejected"),
+            ("\nstruct Puzzle5dCutJob {", "\nenum Puzzle5dPasteStage {", "puzzle5d cut completion remains rejected"),
+            ("\nstruct Puzzle5dPasteJob {", "\nenum Puzzle5dImportStage {", "puzzle5d paste completion remains rejected"),
+            ("\nstruct Puzzle5dImportJob {", "\n//#endregion 🧵️ReservedJobs", "puzzle5d import completion remains rejected"),
+        ] {
+            let region = source.split_once(job).and_then(|(_, suffix)| suffix.split_once(next).map(|(region, _)| region)).expect("reserved job region");
+            let guard = region.find(guard).expect("pending rejection replay guard");
+            let prepare = region.find("commit.prepare").expect("commit prepare");
+            let retain = region.find("pending_completion_rejection = Some").expect("exact rejection handoff");
+            assert!(guard < prepare && prepare < retain, "{job} must stop replay before preparing or publishing");
+            assert!(!region.contains("if let Err(error) = completion.complete"));
+        }
+    }
 }
 
 struct Puzzle5dClipboardWork {
@@ -2052,6 +2194,7 @@ impl Puzzle5dClipboardWork {
 
 struct Puzzle5dCopyJob {
     work: Puzzle5dClipboardWork,
+    pending_completion_rejection: Option<Puzzle5dPendingCompletionRejection>,
     completed: bool,
 }
 
@@ -2059,6 +2202,9 @@ impl InteractiveJob for Puzzle5dCopyJob {
     fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
         if cx.is_cancelled() {
             return StepOutcome::Cancelled;
+        }
+        if self.pending_completion_rejection.is_some() {
+            return puzzle5d_job_fault(cx, "puzzle5d copy completion remains rejected");
         }
         if !self.completed {
             match self.work.step_work(cx) {
@@ -2076,8 +2222,10 @@ impl InteractiveJob for Puzzle5dCopyJob {
                         None => Emit::default(),
                     };
                     let Some(completion) = self.work.completion.as_ref() else { return puzzle5d_job_fault(cx, "puzzle5d copy lost its completion authority") };
-                    if let Err(error) = completion.complete(Ok(emit), EphemeralEmit::default()) {
-                        return puzzle5d_job_fault(cx, error.message);
+                    if let Err(rejected) = completion.complete(Ok(emit), EphemeralEmit::default()) {
+                        let message = rejected.fault.message.clone();
+                        self.pending_completion_rejection = Some(Puzzle5dPendingCompletionRejection::new(Puzzle5dCompletionOwnerKind::Copy, rejected));
+                        return puzzle5d_job_fault(cx, message);
                     }
                     self.completed = true;
                 }
@@ -2108,16 +2256,25 @@ impl InteractiveJob for Puzzle5dCopyJob {
 
 impl ArtifactReservedJob for Puzzle5dCopyJob {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        if let Some(rejected) = self.pending_completion_rejection.as_mut() {
+            let step = rejected.close_step(maximum_items, maximum_bytes)?;
+            if step == PluginCloseStep::Complete {
+                self.pending_completion_rejection = None;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            return Ok(step);
+        }
         self.work.close_step(maximum_items, maximum_bytes)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.work.terminal_is_empty()
+        self.pending_completion_rejection.is_none() && self.work.terminal_is_empty()
     }
 }
 
 struct Puzzle5dCutJob {
     work: Puzzle5dClipboardWork,
+    pending_completion_rejection: Option<Puzzle5dPendingCompletionRejection>,
     completed: bool,
 }
 
@@ -2125,6 +2282,9 @@ impl InteractiveJob for Puzzle5dCutJob {
     fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
         if cx.is_cancelled() {
             return StepOutcome::Cancelled;
+        }
+        if self.pending_completion_rejection.is_some() {
+            return puzzle5d_job_fault(cx, "puzzle5d cut completion remains rejected");
         }
         if !self.completed {
             match self.work.step_work(cx) {
@@ -2142,8 +2302,10 @@ impl InteractiveJob for Puzzle5dCutJob {
                     let effects = self.work.fragment().map(|fragment| vec![Effect::ClipboardWrite { fragment }]).unwrap_or_default();
                     let emit = Emit { artifact_mutations: mutations, effects, ..Default::default() };
                     let Some(completion) = self.work.completion.as_ref() else { return puzzle5d_job_fault(cx, "puzzle5d cut lost its completion authority") };
-                    if let Err(error) = completion.complete(Ok(emit), EphemeralEmit::default()) {
-                        return puzzle5d_job_fault(cx, error.message);
+                    if let Err(rejected) = completion.complete(Ok(emit), EphemeralEmit::default()) {
+                        let message = rejected.fault.message.clone();
+                        self.pending_completion_rejection = Some(Puzzle5dPendingCompletionRejection::new(Puzzle5dCompletionOwnerKind::Cut, rejected));
+                        return puzzle5d_job_fault(cx, message);
                     }
                     self.completed = true;
                 }
@@ -2174,11 +2336,19 @@ impl InteractiveJob for Puzzle5dCutJob {
 
 impl ArtifactReservedJob for Puzzle5dCutJob {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        if let Some(rejected) = self.pending_completion_rejection.as_mut() {
+            let step = rejected.close_step(maximum_items, maximum_bytes)?;
+            if step == PluginCloseStep::Complete {
+                self.pending_completion_rejection = None;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            return Ok(step);
+        }
         self.work.close_step(maximum_items, maximum_bytes)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.work.terminal_is_empty()
+        self.pending_completion_rejection.is_none() && self.work.terminal_is_empty()
     }
 }
 
@@ -2215,6 +2385,7 @@ struct Puzzle5dPasteJob {
     fresh_ids: Puzzle5dFreshIds,
     mutations: Vec<Puzzle5dMutation>,
     completion: Option<ArtifactToolCompletion<EditorApp<Puzzle5dPlayApp>>>,
+    pending_completion_rejection: Option<Puzzle5dPendingCompletionRejection>,
     commit: Puzzle5dCommitEnvelope,
     completed: bool,
     retirement_key: [u8; PUZZLE5D_JSON_RETIREMENT_KEY_BYTES],
@@ -2244,6 +2415,7 @@ impl Puzzle5dPasteJob {
             fresh_ids: Puzzle5dFreshIds::default(),
             mutations: Vec::new(),
             completion: Some(request.completion),
+            pending_completion_rejection: None,
             commit: Puzzle5dCommitEnvelope::new(),
             completed: false,
             retirement_key: [0; PUZZLE5D_JSON_RETIREMENT_KEY_BYTES],
@@ -2260,6 +2432,9 @@ impl InteractiveJob for Puzzle5dPasteJob {
     fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
         if cx.is_cancelled() {
             return StepOutcome::Cancelled;
+        }
+        if self.pending_completion_rejection.is_some() {
+            return puzzle5d_job_fault(cx, "puzzle5d paste completion remains rejected");
         }
         match self.stage {
             Puzzle5dPasteStage::Envelope => {
@@ -2404,8 +2579,10 @@ impl InteractiveJob for Puzzle5dPasteJob {
                 if !self.completed {
                     let emit = Emit::mutations(std::mem::take(&mut self.mutations));
                     let Some(completion) = self.completion.as_ref() else { return puzzle5d_job_fault(cx, "puzzle5d paste lost its completion authority") };
-                    if let Err(error) = completion.complete(Ok(emit), EphemeralEmit::default()) {
-                        return puzzle5d_job_fault(cx, error.message);
+                    if let Err(rejected) = completion.complete(Ok(emit), EphemeralEmit::default()) {
+                        let message = rejected.fault.message.clone();
+                        self.pending_completion_rejection = Some(Puzzle5dPendingCompletionRejection::new(Puzzle5dCompletionOwnerKind::Paste, rejected));
+                        return puzzle5d_job_fault(cx, message);
                     }
                     self.completed = true;
                 }
@@ -2442,6 +2619,14 @@ impl ArtifactReservedJob for Puzzle5dPasteJob {
         self.closing = true;
         if maximum_items == 0 {
             return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(rejected) = self.pending_completion_rejection.as_mut() {
+            let step = rejected.close_step(maximum_items, maximum_bytes)?;
+            if step == PluginCloseStep::Complete {
+                self.pending_completion_rejection = None;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            return Ok(step);
         }
         match self.commit.close_step(maximum_items, maximum_bytes) {
             PluginCloseStep::Complete => {}
@@ -2563,6 +2748,7 @@ impl ArtifactReservedJob for Puzzle5dPasteJob {
             && self.id_map.capacity() == 0
             && self.mutations.is_empty()
             && self.mutations.capacity() == 0
+            && self.pending_completion_rejection.is_none()
             && self.completion.is_none()
             && self.commit.terminal_is_empty()
     }
@@ -2624,6 +2810,7 @@ struct Puzzle5dImportJob {
     decoded_items: usize,
     current_part: Option<crate::artifacts::puzzle5d::Puzzle5dCatalogPartKind>,
     completion: Option<ArtifactToolCompletion<EditorApp<Puzzle5dPlayApp>>>,
+    pending_completion_rejection: Option<Puzzle5dPendingCompletionRejection>,
     commit: Puzzle5dCommitEnvelope,
     completed: bool,
     retiring_index_primary: Option<String>,
@@ -2894,6 +3081,252 @@ fn puzzle5d_retire_import_mutation_step(owner: &mut Puzzle5dMutation, maximum_by
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle5dCompletionOwnerKind {
+    Copy,
+    Cut,
+    Paste,
+    Import,
+}
+
+fn puzzle5d_retire_typed_part_step(owner: &mut crate::artifacts::puzzle5d::Puzzle5dPart, maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault> {
+    if let Some(grip) = owner.grips.last_mut() {
+        if let Some(step) = puzzle5d_retire_string_step(&mut grip.id, maximum_bytes)? {
+            return Ok(Some(step));
+        }
+        if let Some(step) = puzzle5d_retire_optional_string_step(&mut grip.grip_kind, maximum_bytes)? {
+            return Ok(Some(step));
+        }
+        if let Some(step) = puzzle5d_retire_optional_string_step(&mut grip.grip_2d.grip_kind, maximum_bytes)? {
+            return Ok(Some(step));
+        }
+        if let Some(step) = puzzle5d_retire_optional_string_step(&mut grip.grip_3d.label, maximum_bytes)? {
+            return Ok(Some(step));
+        }
+        owner.grips.pop();
+        return Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }));
+    }
+    if let Some(step) = puzzle5d_retire_vec_backing(&mut owner.grips, maximum_bytes)? {
+        return Ok(Some(step));
+    }
+    if let Some(step) = puzzle5d_retire_string_step(&mut owner.id, maximum_bytes)? {
+        return Ok(Some(step));
+    }
+    if let Some(step) = puzzle5d_retire_optional_string_step(&mut owner.part_kind, maximum_bytes)? {
+        return Ok(Some(step));
+    }
+    for value in [&mut owner.part_2d.shape, &mut owner.part_2d.text, &mut owner.part_2d.icon_kind, &mut owner.part_3d.mesh_url, &mut owner.part_3d.label] {
+        if let Some(step) = puzzle5d_retire_optional_string_step(value, maximum_bytes)? {
+            return Ok(Some(step));
+        }
+    }
+    Ok(None)
+}
+
+fn puzzle5d_retire_completion_mutation_step(kind: Puzzle5dCompletionOwnerKind, owner: &mut Puzzle5dMutation, maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault> {
+    match (kind, owner) {
+        (Puzzle5dCompletionOwnerKind::Cut, Puzzle5dMutation::DisconnectGrips(value)) => puzzle5d_retire_string_step(&mut value.id, maximum_bytes),
+        (Puzzle5dCompletionOwnerKind::Cut, Puzzle5dMutation::DeletePart(value)) => puzzle5d_retire_string_step(&mut value.id, maximum_bytes),
+        (Puzzle5dCompletionOwnerKind::Paste, Puzzle5dMutation::CreatePart(value)) => puzzle5d_retire_typed_part_step(&mut value.part, maximum_bytes),
+        (Puzzle5dCompletionOwnerKind::Paste, Puzzle5dMutation::ConnectGrips(value)) => {
+            for text in [&mut value.id, &mut value.source, &mut value.target] {
+                if let Some(step) = puzzle5d_retire_string_step(text, maximum_bytes)? {
+                    return Ok(Some(step));
+                }
+            }
+            puzzle5d_retire_optional_string_step(&mut value.fastener_kind, maximum_bytes)
+        }
+        (Puzzle5dCompletionOwnerKind::Import, owner) => puzzle5d_retire_import_mutation_step(owner, maximum_bytes),
+        _ => Err(Fault::from("puzzle5d completion rejection retained an unexpected mutation owner")),
+    }
+}
+
+fn puzzle5d_retire_clipboard_fragment_step(owner: &mut ClipboardFragment, maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault> {
+    for text in [&mut owner.schema, &mut owner.dsl_text, &mut owner.source_app, &mut owner.label] {
+        if let Some(step) = puzzle5d_retire_string_step(text, maximum_bytes)? {
+            return Ok(Some(step));
+        }
+    }
+    let Some(bytes) = owner.pack_bytes.as_mut() else { return Ok(None) };
+    if bytes.pop().is_some() {
+        return Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 1 }));
+    }
+    if let Some(step) = puzzle5d_retire_vec_backing(bytes, maximum_bytes)? {
+        return Ok(Some(step));
+    }
+    owner.pack_bytes = None;
+    Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }))
+}
+
+fn puzzle5d_retire_fault_step(owner: &mut Fault, maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault> {
+    if let Some(cause) = owner.causes.last_mut() {
+        if let Some(step) = puzzle5d_retire_string_step(&mut cause.message, maximum_bytes)? {
+            return Ok(Some(step));
+        }
+        if let Some(code) = cause.code.as_mut() {
+            if let Some(step) = puzzle5d_retire_string_step(&mut code.0, maximum_bytes)? {
+                return Ok(Some(step));
+            }
+            cause.code = None;
+            return Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }));
+        }
+        owner.causes.pop();
+        return Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }));
+    }
+    if let Some(step) = puzzle5d_retire_vec_backing(&mut owner.causes, maximum_bytes)? {
+        return Ok(Some(step));
+    }
+    for field in [
+        &mut owner.scope.plugin_id,
+        &mut owner.scope.app_id,
+        &mut owner.scope.instance_id,
+        &mut owner.scope.module,
+        &mut owner.scope.body_key,
+    ] {
+        if let Some(step) = puzzle5d_retire_optional_string_step(field, maximum_bytes)? {
+            return Ok(Some(step));
+        }
+    }
+    if let Some(step) = puzzle5d_retire_string_step(&mut owner.message, maximum_bytes)? {
+        return Ok(Some(step));
+    }
+    if let Some(step) = puzzle5d_retire_string_step(&mut owner.code.0, maximum_bytes)? {
+        return Ok(Some(step));
+    }
+    if owner.span.take().is_some() {
+        return Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }));
+    }
+    Ok(None)
+}
+
+fn puzzle5d_retire_completion_effect_step(owner: &mut Effect, maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault> {
+    match owner {
+        Effect::ClipboardWrite { fragment } => puzzle5d_retire_clipboard_fragment_step(fragment, maximum_bytes),
+        _ => Err(Fault::from("puzzle5d completion rejection retained an unexpected effect owner")),
+    }
+}
+
+fn puzzle5d_retire_completion_emit_step(
+    kind: Puzzle5dCompletionOwnerKind,
+    owner: &mut Emit<Puzzle5dMutation, Puzzle5dConfigMutation, NoDraftMutation>,
+    maximum_items: usize,
+    maximum_bytes: usize,
+) -> Result<Option<PluginCloseStep>, Fault> {
+    if let Some(step) = owner.close_child_one(maximum_items, maximum_bytes) {
+        return Ok(Some(step));
+    }
+    if let Some(mutation) = owner.artifact_mutations.last_mut() {
+        if let Some(step) = puzzle5d_retire_completion_mutation_step(kind, mutation, maximum_bytes)? {
+            return Ok(Some(step));
+        }
+        owner.artifact_mutations.pop();
+        return Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }));
+    }
+    if let Some(step) = puzzle5d_retire_vec_backing(&mut owner.artifact_mutations, maximum_bytes)? {
+        return Ok(Some(step));
+    }
+    if !owner.config_mutations.is_empty() || !owner.draft_mutations.is_empty() {
+        return Err(Fault::from("puzzle5d completion rejection retained an impossible non-document mutation owner"));
+    }
+    if let Some(step) = puzzle5d_retire_vec_backing(&mut owner.config_mutations, maximum_bytes)? {
+        return Ok(Some(step));
+    }
+    if let Some(step) = puzzle5d_retire_vec_backing(&mut owner.draft_mutations, maximum_bytes)? {
+        return Ok(Some(step));
+    }
+    if let Some(step) = puzzle5d_retire_optional_string_step(&mut owner.description, maximum_bytes)? {
+        return Ok(Some(step));
+    }
+    if let Some(step) = puzzle5d_retire_optional_string_step(&mut owner.coalesce_key, maximum_bytes)? {
+        return Ok(Some(step));
+    }
+    if let Some(effect) = owner.effects.last_mut() {
+        if let Some(step) = puzzle5d_retire_completion_effect_step(effect, maximum_bytes)? {
+            return Ok(Some(step));
+        }
+        owner.effects.pop();
+        return Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }));
+    }
+    if let Some(step) = puzzle5d_retire_vec_backing(&mut owner.effects, maximum_bytes)? {
+        return Ok(Some(step));
+    }
+    if !owner.events.is_empty() || !owner.tasks.is_empty() {
+        return Err(Fault::from("puzzle5d completion rejection retained an unexpected event or task owner"));
+    }
+    if let Some(step) = puzzle5d_retire_vec_backing(&mut owner.events, maximum_bytes)? {
+        return Ok(Some(step));
+    }
+    if let Some(step) = puzzle5d_retire_vec_backing(&mut owner.child_emits, maximum_bytes)? {
+        return Ok(Some(step));
+    }
+    puzzle5d_retire_vec_backing(&mut owner.tasks, maximum_bytes)
+}
+
+fn puzzle5d_retire_completion_ephemeral_step(owner: &mut EphemeralEmit<EditorApp<Puzzle5dPlayApp>>, maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault> {
+    if let Some(Puzzle5dPresenceMutation::Snapshot { presence }) = owner.presence.last_mut() {
+        if let Some(step) = puzzle5d_retire_string_step(&mut presence.active_utility_id, maximum_bytes)? {
+            return Ok(Some(step));
+        }
+        owner.presence.pop();
+        return Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }));
+    }
+    if let Some(step) = puzzle5d_retire_vec_backing(&mut owner.presence, maximum_bytes)? {
+        return Ok(Some(step));
+    }
+    if !owner.transient.is_empty() {
+        return Err(Fault::from("puzzle5d completion rejection retained an impossible transient owner"));
+    }
+    puzzle5d_retire_vec_backing(&mut owner.transient, maximum_bytes)
+}
+
+struct Puzzle5dPendingCompletionRejection {
+    owner: Option<ArtifactToolCompletionRejection<EditorApp<Puzzle5dPlayApp>>>,
+    kind: Puzzle5dCompletionOwnerKind,
+    emit_closed: bool,
+    ephemeral_closed: bool,
+    fault_closed: bool,
+}
+
+impl Puzzle5dPendingCompletionRejection {
+    fn new(kind: Puzzle5dCompletionOwnerKind, owner: ArtifactToolCompletionRejection<EditorApp<Puzzle5dPlayApp>>) -> Self {
+        Self { owner: Some(owner), kind, emit_closed: false, ephemeral_closed: false, fault_closed: false }
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        if maximum_items == 0 {
+            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        let Some(owner) = self.owner.as_mut() else { return Ok(PluginCloseStep::Complete) };
+        if !self.emit_closed {
+            let step = match owner.emit.as_mut() {
+                Ok(emit) => puzzle5d_retire_completion_emit_step(self.kind, emit, maximum_items, maximum_bytes)?,
+                Err(fault) => puzzle5d_retire_fault_step(fault, maximum_bytes)?,
+            };
+            if let Some(step) = step {
+                return Ok(step);
+            }
+            self.emit_closed = true;
+            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if !self.ephemeral_closed {
+            if let Some(step) = puzzle5d_retire_completion_ephemeral_step(&mut owner.ephemeral, maximum_bytes)? {
+                return Ok(step);
+            }
+            self.ephemeral_closed = true;
+            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if !self.fault_closed {
+            if let Some(step) = puzzle5d_retire_fault_step(&mut owner.fault, maximum_bytes)? {
+                return Ok(step);
+            }
+            self.fault_closed = true;
+            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        self.owner = None;
+        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+    }
+}
+
 impl Puzzle5dImportJob {
     fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>, port: String, media: Media) -> Self {
         let media_json = match media.payload {
@@ -2924,6 +3357,7 @@ impl Puzzle5dImportJob {
             decoded_items: 0,
             current_part: None,
             completion: Some(request.completion),
+            pending_completion_rejection: None,
             commit: Puzzle5dCommitEnvelope::new(),
             completed: false,
             retiring_index_primary: None,
@@ -2970,6 +3404,9 @@ impl InteractiveJob for Puzzle5dImportJob {
     fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
         if cx.is_cancelled() {
             return StepOutcome::Cancelled;
+        }
+        if self.pending_completion_rejection.is_some() {
+            return puzzle5d_job_fault(cx, "puzzle5d import completion remains rejected");
         }
         match self.stage {
             Puzzle5dImportStage::Envelope => {
@@ -3399,8 +3836,10 @@ impl InteractiveJob for Puzzle5dImportJob {
                         mutations.append(page);
                     }
                     let Some(completion) = self.completion.as_ref() else { return puzzle5d_job_fault(cx, "puzzle5d import lost its completion authority") };
-                    if let Err(error) = completion.complete(Ok(Emit::mutations(mutations)), EphemeralEmit::default()) {
-                        return puzzle5d_job_fault(cx, error.message);
+                    if let Err(rejected) = completion.complete(Ok(Emit::mutations(mutations)), EphemeralEmit::default()) {
+                        let message = rejected.fault.message.clone();
+                        self.pending_completion_rejection = Some(Puzzle5dPendingCompletionRejection::new(Puzzle5dCompletionOwnerKind::Import, rejected));
+                        return puzzle5d_job_fault(cx, message);
                     }
                     self.completed = true;
                 }
@@ -3437,6 +3876,14 @@ impl ArtifactReservedJob for Puzzle5dImportJob {
         self.closing = true;
         if maximum_items == 0 {
             return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(rejected) = self.pending_completion_rejection.as_mut() {
+            let step = rejected.close_step(maximum_items, maximum_bytes)?;
+            if step == PluginCloseStep::Complete {
+                self.pending_completion_rejection = None;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            return Ok(step);
         }
         match self.commit.close_step(maximum_items, maximum_bytes) {
             PluginCloseStep::Complete => {}
@@ -3629,6 +4076,7 @@ impl ArtifactReservedJob for Puzzle5dImportJob {
             && self.mutation_pages.iter().all(|page| page.is_empty() && page.capacity() == 0)
             && self.retiring_index_primary.is_none()
             && self.retiring_index_secondary.is_none()
+            && self.pending_completion_rejection.is_none()
             && self.completion.is_none()
             && self.commit.terminal_is_empty()
     }
@@ -8507,14 +8955,14 @@ impl ArtifactEditor for Puzzle5dPlayApp {
                     ArtifactReservedToolInput::Action { interaction, .. } => interaction.clone(),
                     _ => return Err(Fault::from("puzzle5d copy requires action input")),
                 };
-                ArtifactReservedToolJob::new(Puzzle5dCopyJob { work: Puzzle5dClipboardWork::new(request, interaction), completed: false })
+                ArtifactReservedToolJob::new(Puzzle5dCopyJob { work: Puzzle5dClipboardWork::new(request, interaction), pending_completion_rejection: None, completed: false })
             }
             "cut" => {
                 let interaction = match &request.input {
                     ArtifactReservedToolInput::Action { interaction, .. } => interaction.clone(),
                     _ => return Err(Fault::from("puzzle5d cut requires action input")),
                 };
-                ArtifactReservedToolJob::new(Puzzle5dCutJob { work: Puzzle5dClipboardWork::new(request, interaction), completed: false })
+                ArtifactReservedToolJob::new(Puzzle5dCutJob { work: Puzzle5dClipboardWork::new(request, interaction), pending_completion_rejection: None, completed: false })
             }
             "paste" => {
                 let args = match &request.input {

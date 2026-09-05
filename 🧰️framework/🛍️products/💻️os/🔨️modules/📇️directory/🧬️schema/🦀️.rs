@@ -193,6 +193,137 @@ pub struct DirectoryEvent {
     pub body: DirectoryEventBody,
     pub recorded_at_ms: i64,
 }
+
+/// 📏️ Maximum raw rows represented by one event-page scan.
+pub const DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS: usize = 128;
+/// 📦️ Maximum canonical response bytes retained by one page owner.
+pub const DIRECTORY_EVENT_PAGE_MAX_BYTES: usize = 64 * 1024;
+/// ⚡️ Maximum canonical bytes of one persisted event.
+pub const DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES: usize = 48 * 1024;
+
+#[derive(Clone, Debug, PartialEq, ToValue)]
+#[value(rename_all = "camelCase")]
+struct DirectoryEventPageReceiptV1 {
+    schema: String,
+    session_binding_sha256: String,
+    authorization_generation: u64,
+    after_seq_exclusive: u64,
+    through_seq_inclusive: u64,
+    has_more: bool,
+    events: Vec<DirectoryEvent>,
+}
+
+/// 📄️ One authenticated, receipt-bound bounded scan of the durable directory log.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DirectoryEventPageV1 {
+    pub schema: String,
+    pub session_binding_sha256: String,
+    pub authorization_generation: u64,
+    pub after_seq_exclusive: u64,
+    pub through_seq_inclusive: u64,
+    pub has_more: bool,
+    pub events: Vec<DirectoryEvent>,
+    pub receipt_sha256: String,
+}
+
+/// 🚫️ Stable bounded-page denial classes shared by hub and clients.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DirectoryEventPageErrorV1 {
+    Invalid,
+    TooLarge,
+    ReceiptMismatch,
+}
+
+fn directory_event_page_has_control(value: &crate::DslValue) -> bool {
+    match value {
+        crate::DslValue::String(value) => value.chars().any(char::is_control),
+        crate::DslValue::Array(values) => values.iter().any(directory_event_page_has_control),
+        crate::DslValue::Object(fields) => fields.iter().any(|(key, value)| key.chars().any(char::is_control) || directory_event_page_has_control(value)),
+        crate::DslValue::Null | crate::DslValue::Bool(_) | crate::DslValue::Number(_) => false,
+    }
+}
+
+/// 🛡️ Admits one fully assigned event into the durable directory log and bounded page protocol.
+pub fn validate_directory_event_page_event(event: &DirectoryEvent) -> Result<(), DirectoryEventPageErrorV1> {
+    let encoded = crate::os_pack::json::to_json_string(event);
+    if event.seq == 0
+        || event.seq > DOCUMENT_OPEN_MAX_SAFE_INTEGER
+        || encoded.len() > DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES
+        || directory_event_page_has_control(&crate::ToValue::to_value(event))
+    {
+        Err(DirectoryEventPageErrorV1::Invalid)
+    } else {
+        Ok(())
+    }
+}
+
+impl DirectoryEventPageV1 {
+    /// 🧾️ Returns the canonical UTF-8 JSON covered by `receiptSha256`.
+    pub fn canonical_unsigned_json(&self) -> String {
+        crate::os_pack::json::to_json_string(&DirectoryEventPageReceiptV1 {
+            schema: self.schema.clone(),
+            session_binding_sha256: self.session_binding_sha256.clone(),
+            authorization_generation: self.authorization_generation,
+            after_seq_exclusive: self.after_seq_exclusive,
+            through_seq_inclusive: self.through_seq_inclusive,
+            has_more: self.has_more,
+            events: self.events.clone(),
+        })
+    }
+
+    /// 🔐️ Verifies the lowercase SHA-256 receipt over the declaration-ordered unsigned page.
+    pub fn receipt_matches(&self) -> bool {
+        self.receipt_sha256 == semio_framework_hash::sha256_hex(self.canonical_unsigned_json().as_bytes())
+    }
+
+    /// ✅️ Checks bounded range, canonical digest, event ordering, and cross-runtime integer laws.
+    pub fn validate(&self) -> Result<(), DirectoryEventPageErrorV1> {
+        if self.schema != "semio.directory.event-page.v1"
+            || !valid_document_open_hash(&self.session_binding_sha256)
+            || self.authorization_generation == 0
+            || self.authorization_generation > DOCUMENT_OPEN_MAX_SAFE_INTEGER
+            || self.after_seq_exclusive > DOCUMENT_OPEN_MAX_SAFE_INTEGER
+            || self.through_seq_inclusive > DOCUMENT_OPEN_MAX_SAFE_INTEGER
+            || self.after_seq_exclusive > self.through_seq_inclusive
+            || self.events.len() > DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS
+            || self.receipt_sha256.len() != 64
+            || !self.receipt_sha256.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
+        {
+            return Err(DirectoryEventPageErrorV1::Invalid);
+        }
+        let mut previous = self.after_seq_exclusive;
+        for event in &self.events {
+            if event.seq <= previous
+                || event.seq > self.through_seq_inclusive
+                || validate_directory_event_page_event(event).is_err()
+            {
+                return Err(DirectoryEventPageErrorV1::Invalid);
+            }
+            previous = event.seq;
+        }
+        if !self.receipt_matches() {
+            return Err(DirectoryEventPageErrorV1::ReceiptMismatch);
+        }
+        if crate::os_pack::json::to_json_string(self).len() > DIRECTORY_EVENT_PAGE_MAX_BYTES {
+            return Err(DirectoryEventPageErrorV1::TooLarge);
+        }
+        Ok(())
+    }
+
+    /// 📥️ Parses exactly one canonical page, rejecting whitespace, trailing bytes, and duplicate or unknown fields.
+    pub fn parse_canonical_json(json: &str) -> Result<Self, DirectoryEventPageErrorV1> {
+        if json.len() > DIRECTORY_EVENT_PAGE_MAX_BYTES {
+            return Err(DirectoryEventPageErrorV1::TooLarge);
+        }
+        let page: Self = crate::os_pack::json::from_json_str(json).map_err(|_| DirectoryEventPageErrorV1::Invalid)?;
+        if crate::os_pack::json::to_json_string(&page) != json {
+            return Err(DirectoryEventPageErrorV1::Invalid);
+        }
+        page.validate()?;
+        Ok(page)
+    }
+}
 //#endregion 🔖️Event
 
 //#region 🔖️Command
@@ -212,6 +343,261 @@ pub enum DirectoryCommand {
     AnnounceDocument { descriptor: DocumentDescriptor },
 }
 //#endregion 🔖️Command
+
+//#region 🔖️CommandReceipt
+/// 📦️ Exact posted-command request ceiling; matches the hub's public administrator request ceiling.
+pub const DIRECTORY_COMMAND_REQUEST_MAX_BYTES: usize = 8 * 1024;
+/// 📦️ Exact returned-receipt ceiling; matches the administrator response and event-page ceilings.
+pub const DIRECTORY_COMMAND_RECEIPT_MAX_BYTES: usize = 64 * 1024;
+/// 🔢️ Maximum durable events one directory command may append (`upsert-member` emits at most two).
+pub const DIRECTORY_COMMAND_RECEIPT_MAX_EVENTS: usize = 4;
+/// 🎟️ Maximum bytes of the one-shot invite capability a receipt may carry.
+pub const DIRECTORY_COMMAND_INVITE_TOKEN_MAX_BYTES: usize = 256;
+/// 🆔️ Exact hex length of one command-request idempotency correlation.
+pub const DIRECTORY_COMMAND_REQUEST_ID_LEN: usize = 32;
+
+/// 🆔️ One sealed, idempotency-correlated directory command posted to `POST /directory/commands`.
+/// `request_id` is a correlation, never a capability: knowing it grants nothing, and the hub
+/// re-runs authentication and authorization before returning any stored completion.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DirectoryCommandRequestV1 {
+    pub schema: String,
+    pub request_id: String,
+    pub command: DirectoryCommand,
+}
+
+/// 🧾️ Closed disposition of one durable command request. `secret-undeliverable` proves no duplicate
+/// was executed while stating honestly that a one-shot capability cannot be re-delivered.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "kebab-case")]
+pub enum DirectoryCommandOutcomeV1 {
+    Accepted,
+    PreviouslyAccepted,
+    SecretUndeliverable,
+}
+
+/// 🎁️ Closed command-result grammar. The invite capability lives only in the live operation's
+/// receipt: it is never appended, broadcast, folded, logged, or persisted by any store.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
+pub enum DirectoryCommandResultV1 {
+    None,
+    Invite { invite_token: String },
+}
+
+/// 🧾️ One authoritative, receipt-bound completion of exactly one command request.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DirectoryCommandReceiptV1 {
+    pub schema: String,
+    pub request_id: String,
+    pub command_sha256: String,
+    pub outcome: DirectoryCommandOutcomeV1,
+    pub events: Vec<DirectoryEvent>,
+    pub result: DirectoryCommandResultV1,
+    pub receipt_sha256: String,
+}
+
+#[derive(Clone, Debug, PartialEq, ToValue)]
+#[value(rename_all = "camelCase")]
+struct DirectoryCommandReceiptUnsignedV1 {
+    schema: String,
+    request_id: String,
+    command_sha256: String,
+    outcome: DirectoryCommandOutcomeV1,
+    events: Vec<DirectoryEvent>,
+    result: DirectoryCommandResultV1,
+}
+
+/// 🚫️ Closed command-transport denial classes shared by the hub route and both clients. The first
+/// six are the only codes the hub ever puts on the wire; the rest are client-owned terminal or
+/// transient transport classes that never carry raw server text.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "kebab-case")]
+pub enum DirectoryCommandErrorCodeV1 {
+    Unauthorized,
+    Forbidden,
+    StaleSession,
+    RequestConflict,
+    Invalid,
+    Overloaded,
+    TooLarge,
+    Capacity,
+    Closed,
+    Cancelled,
+    Transport,
+}
+
+impl DirectoryCommandErrorCodeV1 {
+    /// 🏷️ The exact kebab-case wire spelling.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Unauthorized => "unauthorized",
+            Self::Forbidden => "forbidden",
+            Self::StaleSession => "stale-session",
+            Self::RequestConflict => "request-conflict",
+            Self::Invalid => "invalid",
+            Self::Overloaded => "overloaded",
+            Self::TooLarge => "too-large",
+            Self::Capacity => "capacity",
+            Self::Closed => "closed",
+            Self::Cancelled => "cancelled",
+            Self::Transport => "transport",
+        }
+    }
+
+    /// 🌐️ Maps one non-2xx status to its closed hub code without preserving any response body.
+    pub fn from_status(status: u16) -> Self {
+        match status {
+            401 => Self::Unauthorized,
+            403 => Self::Forbidden,
+            409 => Self::RequestConflict,
+            410 => Self::StaleSession,
+            413 => Self::TooLarge,
+            503 => Self::Overloaded,
+            _ => Self::Invalid,
+        }
+    }
+
+    /// 🔁️ Only transient faults may retry the byte-identical sealed request.
+    pub fn is_transient(self) -> bool {
+        matches!(self, Self::Overloaded | Self::Transport)
+    }
+}
+
+fn valid_directory_command_request_id(value: &str) -> bool {
+    value.len() == DIRECTORY_COMMAND_REQUEST_ID_LEN
+        && !value.as_bytes().iter().all(|byte| *byte == b'0')
+        && value.as_bytes().iter().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
+}
+
+/// 🔐️ The one canonical command digest both the hub and every client derive independently.
+pub fn directory_command_sha256(command: &DirectoryCommand) -> String {
+    semio_framework_hash::sha256_hex(crate::os_pack::json::to_json_string(command).as_bytes())
+}
+
+impl DirectoryCommandRequestV1 {
+    /// 🆕️ Seals one request around an already-minted correlation id.
+    pub fn new(request_id: impl Into<String>, command: DirectoryCommand) -> Self {
+        Self { schema: "semio.directory.command-request.v1".into(), request_id: request_id.into(), command }
+    }
+
+    /// 🧾️ Returns the canonical UTF-8 JSON that both peers hash and count bytes over.
+    pub fn canonical_json(&self) -> String {
+        crate::os_pack::json::to_json_string(self)
+    }
+
+    /// ✅️ Checks the closed envelope, the correlation grammar, and the request byte ceiling.
+    pub fn validate(&self) -> Result<(), DirectoryCommandErrorCodeV1> {
+        if self.schema != "semio.directory.command-request.v1" || !valid_directory_command_request_id(&self.request_id) {
+            return Err(DirectoryCommandErrorCodeV1::Invalid);
+        }
+        if self.canonical_json().len() > DIRECTORY_COMMAND_REQUEST_MAX_BYTES {
+            return Err(DirectoryCommandErrorCodeV1::TooLarge);
+        }
+        Ok(())
+    }
+
+    /// 📥️ Parses exactly one canonical request, rejecting padding, unknown fields, and oversize bodies.
+    pub fn parse_canonical_json(json: &str) -> Result<Self, DirectoryCommandErrorCodeV1> {
+        if json.len() > DIRECTORY_COMMAND_REQUEST_MAX_BYTES {
+            return Err(DirectoryCommandErrorCodeV1::TooLarge);
+        }
+        let request: Self = crate::os_pack::json::from_json_str(json).map_err(|_| DirectoryCommandErrorCodeV1::Invalid)?;
+        if request.canonical_json() != json {
+            return Err(DirectoryCommandErrorCodeV1::Invalid);
+        }
+        request.validate()?;
+        Ok(request)
+    }
+}
+
+impl DirectoryCommandReceiptV1 {
+    /// 🧾️ Returns the canonical UTF-8 JSON covered by `receiptSha256`.
+    pub fn canonical_unsigned_json(&self) -> String {
+        crate::os_pack::json::to_json_string(&DirectoryCommandReceiptUnsignedV1 {
+            schema: self.schema.clone(),
+            request_id: self.request_id.clone(),
+            command_sha256: self.command_sha256.clone(),
+            outcome: self.outcome,
+            events: self.events.clone(),
+            result: self.result.clone(),
+        })
+    }
+
+    /// 🔐️ Seals one completion by hashing its declaration-ordered unsigned canonical JSON.
+    pub fn seal(request_id: impl Into<String>, command_sha256: impl Into<String>, outcome: DirectoryCommandOutcomeV1, events: Vec<DirectoryEvent>, result: DirectoryCommandResultV1) -> Self {
+        let mut receipt = Self {
+            schema: "semio.directory.command-receipt.v1".into(),
+            request_id: request_id.into(),
+            command_sha256: command_sha256.into(),
+            outcome,
+            events,
+            result,
+            receipt_sha256: String::new(),
+        };
+        receipt.receipt_sha256 = semio_framework_hash::sha256_hex(receipt.canonical_unsigned_json().as_bytes());
+        receipt
+    }
+
+    /// 🔐️ Verifies the lowercase SHA-256 receipt over the declaration-ordered unsigned completion.
+    pub fn receipt_matches(&self) -> bool {
+        self.receipt_sha256 == semio_framework_hash::sha256_hex(self.canonical_unsigned_json().as_bytes())
+    }
+
+    /// ✅️ Checks the closed envelope, the secret-result rule, event laws, digest, and byte ceiling.
+    pub fn validate(&self) -> Result<(), DirectoryCommandErrorCodeV1> {
+        let token = match &self.result {
+            DirectoryCommandResultV1::None => None,
+            DirectoryCommandResultV1::Invite { invite_token } => Some(invite_token.as_str()),
+        };
+        if self.schema != "semio.directory.command-receipt.v1"
+            || !valid_directory_command_request_id(&self.request_id)
+            || !valid_document_open_hash(&self.command_sha256)
+            || !valid_document_open_hash(&self.receipt_sha256)
+            || self.events.len() > DIRECTORY_COMMAND_RECEIPT_MAX_EVENTS
+            || token.is_some_and(|token| token.is_empty() || token.len() > DIRECTORY_COMMAND_INVITE_TOKEN_MAX_BYTES || token.chars().any(char::is_control))
+            || (self.outcome != DirectoryCommandOutcomeV1::Accepted && token.is_some())
+        {
+            return Err(DirectoryCommandErrorCodeV1::Invalid);
+        }
+        let mut previous = 0;
+        for event in &self.events {
+            if event.seq <= previous || validate_directory_event_page_event(event).is_err() {
+                return Err(DirectoryCommandErrorCodeV1::Invalid);
+            }
+            previous = event.seq;
+        }
+        if self.outcome != DirectoryCommandOutcomeV1::Accepted && !self.events.is_empty() {
+            return Err(DirectoryCommandErrorCodeV1::Invalid);
+        }
+        if !self.receipt_matches() {
+            return Err(DirectoryCommandErrorCodeV1::Invalid);
+        }
+        if crate::os_pack::json::to_json_string(self).len() > DIRECTORY_COMMAND_RECEIPT_MAX_BYTES {
+            return Err(DirectoryCommandErrorCodeV1::TooLarge);
+        }
+        Ok(())
+    }
+
+    /// 📥️ Parses exactly one canonical receipt bound to the request that asked for it.
+    pub fn parse_canonical_json(json: &str, request: &DirectoryCommandRequestV1) -> Result<Self, DirectoryCommandErrorCodeV1> {
+        if json.len() > DIRECTORY_COMMAND_RECEIPT_MAX_BYTES {
+            return Err(DirectoryCommandErrorCodeV1::TooLarge);
+        }
+        let receipt: Self = crate::os_pack::json::from_json_str(json).map_err(|_| DirectoryCommandErrorCodeV1::Invalid)?;
+        if crate::os_pack::json::to_json_string(&receipt) != json
+            || receipt.request_id != request.request_id
+            || receipt.command_sha256 != directory_command_sha256(&request.command)
+        {
+            return Err(DirectoryCommandErrorCodeV1::Invalid);
+        }
+        receipt.validate()?;
+        Ok(receipt)
+    }
+}
+//#endregion 🔖️CommandReceipt
 
 //#region 🔖️Admin
 /// 🛡️ One strict administrator intent; actor and authority fields are always server-derived.
@@ -415,6 +801,448 @@ pub struct SpaceView {
     pub updated_at_ms: i64,
 }
 
+/// 🌐️ Discoverable space metadata. Account identity, caller role, and live activity are
+/// structurally absent rather than redacted from [`SpaceView`].
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PublicSpaceViewV1 {
+    pub id: String,
+    pub name: String,
+    pub kind: DirectorySpaceKind,
+    pub visibility: DirectorySpaceVisibility,
+    pub member_count: u32,
+    pub document_count: u32,
+    pub created_at_ms: i64,
+    pub updated_at_ms: i64,
+}
+
+/// 🔐️ Membership-qualified space metadata. Its required role makes accidental use for
+/// anonymous discovery a type error.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MemberSpaceViewV1 {
+    pub id: String,
+    pub name: String,
+    pub kind: DirectorySpaceKind,
+    pub visibility: DirectorySpaceVisibility,
+    pub owner_user_id: String,
+    pub role: DirectorySpaceRole,
+    pub member_count: u32,
+    pub document_count: u32,
+    pub active_connections: u32,
+    pub created_at_ms: i64,
+    pub updated_at_ms: i64,
+}
+
+/// 📖️ Public document catalog identity. Replication frontier/currentness and bootstrap
+/// checkpoint state remain private to the authenticated D1 open authority.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PublicDocumentCatalogEntryV1 {
+    pub document_id: String,
+    pub artifact_kind: String,
+    pub artifact_schema: String,
+    pub owner: DocumentOwner,
+    pub pack_schema_hash: String,
+}
+
+/// 🔎️ One list entry with an explicit public/member/author authority discriminator.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(tag = "access", rename_all = "lowercase", rename_all_fields = "camelCase", deny_unknown_fields)]
+pub enum DirectorySpaceListEntryV1 {
+    Public { space: PublicSpaceViewV1 },
+    Member { space: MemberSpaceViewV1 },
+    Author { space: MemberSpaceViewV1 },
+}
+
+impl DirectorySpaceListEntryV1 {
+    /// 🧭️ Checks discriminator-to-role/visibility correlation after wire decoding.
+    pub fn validate(&self) -> bool {
+        match self {
+            Self::Public { space } => space.visibility == DirectorySpaceVisibility::Public,
+            Self::Member { space } => space.role == DirectorySpaceRole::Spectator,
+            Self::Author { space } => space.role == DirectorySpaceRole::Author,
+        }
+    }
+}
+
+/// 📏️ Maximum rows one administration-page window may carry.
+pub const DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS: usize = 64;
+/// 📦️ Maximum canonical response bytes of one administration page.
+pub const DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES: usize = 48 * 1024;
+/// 🔑️ Maximum UTF-8 bytes of one opaque administration cursor.
+pub const DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES: usize = 512;
+/// 🏷️ Canonical schema identifier of the bounded space administration page.
+pub const DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA: &str = "semio.directory.space-administration-page.v1";
+
+/// 🗂️ The one independently paged window a cursor may advance.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DirectorySpaceAdministrationSectionV1 {
+    Members,
+    Invites,
+    Documents,
+}
+
+impl DirectorySpaceAdministrationSectionV1 {
+    /// 🔤️ Wire spelling shared by cursor payloads and client requests.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Members => "members",
+            Self::Invites => "invites",
+            Self::Documents => "documents",
+        }
+    }
+
+    /// 🔍️ Parses exactly the three closed section names.
+    pub fn parse(value: &str) -> Option<Self> {
+        match value {
+            "members" => Some(Self::Members),
+            "invites" => Some(Self::Invites),
+            "documents" => Some(Self::Documents),
+            _ => None,
+        }
+    }
+}
+
+/// 🧑️ One administration-page member row; never carries a credential, session, or provider column.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DirectorySpaceAdministrationMemberRowV1 {
+    pub user_id: String,
+    pub email: String,
+    pub display_name: String,
+    pub role: DirectorySpaceRole,
+    pub owner: bool,
+}
+
+/// 🎟️ One administration-page invite row; never carries the selector, secret digest, or capability.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DirectorySpaceAdministrationInviteRowV1 {
+    pub invite_id: String,
+    pub role: DirectorySpaceRole,
+    pub created_at_ms: i64,
+    pub expires_at_ms: i64,
+    pub revoked: bool,
+    pub accepted: bool,
+}
+
+/// 🪟️ One bounded member window; `next_cursor` is present exactly when more rows remain.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DirectorySpaceAdministrationMemberWindowV1 {
+    pub rows: Vec<DirectorySpaceAdministrationMemberRowV1>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub next_cursor: Option<String>,
+}
+
+/// 🪟️ One bounded invite window; author-only by construction.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DirectorySpaceAdministrationInviteWindowV1 {
+    pub rows: Vec<DirectorySpaceAdministrationInviteRowV1>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub next_cursor: Option<String>,
+}
+
+/// 🪟️ One bounded membership-qualified document window.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DirectorySpaceAdministrationDocumentWindowV1 {
+    pub rows: Vec<DocumentView>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub next_cursor: Option<String>,
+}
+
+/// 🪟️ One bounded public document-catalog window.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DirectorySpaceAdministrationPublicDocumentWindowV1 {
+    pub rows: Vec<PublicDocumentCatalogEntryV1>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub next_cursor: Option<String>,
+}
+
+/// 🛂️ Server-decided administration affordances; the only authority a renderer may consult.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DirectorySpaceAdministrationCapabilitiesV1 {
+    pub rename_space: bool,
+    pub set_visibility: bool,
+    pub delete_space: bool,
+    pub upsert_member: bool,
+    pub remove_member: bool,
+    pub create_invite: bool,
+    pub revoke_invite: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, ToValue)]
+#[value(tag = "access", rename_all = "lowercase", rename_all_fields = "camelCase")]
+enum DirectorySpaceAdministrationReceiptV1 {
+    Public {
+        schema: String,
+        session_binding_sha256: String,
+        authorization_generation: u64,
+        space_id: String,
+        space: PublicSpaceViewV1,
+        documents: DirectorySpaceAdministrationPublicDocumentWindowV1,
+    },
+    Member {
+        schema: String,
+        session_binding_sha256: String,
+        authorization_generation: u64,
+        space_id: String,
+        space: MemberSpaceViewV1,
+        members: DirectorySpaceAdministrationMemberWindowV1,
+        documents: DirectorySpaceAdministrationDocumentWindowV1,
+    },
+    Author {
+        schema: String,
+        session_binding_sha256: String,
+        authorization_generation: u64,
+        space_id: String,
+        space: MemberSpaceViewV1,
+        members: DirectorySpaceAdministrationMemberWindowV1,
+        documents: DirectorySpaceAdministrationDocumentWindowV1,
+        invites: DirectorySpaceAdministrationInviteWindowV1,
+        capabilities: DirectorySpaceAdministrationCapabilitiesV1,
+    },
+}
+
+/// 🏛️ One authenticated, receipt-bound bounded administration projection of exactly one space.
+/// Only the `author` shape carries invites and capability flags; `member`/`public` omit them
+/// structurally rather than sending empty placeholders.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(tag = "access", rename_all = "lowercase", rename_all_fields = "camelCase", deny_unknown_fields)]
+pub enum DirectorySpaceAdministrationPageV1 {
+    Public {
+        schema: String,
+        session_binding_sha256: String,
+        authorization_generation: u64,
+        space_id: String,
+        space: PublicSpaceViewV1,
+        documents: DirectorySpaceAdministrationPublicDocumentWindowV1,
+        receipt_sha256: String,
+    },
+    Member {
+        schema: String,
+        session_binding_sha256: String,
+        authorization_generation: u64,
+        space_id: String,
+        space: MemberSpaceViewV1,
+        members: DirectorySpaceAdministrationMemberWindowV1,
+        documents: DirectorySpaceAdministrationDocumentWindowV1,
+        receipt_sha256: String,
+    },
+    Author {
+        schema: String,
+        session_binding_sha256: String,
+        authorization_generation: u64,
+        space_id: String,
+        space: MemberSpaceViewV1,
+        members: DirectorySpaceAdministrationMemberWindowV1,
+        documents: DirectorySpaceAdministrationDocumentWindowV1,
+        invites: DirectorySpaceAdministrationInviteWindowV1,
+        capabilities: DirectorySpaceAdministrationCapabilitiesV1,
+        receipt_sha256: String,
+    },
+}
+
+/// 🚫️ Stable bounded administration-page denial classes shared by hub and clients.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DirectorySpaceAdministrationPageErrorV1 {
+    Invalid,
+    TooLarge,
+    ReceiptMismatch,
+}
+
+fn directory_space_administration_cursor_valid(cursor: &Option<String>) -> bool {
+    match cursor {
+        None => true,
+        Some(cursor) => {
+            !cursor.is_empty()
+                && cursor.len() <= DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES
+                && cursor.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.'))
+        }
+    }
+}
+
+fn directory_space_administration_text_valid(value: &str) -> bool {
+    !value.is_empty() && value.len() <= DOCUMENT_OPEN_ID_MAX_BYTES && !value.chars().any(char::is_control)
+}
+
+fn directory_space_administration_time_valid(value: i64) -> bool {
+    value >= 0 && (value as u64) <= DOCUMENT_OPEN_MAX_SAFE_INTEGER
+}
+
+impl DirectorySpaceAdministrationPageV1 {
+    /// 🧾️ Returns the canonical UTF-8 JSON covered by `receiptSha256`.
+    pub fn canonical_unsigned_json(&self) -> String {
+        let receipt = match self {
+            Self::Public { schema, session_binding_sha256, authorization_generation, space_id, space, documents, .. } => DirectorySpaceAdministrationReceiptV1::Public {
+                schema: schema.clone(),
+                session_binding_sha256: session_binding_sha256.clone(),
+                authorization_generation: *authorization_generation,
+                space_id: space_id.clone(),
+                space: space.clone(),
+                documents: documents.clone(),
+            },
+            Self::Member { schema, session_binding_sha256, authorization_generation, space_id, space, members, documents, .. } => DirectorySpaceAdministrationReceiptV1::Member {
+                schema: schema.clone(),
+                session_binding_sha256: session_binding_sha256.clone(),
+                authorization_generation: *authorization_generation,
+                space_id: space_id.clone(),
+                space: space.clone(),
+                members: members.clone(),
+                documents: documents.clone(),
+            },
+            Self::Author { schema, session_binding_sha256, authorization_generation, space_id, space, members, documents, invites, capabilities, .. } => DirectorySpaceAdministrationReceiptV1::Author {
+                schema: schema.clone(),
+                session_binding_sha256: session_binding_sha256.clone(),
+                authorization_generation: *authorization_generation,
+                space_id: space_id.clone(),
+                space: space.clone(),
+                members: members.clone(),
+                documents: documents.clone(),
+                invites: invites.clone(),
+                capabilities: *capabilities,
+            },
+        };
+        crate::os_pack::json::to_json_string(&receipt)
+    }
+
+    /// 🔐️ Verifies the lowercase SHA-256 receipt over the declaration-ordered unsigned page.
+    pub fn receipt_matches(&self) -> bool {
+        self.receipt_sha256() == semio_framework_hash::sha256_hex(self.canonical_unsigned_json().as_bytes())
+    }
+
+    /// 🧾️ The receipt digest of whichever access shape this page carries.
+    pub fn receipt_sha256(&self) -> &str {
+        match self {
+            Self::Public { receipt_sha256, .. } | Self::Member { receipt_sha256, .. } | Self::Author { receipt_sha256, .. } => receipt_sha256,
+        }
+    }
+
+    /// 🆔️ The exact space this page projects.
+    pub fn space_id(&self) -> &str {
+        match self {
+            Self::Public { space_id, .. } | Self::Member { space_id, .. } | Self::Author { space_id, .. } => space_id,
+        }
+    }
+
+    /// 🛂️ Author capabilities, absent for every non-author shape.
+    pub fn capabilities(&self) -> Option<DirectorySpaceAdministrationCapabilitiesV1> {
+        match self {
+            Self::Author { capabilities, .. } => Some(*capabilities),
+            _ => None,
+        }
+    }
+
+    /// ✅️ Checks schema, binding, window bounds, ordering, canonical digest, and byte ceiling.
+    pub fn validate(&self) -> Result<(), DirectorySpaceAdministrationPageErrorV1> {
+        let (schema, binding, generation, space_id) = match self {
+            Self::Public { schema, session_binding_sha256, authorization_generation, space_id, .. }
+            | Self::Member { schema, session_binding_sha256, authorization_generation, space_id, .. }
+            | Self::Author { schema, session_binding_sha256, authorization_generation, space_id, .. } => (schema, session_binding_sha256, *authorization_generation, space_id),
+        };
+        let anonymous = generation == 0 && binding.bytes().all(|byte| byte == b'0');
+        let bound = generation >= 1 && generation <= DOCUMENT_OPEN_MAX_SAFE_INTEGER && !binding.bytes().all(|byte| byte == b'0');
+        if schema != DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA
+            || !valid_document_open_hash(binding)
+            || !valid_document_open_hash(self.receipt_sha256())
+            || !directory_space_administration_text_valid(space_id)
+            || !(anonymous || bound)
+            || (!matches!(self, Self::Public { .. }) && !bound)
+        {
+            return Err(DirectorySpaceAdministrationPageErrorV1::Invalid);
+        }
+        let ok = match self {
+            Self::Public { space, documents, .. } => {
+                space.id == *space_id
+                    && space.visibility == DirectorySpaceVisibility::Public
+                    && documents.rows.len() <= DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS
+                    && directory_space_administration_cursor_valid(&documents.next_cursor)
+            }
+            Self::Member { space, members, documents, .. } => {
+                space.id == *space_id
+                    && space.role == DirectorySpaceRole::Spectator
+                    && directory_space_administration_members_valid(members)
+                    && documents.rows.len() <= DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS
+                    && directory_space_administration_cursor_valid(&documents.next_cursor)
+            }
+            Self::Author { space, members, documents, invites, .. } => {
+                space.id == *space_id
+                    && space.role == DirectorySpaceRole::Author
+                    && directory_space_administration_members_valid(members)
+                    && documents.rows.len() <= DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS
+                    && directory_space_administration_cursor_valid(&documents.next_cursor)
+                    && directory_space_administration_invites_valid(invites)
+            }
+        };
+        if !ok {
+            return Err(DirectorySpaceAdministrationPageErrorV1::Invalid);
+        }
+        if !self.receipt_matches() {
+            return Err(DirectorySpaceAdministrationPageErrorV1::ReceiptMismatch);
+        }
+        if crate::os_pack::json::to_json_string(self).len() > DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES {
+            return Err(DirectorySpaceAdministrationPageErrorV1::TooLarge);
+        }
+        Ok(())
+    }
+
+    /// 📥️ Parses exactly one canonical page, rejecting whitespace, trailing bytes, and unknown fields.
+    pub fn parse_canonical_json(json: &str) -> Result<Self, DirectorySpaceAdministrationPageErrorV1> {
+        if json.len() > DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES {
+            return Err(DirectorySpaceAdministrationPageErrorV1::TooLarge);
+        }
+        let page: Self = crate::os_pack::json::from_json_str(json).map_err(|_| DirectorySpaceAdministrationPageErrorV1::Invalid)?;
+        if crate::os_pack::json::to_json_string(&page) != json {
+            return Err(DirectorySpaceAdministrationPageErrorV1::Invalid);
+        }
+        page.validate()?;
+        Ok(page)
+    }
+}
+
+fn directory_space_administration_members_valid(window: &DirectorySpaceAdministrationMemberWindowV1) -> bool {
+    if window.rows.len() > DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS || !directory_space_administration_cursor_valid(&window.next_cursor) {
+        return false;
+    }
+    let mut previous: Option<&str> = None;
+    for row in &window.rows {
+        if !directory_space_administration_text_valid(&row.user_id)
+            || row.email.chars().any(char::is_control)
+            || row.display_name.chars().any(char::is_control)
+            || row.email.len() > DOCUMENT_OPEN_ID_MAX_BYTES
+            || row.display_name.len() > DOCUMENT_OPEN_ID_MAX_BYTES
+            || previous.is_some_and(|previous| previous >= row.user_id.as_str())
+        {
+            return false;
+        }
+        previous = Some(row.user_id.as_str());
+    }
+    true
+}
+
+fn directory_space_administration_invites_valid(window: &DirectorySpaceAdministrationInviteWindowV1) -> bool {
+    if window.rows.len() > DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS || !directory_space_administration_cursor_valid(&window.next_cursor) {
+        return false;
+    }
+    let mut previous: Option<(i64, &str)> = None;
+    for row in &window.rows {
+        if !directory_space_administration_text_valid(&row.invite_id)
+            || !directory_space_administration_time_valid(row.created_at_ms)
+            || !directory_space_administration_time_valid(row.expires_at_ms)
+            || previous.is_some_and(|previous| previous <= (row.created_at_ms, row.invite_id.as_str()))
+        {
+            return false;
+        }
+        previous = Some((row.created_at_ms, row.invite_id.as_str()));
+    }
+    true
+}
+
 /// 🧑️ One space member, display-ready (`email`/`display_name` joined from the user directory).
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
@@ -455,7 +1283,7 @@ pub struct ConnectionView {
 
 /// 📦️ Immutable identity of the plugin package that owns a document codec.
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DocumentOwner {
     pub plugin_id: String,
     pub package_id: String,
@@ -553,6 +1381,15 @@ pub struct DocumentOpenArtifactV1 {
     pub pack_schema_hash: String,
 }
 
+/// 🧭️ Complete parent dialect selected from the verified application declaration.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentOpenParentDialectV1 {
+    pub artifact_kind: String,
+    pub standard: String,
+    pub subset: String,
+}
+
 /// 🪟️ One server-selected declared surface.
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -608,6 +1445,7 @@ pub struct DocumentOpenPlanV1 {
     pub catalog: DocumentOpenCatalogV1,
     pub package: DocumentOpenPackageV1,
     pub artifact: DocumentOpenArtifactV1,
+    pub parent_dialect: DocumentOpenParentDialectV1,
     pub surface: DocumentOpenSurfaceV1,
     pub grant: DocumentOpenGrantV1,
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -709,6 +1547,10 @@ impl DocumentOpenPlanV1 {
             || self.expires_at_unix_ms <= now_ms
             || self.expires_at_unix_ms.checked_sub(now_ms).is_none_or(|ttl| ttl > DOCUMENT_OPEN_PLAN_MAX_TTL_MS)
             || ids.iter().any(|value| !valid_document_open_text(value, DOCUMENT_OPEN_ID_MAX_BYTES))
+            || self.parent_dialect.artifact_kind != self.artifact.kind
+            || [&self.parent_dialect.artifact_kind, &self.parent_dialect.standard, &self.parent_dialect.subset]
+                .into_iter()
+                .any(|value| !valid_document_open_text(value, DOCUMENT_OPEN_ID_MAX_BYTES) || value.trim() != value.as_str())
             || !valid_document_open_hash(&self.descriptor_digest_v1)
             || !valid_document_open_hash(&self.catalog.generation_id)
             || !valid_document_open_hash(&self.package.component_sha256)
@@ -760,6 +1602,193 @@ impl DocumentPlanSocketGrantIntentV1 {
         Ok(())
     }
 }
+
+//#region 🪪️ExecutionTargetLease
+/// 🧯️ Exact maximum accepted bytes for one verified execution-target component.
+pub const DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES: u64 = 64 * 1024 * 1024;
+/// 🧯️ Exact maximum accepted bytes for one verified raw package descriptor.
+pub const DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES: u64 = 4 * 1024 * 1024;
+
+/// 🧱️ Exact byte identity of one verified component, bound to the package projection.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentExecutionTargetComponentV1 {
+    pub sha256: String,
+    pub blake3: String,
+    pub byte_length: u64,
+}
+
+/// 📜️ Exact byte identity of one verified raw package descriptor.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentExecutionTargetDescriptorV1 {
+    pub sha256: String,
+    pub byte_length: u64,
+}
+
+/// 🪪️ Receipt-free public fields of one document execution-target lease. It never carries a plan
+/// receipt, socket grant, session token, hub origin, local path or module URL.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentExecutionTargetLeaseFieldsV1 {
+    pub schema: String,
+    pub version: u32,
+    pub scope: DocumentScope,
+    pub descriptor_digest_v1: String,
+    pub catalog: DocumentOpenCatalogV1,
+    pub package: DocumentOpenPackageV1,
+    pub component: DocumentExecutionTargetComponentV1,
+    pub descriptor: DocumentExecutionTargetDescriptorV1,
+    pub artifact: DocumentOpenArtifactV1,
+    pub parent_dialect: DocumentOpenParentDialectV1,
+    pub surface: DocumentOpenSurfaceV1,
+    pub grant: DocumentOpenGrantV1,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub checkpoint: Option<DocumentOpenCheckpointV1>,
+    pub revalidation: DocumentOpenRevalidationV1,
+}
+
+impl DocumentExecutionTargetLeaseFieldsV1 {
+    /// ✅ Validates every identity, byte and grant invariant of one receipt-free lease projection.
+    pub fn validate(&self) -> Result<(), DocumentOpenPlanErrorCodeV1> {
+        let ids = [
+            self.scope.space_id.as_str(),
+            self.scope.document_id.as_str(),
+            self.package.plugin_id.as_str(),
+            self.package.package_id.as_str(),
+            self.package.version.as_str(),
+            self.artifact.kind.as_str(),
+            self.artifact.schema.as_str(),
+            self.surface.surface_id.as_str(),
+            self.surface.app_id.as_str(),
+            self.surface.window_kind_id.as_str(),
+        ];
+        if self.schema != "semio.os.document-execution-target-lease/v1"
+            || self.version != 1
+            || ids.iter().any(|value| !valid_document_open_text(value, DOCUMENT_OPEN_ID_MAX_BYTES))
+            || self.parent_dialect.artifact_kind != self.artifact.kind
+            || [&self.parent_dialect.artifact_kind, &self.parent_dialect.standard, &self.parent_dialect.subset]
+                .into_iter()
+                .any(|value| !valid_document_open_text(value, DOCUMENT_OPEN_ID_MAX_BYTES) || value.trim() != value.as_str())
+            || !valid_document_open_hash(&self.descriptor_digest_v1)
+            || !valid_document_open_hash(&self.catalog.generation_id)
+            || !valid_document_open_hash(&self.package.component_sha256)
+            || !valid_document_open_hash(&self.package.component_blake3)
+            || !valid_document_open_hash(&self.package.descriptor_byte_sha256)
+            || !valid_document_open_hash(&self.artifact.pack_schema_hash)
+            || !valid_document_open_hash(&self.component.sha256)
+            || !valid_document_open_hash(&self.component.blake3)
+            || !valid_document_open_hash(&self.descriptor.sha256)
+            || self.component.sha256 != self.package.component_sha256
+            || self.component.blake3 != self.package.component_blake3
+            || self.descriptor.sha256 != self.package.descriptor_byte_sha256
+            || self.component.byte_length == 0
+            || self.component.byte_length > DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES
+            || self.descriptor.byte_length == 0
+            || self.descriptor.byte_length > DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES
+            || !self.grant.read
+            || !self.grant.observe
+            || self.grant.write != matches!(self.surface.role, DocumentOpenSurfaceRoleV1::Editor)
+            || self.revalidation.directory_revision == 0
+            || self.revalidation.directory_revision > DOCUMENT_OPEN_MAX_SAFE_INTEGER
+            || self.revalidation.membership_generation == 0
+            || self.revalidation.membership_generation > DOCUMENT_OPEN_MAX_SAFE_INTEGER
+            || (self.revalidation.session_generation.is_some() == self.revalidation.share_generation.is_some())
+            || self.revalidation.session_generation == Some(0)
+            || self.revalidation.session_generation.is_some_and(|generation| generation > DOCUMENT_OPEN_MAX_SAFE_INTEGER)
+            || self.revalidation.share_generation == Some(0)
+            || self.revalidation.share_generation.is_some_and(|generation| generation > DOCUMENT_OPEN_MAX_SAFE_INTEGER)
+        {
+            return Err(DocumentOpenPlanErrorCodeV1::Denied);
+        }
+        if let Some(checkpoint) = &self.checkpoint {
+            if !valid_document_open_hash(&checkpoint.checkpoint_id)
+                || checkpoint.descriptor_digest_v1 != self.descriptor_digest_v1
+                || !valid_document_open_hash(&checkpoint.aggregate_sha256)
+                || checkpoint.baseline_frontier.document_id != self.scope.document_id
+                || checkpoint.baseline_frontier.head_edit_ordinal < checkpoint.baseline_frontier.last_commit_seq
+                || checkpoint.baseline_frontier.chain_hash.0 == [0; 32]
+            {
+                return Err(DocumentOpenPlanErrorCodeV1::Denied);
+            }
+        }
+        Ok(())
+    }
+}
+
+/// 🧾 Projects one plan into receipt-free lease fields. The plan constrains every identity but no
+/// byte length, so both lengths come from the installation under comparison and are independently
+/// enforced against the exact verified bytes before a lease exists.
+pub fn lease_fields_from_plan_v1(plan: &DocumentOpenPlanV1, component_byte_length: u64, descriptor_byte_length: u64) -> DocumentExecutionTargetLeaseFieldsV1 {
+    DocumentExecutionTargetLeaseFieldsV1 {
+        schema: "semio.os.document-execution-target-lease/v1".to_string(),
+        version: 1,
+        scope: plan.scope.clone(),
+        descriptor_digest_v1: plan.descriptor_digest_v1.clone(),
+        catalog: plan.catalog.clone(),
+        package: plan.package.clone(),
+        component: DocumentExecutionTargetComponentV1 { sha256: plan.package.component_sha256.clone(), blake3: plan.package.component_blake3.clone(), byte_length: component_byte_length },
+        descriptor: DocumentExecutionTargetDescriptorV1 { sha256: plan.package.descriptor_byte_sha256.clone(), byte_length: descriptor_byte_length },
+        artifact: plan.artifact.clone(),
+        parent_dialect: plan.parent_dialect.clone(),
+        surface: plan.surface.clone(),
+        grant: plan.grant,
+        checkpoint: plan.checkpoint.clone(),
+        revalidation: plan.revalidation,
+    }
+}
+
+/// ⚖️ The one shared full-field lease relation. No transport is permitted a subset comparison.
+pub fn same_lease_fields_v1(left: &DocumentExecutionTargetLeaseFieldsV1, right: &DocumentExecutionTargetLeaseFieldsV1) -> bool {
+    left == right
+}
+
+/// 🌐 Complete localized execution-target status vocabulary, free of origin, path, receipt, grant,
+/// digest and user identity.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "kebab-case")]
+pub enum DocumentExecutionTargetStatusCodeV1 {
+    Verifying,
+    IntegrityFailed,
+    Stale,
+    Cancelled,
+    RendererUnavailable,
+}
+
+impl DocumentExecutionTargetStatusCodeV1 {
+    /// 🗣️ Explicit English and German text; there is no default language.
+    pub const fn text(self, locale: DocumentExecutionTargetLocaleV1) -> &'static str {
+        match (self, locale) {
+            (Self::Verifying, DocumentExecutionTargetLocaleV1::En) => "Verifying document component…",
+            (Self::Verifying, DocumentExecutionTargetLocaleV1::De) => "Dokumentkomponente wird überprüft…",
+            (Self::IntegrityFailed, DocumentExecutionTargetLocaleV1::En) => "The document component could not be verified. Reopen the document.",
+            (Self::IntegrityFailed, DocumentExecutionTargetLocaleV1::De) => "Die Dokumentkomponente konnte nicht verifiziert werden. Öffnen Sie das Dokument erneut.",
+            (Self::Stale, DocumentExecutionTargetLocaleV1::En) => "The document target changed. Reopen the document.",
+            (Self::Stale, DocumentExecutionTargetLocaleV1::De) => "Das Dokumentziel wurde geändert. Öffnen Sie das Dokument erneut.",
+            (Self::Cancelled, DocumentExecutionTargetLocaleV1::En) => "Opening the document was cancelled.",
+            (Self::Cancelled, DocumentExecutionTargetLocaleV1::De) => "Das Öffnen des Dokuments wurde abgebrochen.",
+            (Self::RendererUnavailable, DocumentExecutionTargetLocaleV1::En) => "The verified document component is ready, but this renderer is unavailable.",
+            (Self::RendererUnavailable, DocumentExecutionTargetLocaleV1::De) => "Die überprüfte Dokumentkomponente ist bereit, aber dieser Renderer ist nicht verfügbar.",
+        }
+    }
+
+    /// 🔊 Progress announces; every terminal outcome asserts.
+    pub const fn aria_role(self) -> &'static str {
+        match self {
+            Self::Verifying => "status",
+            _ => "alert",
+        }
+    }
+}
+
+/// 🌍 Explicit UI language for one execution-target status; callers must choose one.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "lowercase")]
+pub enum DocumentExecutionTargetLocaleV1 {
+    En,
+    De,
+}
+//#endregion 🪪️ExecutionTargetLease
 
 /// 🚨️ Descriptor values that cannot participate in canonical authority hashing.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -1023,6 +2052,64 @@ pub enum DirectoryStreamMessage {
 mod tests {
     use super::*;
 
+    #[derive(FromValue)]
+    #[value(rename_all = "camelCase")]
+    struct DirectoryEventPageFixture {
+        valid: DirectoryEventPageV1,
+        canonical_unsigned: String,
+        expected_receipt_sha256: String,
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn directory_event_page_v1_matches_language_neutral_receipt_and_rejects_hostiles() {
+        let fixture: DirectoryEventPageFixture = crate::os_pack::json::from_json_str(include_str!("../../../🧫️fixtures/📇️directory/📃️event-page-v1.json")).expect("event-page fixture decodes");
+        assert_eq!(fixture.valid.canonical_unsigned_json(), fixture.canonical_unsigned);
+        assert_eq!(semio_framework_hash::sha256_hex(fixture.canonical_unsigned.as_bytes()), fixture.expected_receipt_sha256);
+        assert_eq!(fixture.valid.validate(), Ok(()));
+        let canonical = crate::os_pack::json::to_json_string(&fixture.valid);
+        assert_eq!(DirectoryEventPageV1::parse_canonical_json(&canonical), Ok(fixture.valid.clone()));
+
+        let mut hostile = fixture.valid.clone();
+        hostile.session_binding_sha256.make_ascii_uppercase();
+        assert_eq!(hostile.validate(), Err(DirectoryEventPageErrorV1::Invalid));
+        hostile = fixture.valid.clone();
+        hostile.authorization_generation = DOCUMENT_OPEN_MAX_SAFE_INTEGER + 1;
+        assert_eq!(hostile.validate(), Err(DirectoryEventPageErrorV1::Invalid));
+        hostile = fixture.valid.clone();
+        hostile.after_seq_exclusive = hostile.events[0].seq;
+        assert_eq!(hostile.validate(), Err(DirectoryEventPageErrorV1::Invalid));
+        hostile = fixture.valid.clone();
+        hostile.events[0].seq = hostile.after_seq_exclusive;
+        assert_eq!(hostile.validate(), Err(DirectoryEventPageErrorV1::Invalid));
+        hostile = fixture.valid.clone();
+        hostile.receipt_sha256 = "b".repeat(64);
+        assert_eq!(hostile.validate(), Err(DirectoryEventPageErrorV1::ReceiptMismatch));
+        hostile = fixture.valid.clone();
+        if let DirectoryEventBody::SpaceRenamed { name, .. } = &mut hostile.events[0].body {
+            name.push('\u{1}');
+        }
+        assert_eq!(hostile.validate(), Err(DirectoryEventPageErrorV1::Invalid));
+
+        let mut boundary = fixture.valid.events[0].clone();
+        if let DirectoryEventBody::SpaceRenamed { name, .. } = &mut boundary.body {
+            name.clear();
+        }
+        let base = crate::os_pack::json::to_json_string(&boundary).len();
+        if let DirectoryEventBody::SpaceRenamed { name, .. } = &mut boundary.body {
+            *name = "x".repeat(DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES - base);
+        }
+        assert_eq!(crate::os_pack::json::to_json_string(&boundary).len(), DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES);
+        assert_eq!(validate_directory_event_page_event(&boundary), Ok(()));
+        if let DirectoryEventBody::SpaceRenamed { name, .. } = &mut boundary.body {
+            name.push('x');
+        }
+        assert_eq!(validate_directory_event_page_event(&boundary), Err(DirectoryEventPageErrorV1::Invalid));
+
+        assert_eq!(DirectoryEventPageV1::parse_canonical_json(&format!("{canonical} ")), Err(DirectoryEventPageErrorV1::Invalid));
+        assert_eq!(DirectoryEventPageV1::parse_canonical_json(&canonical.replacen("{\"schema\":", "{\"schema\":\"duplicate\",\"schema\":", 1)), Err(DirectoryEventPageErrorV1::Invalid));
+        assert_eq!(DirectoryEventPageV1::parse_canonical_json(&canonical.replacen("{\"schema\":", "{\"unexpected\":true,\"schema\":", 1)), Err(DirectoryEventPageErrorV1::Invalid));
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn event_body_kind_is_the_dotted_wire_string() {
         let body = DirectoryEventBody::SpaceCreated { space_id: "sp-1".into(), name: "Studio".into(), space_kind: DirectorySpaceKind::Studio, visibility: DirectorySpaceVisibility::Private, owner_user_id: "u-1".into() };
@@ -1074,7 +2161,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn document_descriptor_matches_the_language_neutral_fixture() {
-        let fixture: DescriptorFixture = crate::os_pack::json::from_json_str(include_str!("../../../🧫️fixtures/📇️directory/📄️document-descriptor.json")).expect("descriptor fixture decodes");
+        let fixture: DescriptorFixture = crate::os_pack::json::from_json_str(include_str!("../../../🧫️fixtures/📇️directory/🪪️document-descriptor.json")).expect("descriptor fixture decodes");
         assert_eq!(crate::os_pack::json::to_json_string(&fixture.valid), fixture.canonical);
     }
 
@@ -1088,7 +2175,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn document_descriptor_digest_v1_matches_the_language_neutral_binary_vector() {
-        let fixture: ArtifactAuthorityFixture = crate::os_pack::json::from_json_str(include_str!("../../../🧫️fixtures/📇️directory/📄️artifact-authority.json")).expect("artifact authority fixture decodes");
+        let fixture: ArtifactAuthorityFixture = crate::os_pack::json::from_json_str(include_str!("../../../🧫️fixtures/📇️directory/🛡️artifact-authority.json")).expect("artifact authority fixture decodes");
         assert_eq!(hex_lower(&descriptor_digest_encoding_v1(&fixture.descriptor).expect("descriptor encodes")), fixture.descriptor_encoding_hex);
         assert_eq!(descriptor_digest_v1(&fixture.descriptor).expect("descriptor hashes"), fixture.descriptor_digest_v1);
     }
@@ -1106,10 +2193,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn document_open_plan_v1_matches_language_neutral_fixture() {
-        let fixture: DocumentOpenPlanFixture = crate::os_pack::json::from_json_str(include_str!("../../../🧫️fixtures/📇️directory/📄️document-open-plan-v1.json")).expect("document open plan fixture decodes");
+        let fixture: DocumentOpenPlanFixture = crate::os_pack::json::from_json_str(include_str!("../../../🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("document open plan fixture decodes");
         assert_eq!(hex_lower(&descriptor_digest_v1(&fixture.descriptor).expect("descriptor hashes").0), fixture.descriptor_digest_v1);
         assert_eq!(fixture.intent.validate(), Ok(()));
         assert_eq!(fixture.valid_plan.validate(fixture.now_ms), Ok(()));
+        assert_eq!(fixture.valid_plan.parent_dialect.artifact_kind, fixture.valid_plan.artifact.kind);
         assert_eq!(fixture.exchange_intent.validate(), Ok(()));
 
         let mut overlong = fixture.valid_plan.clone();
@@ -1127,6 +2215,19 @@ mod tests {
         let mut unicode_control = fixture.valid_plan.clone();
         unicode_control.surface.app_id = "app.\u{85}hidden".into();
         assert_eq!(unicode_control.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
+        let mut parent_kind = fixture.valid_plan.clone();
+        parent_kind.parent_dialect.artifact_kind = "s.foreign.document".into();
+        assert_eq!(parent_kind.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
+        let mut parent_control = fixture.valid_plan.clone();
+        parent_control.parent_dialect.standard.push('\u{85}');
+        assert_eq!(parent_control.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
+        let mut parent_trim = fixture.valid_plan.clone();
+        parent_trim.parent_dialect.subset = " * ".into();
+        assert_eq!(parent_trim.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
+        let mut parent_kind_trim = fixture.valid_plan.clone();
+        parent_kind_trim.artifact.kind = " s.gis:gismap ".into();
+        parent_kind_trim.parent_dialect.artifact_kind = parent_kind_trim.artifact.kind.clone();
+        assert_eq!(parent_kind_trim.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
         let mut noncanonical_receipt = fixture.valid_plan.clone();
         noncanonical_receipt.receipt = "open.v1.AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyB".into();
         assert_eq!(noncanonical_receipt.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));

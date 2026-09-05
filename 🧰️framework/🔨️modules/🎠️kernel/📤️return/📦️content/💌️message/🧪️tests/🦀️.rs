@@ -2,7 +2,7 @@
 use super::return_message::ReturnMessageCursor;
 use super::{Effect, MessageEndpoint, PluginInstanceId};
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap() }
 fn unhex(value: &str) -> Vec<u8> { (0..value.len()).step_by(2).map(|offset| u8::from_str_radix(&value[offset..offset + 2], 16).unwrap()).collect() }
 fn endpoint(value: &serde_json::Value) -> MessageEndpoint {
     match value["kind"].as_str().unwrap() {
@@ -41,7 +41,7 @@ fn return_content_message_all_endpoints_match_independent_bytes_without_payload_
         let effect = Effect::SendMessage { target: endpoint(&row["endpoint"]), payload: unhex(fixture["payloadHex"].as_str().unwrap()) };
         for grant in [1, 64, 4096] { assert_eq!(encode(&effect, grant), unhex(row["recordHex"].as_str().unwrap())); }
     }
-    let common: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixture/🔣️.json")).unwrap();
+    let common: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap();
     let effect = Effect::SendMessage { target: MessageEndpoint::Shell { instance: PluginInstanceId("7".into()) }, payload: unhex(common["invocation"]["appFrameHex"].as_str().unwrap()) };
     assert_eq!(encode(&effect, 1), unhex(common["invocation"]["effectRecordHex"].as_str().unwrap()));
 }

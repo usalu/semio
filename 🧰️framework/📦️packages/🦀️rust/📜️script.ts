@@ -28,6 +28,13 @@ class TestScript extends BundleScript {
   }
 }
 
+class CoreModulesTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { rest } = resolveTestLevel(segments);
+    await runCargoTestBudgeted(["semio-framework-hash", "semio-framework-pixels", "semio-framework-intrinsic-size", "semio-framework-mesh-engine"], this.repoRoot, rest.length ? rest : ["--lib"]);
+  }
+}
+
 class PackageDescriptorValueCodecTestScript extends BundleScript {
   run(): void {
     const status = runCmdStatus("cargo", ["test", "-p", "semio-framework", "--lib", "manifest::package_descriptor_value_codec_tests::package_descriptor_first_party_codec_preserves_serde_wire_and_required_fields", "--", "--exact"], {
@@ -49,7 +56,7 @@ class LintScript extends BundleScript {
 const TYPEGEN_TEST_FILTER = "exports_typescript_bindings";
 
 function generatedManifestPath(root: string): string {
-  return join(root, "..", "..", "🔨️modules", "🛂️manifest", "🤖️generated", "🟦️manifest.ts");
+  return join(root, "..", "..", "🔨️modules", "🛂️manifest", "🤖️generated", "🪪️manifest.ts");
 }
 
 /** 🧬️ Runs the owned framework schema export test, optionally writing its stable projection. */
@@ -103,6 +110,6 @@ class CheckScript extends BundleScript {
 }
 //#endregion 🔖️Typegen
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-core-modules", CoreModulesTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

@@ -5,7 +5,7 @@
   "displayName": "Change L Cr Mm",
   "emoji": "🦔",
   "aggregateVariant": "ChangeLCrMm",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

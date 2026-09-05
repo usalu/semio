@@ -1,4 +1,0 @@
-# Direct set-info-author GraphQL payload.
-input SetInfoAuthorMutationInput {
-  author: String!
-}

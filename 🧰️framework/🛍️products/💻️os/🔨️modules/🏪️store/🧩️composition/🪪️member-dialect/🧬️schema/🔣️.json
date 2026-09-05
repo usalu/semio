@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Closed Member Dialect Admission Fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contractId", "bindings", "cases", "identityCases", "graphCases", "projectionSlots", "projectionCases", "publicRestoreCases"],
+  "properties": {
+    "contractId": { "const": "semio.member-dialect-admission/v1" },
+    "bindings": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/binding" } },
+    "cases": { "type": "array", "minItems": 12, "items": { "$ref": "#/$defs/case" } },
+    "identityCases": { "type": "array", "minItems": 9, "items": { "$ref": "#/$defs/identityCase" } },
+    "graphCases": { "type": "array", "minItems": 7, "items": { "$ref": "#/$defs/graphCase" } },
+    "projectionSlots": { "type": "array", "items": { "$ref": "#/$defs/slot" } },
+    "publicRestoreCases": { "type": "array", "minItems": 4, "items": { "$ref": "#/$defs/publicRestoreCase" } },
+    "projectionCases": { "type": "array", "minItems": 12, "items": { "$ref": "#/$defs/projectionCase" } }
+  },
+  "$defs": {
+    "publicRestoreCase": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "parentHasChild", "slot", "childId", "accepted"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 }, "parentHasChild": { "type": "boolean" },
+        "slot": { "type": "string", "minLength": 1 }, "childId": { "type": "string", "minLength": 1 }, "accepted": { "type": "boolean" }
+      }
+    },
+    "slot": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "kind", "many"],
+      "properties": { "name": { "type": "string" }, "kind": { "type": "string" }, "many": { "type": "boolean" } }
+    },
+    "projectedRef": {
+      "type": "object", "additionalProperties": false,
+      "required": ["slot", "childId", "artifactId", "artifactKind", "standard", "subset"],
+      "properties": {
+        "slot": { "type": "string" }, "childId": { "type": "string" }, "artifactId": { "type": "string" },
+        "artifactKind": { "type": "string" }, "standard": { "type": "string" }, "subset": { "type": "string" }
+      }
+    },
+    "projectionCase": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "parent", "incoming", "projected", "accepted"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 }, "projected": { "type": "boolean" }, "accepted": { "type": "boolean" },
+        "parent": { "type": "array", "items": { "$ref": "#/$defs/projectedRef" } },
+        "incoming": { "type": "array", "items": { "$ref": "#/$defs/projectedRef" } }
+      }
+    },
+    "edge": {
+      "type": "object", "additionalProperties": false,
+      "required": ["parent", "slot", "child"],
+      "properties": { "parent": { "type": "string", "minLength": 1 }, "slot": { "type": "string", "minLength": 1 }, "child": { "type": "string", "minLength": 1 } }
+    },
+    "graphCase": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "edges", "candidate", "accepted", "inserted", "syncAccepted"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 }, "edges": { "type": "array", "items": { "$ref": "#/$defs/edge" } },
+        "candidate": { "$ref": "#/$defs/edge" }, "accepted": { "type": "boolean" }, "inserted": { "type": "boolean" }, "syncAccepted": { "type": "boolean" }
+      }
+    },
+    "owner": {
+      "type": "object", "additionalProperties": false,
+      "required": ["parentId", "parentDialect", "slot", "childId"],
+      "properties": {
+        "parentId": { "type": "string" }, "parentDialect": { "type": "string" },
+        "slot": { "type": "string" }, "childId": { "type": "string" }
+      }
+    },
+    "identityCase": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "expectedOwned", "persistedId", "persistedOwner", "accepted"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 }, "expectedOwned": { "type": "boolean" },
+        "persistedId": { "type": "string" }, "accepted": { "type": "boolean" },
+        "persistedOwner": { "anyOf": [{ "$ref": "#/$defs/owner" }, { "type": "null" }] }
+      }
+    },
+    "dialect": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifactKind", "standard", "subset"],
+      "properties": {
+        "artifactKind": { "type": "string", "minLength": 1 },
+        "standard": { "type": "string", "minLength": 1 },
+        "subset": { "type": "string", "minLength": 1 }
+      }
+    },
+    "binding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["variant", "schema", "dialect"],
+      "properties": {
+        "variant": { "type": "string", "minLength": 1 },
+        "schema": { "type": "string", "minLength": 1 },
+        "dialect": { "$ref": "#/$defs/dialect" }
+      }
+    },
+    "persisted": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema", "dialect"],
+      "properties": {
+        "schema": { "type": "string" },
+        "dialect": { "anyOf": [{ "$ref": "#/$defs/dialect" }, { "type": "null" }] }
+      }
+    },
+    "case": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "operation", "requested", "accepted", "variant"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "operation": { "enum": ["create", "open"] },
+        "requested": { "$ref": "#/$defs/dialect" },
+        "persisted": { "$ref": "#/$defs/persisted" },
+        "accepted": { "type": "boolean" },
+        "variant": { "type": ["string", "null"] }
+      },
+      "allOf": [
+        { "if": { "properties": { "operation": { "const": "open" } }, "required": ["operation"] }, "then": { "properties": { "persisted": {} }, "required": ["persisted"] }, "else": { "not": { "properties": { "persisted": {} }, "required": ["persisted"] } } },
+        { "if": { "properties": { "accepted": { "const": true } }, "required": ["accepted"] }, "then": { "properties": { "variant": { "type": "string", "minLength": 1 } } }, "else": { "properties": { "variant": { "type": "null" } } } }
+      ]
+    }
+  }
+}

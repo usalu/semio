@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "id": "s.stdio.gltf.mutation.bind-node-child.v1",
+  "languageParity": ["rust", "typescript"],
+  "vectors": [{
+    "name": "insert-child-at-explicit-position",
+    "base": {"schema":"s.stdio.gltf","document":{"asset":{"version":"2.0"},"scenes":[{"nodes":[0]}],"nodes":[{"children":[],"weights":[]},{"children":[],"weights":[]},{"children":[],"weights":[]}]},"buffers":[],"sourceForm":"json"},
+    "mutation": {"parent":0,"child":1,"position":0},
+    "diff": {"parent":0,"child":1,"position":0,"touchedPaths":["document/nodes/0/children/0"]},
+    "inverse": {"parent":0,"child":1,"position":0,"expectedChildren":[1],"touchedPaths":["document/nodes/0/children/0"]},
+    "after": {"schema":"s.stdio.gltf","document":{"asset":{"version":"2.0"},"scenes":[{"nodes":[0]}],"nodes":[{"children":[1],"weights":[]},{"children":[],"weights":[]},{"children":[],"weights":[]}]},"buffers":[],"sourceForm":"json"},
+    "staleDiff": {"schema":"s.stdio.gltf","document":{"asset":{"version":"2.0"},"scenes":[{"nodes":[0]}],"nodes":[{"children":[1],"weights":[]},{"children":[],"weights":[]},{"children":[],"weights":[]}]},"buffers":[],"sourceForm":"json"},
+    "staleInverse": {"schema":"s.stdio.gltf","document":{"asset":{"version":"2.0"},"scenes":[{"nodes":[0]}],"nodes":[{"children":[1,2],"weights":[]},{"children":[],"weights":[]},{"children":[],"weights":[]}]},"buffers":[],"sourceForm":"json"},
+    "rejected": {"index":{"parent":3,"child":1,"position":0},"reference":{"parent":0,"child":3,"position":0}},
+    "wire": {"malformedPayload":"{","mutation":"{\"parent\":0,\"child\":1,\"position\":0}","diff":"{\"parent\":0,\"child\":1,\"position\":0,\"touchedPaths\":[\"document/nodes/0/children/0\"]}","inverse":"{\"parent\":0,\"child\":1,\"position\":0,\"expectedChildren\":[1],\"touchedPaths\":[\"document/nodes/0/children/0\"]}"},
+    "staleRejection": {"code":"gltf.mutation.stale-diff","path":"document/nodes/0/children/0"}
+  }]
+}

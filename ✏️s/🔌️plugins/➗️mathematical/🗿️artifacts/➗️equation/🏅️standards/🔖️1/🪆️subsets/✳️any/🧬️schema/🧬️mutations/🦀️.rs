@@ -468,10 +468,10 @@ mod kinds_conformance {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
         let manifests = [
-            include_str!("../../🧪️oracle/🔣️.json"),
-            include_str!("../../../✳️graph/🧪️oracle/🔣️.json"),
-            include_str!("../../../✳️geometry/🧪️oracle/🔣️.json"),
-            include_str!("../../../✳️equation/🧪️oracle/🔣️.json"),
+            include_str!("../../🔮️oracle/🔣️.json"),
+            include_str!("../../../🕸️graph/🧪️oracle/🔣️.json"),
+            include_str!("../../../📐️geometry/🧪️oracle/🔣️.json"),
+            include_str!("../../../➗️equation/🧪️oracle/🔣️.json"),
         ];
         for kind in KINDS {
             let needle = format!("\"{kind}\"");

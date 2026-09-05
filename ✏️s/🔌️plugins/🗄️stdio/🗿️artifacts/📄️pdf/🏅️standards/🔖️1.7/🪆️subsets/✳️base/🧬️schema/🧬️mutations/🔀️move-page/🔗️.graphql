@@ -1,5 +1,0 @@
-# 🔀️ Direct move-page GraphQL payload.
-input MovePageMutationInput {
-  from: Int
-  to: Int
-}

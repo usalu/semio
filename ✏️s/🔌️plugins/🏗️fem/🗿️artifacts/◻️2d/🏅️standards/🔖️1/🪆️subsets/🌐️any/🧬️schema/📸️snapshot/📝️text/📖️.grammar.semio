@@ -1,0 +1,9 @@
+dialect grammar
+grammar 2d.snapshot
+extension 2d
+start document
+
+document = header body
+header = "schema" SP "fem.fem2d.snapshot" NL
+body = payload NL?
+payload = OCTET+

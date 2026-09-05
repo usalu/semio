@@ -3,9 +3,9 @@
   "$id": "https://semio.tech/schema/s/sourcing/curation/mutation.json",
   "title": "SourcingMutation",
   "oneOf": [
-    {"$ref": "./🌱create-curated-item/🔣️.schema.json"},
-    {"$ref": "./🗑️delete-curated-item/🔣️.schema.json"},
-    {"$ref": "./🔢change-curated-item-count/🔣️.schema.json"}
+    {"$ref": "./🌱create-curated-item/🧬️.schema.json"},
+    {"$ref": "./🗑️delete-curated-item/🧬️.schema.json"},
+    {"$ref": "./🔢change-curated-item-count/🧬️.schema.json"}
   ],
   "x-semio-mutationKinds": ["create-curated-item", "delete-curated-item", "change-curated-item-count"]
 }

@@ -557,6 +557,7 @@ impl DrawingRetainedCommandDecoder {
 
 struct DrawingGestureOperationJob {
     payload: Option<DrawingGestureOperationPayload>,
+    pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<semio_framework_plugin::EditorApp<DrawingPlayApp>>>,
     raw_input: Option<semio_framework::action_bus::RetainedToolWireInput>,
     raw_page_cursor: usize,
     raw_byte_cursor: usize,
@@ -599,6 +600,9 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
             context.consume_fuel(1);
             return semio_framework_job::StepOutcome::Yield;
         }
+        if self.pending_completion_rejection.is_some() {
+            return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
+        }
         if !self.completed {
             let Some(payload) = self.payload.as_ref() else { return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }) };
             let key = semio_framework_job::FixedOperationKey::new(semio_framework_job::OperationId(payload.operation_context.operation_id), semio_framework_job::Generation(payload.operation_context.generation));
@@ -613,7 +617,8 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
                 }
                 Err(error) => Err(error),
             };
-            if payload.completion.complete(emit, semio_framework_plugin::EphemeralEmit::default()).is_err() {
+            if let Err(rejected) = payload.completion.complete(emit, semio_framework_plugin::EphemeralEmit::default()) {
+                self.pending_completion_rejection = Some(rejected);
                 return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
             }
             self.completed = true;
@@ -633,7 +638,26 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.closing || maximum_items == 0 {
+        if !self.closing {
+            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+        }
+        if let Some(rejected) = self.pending_completion_rejection.as_mut() {
+            if let Ok(emit) = rejected.emit.as_mut() {
+                if let Some(step) = emit.close_child_one(maximum_items, maximum_bytes) {
+                    return match step {
+                        semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                        semio_framework_plugin::PluginCloseStep::Blocked { .. } | semio_framework_plugin::PluginCloseStep::AwaitingInput { .. } => semio_framework_job::InteractiveJobCloseStep::Blocked,
+                        semio_framework_plugin::PluginCloseStep::Complete => unreachable!("child close helper consumes completed children"),
+                    };
+                }
+            }
+            if maximum_items == 0 {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.pending_completion_rejection = None;
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if maximum_items == 0 {
             return semio_framework_job::InteractiveJobCloseStep::Blocked;
         }
         if let Some(input) = self.raw_input.as_mut() {
@@ -656,7 +680,7 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.payload.is_none() && self.raw_input.is_none() && self.decoder.is_none()
+        self.closing && self.pending_completion_rejection.is_none() && self.payload.is_none() && self.raw_input.is_none() && self.decoder.is_none()
     }
 }
 
@@ -691,7 +715,7 @@ impl semio_framework::ToolJobFactory for DrawingGestureOperationJobFactory {
     }
 
     fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-        Ok(DrawingGestureOperationJob { payload: Some(payload), raw_input: None, raw_page_cursor: 0, raw_byte_cursor: 0, decoder: None, raw_validated: true, completed: false, closing: false })
+        Ok(DrawingGestureOperationJob { payload: Some(payload), pending_completion_rejection: None, raw_input: None, raw_page_cursor: 0, raw_byte_cursor: 0, decoder: None, raw_validated: true, completed: false, closing: false })
     }
 
     fn create_job_from_wire_pages_with_payload(
@@ -727,6 +751,47 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DrawingGestureOpera
 #[cfg(test)]
 mod gesture_operation_owner_tests {
     use super::*;
+    use semio_framework_job::InteractiveJob as _;
+
+    #[test]
+    fn drawing_completion_rejection_retires_child_before_decoder_without_redispatch() {
+        let mut emit: semio_framework_plugin::Emit<DrawingMutation, DrawingConfigMutation, NoDraftMutation> = semio_framework_plugin::Emit::default();
+        emit.child_emits.push(semio_framework_plugin::app::ChildEmit::of::<DrawingSnapshot, DrawingMutation>("member", "drawing-child", Vec::new()));
+        let rejected = semio_framework_plugin::app::ArtifactToolCompletionRejection::<semio_framework_plugin::EditorApp<DrawingPlayApp>> {
+            emit: Ok(emit),
+            ephemeral: semio_framework_plugin::EphemeralEmit::default(),
+            fault: Fault::new(FaultOrigin::Framework, FaultCode::new("test.completion-rejected"), "injected completion rejection"),
+        };
+        let mut job = DrawingGestureOperationJob {
+            payload: None,
+            pending_completion_rejection: Some(rejected),
+            raw_input: None,
+            raw_page_cursor: 0,
+            raw_byte_cursor: 0,
+            decoder: Some(DrawingRetainedCommandDecoder::new("canvasEscape")),
+            raw_validated: true,
+            completed: false,
+            closing: false,
+        };
+        job.begin_close();
+        assert_eq!(job.close_step(0, 1), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 1 });
+        assert!(job.pending_completion_rejection.is_some());
+        assert!(job.decoder.is_some());
+        for _ in 0..128 {
+            if job.pending_completion_rejection.is_none() {
+                break;
+            }
+            let step = job.close_step(1, 4);
+            if let semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } = step {
+                assert!(released_items <= 1 && released_bytes <= 4);
+            }
+        }
+        assert!(job.pending_completion_rejection.is_none());
+        assert!(job.decoder.is_some(), "normal decoder owner stays retained until the rejected output is terminal");
+        assert_eq!(job.close_step(1, 4), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        assert_eq!(job.close_step(1, 4), semio_framework_job::InteractiveJobCloseStep::Complete);
+        assert!(job.terminal_is_empty());
+    }
 
     fn decode_retained(expected: &'static str, wire: &[u8]) -> bool {
         let mut decoder = DrawingRetainedCommandDecoder::new(expected);

@@ -5,7 +5,7 @@
   "displayName": "Insert Unknown Chunk",
   "emoji": "📦️",
   "aggregateVariant": "InsertUnknownChunk",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "insert-unknown-chunk",
   "binaryTag": 15,
   "invertibility": "explicit-mutation",

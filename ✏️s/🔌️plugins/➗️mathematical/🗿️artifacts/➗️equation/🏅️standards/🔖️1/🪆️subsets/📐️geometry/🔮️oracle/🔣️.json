@@ -1,0 +1,194 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "📐 This subset's own contribution — the point cloud playground (4 of s.mathematical.equation's 15 mutation kinds; ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). None of the four reach any exported carrier — EquationIntoCsv writes only graph nodes, and the JSON export skips the composed-child scene entirely — so all four fall to the equation-mutation-semantics noOracleDecision recorded on the ✳️graph sibling (the merged test registry resolves it from there; it need not be duplicated per subset).",
+  "oracles": [],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "equation-1-geometry",
+      "capability": "equation-1-geometry-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️geometry",
+      "vectors": [
+        {
+          "mutationId": "replace-points",
+          "sourceMutationDirectoryName": "🌀️replace-points",
+          "mutationDirectoryName": "🌀️replace-points",
+          "scenarios": [
+            {
+              "id": "replays-the-identical-empty-point-cloud",
+              "directoryName": "🧪️replays-the-identical-empty-point-cloud"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-point",
+          "sourceMutationDirectoryName": "➕️insert-point",
+          "mutationDirectoryName": "➕️insert-point",
+          "scenarios": [
+            {
+              "id": "seeds-the-empty-cloud-with-its-first-point",
+              "directoryName": "🧪️seeds-the-empty-cloud-with-its-first-point"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-point",
+          "sourceMutationDirectoryName": "➖️remove-point",
+          "mutationDirectoryName": "➖️remove-point",
+          "scenarios": [
+            {
+              "id": "rejects-removing-a-point-from-an-empty-cloud",
+              "directoryName": "🧪️rejects-removing-a-point-from-an-empty-cloud"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-point",
+          "sourceMutationDirectoryName": "🎯️move-point",
+          "mutationDirectoryName": "🎯️move-point",
+          "scenarios": [
+            {
+              "id": "rejects-moving-a-point-that-is-not-in-the-cloud",
+              "directoryName": "🧪️rejects-moving-a-point-that-is-not-in-the-cloud"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "replace-points",
+        "insert-point",
+        "remove-point",
+        "move-point"
+      ]
+    }
+  ],
+  "probes": [],
+  "comparisonPipelines": [],
+  "comparisonProfiles": [],
+  "toleranceProfiles": [],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.mathematical.equation",
+      "standard": "1",
+      "subset": "geometry",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️geometry",
+      "mutations": [
+        {
+          "id": "replace-points",
+          "capability": "equation-1-geometry-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-points",
+            "bridgeVersion": 1,
+            "variant": "ReplacePoints"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "equation-1-mutate-uncarried",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "node-identity-preserved-across-untouched-rows"
+            ]
+          }
+        },
+        {
+          "id": "insert-point",
+          "capability": "equation-1-geometry-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-point",
+            "bridgeVersion": 1,
+            "variant": "InsertPoint"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "equation-1-mutate-uncarried",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "node-identity-preserved-across-untouched-rows"
+            ]
+          }
+        },
+        {
+          "id": "remove-point",
+          "capability": "equation-1-geometry-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-point",
+            "bridgeVersion": 1,
+            "variant": "RemovePoint"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "equation-1-mutate-uncarried",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "node-identity-preserved-across-untouched-rows"
+            ]
+          }
+        },
+        {
+          "id": "move-point",
+          "capability": "equation-1-geometry-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-point",
+            "bridgeVersion": 1,
+            "variant": "MovePoint"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "equation-1-mutate-uncarried",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "node-identity-preserved-across-untouched-rows"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": []
+}

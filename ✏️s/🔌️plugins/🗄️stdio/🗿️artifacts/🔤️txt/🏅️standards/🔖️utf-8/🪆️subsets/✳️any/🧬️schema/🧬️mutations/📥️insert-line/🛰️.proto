@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.txt.mutation;
+// canonical insert-line/InsertLine
+message InsertLinePayload { optional uint32 index = 1; optional string text = 2; }

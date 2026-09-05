@@ -1,0 +1,127 @@
+{
+  "schema": "block.5d",
+  "partKind": {
+    "id": "pk-capsule",
+    "name": "capsule",
+    "label": "Capsule",
+    "variant": "a",
+    "description": "One habitation capsule.",
+    "icon": "icon://capsule",
+    "unit": "m"
+  },
+  "2d": {
+    "shape": "circle",
+    "radius": 0.5,
+    "color": "#3366ff",
+    "iconKind": "icon.capsule"
+  },
+  "3d": {
+    "orientation": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "representations": [
+    {
+      "id": "rep-shell",
+      "name": "shell",
+      "meshUrl": "mesh://capsule/shell",
+      "tags": [
+        "lod0",
+        "printable"
+      ],
+      "lod": "lod0",
+      "description": "Outer shell mesh.",
+      "attributes": [
+        {
+          "key": "finish",
+          "value": "matte"
+        }
+      ]
+    }
+  ],
+  "gripKinds": [
+    {
+      "id": "gk-socket",
+      "name": "socket",
+      "label": "Socket",
+      "color": "#00aa88",
+      "defaultRopeKind": "rope.link"
+    },
+    {
+      "id": "gk-plug",
+      "name": "plug",
+      "label": "Plug",
+      "color": "#ff8800",
+      "defaultRopeKind": "rope.link"
+    }
+  ],
+  "grips": [
+    {
+      "id": "grip-north",
+      "gripKind": "gk-plug",
+      "angle": 0.0,
+      "radius2d": 0.3,
+      "position": [
+        1.0,
+        2.0,
+        3.0
+      ],
+      "direction": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "radius3d": 0.25
+    }
+  ],
+  "compatibility": [
+    {
+      "id": "compat-plug-plug",
+      "source": "gk-plug",
+      "target": "gk-plug",
+      "bidirectional": true
+    }
+  ],
+  "attributes": [
+    {
+      "key": "material",
+      "value": "concrete"
+    }
+  ],
+  "authors": [
+    {
+      "id": "author-ada",
+      "name": "Ada",
+      "email": "ada@example.org"
+    }
+  ],
+  "camera2d": {
+    "x": 0.0,
+    "y": 0.0,
+    "zoom": 1.0
+  },
+  "camera3d": {
+    "position": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "target": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "zoom": 1.0
+  },
+  "meta": {
+    "description": "Fixture base for the block5d mutation vocabulary."
+  }
+}

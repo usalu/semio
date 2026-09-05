@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    { "id": "frame-worker", "sourceRelativePath": "🎞️frame-worker/🟦️.ts", "outputRelativePath": "🎞️frame-worker/🤖️generated/🟨️.js", "inclusion": "tracked" },
+    { "id": "browser-boot", "sourceRelativePath": "🚀️browser-boot/🟦️.ts", "outputRelativePath": "🚀️browser-boot/🤖️generated/🟨️.js", "inclusion": "ignored" }
+  ],
+  "catalogCases": [
+    { "id": "reviewed-catalog-bytes", "suffix": "", "expected": true },
+    { "id": "whitespace-digest-drift", "suffix": " ", "expected": false },
+    { "id": "trailing-data-digest-drift", "suffix": "{}", "expected": false }
+  ],
+  "activationCases": [
+    { "id": "current-catalog-and-package", "catalog": "file", "manifest": "file", "expected": true },
+    { "id": "missing-current-catalog", "catalog": "absent", "manifest": "file", "expected": false },
+    { "id": "symlink-current-catalog", "catalog": "symlink", "manifest": "file", "expected": false },
+    { "id": "missing-current-package", "catalog": "file", "manifest": "absent", "expected": false },
+    { "id": "symlink-current-package", "catalog": "file", "manifest": "symlink", "expected": false }
+  ],
+  "cases": [
+    { "id": "explicit-distinct-identities", "changes": [], "expected": true },
+    { "id": "missing-output-authority", "changes": [{ "entry": 0, "field": "outputRelativePath", "value": null }], "expected": false },
+    { "id": "foreign-output-owner", "changes": [{ "entry": 0, "field": "outputRelativePath", "value": "🚀️browser-boot/🤖️generated/🟨️.js" }], "expected": false },
+    { "id": "stacked-source-identity", "changes": [{ "entry": 0, "field": "sourceRelativePath", "value": "🧵️🎞️frame-worker/🟦️.ts" }], "expected": false },
+    { "id": "missing-emoji-source", "changes": [{ "entry": 0, "field": "sourceRelativePath", "value": "frame-worker/🟦️.ts" }], "expected": false },
+    { "id": "generic-source-identity", "changes": [{ "entry": 0, "field": "sourceRelativePath", "value": "📂️frame-worker/🟦️.ts" }], "expected": false },
+    { "id": "undeclared-output-field", "changes": [{ "entry": 0, "field": "destination", "value": "🎞️frame-worker/🤖️generated/🟨️.js" }], "expected": false },
+    { "id": "duplicate-thread-siblings", "changes": [{ "entry": 0, "field": "sourceRelativePath", "value": "🧵️frame-worker/🟦️.ts" }, { "entry": 0, "field": "outputRelativePath", "value": "🧵️frame-worker/🤖️generated/🟨️.js" }, { "entry": 1, "field": "sourceRelativePath", "value": "🧵️browser-boot/🟦️.ts" }, { "entry": 1, "field": "outputRelativePath", "value": "🧵️browser-boot/🤖️generated/🟨️.js" }], "expected": false }
+  ]
+}

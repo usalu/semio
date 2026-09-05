@@ -5,7 +5,7 @@
   "displayName": "Change Notes",
   "emoji": "📝",
   "aggregateVariant": "ChangeNotes",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "📋️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "self",

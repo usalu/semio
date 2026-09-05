@@ -1,0 +1,2 @@
+dialect protocol stdio.avi.diff
+document = json:UTF8(*)

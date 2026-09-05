@@ -1,3 +1,0 @@
-# 📝 Canonical one-line mutation transport maps one-to-one to the visible aggregate.
-type GltfMutationCodecRejection { code: String! path: String! detail: String! }
-type GltfMutationTextDocument { text: String! value: GltfMutation rejection: GltfMutationCodecRejection }

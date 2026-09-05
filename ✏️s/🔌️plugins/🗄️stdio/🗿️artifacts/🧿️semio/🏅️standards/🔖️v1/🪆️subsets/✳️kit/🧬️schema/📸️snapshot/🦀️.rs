@@ -703,7 +703,7 @@ pub fn encode_kit_snapshot_json(snapshot: &SemioKitSnapshot) -> String {
 //#region 🔖️Wire
 /// 📝️ Parses `s.stdio.semio.kit` DSL text into a [`SemioKitSnapshot`] — a named pass-through of this snapshot's own
 /// `store::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
-/// crate, so `mutate-semio-kit`'s `identity-round-trip` scenario reaches the real committed
+/// crate, so `🌻️mutate-semio-kit`'s `identity-round-trip` scenario reaches the real committed
 /// artifact (`../../📚️examples/🪑️furniture/🖼️assets/🗣️.dsl.semio`) through this instead.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_kit_dsl(text: &str) -> Result<SemioKitSnapshot, String> {

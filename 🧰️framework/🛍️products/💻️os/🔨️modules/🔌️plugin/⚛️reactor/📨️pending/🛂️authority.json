@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "current": {"activationGeneration": "41", "instanceId": 7, "guestLifetime": "14", "patchSequence": "3", "surface": "7:保留,🙂", "revision": "1"},
+  "feedback": [
+    {"name": "exact", "changes": {}, "accepted": true},
+    {"name": "prior-guest-same-instance-and-revision", "changes": {"guestLifetime": "13"}, "accepted": false},
+    {"name": "prior-activation", "changes": {"activationGeneration": "40"}, "accepted": false},
+    {"name": "foreign-instance", "changes": {"instanceId": 8}, "accepted": false},
+    {"name": "prior-issued-sequence", "changes": {"patchSequence": "2"}, "accepted": false},
+    {"name": "wrong-surface", "changes": {"surface": "7:second"}, "accepted": false},
+    {"name": "wrong-revision", "changes": {"revision": "2"}, "accepted": false}
+  ],
+  "kinds": ["ack", "rejected"],
+  "reservation": {"zeroBytesPreservesSequence": true, "occupiedTargetPreservesSource": true, "sequenceExhaustionCapturesSources": 0, "maximumSequence": "18446744073709551615", "maximumPlacementBytes": 32768},
+  "retirementGrants": [1, 64, 4096],
+  "liveGuestReceiverProven": false,
+  "semanticPublicationProven": false
+}

@@ -2,7 +2,7 @@
 //! (ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING). Directory
 //! shape mirrors `🧬️mutations/`: this file is the family-root assembly (never mod's/includes the
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
-//! inference gets its own `<emoji><slug>/` child (currently: `🗃entries/`).
+//! inference gets its own `<emoji><slug>/` child (currently: `🗃️entries/`).
 //!
 //! The curation snapshot is `stock: Vec<ObjectKind>` (the catalog) and `curated: Vec<CuratedItem>`
 //! (the picked bill of quantities, each `{ objectId, count }`) — no graph, no geometry, so the
@@ -18,7 +18,7 @@ pub use super::entries::CurationEntries;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a curation snapshot. One field per named inference under
-/// `💡️inferences/` (currently: `entries`, backed by the `🗃entries/` slug dir).
+/// `💡️inferences/` (currently: `entries`, backed by the `🗃️entries/` slug dir).
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sourcing.curation.inference")]

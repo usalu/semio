@@ -1,8 +1,0 @@
-{
-  "mutation": "change-header-fields",
-  "payload": {
-    "width": 3,
-    "xPixelsPerMeter": 11811,
-    "yPixelsPerMeter": 11811
-  }
-}

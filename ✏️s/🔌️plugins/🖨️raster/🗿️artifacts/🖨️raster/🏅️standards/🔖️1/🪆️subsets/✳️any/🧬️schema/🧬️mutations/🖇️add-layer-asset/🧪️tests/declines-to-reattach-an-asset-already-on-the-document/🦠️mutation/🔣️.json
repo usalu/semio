@@ -1,8 +1,0 @@
-{
-  "mutation": "addLayerAsset",
-  "assetId": "cover-art",
-  "asset": {
-    "mime": "image/png",
-    "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mM4MS3lPwAGrgLC6MV/HQAAAABJRU5ErkJggg=="
-  }
-}

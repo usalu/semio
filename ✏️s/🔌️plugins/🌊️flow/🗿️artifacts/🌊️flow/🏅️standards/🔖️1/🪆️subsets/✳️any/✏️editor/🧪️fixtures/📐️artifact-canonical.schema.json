@@ -1,0 +1,869 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.flow.artifact-canonical",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "widgets",
+    "mutations"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.flow.artifact-canonical"
+    },
+    "widgets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/widget"
+      },
+      "minItems": 9,
+      "maxItems": 9
+    },
+    "mutations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/mutation"
+      },
+      "minItems": 10,
+      "maxItems": 10
+    }
+  },
+  "definitions": {
+    "value": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/definitions/dictionary"
+        }
+      ]
+    },
+    "dictionary": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/value"
+      }
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    },
+    "optionalLayout": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/layout"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "layout"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "layout": {
+          "$ref": "#/definitions/optionalLayout"
+        }
+      }
+    },
+    "tree": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "neurons",
+        "synapses"
+      ],
+      "properties": {
+        "neurons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/neuron"
+          }
+        },
+        "synapses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/synapse"
+          }
+        }
+      }
+    },
+    "neuron": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "params"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "params": {
+          "$ref": "#/definitions/dictionary"
+        },
+        "tree": {
+          "oneOf": [{ "$ref": "#/definitions/tree" }, { "type": "null" }]
+        }
+      }
+    },
+    "synapse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to",
+        "fromPort",
+        "toPort"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "fromPort": {
+          "type": "string"
+        },
+        "toPort": {
+          "type": "string"
+        }
+      }
+    },
+    "gui": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "camera",
+        "nodes",
+        "previews"
+      ],
+      "properties": {
+        "camera": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "x",
+            "y",
+            "zoom"
+          ],
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "zoom": {
+              "type": "number"
+            }
+          }
+        },
+        "nodes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "layout",
+              "chrome"
+            ],
+            "properties": {
+              "layout": {
+                "$ref": "#/definitions/layout"
+              },
+              "chrome": {
+                "$ref": "#/definitions/chrome"
+              }
+            }
+          }
+        },
+        "previews": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/preview"
+          }
+        }
+      }
+    },
+    "preview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source",
+        "mode",
+        "preview",
+        "expanded",
+        "layout"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "neuron",
+                "channel"
+              ],
+              "properties": {
+                "neuron": {
+                  "type": "string"
+                },
+                "channel": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mode": {
+          "type": "string"
+        },
+        "preview": {
+          "$ref": "#/definitions/dictionary"
+        },
+        "expanded": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "layout": {
+          "$ref": "#/definitions/optionalLayout"
+        }
+      }
+    },
+    "chrome": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "preview"
+          ],
+          "properties": {
+            "kind": {
+              "const": "plain"
+            },
+            "preview": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "label",
+            "min",
+            "max",
+            "step",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "slider"
+            },
+            "label": {
+              "type": "string"
+            },
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            },
+            "step": {
+              "type": "number"
+            },
+            "value": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "note"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "src"
+          ],
+          "properties": {
+            "kind": {
+              "const": "image"
+            },
+            "src": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name",
+            "schema"
+          ],
+          "properties": {
+            "kind": {
+              "const": "variable"
+            },
+            "name": {
+              "type": "string"
+            },
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "widget": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "neuronKind",
+            "params",
+            "inputPorts",
+            "outputPorts",
+            "preview"
+          ],
+          "properties": {
+            "kind": {
+              "const": "neuron"
+            },
+            "id": {
+              "type": "string"
+            },
+            "neuronKind": {
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/definitions/dictionary"
+            },
+            "inputPorts": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "outputPorts": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "preview": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "label",
+            "value",
+            "min",
+            "max",
+            "step"
+          ],
+          "properties": {
+            "kind": {
+              "const": "inputSlider"
+            },
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "value": {
+              "type": "number"
+            },
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            },
+            "step": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "inputNote"
+            },
+            "id": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "src"
+          ],
+          "properties": {
+            "kind": {
+              "const": "inputImage"
+            },
+            "id": {
+              "type": "string"
+            },
+            "src": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "name",
+            "schema"
+          ],
+          "properties": {
+            "kind": {
+              "const": "variable"
+            },
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "preview",
+            "expanded"
+          ],
+          "properties": {
+            "kind": {
+              "const": "outputPreview"
+            },
+            "id": {
+              "type": "string"
+            },
+            "preview": {
+              "$ref": "#/definitions/dictionary"
+            },
+            "expanded": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "action"
+          ],
+          "properties": {
+            "kind": {
+              "const": "outputAction"
+            },
+            "id": {
+              "type": "string"
+            },
+            "action": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "format"
+          ],
+          "properties": {
+            "kind": {
+              "const": "outputExport"
+            },
+            "id": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "name",
+            "tree",
+            "flow"
+          ],
+          "properties": {
+            "kind": {
+              "const": "cluster"
+            },
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "tree": {
+              "$ref": "#/definitions/tree"
+            },
+            "flow": {
+              "$ref": "#/definitions/gui"
+            }
+          }
+        }
+      ]
+    },
+    "mutation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "index",
+            "widget"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "createWidget"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "widget": {
+              "$ref": "#/definitions/widget"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "id"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "deleteWidget"
+            },
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "id",
+            "toIndex"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "reorderWidgets"
+            },
+            "id": {
+              "type": "string"
+            },
+            "toIndex": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "id",
+            "widget"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "replaceWidget"
+            },
+            "id": {
+              "type": "string"
+            },
+            "widget": {
+              "$ref": "#/definitions/widget"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "index",
+            "id",
+            "from",
+            "fromPort",
+            "to",
+            "toPort"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "connectWidgets"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "id": {
+              "type": "string"
+            },
+            "from": {
+              "type": "string"
+            },
+            "fromPort": {
+              "type": "string"
+            },
+            "to": {
+              "type": "string"
+            },
+            "toPort": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "id"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "disconnectWidgets"
+            },
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "id",
+            "toIndex"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "reorderSynapses"
+            },
+            "id": {
+              "type": "string"
+            },
+            "toIndex": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "id",
+            "from",
+            "fromPort",
+            "to",
+            "toPort"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "updateSynapseEndpoints"
+            },
+            "id": {
+              "type": "string"
+            },
+            "from": {
+              "type": "string"
+            },
+            "fromPort": {
+              "type": "string"
+            },
+            "to": {
+              "type": "string"
+            },
+            "toPort": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "entries"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "moveWidgets"
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/entry"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mutation",
+            "sourceId",
+            "newId",
+            "synapseId",
+            "fromPort",
+            "toPort"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "duplicateWidget"
+            },
+            "sourceId": {
+              "type": "string"
+            },
+            "newId": {
+              "type": "string"
+            },
+            "synapseId": {
+              "type": "string"
+            },
+            "fromPort": {
+              "type": "string"
+            },
+            "toPort": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -114,118 +114,8 @@ use crate::artifacts::semio::standards::v1::subsets;
 //#region 🧹️SnapshotRetirement
 use std::{marker::PhantomData, sync::Arc};
 
-trait RetireOwned: Send + 'static {
-    fn retirement(self) -> Box<dyn RetirementCursor>;
-}
-
-enum RetirementStep {
-    Child(Box<dyn RetirementCursor>),
-    Bytes(usize),
-    Complete,
-    BudgetExhausted,
-}
-
-trait RetirementCursor: Send {
-    fn close_step(&mut self, maximum_bytes: usize) -> RetirementStep;
-}
-
-struct Leaf<T: Copy + Send + 'static>(Option<T>, usize);
-
-impl<T: Copy + Send + 'static> RetirementCursor for Leaf<T> {
-    fn close_step(&mut self, maximum_bytes: usize) -> RetirementStep {
-        if self.1 > 0 {
-            if maximum_bytes == 0 {
-                return RetirementStep::BudgetExhausted;
-            }
-            let bytes = maximum_bytes.min(self.1);
-            self.1 -= bytes;
-            return RetirementStep::Bytes(bytes);
-        }
-        self.0.take();
-        RetirementStep::Complete
-    }
-}
-
-macro_rules! retire_leaf {
-    ($($type:ty),+ $(,)?) => {$ (
-        impl RetireOwned for $type {
-            fn retirement(self) -> Box<dyn RetirementCursor> {
-                Box::new(Leaf(Some(self), std::mem::size_of::<Self>()))
-            }
-        }
-    )+ };
-}
-
-retire_leaf!(bool, u8, u32, u64, usize, i32, i64, f32, f64);
-
-struct Bytes(Vec<u8>);
-
-impl RetirementCursor for Bytes {
-    fn close_step(&mut self, maximum_bytes: usize) -> RetirementStep {
-        if self.0.is_empty() {
-            return RetirementStep::Complete;
-        }
-        if maximum_bytes == 0 {
-            return RetirementStep::BudgetExhausted;
-        }
-        let bytes = maximum_bytes.min(self.0.len());
-        self.0.truncate(self.0.len() - bytes);
-        RetirementStep::Bytes(bytes)
-    }
-}
-
-impl RetireOwned for String {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        Box::new(Bytes(self.into_bytes()))
-    }
-}
-
-struct Collection<T: RetireOwned>(Vec<T>);
-
-impl<T: RetireOwned> RetirementCursor for Collection<T> {
-    fn close_step(&mut self, _: usize) -> RetirementStep {
-        self.0.pop().map_or(RetirementStep::Complete, |value| RetirementStep::Child(value.retirement()))
-    }
-}
-
-impl<T: RetireOwned> RetireOwned for Vec<T> {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        Box::new(Collection(self))
-    }
-}
-
-impl<T: RetireOwned> RetireOwned for Option<T> {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        self.map_or_else(|| sequence(Vec::new()), RetireOwned::retirement)
-    }
-}
-
-struct Sequence(Vec<Box<dyn RetirementCursor>>);
-
-impl RetirementCursor for Sequence {
-    fn close_step(&mut self, _: usize) -> RetirementStep {
-        self.0.pop().map_or(RetirementStep::Complete, RetirementStep::Child)
-    }
-}
-
-fn sequence(fields: Vec<Box<dyn RetirementCursor>>) -> Box<dyn RetirementCursor> {
-    Box::new(Sequence(fields))
-}
-
-macro_rules! seq {
-    ($($field:expr),* $(,)?) => { sequence(vec![$(RetireOwned::retirement($field)),*]) };
-}
-
-macro_rules! retire_struct {
-    ($type:ty { $($field:ident),+ $(,)? }) => {
-        impl RetireOwned for $type {
-            fn retirement(self) -> Box<dyn RetirementCursor> {
-                let Self { $($field),+ } = self;
-                seq![$($field),+]
-            }
-        }
-    };
-}
+use dsl::os_store::retirement::{RetireOwned, RetirementCursor, sequence, owned_retirement, shared_retirement};
+use dsl::{artifact_retire_leaf as retire_leaf, artifact_retire_struct as retire_struct, artifact_retirement_sequence as seq};
 
 use subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform, SemioUv};
 use subsets::{
@@ -234,6 +124,15 @@ use subsets::{
     mesh::schema::mutations as mesh_mutation, model::schema::mutations as model_mutation, object::schema::mutations as object_mutation, presentation::schema::mutations as presentation_mutation, table::schema::mutations as table_mutation,
     text::schema::mutations as text_mutation, value::schema::mutations as value_mutation, video::schema::mutations as video_mutation,
 };
+
+macro_rules! semio_snapshot_open {
+    (flow, $snapshot:ty) => {
+        type SnapshotOpen = subsets::flow::schema::snapshot::binary::SemioFlowSnapshotDecode;
+    };
+    ($module:ident, $snapshot:ty) => {
+        type SnapshotOpen = dsl::UnsupportedMemberSnapshotOpen<$snapshot>;
+    };
+}
 use subsets::{
     animation::schema::snapshot as animation, audio::schema::snapshot as audio, brep::schema::snapshot as brep, cad::schema::snapshot as cad, document::schema::snapshot as document, drawing::schema::snapshot as drawing,
     flow::schema::snapshot as flow, graph::schema::snapshot as graph, image::schema::snapshot as image, kit::schema::snapshot as kit, mesh::schema::snapshot as mesh, model::schema::snapshot as model, object::schema::snapshot as object,
@@ -300,11 +199,6 @@ retire_struct!(brep::BrepSolidShell { shell, is_void });
 retire_struct!(brep::BrepSolid { id, shells });
 retire_struct!(brep::BrepCoedge { id, edge, forward, pcurve, prange, loop_id, next, prev });
 retire_struct!(brep::SemioBrepSnapshot { schema, vertices, edges, loops, faces, shells, solids, coedges, next_label });
-impl RetireOwned for (f64, f64) {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        seq![self.0, self.1]
-    }
-}
 impl RetireOwned for brep::BrepCurve2 {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
@@ -524,37 +418,6 @@ retire_struct!(text::SemioTextSnapshot { schema, runs });
 retire_struct!(video::SemioVideoSample { pts, key, data });
 retire_struct!(video::SemioVideoStream { kind, codec, width, height, rate, samples });
 retire_struct!(video::SemioVideoSnapshot { schema, streams });
-
-impl RetireOwned for dsl::os_io::ArtifactDialect {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        let Self { artifact_kind, standard, subset } = self;
-        seq![artifact_kind, standard, subset]
-    }
-}
-impl RetireOwned for dsl::os_io::ArtifactRef {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        let Self { artifact_id, dialect } = self;
-        seq![artifact_id, dialect]
-    }
-}
-impl<S: Send + 'static> RetireOwned for dsl::ArtifactChild<S> {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        let child_id = self.child_id;
-        let target = self.target;
-        seq![child_id, target]
-    }
-}
-retire_struct!(dsl::BlobRef { hash, size, media_type });
-retire_struct!(dsl::ArtifactLink { target, pin, role });
-impl RetireOwned for dsl::LinkPin {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        match self {
-            Self::Head => seq![],
-            Self::Checkpoint { id } => id.retirement(),
-            Self::Snapshot { blob } => blob.retirement(),
-        }
-    }
-}
 
 retire_struct!(subsets::drawing::schema::diff::NodePath { layer, path });
 retire_struct!(document_mutation::DocBlockPath { segments, index });
@@ -916,91 +779,12 @@ impl RetireOwned for text_mutation::SemioTextMutation {
     }
 }
 
-struct SemioSnapshotRetirement<P: RetireOwned> {
-    snapshot: Option<Arc<P>>,
-    cursors: Vec<Box<dyn RetirementCursor>>,
-}
-impl<P: RetireOwned + Sync> dsl::ErasedSnapshotRetirement for SemioSnapshotRetirement<P> {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<dsl::SnapshotRetirementStep, String> {
-        if maximum_items == 0 {
-            return Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        let (mut turns, mut released_items, mut released_bytes) = (0, 0, 0);
-        if let Some(snapshot) = self.snapshot.take() {
-            if Arc::strong_count(&snapshot) > 1 {
-                self.snapshot = Some(snapshot);
-                return Ok(dsl::SnapshotRetirementStep::Blocked);
-            }
-            turns += 1;
-            match Arc::try_unwrap(snapshot) {
-                Ok(snapshot) => self.cursors.push(snapshot.retirement()),
-                Err(shared) => {
-                    self.snapshot = Some(shared);
-                    return Ok(dsl::SnapshotRetirementStep::Blocked);
-                }
-            }
-        }
-        while turns < maximum_items {
-            let Some(cursor) = self.cursors.last_mut() else { return Ok(dsl::SnapshotRetirementStep::Complete) };
-            match cursor.close_step(maximum_bytes - released_bytes) {
-                RetirementStep::Child(child) => self.cursors.push(child),
-                RetirementStep::Bytes(bytes) => released_bytes += bytes,
-                RetirementStep::Complete => {
-                    self.cursors.pop();
-                    released_items += 1;
-                }
-                RetirementStep::BudgetExhausted => break,
-            }
-            turns += 1;
-        }
-        if self.terminal_is_empty() { Ok(dsl::SnapshotRetirementStep::Complete) } else { Ok(dsl::SnapshotRetirementStep::Pending { released_items, released_bytes }) }
-    }
-    fn terminal_is_empty(&self) -> bool {
-        self.snapshot.is_none() && self.cursors.is_empty()
-    }
-}
 struct SemioSnapshotRetirementFactory<P>(PhantomData<fn() -> P>);
-struct SemioOwnedValueRetirement<T: RetireOwned> {
-    value: Option<T>,
-    cursors: Vec<Box<dyn RetirementCursor>>,
-}
-
-impl<T: RetireOwned> dsl::ErasedSnapshotRetirement for SemioOwnedValueRetirement<T> {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<dsl::SnapshotRetirementStep, String> {
-        if maximum_items == 0 {
-            return Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        let (mut turns, mut released_items, mut released_bytes) = (0, 0, 0);
-        if let Some(value) = self.value.take() {
-            self.cursors.push(value.retirement());
-            turns += 1;
-        }
-        while turns < maximum_items {
-            let Some(cursor) = self.cursors.last_mut() else { return Ok(dsl::SnapshotRetirementStep::Complete) };
-            match cursor.close_step(maximum_bytes - released_bytes) {
-                RetirementStep::Child(child) => self.cursors.push(child),
-                RetirementStep::Bytes(bytes) => released_bytes += bytes,
-                RetirementStep::Complete => {
-                    self.cursors.pop();
-                    released_items += 1;
-                }
-                RetirementStep::BudgetExhausted => break,
-            }
-            turns += 1;
-        }
-        if self.terminal_is_empty() { Ok(dsl::SnapshotRetirementStep::Complete) } else { Ok(dsl::SnapshotRetirementStep::Pending { released_items, released_bytes }) }
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.value.is_none() && self.cursors.is_empty()
-    }
-}
-
 struct SemioOwnedValueRetirementFactory<T>(PhantomData<fn() -> T>);
 
 impl<T: RetireOwned> dsl::ArtifactOwnedValueRetirementFactory<T> for SemioOwnedValueRetirementFactory<T> {
     fn retire_owned(&self, value: T) -> Box<dyn dsl::ErasedSnapshotRetirement> {
-        Box::new(SemioOwnedValueRetirement { value: Some(value), cursors: Vec::new() })
+        owned_retirement(value)
     }
 }
 
@@ -1008,7 +792,7 @@ struct SemioMutationRetirementFactory<T>(PhantomData<fn() -> T>);
 
 impl<T: RetireOwned> dsl::ArtifactOwnedValueRetirementFactory<T> for SemioMutationRetirementFactory<T> {
     fn retire_owned(&self, value: T) -> Box<dyn dsl::ErasedSnapshotRetirement> {
-        Box::new(SemioOwnedValueRetirement { value: Some(value), cursors: Vec::new() })
+        owned_retirement(value)
     }
 }
 
@@ -1034,13 +818,14 @@ enum SemioStoreClosePhase {
 
 struct SemioStoreOwnedDisposer<P, Mutation> {
     phase: SemioStoreClosePhase,
+    started: bool,
     active: std::mem::ManuallyDrop<Option<Box<dyn dsl::ErasedSnapshotRetirement>>>,
     marker: PhantomData<fn() -> (P, Mutation)>,
 }
 
 impl<P, Mutation> SemioStoreOwnedDisposer<P, Mutation> {
     fn new() -> Self {
-        Self { phase: SemioStoreClosePhase::DisplacedOwners, active: std::mem::ManuallyDrop::new(None), marker: PhantomData }
+        Self { phase: SemioStoreClosePhase::DisplacedOwners, started: false, active: std::mem::ManuallyDrop::new(None), marker: PhantomData }
     }
 }
 macro_rules! member_owners {
@@ -1052,7 +837,7 @@ macro_rules! member_owners {
                 &self,
                 snapshot: Arc<subsets::$module::schema::snapshot::$snapshot>,
             ) -> Box<dyn dsl::ErasedSnapshotRetirement> {
-                Box::new(SemioSnapshotRetirement { snapshot: Some(snapshot), cursors: Vec::new() })
+                shared_retirement(snapshot)
             }
         }
 
@@ -1072,6 +857,7 @@ macro_rules! member_owners {
                 maximum_items: usize,
                 maximum_bytes: usize,
             ) -> Result<dsl::SnapshotRetirementStep, String> {
+                self.started = true;
                 if maximum_items == 0 {
                     return Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
                 }
@@ -1308,11 +1094,24 @@ macro_rules! member_owners {
             ) -> bool {
                 matches!(self.phase, SemioStoreClosePhase::Complete) && self.active.is_none() && store.owned_roots_terminal_is_empty()
             }
+
+            fn close_uninstalled_step(&mut self, maximum_items: usize) -> Result<dsl::SnapshotRetirementStep, String> {
+                if self.started || self.active.is_some() { return Err("installed semio disposer cannot retire as uninstalled".into()); }
+                if maximum_items == 0 { return Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+                self.phase = SemioStoreClosePhase::Complete;
+                Ok(dsl::SnapshotRetirementStep::Complete)
+            }
+
+            fn uninstalled_terminal_is_empty(&self) -> bool {
+                !self.started && matches!(self.phase, SemioStoreClosePhase::Complete) && self.active.is_none()
+            }
         }
 
         impl dsl::MemberStoreOwner<subsets::$module::schema::mutations::$mutation>
             for subsets::$module::schema::snapshot::$snapshot
         {
+            semio_snapshot_open!($module, subsets::$module::schema::snapshot::$snapshot);
+
             fn member_store_owners() -> dsl::MemberStoreOwners<
                 Self,
                 subsets::$module::schema::mutations::$mutation,
@@ -1329,60 +1128,38 @@ macro_rules! member_owners {
 semio_subset_table!(member_owners);
 //#endregion 🧹️SnapshotRetirement
 
-/// 🧬️ Closed set spanning `semio`'s 18 composable subsets — the O1 replacement for the deleted
-/// `Box<dyn SpaceMember>` `ChildStoreFactory` registry (`store::MemberFactory`'s own doc explains the
-/// general mechanism; `store::space_members!` generates the `SpaceMember`/`MemberFactory` delegation
-/// below). Generated exactly as any other family would be, EXCEPT the string fed to `MemberFactory::
-/// create`/`open` at the two call sites below is `dialect.subset` — never `dialect.artifact_kind` —
-/// because all 18 variants share the SAME kind (`s.stdio.semio`, `SEMIO_ARTIFACT_SCHEMA_ID` above) and
-/// differ only by subset. Nothing in `space_members!` requires its `kind: &str` parameter to actually
-/// BE an `ArtifactKindId`; it only ever compares it against string literals, so this reuse is exact,
-/// not approximate.
+/// 🧬️ Eighteen composable subsets, each bound to its exact kind, standard, subset and schema.
 dsl::space_members! {
-    pub enum SemioMembers {
-        Animation("animation", "stdio.semio") => dsl::ArtifactStore<subsets::animation::schema::snapshot::SemioAnimationSnapshot, subsets::animation::schema::mutations::SemioAnimationMutation>,
-        Audio("audio", "stdio.semio") => dsl::ArtifactStore<subsets::audio::schema::snapshot::SemioAudioSnapshot, subsets::audio::schema::mutations::SemioAudioMutation>,
-        Brep("brep", "stdio.semio") => dsl::ArtifactStore<subsets::brep::schema::snapshot::SemioBrepSnapshot, subsets::brep::schema::mutations::SemioBrepMutation>,
-        Cad("cad", "stdio.semio") => dsl::ArtifactStore<subsets::cad::schema::snapshot::SemioCadSnapshot, subsets::cad::schema::mutations::SemioCadMutation>,
-        Document("document", "stdio.semio") => dsl::ArtifactStore<subsets::document::schema::snapshot::SemioDocumentSnapshot, subsets::document::schema::mutations::SemioDocumentMutation>,
-        Drawing("drawing", "stdio.semio") => dsl::ArtifactStore<subsets::drawing::schema::snapshot::SemioDrawingSnapshot, subsets::drawing::schema::mutations::SemioDrawingMutation>,
-        Flow("flow", "stdio.semio") => dsl::ArtifactStore<subsets::flow::schema::snapshot::SemioFlowSnapshot, subsets::flow::schema::mutations::SemioFlowMutation>,
-        Graph("graph", "stdio.semio") => dsl::ArtifactStore<subsets::graph::schema::snapshot::SemioGraphSnapshot, subsets::graph::schema::mutations::SemioGraphMutation>,
-        Image("image", "stdio.semio") => dsl::ArtifactStore<subsets::image::schema::snapshot::SemioImageSnapshot, subsets::image::schema::mutations::SemioImageMutation>,
-        Kit("kit", "stdio.semio") => dsl::ArtifactStore<subsets::kit::schema::snapshot::SemioKitSnapshot, subsets::kit::schema::mutations::SemioKitMutation>,
-        Mesh("mesh", "stdio.semio") => dsl::ArtifactStore<subsets::mesh::schema::snapshot::SemioMeshSnapshot, subsets::mesh::schema::mutations::SemioMeshMutation>,
-        Model("model", "stdio.semio") => dsl::ArtifactStore<subsets::model::schema::snapshot::SemioModelSnapshot, subsets::model::schema::mutations::SemioModelMutation>,
-        Object("object", "stdio.semio") => dsl::ArtifactStore<subsets::object::schema::snapshot::SemioObjectSnapshot, subsets::object::schema::mutations::SemioObjectMutation>,
-        Presentation("presentation", "stdio.semio") => dsl::ArtifactStore<subsets::presentation::schema::snapshot::SemioPresentationSnapshot, subsets::presentation::schema::mutations::SemioPresentationMutation>,
-        Table("table", "stdio.semio") => dsl::ArtifactStore<subsets::table::schema::snapshot::SemioTableSnapshot, subsets::table::schema::mutations::SemioTableMutation>,
-        Text("text", "stdio.semio") => dsl::ArtifactStore<subsets::text::schema::snapshot::SemioTextSnapshot, subsets::text::schema::mutations::SemioTextMutation>,
-        Value("value", "stdio.semio") => dsl::ArtifactStore<subsets::value::schema::snapshot::SemioValueSnapshot, subsets::value::schema::mutations::SemioValueMutation>,
-        Video("video", "stdio.semio") => dsl::ArtifactStore<subsets::video::schema::snapshot::SemioVideoSnapshot, subsets::video::schema::mutations::SemioVideoMutation>,
+    pub enum SemioMembers, SemioMembersOpen {
+        Animation("s.stdio.semio", "v1", "animation", "stdio.semio") => (subsets::animation::schema::snapshot::SemioAnimationSnapshot, subsets::animation::schema::mutations::SemioAnimationMutation),
+        Audio("s.stdio.semio", "v1", "audio", "stdio.semio") => (subsets::audio::schema::snapshot::SemioAudioSnapshot, subsets::audio::schema::mutations::SemioAudioMutation),
+        Brep("s.stdio.semio", "v1", "brep", "stdio.semio") => (subsets::brep::schema::snapshot::SemioBrepSnapshot, subsets::brep::schema::mutations::SemioBrepMutation),
+        Cad("s.stdio.semio", "v1", "cad", "stdio.semio") => (subsets::cad::schema::snapshot::SemioCadSnapshot, subsets::cad::schema::mutations::SemioCadMutation),
+        Document("s.stdio.semio", "v1", "document", "stdio.semio") => (subsets::document::schema::snapshot::SemioDocumentSnapshot, subsets::document::schema::mutations::SemioDocumentMutation),
+        Drawing("s.stdio.semio", "v1", "drawing", "stdio.semio") => (subsets::drawing::schema::snapshot::SemioDrawingSnapshot, subsets::drawing::schema::mutations::SemioDrawingMutation),
+        Flow("s.stdio.semio", "v1", "flow", "stdio.semio") => (subsets::flow::schema::snapshot::SemioFlowSnapshot, subsets::flow::schema::mutations::SemioFlowMutation),
+        Graph("s.stdio.semio", "v1", "graph", "stdio.semio") => (subsets::graph::schema::snapshot::SemioGraphSnapshot, subsets::graph::schema::mutations::SemioGraphMutation),
+        Image("s.stdio.semio", "v1", "image", "stdio.semio") => (subsets::image::schema::snapshot::SemioImageSnapshot, subsets::image::schema::mutations::SemioImageMutation),
+        Kit("s.stdio.semio", "v1", "kit", "stdio.semio") => (subsets::kit::schema::snapshot::SemioKitSnapshot, subsets::kit::schema::mutations::SemioKitMutation),
+        Mesh("s.stdio.semio", "v1", "mesh", "stdio.semio") => (subsets::mesh::schema::snapshot::SemioMeshSnapshot, subsets::mesh::schema::mutations::SemioMeshMutation),
+        Model("s.stdio.semio", "v1", "model", "stdio.semio") => (subsets::model::schema::snapshot::SemioModelSnapshot, subsets::model::schema::mutations::SemioModelMutation),
+        Object("s.stdio.semio", "v1", "object", "stdio.semio") => (subsets::object::schema::snapshot::SemioObjectSnapshot, subsets::object::schema::mutations::SemioObjectMutation),
+        Presentation("s.stdio.semio", "v1", "presentation", "stdio.semio") => (subsets::presentation::schema::snapshot::SemioPresentationSnapshot, subsets::presentation::schema::mutations::SemioPresentationMutation),
+        Table("s.stdio.semio", "v1", "table", "stdio.semio") => (subsets::table::schema::snapshot::SemioTableSnapshot, subsets::table::schema::mutations::SemioTableMutation),
+        Text("s.stdio.semio", "v1", "text", "stdio.semio") => (subsets::text::schema::snapshot::SemioTextSnapshot, subsets::text::schema::mutations::SemioTextMutation),
+        Value("s.stdio.semio", "v1", "value", "stdio.semio") => (subsets::value::schema::snapshot::SemioValueSnapshot, subsets::value::schema::mutations::SemioValueMutation),
+        Video("s.stdio.semio", "v1", "video", "stdio.semio") => (subsets::video::schema::snapshot::SemioVideoSnapshot, subsets::video::schema::mutations::SemioVideoMutation),
     }
 }
 
-/// 🏭️ Mints a new subset-typed `semio` child — the `create` half of the removed `ChildStoreFactory`.
-/// Dispatch key is `dialect.subset` (see [`SemioMembers`]'s doc).
+/// 🏭️ Mints a typed Semio child through its closed full-dialect factory.
 pub async fn create_semio_member(id: &str, dialect: &dsl::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<SemioMembers, dsl::VcsError> {
-    <SemioMembers as dsl::MemberFactory>::create(dialect.subset.as_str(), id, dialect, initial_pack).await
+    <SemioMembers as dsl::MemberFactory>::create(id, dialect, initial_pack).await
 }
 
-/// 📤️ Reopens a persisted subset-typed `semio` child — the `open` half. The subset is recovered from
-/// the envelope itself (`subset_of_persisted_envelope`), exactly as the removed `ChildStoreFactory::
-/// open` did — `open` gets no dialect argument, so it has to; this only works because the `.spr`
-/// composition overlay carries `dialect` (see this ticket's `REC_COMPOSITION`).
-pub async fn open_semio_member(envelope_pack: &[u8]) -> Result<SemioMembers, dsl::VcsError> {
-    let subset = subset_of_persisted_envelope(envelope_pack).await?;
-    <SemioMembers as dsl::MemberFactory>::open(subset.as_str(), envelope_pack).await
-}
-
-/// 🎯️ Reads a persisted child's subset out of its own `.spr` composition overlay — deliberately
-/// snapshot-type-agnostic (it decodes only the history log, never the document body), because
-/// choosing the snapshot type is exactly what this answer is needed FOR.
-async fn subset_of_persisted_envelope(envelope_pack: &[u8]) -> Result<String, dsl::VcsError> {
-    let (_, spr) = dsl::decode_document_pack_bytes(envelope_pack).await?;
-    let log = dsl::decode_history(&spr, &dsl::os_spr::DecodeOptions::default()).await.map_err(|error| dsl::VcsError::Deserialize(error.to_string()))?;
-    log.composition.and_then(|composition| composition.dialect).map(|(_, _, subset)| subset).ok_or_else(|| dsl::VcsError::Deserialize("semio child store: persisted child carries no dialect, so its subset is unknowable".to_string()))
+/// 📤️ Reopens a Semio member only when its persisted schema and dialect match the requested binding.
+pub async fn open_semio_member(expected: &dsl::os_io::ArtifactRef, owner: Option<&dsl::OwnerRef>, envelope_pack: &[u8]) -> Result<SemioMembers, dsl::VcsError> {
+    <SemioMembers as dsl::MemberFactory>::open(expected, owner, envelope_pack).await
 }
 //#endregion 🔖️Members
 
@@ -1485,13 +1262,13 @@ mod tests {
                 Ok(_) => panic!("empty genesis pack must be rejected"),
                 Err(error) => error,
             };
-            assert!(!error.to_string().contains("no member kind"), "subset {subset} is not wired into the child-store dispatch");
+            assert!(!error.to_string().contains("no member dialect"), "subset {subset} is not wired into the child-store dispatch");
         }
         let unknown = match create_semio_member("probe", &subset_dialect("not-a-subset"), &[]).await {
             Ok(_) => panic!("unknown subset must be rejected"),
             Err(error) => error,
         };
-        assert!(unknown.to_string().contains("no member kind"));
+        assert!(unknown.to_string().contains("no member dialect"));
     }
 
     /// 🧸️ `create_semio_member` must MINT a real child store and `open_semio_member` must REOPEN it
@@ -1506,7 +1283,8 @@ mod tests {
         let child = create_semio_member("mesh-child-1", &dialect, &seed.encode_pack()).await.expect("create child");
         assert_eq!(child.document_id().await, "mesh-child-1");
 
-        let reopened = open_semio_member(&child.envelope_pack_bytes().await.expect("envelope pack")).await.expect("reopen child");
+        let expected = dsl::os_io::ArtifactRef { artifact_id: "mesh-child-1".into(), dialect };
+        let reopened = open_semio_member(&expected, None, &child.envelope_pack_bytes().await.expect("envelope pack")).await.expect("reopen child");
         assert_eq!(reopened.document_pack_bytes().await.expect("head pack"), child.document_pack_bytes().await.expect("head pack"), "the reopened child diverged from the persisted one");
     }
 }

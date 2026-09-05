@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateHandleKind",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "handleKind"
+  ],
+  "properties": {
+    "handleKind": {
+      "title": "Block2dHandleKind",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "color",
+        "defaultWireKind",
+        "id",
+        "label",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string"
+        },
+        "defaultWireKind": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

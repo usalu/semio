@@ -1,0 +1,2579 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution: a mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so `s.stdio.semio.document`'s oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.document` is a semio-NATIVE format, so its reference is a second IMPLEMENTATION written in another language from the committed grammars and the committed binary protocol rather than a third-party package.",
+  "oracles": [
+    {
+      "id": "semio-document-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "capabilities": [
+        "semio-v1-document-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "No third-party library in any ecosystem reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, so the second producer THE STANDARD requires is a second IMPLEMENTATION in another language. `../../../../🧪️tests/mutate-semio-document/🐍️component.py` is that implementation: the text and binary semio envelopes, the whole `document = artifact-mark schema-line styles-line images-line blocks-line` grammar in both directions - `style`, `image`, `run`, `run-style`, `option-hex`, `option-f64` and the eight single-letter-tagged `block` variants P/H/L/T/C/Q/I/B with their recursive list, table and quote nesting included - the binary pack frame in both directions, and all eighteen verbs of this subset's vocabulary together with their inverses. It is written from this subset's own committed snapshot grammar, binary protocol and mutations grammar, from the committed TypeScript schema mirror for the three `DocBlockPath` segment tags (`quote`, `listItem`, `tableCell`), and from the envelope section of the framework carrier module, importing nothing from and transliterating nothing of the Rust it judges. The snapshot grammar states the one thing a reader would otherwise get wrong and the Python follows it: `enc_f64` prints `f64::to_bits()` as plain decimal digits, not a float literal, so every `f64` leaf is a bare INT token. One boundary is recorded rather than smoothed over: the binary protocol document declares `styles`/`images`/`blocks` one opaque trailing `payload` chain by its own admission, so that layer was DERIVED from the committed pack example's bytes - LEB128 varint counts, length-prefixed UTF-8 strings, little-endian `f64` leaves, a `u8` bool, a `u8` option discriminant and a per-variant `u8` block tag in the grammar's own variant order - and the derivation is pinned by byte-exact re-encoding of that committed file, which a misreading could not produce. `package` is deliberately the empty string: the implementation needs no distribution, so it contributes nothing to the dependency ledger and nothing to the import-purity probe. The CommonMark route was surveyed again and still rejected on the merits rather than for absence - the oracle role may never link the subject crate, so `comrak` 0.54 could only be handed a document this repository's own Markdown exporter produced, and CommonMark carries no named style table, no id-keyed embedded image store and no run-level character formatting that survives a parse-render cycle, stranding ten of the eighteen kinds.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-document-mutate`'s external-oracle requirement for its 18-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "jszip-xmldom-docx-carrier",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "jszip",
+      "packages": [
+        {
+          "package": "@xmldom/xmldom",
+          "version": "0.9.10",
+          "license": "MIT",
+          "role": "serializes the WordprocessingML DOM of the committed fixtures"
+        }
+      ],
+      "version": "3.10.1",
+      "source": {
+        "repository": "https://github.com/Stuk/jszip",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "jszip",
+        "implementation": "jszip OPC writer + @xmldom/xmldom serializer; fflate + fast-xml-parser reader",
+        "version": "3.10.1"
+      },
+      "capabilities": [
+        "semio-v1-document-mutate",
+        "document.carrier.docx"
+      ],
+      "comparisonProfiles": [
+        "semantic-document-carrier-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://stuk.github.io/jszip",
+      "rationale": "📜️ THE WORDPROCESSINGML CARRIER, AND THE SCOPE IS THE POINT OF THE REGISTRATION.\n\nWhat makes it qualify at all is that this subset's docx export is REAL, established by reading the serializer body rather than the directory tree: `🚪️io/📤️export/🧵️serializers/🗿️artifacts/📜️docx/🔖️ecma-376/✳️any/🦀️.rs` builds a genuine `DocxDocument { body, styles }` through `map_semio_block` and hands the container to docx's own `engine::encode_docx`. It is none of the three stub shapes the `stub-serializer` gate exists to catch.\n\nWRITER AND READER ARE DIFFERENT LIBRARIES ON PURPOSE, AND THEY ARE REGISTERED SEPARATELY. This entry is the WRITER: `jszip` builds the OPC container and `@xmldom/xmldom` serializes the WordprocessingML, and that is what `generator.oracle` on every docx fixture points at. The READER is the registered probe `semio-document-carrier-read`, which unzips with `fflate` and decodes with `fast-xml-parser`. A reading produced by the library that did the writing would confirm its own serializer rather than check the bytes. Neither half is this repository's code, and neither half is ever handed our snapshot type.\n\nTHIS ORACLE PREDICTS NOTHING. It reads a file and reports what WordprocessingML encodes: the paragraph sequence, each `w:pStyle` reference, each `w:r`'s `w:b`/`w:i`/`w:u`, and the `w:style`/`w:name`/`w:basedOn` table. The pipeline compares those readings; no expected mutation result is computed anywhere in this registration.\n\nWHAT IT CANNOT DISCHARGE, STATED AS A LIMIT. The serializer FLATTENS `List` and `Quote` into bare paragraphs, so `ordered` has no docx encoding and `set-list-ordered` is not registered here — the probe answers `unsupported` rather than an empty `ok`, because an empty reading reported as ok would let that mutation pass against evidence that was never there. `Code`'s language tag, an `Image`'s bytes/width/height, `PageBreak`, and `RunStyle`'s size/font/colour/link are likewise absent from the carrier and are not claimed.\n\nMEASURED, and this is what qualifies the registration rather than merely motivating it: over the 24 committed fixtures the reader witnesses its own mutation in 24 of 24 cases; on the gate recipe a one-character corruption of the after (`revised` → `rev1sed`) separates at differingEntries 1 against 0 for the correct pair, and the same corruption disagrees with the CommonMark reading at totalDisagreements 1 against 0. Regeneration is byte-identical on all 50 fixture files."
+    },
+    {
+      "id": "mdast-to-markdown-md-carrier",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "mdast-util-to-markdown",
+      "version": "2.1.2",
+      "source": {
+        "repository": "https://github.com/syntax-tree/mdast-util-to-markdown",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "unified-mdast",
+        "implementation": "mdast-util-to-markdown CommonMark serializer",
+        "version": "2.1.2"
+      },
+      "capabilities": [
+        "semio-v1-document-mutate",
+        "document.carrier.md"
+      ],
+      "comparisonProfiles": [
+        "semantic-document-carrier-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://github.com/syntax-tree/mdast-util-to-markdown",
+      "rationale": "📝️ THE COMMONMARK CARRIER, AND THE ONLY WITNESS THIS SUBSET HAS FOR `set-list-ordered`.\n\nThe md export is REAL: `🚪️io/📤️export/🧵️serializers/🗿️artifacts/📝️md/🔖️commonmark/✳️any/🦀️.rs` maps every `DocBlock` onto a genuine `MdBlock`, preserving heading level, list `ordered`, code `info` and blockquote nesting.\n\nTWO DIFFERENT COMMONMARK IMPLEMENTATIONS, WHICH IS WHAT MAKES THIS LEG INDEPENDENT IN THE STRONGEST SENSE AVAILABLE HERE, AND THEY ARE REGISTERED SEPARATELY. This entry is the WRITER, `mdast-util-to-markdown` of the unified/mdast family, and it is what `generator.oracle` on every md fixture points at. The READER is the registered probe `semio-document-carrier-read`, which parses with `markdown-it` — an unrelated implementation with its own parser. That is the reader/judge separation the mesh pilot gets from `three` versus `manifold-3d`, and it means a serializer bug surfaces as a parse disagreement instead of being confirmed by its own author.\n\nTHIS ORACLE PREDICTS NOTHING. It parses a file and reports what CommonMark encodes: the block sequence, heading levels, list ordered-ness, code info strings, image alt and URL, and Strong/Emphasis/Link spans.\n\nWHAT IT CANNOT DISCHARGE, STATED AS A LIMIT AND NOT PAPERED OVER. The serializer's own header says `styles`/`DocStyle` are dropped entirely because CommonMark has no named-style concept, so `set-paragraph-style`, `insert-style`, `remove-style`, `set-style-name` and `set-style-based-on` are NOT registered against this oracle and the probe answers `unsupported` for them. `underline` has no CommonMark construct and is dropped, so md sees only two thirds of a `RunStyle` change. Registering it against all fifteen witnessed kinds would have produced five green results that prove nothing, which is the exact failure mode Protocol v2's per-mutation requirement exists to prevent.\n\nMEASURED: 10 of this oracle's 10 committed fixtures are witnessed by the reader; the gate recipe's corrupted after separates at differingEntries 1 against 0; regeneration is byte-identical."
+    },
+    {
+      "id": "serde-json-semio-document-carrier-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "serde_json",
+      "version": "1",
+      "source": {
+        "repository": "https://github.com/serde-rs/json",
+        "license": "MIT OR Apache-2.0"
+      },
+      "engine": {
+        "family": "serde-json",
+        "implementation": "serde_json 1 value tree",
+        "version": "1"
+      },
+      "capabilities": [
+        "semio-v1-document-mutate-carrier"
+      ],
+      "comparisonProfiles": [
+        "semantic-semio-document-carrier-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://docs.rs/serde_json",
+      "rationale": "📖️ A READER over a THIRD CARRIER, covering exactly what the other two cannot.\n\n`jszip-xmldom-docx-carrier` and `mdast-to-markdown-md-carrier` judge the docx and markdown exports. An embedded image's raw BYTES survive neither faithfully — docx stores them as separate zip media parts, markdown references them by path — so `insert-image`, `remove-image` and `set-image-bytes` were recorded `-uncarried` against both. Honest about those two carriers, and not a general claim.\n\n`SemioDocumentSnapshot::images` is an INLINE `Vec<DocImage>` carrying `{id, mime, bytes}` directly, so all three are carrier-level facts in this subset's own JSON export and a third-party JSON implementation witnesses each one, bytes included.\n\nWorth contrasting with `mathematical` and `sequence`, which look similar and are NOT addressable this way: their mutated state lives in composed CHILD artifacts behind `ArtifactChild` handles whose `local_owner` is `#[serde(skip)]`, so it never reaches their own JSON at all. Inline-versus-composed is the discriminator, and it was checked rather than assumed."
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "semio-v1-document",
+      "capability": "semio-v1-document-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "📑️document",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "🟤️set-snapshot",
+          "mutationDirectoryName": "🟤️set-snapshot",
+          "scenarios": [
+            {
+              "id": "bolds-the-body-paragraph-and-finalizes-its-copy",
+              "directoryName": "🧪️bolds-the-body-paragraph-and-finalizes-its-copy"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "insert-block",
+        "remove-block",
+        "set-block-content",
+        "set-paragraph-style",
+        "set-heading-level",
+        "set-list-ordered",
+        "set-run-text",
+        "set-run-style",
+        "set-image-block",
+        "insert-style",
+        "remove-style",
+        "set-style-name",
+        "set-style-based-on",
+        "insert-image",
+        "remove-image",
+        "set-image-bytes"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "id": "semio-document-carrier-read",
+      "kind": "external-process",
+      "ecosystem": "javascript",
+      "package": "fast-xml-parser",
+      "version": "5.11.1",
+      "packages": [
+        {
+          "package": "fflate",
+          "version": "0.8.3",
+          "license": "MIT",
+          "role": "unzips the OPC container"
+        },
+        {
+          "package": "markdown-it",
+          "version": "14.3.0",
+          "license": "MIT",
+          "role": "parses the CommonMark carrier"
+        }
+      ],
+      "engine": {
+        "family": "fast-xml-parser",
+        "implementation": "fflate + fast-xml-parser OOXML reader; markdown-it CommonMark reader",
+        "version": "5.11.1"
+      },
+      "capabilities": [
+        "semio-v1-document-mutate",
+        "document.carrier.docx",
+        "document.carrier.md"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🔬️probes/📜️script.ts",
+        "document-read"
+      ],
+      "rationale": "🔎️ Reports every document property the given carrier ENCODES, and — just as importantly — the list it does not. It computes nothing and predicts nothing. This is the READING half of both registered carrier oracles, deliberately built from libraries that wrote none of the bytes it reads: `fflate` + `fast-xml-parser` against docx written by `jszip` + `@xmldom/xmldom`, and `markdown-it` against CommonMark written by `mdast-util-to-markdown`. One import site of `markdown-it` exists outside a test-owned directory — 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️artifact-support-leaf-authority.ts, a framework library test that parses its own README prose — recorded here rather than left unsaid.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Run over the 24 committed fixtures: the docx reader reports supportedProperties [block-text, block-count, paragraph-style, heading-level, run-emphasis, image-alt, style-table] and unsupportedProperties [list-ordered, image-store]; the md reader reports supportedProperties [block-text, block-count, heading-level, list-ordered, run-emphasis, image-alt] and unsupportedProperties [paragraph-style, style-table, image-store]. Both splits match the serializer bodies read in 📓️document-subset-oracle.md §1.",
+        "criteria": [
+          {
+            "id": "reader-is-not-the-writer",
+            "met": true,
+            "detail": "fflate + fast-xml-parser read what jszip + @xmldom/xmldom wrote; markdown-it reads what mdast-util-to-markdown wrote."
+          },
+          {
+            "id": "unsupported-is-not-empty-ok",
+            "met": true,
+            "detail": "image-store answers unsupported on BOTH carriers; list-ordered answers unsupported on docx; paragraph-style and style-table answer unsupported on md."
+          }
+        ]
+      }
+    },
+    {
+      "id": "semio-document-carrier-property",
+      "kind": "external-process",
+      "ecosystem": "javascript",
+      "package": "fast-xml-parser",
+      "version": "5.11.1",
+      "packages": [
+        {
+          "package": "fflate",
+          "version": "0.8.3",
+          "license": "MIT",
+          "role": "unzips the OPC container"
+        },
+        {
+          "package": "markdown-it",
+          "version": "14.3.0",
+          "license": "MIT",
+          "role": "parses the CommonMark carrier"
+        }
+      ],
+      "engine": {
+        "family": "fast-xml-parser",
+        "implementation": "fflate + fast-xml-parser OOXML reader; markdown-it CommonMark reader",
+        "version": "5.11.1"
+      },
+      "capabilities": [
+        "semio-v1-document-mutate",
+        "document.carrier.docx",
+        "document.carrier.md"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🔬️probes/📜️script.ts",
+        "document-property"
+      ],
+      "rationale": "⚖️ Reads one property out of two carriers of the SAME format and reports where their entries differ. It states a fact about two files; the verdict is the pipeline's.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Two-sided, measured on the set-run-text-rewrites-the-body-copy bundle. ACCEPT: the correct after against itself reads differingEntries 0, and the docx and md readings of that after agree at totalDisagreements 0. REJECT: the committed counterexample (a single character changed, revised → rev1sed) reads differingEntries 1 on docx AND 1 on md against the correct after, and disagrees with the CommonMark reading at totalDisagreements 1. Across all 24 fixtures each mutation is witnessed by its own carrier — 24/24 — with no-mutation correctly reading differingEntries 0.",
+        "criteria": [
+          {
+            "id": "accepts-the-good-pair",
+            "met": true,
+            "detail": "differingEntries 0 on docx and md; cross-family totalDisagreements 0."
+          },
+          {
+            "id": "rejects-the-bad-pair",
+            "met": true,
+            "detail": "differingEntries 1 on docx and md; cross-family totalDisagreements 1."
+          },
+          {
+            "id": "refuses-an-uncarried-property",
+            "met": true,
+            "detail": "image-store returns status unsupported on both carriers rather than an empty ok."
+          }
+        ]
+      }
+    },
+    {
+      "id": "semio-document-carrier-project",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "serde_json",
+      "version": "1",
+      "engine": {
+        "family": "serde-json",
+        "implementation": "serde_json 1 value tree",
+        "version": "1"
+      },
+      "capabilities": [
+        "semio.document.carrier.project"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/🦀️json-engine/target/release/reader",
+        "project"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 3 kinds, per-fixture: (before,before) -> equal:true for 3/3; (before,after) -> equal:false for 3/3 — 6/6 directions correct. Observability is also enforced at GENERATION time: the engine refuses to write a pair whose carrier projection does not move.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "3/3 kinds: identical (before,before) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "3/3 kinds: the kind's own (before,after) compares equal:false"
+          },
+          {
+            "id": "reads-only",
+            "met": true,
+            "detail": "The reader projects and compares; it neither applies a mutation nor computes an expected state"
+          },
+          {
+            "id": "witnesses-raw-image-bytes",
+            "met": true,
+            "detail": "DocImage.bytes is projected as-is, which is precisely what the docx and markdown carriers cannot preserve"
+          },
+          {
+            "id": "deterministic",
+            "met": true,
+            "detail": "Object keys sorted, array order preserved; the corpus regenerates byte-identically"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "serde_json 1 is vendored in the cargo registry cache; builds and runs with --offline"
+          }
+        ]
+      }
+    },
+    {
+      "id": "semio-document-carrier-compare",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "serde_json",
+      "version": "1",
+      "engine": {
+        "family": "serde-json",
+        "implementation": "serde_json 1 value tree",
+        "version": "1"
+      },
+      "capabilities": [
+        "semio.document.carrier.compare"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/🦀️json-engine/target/release/reader",
+        "compare"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 3 kinds, per-fixture: (before,before) -> equal:true for 3/3; (before,after) -> equal:false for 3/3 — 6/6 directions correct. Observability is also enforced at GENERATION time: the engine refuses to write a pair whose carrier projection does not move.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "3/3 kinds: identical (before,before) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "3/3 kinds: the kind's own (before,after) compares equal:false"
+          },
+          {
+            "id": "reads-only",
+            "met": true,
+            "detail": "The reader projects and compares; it neither applies a mutation nor computes an expected state"
+          },
+          {
+            "id": "witnesses-raw-image-bytes",
+            "met": true,
+            "detail": "DocImage.bytes is projected as-is, which is precisely what the docx and markdown carriers cannot preserve"
+          },
+          {
+            "id": "deterministic",
+            "met": true,
+            "detail": "Object keys sorted, array order preserved; the corpus regenerates byte-identically"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "serde_json 1 is vendored in the cargo registry cache; builds and runs with --offline"
+          }
+        ]
+      }
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-document-carrier-v1",
+      "description": "Document state as a carrier's own reader recovers it — an ordered list of property entries per carrier. Array order is significant because block order is document semantics here; text is normalized for line endings and Unicode form because that is producer freedom in every one of these formats.",
+      "arrays": "ordered",
+      "text": "utf8"
+    },
+    {
+      "id": "semantic-semio-document-carrier-v1",
+      "description": "The ORDERED image list with its raw bytes, plus the block tree that references it — so a removal that would orphan a reference is visible in both places. Object keys sorted, array order preserved."
+    }
+  ],
+  "toleranceProfiles": [
+    {
+      "id": "document-text-exact",
+      "description": "Document text and structure are exact: unlike a tessellation there is no legitimate producer freedom in the characters of a paragraph or the id of a style, so no dimensional slack is defined and no override is permitted.",
+      "maxOverrideFactor": 1
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "document",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "📑️document",
+      "mutations": [
+        {
+          "id": "no-mutation",
+          "capability": "semio-v1-document-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#NoMutation",
+          "outcomes": [
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "no-mutation",
+            "bridgeVersion": 1,
+            "variant": "NoMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-xmldom-docx-carrier"
+            },
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "mdast-to-markdown-md-carrier"
+            }
+          ],
+          "carriers": [
+            "docx",
+            "md"
+          ],
+          "invariants": {
+            "local": [
+              "block-text-is-read-back-from-the-carrier"
+            ],
+            "enclosing": [
+              "document-text-agrees-across-every-carrier"
+            ]
+          },
+          "notes": "Its diff arm is the unconditional `SemioDocumentDiff::default()`, so a no-op is its only reachable outcome; the evidence is that two independent readers recover an unchanged block-text sequence."
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "semio-v1-document-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSnapshot",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-xmldom-docx-carrier"
+            },
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "mdast-to-markdown-md-carrier"
+            }
+          ],
+          "carriers": [
+            "docx",
+            "md"
+          ],
+          "invariants": {
+            "local": [
+              "block-text-is-read-back-from-the-carrier"
+            ],
+            "enclosing": [
+              "document-text-agrees-across-every-carrier"
+            ]
+          },
+          "notes": "The one generic entry point production dispatches today. Its leaf diff warns `mutation.no-op` when the new snapshot equals the current one, which is where the no-op outcome comes from."
+        },
+        {
+          "id": "insert-block",
+          "capability": "semio-v1-document-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#InsertBlock",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-block",
+            "bridgeVersion": 1,
+            "variant": "InsertBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-xmldom-docx-carrier"
+            },
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "mdast-to-markdown-md-carrier"
+            }
+          ],
+          "carriers": [
+            "docx",
+            "md"
+          ],
+          "invariants": {
+            "local": [
+              "block-count-is-read-back-from-the-carrier"
+            ],
+            "enclosing": [
+              "document-text-agrees-across-every-carrier"
+            ]
+          },
+          "notes": "A new block is a block both carriers count. A PageBreak insert is the exception and is invisible in BOTH — each serializer maps PageBreak to nothing — so that case carries no fixture rather than a flattering one."
+        },
+        {
+          "id": "remove-block",
+          "capability": "semio-v1-document-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveBlock",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-block",
+            "bridgeVersion": 1,
+            "variant": "RemoveBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-xmldom-docx-carrier"
+            },
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "mdast-to-markdown-md-carrier"
+            }
+          ],
+          "carriers": [
+            "docx",
+            "md"
+          ],
+          "invariants": {
+            "local": [
+              "block-count-is-read-back-from-the-carrier"
+            ],
+            "enclosing": [
+              "document-text-agrees-across-every-carrier"
+            ]
+          },
+          "notes": "Symmetric to insert-block; its diff arm is likewise unconditional, so `applied` is its only reachable outcome."
+        },
+        {
+          "id": "set-block-content",
+          "capability": "semio-v1-document-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetBlockContent",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-block-content",
+            "bridgeVersion": 1,
+            "variant": "SetBlockContent"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-xmldom-docx-carrier"
+            },
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "mdast-to-markdown-md-carrier"
+            }
+          ],
+          "carriers": [
+            "docx",
+            "md"
+          ],
+          "invariants": {
+            "local": [
+              "block-text-is-read-back-from-the-carrier"
+            ],
+            "enclosing": [
+              "document-text-agrees-across-every-carrier"
+            ]
+          },
+          "notes": "Replacing a block's content moves exactly one text entry and must not move the count; both carriers encode enough to see that."
+        },
+        {
+          "id": "set-paragraph-style",
+          "capability": "semio-v1-document-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetParagraphStyle",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-paragraph-style",
+            "bridgeVersion": 1,
+            "variant": "SetParagraphStyle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-xmldom-docx-carrier"
+            }
+          ],
+          "carriers": [
+            "docx"
+          ],
+          "invariants": {
+            "local": [
+              "paragraph-style-is-read-back-from-the-carrier"
+            ],
+            "enclosing": [
+              "carrier-remains-parseable-by-its-own-reader"
+            ]
+          },
+          "notes": "docx ONLY. The md serializer's own header states `styles`/`style_id` are dropped entirely on export, so CommonMark carries no trace of this mutation."
+        },
+        {
+          "id": "set-heading-level",
+          "capability": "semio-v1-document-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetHeadingLevel",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-heading-level",
+            "bridgeVersion": 1,
+            "variant": "SetHeadingLevel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-xmldom-docx-carrier"
+            },
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "mdast-to-markdown-md-carrier"
+            }
+          ],
+          "carriers": [
+            "docx",
+            "md"
+          ],
+          "invariants": {
+            "local": [
+              "heading-level-is-read-back-from-the-carrier"
+            ],
+            "enclosing": [
+              "document-text-agrees-across-every-carrier"
+            ]
+          },
+          "notes": "md carries the level directly. docx carries it only through the HeadingN style-id convention its serializer writes when no explicit style_id was set — a heading that already has a style hides its level, which is why the fixture leaves it unstyled."
+        },
+        {
+          "id": "set-list-ordered",
+          "capability": "semio-v1-document-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetListOrdered",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-list-ordered",
+            "bridgeVersion": 1,
+            "variant": "SetListOrdered"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "mdast-to-markdown-md-carrier"
+            }
+          ],
+          "carriers": [
+            "md"
+          ],
+          "invariants": {
+            "local": [
+              "list-ordered-is-read-back-from-the-carrier"
+            ],
+            "enclosing": [
+              "carrier-remains-parseable-by-its-own-reader"
+            ]
+          },
+          "notes": "md ONLY. The docx serializer FLATTENS a list into its items' bare paragraphs, so `ordered` has no WordprocessingML encoding at all and the docx probe answers `unsupported` rather than an empty ok."
+        },
+        {
+          "id": "set-run-text",
+          "capability": "semio-v1-document-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetRunText",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-run-text",
+            "bridgeVersion": 1,
+            "variant": "SetRunText"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-xmldom-docx-carrier"
+            },
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "mdast-to-markdown-md-carrier"
+            }
+          ],
+          "carriers": [
+            "docx",
+            "md"
+          ],
+          "invariants": {
+            "local": [
+              "block-text-is-read-back-from-the-carrier"
+            ],
+            "enclosing": [
+              "document-text-agrees-across-every-carrier"
+            ]
+          },
+          "notes": "The gate mutation: its fixture ships a one-character-corrupted counterexample, so the reading is proved to accept the correct after and reject the wrong one."
+        },
+        {
+          "id": "set-run-style",
+          "capability": "semio-v1-document-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetRunStyle",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-run-style",
+            "bridgeVersion": 1,
+            "variant": "SetRunStyle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-xmldom-docx-carrier"
+            },
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "mdast-to-markdown-md-carrier"
+            }
+          ],
+          "carriers": [
+            "docx",
+            "md"
+          ],
+          "invariants": {
+            "local": [
+              "run-emphasis-is-read-back-from-the-carrier"
+            ],
+            "enclosing": [
+              "document-text-agrees-across-every-carrier"
+            ]
+          },
+          "notes": "The two carriers cover different halves of RunStyle: docx encodes w:b/w:i/w:u, md encodes Strong/Emphasis/Link. NEITHER encodes size, font or colour, so a mutation touching only those three fields would be invisible — stated as a limit of this registration."
+        },
+        {
+          "id": "set-image-block",
+          "capability": "semio-v1-document-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetImageBlock",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-image-block",
+            "bridgeVersion": 1,
+            "variant": "SetImageBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-xmldom-docx-carrier"
+            },
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "mdast-to-markdown-md-carrier"
+            }
+          ],
+          "carriers": [
+            "docx",
+            "md"
+          ],
+          "invariants": {
+            "local": [
+              "image-alt-is-read-back-from-the-carrier"
+            ],
+            "enclosing": [
+              "document-text-agrees-across-every-carrier"
+            ]
+          },
+          "notes": "md keeps a real image node carrying alt and the image id as its URL; docx keeps the alt as ordinary paragraph text, which still witnesses a change to it. Neither carries width or height."
+        },
+        {
+          "id": "insert-style",
+          "capability": "semio-v1-document-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#InsertStyle",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-style",
+            "bridgeVersion": 1,
+            "variant": "InsertStyle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-xmldom-docx-carrier"
+            }
+          ],
+          "carriers": [
+            "docx"
+          ],
+          "invariants": {
+            "local": [
+              "style-table-is-read-back-from-the-carrier"
+            ],
+            "enclosing": [
+              "carrier-remains-parseable-by-its-own-reader"
+            ]
+          },
+          "notes": "docx ONLY — the named-style table exists in no other carrier here. Its diff arm is unconditional, hence `applied` only."
+        },
+        {
+          "id": "remove-style",
+          "capability": "semio-v1-document-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveStyle",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-style",
+            "bridgeVersion": 1,
+            "variant": "RemoveStyle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-xmldom-docx-carrier"
+            }
+          ],
+          "carriers": [
+            "docx"
+          ],
+          "invariants": {
+            "local": [
+              "style-table-is-read-back-from-the-carrier"
+            ],
+            "enclosing": [
+              "carrier-remains-parseable-by-its-own-reader"
+            ]
+          },
+          "notes": "docx ONLY, unconditional diff arm, hence `applied` only."
+        },
+        {
+          "id": "set-style-name",
+          "capability": "semio-v1-document-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetStyleName",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-style-name",
+            "bridgeVersion": 1,
+            "variant": "SetStyleName"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-xmldom-docx-carrier"
+            }
+          ],
+          "carriers": [
+            "docx"
+          ],
+          "invariants": {
+            "local": [
+              "style-table-is-read-back-from-the-carrier"
+            ],
+            "enclosing": [
+              "carrier-remains-parseable-by-its-own-reader"
+            ]
+          },
+          "notes": "docx ONLY — w:name. The id column must not move, which is what separates a rename from a replace."
+        },
+        {
+          "id": "set-style-based-on",
+          "capability": "semio-v1-document-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetStyleBasedOn",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-style-based-on",
+            "bridgeVersion": 1,
+            "variant": "SetStyleBasedOn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-xmldom-docx-carrier"
+            }
+          ],
+          "carriers": [
+            "docx"
+          ],
+          "invariants": {
+            "local": [
+              "style-table-is-read-back-from-the-carrier"
+            ],
+            "enclosing": [
+              "carrier-remains-parseable-by-its-own-reader"
+            ]
+          },
+          "notes": "docx ONLY — w:basedOn. No other carrier here models style inheritance."
+        },
+        {
+          "id": "insert-image",
+          "capability": "semio-v1-document-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#InsertImage",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-image",
+            "bridgeVersion": 1,
+            "variant": "InsertImage"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-document-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-semio-document-carrier-reader"
+            }
+          ],
+          "carriers": [],
+          "invariants": {
+            "local": [
+              "image-store-is-read-back-from-the-carrier"
+            ],
+            "enclosing": [
+              "carrier-remains-parseable-by-its-own-reader"
+            ]
+          },
+          "notes": "UNCARRIED. `SemioDocumentSnapshot::images` is never serialized by either export path: the docx serializer says real image BYTES are never fabricated into a fake OPC media part, and the md serializer says bytes/mime are dropped because md images carry a URL. A reader cannot witness what the bytes never carried."
+        },
+        {
+          "id": "remove-image",
+          "capability": "semio-v1-document-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveImage",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-image",
+            "bridgeVersion": 1,
+            "variant": "RemoveImage"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-document-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-semio-document-carrier-reader"
+            }
+          ],
+          "carriers": [],
+          "invariants": {
+            "local": [
+              "image-store-is-read-back-from-the-carrier"
+            ],
+            "enclosing": [
+              "carrier-remains-parseable-by-its-own-reader"
+            ]
+          },
+          "notes": "UNCARRIED, for the same reason as insert-image: neither carrier encodes the id-keyed image store."
+        },
+        {
+          "id": "set-image-bytes",
+          "capability": "semio-v1-document-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetImageBytes",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-image-bytes",
+            "bridgeVersion": 1,
+            "variant": "SetImageBytes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-document-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-semio-document-carrier-reader"
+            }
+          ],
+          "carriers": [],
+          "invariants": {
+            "local": [
+              "image-store-is-read-back-from-the-carrier"
+            ],
+            "enclosing": [
+              "carrier-remains-parseable-by-its-own-reader"
+            ]
+          },
+          "notes": "UNCARRIED. The raw bytes and mime of a stored image reach no exported carrier at all, so this kind stays owed a qualifying reference rather than being absorbed into a capability-level pass."
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-block-appends-a-paragraph-docx",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "insert-block",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🧱️insert-block-appends-a-paragraph/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
+          "bytes": 1583
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🧱️insert-block-appends-a-paragraph/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:c48546fbdc9466a2772a57066ccb72a3865ef1ea995ee3a6b49b1599fc95d191",
+          "bytes": 1591
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xmldom-docx-carrier",
+        "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
+        "engineFamily": "jszip",
+        "engineVersion": "3.10.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only insert-block-appends-a-paragraph",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip) + MIT (@xmldom/xmldom)",
+        "attribution": "OPC container written by JSZip (MIT); WordprocessingML serialized by @xmldom/xmldom (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "blocks",
+      "notes": "A new paragraph between the body and the closing paragraph. Both carriers count one more block. A PageBreak insert would be invisible in BOTH (each serializer maps it to nothing), which is why this recipe inserts a paragraph and the page-break case is recorded as uncarried rather than faked. Witnessed through the block-count property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-block-appends-a-paragraph-md",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "insert-block",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-md",
+          "path": "../🧫️fixtures/🧱️insert-block-appends-a-paragraph/⏮️before.md",
+          "mediaType": "text/markdown",
+          "sha256": "sha256:e52070fccf0a0de9b8271d9703f6ce1efd6e9fdc44d526d8e9c5d3bf78401ed7",
+          "bytes": 64
+        },
+        {
+          "role": "after-md",
+          "path": "../🧫️fixtures/🧱️insert-block-appends-a-paragraph/⏭️after.md",
+          "mediaType": "text/markdown",
+          "sha256": "sha256:1adfa16f6a2304e1dd53966c82a3450c7a716fd851f7a8e4a67d0959b9f44d3e",
+          "bytes": 89
+        }
+      ],
+      "generator": {
+        "oracle": "mdast-to-markdown-md-carrier",
+        "packageVersion": "2.1.2",
+        "engineFamily": "unified-mdast",
+        "engineVersion": "2.1.2",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only insert-block-appends-a-paragraph",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (mdast-util-to-markdown)",
+        "attribution": "CommonMark serialized by mdast-util-to-markdown (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "blocks",
+      "notes": "A new paragraph between the body and the closing paragraph. Both carriers count one more block. A PageBreak insert would be invisible in BOTH (each serializer maps it to nothing), which is why this recipe inserts a paragraph and the page-break case is recorded as uncarried rather than faked. Witnessed through the block-count property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-style-adds-a-named-style-docx",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "insert-style",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🧶️insert-style-adds-a-named-style/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
+          "bytes": 1583
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🧶️insert-style-adds-a-named-style/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:3fc6200037fab1b70c990c33cb69ba3ebe441abb05a2298170dd00c850aed2bf",
+          "bytes": 1609
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xmldom-docx-carrier",
+        "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
+        "engineFamily": "jszip",
+        "engineVersion": "3.10.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only insert-style-adds-a-named-style",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip) + MIT (@xmldom/xmldom)",
+        "attribution": "OPC container written by JSZip (MIT); WordprocessingML serialized by @xmldom/xmldom (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "styles",
+      "notes": "A new row in the named-style table, carrying an id, a display name and a basedOn parent. Its diff arm is unconditional, so `applied` is its only reachable outcome. Witnessed through the style-table property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "no-mutation-leaves-the-document-untouched-docx",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "no-mutation",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/⏸️no-mutation-leaves-the-document-untouched/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
+          "bytes": 1583
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/⏸️no-mutation-leaves-the-document-untouched/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
+          "bytes": 1583
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xmldom-docx-carrier",
+        "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
+        "engineFamily": "jszip",
+        "engineVersion": "3.10.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only no-mutation-leaves-the-document-untouched",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip) + MIT (@xmldom/xmldom)",
+        "attribution": "OPC container written by JSZip (MIT); WordprocessingML serialized by @xmldom/xmldom (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "document",
+      "notes": "The identity element. Its diff arm is `SemioDocumentMutation::NoMutation => SemioDocumentDiff::default()`, so its only reachable outcome is a no-op, and the evidence for it is that two independent readers recover exactly the same block-text sequence from the before and the after carrier. Witnessed through the block-text property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "no-mutation-leaves-the-document-untouched-md",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "no-mutation",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-md",
+          "path": "../🧫️fixtures/⏸️no-mutation-leaves-the-document-untouched/⏮️before.md",
+          "mediaType": "text/markdown",
+          "sha256": "sha256:e52070fccf0a0de9b8271d9703f6ce1efd6e9fdc44d526d8e9c5d3bf78401ed7",
+          "bytes": 64
+        },
+        {
+          "role": "after-md",
+          "path": "../🧫️fixtures/⏸️no-mutation-leaves-the-document-untouched/⏭️after.md",
+          "mediaType": "text/markdown",
+          "sha256": "sha256:e52070fccf0a0de9b8271d9703f6ce1efd6e9fdc44d526d8e9c5d3bf78401ed7",
+          "bytes": 64
+        }
+      ],
+      "generator": {
+        "oracle": "mdast-to-markdown-md-carrier",
+        "packageVersion": "2.1.2",
+        "engineFamily": "unified-mdast",
+        "engineVersion": "2.1.2",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only no-mutation-leaves-the-document-untouched",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (mdast-util-to-markdown)",
+        "attribution": "CommonMark serialized by mdast-util-to-markdown (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "document",
+      "notes": "The identity element. Its diff arm is `SemioDocumentMutation::NoMutation => SemioDocumentDiff::default()`, so its only reachable outcome is a no-op, and the evidence for it is that two independent readers recover exactly the same block-text sequence from the before and the after carrier. Witnessed through the block-text property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-block-drops-a-paragraph-docx",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "remove-block",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🪓️remove-block-drops-a-paragraph/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
+          "bytes": 1583
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🪓️remove-block-drops-a-paragraph/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:6211c21c43f8b6e85e9af76f716d11a603d61fadb563c4fea2b1e30fc8603e07",
+          "bytes": 1579
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xmldom-docx-carrier",
+        "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
+        "engineFamily": "jszip",
+        "engineVersion": "3.10.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only remove-block-drops-a-paragraph",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip) + MIT (@xmldom/xmldom)",
+        "attribution": "OPC container written by JSZip (MIT); WordprocessingML serialized by @xmldom/xmldom (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "blocks",
+      "notes": "The body paragraph is removed; both carriers count one fewer block and the surviving text entries shift by one. Witnessed through the block-count property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-block-drops-a-paragraph-md",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "remove-block",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-md",
+          "path": "../🧫️fixtures/🪓️remove-block-drops-a-paragraph/⏮️before.md",
+          "mediaType": "text/markdown",
+          "sha256": "sha256:e52070fccf0a0de9b8271d9703f6ce1efd6e9fdc44d526d8e9c5d3bf78401ed7",
+          "bytes": 64
+        },
+        {
+          "role": "after-md",
+          "path": "../🧫️fixtures/🪓️remove-block-drops-a-paragraph/⏭️after.md",
+          "mediaType": "text/markdown",
+          "sha256": "sha256:b514070d25784718757ba269942608a69589182ec0da5e51fc588ed91287dac8",
+          "bytes": 43
+        }
+      ],
+      "generator": {
+        "oracle": "mdast-to-markdown-md-carrier",
+        "packageVersion": "2.1.2",
+        "engineFamily": "unified-mdast",
+        "engineVersion": "2.1.2",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only remove-block-drops-a-paragraph",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (mdast-util-to-markdown)",
+        "attribution": "CommonMark serialized by mdast-util-to-markdown (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "blocks",
+      "notes": "The body paragraph is removed; both carriers count one fewer block and the surviving text entries shift by one. Witnessed through the block-count property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-style-drops-a-named-style-docx",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "remove-style",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🪥️remove-style-drops-a-named-style/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
+          "bytes": 1583
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🪥️remove-style-drops-a-named-style/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:bac452d0adc468e46f211bd29ccb2d578f9c63bd9a1218bcdc73bed6a34aeaef",
+          "bytes": 1564
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xmldom-docx-carrier",
+        "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
+        "engineFamily": "jszip",
+        "engineVersion": "3.10.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only remove-style-drops-a-named-style",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip) + MIT (@xmldom/xmldom)",
+        "attribution": "OPC container written by JSZip (MIT); WordprocessingML serialized by @xmldom/xmldom (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "styles",
+      "notes": "A named style removed from the table. Also unconditional in its diff arm, hence `applied` only. Witnessed through the style-table property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-block-content-replaces-a-paragraph-docx",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "set-block-content",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📦️set-block-content-replaces-a-paragraph/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
+          "bytes": 1583
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/📦️set-block-content-replaces-a-paragraph/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:560f94f803572554d68641e9ac4d81eec58457f22958da3bcee68ce339411311",
+          "bytes": 1585
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xmldom-docx-carrier",
+        "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
+        "engineFamily": "jszip",
+        "engineVersion": "3.10.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only set-block-content-replaces-a-paragraph",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip) + MIT (@xmldom/xmldom)",
+        "attribution": "OPC container written by JSZip (MIT); WordprocessingML serialized by @xmldom/xmldom (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "blocks",
+      "notes": "One block's whole content replaced in place: the block count must not move and exactly one text entry must. Witnessed through the block-text property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-block-content-replaces-a-paragraph-md",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "set-block-content",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-md",
+          "path": "../🧫️fixtures/📦️set-block-content-replaces-a-paragraph/⏮️before.md",
+          "mediaType": "text/markdown",
+          "sha256": "sha256:e52070fccf0a0de9b8271d9703f6ce1efd6e9fdc44d526d8e9c5d3bf78401ed7",
+          "bytes": 64
+        },
+        {
+          "role": "after-md",
+          "path": "../🧫️fixtures/📦️set-block-content-replaces-a-paragraph/⏭️after.md",
+          "mediaType": "text/markdown",
+          "sha256": "sha256:4673e2cffc5484c937dbe9437446754bd7664be34b5d3f66de796d2e6a08b417",
+          "bytes": 68
+        }
+      ],
+      "generator": {
+        "oracle": "mdast-to-markdown-md-carrier",
+        "packageVersion": "2.1.2",
+        "engineFamily": "unified-mdast",
+        "engineVersion": "2.1.2",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only set-block-content-replaces-a-paragraph",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (mdast-util-to-markdown)",
+        "attribution": "CommonMark serialized by mdast-util-to-markdown (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "blocks",
+      "notes": "One block's whole content replaced in place: the block count must not move and exactly one text entry must. Witnessed through the block-text property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-heading-level-demotes-the-title-docx",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "set-heading-level",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📐️set-heading-level-demotes-the-title/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
+          "bytes": 1583
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/📐️set-heading-level-demotes-the-title/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:597de4a8f0aa29f753fb4de2d1c5d817848f4ca4c9958e3f47b660f9da11692f",
+          "bytes": 1583
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xmldom-docx-carrier",
+        "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
+        "engineFamily": "jszip",
+        "engineVersion": "3.10.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only set-heading-level-demotes-the-title",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip) + MIT (@xmldom/xmldom)",
+        "attribution": "OPC container written by JSZip (MIT); WordprocessingML serialized by @xmldom/xmldom (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "blocks",
+      "notes": "A heading demoted from level 1 to level 3. md carries the level directly; docx carries it only through the HeadingN style-id convention its serializer writes when no explicit style_id was set, so this recipe deliberately leaves the heading unstyled. Witnessed through the heading-level property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-heading-level-demotes-the-title-md",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "set-heading-level",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-md",
+          "path": "../🧫️fixtures/📐️set-heading-level-demotes-the-title/⏮️before.md",
+          "mediaType": "text/markdown",
+          "sha256": "sha256:e52070fccf0a0de9b8271d9703f6ce1efd6e9fdc44d526d8e9c5d3bf78401ed7",
+          "bytes": 64
+        },
+        {
+          "role": "after-md",
+          "path": "../🧫️fixtures/📐️set-heading-level-demotes-the-title/⏭️after.md",
+          "mediaType": "text/markdown",
+          "sha256": "sha256:1c028bac6d2a00ef729cf8236d72816ae8b8bae483be39d2a9e79dcb782e4c58",
+          "bytes": 66
+        }
+      ],
+      "generator": {
+        "oracle": "mdast-to-markdown-md-carrier",
+        "packageVersion": "2.1.2",
+        "engineFamily": "unified-mdast",
+        "engineVersion": "2.1.2",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only set-heading-level-demotes-the-title",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (mdast-util-to-markdown)",
+        "attribution": "CommonMark serialized by mdast-util-to-markdown (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "blocks",
+      "notes": "A heading demoted from level 1 to level 3. md carries the level directly; docx carries it only through the HeadingN style-id convention its serializer writes when no explicit style_id was set, so this recipe deliberately leaves the heading unstyled. Witnessed through the heading-level property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-image-block-corrects-the-caption-docx",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "set-image-block",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📷️set-image-block-corrects-the-caption/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:7944c930165ce430158a4453920b7ba941c10013fe5ba51f154c2ba771b72362",
+          "bytes": 1490
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/📷️set-image-block-corrects-the-caption/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:5df1b1710a00a5e52bd1e936a682386b8cf5860102561acd70cd70b835e83555",
+          "bytes": 1490
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xmldom-docx-carrier",
+        "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
+        "engineFamily": "jszip",
+        "engineVersion": "3.10.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only set-image-block-corrects-the-caption",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip) + MIT (@xmldom/xmldom)",
+        "attribution": "OPC container written by JSZip (MIT); WordprocessingML serialized by @xmldom/xmldom (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "runs",
+      "notes": "An image block's alt text. md keeps a real image node carrying both the alt and the image id as its URL; docx keeps the alt as ordinary paragraph text, which still witnesses the change even though the carrier cannot say that it IS an alt. Neither carries width or height. Witnessed through the image-alt property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-image-block-corrects-the-caption-md",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "set-image-block",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-md",
+          "path": "../🧫️fixtures/📷️set-image-block-corrects-the-caption/⏮️before.md",
+          "mediaType": "text/markdown",
+          "sha256": "sha256:aef9eecd33d90cd568ca642481afad2fe169510cd2afe320b40800fccd11e34f",
+          "bytes": 55
+        },
+        {
+          "role": "after-md",
+          "path": "../🧫️fixtures/📷️set-image-block-corrects-the-caption/⏭️after.md",
+          "mediaType": "text/markdown",
+          "sha256": "sha256:9f65147b0d1cfd46613d1b963595c85374b8e66c23a4fcdcd50a8037feb83fa8",
+          "bytes": 56
+        }
+      ],
+      "generator": {
+        "oracle": "mdast-to-markdown-md-carrier",
+        "packageVersion": "2.1.2",
+        "engineFamily": "unified-mdast",
+        "engineVersion": "2.1.2",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only set-image-block-corrects-the-caption",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (mdast-util-to-markdown)",
+        "attribution": "CommonMark serialized by mdast-util-to-markdown (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "runs",
+      "notes": "An image block's alt text. md keeps a real image node carrying both the alt and the image id as its URL; docx keeps the alt as ordinary paragraph text, which still witnesses the change even though the carrier cannot say that it IS an alt. Neither carries width or height. Witnessed through the image-alt property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-list-ordered-numbers-the-list-md",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "set-list-ordered",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-md",
+          "path": "../🧫️fixtures/🔢️set-list-ordered-numbers-the-list/⏮️before.md",
+          "mediaType": "text/markdown",
+          "sha256": "sha256:c0f5a4e199a00c8b2f168a5f2c436aa761feb7aa1ebe7823cb9f07bebb7b0fd8",
+          "bytes": 44
+        },
+        {
+          "role": "after-md",
+          "path": "../🧫️fixtures/🔢️set-list-ordered-numbers-the-list/⏭️after.md",
+          "mediaType": "text/markdown",
+          "sha256": "sha256:21b0375b41e66886495ab1ddd819bf3d00778b1d19876d29092138c33b4d82b9",
+          "bytes": 46
+        }
+      ],
+      "generator": {
+        "oracle": "mdast-to-markdown-md-carrier",
+        "packageVersion": "2.1.2",
+        "engineFamily": "unified-mdast",
+        "engineVersion": "2.1.2",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only set-list-ordered-numbers-the-list",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (mdast-util-to-markdown)",
+        "attribution": "CommonMark serialized by mdast-util-to-markdown (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "blocks",
+      "notes": "A bullet list becomes an ordered list. CommonMark is the ONLY carrier: docx flattens lists into bare paragraphs and drops the flag entirely, so no docx fixture is generated for this kind at all. Witnessed through the list-ordered property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-paragraph-style-names-the-body-style-docx",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "set-paragraph-style",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🪶️set-paragraph-style-names-the-body-style/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
+          "bytes": 1583
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🪶️set-paragraph-style-names-the-body-style/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:c671f50802b130cfc721e57b84a25a328f421f8a416fc51c7d96bdaea1b0e2ec",
+          "bytes": 1591
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xmldom-docx-carrier",
+        "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
+        "engineFamily": "jszip",
+        "engineVersion": "3.10.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only set-paragraph-style-names-the-body-style",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip) + MIT (@xmldom/xmldom)",
+        "attribution": "OPC container written by JSZip (MIT); WordprocessingML serialized by @xmldom/xmldom (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "styles",
+      "notes": "A named paragraph style set on the body paragraph, read back out of w:pStyle. CommonMark drops style_id on export, so WordprocessingML is the only witness. Witnessed through the paragraph-style property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-run-style-emphasises-a-run-docx",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "set-run-style",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🎨️set-run-style-emphasises-a-run/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:75040fa3419589f9deea8eab16690c23a32a16cd74e29f24bd9ad0c0967d3293",
+          "bytes": 1484
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🎨️set-run-style-emphasises-a-run/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:b2dc177eadfa57fa21f299dc50188df5cde52b3dd08e148e9b58a9e3fdc80a07",
+          "bytes": 1497
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xmldom-docx-carrier",
+        "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
+        "engineFamily": "jszip",
+        "engineVersion": "3.10.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only set-run-style-emphasises-a-run",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip) + MIT (@xmldom/xmldom)",
+        "attribution": "OPC container written by JSZip (MIT); WordprocessingML serialized by @xmldom/xmldom (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "runs",
+      "notes": "Bold and italic on one run. docx witnesses w:b/w:i/w:u and md witnesses Strong/Emphasis/Link, so the two carriers cover different halves of RunStyle; neither witnesses size, font or colour, and both serializers say so in their own headers. Witnessed through the run-emphasis property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-run-style-emphasises-a-run-md",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "set-run-style",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-md",
+          "path": "../🧫️fixtures/🎨️set-run-style-emphasises-a-run/⏮️before.md",
+          "mediaType": "text/markdown",
+          "sha256": "sha256:9e50bdd5eb2d8ce90a16b259c60aaa41dafc38ede5573926639f23378e3b9576",
+          "bytes": 38
+        },
+        {
+          "role": "after-md",
+          "path": "../🧫️fixtures/🎨️set-run-style-emphasises-a-run/⏭️after.md",
+          "mediaType": "text/markdown",
+          "sha256": "sha256:31398fbcdea5b6909405aa2c532904f20bccdbf1c1d20188e1d99f58ea968c00",
+          "bytes": 44
+        }
+      ],
+      "generator": {
+        "oracle": "mdast-to-markdown-md-carrier",
+        "packageVersion": "2.1.2",
+        "engineFamily": "unified-mdast",
+        "engineVersion": "2.1.2",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only set-run-style-emphasises-a-run",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (mdast-util-to-markdown)",
+        "attribution": "CommonMark serialized by mdast-util-to-markdown (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "runs",
+      "notes": "Bold and italic on one run. docx witnesses w:b/w:i/w:u and md witnesses Strong/Emphasis/Link, so the two carriers cover different halves of RunStyle; neither witnesses size, font or colour, and both serializers say so in their own headers. Witnessed through the run-emphasis property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-run-text-rewrites-the-body-copy-docx",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "set-run-text",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🧵️set-run-text-rewrites-the-body-copy/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
+          "bytes": 1583
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🧵️set-run-text-rewrites-the-body-copy/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:9346a9701e794dcedcdd1685b0cb32a5b822464f2d24a3016ce6bd1ccaed1591",
+          "bytes": 1587
+        },
+        {
+          "role": "counterexample-docx",
+          "path": "../🧫️fixtures/🧵️set-run-text-rewrites-the-body-copy/⚠️counterexample.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:408656c8bfce75f2b5b02e86d60701462d93724448db866685ff6cfca2648700",
+          "bytes": 1588
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xmldom-docx-carrier",
+        "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
+        "engineFamily": "jszip",
+        "engineVersion": "3.10.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only set-run-text-rewrites-the-body-copy",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip) + MIT (@xmldom/xmldom)",
+        "attribution": "OPC container written by JSZip (MIT); WordprocessingML serialized by @xmldom/xmldom (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "runs",
+      "notes": "One run's literal text. THE GATE RECIPE: the committed counterexample is a single-character corruption of the correct after (`revised` → `rev1sed`), close enough that only a reader that genuinely decoded the text can tell them apart, so accepting the good pair and rejecting the bad one is a real measurement rather than a formality. Witnessed through the block-text property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-run-text-rewrites-the-body-copy-md",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "set-run-text",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-md",
+          "path": "../🧫️fixtures/🧵️set-run-text-rewrites-the-body-copy/⏮️before.md",
+          "mediaType": "text/markdown",
+          "sha256": "sha256:e52070fccf0a0de9b8271d9703f6ce1efd6e9fdc44d526d8e9c5d3bf78401ed7",
+          "bytes": 64
+        },
+        {
+          "role": "after-md",
+          "path": "../🧫️fixtures/🧵️set-run-text-rewrites-the-body-copy/⏭️after.md",
+          "mediaType": "text/markdown",
+          "sha256": "sha256:a0b889c48a59600cc689aa676f1f79b91cb4405a958a9d4f6a9c89cc945b56aa",
+          "bytes": 72
+        },
+        {
+          "role": "counterexample-md",
+          "path": "../🧫️fixtures/🧵️set-run-text-rewrites-the-body-copy/🚫️counterexample.md",
+          "mediaType": "text/markdown",
+          "sha256": "sha256:454fc3ef9d348a3c4911ed190cbef5607a10993db010a899c068eaf4e9b57b83",
+          "bytes": 72
+        }
+      ],
+      "generator": {
+        "oracle": "mdast-to-markdown-md-carrier",
+        "packageVersion": "2.1.2",
+        "engineFamily": "unified-mdast",
+        "engineVersion": "2.1.2",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only set-run-text-rewrites-the-body-copy",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (mdast-util-to-markdown)",
+        "attribution": "CommonMark serialized by mdast-util-to-markdown (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "runs",
+      "notes": "One run's literal text. THE GATE RECIPE: the committed counterexample is a single-character corruption of the correct after (`revised` → `rev1sed`), close enough that only a reader that genuinely decoded the text can tell them apart, so accepting the good pair and rejecting the bad one is a real measurement rather than a formality. Witnessed through the block-text property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-replaces-the-whole-document-docx",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🟤️set-snapshot-replaces-the-whole-document/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:ba71691de785cf9bac982d084846325b6ab24a67376ccef2ed7297b4c75a18e5",
+          "bytes": 1565
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🟤️set-snapshot-replaces-the-whole-document/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:5b6b7193ee70bf6fa753f3deb41a0794a7c3a38e769fc371d05b477bd8c5ff47",
+          "bytes": 1597
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xmldom-docx-carrier",
+        "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
+        "engineFamily": "jszip",
+        "engineVersion": "3.10.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only set-snapshot-replaces-the-whole-document",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip) + MIT (@xmldom/xmldom)",
+        "attribution": "OPC container written by JSZip (MIT); WordprocessingML serialized by @xmldom/xmldom (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "document",
+      "notes": "The generic entry point this subset actually dispatches today: a whole-snapshot replacement that rewrites a heading and a paragraph, adds a named style, and leaves the fenced code block alone — so the reading must show movement in exactly two text entries and none in the third. Witnessed through the block-text property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-replaces-the-whole-document-md",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-md",
+          "path": "../🧫️fixtures/🟤️set-snapshot-replaces-the-whole-document/⏮️before.md",
+          "mediaType": "text/markdown",
+          "sha256": "sha256:f79ec7344343950fbcb0b46a416db7c24f574bdd64a403ae4b7340248f3c8703",
+          "bytes": 56
+        },
+        {
+          "role": "after-md",
+          "path": "../🧫️fixtures/🟤️set-snapshot-replaces-the-whole-document/⏭️after.md",
+          "mediaType": "text/markdown",
+          "sha256": "sha256:137156ab6cc61e3c33f47f4642ba2e9cb08b70a376e455958c5da52286d613aa",
+          "bytes": 56
+        }
+      ],
+      "generator": {
+        "oracle": "mdast-to-markdown-md-carrier",
+        "packageVersion": "2.1.2",
+        "engineFamily": "unified-mdast",
+        "engineVersion": "2.1.2",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only set-snapshot-replaces-the-whole-document",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (mdast-util-to-markdown)",
+        "attribution": "CommonMark serialized by mdast-util-to-markdown (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "document",
+      "notes": "The generic entry point this subset actually dispatches today: a whole-snapshot replacement that rewrites a heading and a paragraph, adds a named style, and leaves the fenced code block alone — so the reading must show movement in exactly two text entries and none in the third. Witnessed through the block-text property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-style-based-on-reparents-a-style-docx",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "set-style-based-on",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🧬️set-style-based-on-reparents-a-style/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
+          "bytes": 1583
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🧬️set-style-based-on-reparents-a-style/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:40545749579d4e4d3d5aacf91999fd5376e0631de69dbb9c8775fc33095daa15",
+          "bytes": 1595
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xmldom-docx-carrier",
+        "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
+        "engineFamily": "jszip",
+        "engineVersion": "3.10.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only set-style-based-on-reparents-a-style",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip) + MIT (@xmldom/xmldom)",
+        "attribution": "OPC container written by JSZip (MIT); WordprocessingML serialized by @xmldom/xmldom (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "styles",
+      "notes": "A style's w:basedOn parent set. Only WordprocessingML carries style inheritance at all. Witnessed through the style-table property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-style-name-renames-a-style-docx",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "set-style-name",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/🏷️set-style-name-renames-a-style/⬅️before.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
+          "bytes": 1583
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🏷️set-style-name-renames-a-style/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:f61b92b394fe091310fddae7bac454f2e55cb169398b6754c4f3169f2f61fc8b",
+          "bytes": 1588
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-xmldom-docx-carrier",
+        "packageVersion": "3.10.1 + @xmldom/xmldom 0.9.10",
+        "engineFamily": "jszip",
+        "engineVersion": "3.10.1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts generate --only set-style-name-renames-a-style",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (jszip) + MIT (@xmldom/xmldom)",
+        "attribution": "OPC container written by JSZip (MIT); WordprocessingML serialized by @xmldom/xmldom (MIT)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-document-carrier-v1",
+      "toleranceProfile": "document-text-exact",
+      "reproducible": true,
+      "family": "styles",
+      "notes": "A style's display name changed while its id stays put — visible in w:name and nowhere else in this subset's carriers. The id column must not move, which is what separates a rename from a replace. Witnessed through the style-table property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-insert-image",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "insert-image",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/📸️insert-image/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b3254b4dd2815acc7e158b8f4fad0596354834d60e62ca18cfe644f98d09ff7b",
+          "bytes": 1021
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/📸️insert-image/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:262803de3d93088590b5113fb7d5aa4c95ab951a0f6cd90642986fc1100c123f",
+          "bytes": 1202
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-semio-document-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-semio-document-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic two-image document with the insert-image mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Neither the docx nor the markdown carrier preserves an image's raw bytes. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "semio-v1-document-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-remove-image",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "remove-image",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/🪦️remove-image/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b3254b4dd2815acc7e158b8f4fad0596354834d60e62ca18cfe644f98d09ff7b",
+          "bytes": 1021
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/🪦️remove-image/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:51b3e65d0096b791e444b722f03a136e62a8ab534da5137e27deb58cf8f862eb",
+          "bytes": 750
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-semio-document-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-semio-document-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic two-image document with the remove-image mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Neither the docx nor the markdown carrier preserves an image's raw bytes. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "semio-v1-document-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-set-image-bytes",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "set-image-bytes",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/🧮️set-image-bytes/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b3254b4dd2815acc7e158b8f4fad0596354834d60e62ca18cfe644f98d09ff7b",
+          "bytes": 1021
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/🧮️set-image-bytes/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:dd4985711115cb81dd2dce0ec5ea5d5f61317de2de8baad2e84ec3450c9f6e3f",
+          "bytes": 1037
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-semio-document-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏗️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-semio-document-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic two-image document with the set-image-bytes mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Neither the docx nor the markdown carrier preserves an image's raw bytes. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "semio-v1-document-carrier-compare-v1"
+    }
+  ],
+  "comparisonPipelines": [
+    {
+      "id": "semio-v1-document-carrier-compare-v1",
+      "description": "Carrier-level equality over the ordered image list and block tree, read through serde_json. GATING for the three kinds neither docx nor markdown preserves.",
+      "stages": [
+        {
+          "probe": "semio-document-carrier-project",
+          "description": "An independent JSON implementation accepts both files.",
+          "inputs": [
+            "expected-before-json",
+            "expected-after-json"
+          ],
+          "assertions": {
+            "bothImport": true
+          }
+        },
+        {
+          "probe": "semio-document-carrier-compare",
+          "description": "Ordered equality over images and blocks — the operative equality.",
+          "inputs": [
+            "expected-before-json",
+            "expected-after-json"
+          ],
+          "assertions": {
+            "equal": true
+          }
+        }
+      ]
+    }
+  ]
+}

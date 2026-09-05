@@ -1477,7 +1477,7 @@ mod tests {
 
     #[test]
     fn retained_schema_contract_and_factory_identity_are_exact() {
-        let fixture: Value = json::parse(include_str!("../../../../../🧪️fixtures/equation-retained-command-law.json")).expect("language-neutral retained fixture");
+        let fixture: Value = json::parse(include_str!("../../../../../🧪️fixtures/⚖️equation-retained-command-law.json")).expect("language-neutral retained fixture");
         assert_eq!(fixture["contract"]["workItems"], 65_536);
         assert_eq!(fixture["contract"]["maximumStepMillis"], 8);
         assert_eq!(fixture["actions"], json::array(EQUATION_TOOL_IDS.iter().map(|id| Value::from(*id))));
@@ -1649,7 +1649,7 @@ mod tests {
     /// (an undeclared host-pushed command) and `setDocument` → `set-artifact` (the `app_commands!`
     /// row's own `"setDocument" as "set-artifact" => set_artifact::SetArtifact` explicitly pins a
     /// non-kebab wire keyword, matching `SetArtifact`'s own `#[dsl(keyword = "set-artifact")]`).
-    /// **Pre-existing bug, independently traced**: `git log -1 --date=iso -- 🎮️commands/📄️set-artifact/
+    /// **Pre-existing bug, independently traced**: `git log -1 --date=iso -- 🎮️commands/🗿️set-artifact/
     /// 🦀️.rs` shows `SetArtifact`'s explicit `set-artifact` keyword predates this ticket's
     /// own edits to this file (which only touched `render`/`export_media`); this test's hardcoded
     /// exception list simply never accounted for the second declared divergence. Fixed outright

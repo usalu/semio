@@ -5,7 +5,7 @@
   "displayName": "Change Cursor",
   "emoji": "⏱️",
   "aggregateVariant": "ChangeCursor",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

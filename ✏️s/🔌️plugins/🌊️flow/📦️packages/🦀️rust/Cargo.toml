@@ -18,7 +18,7 @@ consumes = ["flow.extension"]
 [[package.metadata.semio.playground]]
 variant = "flow"
 ports = { react = 6016, wgpu = 6116 }
-engines = ["./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg"]
+engines = ["./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -27,7 +27,7 @@ path = "🦀️.rs"
 [dependencies]
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-job.workspace = true
-semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔢️hash/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
 flow = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust", package = "semio-framework-os-flow" }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
@@ -35,6 +35,12 @@ infinite_canvas = { path = "../../../../../🧰️framework/🛍️products/💻
 ui_wgpu = {path = "../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"]}
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+# 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (26/08/20): the raw `ui::*` builder DSL (tree items
+# with row actions, form field controls) has no SDK-level convenience wrapper for every shape the
+# Generate-mode windows need — depended on directly rather than routed through `semio-framework-plugin`,
+# mirroring that SDK's own registrar-request note ("add semio-framework-ui-contract ... in [ui_wgpu's]
+# place").
+semio_framework_ui_contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 dsl_derive = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust", package = "semio-framework-os-kernel-dsl-derive" }
 # 🌱️ `DuplicateWidget`'s `CompositeMutationKind` impl now bounds on `ToValue`/`FromValue` (see that

@@ -1,9 +1,0 @@
-syntax = "proto3";
-package semio.stdio.pdf.v1_4.mutations;
-
-// 📥️ insert-page payload.
-message InsertPage {
-  message Page { double width = 1; double height = 2; string text = 3; }
-  uint64 index = 1;
-  Page page = 2;
-}

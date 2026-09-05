@@ -5,7 +5,7 @@
   "displayName": "Set Default App",
   "emoji": "📌️",
   "aggregateVariant": "SetDefaultApp",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

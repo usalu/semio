@@ -81,7 +81,7 @@ impl store::ArtifactPack for CurationSnapshot {
 
 //#region 🌉️ExternalCodecBridge
 /// 📤️ Renders a [`CurationSnapshot`] as this facet's own camelCase JSON projection — the comparison
-/// surface `mutate-curation-1`'s scenarios are measured through, and the shape the committed
+/// surface `🟨️mutate-curation-1`'s scenarios are measured through, and the shape the committed
 /// `../🧬️mutations/<slug>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
 /// specification vectors are written in. `curated` travels as an ORDERED list, which is what makes
 /// the append-at-the-end and restore-in-place claims below checkable at all.
@@ -94,7 +94,7 @@ pub fn encode_curation_snapshot_json(snapshot: &CurationSnapshot) -> String {
 }
 
 /// 📥️ The inverse of [`encode_curation_snapshot_json`] — decodes those committed specification
-/// vectors into real [`CurationSnapshot`] values, so `mutate-curation-1`'s adapter reads the committed
+/// vectors into real [`CurationSnapshot`] values, so `🟨️mutate-curation-1`'s adapter reads the committed
 /// fixture rather than re-declaring it as a Rust literal beside it. Reaching `serde_json` from that
 /// adapter is impossible: the generated test host links only this crate and `semio-repo-test-host`.
 pub fn decode_curation_snapshot_json(text: &str) -> Result<CurationSnapshot, String> {
@@ -103,7 +103,7 @@ pub fn decode_curation_snapshot_json(text: &str) -> Result<CurationSnapshot, Str
 
 /// 📝️ Parses `.curation.dsl.semio` text into a [`CurationSnapshot`] — a named, non-async pass-through of
 /// this type's own `store::ArtifactDsl` impl above, whose trait and error type are both unnameable
-/// outside this crate, so `mutate-curation-1`'s `identity-round-trip` scenario reaches the real
+/// outside this crate, so `🟨️mutate-curation-1`'s `identity-round-trip` scenario reaches the real
 /// committed artifact (`../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`) through this instead.
 pub fn parse_curation_dsl(text: &str) -> Result<CurationSnapshot, String> {
     <CurationSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))

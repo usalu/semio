@@ -1,0 +1,264 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution. `s.vcs.vcs` is a semio-NATIVE checkpoint document — its wire forms are `.vcs.dsl.semio` and `.vcs.pack.semio`, both defined by this repository alone — so no oracle is registered and the evidence rests on the committed per-kind specification vectors plus the inverse law (see noOracleDecisions).",
+  "oracles": [
+    {
+      "id": "vcs-1-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "capabilities": [
+        "vcs-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "🐍️ No third-party library reads or writes s.vcs.vcs's .vcs.dsl.semio/.vcs.pack.semio carriers — grammars this repository defines and nobody else reads. The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../../../🧪️tests/mutate-vcs-1/🐍️component.py, written from this subset's own committed ../🧬️schema/📸️snapshot/🔣️.json and each mutation's 🔣️.schema.json, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's change/rename/add/remove verb entries. It imports nothing from the Rust it judges and transliterates none of it — remove-tag's inverse reinserts the captured tag at its captured BASE-state index rather than appending, which the committed fixture's two-tag ordering is built to catch (a first standalone run caught exactly this bug in this file, fixed before registration). All six kinds' forward and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan — all twelve passed.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.vcs.vcs",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "s.vcs.vcs",
+              "reason": "No third-party library in any ecosystem reads or writes this repository own .vcs.dsl.semio/.vcs.pack.semio checkpoint grammars; searched by name and by domain keywords with no match."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md; ../🧬️schema/📸️snapshot/🔣️.json; each mutation's own 🔣️.schema.json",
+        "fixtureCoverage": {
+          "vectors": 6,
+          "capabilitiesCovered": [
+            "vcs-1-mutate"
+          ]
+        }
+      }
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "vcs-1-any",
+      "capability": "vcs-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "add-tag",
+          "sourceMutationDirectoryName": "🏷️add-tag",
+          "mutationDirectoryName": "🏷️add-tag",
+          "scenarios": [
+            {
+              "id": "appends-urgent-tag",
+              "directoryName": "🧪️appends-urgent-tag"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-counter",
+          "sourceMutationDirectoryName": "🔢change-counter",
+          "mutationDirectoryName": "🔢change-counter",
+          "scenarios": [
+            {
+              "id": "sets-counter-to-seven",
+              "directoryName": "🧪️sets-counter-to-seven"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-notes",
+          "sourceMutationDirectoryName": "📝change-notes",
+          "mutationDirectoryName": "📝change-notes",
+          "scenarios": [
+            {
+              "id": "rewrites-the-notes",
+              "directoryName": "🧪️rewrites-the-notes"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-status",
+          "sourceMutationDirectoryName": "🚦change-status",
+          "mutationDirectoryName": "🚦change-status",
+          "scenarios": [
+            {
+              "id": "draft-to-review",
+              "directoryName": "🧪️draft-to-review"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-tag",
+          "sourceMutationDirectoryName": "🗑️remove-tag",
+          "mutationDirectoryName": "🗑️remove-tag",
+          "scenarios": [
+            {
+              "id": "detaches-the-review-tag",
+              "directoryName": "🧪️detaches-the-review-tag"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-vcs",
+          "sourceMutationDirectoryName": "✏️rename-vcs",
+          "mutationDirectoryName": "✏️rename-vcs",
+          "scenarios": [
+            {
+              "id": "retitles-the-document",
+              "directoryName": "🧪️retitles-the-document"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "rename-vcs",
+        "change-counter",
+        "change-notes",
+        "change-status",
+        "add-tag",
+        "remove-tag"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.vcs.vcs",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "add-tag",
+          "capability": "vcs-1-mutate",
+          "payloadSchema": "📋️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-tag",
+            "bridgeVersion": 1,
+            "variant": "AddTag"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vcs-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-counter",
+          "capability": "vcs-1-mutate",
+          "payloadSchema": "📋️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-counter",
+            "bridgeVersion": 1,
+            "variant": "ChangeCounter"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vcs-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-notes",
+          "capability": "vcs-1-mutate",
+          "payloadSchema": "📋️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-notes",
+            "bridgeVersion": 1,
+            "variant": "ChangeNotes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vcs-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-status",
+          "capability": "vcs-1-mutate",
+          "payloadSchema": "📋️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-status",
+            "bridgeVersion": 1,
+            "variant": "ChangeStatus"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vcs-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-tag",
+          "capability": "vcs-1-mutate",
+          "payloadSchema": "📋️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-tag",
+            "bridgeVersion": 1,
+            "variant": "RemoveTag"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vcs-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "rename-vcs",
+          "capability": "vcs-1-mutate",
+          "payloadSchema": "📋️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-vcs",
+            "bridgeVersion": 1,
+            "variant": "RenameVcs"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vcs-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

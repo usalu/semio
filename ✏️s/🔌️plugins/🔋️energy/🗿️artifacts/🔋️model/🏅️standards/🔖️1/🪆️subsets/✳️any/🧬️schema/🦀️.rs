@@ -217,7 +217,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for EnergyModelAnalyzerAnalysis {
         type Parts = EnergyModelParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.model", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.energy.model", standard: StandardId("1"), subset: SubsetId("*") };
 
         async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium

@@ -5,7 +5,7 @@
   "displayName": "Change Selection Class",
   "emoji": "🌴",
   "aggregateVariant": "ChangeSelectionClass",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

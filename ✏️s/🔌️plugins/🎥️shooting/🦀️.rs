@@ -25,6 +25,7 @@ pub async fn plugin() -> Result<Plugin<ShootingApps>, semio_framework_plugin::Pl
     Plugin::<ShootingApps>::builder("shooting")
         .label("Shooting")
         .version("0.1.0")
+        .package_id("semio:shooting")
         .artifact(crate::artifacts::shooting::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .editor::<crate::editor::shooting::ShootingPlayApp>(crate::editor::shooting::create_shooting_app())
         .editor_mutation_roster::<crate::editor::shooting::ShootingPlayApp>()

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "urn:semio:hub:inference-catalog-selection-fixture:v1",
+  "type": "object", "additionalProperties": false, "required": ["schema", "scope", "descriptor", "package", "services", "cases"],
+  "properties": {
+    "schema": { "const": "semio.hub.inference-catalog-selection-fixture/v1" },
+    "scope": { "type": "object", "additionalProperties": false, "required": ["spaceId", "documentId"], "properties": { "spaceId": { "$ref": "#/$defs/id" }, "documentId": { "$ref": "#/$defs/id" } } },
+    "descriptor": { "type": "object", "additionalProperties": false, "required": ["spaceId", "documentId", "artifactKind", "artifactSchema", "owner", "packSchemaHash", "bootstrapVersion", "bootstrapFrontier", "bootstrapSnapshotHash"], "properties": {
+      "spaceId": { "$ref": "#/$defs/id" }, "documentId": { "$ref": "#/$defs/id" }, "artifactKind": { "const": "s.gis.gismap" }, "artifactSchema": { "const": "gis.map" },
+      "owner": { "type": "object", "additionalProperties": false, "required": ["pluginId", "packageId", "version", "packageHash"], "properties": { "pluginId": { "const": "gis" }, "packageId": { "const": "semio:gis" }, "version": { "const": "1.0.0" }, "packageHash": { "$ref": "#/$defs/hash" } } },
+      "packSchemaHash": { "$ref": "#/$defs/hash" }, "bootstrapVersion": { "const": 1 }, "bootstrapSnapshotHash": { "$ref": "#/$defs/hash" },
+      "bootstrapFrontier": { "type": "object", "additionalProperties": false, "required": ["headSeq", "commitSeq", "epoch"], "properties": { "headSeq": { "const": 0 }, "commitSeq": { "const": 0 }, "epoch": { "const": 0 } } }
+    } },
+    "package": { "type": "object", "additionalProperties": false, "required": ["pluginId", "packageId", "version", "componentSha256"], "properties": { "pluginId": { "const": "gis" }, "packageId": { "const": "semio:gis" }, "version": { "const": "1.0.0" }, "componentSha256": { "$ref": "#/$defs/hash" } } },
+    "services": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["owner", "artifactKind", "artifactSchema", "artifactSchemaVersion", "documentSchema", "documentSchemaVersion", "inferenceSchema", "inferenceSchemaVersion", "algorithmVersion", "policyVersion", "contributor", "dependsOn"], "properties": {
+      "owner": { "const": "gis" }, "contributor": { "const": "gis" }, "artifactKind": { "const": "s.gis.gismap" }, "artifactSchema": { "const": "s.gis.gismap" }, "documentSchema": { "const": "gis.map" }, "inferenceSchema": { "const": "s.gis.gismap.inference" },
+      "artifactSchemaVersion": { "const": 1 }, "documentSchemaVersion": { "const": 1 }, "inferenceSchemaVersion": { "const": 1 }, "algorithmVersion": { "const": 1 }, "policyVersion": { "const": 1 }, "dependsOn": { "type": "array", "maxItems": 0 }
+    } } },
+    "cases": { "type": "array", "minItems": 12, "maxItems": 12, "items": { "type": "object", "additionalProperties": false, "required": ["name", "path", "value", "accepted"], "properties": { "name": { "type": "string", "minLength": 1, "maxLength": 64 }, "path": { "type": "array", "maxItems": 3, "items": { "anyOf": [{ "type": "string", "maxLength": 32 }, { "type": "integer", "minimum": 0, "maximum": 0 }] } }, "value": {}, "accepted": { "type": "boolean" } } } }
+  },
+  "$defs": { "id": { "type": "string", "pattern": "^[0-9a-f]{32}$" }, "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" } }
+}

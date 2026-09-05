@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.hub.inference-author-fixture/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "cases"],
+  "properties": {
+    "schema": { "const": "semio.hub.inference-author-fixture/v1" },
+    "cases": {
+      "type": "array", "minItems": 16, "maxItems": 16, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["operation", "accepted"],
+        "properties": {
+          "operation": { "enum": ["author", "cross-space", "cross-document", "wrong-user", "wrong-session", "rotated-generation", "spectator", "removed-member", "revoked", "expiry-exact", "expiry-past", "expiry-after-read", "clock-regressed", "cancelled", "deadline", "negative-clock"] },
+          "accepted": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

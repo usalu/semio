@@ -1,0 +1,37 @@
+{
+  "mutation": "createReportRecord",
+  "reportRecord": {
+    "id": "report-record-a",
+    "name": "Report Record A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "kind": "executiveSummary",
+    "title": "",
+    "audience": [],
+    "sections": [],
+    "generatedAt": null,
+    "generatedBy": null,
+    "analysisIds": [],
+    "format": null,
+    "fileRef": null,
+    "distributionList": [],
+    "approvalStatus": "pending",
+    "approverId": null,
+    "version": "",
+    "templateId": null,
+    "parameters": [],
+    "confidentiality": null,
+    "expiryDate": null,
+    "relatedDecisionIds": []
+  }
+}

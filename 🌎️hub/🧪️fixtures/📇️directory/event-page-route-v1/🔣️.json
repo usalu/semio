@@ -1,0 +1,69 @@
+{
+  "schema": "semio.hub.directory-event-page-route/v1",
+  "limits": { "rawRows": 128, "eventBytes": 49152, "pageBytes": 65536, "safeInteger": 9007199254740991 },
+  "session": {
+    "sessionId": "session-route-01",
+    "userId": "user-route-01",
+    "authorizationGeneration": 7,
+    "expiresAt": 4102444800000,
+    "bindingSha256": "5ca03986f7b9d0c0c5c9cd38006919e99c5139da0fa5d54ecc787cfe783ef7b7"
+  },
+  "vectors": [
+    {
+      "name": "raw-holes",
+      "after": 10,
+      "raw": [
+        { "seq": 11, "visible": false, "labelBytes": 8 },
+        { "seq": 12, "visible": true, "labelBytes": 8 },
+        { "seq": 13, "visible": false, "labelBytes": 8 },
+        { "seq": 14, "visible": true, "labelBytes": 8 }
+      ],
+      "expected": { "through": 14, "hasMore": false, "visibleSeqs": [12, 14], "nextVisibleSeqs": [] }
+    },
+    {
+      "name": "128-hidden",
+      "after": 100,
+      "raw": [],
+      "expected": { "through": 228, "hasMore": true, "visibleSeqs": [], "nextVisibleSeqs": [] }
+    },
+    {
+      "name": "page-byte-prefix",
+      "after": 300,
+      "raw": [
+        { "seq": 301, "visible": true, "labelBytes": 32768 },
+        { "seq": 302, "visible": true, "labelBytes": 32768 }
+      ],
+      "expected": { "through": 301, "hasMore": true, "visibleSeqs": [301], "nextVisibleSeqs": [302] }
+    },
+    {
+      "name": "empty",
+      "after": 400,
+      "raw": [],
+      "expected": { "through": 400, "hasMore": false, "visibleSeqs": [], "nextVisibleSeqs": [] }
+    },
+    {
+      "name": "event-byte-boundary",
+      "after": 500,
+      "raw": [
+        { "seq": 501, "visible": true, "labelBytes": 48926 },
+        { "seq": 502, "visible": true, "labelBytes": 48927 }
+      ],
+      "expected": { "through": 501, "hasMore": true, "visibleSeqs": [501], "nextVisibleSeqs": [] }
+    }
+  ],
+  "queryCases": [
+    { "query": "after=0", "bearer": "valid", "status": 200, "bodyBytes": 1, "reads": 1 },
+    { "query": "", "bearer": "valid", "status": 400, "bodyBytes": 0, "reads": 0 },
+    { "query": "after=", "bearer": "valid", "status": 400, "bodyBytes": 0, "reads": 0 },
+    { "query": "after=00", "bearer": "valid", "status": 400, "bodyBytes": 0, "reads": 0 },
+    { "query": "after=1&after=2", "bearer": "valid", "status": 400, "bodyBytes": 0, "reads": 0 },
+    { "query": "since=0", "bearer": "valid", "status": 400, "bodyBytes": 0, "reads": 0 },
+    { "query": "after=%30", "bearer": "valid", "status": 400, "bodyBytes": 0, "reads": 0 },
+    { "query": "after=9007199254740992", "bearer": "valid", "status": 400, "bodyBytes": 0, "reads": 0 },
+    { "query": "after=0", "bearer": "missing", "status": 401, "bodyBytes": 0, "reads": 0 },
+    { "query": "after=0", "bearer": "revoked", "status": 401, "bodyBytes": 0, "reads": 0 },
+    { "query": "after=0", "bearer": "rotated", "status": 401, "bodyBytes": 0, "reads": 1 },
+    { "query": "after=0", "bearer": "backend-failure", "status": 500, "bodyBytes": 0, "reads": 1 }
+  ],
+  "hostiles": ["receipt-substitution", "hidden-identity-leak", "event-plus-one", "unknown-field", "binding-concatenation"]
+}

@@ -21,7 +21,7 @@ aliases = ["curation"]
 ports = { react = 6081, wgpu = 6181 }
 
 # 🎪️ The `aussuchen` demonstrator row moved to
-# ✏️s/🔌️plugins/🎪️demonstrator/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml — see that
+# ✏️s/🔌️plugins/🎪️demonstrator/🪪️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml — see that
 # crate's docstring (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT).
 
 [package.metadata.wasm-pack.profile.dev]

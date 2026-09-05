@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/din18599/diff/text.json",
+  "title": "Din18599DiffText",
+  "type": "object"
+}

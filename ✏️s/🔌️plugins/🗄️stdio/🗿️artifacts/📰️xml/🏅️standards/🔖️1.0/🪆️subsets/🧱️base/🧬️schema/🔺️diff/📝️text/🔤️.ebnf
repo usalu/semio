@@ -1,0 +1,2 @@
+(* ebnf stdio.xml diff -- JSON per the sibling JSON Schema facet, no custom textual grammar *)
+document = jsonValue ;

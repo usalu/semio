@@ -1,0 +1,32 @@
+{
+  "schema": "semio.process3d.retained-mutation-laws",
+  "version": 1,
+  "variants": [
+    { "tag": "create-step", "semantic": "insert-step-at-index", "owners": ["step", "index"] },
+    { "tag": "delete-step", "semantic": "remove-addressed-step", "owners": ["id"] },
+    { "tag": "rename-step", "semantic": "replace-addressed-label", "owners": ["id", "newLabel"] },
+    { "tag": "change-step-enabled", "semantic": "replace-addressed-enabled-flag", "owners": ["id", "newEnabled"] },
+    { "tag": "change-step-origin", "semantic": "replace-addressed-origin", "owners": ["id", "newOrigin"] },
+    { "tag": "replace-step-measure", "semantic": "replace-addressed-measure", "owners": ["id", "newMeasure"] },
+    { "tag": "reorder-steps", "semantic": "reposition-addressed-step", "owners": ["id", "toIndex"] },
+    { "tag": "create-machine", "semantic": "append-unique-machine", "owners": ["machine", "index"] },
+    { "tag": "delete-machine", "semantic": "remove-addressed-machine", "owners": ["id"] },
+    { "tag": "rename-machine", "semantic": "replace-addressed-label", "owners": ["id", "newLabel"] },
+    { "tag": "change-machine-icon", "semantic": "replace-addressed-icon", "owners": ["id", "newIconId"] },
+    { "tag": "replace-machine-capabilities", "semantic": "replace-addressed-capability-list", "owners": ["id", "newCapabilities"] },
+    { "tag": "move-stock", "semantic": "replace-finite-pose", "owners": ["newPose"] },
+    { "tag": "change-stock-label", "semantic": "replace-stock-label", "owners": ["newLabel"] },
+    { "tag": "replace-stock-solid", "semantic": "replace-child-handle", "owners": ["newSolid"] },
+    { "tag": "change-cursor", "semantic": "replace-resolved-up-to", "owners": ["newResolvedUpTo"] }
+  ],
+  "laws": [
+    "variant-tags-are-unique",
+    "variant-count-equals-16",
+    "every-variant-has-retirement-owners",
+    "every-variant-has-one-replay-arm",
+    "every-replaced-owner-is-retired-before-next-replay-unit",
+    "every-digest-observes-variant-and-owned-payload",
+    "replay-never-calls-diff-or-apply",
+    "terminal-handoff-precedes-ordinary-drop"
+  ]
+}

@@ -1,6 +1,0 @@
-dialect grammar
-grammar stdio.zip.diff
-start diff
-
-# 🔺️ The shared DslValue record recursively carries only archive comment and name-keyed logical members.
-diff = "value" "=" REST

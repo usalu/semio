@@ -1,0 +1,17 @@
+{
+  "mutation": "createRigExtrinsic",
+  "extrinsic": {
+    "cameraId": "cam-b",
+    "rotationWxyz": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ],
+    "translationM": [
+      0.25,
+      0.0,
+      -0.125
+    ]
+  }
+}

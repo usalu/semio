@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateSubject",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subject"
+  ],
+  "properties": {
+    "subject": {
+      "title": "Subject",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "definition",
+        "id",
+        "kind",
+        "names"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "ProductGroup",
+            "ProductClass",
+            "ProductSpecialization",
+            "CatalogueMetadata",
+            "ManufacturerMetadata",
+            "PropertyBlock",
+            "Port",
+            "Inlet",
+            "Outlet",
+            "InOutlet"
+          ]
+        },
+        "names": {
+          "title": "Names",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "alternatives",
+            "preferred"
+          ],
+          "properties": {
+            "preferred": {
+              "title": "LocalizedText",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "locale",
+                "text"
+              ],
+              "properties": {
+                "locale": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                }
+              }
+            },
+            "shortName": {
+              "type": "string"
+            },
+            "alternatives": {
+              "type": "array",
+              "items": {
+                "title": "LocalizedText",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "locale",
+                  "text"
+                ],
+                "properties": {
+                  "locale": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "definition": {
+          "title": "LocalizedText",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "locale",
+            "text"
+          ],
+          "properties": {
+            "locale": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        "parentId": {
+          "type": "string"
+        }
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

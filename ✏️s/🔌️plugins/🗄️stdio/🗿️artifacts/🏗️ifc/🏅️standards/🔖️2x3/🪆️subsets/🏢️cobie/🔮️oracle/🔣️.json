@@ -1,0 +1,515 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🔮️ Basic FM Handover's own contribution to the repository test platform: `ruststep` 0.4 registered as the independent ISO 10303-21 reader for this subset's `Ifc2x3CobieMutation` vocabulary, and the mutation catalog it is measured against. The vocabulary is NOT the ✳️base subset's -- ✳️base declares generic Part-21 graph editing and knows nothing about model view definitions, while every kind below is one COBie handover sheet, taken from the conformance gate this repository already implements in production (`../🧬️schema/🦀️component.rs`'s `check_cobie_conformance`). The `semantic-ifc-v1` comparison profile is the ✳️base subset's own contribution, reused rather than copied.",
+  "oracles": [
+    {
+      "id": "ruststep-ifc-2x3-cobie-mutate",
+      "ecosystem": "rust",
+      "package": "ruststep",
+      "version": "0.4",
+      "capabilities": [
+        "ifc-2x3-cobie-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-ifc-v1"
+      ],
+      "license": "Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/ricosjp/ruststep",
+      "rationale": "🩹️ RECLASSIFIED (ticket SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION, shard A10, 2026-09-02). This entry was registered `third-party-library` on the strength of a real crate that does genuine codec work, but the mutation's expected RESULT is computed by this owner's own `🦀️oracle.rs` -- its dispatch function's catch-all arm is `\"mutation kind {...} has no oracle implementation\"`, proof that every OTHER arm is an implementation, not a reading. Both halves of the comparison then descend from the same specification, so a shared misreading produces two agreeing wrong answers -- the one failure a differential oracle exists to catch. This is a `cross-semio-implementation`: a required SUPPLEMENT (metamorphic/inverse/round-trip evidence), never a substitute. A qualifying third-party reference for the mutation semantics is still owed. See $TICKET/📓️a10-oracle-honesty.md.\n\nIFC2X3 is physically ISO 10303-21 syntax under the IFC2X3 EXPRESS schema, and `ruststep` 0.4 parses it exactly as it parses STEP AP214 -- already linked and already registered for the sibling `ifc 2x3/✳️base` and `step ap214/✳️base` subsets, re-confirmed here against this subset's own real input (the committed 3464-entity slice of a real 21 MB IFC2X3 EDM export). It has NO writer at all, which per the fleet brief's §6 rules out `@mode-differential`: it cannot be a second PRODUCER of mutated bytes. It is registered strictly as the INDEPENDENT READER -- every mutation this subset's dispatcher performs (ruststep parse plus the standard-level from-scratch Part-21 writer at `../../../🦀️oracle.rs`, never this repository's own production `step::engine::part21` writer) is read back through a FRESH `ruststep::ast::Exchange::from_str` call before `semantic-ifc-v1` compares it. STRONGER REFERENCE EVALUATED AND NOT ADOPTED: `ifcopenshell` 0.8.4 (Python) is the canonical IFC toolkit, reads AND writes IFC, and would make a genuine `@mode-differential` possible for these MVD subsets; it installed and imported successfully in this environment and the repository's Python oracle host has landed (precedent: `🗿️artifacts/📄️pdf/🧪️tests/extract-text-pdf-1-4/🐍️component.py` with `pypdf`). It was NOT adopted because putting a Python distribution on a generated host's import path requires an `oracleHostPackages` entry in the SHARED `✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json` (host packages resolve by owner prefix, and a subset manifest is not a prefix of the case owner `🗿️artifacts/🏗️ifc`), and this wave's brief forbids an executor from editing the shared stdio manifest. A governance boundary, not a capability gap.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "stepcode-independent",
+        "implementation": "ruststep pure-Rust EXPRESS/Part-21 reader",
+        "version": "0.4"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "ifcopenshell-ifc-2x3-cobie-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "ifcopenshell",
+      "version": "0.8.4.post1",
+      "engine": {
+        "family": "ifcopenshell",
+        "implementation": "IfcOpenShell C++/Python IFC engine",
+        "version": "0.8.4.post1"
+      },
+      "capabilities": [
+        "ifc-2x3-cobie-mutate"
+      ],
+      "license": "LGPL-3.0-or-later",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://ifcopenshell.org",
+      "rationale": "📖️ A READER, registered separately from this file's `cross-semio-implementation` entry (the `ruststep`-backed dispatcher that COMPUTES what a mutation should produce). IfcOpenShell 0.8.4.post1 is the reference open-source IFC engine: `ifcopenshell.open(path)` runs its own C++ Part-21/EXPRESS parser against the real IFC2X3 schema, entirely independent of this repository's `ruststep` reimplementation or its own production decoder. It is ALREADY declared as an `oracleHostPackages` entry in the shared `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json` (owner `✏️s/🔌️plugins/🗄️stdio`, a real path prefix of every subset under it, ifc included) by this ticket's own A10 shard for the sibling 2x3/✳️base subset's `ifcopenshell-ifc-2x3-base-differential` entry — so it is already resolvable on every stdio test case's host import path and this registration needs no shared-manifest edit at all. This subset's own vocabulary (`set-facility-name`, `set-floor-elevation`, `set-space`, `set-type-assignment`, `set-view-definition`) is a COBie-flavoured slice of core IFC entities, all directly readable through `ifcopenshell.file.by_type` — `f.by_type(\"IfcProject\")[0].Name` (facility name), `f.by_type(\"IfcBuildingStorey\")` `.Elevation` (floor elevation), `f.by_type(\"IfcSpace\")` (space presence/count), `f.by_type(\"IfcTypeObject\")` (type assignment) and the FILE_DESCRIPTION header string (view definition). Verified directly against this subset's own committed fixture before registration.",
+      "comparisonProfiles": [
+        "semantic-ifc-v1"
+      ]
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "ifc-2x3-cobie",
+      "capability": "ifc-2x3-cobie-mutate",
+      "standardDirectoryName": "🔖️2x3",
+      "subsetDirectoryName": "🏢️cobie",
+      "vectors": [],
+      "kinds": [
+        "set-snapshot",
+        "set-view-definition",
+        "set-facility-name",
+        "set-floor-elevation",
+        "set-space",
+        "set-type-assignment"
+      ]
+    }
+  ],
+  "comparisonProfiles": [],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.ifc",
+      "standard": "2x3",
+      "subset": "cobie",
+      "standardDirectoryName": "🔖️2x3",
+      "subsetDirectoryName": "🏢️cobie",
+      "mutations": [
+        {
+          "id": "set-facility-name",
+          "capability": "ifc-2x3-cobie-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-facility-name",
+            "bridgeVersion": 1,
+            "variant": "SetFacilityName"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-2x3-cobie-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-floor-elevation",
+          "capability": "ifc-2x3-cobie-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-floor-elevation",
+            "bridgeVersion": 1,
+            "variant": "SetFloorElevation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-2x3-cobie-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "ifc-2x3-cobie-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-2x3-cobie-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-space",
+          "capability": "ifc-2x3-cobie-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-space",
+            "bridgeVersion": 1,
+            "variant": "SetSpace"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-2x3-cobie-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-type-assignment",
+          "capability": "ifc-2x3-cobie-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-type-assignment",
+            "bridgeVersion": 1,
+            "variant": "SetTypeAssignment"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-2x3-cobie-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-view-definition",
+          "capability": "ifc-2x3-cobie-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-view-definition",
+            "bridgeVersion": 1,
+            "variant": "SetViewDefinition"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-2x3-cobie-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-facility-name-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "2x3",
+        "subset": "cobie"
+      },
+      "mutation": "set-facility-name",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/🏢️set-facility-name-applied/⬅️before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:320f5915d2ce0c3384c779c8ff9eb7e471aaca3bba64ce909760559b452d969c",
+          "bytes": 188288
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/🏢️set-facility-name-applied/➡️after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:5dbc1859b687fa56afb14f18df6860f4e93886587344faa345b3352d8d0af73d",
+          "bytes": 188304
+        }
+      ],
+      "generator": {
+        "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader",
+        "packageVersion": "0.8.4.post1",
+        "engineFamily": "ifcopenshell",
+        "engineVersion": "0.8.4.post1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "LGPL-3.0-or-later (ifcopenshell)",
+        "attribution": "Generated with IfcOpenShell 0.8.4.post1 (LGPL-3.0-or-later) via a real read+write round trip against this repository's own committed real-world fixture",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Set #IfcBuilding.Name (the COBie facility row's own name) via ifcopenshell."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-floor-elevation-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "2x3",
+        "subset": "cobie"
+      },
+      "mutation": "set-floor-elevation",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/📏️set-floor-elevation-applied/⬅️before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:320f5915d2ce0c3384c779c8ff9eb7e471aaca3bba64ce909760559b452d969c",
+          "bytes": 188288
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/📏️set-floor-elevation-applied/➡️after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:b15e293ccf40010a65b5bad3f9317c936b619dad48926c7e15ec1dc8ecd6cd81",
+          "bytes": 188288
+        }
+      ],
+      "generator": {
+        "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader",
+        "packageVersion": "0.8.4.post1",
+        "engineFamily": "ifcopenshell",
+        "engineVersion": "0.8.4.post1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "LGPL-3.0-or-later (ifcopenshell)",
+        "attribution": "Generated with IfcOpenShell 0.8.4.post1 (LGPL-3.0-or-later) via a real read+write round trip against this repository's own committed real-world fixture",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Set #145 IfcBuildingStorey ('Grond floor')'s Elevation to 999.0 via ifcopenshell."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-space-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "2x3",
+        "subset": "cobie"
+      },
+      "mutation": "set-space",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/🚪️set-space-applied/⬅️before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:320f5915d2ce0c3384c779c8ff9eb7e471aaca3bba64ce909760559b452d969c",
+          "bytes": 188288
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/🚪️set-space-applied/➡️after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:7869764354d82996bc1d01165f28c46608e414dbf9775928b0cb2a29a546e28a",
+          "bytes": 188457
+        }
+      ],
+      "generator": {
+        "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader",
+        "packageVersion": "0.8.4.post1",
+        "engineFamily": "ifcopenshell",
+        "engineVersion": "0.8.4.post1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "LGPL-3.0-or-later (ifcopenshell)",
+        "attribution": "Generated with IfcOpenShell 0.8.4.post1 (LGPL-3.0-or-later) via a real read+write round trip against this repository's own committed real-world fixture",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Created a new #IfcSpace ('Room 101') via ifcopenshell.api.root.create_entity — this fixture's own real-world source has no IfcSpace, so COBie's set-space mutation is witnessed by a genuine third-party-constructed entity rather than an edit of a pre-existing one. GlobalId pinned to a fixed literal after creation so the fixture is byte-reproducible across regenerations."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-type-assignment-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "2x3",
+        "subset": "cobie"
+      },
+      "mutation": "set-type-assignment",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/🧩️set-type-assignment-applied/⬅️before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:320f5915d2ce0c3384c779c8ff9eb7e471aaca3bba64ce909760559b452d969c",
+          "bytes": 188288
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/🧩️set-type-assignment-applied/➡️after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:8e808691a2b9948b2fd85d37a7a5235f6739397b5619f0e78c0c989e63ae76eb",
+          "bytes": 188312
+        }
+      ],
+      "generator": {
+        "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader",
+        "packageVersion": "0.8.4.post1",
+        "engineFamily": "ifcopenshell",
+        "engineVersion": "0.8.4.post1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "LGPL-3.0-or-later (ifcopenshell)",
+        "attribution": "Generated with IfcOpenShell 0.8.4.post1 (LGPL-3.0-or-later) via a real read+write round trip against this repository's own committed real-world fixture",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Set #712585 IfcRelDefinesByType.Name via ifcopenshell."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-view-definition-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "2x3",
+        "subset": "cobie"
+      },
+      "mutation": "set-view-definition",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/👁️set-view-definition-applied/⬅️before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:320f5915d2ce0c3384c779c8ff9eb7e471aaca3bba64ce909760559b452d969c",
+          "bytes": 188288
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/👁️set-view-definition-applied/➡️after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:4e2f16c084a475886fc45583641a1172123211444da357f915f07290f1a3c7f4",
+          "bytes": 188276
+        }
+      ],
+      "generator": {
+        "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader",
+        "packageVersion": "0.8.4.post1",
+        "engineFamily": "ifcopenshell",
+        "engineVersion": "0.8.4.post1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "LGPL-3.0-or-later (ifcopenshell)",
+        "attribution": "Generated with IfcOpenShell 0.8.4.post1 (LGPL-3.0-or-later) via a real read+write round trip against this repository's own committed real-world fixture",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Replaced the header FILE_DESCRIPTION's view-definition text via ifcopenshell's own header object."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.ifc",
+        "standard": "2x3",
+        "subset": "cobie"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "millimetre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-ifc",
+          "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:320f5915d2ce0c3384c779c8ff9eb7e471aaca3bba64ce909760559b452d969c",
+          "bytes": 188288
+        },
+        {
+          "role": "expected-after-ifc",
+          "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.ifc",
+          "mediaType": "model/ifc",
+          "sha256": "sha256:f390850ec1fecad9de3eb1d3e704b15d4640d29a4ad41d7ce7a7e80a2eac4933",
+          "bytes": 188317
+        }
+      ],
+      "generator": {
+        "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader",
+        "packageVersion": "0.8.4.post1",
+        "engineFamily": "ifcopenshell",
+        "engineVersion": "0.8.4.post1",
+        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "LGPL-3.0-or-later (ifcopenshell)",
+        "attribution": "Generated with IfcOpenShell 0.8.4.post1 (LGPL-3.0-or-later) via a real read+write round trip against this repository's own committed real-world fixture",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-ifc-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Replaced both #IfcBuilding.Name and the first #IfcBuildingStorey.Elevation together, standing in for a wholesale COBie snapshot replacement (ifcopenshell has no single bulk-document type; the combined edit is the observable surface)."
+    }
+  ]
+}

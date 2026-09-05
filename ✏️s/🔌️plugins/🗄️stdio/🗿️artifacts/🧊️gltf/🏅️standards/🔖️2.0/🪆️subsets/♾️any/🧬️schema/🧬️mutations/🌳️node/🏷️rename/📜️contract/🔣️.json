@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "id": "s.stdio.gltf.mutation.change-node-name.v1",
+  "languageParity": ["rust", "typescript"],
+  "vectors": [{
+    "name": "set-absent-node-name",
+    "base": {"schema":"s.stdio.gltf","document":{"asset":{"version":"2.0"},"scenes":[],"nodes":[{"children":[],"weights":[]}]},"buffers":[],"sourceForm":"json"},
+    "mutation": {"node":0,"value":"Hull"},
+    "diff": {"node":0,"before":null,"after":"Hull","touchedPaths":["document/nodes/0/name"]},
+    "inverse": {"node":0,"before":null,"after":"Hull","touchedPaths":["document/nodes/0/name"]},
+    "after": {"schema":"s.stdio.gltf","document":{"asset":{"version":"2.0"},"scenes":[],"nodes":[{"children":[],"weights":[],"name":"Hull"}]},"buffers":[],"sourceForm":"json"},
+    "staleRejection": {"code":"gltf.mutation.stale-diff","path":"document/nodes/0/name"}
+  }]
+}

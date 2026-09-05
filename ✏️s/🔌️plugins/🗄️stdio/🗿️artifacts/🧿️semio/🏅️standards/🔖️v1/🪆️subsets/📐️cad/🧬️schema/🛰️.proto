@@ -1,0 +1,12 @@
+syntax = "proto3";
+// 🧬️ SemioCadArtifact schema — full artifact state, mirrors SemioCadSnapshot field for field.
+package semio.s_stdio_semio_cad.artifact;
+
+import "📸️snapshot/🛰️.proto";
+
+message SemioCadArtifact {
+  string schema = 1;
+  repeated semio.s_stdio_semio_cad.snapshot.CadLayer layers = 2;
+  repeated semio.s_stdio_semio_cad.snapshot.CadBlock blocks = 3;
+  repeated semio.s_stdio_semio_cad.snapshot.CadEntityRecord entities = 4;
+}

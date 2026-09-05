@@ -3,10 +3,10 @@
   "$id": "https://semio.tech/schema/writer/1/any/mutation.json",
   "title": "WriterMutation",
   "oneOf": [
-    {"$ref": "./🏷️rename-writer/🔣️.schema.json"},
-    {"$ref": "./🔗change-uri/🔣️.schema.json"},
-    {"$ref": "./🌐change-language/🔣️.schema.json"},
-    {"$ref": "./✏️edit-text/🔣️.schema.json"}
+    {"$ref": "./🏷️rename-writer/🧬️.schema.json"},
+    {"$ref": "./🔗change-uri/🧬️.schema.json"},
+    {"$ref": "./🌐change-language/🧬️.schema.json"},
+    {"$ref": "./✏️edit-text/🧬️.schema.json"}
   ],
   "x-semio-mutationKinds": ["rename-writer", "change-uri", "change-language", "edit-text"]
 }

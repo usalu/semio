@@ -108,7 +108,7 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         //#region 🔖️ConformanceLaws
-        /// 🧪️ The 6 real-codec conformance-law tests, mirroring `✳️image`'s/`✳️audio`'s own proven
+        /// 🧪️ The 6 real-codec conformance-law tests, mirroring `✳️image`'s/`🔊️audio`'s own proven
         /// template — same 6 test names, same shape, only the facet modules and demo-case helpers
         /// differ.
         mod conformance_laws {

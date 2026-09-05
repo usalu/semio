@@ -1,4 +1,0 @@
-"""🎚 Direct change-exaggeration payload."""
-input ChangeExaggerationInput {
-  newExaggeration: Float!
-}

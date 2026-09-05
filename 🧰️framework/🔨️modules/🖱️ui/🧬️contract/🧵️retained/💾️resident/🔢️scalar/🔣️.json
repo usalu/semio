@@ -2490,7 +2490,7 @@
     },
     "page": {
       "kind": "original-parent-page",
-      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📄️page/🧪️fixture/🔣️.json",
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🧪️fixture/🔣️.json",
       "sha256": "9d53ef658fc390cd6aa00ff88222c1277a7b05a389769caf7430a876cf400701",
       "grants": [
         64,
@@ -3581,8 +3581,8 @@
   "registeredTestProposal": {
     "status": "source-oracle-contract",
     "nxTarget": "@semio-tech/framework-renderer-react:test-long",
-    "router": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📜️script.ts",
-    "project": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📋️project.json",
+    "router": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📜️script.ts",
+    "project": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📋️project.json",
     "testHost": "UiDocumentStore/🟦️.tsx / TypedWire",
     "selectors": [
       "OwnedResidentScalarDeclaration",

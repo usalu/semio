@@ -5,7 +5,7 @@
   "displayName": "Change Sigma Ed Shell Mpa",
   "emoji": "🦒",
   "aggregateVariant": "ChangeSigmaEdShellMpa",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

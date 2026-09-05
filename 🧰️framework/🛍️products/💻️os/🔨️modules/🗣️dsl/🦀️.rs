@@ -344,7 +344,7 @@ pub mod __rt {
 /// Called explicitly from handcrafted `protocol::OpBinary` impls — never re-emitted by derive.
 pub mod variants_binary {
     use super::DslVariants;
-    use crate::os_pack::{decode_record_body, encode_record_body, write_varint_u64, ByteReader, DecodeOptions, EncodeOptions};
+    use crate::os_pack::{decode_record_body_exact, encode_record_body, write_varint_u64, ByteReader, DecodeOptions, EncodeOptions};
     use crate::os_spr::ProtocolError;
 
     pub const OP_BINARY_FORMAT: u8 = 1;
@@ -375,9 +375,13 @@ pub mod variants_binary {
         let (keyword, spec_fn) = variants.get(index).ok_or(ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = spec_fn();
         let body = &bytes[reader.position()..];
-        let (record, _report) = decode_record_body(body, &spec, &DecodeOptions::default()).map_err(ProtocolError::from)?;
+        let record = decode_record_body_exact(body, &spec, &DecodeOptions::default()).map_err(ProtocolError::from)?;
         let record_offset = reader.position() as u64;
-        T::from_named_record(keyword, &record).map_err(|error| ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
+        let decoded = T::from_named_record(keyword, &record).map_err(|error| ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })?;
+        if encode_op(&decoded)?.as_slice() != bytes {
+            return Err(ProtocolError::Malformed { what: "op encoding", offset: 0, detail: "operation bytes are not canonical".into() });
+        }
+        Ok(decoded)
     }
 }
 //#endregion 🔖️OpRt
@@ -731,11 +735,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn primitive_dsl_field_impls_round_trip() {
-        assert_eq!(i32::from_value(&42i32.to_value()), Ok(42));
-        assert_eq!(u64::from_value(&7u64.to_value()), Ok(7));
-        assert_eq!(bool::from_value(&true.to_value()), Ok(true));
-        assert_eq!(f64::from_value(&1.5f64.to_value()), Ok(1.5));
-        assert_eq!(String::from_value(&"hi".to_string().to_value()), Ok("hi".to_string()));
+        assert_eq!(<i32 as DslField>::from_value(&DslField::to_value(&42i32)), Ok(42));
+        assert_eq!(<u64 as DslField>::from_value(&DslField::to_value(&7u64)), Ok(7));
+        assert_eq!(<bool as DslField>::from_value(&DslField::to_value(&true)), Ok(true));
+        assert_eq!(<f64 as DslField>::from_value(&DslField::to_value(&1.5f64)), Ok(1.5));
+        assert_eq!(<String as DslField>::from_value(&DslField::to_value(&"hi".to_string())), Ok("hi".to_string()));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -812,10 +816,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn dsl_value_dsl_field_round_trips_through_record_value() {
         let value = DslValue::object([("a".into(), DslValue::float(1.0)), ("b".into(), DslValue::Array(vec![DslValue::Bool(true), DslValue::Null, DslValue::String("x".into())]))]);
-        assert_eq!(DslValue::from_value(&value.to_value()), Ok(value));
+        assert_eq!(<DslValue as DslField>::from_value(&DslField::to_value(&value)), Ok(value));
 
         let map = DslValue::object([("curves".into(), DslValue::Array(vec![DslValue::Array(vec![DslValue::float(0.0), DslValue::float(0.0)]), DslValue::Array(vec![DslValue::float(1.0), DslValue::float(1.0)])]))]);
-        assert_eq!(DslValue::from_value(&map.to_value()), Ok(map));
+        assert_eq!(<DslValue as DslField>::from_value(&DslField::to_value(&map)), Ok(map));
     }
 
     // --- end-to-end derive tests: mirrors the norm-family "flat scalar document" worked example ---
@@ -1001,6 +1005,16 @@ mod tests {
         let ops = vec![DerivedMutation::SetCategory { category: "roof".to_string() }, DerivedMutation::SetAirtightness { n50: 0.9 }, DerivedMutation::Reset];
         for op in ops {
             crate::os_store::test_support::assert_op_text_binary_equivalence(&op);
+            let encoded = variants_binary::encode_op(&op).unwrap();
+            let decoded: DerivedMutation = variants_binary::decode_op(&encoded).unwrap();
+            assert_eq!(serde_json::to_value(&decoded).unwrap(), serde_json::to_value(&op).unwrap());
+            let mut trailing = encoded.clone();
+            trailing.push(0);
+            assert!(variants_binary::decode_op::<DerivedMutation>(&trailing).is_err());
+            let mut nonminimal = encoded;
+            nonminimal[1] |= 0x80;
+            nonminimal.insert(2, 0);
+            assert!(variants_binary::decode_op::<DerivedMutation>(&nonminimal).is_err());
         }
     }
 

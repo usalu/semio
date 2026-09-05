@@ -288,3 +288,78 @@ live gltf work. The call is left in place because it is the correct fix; faking 
 fails in isolation — it depends on publication-lease state another test leaves behind. Pre-existing latent
 ordering coupling, surfaced (not caused) by the fixture now being registry-backed: a bare `VcsArtifactApp::new`
 can no longer be constructed for an app that declares tool proofs.
+
+---
+
+# 📅️ 2026-09-05 — re-verification of the closed waves after three days of peer churn
+
+Everything below was re-read against today's tree, not taken from the earlier notes.
+
+## ✅️ P2 still holds — the seven step verbs are genuinely implemented
+Each of `🌱create-step`, `🗑️delete-step`, `🏷️rename-step`, `🔘change-step-enabled`, `🧷change-step-origin`,
+`📐replace-step-measure`, `🔀reorder-steps` clones `base.step_payloads`, edits it, and returns
+`MutationOutcome::new(process3d_step_timeline_diff(base, steps))` — a real diff that re-mints the
+`steps`/`tool_solids` children. Verified per-verb in each `🔺️diff/🦀️.rs`.
+
+Two things worth recording because they look like regressions and are not:
+- **`mutation.no-op` still appears in eight diffs.** It is no longer the "unimplemented" marker it was; it is
+  now the *benign guard* for a mutation whose new value equals the old one (rename to the same label, toggle to
+  the same flag, reorder to the same index). The distinguishing check is the string: the old marker read
+  `"…pending a link resolver for the composed steps child."`, and that phrase now has **zero occurrences**
+  anywhere in the plugin.
+- **`UNOBSERVABLE` is now `&[]`** (`🧪️tests/🌷️mutate-process3d-1/🦀️.rs:58`) — all sixteen mutation kinds carry a
+  committed vector that moves the document.
+
+## 🧨️ A live-turn cost hazard the fixture fix introduced
+`🪟️windows/🪚️workpiece/🦀️.rs:106-113` documents that `processed_mesh` "builds a fresh kernel session, replays
+every enabled step as a real CSG boolean, tessellates and remaps face groups", that `processed_volume` "replays
+the identical sequence again", so **an uncached turn pays for the whole process twice** — and that the host
+re-drives the plugin until every surface publishes, multiplying that by every continuation.
+
+Before this ticket the shipped fixtures parsed to an EMPTY scene, so that whole path was free. Regenerating them
+with a real four-step timeline is what first made a turn expensive. That makes the 8 ms
+`INTERACTIVE_STEP_CEILING_US` branch a genuine candidate for the 09-02 `runtime live cleanup faulted` symptom —
+and, importantly, one this ticket's own P1 could have *caused* rather than merely revealed. The `Process3dPreviewCache`
+memo (structural `PartialEq` on the scene) is the existing mitigation; it protects repeat turns, not the first.
+
+This is a hypothesis with a clear discriminator, not a conclusion — see `🧪️runtime-verification.md` for the
+twelve fault sites and why the fault message alone cannot tell "too slow" from "wrong ABI".
+
+## ✅️ P3 holds — the inspection panel is genuinely wired to live selection
+`Process3dPlayApp::render_with_request_context` (`✏️editor/🦀️.rs:1644-1654`) overrides the framework default,
+reads `interaction.selection(PROCESS3D_INTERACTION_DOMAIN)` (`"geometry"`, defined `✏️editor/🦀️.rs:46`) and
+threads the ids into `process3d_render_body`. The framework method still exists on the trait
+(`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:26844-26854`) with a default that discards `interaction`,
+so the override is load-bearing. `🔍️inspection::render` resolves each id against the stock, the machines and
+`step_payloads`, and only falls back to `empty_state` on no selection or an unresolvable id. The other three
+panels have no empty state at all — they always emit their sections.
+
+## 🕳️ NEW gap found: the 3D viewport can never show a selection
+`process3d_render_body` (`✏️editor/🦀️.rs:1315-1326`) passes `selected_ids` to **exactly one** body —
+`PROCESS_3D_PLAY_BODY_INSPECTION` (`:1323`). The workpiece window (`:1319`) is called as
+`workpiece::render(doc, config)`, with no selection argument. Downstream,
+`evaluated_preview_payload` (`🪟️windows/🪚️workpiece/🦀️.rs:104-105`) hardcodes the single instance's
+`"selected"` and `"hovered"` to `Bool(false)`.
+
+Consequence: selecting a step or the stock in `🗿️artifact` (which does declare
+`.interaction_domain(PROCESS3D_INTERACTION_DOMAIN)`, `🗿️artifact/🦀️.rs:93`) updates the inspection panel but
+**never highlights anything in the 3D view**. Selection is one-way.
+
+The doc comment that explains this away — `🪚️workpiece/🦀️.rs:65-67`, "unreachable at this `render` boundary
+(`ArtifactEditor::render` carries no `InteractionView` — a known SDK gap)" — is **stale for the same reason the
+inspection panel's was**: `render_with_request_context` exists and this app already overrides it. The selection
+is in hand at `:1652`; it simply is not forwarded past `:1319`.
+
+Fix shape (deliberately NOT applied yet — see below): forward `selected_ids` into `workpiece::render`, set the
+instance's `selected` from whether `fixture.stock_id` is in the selection, and **extend `Process3dPreviewCache`'s
+freshness key to include the selection** — it currently keys on `scene`/`resolved_up_to`/`label` only
+(`🪚️workpiece/🦀️.rs:123`), so a selection-dependent payload would otherwise be served stale from the memo.
+
+**Sequencing note.** This is held back on purpose. The open question this ticket must answer first is whether a
+core rebuilt against today's framework still shows `runtime live cleanup faulted`. Introducing new plugin code
+into that build would confound the experiment — a fresh failure could then be either the stale-core hypothesis
+or my own new code. Verify the rebuilt core first, then apply this on a known-good baseline.
+
+**Not ours, worth telling the owners.** The identical stale "no `InteractionView`" comment appears in 50+ places
+across `📸️remodel`, `📐️cad`, `🌍️gis`, `🕸️dag`, `🎥️shooting`, `🪐️space`, `🧩️puzzle`, `🖍️draw` and others. Each is a
+plugin whose viewport may have the same one-way selection.

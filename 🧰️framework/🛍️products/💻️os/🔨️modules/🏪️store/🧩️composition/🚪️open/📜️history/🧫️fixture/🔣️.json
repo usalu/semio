@@ -1,0 +1,29 @@
+{
+  "schema": "semio.member.retained-history-input/v1",
+  "historyHex": "895350520d0a1a0a0100000001000000010000006fdee5cf00000000000000002203020100020b666c6f772d6d656d62657210737464696f2e73656d696f2e666c6f773f58027e2b000000070102010100010106382c0c10000000420c02010000000000000000000000000000003b0000000000000002000000000000008ee5f3e30e76cb566658461b63d925679cbf49ca816f74311632dc93e3726315d9067bd94b00000005400201000064ad05680e000000420c0202000000000000005b000000000000000e00000000000000010000000000000074e7445cc7e1ccf24cee3394d0d5418dd7c28223ff0b2ceb0570b00ef0ae593d64913ddf4b000000",
+  "identity": { "artifactId": "flow-member", "kind": "s.stdio.semio", "standard": "v1", "subset": "flow" },
+  "authority": { "operation": 7, "generation": 11, "expiresAtUs": 1000, "nowUs": 1 },
+  "grants": [1, 7, 4096],
+  "inputs": [
+    { "id": "exact", "operation": "exact", "historyBytes": 255, "verifiedEnd": 255, "tailBytes": 0, "retiredBytes": 287, "error": null },
+    { "id": "torn", "operation": "torn", "historyBytes": 258, "verifiedEnd": 255, "tailBytes": 3, "retiredBytes": 290, "error": null },
+    { "id": "paged-tail", "operation": "paged-tail", "historyBytes": 4499, "verifiedEnd": 255, "tailBytes": 4244, "retiredBytes": 4531, "error": null },
+    { "id": "no-commit", "operation": "header-only", "historyBytes": 32, "verifiedEnd": null, "tailBytes": null, "retiredBytes": 64, "error": "malformed" },
+    { "id": "bad-crc", "operation": "bad-crc", "historyBytes": 255, "verifiedEnd": null, "tailBytes": null, "retiredBytes": 287, "error": "malformed" }
+  ],
+  "lifecycle": [
+    { "id": "handoff-once", "at": "ready", "event": "none", "error": null, "retainedBytes": 257, "retiredBytes": 287, "handoffs": 1 },
+    { "id": "cancel-before-input", "at": "input", "event": "cancel", "error": "cancelled", "retainedBytes": 257, "retiredBytes": 287, "handoffs": 0 },
+    { "id": "cancel-pending-byte", "at": "pending-byte", "event": "cancel", "error": "cancelled", "retainedBytes": 257, "retiredBytes": 287, "handoffs": 0 },
+    { "id": "cancel-ready", "at": "ready", "event": "cancel", "error": "cancelled", "retainedBytes": 257, "retiredBytes": 287, "handoffs": 0 },
+    { "id": "cancel-witness", "at": "witness", "event": "cancel", "error": "cancelled", "retainedBytes": 257, "retiredBytes": 287, "handoffs": 1 },
+    { "id": "operation-ready", "at": "ready", "event": "operation", "error": "stale", "retainedBytes": 257, "retiredBytes": 287, "handoffs": 0 },
+    { "id": "generation-ready", "at": "ready", "event": "generation", "error": "stale", "retainedBytes": 257, "retiredBytes": 287, "handoffs": 0 },
+    { "id": "operation-witness", "at": "witness", "event": "operation", "error": "stale", "retainedBytes": 257, "retiredBytes": 287, "handoffs": 1 },
+    { "id": "generation-witness", "at": "witness", "event": "generation", "error": "stale", "retainedBytes": 257, "retiredBytes": 287, "handoffs": 1 },
+    { "id": "expired-ready", "at": "ready", "event": "expired", "error": "expired", "retainedBytes": 257, "retiredBytes": 287, "handoffs": 0 },
+    { "id": "clock-absent", "at": "pending-byte", "event": "clock-absent", "error": "expired", "retainedBytes": 257, "retiredBytes": 287, "handoffs": 0 },
+    { "id": "expired-witness", "at": "witness", "event": "expired", "error": "expired", "retainedBytes": 257, "retiredBytes": 287, "handoffs": 1 },
+    { "id": "operation-input", "at": "input", "event": "operation", "error": "stale", "retainedBytes": 257, "retiredBytes": 287, "handoffs": 0 }
+  ]
+}

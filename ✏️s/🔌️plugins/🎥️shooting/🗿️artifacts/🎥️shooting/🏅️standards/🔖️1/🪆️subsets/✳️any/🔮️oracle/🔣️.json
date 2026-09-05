@@ -1,0 +1,1077 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution. The `kinds` are the kebab spelling of `ShootingMutation`'s thirty-one variants in declaration order — assets, then shots, then saved cameras, then the two active-selection verbs, then the scene lighting block; `../🧬️schema/🧬️mutations/🦀️.rs`'s `KINDS` const and its `kinds_match_the_enum_and_the_catalog` test keep this file, that const and the enum in agreement.",
+  "oracles": [
+    {
+      "id": "shooting-1-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "capabilities": [
+        "shooting-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "🐍️ No third-party library reads or writes s.shooting.shooting's shooting.shooting.dsl carrier -- glTF 2.0, USD and Collada were surveyed and declined on the one structural point that matters: none of them models a SHOT (a named render-output configuration with width/height/format/shape), and eleven of the thirty-one kinds address one. The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../../../🧪️tests/mutate-shooting-1/🐍️component.py, written from this subset's own committed ../🧬️schema/📸️snapshot/🔣️.json document shape, each kind's own committed (mutation, after) leaf fixture (all thirty-one leaves share ONE committed before-document, SHA-1 6441b72754e5c649b2b07a2f2b244313467f85a0, verified across all thirty-one copies), and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's verb table. It imports nothing from the Rust it judges and transliterates none of it -- rotate-assets/scale-assets compose via the standard Hamilton-product/component-multiply mathematics, not the Rust arithmetic; replace-shot-camera was read off the one committed vector (and confirmed by the payload schema) to patch the SAVED CAMERA the shot references, not the shot itself; create-* was read off all three committed create vectors at once (each ones own index field disagrees with where its after-document actually places the new member) to be append-only, matching production's own CreateAsset/CreateShot/CreateSavedCamera docstrings. All 31 kinds forward and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan -- all 62 passed on the first run.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.shooting.shooting",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "glTF 2.0 (khronos)",
+              "reason": "Interchange scene format with meshes/cameras/nodes, but has no notion of a SHOT (a named render-output configuration with width/height/format/shape); eleven of thirty-one kinds address one and would have nothing to write to."
+            },
+            {
+              "package": "USD (pixar openusd)",
+              "reason": "Composable scene-description format for VFX pipelines, models cameras and prims but no SHOT concept comparable to this vocabulary either; declined for the same structural reason as glTF."
+            },
+            {
+              "package": "Collada (khronos, .dae)",
+              "reason": "XML scene-interchange format, same gap: no SHOT entity, and no reader in this repository already links it as a test oracle for any format."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md; ../🧬️schema/📸️snapshot/🔣️.json; each mutation's own 🧬️.schema.json and ↩️inverse/🦀️.rs docstring (read for convention, not transliterated)",
+        "fixtureCoverage": {
+          "vectors": 31,
+          "capabilitiesCovered": [
+            "shooting-1-mutate"
+          ]
+        }
+      }
+    }
+  ],
+  "noOracleDecisions": [
+    {
+      "id": "shooting-render-scene-mutation-semantics",
+      "capabilities": [],
+      "rationale": "The survey this decision already carries is a good one and is kept: glTF 2.0, USD and Collada are named, they really do model an asset list, a transform, a camera and a punctual light, and they are declined on one structural point — none of them models a SHOT, a render request with width, height, output format, mask shape, background and a saved-camera reference, which ELEVEN of the thirty-one kinds address. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-puzzle-2d-1` and `mutate-puzzle-3d-1`, whose documents carry ports inside nodes and cascade on delete, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the thirty-one committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is `mutate-puzzle-3d-1`: a scene of typed placed records beside a second register the first one references.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows. AND, SEPARATELY, `identity-round-trip` WOULD STILL BE REFUSED. This subset's committed snapshot text grammar is the repository-wide PLACEHOLDER: its whole body is `payload = OCTET+` and its header production declares `\"schema\" SP \"stdio.json\"`, which the committed artifact contradicts on its own first line. A second reader cannot parse what no document describes — the finding `mutate-iso16757-1`, `mutate-vdi3805-1`, `mutate-program-1` and `mutate-writer-1` all report against their own subsets.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen.\n\n[C2 2026-09-02] Narrowed `capabilities` to remove 'shooting-1-mutate': a mutation manifest already requires an external-oracle discharge for this capability (tracked honestly as `missing-external-oracle`), so a no-oracle decision claiming the same capability made that gap invisible to `no-oracle-covers-mutation` without discharging it. The rationale above is kept verbatim as the record of what was actually investigated; only the claim is withdrawn. See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️c2-native-artifact-oracles.md.\n\n[E1 2026-09-02] The asset:// fixture-declaration blocker named above is now resolved (this feature's Examples now carry declared asset:// fixtures) and a Python second implementation is registered as oracle 'shooting-1-python-independent' (kind verified-native-second-implementation). Capabilities stay empty ([]) — this entry is kept, not deleted, as the honest record of what was investigated on the carrier side; the mutation-semantics gap it used to name is now discharged by the registered oracle instead. See $TICKET/📓️e1-remodel-shooting-layout.md.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "shooting-1-any",
+      "capability": "shooting-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-asset-url",
+          "sourceMutationDirectoryName": "🌐️change-asset-url",
+          "mutationDirectoryName": "🌐️change-asset-url",
+          "scenarios": [
+            {
+              "id": "points-asset-prop-at-v2-mesh",
+              "directoryName": "🖼️points-asset-prop-at-v2-mesh"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-scene-ambient-intensity",
+          "sourceMutationDirectoryName": "🔅️change-scene-ambient-intensity",
+          "mutationDirectoryName": "🔅️change-scene-ambient-intensity",
+          "scenarios": [
+            {
+              "id": "dims-scene-ambient-to-quarter",
+              "directoryName": "🎞️dims-scene-ambient-to-quarter"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-scene-material-roughness",
+          "sourceMutationDirectoryName": "🪨️change-scene-material-roughness",
+          "mutationDirectoryName": "🪨️change-scene-material-roughness",
+          "scenarios": [
+            {
+              "id": "polishes-scene-material-to-quarter",
+              "directoryName": "🎞️polishes-scene-material-to-quarter"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-scene-shadow-enabled",
+          "sourceMutationDirectoryName": "🌑️change-scene-shadow-enabled",
+          "mutationDirectoryName": "🌑️change-scene-shadow-enabled",
+          "scenarios": [
+            {
+              "id": "switches-scene-shadows-off",
+              "directoryName": "🎞️switches-scene-shadows-off"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-scene-sun-azimuth",
+          "sourceMutationDirectoryName": "🧭️change-scene-sun-azimuth",
+          "mutationDirectoryName": "🧭️change-scene-sun-azimuth",
+          "scenarios": [
+            {
+              "id": "turns-scene-sun-to-315-degrees",
+              "directoryName": "🎞️turns-scene-sun-to-315-degrees"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-scene-sun-elevation",
+          "sourceMutationDirectoryName": "🌅️change-scene-sun-elevation",
+          "mutationDirectoryName": "🌅️change-scene-sun-elevation",
+          "scenarios": [
+            {
+              "id": "raises-scene-sun-to-60-degrees",
+              "directoryName": "🎞️raises-scene-sun-to-60-degrees"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-scene-sun-enabled",
+          "sourceMutationDirectoryName": "☀️change-scene-sun-enabled",
+          "mutationDirectoryName": "☀️change-scene-sun-enabled",
+          "scenarios": [
+            {
+              "id": "switches-scene-sun-off",
+              "directoryName": "🎞️switches-scene-sun-off"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-scene-sun-intensity",
+          "sourceMutationDirectoryName": "💡️change-scene-sun-intensity",
+          "mutationDirectoryName": "💡️change-scene-sun-intensity",
+          "scenarios": [
+            {
+              "id": "dims-scene-sun-to-half",
+              "directoryName": "🎞️dims-scene-sun-to-half"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-shot-format",
+          "sourceMutationDirectoryName": "🖼️change-shot-format",
+          "mutationDirectoryName": "🖼️change-shot-format",
+          "scenarios": [
+            {
+              "id": "switches-shot-wide-to-svg",
+              "directoryName": "🦀️switches-shot-wide-to-svg"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-shot-height",
+          "sourceMutationDirectoryName": "📐️change-shot-height",
+          "mutationDirectoryName": "📐️change-shot-height",
+          "scenarios": [
+            {
+              "id": "heightens-shot-close-to-768",
+              "directoryName": "🧭️heightens-shot-close-to-768"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-shot-shape",
+          "sourceMutationDirectoryName": "✂️change-shot-shape",
+          "mutationDirectoryName": "✂️change-shot-shape",
+          "scenarios": [
+            {
+              "id": "rounds-shot-wide-to-ellipse",
+              "directoryName": "⛵️rounds-shot-wide-to-ellipse"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-shot-width",
+          "sourceMutationDirectoryName": "📏️change-shot-width",
+          "mutationDirectoryName": "📏️change-shot-width",
+          "scenarios": [
+            {
+              "id": "widens-shot-close-to-1024",
+              "directoryName": "🦋️widens-shot-close-to-1024"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-asset",
+          "sourceMutationDirectoryName": "🌱️create-asset",
+          "mutationDirectoryName": "🌱️create-asset",
+          "scenarios": [
+            {
+              "id": "appends-asset-detail",
+              "directoryName": "🖼️appends-asset-detail"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-saved-camera",
+          "sourceMutationDirectoryName": "🎥️create-saved-camera",
+          "mutationDirectoryName": "🎥️create-saved-camera",
+          "scenarios": [
+            {
+              "id": "appends-saved-camera-top",
+              "directoryName": "🍋️appends-saved-camera-top"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-shot",
+          "sourceMutationDirectoryName": "📸️create-shot",
+          "mutationDirectoryName": "📸️create-shot",
+          "scenarios": [
+            {
+              "id": "appends-shot-macro",
+              "directoryName": "🔴️appends-shot-macro"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-asset",
+          "sourceMutationDirectoryName": "🗑️delete-asset",
+          "mutationDirectoryName": "🗑️delete-asset",
+          "scenarios": [
+            {
+              "id": "removes-trailing-asset-prop",
+              "directoryName": "🖼️removes-trailing-asset-prop"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-saved-camera",
+          "sourceMutationDirectoryName": "🧹️delete-saved-camera",
+          "mutationDirectoryName": "🧹️delete-saved-camera",
+          "scenarios": [
+            {
+              "id": "removes-trailing-cam-close",
+              "directoryName": "🚫️removes-trailing-cam-close"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-shot",
+          "sourceMutationDirectoryName": "🚮️delete-shot",
+          "mutationDirectoryName": "🚮️delete-shot",
+          "scenarios": [
+            {
+              "id": "removes-trailing-shot-close",
+              "directoryName": "🚫️removes-trailing-shot-close"
+            }
+          ]
+        },
+        {
+          "mutationId": "drag-assets",
+          "sourceMutationDirectoryName": "↔️drag-assets",
+          "mutationDirectoryName": "↔️drag-assets",
+          "scenarios": [
+            {
+              "id": "offsets-both-assets-and-skips-a-ghost",
+              "directoryName": "🤖️offsets-both-assets-and-skips-a-ghost"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-asset",
+          "sourceMutationDirectoryName": "✏️rename-asset",
+          "mutationDirectoryName": "✏️rename-asset",
+          "scenarios": [
+            {
+              "id": "renames-asset-hero-to-lead",
+              "directoryName": "🖼️renames-asset-hero-to-lead"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-saved-camera",
+          "sourceMutationDirectoryName": "🪪️rename-saved-camera",
+          "mutationDirectoryName": "🪪️rename-saved-camera",
+          "scenarios": [
+            {
+              "id": "relabels-cam-close-to-tight",
+              "directoryName": "🔤️relabels-cam-close-to-tight"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-shot",
+          "sourceMutationDirectoryName": "🏷️rename-shot",
+          "mutationDirectoryName": "🏷️rename-shot",
+          "scenarios": [
+            {
+              "id": "relabels-shot-close-to-detail",
+              "directoryName": "🔤️relabels-shot-close-to-detail"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-assets",
+          "sourceMutationDirectoryName": "🔀️reorder-assets",
+          "mutationDirectoryName": "🔀️reorder-assets",
+          "scenarios": [
+            {
+              "id": "moves-asset-hero-behind-asset-prop",
+              "directoryName": "🖼️moves-asset-hero-behind-asset-prop"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-saved-cameras",
+          "sourceMutationDirectoryName": "🔁️reorder-saved-cameras",
+          "mutationDirectoryName": "🔁️reorder-saved-cameras",
+          "scenarios": [
+            {
+              "id": "moves-cam-close-to-front",
+              "directoryName": "🛰️moves-cam-close-to-front"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-shots",
+          "sourceMutationDirectoryName": "🔃️reorder-shots",
+          "mutationDirectoryName": "🔃️reorder-shots",
+          "scenarios": [
+            {
+              "id": "moves-shot-close-to-front",
+              "directoryName": "🟢️moves-shot-close-to-front"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-saved-camera-view",
+          "sourceMutationDirectoryName": "🎞️replace-saved-camera-view",
+          "mutationDirectoryName": "🎞️replace-saved-camera-view",
+          "scenarios": [
+            {
+              "id": "repositions-cam-close-view",
+              "directoryName": "🍐️repositions-cam-close-view"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-shot-camera",
+          "sourceMutationDirectoryName": "📷️replace-shot-camera",
+          "mutationDirectoryName": "📷️replace-shot-camera",
+          "scenarios": [
+            {
+              "id": "rewrites-cam-wide-through-shot-wide",
+              "directoryName": "🦅️rewrites-cam-wide-through-shot-wide"
+            }
+          ]
+        },
+        {
+          "mutationId": "rotate-assets",
+          "sourceMutationDirectoryName": "🔄️rotate-assets",
+          "mutationDirectoryName": "🔄️rotate-assets",
+          "scenarios": [
+            {
+              "id": "spins-asset-hero-about-z",
+              "directoryName": "🖼️spins-asset-hero-about-z"
+            }
+          ]
+        },
+        {
+          "mutationId": "scale-assets",
+          "sourceMutationDirectoryName": "↕️scale-assets",
+          "mutationDirectoryName": "↕️scale-assets",
+          "scenarios": [
+            {
+              "id": "doubles-asset-hero-scale",
+              "directoryName": "🖼️doubles-asset-hero-scale"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-active-asset",
+          "sourceMutationDirectoryName": "📌️set-active-asset",
+          "mutationDirectoryName": "📌️set-active-asset",
+          "scenarios": [
+            {
+              "id": "activates-asset-prop",
+              "directoryName": "🖼️activates-asset-prop"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-active-shot",
+          "sourceMutationDirectoryName": "🎯️set-active-shot",
+          "mutationDirectoryName": "🎯️set-active-shot",
+          "scenarios": [
+            {
+              "id": "activates-shot-close",
+              "directoryName": "🛟️activates-shot-close"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "create-asset",
+        "delete-asset",
+        "rename-asset",
+        "change-asset-url",
+        "reorder-assets",
+        "drag-assets",
+        "rotate-assets",
+        "scale-assets",
+        "create-shot",
+        "delete-shot",
+        "rename-shot",
+        "change-shot-width",
+        "change-shot-height",
+        "change-shot-format",
+        "change-shot-shape",
+        "reorder-shots",
+        "replace-shot-camera",
+        "create-saved-camera",
+        "delete-saved-camera",
+        "rename-saved-camera",
+        "replace-saved-camera-view",
+        "reorder-saved-cameras",
+        "set-active-shot",
+        "set-active-asset",
+        "change-scene-sun-enabled",
+        "change-scene-sun-azimuth",
+        "change-scene-sun-elevation",
+        "change-scene-sun-intensity",
+        "change-scene-ambient-intensity",
+        "change-scene-shadow-enabled",
+        "change-scene-material-roughness"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.shooting.shooting",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-asset-url",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-asset-url",
+            "bridgeVersion": 1,
+            "variant": "ChangeAssetUrl"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-scene-ambient-intensity",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-scene-ambient-intensity",
+            "bridgeVersion": 1,
+            "variant": "ChangeSceneAmbientIntensity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-scene-material-roughness",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-scene-material-roughness",
+            "bridgeVersion": 1,
+            "variant": "ChangeSceneMaterialRoughness"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-scene-shadow-enabled",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-scene-shadow-enabled",
+            "bridgeVersion": 1,
+            "variant": "ChangeSceneShadowEnabled"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-scene-sun-azimuth",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-scene-sun-azimuth",
+            "bridgeVersion": 1,
+            "variant": "ChangeSceneSunAzimuth"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-scene-sun-elevation",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-scene-sun-elevation",
+            "bridgeVersion": 1,
+            "variant": "ChangeSceneSunElevation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-scene-sun-enabled",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-scene-sun-enabled",
+            "bridgeVersion": 1,
+            "variant": "ChangeSceneSunEnabled"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-scene-sun-intensity",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-scene-sun-intensity",
+            "bridgeVersion": 1,
+            "variant": "ChangeSceneSunIntensity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-shot-format",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-shot-format",
+            "bridgeVersion": 1,
+            "variant": "ChangeShotFormat"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-shot-height",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-shot-height",
+            "bridgeVersion": 1,
+            "variant": "ChangeShotHeight"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-shot-shape",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-shot-shape",
+            "bridgeVersion": 1,
+            "variant": "ChangeShotShape"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-shot-width",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-shot-width",
+            "bridgeVersion": 1,
+            "variant": "ChangeShotWidth"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-asset",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-asset",
+            "bridgeVersion": 1,
+            "variant": "CreateAsset"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-saved-camera",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-saved-camera",
+            "bridgeVersion": 1,
+            "variant": "CreateSavedCamera"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-shot",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-shot",
+            "bridgeVersion": 1,
+            "variant": "CreateShot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-asset",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-asset",
+            "bridgeVersion": 1,
+            "variant": "DeleteAsset"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-saved-camera",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-saved-camera",
+            "bridgeVersion": 1,
+            "variant": "DeleteSavedCamera"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-shot",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-shot",
+            "bridgeVersion": 1,
+            "variant": "DeleteShot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "drag-assets",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "drag-assets",
+            "bridgeVersion": 1,
+            "variant": "DragAssets"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "rename-asset",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-asset",
+            "bridgeVersion": 1,
+            "variant": "RenameAsset"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "rename-saved-camera",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-saved-camera",
+            "bridgeVersion": 1,
+            "variant": "RenameSavedCamera"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "rename-shot",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-shot",
+            "bridgeVersion": 1,
+            "variant": "RenameShot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "reorder-assets",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-assets",
+            "bridgeVersion": 1,
+            "variant": "ReorderAssets"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "reorder-saved-cameras",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-saved-cameras",
+            "bridgeVersion": 1,
+            "variant": "ReorderSavedCameras"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "reorder-shots",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-shots",
+            "bridgeVersion": 1,
+            "variant": "ReorderShots"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "replace-saved-camera-view",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-saved-camera-view",
+            "bridgeVersion": 1,
+            "variant": "ReplaceSavedCameraView"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "replace-shot-camera",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-shot-camera",
+            "bridgeVersion": 1,
+            "variant": "ReplaceShotCamera"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "rotate-assets",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rotate-assets",
+            "bridgeVersion": 1,
+            "variant": "RotateAssets"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "scale-assets",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "scale-assets",
+            "bridgeVersion": 1,
+            "variant": "ScaleAssets"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-active-asset",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-active-asset",
+            "bridgeVersion": 1,
+            "variant": "SetActiveAsset"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-active-shot",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-active-shot",
+            "bridgeVersion": 1,
+            "variant": "SetActiveShot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

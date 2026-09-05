@@ -46,6 +46,11 @@ pub fn decode_record_body(bytes: &[u8], spec: &crate::os_dsl::schema::RecordSpec
     crate::value::decode_record_body(bytes, spec, options)
 }
 
+/// 🛂️ Admits one terminal schema-owned record without unknown fields or byte suffixes.
+pub fn decode_record_body_exact(bytes: &[u8], spec: &crate::os_dsl::schema::RecordSpec, options: &DecodeOptions) -> Result<crate::os_dsl::schema::RecordValue, PackError> {
+    crate::value::decode_record_body_exact(bytes, spec, options)
+}
+
 /// @emoji #⃣ Reads only the trailing footer of an encoded pack file and returns its stored
 /// `content_hash` — no header/manifest/document decode needed. Thin forward onto
 /// `crate::format::read_footer_only`.

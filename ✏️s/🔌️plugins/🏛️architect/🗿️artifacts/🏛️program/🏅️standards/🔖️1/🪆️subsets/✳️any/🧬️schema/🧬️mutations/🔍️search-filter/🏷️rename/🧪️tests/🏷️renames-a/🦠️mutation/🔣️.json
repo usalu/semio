@@ -1,0 +1,5 @@
+{
+  "mutation": "renameSearchFilter",
+  "id": "search-filter-a",
+  "newName": "Renamed Search Filter A"
+}

@@ -1,9 +1,0 @@
-{
-  "mutation": "addCompatibilityRule",
-  "rule": {
-    "id": "compat-signal-power",
-    "source": "hk-signal",
-    "target": "hk-power",
-    "bidirectional": false
-  }
-}

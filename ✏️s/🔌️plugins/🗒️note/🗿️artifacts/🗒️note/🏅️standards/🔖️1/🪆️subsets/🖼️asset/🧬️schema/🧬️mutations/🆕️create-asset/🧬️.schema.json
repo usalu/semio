@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateAsset",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "asset",
+    "key"
+  ],
+  "properties": {
+    "key": {
+      "type": "string"
+    },
+    "asset": {
+      "title": "NoteImageAsset",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "data",
+        "mime"
+      ],
+      "properties": {
+        "mime": {
+          "type": "string"
+        },
+        "data": {
+          "type": "string"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

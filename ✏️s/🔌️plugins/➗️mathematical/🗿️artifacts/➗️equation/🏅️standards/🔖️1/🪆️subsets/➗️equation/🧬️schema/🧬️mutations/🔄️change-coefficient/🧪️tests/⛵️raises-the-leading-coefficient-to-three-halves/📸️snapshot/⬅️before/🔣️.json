@@ -1,0 +1,88 @@
+{
+  "notation": {
+    "childId": "equation-scene-unresolved-change-coefficient",
+    "target": {
+      "artifactId": "equation-text",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "text"
+      }
+    }
+  },
+  "results": {
+    "childId": "equation-scene-unresolved-change-coefficient",
+    "target": {
+      "artifactId": "equation-table",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "table"
+      }
+    }
+  },
+  "computed": {
+    "childId": "equation-scene-unresolved-change-coefficient",
+    "target": {
+      "artifactId": "equation-value",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "value"
+      }
+    }
+  },
+  "equation": {
+    "expr": {
+      "label": 0,
+      "kind": {
+        "kind": "add",
+        "terms": [
+          {
+            "label": 1,
+            "kind": {
+              "kind": "mul",
+              "factors": [
+                {
+                  "label": 2,
+                  "kind": {
+                    "kind": "integer",
+                    "lexeme": "2"
+                  }
+                },
+                {
+                  "label": 3,
+                  "kind": {
+                    "kind": "pow",
+                    "base": {
+                      "label": 4,
+                      "kind": {
+                        "kind": "symbol",
+                        "name": "x"
+                      }
+                    },
+                    "exponent": {
+                      "label": 5,
+                      "kind": {
+                        "kind": "integer",
+                        "lexeme": "2"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "label": 6,
+            "kind": {
+              "kind": "integer",
+              "lexeme": "7"
+            }
+          }
+        ]
+      }
+    },
+    "nextLabel": 7
+  }
+}

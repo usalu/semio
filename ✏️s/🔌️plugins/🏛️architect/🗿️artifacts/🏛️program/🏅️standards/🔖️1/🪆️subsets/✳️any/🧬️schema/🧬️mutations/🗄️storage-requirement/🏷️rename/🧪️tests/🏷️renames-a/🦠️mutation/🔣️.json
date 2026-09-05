@@ -1,0 +1,5 @@
+{
+  "mutation": "renameStorageRequirement",
+  "id": "storage-requirement-a",
+  "newName": "Renamed Storage Requirement A"
+}

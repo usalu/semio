@@ -1,6 +1,6 @@
 // #region 🧲️Header
 /** @emoji 🧠️ `@semio-tech/cad-js/spatial-kernel/semio` — first-party `SpatialKernel` backed by the
- * Rust `BrepKernel` (`Brep`, `semio-s-plugin-stdio`'s `✳️brep` subset) over the existing
+ * Rust `BrepKernel` (`Brep`, `semio-s-plugin-stdio`'s `🧊️brep` subset) over the existing
  * `flow_core` wasm JS→Rust bridge (`invokeBrep`/`brep_invoke`, see
  * `🧰️framework/🔨️modules/🧊️3d/🟦️.ts` and `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📐️brep-geometry/🦀️.rs`).
  * THE production CAD runtime kernel (`id = "semio-brep"`); `🧱️brepjs` (OpenCascade) stays only as

@@ -31,7 +31,7 @@
 //
 // @see 🦀️oracle-probe/🦀️.rs — the reader itself
 // @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
-// @see ../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🔬️probes/📜️script.ts
+// @see ../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🔬️probes/📜️script.ts
 //      — the spawn/offline/agent-scoped-target pattern this file mirrors
 
 //#endregion 🧲️Header

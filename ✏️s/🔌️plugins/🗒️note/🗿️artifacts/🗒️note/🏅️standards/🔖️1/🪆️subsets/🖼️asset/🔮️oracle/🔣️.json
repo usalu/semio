@@ -1,0 +1,292 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution, split out of ✳️any's former note-1-any wildcard catalog in ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION so every s.note.note mutation has a non-wildcard subset owner. Id-keyed image asset pool (create/replace/delete). The generic (whole-document) note-python-independent oracle and the three carrier-family third-party-library oracles (dxf/quick-xml/lopdf) this subset's fixtures cite by id stay registered once, in ✳️any/🔮️oracle/🔣️.json — the registry is global (semio.repository-test's loadOracleRegistry merges every subset's contribution), so this file references them by id without redeclaring them.",
+  "oracles": [],
+  "probes": [],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "note-1-asset",
+      "capability": "note-1-asset-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "🖼️asset",
+      "kinds": [
+        "create-asset",
+        "replace-asset-payload",
+        "delete-asset"
+      ],
+      "vectors": [
+        {
+          "mutationId": "create-asset",
+          "sourceMutationDirectoryName": "🆕️create-asset",
+          "mutationDirectoryName": "🆕️create-asset",
+          "scenarios": [
+            {
+              "id": "adds-a-second-image-asset",
+              "directoryName": "🖼️adds-a-second-image-asset"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-asset",
+          "sourceMutationDirectoryName": "🗑️delete-asset",
+          "mutationDirectoryName": "🗑️delete-asset",
+          "scenarios": [
+            {
+              "id": "removes-the-logo-asset",
+              "directoryName": "🗑️removes-the-logo-asset"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-asset-payload",
+          "sourceMutationDirectoryName": "🔁️replace-asset-payload",
+          "mutationDirectoryName": "🔁️replace-asset-payload",
+          "scenarios": [
+            {
+              "id": "swaps-logo-payload-for-svg",
+              "directoryName": "🔁️swaps-logo-payload-for-svg"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "comparisonProfiles": [],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.note.note",
+      "standard": "1",
+      "subset": "asset",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "🖼️asset",
+      "mutations": [
+        {
+          "id": "create-asset",
+          "capability": "note-1-asset-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-asset",
+            "bridgeVersion": 1,
+            "variant": "CreateAsset"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-asset",
+          "capability": "note-1-asset-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-asset",
+            "bridgeVersion": 1,
+            "variant": "DeleteAsset"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-asset-payload",
+          "capability": "note-1-asset-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-asset-payload",
+            "bridgeVersion": 1,
+            "variant": "ReplaceAssetPayload"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "adds-the-diagram-asset",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.note.note",
+        "standard": "1",
+        "subset": "asset"
+      },
+      "mutation": "create-asset",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree",
+        "handedness": "right",
+        "up": "y"
+      },
+      "files": [
+        {
+          "role": "before-svg",
+          "path": "../🧫️fixtures/➕️adds-the-diagram-asset/⬅️before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:33c861c534b51d3768bd43db877996b6e2d1ad7b5f1b7c57f983a0e7660944a8",
+          "bytes": 852
+        },
+        {
+          "role": "after-svg",
+          "path": "../🧫️fixtures/➕️adds-the-diagram-asset/➡️after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:90767b9386e4e2a28d0394a9a8e2a40c30ef2237b122e7dd3b6700c277cac180",
+          "bytes": 1035
+        }
+      ],
+      "generator": {
+        "oracle": "quick-xml-note-drawing-reader",
+        "packageVersion": "0.42",
+        "engineFamily": "quick-xml",
+        "engineVersion": "0.42",
+        "command": "bun ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only adds-the-diagram-asset",
+        "seed": 0,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT",
+        "attribution": "Built and written by the quick-xml 0.42 crate(s) — no byte of SVG here originates in this repository.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-note-svg-drawing-v1",
+      "reproducible": true,
+      "family": "svg",
+      "notes": "Witnesses create-asset via the svg carrier(s) — see 📓️note-1-any-fixture-corpus.md for why exactly these carriers and not the others declared for this mutation kind."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "swaps-the-logo-payload",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.note.note",
+        "standard": "1",
+        "subset": "asset"
+      },
+      "mutation": "replace-asset-payload",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree",
+        "handedness": "right",
+        "up": "y"
+      },
+      "files": [
+        {
+          "role": "before-svg",
+          "path": "../🧫️fixtures/🔁️swaps-the-logo-payload/⬅️before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:33c861c534b51d3768bd43db877996b6e2d1ad7b5f1b7c57f983a0e7660944a8",
+          "bytes": 852
+        },
+        {
+          "role": "after-svg",
+          "path": "../🧫️fixtures/🔁️swaps-the-logo-payload/➡️after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:d378c98fcae5dbe64b1ef2f9a8913fcf767591646ac0a82ec836b6322d90a3ba",
+          "bytes": 912
+        }
+      ],
+      "generator": {
+        "oracle": "quick-xml-note-drawing-reader",
+        "packageVersion": "0.42",
+        "engineFamily": "quick-xml",
+        "engineVersion": "0.42",
+        "command": "bun ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only swaps-the-logo-payload",
+        "seed": 0,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT",
+        "attribution": "Built and written by the quick-xml 0.42 crate(s) — no byte of SVG here originates in this repository.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-note-svg-drawing-v1",
+      "reproducible": true,
+      "family": "svg",
+      "notes": "Witnesses replace-asset-payload via the svg carrier(s) — see 📓️note-1-any-fixture-corpus.md for why exactly these carriers and not the others declared for this mutation kind."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "removes-the-logo-asset",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.note.note",
+        "standard": "1",
+        "subset": "asset"
+      },
+      "mutation": "delete-asset",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree",
+        "handedness": "right",
+        "up": "y"
+      },
+      "files": [
+        {
+          "role": "before-svg",
+          "path": "../🧫️fixtures/🗑️removes-the-logo-asset/⬅️before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:33c861c534b51d3768bd43db877996b6e2d1ad7b5f1b7c57f983a0e7660944a8",
+          "bytes": 852
+        },
+        {
+          "role": "after-svg",
+          "path": "../🧫️fixtures/🗑️removes-the-logo-asset/➡️after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:a7106fdefa2c7f24889d7618f968eaa1a2195b2fd861320341777b5463046f83",
+          "bytes": 729
+        }
+      ],
+      "generator": {
+        "oracle": "quick-xml-note-drawing-reader",
+        "packageVersion": "0.42",
+        "engineFamily": "quick-xml",
+        "engineVersion": "0.42",
+        "command": "bun ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate --only removes-the-logo-asset",
+        "seed": 0,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT",
+        "attribution": "Built and written by the quick-xml 0.42 crate(s) — no byte of SVG here originates in this repository.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-note-svg-drawing-v1",
+      "reproducible": true,
+      "family": "svg",
+      "notes": "Witnesses delete-asset via the svg carrier(s) — see 📓️note-1-any-fixture-corpus.md for why exactly these carriers and not the others declared for this mutation kind."
+    }
+  ]
+}

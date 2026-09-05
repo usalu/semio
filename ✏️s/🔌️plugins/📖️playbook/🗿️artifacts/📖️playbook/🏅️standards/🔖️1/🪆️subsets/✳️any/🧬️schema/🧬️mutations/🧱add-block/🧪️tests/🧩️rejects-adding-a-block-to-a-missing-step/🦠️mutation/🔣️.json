@@ -1,0 +1,9 @@
+{
+  "mutation": "addBlock",
+  "stepId": "s-missing",
+  "block": {
+    "id": "b-notes",
+    "label": "Notes",
+    "kind": "text"
+  }
+}

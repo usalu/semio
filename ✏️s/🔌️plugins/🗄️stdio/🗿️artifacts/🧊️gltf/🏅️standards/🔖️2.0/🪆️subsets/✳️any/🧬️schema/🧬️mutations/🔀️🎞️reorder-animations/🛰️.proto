@@ -1,4 +1,0 @@
-syntax = "proto3";
-package stdio.gltf.mutation;
-message GltfReorderAnimationsPayloadV1 { repeated uint32 order = 1; }
-message GltfReorderAnimationsMutationV1 { string id = 1; uint32 version = 2; repeated string touched_paths = 3; GltfReorderAnimationsPayloadV1 payload = 4; }

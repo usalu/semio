@@ -1,0 +1,9 @@
+{
+  "contract": "semio.flow.store-owners/v1",
+  "grants": [1, 64, 4096],
+  "cases": [
+    { "id": "document-nested-scene", "lane": "document", "unit": "🌊", "repetitions": 2048, "payloadBytes": 8192, "terminalEmpty": true },
+    { "id": "config-owned-ids", "lane": "config", "unit": "ä", "repetitions": 4096, "payloadBytes": 8192, "terminalEmpty": true },
+    { "id": "empty-draft", "lane": "draft", "unit": "", "repetitions": 0, "payloadBytes": 0, "terminalEmpty": true }
+  ]
+}

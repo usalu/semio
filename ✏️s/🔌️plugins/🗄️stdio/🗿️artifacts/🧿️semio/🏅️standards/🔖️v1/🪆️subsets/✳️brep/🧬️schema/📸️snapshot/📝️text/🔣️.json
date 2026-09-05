@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/s.stdio.semio.brep/snapshot/text.json",
-  "title": "SemioBrepSnapshotText",
-  "type": "object"
-}

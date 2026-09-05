@@ -14,7 +14,7 @@ describe("animate presentation core recovery", () => {
 		const presentation = loadPresentationFromSlideGlob(
 			{ id: "recovery", name: "Recovery", language: "en" },
 			{
-				"./slide/Chapter/Sequence/Thought/Second.ts": {
+				"./🎞️slide/Chapter/Sequence/Thought/Second.ts": {
 					default: {
 						order: 2,
 						arrangement: {
@@ -23,7 +23,7 @@ describe("animate presentation core recovery", () => {
 						},
 					},
 				},
-				"./slide/Chapter/Sequence/Thought/First.ts": {
+				"./🎞️slide/Chapter/Sequence/Thought/First.ts": {
 					default: {
 						order: 1,
 						participants: [{ id: "title" }],

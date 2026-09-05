@@ -1,0 +1,22 @@
+[package]
+name = "semio-framework-intrinsic-size"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "First-party intrinsic-dimension reader for PNG/JPEG/GIF/WebP header bytes and SVG root width/height/viewBox attributes — no runtime dependency. Built so a wasm32-wasip2 guest can answer 'how big is this image' without linking image/usvg (ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS)."
+
+[package.metadata.semio]
+role = "framework"
+id = "intrinsic-size"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../../📏️intrinsic-size/📦️packages/🦀️rust/🦀️.rs"
+
+[dev-dependencies]
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "gif", "webp"] }
+usvg = "0.46.0"
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

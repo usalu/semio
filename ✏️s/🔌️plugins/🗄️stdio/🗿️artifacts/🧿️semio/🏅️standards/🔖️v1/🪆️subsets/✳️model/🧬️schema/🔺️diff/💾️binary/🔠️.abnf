@@ -1,6 +1,0 @@
-; ABNF-style descriptive mirror of `stdio.semio.model`'s real diff binary frame -- see the
-; authoritative `📡️.protocol.semio` for the conformance-tested version.
-document  = format presence payload
-format    = %x01                  ; DIFF_BINARY_FORMAT
-presence  = OCTET                 ; bit0=spatial present, bit1=elements present, bit2=relations present
-payload   = *OCTET                ; 0-3 varint-length-prefixed opaque blobs, see component.rs

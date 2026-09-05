@@ -1,0 +1,650 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "📰 XML 1.0/✳️valid's own contribution to the repository test platform: `quick-xml` 0.42 registered as the independent reference reader/writer for THIS subset's own 9-kind `XmlValidMutation` vocabulary, and the comparison profile that vocabulary is measured under. A distinct id and capability from the sibling `✳️any` registration: a mutation vocabulary belongs to the subset that declares it, and reusing an approved oracle outside its surveyed capability fails the contract's oracle-capability-mismatch check.",
+  "oracles": [
+    {
+      "id": "quick-xml-xml-1-0-valid-mutate",
+      "ecosystem": "rust",
+      "package": "quick-xml",
+      "version": "0.42",
+      "capabilities": [
+        "xml-1-0-valid-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-xml-valid-1-0-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/tafia/quick-xml",
+      "rationale": "🩹️ RECLASSIFIED (ticket SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION, shard A10, 2026-09-02). This entry was registered `third-party-library` on the strength of a real crate that does genuine codec work, but the mutation's expected RESULT is computed by this owner's own `./🦀️.rs` -- its dispatch function's catch-all arm is `\"mutation kind {...} has no oracle implementation\"`, proof that every OTHER arm is an implementation, not a reading. Both halves of the comparison then descend from the same specification, so a shared misreading produces two agreeing wrong answers -- the one failure a differential oracle exists to catch. This is a `cross-semio-implementation`: a required SUPPLEMENT (metamorphic/inverse/round-trip evidence), never a substitute. A qualifying third-party reference for the mutation semantics is still owed. See $TICKET/📓️a10-oracle-honesty.md.\n\nquick-xml is a general streaming XML reader AND writer, not a validating processor: it hands the DOCTYPE back as one raw string and never looks at it again, which is exactly what makes it usable as the independent producer for a VALIDITY vocabulary. This subset's oracle (./🦀️.rs) builds its document tree from quick-xml's event stream through the shared 📰markup family module, then decomposes that raw DOCTYPE with its OWN hand-rolled XML 1.0 §2.8/§4.2 grammar, applies each declared XmlValidMutation kind, derives the four §2.8/§2.9 verdicts straight from the W3C text, and re-serializes with quick-xml's Writer. It never imports this repository's own parse_doctype/xml_document_to_text codec, nor its check_valid_conformance. Both encode the same normative rules; neither is derived from the other, which is the point. Registered by this subset rather than shared with ✳️any because the two catalogs have exactly one kind in common (set-text) and disagree about what the DOCTYPE is for.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "quick-xml",
+        "implementation": "quick-xml Rust streaming XML reader/writer",
+        "version": "0.42"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "lxml-xml-1-0-valid-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "lxml",
+      "version": "6.1.3",
+      "engine": {
+        "family": "lxml",
+        "implementation": "lxml/libxml2 XML 1.0 reader",
+        "version": "6.1.3"
+      },
+      "capabilities": [
+        "xml-1-0-valid-mutate"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://lxml.de",
+      "rationale": "📖️ A READER, registered separately from this file's existing `cross-semio-implementation` entry, which COMPUTES what a mutation should produce from this repository's own reading of the spec and therefore cannot discharge this requirement — both halves would descend from one reading of it. lxml 6.1.3 wraps libxml2's validating XML 1.0 parser, entirely independent of this repository's `quick-xml` reimplementation, and `etree.parse(path)` rejects a malformed document outright while exposing the well-formed tree's element names, attributes, text and declared XML version/encoding directly. Verified against this subset's own committed `shared://🍎️macos-uttype-plist/🏷️.xml`: `tree.docinfo.xml_version` and `.encoding` reported the real declared `1.0`/`UTF-8`, and the root parsed to the genuine `plist` element.",
+      "comparisonProfiles": [
+        "semantic-xml-valid-1-0-v1"
+      ]
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "xml-1-0-valid",
+      "capability": "xml-1-0-valid-mutate",
+      "standardDirectoryName": "🔖️1.0",
+      "subsetDirectoryName": "✳️valid",
+      "vectors": [],
+      "kinds": [
+        "set-snapshot",
+        "declare-doctype",
+        "rename-document-element",
+        "set-external-subset",
+        "set-standalone",
+        "declare-entity",
+        "set-internal-subset",
+        "set-text"
+      ]
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-xml-valid-1-0-v1",
+      "description": "XML 1.0 ✳️valid mutation round trips compared on the ground the subset is defined on: the XML declaration decomposed into version/encoding/standalone, the DOCTYPE decomposed into Name, SYSTEM/PUBLIC external identifier and the ORDERED internal-subset entity declarations (§4.2 binds the first declaration of a name, so order is normative and is never sorted), the document element's name, the four §2.8/§2.9 validity verdicts derived independently by each side, and the element/text/CDATA/comment/PI tree. Attributes are compared as a name-sorted set, because XML attribute order is real writer freedom; sibling and child order IS normative and is never sorted. Self-closing versus explicit empty open/close tags are equivalent by construction — both parse to zero children — and are never distinguished by either side. Nothing about validity is narrowed away: the presence of the DOCTYPE, the agreement of its Name with the document element, and the standalone/external-subset pair are exactly what the comparison sees.",
+      "tolerance": 0,
+      "ignoreKeys": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.xml",
+      "standard": "1.0",
+      "subset": "valid",
+      "standardDirectoryName": "🔖️1.0",
+      "subsetDirectoryName": "✳️valid",
+      "mutations": [
+        {
+          "id": "declare-doctype",
+          "capability": "xml-1-0-valid-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "declare-doctype",
+            "bridgeVersion": 1,
+            "variant": "DeclareDoctype"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "xml-1-0-valid-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lxml-xml-1-0-valid-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "declare-entity",
+          "capability": "xml-1-0-valid-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "declare-entity",
+            "bridgeVersion": 1,
+            "variant": "DeclareEntity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "xml-1-0-valid-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lxml-xml-1-0-valid-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "rename-document-element",
+          "capability": "xml-1-0-valid-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-document-element",
+            "bridgeVersion": 1,
+            "variant": "RenameDocumentElement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "xml-1-0-valid-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lxml-xml-1-0-valid-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-external-subset",
+          "capability": "xml-1-0-valid-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-external-subset",
+            "bridgeVersion": 1,
+            "variant": "SetExternalSubset"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "xml-1-0-valid-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lxml-xml-1-0-valid-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-internal-subset",
+          "capability": "xml-1-0-valid-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-internal-subset",
+            "bridgeVersion": 1,
+            "variant": "SetInternalSubset"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "xml-1-0-valid-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lxml-xml-1-0-valid-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "xml-1-0-valid-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "xml-1-0-valid-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lxml-xml-1-0-valid-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-standalone",
+          "capability": "xml-1-0-valid-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-standalone",
+            "bridgeVersion": 1,
+            "variant": "SetStandalone"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "xml-1-0-valid-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lxml-xml-1-0-valid-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-text",
+          "capability": "xml-1-0-valid-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-text",
+            "bridgeVersion": 1,
+            "variant": "SetText"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "xml-1-0-valid-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lxml-xml-1-0-valid-mutate-reader"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "declare-doctype-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xml",
+        "standard": "1.0",
+        "subset": "valid"
+      },
+      "mutation": "declare-doctype",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xml",
+          "path": "../🧫️fixtures/📜️declare-doctype-applied/⬅️before.xml",
+          "mediaType": "application/xml",
+          "sha256": "sha256:61f6795d0f2fe9e13e14af1da74af73d21952c94639f13fc1c43ee805f0b3411",
+          "bytes": 86
+        },
+        {
+          "role": "expected-after-xml",
+          "path": "../🧫️fixtures/📜️declare-doctype-applied/➡️after.xml",
+          "mediaType": "application/xml",
+          "sha256": "sha256:7d7dc16de507266b99c2442c5ac5f6ce1a0099b0f131fb26e426148131f058d6",
+          "bytes": 120
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (lxml, wraps libxml2 MIT/libxml2-license)",
+        "attribution": "Serialized by lxml 6.1.3's own etree.tostring after an lxml.etree.parse round-trip",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "No DOCTYPE -> a SYSTEM external identifier declared for the document element.",
+      "generator": {
+        "oracle": "lxml-xml-1-0-valid-mutate-reader",
+        "packageVersion": "6.1.3",
+        "engineFamily": "lxml",
+        "engineVersion": "6.1.3",
+        "command": "uv run python3 🔨️f2-gen-xml-fixtures.py (lxml.etree.parse -> lxml.etree.tostring round-trip)",
+        "platform": "darwin-arm64"
+      }
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-external-subset-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xml",
+        "standard": "1.0",
+        "subset": "valid"
+      },
+      "mutation": "set-external-subset",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xml",
+          "path": "../🧫️fixtures/🔗️set-external-subset-applied/⬅️before.xml",
+          "mediaType": "application/xml",
+          "sha256": "sha256:6d633ba19d7f900ae6178d8e0934684ad160d2a54aa29988e0ffac6b025c1f58",
+          "bytes": 102
+        },
+        {
+          "role": "expected-after-xml",
+          "path": "../🧫️fixtures/🔗️set-external-subset-applied/➡️after.xml",
+          "mediaType": "application/xml",
+          "sha256": "sha256:6332e62bfa6da45038c1c31cce8c0d00ea3ad16dd84b1e522a967cc787d37ef0",
+          "bytes": 151
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (lxml, wraps libxml2 MIT/libxml2-license)",
+        "attribution": "Serialized by lxml 6.1.3's own etree.tostring after an lxml.etree.parse round-trip",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Bare DOCTYPE -> a PUBLIC external identifier set on it.",
+      "generator": {
+        "oracle": "lxml-xml-1-0-valid-mutate-reader",
+        "packageVersion": "6.1.3",
+        "engineFamily": "lxml",
+        "engineVersion": "6.1.3",
+        "command": "uv run python3 🔨️f2-gen-xml-fixtures.py (lxml.etree.parse -> lxml.etree.tostring round-trip)",
+        "platform": "darwin-arm64"
+      }
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "rename-document-element-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xml",
+        "standard": "1.0",
+        "subset": "valid"
+      },
+      "mutation": "rename-document-element",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xml",
+          "path": "../🧫️fixtures/🌳️rename-document-element-applied/⬅️before.xml",
+          "mediaType": "application/xml",
+          "sha256": "sha256:6d633ba19d7f900ae6178d8e0934684ad160d2a54aa29988e0ffac6b025c1f58",
+          "bytes": 102
+        },
+        {
+          "role": "expected-after-xml",
+          "path": "../🧫️fixtures/🌳️rename-document-element-applied/➡️after.xml",
+          "mediaType": "application/xml",
+          "sha256": "sha256:d125c1bb894ade3efc0e32967eb5dd5be4edec726ba1e6aa48aa1bdc19c6f68f",
+          "bytes": 114
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (lxml, wraps libxml2 MIT/libxml2-license)",
+        "attribution": "Serialized by lxml 6.1.3's own etree.tostring after an lxml.etree.parse round-trip",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Document element (and its DOCTYPE Name, per this subset's own §2.8 rule) retagged root -> document.",
+      "generator": {
+        "oracle": "lxml-xml-1-0-valid-mutate-reader",
+        "packageVersion": "6.1.3",
+        "engineFamily": "lxml",
+        "engineVersion": "6.1.3",
+        "command": "uv run python3 🔨️f2-gen-xml-fixtures.py (lxml.etree.parse -> lxml.etree.tostring round-trip)",
+        "platform": "darwin-arm64"
+      }
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-standalone-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xml",
+        "standard": "1.0",
+        "subset": "valid"
+      },
+      "mutation": "set-standalone",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xml",
+          "path": "../🧫️fixtures/🏳️set-standalone-applied/⬅️before.xml",
+          "mediaType": "application/xml",
+          "sha256": "sha256:61f6795d0f2fe9e13e14af1da74af73d21952c94639f13fc1c43ee805f0b3411",
+          "bytes": 86
+        },
+        {
+          "role": "expected-after-xml",
+          "path": "../🧫️fixtures/🏳️set-standalone-applied/➡️after.xml",
+          "mediaType": "application/xml",
+          "sha256": "sha256:9f9598105f6a507350b5f86b154ee3773991d16344a620e53db430babfea0509",
+          "bytes": 87
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (lxml, wraps libxml2 MIT/libxml2-license)",
+        "attribution": "Serialized by lxml 6.1.3's own etree.tostring after an lxml.etree.parse round-trip",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "XML declaration's standalone pseudo-attribute no -> yes.",
+      "generator": {
+        "oracle": "lxml-xml-1-0-valid-mutate-reader",
+        "packageVersion": "6.1.3",
+        "engineFamily": "lxml",
+        "engineVersion": "6.1.3",
+        "command": "uv run python3 🔨️f2-gen-xml-fixtures.py (lxml.etree.parse -> lxml.etree.tostring round-trip)",
+        "platform": "darwin-arm64"
+      }
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-text-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xml",
+        "standard": "1.0",
+        "subset": "valid"
+      },
+      "mutation": "set-text",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xml",
+          "path": "../🧫️fixtures/✍️set-text-applied/⬅️before.xml",
+          "mediaType": "application/xml",
+          "sha256": "sha256:61f6795d0f2fe9e13e14af1da74af73d21952c94639f13fc1c43ee805f0b3411",
+          "bytes": 86
+        },
+        {
+          "role": "expected-after-xml",
+          "path": "../🧫️fixtures/✍️set-text-applied/➡️after.xml",
+          "mediaType": "application/xml",
+          "sha256": "sha256:24529f50a588707ea2a22c6b01b265708ecad5358f36c9ef9b97548eeb9d0a94",
+          "bytes": 86
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (lxml, wraps libxml2 MIT/libxml2-license)",
+        "attribution": "Serialized by lxml 6.1.3's own etree.tostring after an lxml.etree.parse round-trip",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Character content of /root/item replaced, Hello -> World.",
+      "generator": {
+        "oracle": "lxml-xml-1-0-valid-mutate-reader",
+        "packageVersion": "6.1.3",
+        "engineFamily": "lxml",
+        "engineVersion": "6.1.3",
+        "command": "uv run python3 🔨️f2-gen-xml-fixtures.py (lxml.etree.parse -> lxml.etree.tostring round-trip)",
+        "platform": "darwin-arm64"
+      }
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xml",
+        "standard": "1.0",
+        "subset": "valid"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xml",
+          "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.xml",
+          "mediaType": "application/xml",
+          "sha256": "sha256:61f6795d0f2fe9e13e14af1da74af73d21952c94639f13fc1c43ee805f0b3411",
+          "bytes": 86
+        },
+        {
+          "role": "expected-after-xml",
+          "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.xml",
+          "mediaType": "application/xml",
+          "sha256": "sha256:93bb2fd714b6a3dc3693b7c04cda2208c8ca6c12ea9170b1e5f7e57f59dcdff8",
+          "bytes": 149
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (lxml, wraps libxml2 MIT/libxml2-license)",
+        "attribution": "Serialized by lxml 6.1.3's own etree.tostring after an lxml.etree.parse round-trip",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Whole-document snapshot replace: an unrelated valid document substituted wholesale.",
+      "generator": {
+        "oracle": "lxml-xml-1-0-valid-mutate-reader",
+        "packageVersion": "6.1.3",
+        "engineFamily": "lxml",
+        "engineVersion": "6.1.3",
+        "command": "uv run python3 🔨️f2-gen-xml-fixtures.py (lxml.etree.parse -> lxml.etree.tostring round-trip)",
+        "platform": "darwin-arm64"
+      }
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "declare-entity-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.xml",
+        "standard": "1.0",
+        "subset": "valid"
+      },
+      "mutation": "declare-entity",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xml",
+          "path": "../🧫️fixtures/🏷️declare-entity-applied/⬅️before.xml",
+          "mediaType": "application/xml",
+          "sha256": "sha256:20659c17014a7bad11c8a0b72defcf5d44163feb1bbeee2fa1f2dc3a3ca6f0b5",
+          "bytes": 74
+        },
+        {
+          "role": "expected-after-xml",
+          "path": "../🧫️fixtures/🏷️declare-entity-applied/➡️after.xml",
+          "mediaType": "application/xml",
+          "sha256": "sha256:dd8d87ad59b08c74759f7b93f34c5714ef2a7752e98aca555d1486e61643a435",
+          "bytes": 98
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (handcrafted)",
+        "attribution": "Authored directly; well-formedness confirmed live by lxml 6.1.3 (lxml cannot carry an internal DTD subset through its own serializer, see notes)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "General entity foo declared in the internal subset. HANDCRAFTED: lxml's docinfo.doctype demonstrably drops internal-subset content on serialization (verified live this session -- round-tripping `<!DOCTYPE root [<!ENTITY foo \"bar\">]>` through etree.parse+tostring yields bare `<!DOCTYPE root>`, the entity declaration silently gone), so lxml cannot be the writer for this specific mutation even though it is registered as this subset's reader oracle."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-internal-subset-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.xml",
+        "standard": "1.0",
+        "subset": "valid"
+      },
+      "mutation": "set-internal-subset",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xml",
+          "path": "../🧫️fixtures/📚️set-internal-subset-applied/⬅️before.xml",
+          "mediaType": "application/xml",
+          "sha256": "sha256:a38ac0f1c588000a8605497d7f4c71ce9f8facf2e32d2e0983868e9060aea018",
+          "bytes": 87
+        },
+        {
+          "role": "expected-after-xml",
+          "path": "../🧫️fixtures/📚️set-internal-subset-applied/➡️after.xml",
+          "mediaType": "application/xml",
+          "sha256": "sha256:cdd64e42ab6005726915ed2ae9ab6b639120aaf85c519566403c668e567bac2c",
+          "bytes": 140
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "n/a (handcrafted)",
+        "attribution": "Authored directly; well-formedness confirmed live by lxml 6.1.3 (lxml cannot carry an internal DTD subset through its own serializer, see notes)",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "utf8-text-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Internal subset populated with element declarations. HANDCRAFTED for the same docinfo.doctype-drops-internal-subset reason as declare-entity above."
+    }
+  ]
+}

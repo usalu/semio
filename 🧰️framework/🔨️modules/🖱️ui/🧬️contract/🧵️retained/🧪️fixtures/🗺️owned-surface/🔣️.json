@@ -1,0 +1,6 @@
+{
+  "version": 1, "identity": {"actor": "renderer-owner", "instance": 4294967295, "surface": "Ansicht 😀"}, "root": 9007199254740991, "label": "Ansicht / View 😀",
+  "childClose": {"issuedRoots": 2, "readersPerRoot": 2, "retirementSlots": 4, "foreignTransfer": false, "detachedTransfer": true, "managedUnsubscribe": true},
+  "forgedAuthorities": ["subscription-cell", "patch-source"],
+  "laws": ["private-candidate-root", "retained-initial-read", "exact-version-CAS", "no-ack-before-publication", "incremental-graph-validation", "node-json-hash-parity", "single-root-and-epoch-publish", "one-notification-per-step", "reentrant-subscription-cutoff", "close-waits-issued-owners", "cancel-preserves-source", "quota-before-publication", "foreign-subscription-rejected", "independent-same-id-surfaces", "late-cancel-finishes-committed-notifications", "close-waits-owned-receipt", "failed-notification-exact-retry", "every-cancellation-prefix-retires-staged-bytes"]
+}

@@ -5,7 +5,7 @@
   "displayName": "Change URI",
   "emoji": "🔗",
   "aggregateVariant": "ChangeUri",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-uri",
   "binaryTag": 1,
   "invertibility": "explicit-mutation",

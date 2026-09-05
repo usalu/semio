@@ -1,0 +1,204 @@
+{
+  "domain": "semio.initial-child.v1",
+  "prefix": "initial-child-",
+  "hash": "blake3-256",
+  "encoding": "domain-utf8-zero; nine-u32le-length-prefixed-utf8-fields; ordinal-u32le",
+  "fields": [
+    "scope.spaceId",
+    "parent.artifactId",
+    "parent.artifactKind",
+    "parent.standard",
+    "parent.subset",
+    "slot",
+    "child.artifactKind",
+    "child.standard",
+    "child.subset"
+  ],
+  "maximumFieldBytes": 256,
+  "maximumChildren": 64,
+  "scopeAgreementCases": [
+    { "scopeDocumentId": "document-one", "accepted": true },
+    { "scopeDocumentId": "different-document", "accepted": false },
+    { "scopeDocumentId": "", "accepted": false }
+  ],
+  "cases": [
+    {
+      "id": "document-one",
+      "values": [
+        "space-one",
+        "document-one",
+        "s.flow.flow",
+        "1",
+        "*",
+        "content",
+        "s.stdio.semio",
+        "v1",
+        "flow"
+      ],
+      "ordinal": 0,
+      "wireBytes": 123,
+      "expectedId": "initial-child-c5b56725721e8e99483b03d95135e1cf43fb1d03e6f3cabb71c2cdb6f439f206"
+    },
+    {
+      "id": "different-space-same-document",
+      "values": [
+        "space-two",
+        "document-one",
+        "s.flow.flow",
+        "1",
+        "*",
+        "content",
+        "s.stdio.semio",
+        "v1",
+        "flow"
+      ],
+      "ordinal": 0,
+      "wireBytes": 123,
+      "expectedId": "initial-child-80d7d3a0c99d4bac6ab37d3201281cace6b17bc77ddd9119deb22403ca19d9ff"
+    },
+    {
+      "id": "document-two",
+      "values": [
+        "space-one",
+        "document-two",
+        "s.flow.flow",
+        "1",
+        "*",
+        "content",
+        "s.stdio.semio",
+        "v1",
+        "flow"
+      ],
+      "ordinal": 0,
+      "wireBytes": 123,
+      "expectedId": "initial-child-b77b102b8edbff9c8f7ba19b14c2fff46acb1ada67eb558170fb8f72abb4153f"
+    },
+    {
+      "id": "unicode-document",
+      "values": [
+        "space-one",
+        "文書-🌊",
+        "s.flow.flow",
+        "1",
+        "*",
+        "content",
+        "s.stdio.semio",
+        "v1",
+        "flow"
+      ],
+      "ordinal": 0,
+      "wireBytes": 122,
+      "expectedId": "initial-child-3e47f35c4b2bbcfae15f29c7acbec394260d691621eaa53d3f35b6703262586b"
+    },
+    {
+      "id": "different-parent-standard",
+      "values": [
+        "space-one",
+        "document-one",
+        "s.flow.flow",
+        "2",
+        "*",
+        "content",
+        "s.stdio.semio",
+        "v1",
+        "flow"
+      ],
+      "ordinal": 0,
+      "wireBytes": 123,
+      "expectedId": "initial-child-c4af57e2e2b0c398edfa96c821a8582ba5fc9eecde7803a7f88bb852a2c0e981"
+    },
+    {
+      "id": "different-child-subset",
+      "values": [
+        "space-one",
+        "document-one",
+        "s.flow.flow",
+        "1",
+        "*",
+        "content",
+        "s.stdio.semio",
+        "v1",
+        "graph"
+      ],
+      "ordinal": 0,
+      "wireBytes": 124,
+      "expectedId": "initial-child-b26e458ccb0d5ce4423a69af35c2fa160c7805055c55ee6b3531369d24118050"
+    },
+    {
+      "id": "different-slot",
+      "values": [
+        "space-one",
+        "document-one",
+        "s.flow.flow",
+        "1",
+        "*",
+        "alternate",
+        "s.stdio.semio",
+        "v1",
+        "flow"
+      ],
+      "ordinal": 0,
+      "wireBytes": 125,
+      "expectedId": "initial-child-32420c529513e0599850776467af285179ebc2b39bafee46492c9e934165710c"
+    },
+    {
+      "id": "ordinal-one",
+      "values": [
+        "space-one",
+        "document-one",
+        "s.flow.flow",
+        "1",
+        "*",
+        "content",
+        "s.stdio.semio",
+        "v1",
+        "flow"
+      ],
+      "ordinal": 1,
+      "wireBytes": 123,
+      "expectedId": "initial-child-cb84302c467f05f98b860b8db12dfba656baf3cde7f1382cfe91758ba1014ace"
+    }
+  ],
+  "rejectedFields": [
+    {
+      "unit": "",
+      "repeat": 1
+    },
+    {
+      "unit": "x",
+      "repeat": 257
+    },
+    {
+      "unit": "🌊",
+      "repeat": 65
+    },
+    {
+      "unit": "\u0000",
+      "repeat": 1
+    },
+    {
+      "unit": "\n",
+      "repeat": 1
+    },
+    {
+      "unit": "",
+      "repeat": 1
+    },
+    {
+      "unit": "",
+      "repeat": 1
+    }
+  ],
+  "rejectedOrdinals": [
+    -1,
+    64,
+    0.5
+  ],
+  "excludedInputs": [
+    "surfaceId",
+    "initialPack",
+    "currentGraph",
+    "checkpoint"
+  ],
+  "authority": "none"
+}

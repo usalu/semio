@@ -1,0 +1,3 @@
+(* ebnf stdio.gif snapshot *)
+document = header, body ;
+header = 'schema', space, 'stdio.gif', newline ;

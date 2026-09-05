@@ -5,7 +5,7 @@
   "displayName": "Edit Lhs",
   "emoji": "🔍️",
   "aggregateVariant": "EditLhs",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "edit-lhs",
   "binaryTag": 1,
   "invertibility": "explicit-mutation",

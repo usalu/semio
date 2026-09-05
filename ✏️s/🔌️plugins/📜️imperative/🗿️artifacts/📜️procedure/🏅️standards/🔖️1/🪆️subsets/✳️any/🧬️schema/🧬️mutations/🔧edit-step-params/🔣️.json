@@ -5,7 +5,7 @@
   "displayName": "Edit Step Parameters",
   "emoji": "🔧",
   "aggregateVariant": "EditStepParams",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "edit-step-params",
   "binaryTag": 3,
   "invertibility": "explicit-mutation",

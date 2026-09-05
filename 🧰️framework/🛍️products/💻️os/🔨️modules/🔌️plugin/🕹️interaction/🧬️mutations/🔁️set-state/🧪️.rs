@@ -3,12 +3,12 @@ use protocol::{Mutation, MutationDiff, MutationLeaf, OpBinary, OpText};
 
 #[test]
 fn local_interaction_mutation_leaf_descriptor_and_exact_codecs_are_owned() {
-    let source: serde_json::Value = serde_json::from_str(include_str!("🧪️fixture/🔣️.json")).unwrap();
+    let source: serde_json::Value = serde_json::from_str(include_str!("🧫️fixture/🔣️.json")).unwrap();
     let descriptor: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
     let state: protocol::InteractionState = serde_json::from_value(source.clone()).unwrap();
     let mutation = InteractionConfigMutation::set_state(state.clone());
     assert_eq!(InteractionConfigMutation::DESCRIPTORS.len(), 1);
-    assert_eq!(serde_json::to_value(mutation.descriptor()).unwrap(), descriptor);
+    assert_eq!(serde_json::Value::from(protocol::ToValue::to_value(mutation.descriptor())), descriptor);
     assert_eq!(mutation.descriptor(), &SetInteractionState::DESCRIPTOR);
     assert!(SetInteractionState::PROVENANCE.source_path.ends_with("/🔁️set-state/🦀️.rs"));
     assert_eq!(SetInteractionState::PROVENANCE.owner, mutation.descriptor().owner);

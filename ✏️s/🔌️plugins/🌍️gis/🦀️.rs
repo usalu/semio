@@ -27,6 +27,8 @@ pub fn plugin() -> Result<Plugin<GisApps>, semio_framework_plugin::PluginAssembl
     Plugin::<GisApps>::builder("gis")
         .label("GIS")
         .version("0.1.0")
+        .package_id("semio:gis")
+        .artifact_kind(crate::artifacts::gismap::artifact_kind())
         .artifact(crate::artifacts::gismap::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .artifact(crate::artifacts::gisterrain::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .host_media_handler(HostMediaHandlerDeclaration::two_d_svg_export(
@@ -77,6 +79,34 @@ mod surface_tests {
     use crate::viewer::gismap::GisMapViewer;
     use crate::viewer::gisterrain::GisTerrainViewer;
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
+
+    #[test]
+    fn gis_component_assembly_declares_exact_package_identity_before_descriptor_emission() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🪪️artifact-identity/🔣️.json")).unwrap();
+        let plugin = super::plugin().expect("GIS component must assemble with its exact semio:gis package identity");
+        assert_eq!(plugin.manifest.plugin_id, fixture["pluginId"].as_str().unwrap());
+        assert_eq!(plugin.artifact_definitions().len(), fixture["artifacts"].as_array().unwrap().len());
+        for row in fixture["artifacts"].as_array().unwrap() {
+            let kind = row["kind"].as_str().unwrap();
+            let identity = semio_framework_plugin::ArtifactIdentity::parse(kind).unwrap();
+            let definition = plugin.artifact_definitions().get(&identity).expect("literal canonical identity is registered");
+            assert!(definition.capabilities().all(|capability| capability.identity().as_str().starts_with(&format!("{kind}."))));
+            assert!(definition.capabilities().any(|capability| capability.claims().iter().any(|claim| claim.value() == row["nativeDialect"].as_str().unwrap())));
+            assert!(definition.capabilities().any(|capability| capability.claims().iter().any(|claim| claim.value() == row["documentSchema"].as_str().unwrap())));
+            assert!(definition.capabilities().any(|capability| capability.claims().iter().any(|claim| claim.namespace().as_str() == "codec-extension" && claim.value() == row["codecExtension"].as_str().unwrap())));
+            assert!(!definition.capabilities().any(|capability| capability.claims().iter().any(|claim| claim.namespace().as_str() == "extension")), "GIS native codec extensions are schema-scoped, not global format authority");
+            for role in row["roles"].as_array().unwrap() {
+                let expected = format!("{}#{}", row["nativeDialect"].as_str().unwrap(), role.as_str().unwrap());
+                assert_eq!(plugin.manifest.apps.iter().filter(|app| app.id == expected).count(), 1, "each literal role has exactly one actual app");
+            }
+        }
+        for kind in fixture["hostileKinds"].as_array().unwrap() {
+            let identity = semio_framework_plugin::ArtifactIdentity::parse(kind.as_str().unwrap()).unwrap();
+            assert!(plugin.artifact_definitions().get(&identity).is_none());
+        }
+        assert_eq!(plugin.manifest.apps.len(), 4, "both GIS artifacts retain their editor and viewer");
+        assert_eq!(crate::artifacts::gismap::artifact_kind().id, fixture["artifacts"][0]["kind"].as_str().unwrap());
+    }
 
     #[semio_framework_async_macros::async_test]
     async fn gismap_viewer_never_mutates() {

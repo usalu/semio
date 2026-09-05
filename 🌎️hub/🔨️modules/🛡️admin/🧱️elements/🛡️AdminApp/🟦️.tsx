@@ -12,8 +12,8 @@ import { AdminAccessGate, useAdminSession } from "../🔑️AdminSession/🟦️
 import { OverviewPage } from "../🏠️OverviewPage/🟦️.tsx";
 import { SpacesPage } from "../🏛️SpacesPage/🟦️.tsx";
 import { UsersPage } from "../🙋️UsersPage/🟦️.tsx";
-import { ConnectionsPage } from "../🔴️ConnectionsPage/🟦️.tsx";
-import { DocumentsPage } from "../📄️DocumentsPage/🟦️.tsx";
+import { ConnectionsPage } from "../🔗️ConnectionsPage/🟦️.tsx";
+import { DocumentsPage } from "../📃️DocumentsPage/🟦️.tsx";
 import { EventsPage } from "../📰️EventsPage/🟦️.tsx";
 // #endregion 🔌️Adapters
 

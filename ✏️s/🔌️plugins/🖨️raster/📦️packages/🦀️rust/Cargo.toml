@@ -35,7 +35,7 @@ semio-framework-schema = { path = "../../../../../🧰️framework/🔨️module
 # 🧵️ The generated `🧬️mutations/💾️binary` decoders yield through `semio_framework_job::StepOutcome`,
 # so the job crate has to be linked here the same way `🌍️gis` links it.
 semio-framework-job = { workspace = true }
-framework_hash = { package = "semio-framework-hash", path = "../../../../../🧰️framework/🔨️modules/🔢️hash/📦️packages/🦀️rust" }
+framework_hash = { package = "semio-framework-hash", path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 base64_codec = { path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
 
 [dev-dependencies]

@@ -1,9 +1,0 @@
-dialect grammar
-grammar stdio.semio.presentation.inference
-extension semio.presentation.inference
-start document
-
-document = header body
-header = "schema" SP "s.stdio.semio.presentation.inference" NL
-body = payload NL?
-payload = OCTET+

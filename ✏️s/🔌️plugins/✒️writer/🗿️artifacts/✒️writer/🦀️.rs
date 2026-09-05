@@ -209,7 +209,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn child_local_text_fixture_proves_bounded_identity_isolation_aba_and_wire_omission() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/writer-child-local-text-law.json")).expect("language-neutral writer child fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/⚖️writer-child-local-text-law.json")).expect("language-neutral writer child fixture");
         let cases = fixture["cases"].as_array().expect("fixture cases");
         assert_eq!(fixture["schemaVersion"], 1);
         assert_eq!(cases.len(), fixture["maximumCases"].as_u64().expect("bounded maximum") as usize);
@@ -262,41 +262,41 @@ mod tests {
 //#region 🔖️Declaration
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    ArtifactDefinition::new(ArtifactIdentity::parse("s.writer")?)
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.writer.writer")?)
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.writer.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.writer.writer")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.writer.writer")?)?,
+            ArtifactCapability::new(ArtifactIdentity::parse("s.writer.writer.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.writer.writer")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.writer.writer")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.writer.inference.artifact")?, ArtifactCapabilityKind::inference())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.writer.writer.inference.artifact")?, ArtifactCapabilityKind::inference())
                 .descriptor(b"s.writer.writer.inference")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.writer.writer.inference")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.writer.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.writer@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.writer@1/*")?)?,
+            ArtifactCapability::new(ArtifactIdentity::parse("s.writer.writer.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.writer.writer@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.writer.writer@1/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.writer.composer.txt")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.writer.writer.composer.txt")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.txt@utf-8/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.txt@utf-8/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.writer.composer.md")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.writer.writer.composer.md")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.md@commonmark/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.md@commonmark/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.writer.composer.json")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.writer.writer.composer.json")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.json@rfc8259/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.writer.codec.document")?, ArtifactCapabilityKind::codec())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.writer.writer.codec.document")?, ArtifactCapabilityKind::codec())
                 .descriptor(b"writer.document:writer")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "writer.document")?)?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "writer")?)?,
+                .claim(ArtifactIdentityClaim::codec_extension("writer.document", "writer")?)?,
         )?
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.writer.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Writer")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Writer")?)?)?
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.writer.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Writer")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Writer")?)?)
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.writer.writer.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Writer")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Writer")?)?)?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.writer.writer.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Writer")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Writer")?)?)
 }
 
 /// 🗿️ Declaration-tree root (design.md §1/§2) — ONE standard (`1`), atomic cutover: the old

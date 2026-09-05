@@ -1,0 +1,458 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution. `s.gis.gismap` carries three parallel id-keyed, order-meaningful `MapFeature` collections whose payloads are opaque `dsl::DslValue`s, and two derived composed children content-addressed off all three. No third party reads `.dsl.semio` — GeoJSON, `geo` and GDAL were surveyed and declined for the reasons recorded on the oracle entry — so the reference is a SECOND IMPLEMENTATION in Python, written from this subset's committed schema, grammar and specification vectors.",
+  "oracles": [
+    {
+      "id": "gismap-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "version": "",
+      "capabilities": [
+        "gismap-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "A second implementation of the `s.gis.gismap` document and all twelve typed mutations, in Python, at `../../../../../🧪️tests/🦠️mutate-gismap-1/🐍️component.py`. It was written from `../🧬️schema/📸️snapshot/🔣️.json` (the document: three arrays of `{id, data}` with `data` declared opaque), `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` (the twelve verbs and their positional argument lists) and the twelve committed `(before, mutation, after, diff, outcome)` vectors (the externally tagged wire form of each verb, and the three reorder displacements that pin MOVE rather than swap semantics). It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `geojson` and `geo` model a FeatureCollection, but a `MapFeature` is addressed by a stable `id` that GeoJSON leaves optional and un-unique, member ORDER is meaningful here and a FeatureCollection's is not, and a feature's payload is an untyped value this artifact never inspects — so `replace-<noun>-data` swaps a whole opaque value and no geometry library can adjudicate it. `gdal` was declined additionally as a system library with a C dependency. What a reference CAN adjudicate is the collection algebra, and that is exactly what this one implements. The `.dsl.semio` carrier layout has no prose document of its own and was DERIVED from the committed example's bytes (banner line, one `key=value` member per collection holding the hex of compact UTF-8 JSON, composed child handles as `[hex(childId),hex(target)]`); the derivation is pinned by `identity-round-trip`, which re-encodes the committed file byte for byte. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `gismap-1-mutate`'s external-oracle requirement for its 12-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 12 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.gis.gismap",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "geojson-geo-MapFeature",
+              "reason": "`geojson` and `geo` model a FeatureCollection, but a `MapFeature` is addressed by a stable `id` that GeoJSON leaves optional and un-unique, member ORDER is meaningful here and a FeatureCollection's is not, and a feature's payload is an untyped value this artifact never inspects — so `replace-<noun>-"
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": "../🧬️schema/📸️snapshot/🔣️.json; ../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio; .dsl.semio; 🔒️dependencies.json",
+        "fixtureCoverage": {
+          "vectors": 12,
+          "capabilitiesCovered": [
+            "gismap-1-mutate"
+          ]
+        }
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "gismap-1-any",
+      "capability": "gismap-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "create-position",
+          "sourceMutationDirectoryName": "🆕create-position",
+          "mutationDirectoryName": "🆕create-position",
+          "scenarios": [
+            {
+              "id": "adds-lighthouse-position-after-harbor",
+              "directoryName": "🧪️adds-lighthouse-position-after-harbor"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-region",
+          "sourceMutationDirectoryName": "🌐create-region",
+          "mutationDirectoryName": "🌐create-region",
+          "scenarios": [
+            {
+              "id": "adds-old-town-region-after-harbor-district",
+              "directoryName": "🧪️adds-old-town-region-after-harbor-district"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-route",
+          "sourceMutationDirectoryName": "🛣️create-route",
+          "mutationDirectoryName": "🛣️create-route",
+          "scenarios": [
+            {
+              "id": "adds-tram-route-after-ferry",
+              "directoryName": "🧪️adds-tram-route-after-ferry"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-position",
+          "sourceMutationDirectoryName": "🗑️delete-position",
+          "mutationDirectoryName": "🗑️delete-position",
+          "scenarios": [
+            {
+              "id": "removes-lighthouse-position",
+              "directoryName": "🧪️removes-lighthouse-position"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-region",
+          "sourceMutationDirectoryName": "🧹delete-region",
+          "mutationDirectoryName": "🧹delete-region",
+          "scenarios": [
+            {
+              "id": "removes-old-town-region",
+              "directoryName": "🧪️removes-old-town-region"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-route",
+          "sourceMutationDirectoryName": "✂️delete-route",
+          "mutationDirectoryName": "✂️delete-route",
+          "scenarios": [
+            {
+              "id": "removes-tram-route",
+              "directoryName": "🧪️removes-tram-route"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-positions",
+          "sourceMutationDirectoryName": "🔀reorder-positions",
+          "mutationDirectoryName": "🔀reorder-positions",
+          "scenarios": [
+            {
+              "id": "moves-harbor-position-to-end",
+              "directoryName": "🧪️moves-harbor-position-to-end"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-regions",
+          "sourceMutationDirectoryName": "🔃reorder-regions",
+          "mutationDirectoryName": "🔃reorder-regions",
+          "scenarios": [
+            {
+              "id": "moves-park-region-between-2-districts",
+              "directoryName": "🧪️moves-park-region-between-2-districts"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-routes",
+          "sourceMutationDirectoryName": "🧭reorder-routes",
+          "mutationDirectoryName": "🧭reorder-routes",
+          "scenarios": [
+            {
+              "id": "moves-bus-route-to-front",
+              "directoryName": "🧪️moves-bus-route-to-front"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-position-data",
+          "sourceMutationDirectoryName": "🔁replace-position-data",
+          "mutationDirectoryName": "🔁replace-position-data",
+          "scenarios": [
+            {
+              "id": "rewrites-harbor-position-payload",
+              "directoryName": "🧪️rewrites-harbor-position-payload"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-region-data",
+          "sourceMutationDirectoryName": "🔄replace-region-data",
+          "mutationDirectoryName": "🔄replace-region-data",
+          "scenarios": [
+            {
+              "id": "rewrites-harbor-district-region-payload",
+              "directoryName": "🧪️rewrites-harbor-district-region-payload"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-route-data",
+          "sourceMutationDirectoryName": "♻️replace-route-data",
+          "mutationDirectoryName": "♻️replace-route-data",
+          "scenarios": [
+            {
+              "id": "rewrites-ferry-route-payload",
+              "directoryName": "🧪️rewrites-ferry-route-payload"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "create-position",
+        "delete-position",
+        "replace-position-data",
+        "reorder-positions",
+        "create-route",
+        "delete-route",
+        "replace-route-data",
+        "reorder-routes",
+        "create-region",
+        "delete-region",
+        "replace-region-data",
+        "reorder-regions"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.gis.gismap",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "create-position",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-position",
+            "bridgeVersion": 1,
+            "variant": "CreatePosition"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-region",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-region",
+            "bridgeVersion": 1,
+            "variant": "CreateRegion"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-route",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-route",
+            "bridgeVersion": 1,
+            "variant": "CreateRoute"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-position",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-position",
+            "bridgeVersion": 1,
+            "variant": "DeletePosition"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-region",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-region",
+            "bridgeVersion": 1,
+            "variant": "DeleteRegion"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-route",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-route",
+            "bridgeVersion": 1,
+            "variant": "DeleteRoute"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "reorder-positions",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-positions",
+            "bridgeVersion": 1,
+            "variant": "ReorderPositions"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "reorder-regions",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-regions",
+            "bridgeVersion": 1,
+            "variant": "ReorderRegions"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "reorder-routes",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-routes",
+            "bridgeVersion": 1,
+            "variant": "ReorderRoutes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "replace-position-data",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-position-data",
+            "bridgeVersion": 1,
+            "variant": "ReplacePositionData"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "replace-region-data",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-region-data",
+            "bridgeVersion": 1,
+            "variant": "ReplaceRegionData"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "replace-route-data",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-route-data",
+            "bridgeVersion": 1,
+            "variant": "ReplaceRouteData"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

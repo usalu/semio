@@ -1,0 +1,5 @@
+{
+  "mutation": "changeEdgeVisible",
+  "id": "edge-1",
+  "newVisible": false
+}

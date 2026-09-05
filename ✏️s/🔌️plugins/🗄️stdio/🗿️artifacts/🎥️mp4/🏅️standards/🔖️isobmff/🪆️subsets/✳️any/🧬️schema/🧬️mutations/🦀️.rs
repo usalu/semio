@@ -11,9 +11,9 @@ use protocol::{OpBinary, OpText};
 
 //#region 🔖️Mutation
 //#region 🔖️Leaves
-#[path = "📄set-snapshot/🦀️.rs"]
+#[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
-#[path = "🏷set-ftyp/🦀️.rs"]
+#[path = "🏷️set-ftyp/🦀️.rs"]
 pub mod set_ftyp;
 #[path = "➕insert-track/🦀️.rs"]
 pub mod insert_track;
@@ -21,11 +21,11 @@ pub mod insert_track;
 pub mod remove_track;
 #[path = "📐set-track-dimensions/🦀️.rs"]
 pub mod set_track_dimensions;
-#[path = "🎛set-track-codec/🦀️.rs"]
+#[path = "🎛️set-track-codec/🦀️.rs"]
 pub mod set_track_codec;
 #[path = "🧱insert-sample/🦀️.rs"]
 pub mod insert_sample;
-#[path = "🗑remove-sample/🦀️.rs"]
+#[path = "🗑️remove-sample/🦀️.rs"]
 pub mod remove_sample;
 #[path = "⭐set-sample-sync/🦀️.rs"]
 pub mod set_sample_sync;
@@ -340,7 +340,7 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/promotes-the-second-sample-to-a-sync-frame/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/🧫️promotes-the-second-sample-to-a-sync-frame/🦀️.rs"]
     mod tests_set_snapshot_promotes_the_second_sample_to_a_sync_frame;
 }
 //#endregion 🧪️FixtureTests

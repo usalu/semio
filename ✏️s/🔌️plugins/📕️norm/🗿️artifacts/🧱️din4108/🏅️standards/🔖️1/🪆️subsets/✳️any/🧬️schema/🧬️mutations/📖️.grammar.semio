@@ -1,0 +1,13 @@
+dialect grammar
+grammar din4108.op
+extension din4108
+use family-sheet
+start mutation
+
+artifact-mark = "norm.din4108-op"
+mutation = artifact-mark op-stmt+
+op-stmt = "set-field" field+ | "patch-field" field+ | "remove-field" field+
+field = ("din4108-basis" | "din4108-combination" | "din4108-partial-factor" | "din4108-verdict" | "din4108-annex" | "din4108-actor" | "started" | "actor") "=" value
+value = TEXT | INT | FLOAT | BOOL | QUANTITY
+QUANTITY = FLOAT UNIT | INT UNIT
+UNIT = IDENT

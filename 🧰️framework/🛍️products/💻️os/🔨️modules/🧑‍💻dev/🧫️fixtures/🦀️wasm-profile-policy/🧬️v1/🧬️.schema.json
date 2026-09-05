@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "runtimeDirectories", "publicationProfile", "cases"],
+  "properties": {
+    "schema": { "const": "semio.build.wasi-profile-policy/v1" },
+    "runtimeDirectories": { "const": ["wasm-dev", "wasm-release"] },
+    "publicationProfile": { "const": "wasm-release" },
+    "cases": {
+      "type": "array", "minItems": 12, "maxItems": 12,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["mode", "override", "expectedProfile", "expectedDirectory"],
+        "properties": {
+          "mode": { "enum": ["dev", "ship"] },
+          "override": { "type": ["string", "null"], "maxLength": 64 },
+          "expectedProfile": { "enum": ["wasm-dev", "wasm-release", null] },
+          "expectedDirectory": { "enum": ["wasm-dev", "wasm-release", null] }
+        }
+      }
+    }
+  }
+}

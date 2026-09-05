@@ -1,0 +1,32 @@
+# 💡️ SemioBrepInference facet mirror — see the `🦀️.rs` sibling for the real source of truth.
+
+type BrepValidationDiagnostic {
+  code: String!
+  message: String!
+}
+
+type Vec3 { x: Float!, y: Float!, z: Float! }
+type BrepFaceGroup { start: Int!, count: Int!, entityId: String! }
+type BrepEdgeGroup { start: Int!, count: Int!, entityId: String! }
+enum BrepSurfaceKind { PLANE, CYLINDER, CONE, SPHERE, TORUS, NURBS }
+enum BrepCurveKind { LINE, CIRCLE, ELLIPSE, NURBS }
+type BrepFaceInfo { entityId: String!, surfaceKind: BrepSurfaceKind!, area: Float!, normal: Vec3! }
+type BrepEdgeInfo { entityId: String!, curveKind: BrepCurveKind!, length: Float! }
+type BrepMeshTransfer {
+  position: [Float!]!
+  normal: [Float!]!
+  index: [Int!]!
+  edges: [Float!]!
+  points: [Float!]!
+  faceGroups: [BrepFaceGroup!]!
+  edgeGroups: [BrepEdgeGroup!]!
+  faceInfos: [BrepFaceInfo!]!
+  edgeInfos: [BrepEdgeInfo!]!
+}
+type BrepMassProperties { volume: Float!, area: Float!, centroid: SemioPoint3!, errorEstimate: Float! }
+
+type SemioBrepInference {
+  validationReport: [BrepValidationDiagnostic!]!
+  tessellation: BrepMeshTransfer!
+  massProperties: BrepMassProperties!
+}

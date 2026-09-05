@@ -9,7 +9,7 @@
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
-import { PropertyValueColumnContext } from "../🪵️Tree/🟦️.tsx";
+import { PropertyValueColumnContext } from "../🌳️Tree/🟦️.tsx";
 import { formatNumber, Input } from "../✏️Input/🟦️.tsx";
 import { loadingBorderStateClass, waitingBorderStateClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";

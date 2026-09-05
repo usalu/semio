@@ -1,9 +1,0 @@
-dialect grammar
-grammar stdio.dwg.ac1018.mutations
-start op
-comment none
-op = set-snapshot | set-version-info
-set-snapshot = "set-snapshot" "snapshot" "{" token* "}"
-set-version-info = "set-version-info" "version" "=" text-value "maintenance-version" "=" INT "codepage" "=" INT
-token = IDENT | TEXT | INT | "=" | "[" | "]" | "{" | "}"
-text-value = IDENT | TEXT

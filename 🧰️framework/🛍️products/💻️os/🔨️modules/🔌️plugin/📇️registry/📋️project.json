@@ -24,6 +24,14 @@
         "command": "bun ./📜️script.ts check-generated"
       }
     },
+    "native-catalog-selection-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+        "command": "bun ./📜️script.ts native-catalog-selection-check"
+      }
+    },
     "catalog-complete": {
       "executor": "nx:run-commands",
       "options": {

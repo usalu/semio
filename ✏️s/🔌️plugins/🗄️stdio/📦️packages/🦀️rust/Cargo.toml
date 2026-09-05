@@ -18,6 +18,10 @@ role = "plugin"
 crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
+[[test]]
+name = "flow_retained_decode"
+path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/💾️binary/🧪️tests/🦀️.rs"
+
 # 🔌️ Only the ROOT plugin of a component may emit `plugin_exports!`'s `#[no_mangle]` installer
 # symbols. stdio is unusual: it is a plugin in its own right AND an rlib dependency of other plugins
 # (space's `🚪️io` deserializers). When a dependent links it, both crates emitted
@@ -34,10 +38,10 @@ semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework-geometry = { path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 semio-framework-graph = { path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
-semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔢️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-job = { workspace = true }
 semio-framework-math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
-semio-framework-mesh-engine = { path = "../../../../../🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust", package = "semio-framework-mesh-engine" }
+semio-framework-mesh-engine = { path = "../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust", package = "semio-framework-mesh-engine" }
 semio-framework-number = { path = "../../../../../🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust", package = "semio-framework-number" }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }
@@ -60,7 +64,11 @@ serde_json = { workspace = true }
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 
+[[test]]
+name = "native_openable_provider"
+path = "🧪️tests/📇️native-openable-provider/🦀️.rs"
+
 [[bench]]
 name = "brep_kernel"
-path = "benches/brep_kernel.rs"
+path = "🏃️benches/⏱️brep-kernel.rs"
 harness = false

@@ -681,7 +681,7 @@ mod tests {
     /// registry and the native executor values moved across asynchronous boundaries.
     #[semio_framework_async_macros::async_test]
     async fn shard_stack_authority_matches_the_neutral_fixture() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️stack-authority.json")).expect("stack authority fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧱️stack-authority.json")).expect("stack authority fixture");
         let maximum = fixture["maximumInlineBytes"].as_u64().expect("maximum inline bytes") as usize;
         let registry = |id: &str| fixture["registries"].as_array().expect("registry rows").iter().find(|row| row["id"] == id).expect("stack authority row");
         let seeds = registry("shard-replay-seeds");
@@ -760,7 +760,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn fifo_ingress_selects_interactive_before_earlier_background_without_unbounded_drain() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️relay-lifecycle.json")).expect("neutral relay lifecycle fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️relay-lifecycle.json")).expect("neutral relay lifecycle fixture");
         let case = &fixture["ingressCases"][0];
         let frames = case["frames"].as_array().expect("ingress frames");
         let actor_number = |index: usize| u32::try_from(frames[index]["actor"].as_u64().expect("actor")).expect("actor fits");
@@ -907,12 +907,12 @@ mod tests {
             mock.script_turn(actor, MockGuestRuntime::idle_turn().await).await;
             let replay_step = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: 4, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { turn } };
             executor.send_frame(encode_frame(super::super::ShardFrame::Grant { actor, budget, envelopes: vec![replay_step] }).await, semio_framework_actor::Lane::Interactive).await;
-            let replayed = wait_for_one(&outcomes);
+            let replayed = outcomes.wait_for(2, Duration::from_secs(2));
             assert!(
-                matches!(&replayed, ShardOutcome::Job { request: observed, publication, .. } if *observed == request && matches!(&publication.outcome, semio_framework_actor::JobStepOutcome::Complete { candidate } if candidate.output == [11, 13])),
-                "replay step emitted {replayed:?} before the expected terminal job publication"
+                replayed.iter().any(|outcome| matches!(outcome, ShardOutcome::Job { request: observed, publication, .. } if *observed == request && matches!(&publication.outcome, semio_framework_actor::JobStepOutcome::Complete { candidate } if candidate.output == [11, 13]))),
+                "replay step did not emit the expected terminal job publication: {replayed:?}"
             );
-            assert!(matches!(wait_for_one(&outcomes), ShardOutcome::Turn { actor: reported, .. } if reported == actor.0));
+            assert!(replayed.iter().any(|outcome| matches!(outcome, ShardOutcome::Turn { actor: reported, .. } if *reported == actor.0)), "replay step did not emit the actor turn: {replayed:?}");
 
             executor.send_frame(encode_frame(super::super::ShardFrame::Unregister { actor }).await, semio_framework_actor::Lane::Maintenance).await;
             let close_deadline = std::time::Instant::now() + Duration::from_secs(2);

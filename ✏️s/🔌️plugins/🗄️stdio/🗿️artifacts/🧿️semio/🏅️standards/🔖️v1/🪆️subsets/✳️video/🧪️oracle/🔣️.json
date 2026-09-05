@@ -58,8 +58,8 @@
       "vectors": [
         {
           "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📄set-snapshot",
-          "mutationDirectoryName": "📄set-snapshot",
+          "sourceMutationDirectoryName": "🟤️set-snapshot",
+          "mutationDirectoryName": "🟤️set-snapshot",
           "scenarios": [
             {
               "id": "retimes-the-track-and-promotes-a-sample-to-a-keyframe",

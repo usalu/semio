@@ -6,7 +6,7 @@
 
 // #region 🔌️Adapters
 import { type StoragePort } from "@semio-tech/framework";
-import { parseKeybindingChords } from "../⌨️keybinding-text-interpretation/🟦️.ts";
+import { parseKeybindingChords } from "../🔤️keybinding-text-interpretation/🟦️.ts";
 import { isElementId } from "../../🧱️elements/🆔️ElementId/🟦️.tsx";
 // #endregion 🔌️Adapters
 

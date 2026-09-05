@@ -27,6 +27,7 @@ pub async fn plugin() -> Result<Plugin<SequenceApps>, semio_framework_plugin::Pl
     Plugin::<SequenceApps>::builder("sequence")
         .label("Sequence")
         .version("0.1.0")
+        .package_id("semio:sequence")
         .declare_artifact(crate::artifacts::sequence::artifact())
         .editor_mutation_roster::<crate::editor::sequence::SequencePlayApp>()
         .viewer_mutation_roster::<crate::viewer::sequence::SequenceViewer>()

@@ -1,5 +1,5 @@
 //! 🎨️ SVG carrier — writer AND reader, both `quick-xml` 0.42, matching
-//! `quick-xml-note-drawing-reader` in `../../🔣️oracle.json`. Reproduces the structural shape
+//! `quick-xml-note-drawing-reader` in `../../../🔮️oracle/🔣️.json`. Reproduces the structural shape
 //! `note_document_to_drawing_snapshot` + `draw_node_from_note_block` + `write_svg_xml` build (see
 //! `../../🚪️io/🦀️.rs`): every VISIBLE block, flattened, wrapped in
 //! `<g transform="matrix(a,b,c,d,e,f)">` (the block's own x/y/rotation), then kind-specific content —

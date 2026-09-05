@@ -1,0 +1,8 @@
+{
+  "schema": "artifact-group-cursor-visibility/v1",
+  "maximumItems": 1,
+  "maximumBytes": 4096,
+  "before": { "appliedEditIds": ["initial"], "redoEditIds": ["redo-old"], "checkpointId": "checkpoint" },
+  "after": { "appliedEditIds": ["initial", "member-a", "member-b"], "checkpointId": "checkpoint" },
+  "laws": ["cursor-and-history-use-the-same-decision", "private-old-root-remains-owned-until-retirement", "foreign-decision-is-rejected", "cancel-returns-exact-unpublished-root", "one-item-byte-bounded-close"]
+}

@@ -11,12 +11,8 @@ use protocol::{CompositeMutationKind, PlanError, Planner, SemanticDescriptor};
 use super::*;
 
 //#region 👯️DuplicateWidget
-// 🌱️ `ToValue`/`FromValue` satisfy `CompositeMutationKind`'s supertrait bound (see that trait's
-// own doc — the migration off `serde::Serialize`/`serde::de::DeserializeOwned`); `Serialize`/
-// `Deserialize` stay test-only for the sibling oracle fixtures that round-trip `FlowMutation`
-// (and therefore every leaf payload variant) through `serde_json`.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl_derive::CompositeMutation, dsl::MutationLeaf)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 #[mutation_leaf(contract = ::protocol)]
 #[composite(snapshot = FlowSnapshot, op = FlowMutation)]
 pub struct DuplicateWidget {
@@ -45,8 +41,9 @@ impl CompositeMutationKind<FlowSnapshot, FlowMutation> for DuplicateWidget {
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+    use super::*;
 
-    async fn sample() -> DuplicateWidget {
+    fn sample() -> DuplicateWidget {
         DuplicateWidget { source_id: "note-1".into(), new_id: "note-2".into(), synapse_id: "note-1-to-note-2".into(), from_port: "out".into(), to_port: "in".into() }
     }
 

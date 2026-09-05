@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeWMm3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newWMm3"
+  ],
+  "properties": {
+    "newWMm3": {
+      "type": "number"
+    }
+  }
+}

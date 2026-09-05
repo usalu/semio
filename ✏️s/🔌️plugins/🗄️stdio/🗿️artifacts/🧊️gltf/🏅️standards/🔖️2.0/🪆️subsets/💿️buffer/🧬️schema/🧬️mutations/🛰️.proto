@@ -1,0 +1,23 @@
+syntax = "proto3";
+package stdio.gltf.mutation.buffer;
+import "💿️buffer/🌱️create/🛰️.proto";
+import "🪟️buffer-view/🌱️create/🛰️.proto";
+import "💿️buffer/🗑️delete/🛰️.proto";
+import "🪟️buffer-view/🗑️delete/🛰️.proto";
+import "💿️buffer/🚚️move/🛰️.proto";
+import "🪟️buffer-view/🚚️move/🛰️.proto";
+import "🪟️buffer-view/🔀️reorder/🛰️.proto";
+import "💿️buffer/🔀️reorder/🛰️.proto";
+
+message GltfBufferMutation {
+  oneof mutation {
+    GltfCreateBufferPayloadV1 create_buffer = 1;
+    GltfCreateBufferViewPayloadV1 create_buffer_view = 2;
+    GltfDeleteBufferPayloadV1 delete_buffer = 3;
+    GltfDeleteBufferViewPayloadV1 delete_buffer_view = 4;
+    GltfMoveBufferPayloadV1 move_buffer = 5;
+    GltfMoveBufferViewPayloadV1 move_buffer_view = 6;
+    GltfReorderBufferViewsPayloadV1 reorder_buffer_views = 7;
+    GltfReorderBuffersPayloadV1 reorder_buffers = 8;
+  }
+}

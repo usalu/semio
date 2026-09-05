@@ -5,7 +5,7 @@
   "displayName": "Edit Part3d Label",
   "emoji": "🖋️",
   "aggregateVariant": "EditPart3dLabel",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "edit-part3d-label",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

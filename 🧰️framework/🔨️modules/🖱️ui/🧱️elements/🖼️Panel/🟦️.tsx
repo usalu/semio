@@ -13,7 +13,7 @@ import { panelTabFirstDraggableElementId } from "@semio-tech/framework";
 // 🧱️elements/🔌️Ports/🟦️.tsx's header comment for why the barrel import caused a real bug).
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { Scrollable } from "../📜️Scrollable/🟦️.tsx";
-import { Tree, type TreeDataItem, type TreeDataSection, type TreeDragAndDropController, type TreeSelectionMode } from "../🪵️Tree/🟦️.tsx";
+import { Tree, type TreeDataItem, type TreeDataSection, type TreeDragAndDropController, type TreeSelectionMode } from "../🌳️Tree/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { useFirstDraggableElementAlias } from "../🆔️ElementId/🟦️.tsx";
 import { borderNormalClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
@@ -23,7 +23,7 @@ import { LevelProvider, getLevelZClass, useSurfaceActive } from "../🌈️Surfa
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
 import { type Anchor, PANEL_TREE_UNIT_MIME, PanelGhostRoot, WindowChrome, anchorHorizontal, anchorPositionStyle, beginPanelTreeUnitDrag, chromeHostedOpenPanelPositionStyle, endPanelTreeUnitDrag, flowFromAnchor, readActivePanelTreeUnitDrag, shellNavbarTrailingEndReserveStyle, useNativeDragArm, usePanelDockContext, usePanelTreeUnitDragActive, useShellNavbarTrailingEndWidthPx, useUiDriverDragSurface, type UiStatus } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️";
-import { PanelTabBar, type PanelTabNode, type PanelTreeUnit, findPanelTabNode, progressPanelTabSelection, usePanelTabSelection } from "../📑️PanelTabBar/🟦️.tsx";
+import { PanelTabBar, type PanelTabNode, type PanelTreeUnit, findPanelTabNode, progressPanelTabSelection, usePanelTabSelection } from "../🧭️PanelTabBar/🟦️.tsx";
 import { CloseIcon, Icon } from "../🔣️Icons/🟦️.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
 // #endregion 🔌️Adapters

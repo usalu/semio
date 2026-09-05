@@ -1,7 +1,0 @@
-# move-node-child mutation facet.
-input GltfMoveNodeChildPayloadV1 {
-  parent: Int!
-  child: Int!
-  position: Int!
-}
-type GltfMoveNodeChildMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

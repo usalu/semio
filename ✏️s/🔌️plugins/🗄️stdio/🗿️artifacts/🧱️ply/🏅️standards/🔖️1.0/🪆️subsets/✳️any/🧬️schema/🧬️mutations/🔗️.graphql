@@ -1,0 +1,31 @@
+# 🧬️ PlyMutation union — mirrors the Rust `PlyMutation` enum, discriminated on `mutation`.
+
+enum PlyMutationKind {
+  SET_SNAPSHOT
+  SET_FORMAT
+  INSERT_COMMENT
+  REMOVE_COMMENT
+  ADD_ELEMENT
+  REMOVE_ELEMENT
+  INSERT_ROW
+  REMOVE_ROW
+  SET_ROW_PROPERTY
+}
+
+""" Every field beyond `mutation` is optional here only because GraphQL has no true union-of-
+structs; the concrete field set for each `mutation` kind is exactly the Rust variant's own
+fields (see `component.rs`) — never a mix. """
+type PlyMutation {
+  mutation: PlyMutationKind!
+  snapshot: PlySnapshot
+  format: PlyFormat
+  index: Int
+  comment: String
+  element: PlyElement
+  name: String
+  elementName: String
+  row: PlyRow
+  rowIndex: Int
+  propertyName: String
+  value: PlyValue
+}

@@ -5,7 +5,7 @@
   "displayName": "Change Fvk",
   "emoji": "🧲",
   "aggregateVariant": "ChangeFVK",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

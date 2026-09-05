@@ -8,13 +8,13 @@ import ts from "typescript";
 import { BundleScript, ScriptRouter, runBundleScriptMain } from "@semio-tech/repo-lib";
 import { OwnedResidentLedger } from "./🟦️.ts";
 import * as resident from "./🟦️.ts";
-import fixture from "./🧪️fixture/🔣️.json";
-import fixtureSchema from "./🧪️schema/🔣️.json";
+import fixture from "./🧫️fixture/🔣️.json";
+import fixtureSchema from "./📐️schema/🔣️.json";
 import capacitySchema from "./🧬️schema.json";
-import admissionContract from "./📨️admission/🧬️contract.json";
+import admissionContract from "./📨️admission/🤝️contract.json";
 import admissionContractSchema from "./📨️admission/🧬️schema.json";
-import admissionFixture from "./📨️admission/🧪️fixture/🔣️.json";
-import admissionFixtureSchema from "./📨️admission/🧪️schema/🔣️.json";
+import admissionFixture from "./📨️admission/🧫️fixture/🔣️.json";
+import admissionFixtureSchema from "./📨️admission/📐️schema/🔣️.json";
 
 class TestScript extends BundleScript {
   async run(): Promise<void> {

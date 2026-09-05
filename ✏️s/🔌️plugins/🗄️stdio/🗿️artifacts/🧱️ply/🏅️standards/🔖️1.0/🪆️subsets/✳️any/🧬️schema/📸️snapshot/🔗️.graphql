@@ -1,0 +1,42 @@
+# 🧬️ PlySnapshot schema.
+
+enum PlyScalarType { CHAR U_CHAR SHORT U_SHORT INT U_INT FLOAT DOUBLE }
+
+enum PlyPropertyForm { SCALAR LIST }
+
+type PlyProperty {
+  form: PlyPropertyForm!
+  name: String!
+  kind: PlyScalarType
+  countKind: PlyScalarType
+  valueKind: PlyScalarType
+}
+
+type PlyValue {
+  kind: String!
+  """ Scalar payload; present unless `kind` is `list` (see `listValue`). """
+  numberValue: Float
+  """ Present only when `kind` is `list`. """
+  listValue: [PlyValue!]
+}
+
+type PlyRow {
+  values: [PlyValue!]!
+}
+
+type PlyElement {
+  name: String!
+  count: Int!
+  properties: [PlyProperty!]!
+  rows: [PlyRow!]!
+}
+
+enum PlyFormat { ASCII BINARY_LITTLE_ENDIAN BINARY_BIG_ENDIAN }
+
+""" 📸️ Persisted `stdio.ply` snapshot. """
+type PlySnapshot {
+  schema: String!
+  format: PlyFormat!
+  comments: [String!]!
+  elements: [PlyElement!]!
+}

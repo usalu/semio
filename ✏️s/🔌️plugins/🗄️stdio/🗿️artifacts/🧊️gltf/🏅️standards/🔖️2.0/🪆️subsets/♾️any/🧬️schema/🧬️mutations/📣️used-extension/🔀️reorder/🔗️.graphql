@@ -1,0 +1,2 @@
+# reorder-used-extensions mutation facet.
+type GltfReorderUsedExtensionsMutationV1 { id: ID!, version: Int!, touchedPaths: [String!]!, accepted: Boolean!, rejectionCode: String }

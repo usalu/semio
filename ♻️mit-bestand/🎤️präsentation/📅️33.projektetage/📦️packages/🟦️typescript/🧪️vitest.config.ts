@@ -9,7 +9,6 @@ import { semioAssetsVitePlugin } from "../../../../../🧰️framework/🔨️mo
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(dir, "../../../../..");
-const uiAssetsRoot = resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🖼️assets");
 
 /** @emoji 🧪️ Vitest for `@semio-tech/mit-bestand-praesentation-projektetage`. */
 export default defineConfig({

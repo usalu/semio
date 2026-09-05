@@ -229,33 +229,33 @@ pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.fem3d.standard.v1", "standard", "1", &[], None),
-        ("s.fem3d.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.fem3d.schema.artifact", "schema", "s.fem.fem3d", &[("schema", "s.fem.fem3d")], None),
-        ("s.fem3d.inference.artifact", "inference", "s.fem.fem3d.inference", &[("schema", "s.fem.fem3d.inference")], None),
+        ("s.fem.fem3d.standard.v1", "standard", "1", &[], None),
+        ("s.fem.fem3d.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.fem.fem3d.schema.artifact", "schema", "s.fem.fem3d", &[("schema", "s.fem.fem3d")], None),
+        ("s.fem.fem3d.inference.artifact", "inference", "s.fem.fem3d.inference", &[("schema", "s.fem.fem3d.inference")], None),
         // 🐛️ D2-capability-claim-repairs: `io_registry::entries()` registers SEVEN composer rows, not
         // five — the six below plus `composer_entry_of::<Fem3dAnyComposer>()` (`🚪️io/🦀️.rs`),
         // whose `writes` is this artifact's own native dialect (`FEM3D_DIALECT`, `s.fem3d@1/*`), the
         // same gap class `🗒️note` hit first (see that file's own `definition()` doc comment).
-        ("s.fem3d.composer.fem3d", "composer", "s.fem3d@1/*", &[("dialect", "s.fem3d@1/*")], None),
-        ("s.fem3d.composer.csv", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None),
-        ("s.fem3d.composer.md", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
-        ("s.fem3d.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.fem3d.composer.stl", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
-        ("s.fem3d.composer.obj", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
-        ("s.fem3d.grammar.document", "grammar", "fem.fem3d", &[("grammar", "fem.fem3d")], None),
-        ("s.fem3d.grammar.op", "grammar", "fem.fem3d.op", &[("grammar", "fem.fem3d.op")], None),
-        ("s.fem3d.grammar.diff", "grammar", "fem.fem3d.diff", &[("grammar", "fem.fem3d.diff")], None),
-        ("s.fem3d.grammar.pack", "grammar", "fem3d.pack", &[("grammar", "fem3d.pack")], None),
-        ("s.fem3d.grammar.spr", "grammar", "fem3d.spr", &[("grammar", "fem3d.spr")], None),
+        ("s.fem.fem3d.composer.fem3d", "composer", "s.fem.fem3d@1/*", &[("dialect", "s.fem.fem3d@1/*")], None),
+        ("s.fem.fem3d.composer.csv", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None),
+        ("s.fem.fem3d.composer.md", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
+        ("s.fem.fem3d.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.fem.fem3d.composer.stl", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
+        ("s.fem.fem3d.composer.obj", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
+        ("s.fem.fem3d.grammar.document", "grammar", "fem.fem3d", &[("grammar", "fem.fem3d")], None),
+        ("s.fem.fem3d.grammar.op", "grammar", "fem.fem3d.op", &[("grammar", "fem.fem3d.op")], None),
+        ("s.fem.fem3d.grammar.diff", "grammar", "fem.fem3d.diff", &[("grammar", "fem.fem3d.diff")], None),
+        ("s.fem.fem3d.grammar.pack", "grammar", "fem3d.pack", &[("grammar", "fem3d.pack")], None),
+        ("s.fem.fem3d.grammar.spr", "grammar", "fem3d.spr", &[("grammar", "fem3d.spr")], None),
         // 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Fem3dPlayApp>>()` derives its
         // codec claim from `Fem3dPlayApp::DOCUMENT_SCHEMA` (= `FEM_3D_SCHEMA`, `🦀️.rs`),
         // which is `"fem.3d"`, not `"fem.fem3d"`.
-        ("s.fem3d.codec.document.v1", "codec", "fem.3d:fem3d", &[("codec", "fem.3d"), ("extension", "fem3d")], None),
-        ("s.fem3d.localization.en", "localization", "Finite element model 3D", &[], Some(("en", "Finite element model 3D"))),
-        ("s.fem3d.localization.de", "localization", "Finite-Elemente-Modell 3D", &[], Some(("de", "Finite-Elemente-Modell 3D"))),
+        ("s.fem.fem3d.codec.document.v1", "codec", "fem.3d:fem3d", &[("codec", "fem.3d"), ("codec-extension", "6:fem.3d:fem3d")], None),
+        ("s.fem.fem3d.localization.en", "localization", "Finite element model 3D", &[], Some(("en", "Finite element model 3D"))),
+        ("s.fem.fem3d.localization.de", "localization", "Finite-Elemente-Modell 3D", &[], Some(("de", "Finite-Elemente-Modell 3D"))),
     ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.fem3d")?);
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.fem.fem3d")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
         for (namespace, value) in *claims {

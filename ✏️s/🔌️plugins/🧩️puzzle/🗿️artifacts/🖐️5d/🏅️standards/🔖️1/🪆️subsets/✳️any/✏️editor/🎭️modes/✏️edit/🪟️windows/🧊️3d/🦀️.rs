@@ -3,8 +3,8 @@
 //! gumball descriptor, the chunking/environment blocks and the interaction channel), binds the
 //! transform-gumball and relocate utilities plus the two shared brush/fill ones, and scopes the
 //! transform/3D-camera actions (`🎬️actions`). Its only genuinely 3D-specific chrome measure is the
-//! sun group in `🎚️options/☀️sun`; the brush/fill Utility Options it shares with the 2D window come
-//! from the mode's own `🎚️options/*`.
+//! sun group in `☑️options/☀️sun`; the brush/fill Utility Options it shares with the 2D window come
+//! from the mode's own `☑️options/*`.
 
 use crate::editor::puzzle5d::config::{Puzzle5dCamera3d, Puzzle5dRuntime};
 use crate::editor::puzzle5d::modes::edit;

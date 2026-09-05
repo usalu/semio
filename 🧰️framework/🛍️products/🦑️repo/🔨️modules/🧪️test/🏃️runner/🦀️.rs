@@ -1,5 +1,5 @@
 //! 🏃️ Rust native host runner. A generated cache-local crate links the committed
-//! `../🏃️🪻️runner/🦀️.rs` adapter and calls [`run_main`]; nothing else about the Rust host is generated.
+//! `../🏃️runner/🦀️.rs` adapter and calls [`run_main`]; nothing else about the Rust host is generated.
 
 use crate::protocol::{digest, parse_json, sha256_hex, Json, Outcome, Plan, Scenario};
 use std::collections::BTreeMap;

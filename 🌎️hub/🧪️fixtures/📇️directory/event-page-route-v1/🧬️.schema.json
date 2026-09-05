@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "limits", "session", "vectors", "queryCases", "hostiles"],
+  "properties": {
+    "schema": { "const": "semio.hub.directory-event-page-route/v1" },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rawRows", "eventBytes", "pageBytes", "safeInteger"],
+      "properties": {
+        "rawRows": { "const": 128 },
+        "eventBytes": { "const": 49152 },
+        "pageBytes": { "const": 65536 },
+        "safeInteger": { "const": 9007199254740991 }
+      }
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sessionId", "userId", "authorizationGeneration", "expiresAt", "bindingSha256"],
+      "properties": {
+        "sessionId": { "const": "session-route-01" },
+        "userId": { "const": "user-route-01" },
+        "authorizationGeneration": { "const": 7 },
+        "expiresAt": { "const": 4102444800000 },
+        "bindingSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "after", "raw", "expected"],
+        "properties": {
+          "name": { "enum": ["raw-holes", "128-hidden", "page-byte-prefix", "empty", "event-byte-boundary"] },
+          "after": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+          "raw": {
+            "type": "array",
+            "maxItems": 128,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["seq", "visible", "labelBytes"],
+              "properties": {
+                "seq": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+                "visible": { "type": "boolean" },
+                "labelBytes": { "type": "integer", "minimum": 0, "maximum": 49153 }
+              }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["through", "hasMore", "visibleSeqs", "nextVisibleSeqs"],
+            "properties": {
+              "through": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+              "hasMore": { "type": "boolean" },
+              "visibleSeqs": { "type": "array", "maxItems": 128, "items": { "type": "integer" } },
+              "nextVisibleSeqs": { "type": "array", "maxItems": 128, "items": { "type": "integer" } }
+            }
+          }
+        }
+      }
+    },
+    "queryCases": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["query", "bearer", "status", "bodyBytes", "reads"],
+        "properties": {
+          "query": { "type": "string", "maxLength": 96 },
+          "bearer": { "enum": ["valid", "missing", "revoked", "rotated", "backend-failure"] },
+          "status": { "enum": [200, 400, 401, 500] },
+          "bodyBytes": { "type": "integer", "minimum": 0, "maximum": 65536 },
+          "reads": { "type": "integer", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    "hostiles": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": { "enum": ["receipt-substitution", "hidden-identity-leak", "event-plus-one", "unknown-field", "binding-concatenation"] }
+    }
+  }
+}

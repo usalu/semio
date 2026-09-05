@@ -86,7 +86,7 @@ pub fn render(document: &GisMapSnapshot, cfg: &Gis2dConfig) -> UiAssemblyResult<
     scene.layer_stroke_scale_json = layer_stroke_scale_json(cfg);
     // 🕹️ Feature selection/hover/method/mode now live in the framework-owned "features" interaction
     // domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). `ArtifactEditor::render`
-    // carries no `InteractionView` (a known SDK gap — see `w3c-summary.md`'s flagged `EngineCanvas`/
+    // carries no `InteractionView` (a known SDK gap — see `w3c-summary.md`'s flagged `⚙️EngineCanvas`/
     // `MapHost::sync_interaction` follow-up), so `TiledMapScene::base`'s own empty-selection defaults
     // are left as-is here rather than sourced from this deleted config state.
     apply_gis_map_tile_base_url(&mut scene);

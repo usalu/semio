@@ -1,4 +1,0 @@
-# 🌲️ Direct set-struct-tree-root GraphQL payload.
-input SetStructTreeRootMutationInput {
-  _unit: Boolean
-}

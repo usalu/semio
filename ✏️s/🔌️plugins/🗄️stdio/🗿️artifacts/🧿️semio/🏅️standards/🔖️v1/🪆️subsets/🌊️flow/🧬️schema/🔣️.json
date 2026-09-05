@@ -1,0 +1,31 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.flow/artifact.json",
+  "title": "SemioFlowArtifact",
+  "description": "🧬️ Real facet mirror of 🦀️.rs — mirrors SemioFlowSnapshot field for field.",
+  "type": "object",
+  "definitions": {
+    "SemioPoint2": { "type": "object", "properties": { "x": { "type": "number" }, "y": { "type": "number" } } },
+    "PortRef": { "type": "object", "properties": { "node": { "type": "string" }, "port": { "type": "string" } } },
+    "FlowParam": { "type": "object", "properties": { "key": { "type": "string" }, "value": { "type": "string" } } },
+    "FlowNode": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "kind": { "type": "string" },
+        "label": { "type": "string" },
+        "params": { "type": "array", "items": { "$ref": "#/definitions/FlowParam" } },
+        "position": { "$ref": "#/definitions/SemioPoint2" }
+      }
+    },
+    "FlowEdge": {
+      "type": "object",
+      "properties": { "id": { "type": "string" }, "from": { "$ref": "#/definitions/PortRef" }, "to": { "$ref": "#/definitions/PortRef" }, "kind": { "type": "string" } }
+    }
+  },
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "nodes": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/definitions/FlowNode" } },
+    "edges": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "#/definitions/FlowEdge" } }
+  },
+  "required": ["schema", "nodes", "edges"]
+}

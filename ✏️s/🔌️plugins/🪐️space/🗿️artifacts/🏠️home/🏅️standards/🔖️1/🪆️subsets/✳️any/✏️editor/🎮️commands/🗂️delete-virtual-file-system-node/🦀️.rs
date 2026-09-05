@@ -20,7 +20,7 @@ pub fn handle(payload: &DeleteVirtualFileSystemNode, doc: &ArtifactView<'_, SHom
         Some(space_id) => {
             // 🌉️ `draft_backbone_port`/`ephemeral_draft_catalog`/`catalog_port` are plugin-root
             // async fns (outside this lease); `handle` must stay sync — bridged via `resolve_ready`,
-            // matching `🏙️create-studio`'s own seam.
+            // matching `🏗️create-studio`'s own seam.
             let draft_port = semio_framework_plugin::resolve_ready(crate::draft_backbone_port());
             semio_framework_plugin::resolve_ready(crate::ephemeral_draft_catalog()).discard_draft(&draft_port, space_id);
             let _ = delete_os_space(space_id, semio_framework_plugin::resolve_ready(crate::catalog_port()));

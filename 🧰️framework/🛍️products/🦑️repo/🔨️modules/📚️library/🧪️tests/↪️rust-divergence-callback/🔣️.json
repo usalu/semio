@@ -1,0 +1,1014 @@
+{
+  "schemaVersion": 1,
+  "contract": "rust-divergence-error-callback-v1",
+  "semantics": {
+    "authority": "candidate-only-never-editable",
+    "failure": "unproven-never-complete-empty",
+    "callback": "one-immutable-identifier-unwrap-or-else-direct-standard-panic",
+    "captures": "unescaped-normal-literal-simple-named-immutable-loop-label-or-error-only",
+    "maxExpandedIterations": 256,
+    "physicalAuthority": "unchanged-separate-source-chain-and-global-cargo-proof",
+    "writableSharedLabels": "always-rejected",
+    "unknownSyntax": "invalidate-active-candidate-state"
+  },
+  "cases": [
+    {
+      "id": "simple-named-error-callback",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "closed",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [
+        {
+          "start": 134,
+          "end": 144,
+          "value": "facet.json",
+          "targets": [
+            [
+              "../foreign",
+              "facet.json"
+            ]
+          ]
+        },
+        {
+          "start": 148,
+          "end": 159,
+          "value": "snapshot.rs",
+          "targets": [
+            [
+              "../foreign",
+              "snapshot.rs"
+            ]
+          ]
+        }
+      ],
+      "expectedCallbacks": [
+        {
+          "start": 253,
+          "end": 290,
+          "bodyStart": 261,
+          "bodyEnd": 290,
+          "parameter": {
+            "name": "error",
+            "start": 254,
+            "end": 259
+          },
+          "macroPath": "panic",
+          "captures": [
+            {
+              "name": "relative",
+              "start": 270,
+              "end": 278
+            },
+            {
+              "name": "error",
+              "start": 282,
+              "end": 287
+            }
+          ],
+          "freeVariables": [
+            "relative"
+          ]
+        }
+      ],
+      "native": "ordinary-and-error"
+    },
+    {
+      "id": "qualified-standard-panic",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| std::panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "closed",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [
+        {
+          "start": 134,
+          "end": 144,
+          "value": "facet.json",
+          "targets": [
+            [
+              "../foreign",
+              "facet.json"
+            ]
+          ]
+        },
+        {
+          "start": 148,
+          "end": 159,
+          "value": "snapshot.rs",
+          "targets": [
+            [
+              "../foreign",
+              "snapshot.rs"
+            ]
+          ]
+        }
+      ],
+      "expectedCallbacks": [
+        {
+          "start": 253,
+          "end": 295,
+          "bodyStart": 261,
+          "bodyEnd": 295,
+          "parameter": {
+            "name": "error",
+            "start": 254,
+            "end": 259
+          },
+          "macroPath": "std::panic",
+          "captures": [
+            {
+              "name": "relative",
+              "start": 275,
+              "end": 283
+            },
+            {
+              "name": "error",
+              "start": 287,
+              "end": 292
+            }
+          ],
+          "freeVariables": [
+            "relative"
+          ]
+        }
+      ],
+      "native": null
+    },
+    {
+      "id": "absolute-standard-panic",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| ::std::panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "closed",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [
+        {
+          "start": 134,
+          "end": 144,
+          "value": "facet.json",
+          "targets": [
+            [
+              "../foreign",
+              "facet.json"
+            ]
+          ]
+        },
+        {
+          "start": 148,
+          "end": 159,
+          "value": "snapshot.rs",
+          "targets": [
+            [
+              "../foreign",
+              "snapshot.rs"
+            ]
+          ]
+        }
+      ],
+      "expectedCallbacks": [
+        {
+          "start": 253,
+          "end": 297,
+          "bodyStart": 261,
+          "bodyEnd": 297,
+          "parameter": {
+            "name": "error",
+            "start": 254,
+            "end": 259
+          },
+          "macroPath": "::std::panic",
+          "captures": [
+            {
+              "name": "relative",
+              "start": 277,
+              "end": 285
+            },
+            {
+              "name": "error",
+              "start": 289,
+              "end": 294
+            }
+          ],
+          "freeVariables": [
+            "relative"
+          ]
+        }
+      ],
+      "native": null
+    },
+    {
+      "id": "renamed-bindings-unicode-prefix",
+      "source": "// 🧭️ Unicode before spans.\nfn inspect() {\n    let base = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for entry in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(base.join(entry)).unwrap_or_else(|problem| panic!(\"🧭️ {entry}: {problem}\"));\n        assert_eq!(facet, entry, \"{entry}\");\n        \n    }\n}\n",
+      "reason": "closed",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [
+        {
+          "start": 151,
+          "end": 161,
+          "value": "facet.json",
+          "targets": [
+            [
+              "../foreign",
+              "facet.json"
+            ]
+          ]
+        },
+        {
+          "start": 165,
+          "end": 176,
+          "value": "snapshot.rs",
+          "targets": [
+            [
+              "../foreign",
+              "snapshot.rs"
+            ]
+          ]
+        }
+      ],
+      "expectedCallbacks": [
+        {
+          "start": 258,
+          "end": 300,
+          "bodyStart": 268,
+          "bodyEnd": 300,
+          "parameter": {
+            "name": "problem",
+            "start": 259,
+            "end": 266
+          },
+          "macroPath": "panic",
+          "captures": [
+            {
+              "name": "entry",
+              "start": 281,
+              "end": 286
+            },
+            {
+              "name": "problem",
+              "start": 290,
+              "end": 297
+            }
+          ],
+          "freeVariables": [
+            "entry"
+          ]
+        }
+      ],
+      "native": null
+    },
+    {
+      "id": "mutating-block",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| { artifact_root.push(\"changed\"); panic!(\"{relative}: {error}\") });\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "mutation",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "rebinding-block",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| { let artifact_root = std::path::PathBuf::new(); panic!(\"{relative}: {error}\") });\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "rebinding",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "unknown-call-block",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| { unknown(); panic!(\"{relative}: {error}\") });\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\nfn unknown() {}\n",
+      "reason": "unknown-call",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "nested-closure",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| (|| panic!(\"{relative}: {error}\"))());\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "nested-closure",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "expression-call",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| unknown(relative, error));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\nfn unknown(relative: &str, error: std::io::Error) -> String { format!(\"{relative}: {error}\") }\n",
+      "reason": "unknown-call",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "nonstandard-macro",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| other::panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "nonstandard-macro",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "shadowed-panic",
+      "source": "macro_rules! panic { ($message:literal) => { String::from(\"facet.json\") }; }\nfn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "shadowed-macro",
+      "selectedValues": [
+        "facet.json"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": "nondivergent-shadow"
+    },
+    {
+      "id": "shadowed-env",
+      "source": "macro_rules! env { ($message:literal) => { \"/unproved\" }; }\nfn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "shadowed-environment",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "imported-panic",
+      "source": "use crate::other::panic;\nfn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "unproved-import",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "external-glob",
+      "source": "use crate::other::*;\nfn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "unproved-import",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "macro-use",
+      "source": "#[macro_use]\nextern crate foreign;\nfn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "unproved-attribute",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "governing-attribute",
+      "source": "#[unknown]\nfn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "unproved-attribute",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "attribute-on-callback",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(#[unknown] |error| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "unproved-attribute",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "type-alias-std",
+      "source": "type std = ();\nfn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "type-shadow",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "generic-std",
+      "source": "fn inspect<std>() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "type-shadow",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": "compiler-rejection"
+    },
+    {
+      "id": "module-std",
+      "source": "mod std { pub use ::std::path; pub use ::std::fs; }\nfn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "type-shadow",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "typed-error-parameter",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error: std::io::Error| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "parameter-shape",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "mutable-error-parameter",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|mut error| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "parameter-shape",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "destructured-error-parameter",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|(error,)| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "parameter-shape",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "multiple-error-parameters",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error, second| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "parameter-shape",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "move-error-closure",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(move |error| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "closure-qualifier",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "single-expression-block",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| { panic!(\"{relative}: {error}\") });\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "body-shape",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "dynamic-message",
+      "source": "const MESSAGE: &str = \"dynamic\";\nfn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!(\"{MESSAGE}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "unproved-capture",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "escaped-source-capture",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!(\"\\u{7b}relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "escaped-capture",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "raw-source-capture",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!(r\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "escaped-capture",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "escaped-brace-name",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!(\"{{relative}}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "escaped-capture",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "format-width-capture",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!(\"{relative:>width$}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "dynamic-capture",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "positional-capture",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!(\"{}: {}\", relative, error));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "capture-shape",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "unknown-capture",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!(\"{unknown}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "unproved-capture",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "nested-format-call",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!(\"{}\", format!(\"{relative}: {error}\")));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "unknown-call",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "receiver-mutated-after-callback",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        artifact_root.push(\"changed\");\n    }\n}\n",
+      "reason": "mutation",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "receiver-escaped-after-callback",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        unknown(&artifact_root);\n    }\n}\nfn unknown(_: &std::path::Path) {}\n",
+      "reason": "unknown-call",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "non-manifest-root",
+      "source": "fn inspect() {\n    let artifact_root = std::env::current_dir().unwrap();\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "constructor",
+      "selectedValues": [
+        "facet.json",
+        "snapshot.rs"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    },
+    {
+      "id": "overflow-257-iterations",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet-0.json\", \"facet-1.json\", \"facet-2.json\", \"facet-3.json\", \"facet-4.json\", \"facet-5.json\", \"facet-6.json\", \"facet-7.json\", \"facet-8.json\", \"facet-9.json\", \"facet-10.json\", \"facet-11.json\", \"facet-12.json\", \"facet-13.json\", \"facet-14.json\", \"facet-15.json\", \"facet-16.json\", \"facet-17.json\", \"facet-18.json\", \"facet-19.json\", \"facet-20.json\", \"facet-21.json\", \"facet-22.json\", \"facet-23.json\", \"facet-24.json\", \"facet-25.json\", \"facet-26.json\", \"facet-27.json\", \"facet-28.json\", \"facet-29.json\", \"facet-30.json\", \"facet-31.json\", \"facet-32.json\", \"facet-33.json\", \"facet-34.json\", \"facet-35.json\", \"facet-36.json\", \"facet-37.json\", \"facet-38.json\", \"facet-39.json\", \"facet-40.json\", \"facet-41.json\", \"facet-42.json\", \"facet-43.json\", \"facet-44.json\", \"facet-45.json\", \"facet-46.json\", \"facet-47.json\", \"facet-48.json\", \"facet-49.json\", \"facet-50.json\", \"facet-51.json\", \"facet-52.json\", \"facet-53.json\", \"facet-54.json\", \"facet-55.json\", \"facet-56.json\", \"facet-57.json\", \"facet-58.json\", \"facet-59.json\", \"facet-60.json\", \"facet-61.json\", \"facet-62.json\", \"facet-63.json\", \"facet-64.json\", \"facet-65.json\", \"facet-66.json\", \"facet-67.json\", \"facet-68.json\", \"facet-69.json\", \"facet-70.json\", \"facet-71.json\", \"facet-72.json\", \"facet-73.json\", \"facet-74.json\", \"facet-75.json\", \"facet-76.json\", \"facet-77.json\", \"facet-78.json\", \"facet-79.json\", \"facet-80.json\", \"facet-81.json\", \"facet-82.json\", \"facet-83.json\", \"facet-84.json\", \"facet-85.json\", \"facet-86.json\", \"facet-87.json\", \"facet-88.json\", \"facet-89.json\", \"facet-90.json\", \"facet-91.json\", \"facet-92.json\", \"facet-93.json\", \"facet-94.json\", \"facet-95.json\", \"facet-96.json\", \"facet-97.json\", \"facet-98.json\", \"facet-99.json\", \"facet-100.json\", \"facet-101.json\", \"facet-102.json\", \"facet-103.json\", \"facet-104.json\", \"facet-105.json\", \"facet-106.json\", \"facet-107.json\", \"facet-108.json\", \"facet-109.json\", \"facet-110.json\", \"facet-111.json\", \"facet-112.json\", \"facet-113.json\", \"facet-114.json\", \"facet-115.json\", \"facet-116.json\", \"facet-117.json\", \"facet-118.json\", \"facet-119.json\", \"facet-120.json\", \"facet-121.json\", \"facet-122.json\", \"facet-123.json\", \"facet-124.json\", \"facet-125.json\", \"facet-126.json\", \"facet-127.json\", \"facet-128.json\", \"facet-129.json\", \"facet-130.json\", \"facet-131.json\", \"facet-132.json\", \"facet-133.json\", \"facet-134.json\", \"facet-135.json\", \"facet-136.json\", \"facet-137.json\", \"facet-138.json\", \"facet-139.json\", \"facet-140.json\", \"facet-141.json\", \"facet-142.json\", \"facet-143.json\", \"facet-144.json\", \"facet-145.json\", \"facet-146.json\", \"facet-147.json\", \"facet-148.json\", \"facet-149.json\", \"facet-150.json\", \"facet-151.json\", \"facet-152.json\", \"facet-153.json\", \"facet-154.json\", \"facet-155.json\", \"facet-156.json\", \"facet-157.json\", \"facet-158.json\", \"facet-159.json\", \"facet-160.json\", \"facet-161.json\", \"facet-162.json\", \"facet-163.json\", \"facet-164.json\", \"facet-165.json\", \"facet-166.json\", \"facet-167.json\", \"facet-168.json\", \"facet-169.json\", \"facet-170.json\", \"facet-171.json\", \"facet-172.json\", \"facet-173.json\", \"facet-174.json\", \"facet-175.json\", \"facet-176.json\", \"facet-177.json\", \"facet-178.json\", \"facet-179.json\", \"facet-180.json\", \"facet-181.json\", \"facet-182.json\", \"facet-183.json\", \"facet-184.json\", \"facet-185.json\", \"facet-186.json\", \"facet-187.json\", \"facet-188.json\", \"facet-189.json\", \"facet-190.json\", \"facet-191.json\", \"facet-192.json\", \"facet-193.json\", \"facet-194.json\", \"facet-195.json\", \"facet-196.json\", \"facet-197.json\", \"facet-198.json\", \"facet-199.json\", \"facet-200.json\", \"facet-201.json\", \"facet-202.json\", \"facet-203.json\", \"facet-204.json\", \"facet-205.json\", \"facet-206.json\", \"facet-207.json\", \"facet-208.json\", \"facet-209.json\", \"facet-210.json\", \"facet-211.json\", \"facet-212.json\", \"facet-213.json\", \"facet-214.json\", \"facet-215.json\", \"facet-216.json\", \"facet-217.json\", \"facet-218.json\", \"facet-219.json\", \"facet-220.json\", \"facet-221.json\", \"facet-222.json\", \"facet-223.json\", \"facet-224.json\", \"facet-225.json\", \"facet-226.json\", \"facet-227.json\", \"facet-228.json\", \"facet-229.json\", \"facet-230.json\", \"facet-231.json\", \"facet-232.json\", \"facet-233.json\", \"facet-234.json\", \"facet-235.json\", \"facet-236.json\", \"facet-237.json\", \"facet-238.json\", \"facet-239.json\", \"facet-240.json\", \"facet-241.json\", \"facet-242.json\", \"facet-243.json\", \"facet-244.json\", \"facet-245.json\", \"facet-246.json\", \"facet-247.json\", \"facet-248.json\", \"facet-249.json\", \"facet-250.json\", \"facet-251.json\", \"facet-252.json\", \"facet-253.json\", \"facet-254.json\", \"facet-255.json\", \"facet-256.json\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "reason": "overflow",
+      "selectedValues": [
+        "facet-0.json",
+        "facet-1.json",
+        "facet-2.json",
+        "facet-3.json",
+        "facet-4.json",
+        "facet-5.json",
+        "facet-6.json",
+        "facet-7.json",
+        "facet-8.json",
+        "facet-9.json",
+        "facet-10.json",
+        "facet-11.json",
+        "facet-12.json",
+        "facet-13.json",
+        "facet-14.json",
+        "facet-15.json",
+        "facet-16.json",
+        "facet-17.json",
+        "facet-18.json",
+        "facet-19.json",
+        "facet-20.json",
+        "facet-21.json",
+        "facet-22.json",
+        "facet-23.json",
+        "facet-24.json",
+        "facet-25.json",
+        "facet-26.json",
+        "facet-27.json",
+        "facet-28.json",
+        "facet-29.json",
+        "facet-30.json",
+        "facet-31.json",
+        "facet-32.json",
+        "facet-33.json",
+        "facet-34.json",
+        "facet-35.json",
+        "facet-36.json",
+        "facet-37.json",
+        "facet-38.json",
+        "facet-39.json",
+        "facet-40.json",
+        "facet-41.json",
+        "facet-42.json",
+        "facet-43.json",
+        "facet-44.json",
+        "facet-45.json",
+        "facet-46.json",
+        "facet-47.json",
+        "facet-48.json",
+        "facet-49.json",
+        "facet-50.json",
+        "facet-51.json",
+        "facet-52.json",
+        "facet-53.json",
+        "facet-54.json",
+        "facet-55.json",
+        "facet-56.json",
+        "facet-57.json",
+        "facet-58.json",
+        "facet-59.json",
+        "facet-60.json",
+        "facet-61.json",
+        "facet-62.json",
+        "facet-63.json",
+        "facet-64.json",
+        "facet-65.json",
+        "facet-66.json",
+        "facet-67.json",
+        "facet-68.json",
+        "facet-69.json",
+        "facet-70.json",
+        "facet-71.json",
+        "facet-72.json",
+        "facet-73.json",
+        "facet-74.json",
+        "facet-75.json",
+        "facet-76.json",
+        "facet-77.json",
+        "facet-78.json",
+        "facet-79.json",
+        "facet-80.json",
+        "facet-81.json",
+        "facet-82.json",
+        "facet-83.json",
+        "facet-84.json",
+        "facet-85.json",
+        "facet-86.json",
+        "facet-87.json",
+        "facet-88.json",
+        "facet-89.json",
+        "facet-90.json",
+        "facet-91.json",
+        "facet-92.json",
+        "facet-93.json",
+        "facet-94.json",
+        "facet-95.json",
+        "facet-96.json",
+        "facet-97.json",
+        "facet-98.json",
+        "facet-99.json",
+        "facet-100.json",
+        "facet-101.json",
+        "facet-102.json",
+        "facet-103.json",
+        "facet-104.json",
+        "facet-105.json",
+        "facet-106.json",
+        "facet-107.json",
+        "facet-108.json",
+        "facet-109.json",
+        "facet-110.json",
+        "facet-111.json",
+        "facet-112.json",
+        "facet-113.json",
+        "facet-114.json",
+        "facet-115.json",
+        "facet-116.json",
+        "facet-117.json",
+        "facet-118.json",
+        "facet-119.json",
+        "facet-120.json",
+        "facet-121.json",
+        "facet-122.json",
+        "facet-123.json",
+        "facet-124.json",
+        "facet-125.json",
+        "facet-126.json",
+        "facet-127.json",
+        "facet-128.json",
+        "facet-129.json",
+        "facet-130.json",
+        "facet-131.json",
+        "facet-132.json",
+        "facet-133.json",
+        "facet-134.json",
+        "facet-135.json",
+        "facet-136.json",
+        "facet-137.json",
+        "facet-138.json",
+        "facet-139.json",
+        "facet-140.json",
+        "facet-141.json",
+        "facet-142.json",
+        "facet-143.json",
+        "facet-144.json",
+        "facet-145.json",
+        "facet-146.json",
+        "facet-147.json",
+        "facet-148.json",
+        "facet-149.json",
+        "facet-150.json",
+        "facet-151.json",
+        "facet-152.json",
+        "facet-153.json",
+        "facet-154.json",
+        "facet-155.json",
+        "facet-156.json",
+        "facet-157.json",
+        "facet-158.json",
+        "facet-159.json",
+        "facet-160.json",
+        "facet-161.json",
+        "facet-162.json",
+        "facet-163.json",
+        "facet-164.json",
+        "facet-165.json",
+        "facet-166.json",
+        "facet-167.json",
+        "facet-168.json",
+        "facet-169.json",
+        "facet-170.json",
+        "facet-171.json",
+        "facet-172.json",
+        "facet-173.json",
+        "facet-174.json",
+        "facet-175.json",
+        "facet-176.json",
+        "facet-177.json",
+        "facet-178.json",
+        "facet-179.json",
+        "facet-180.json",
+        "facet-181.json",
+        "facet-182.json",
+        "facet-183.json",
+        "facet-184.json",
+        "facet-185.json",
+        "facet-186.json",
+        "facet-187.json",
+        "facet-188.json",
+        "facet-189.json",
+        "facet-190.json",
+        "facet-191.json",
+        "facet-192.json",
+        "facet-193.json",
+        "facet-194.json",
+        "facet-195.json",
+        "facet-196.json",
+        "facet-197.json",
+        "facet-198.json",
+        "facet-199.json",
+        "facet-200.json",
+        "facet-201.json",
+        "facet-202.json",
+        "facet-203.json",
+        "facet-204.json",
+        "facet-205.json",
+        "facet-206.json",
+        "facet-207.json",
+        "facet-208.json",
+        "facet-209.json",
+        "facet-210.json",
+        "facet-211.json",
+        "facet-212.json",
+        "facet-213.json",
+        "facet-214.json",
+        "facet-215.json",
+        "facet-216.json",
+        "facet-217.json",
+        "facet-218.json",
+        "facet-219.json",
+        "facet-220.json",
+        "facet-221.json",
+        "facet-222.json",
+        "facet-223.json",
+        "facet-224.json",
+        "facet-225.json",
+        "facet-226.json",
+        "facet-227.json",
+        "facet-228.json",
+        "facet-229.json",
+        "facet-230.json",
+        "facet-231.json",
+        "facet-232.json",
+        "facet-233.json",
+        "facet-234.json",
+        "facet-235.json",
+        "facet-236.json",
+        "facet-237.json",
+        "facet-238.json",
+        "facet-239.json",
+        "facet-240.json",
+        "facet-241.json",
+        "facet-242.json",
+        "facet-243.json",
+        "facet-244.json",
+        "facet-245.json",
+        "facet-246.json",
+        "facet-247.json",
+        "facet-248.json",
+        "facet-249.json",
+        "facet-250.json",
+        "facet-251.json",
+        "facet-252.json",
+        "facet-253.json",
+        "facet-254.json",
+        "facet-255.json",
+        "facet-256.json"
+      ],
+      "expectedCandidates": [],
+      "expectedCallbacks": [],
+      "native": null
+    }
+  ],
+  "oracle": {
+    "manifestInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧲️rust-physical-reference-context/⚙️oracle.toml",
+    "sourceInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🦀️rust-divergence-callback.rs"
+  },
+  "retention": {
+    "parentSegments": [
+      "📓️energy-rust-reference-diagnostics",
+      "🧭️divergence-callback",
+      "🧾️runs"
+    ],
+    "dispose": "none-during-initial-red-review"
+  },
+  "registration": {
+    "projectPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+    "routerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+    "packagePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+    "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️rust-divergence-callback.ts",
+    "launchPaths": [
+      ".vscode/🧩️launch.seed.jsonc",
+      ".vscode/launch.json"
+    ],
+    "execution": [
+      {
+        "phase": "source",
+        "route": "rust-divergence-callback-source",
+        "pattern": "^(closed divergence|shared callback|candidate-only callback)",
+        "budgetMs": 15000,
+        "launchOrder": 410.201,
+        "target": "test-rust-divergence-callback-source",
+        "command": "bun ./📜️script.ts test rust-divergence-callback-source",
+        "packageCommand": "nx run @semio-tech/repo-lib:test-rust-divergence-callback-source",
+        "launchName": "🧹clean🧩️taxonomy↪️rust-divergence-callback-source",
+        "launchCommand": "bun nx run @semio-tech/repo-lib:test-rust-divergence-callback-source --skip-nx-cache"
+      },
+      {
+        "phase": "native",
+        "route": "rust-divergence-callback-native",
+        "pattern": "^actual rustc",
+        "budgetMs": 15000,
+        "launchOrder": 410.202,
+        "target": "test-rust-divergence-callback-native",
+        "command": "bun ./📜️script.ts test rust-divergence-callback-native",
+        "packageCommand": "nx run @semio-tech/repo-lib:test-rust-divergence-callback-native",
+        "launchName": "🧹clean🧩️taxonomy↪️rust-divergence-callback-native",
+        "launchCommand": "bun nx run @semio-tech/repo-lib:test-rust-divergence-callback-native --skip-nx-cache"
+      },
+      {
+        "phase": "syn",
+        "route": "rust-divergence-callback-syn",
+        "pattern": "^independent syn callback",
+        "budgetMs": 120000,
+        "launchOrder": 410.203,
+        "target": "test-rust-divergence-callback-syn",
+        "command": "bun ./📜️script.ts test rust-divergence-callback-syn",
+        "packageCommand": "nx run @semio-tech/repo-lib:test-rust-divergence-callback-syn",
+        "launchName": "🧹clean🧩️taxonomy↪️rust-divergence-callback-syn",
+        "launchCommand": "bun nx run @semio-tech/repo-lib:test-rust-divergence-callback-syn --skip-nx-cache"
+      }
+    ]
+  },
+  "attributeCompilerCases": [
+    {
+      "id": "unknown-expression-attribute",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(#[unknown] |error| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "compileExit": 1,
+      "runtimeExit": null
+    },
+    {
+      "id": "builtin-allow-expression-attribute",
+      "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(#[allow(unused_variables)] |error| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+      "compileExit": 0,
+      "runtimeExit": 101
+    }
+  ],
+  "scope": {
+    "productionEdits": false,
+    "actualDwgRows": 9,
+    "liveEnergyRowsRemovedClaim": 0,
+    "unresolvedPrerequisites": [
+      "governing-procedural-attributes",
+      "stdio-ancestor-macro-namespace",
+      "complete-global-cargo-owner-admission"
+    ]
+  }
+}

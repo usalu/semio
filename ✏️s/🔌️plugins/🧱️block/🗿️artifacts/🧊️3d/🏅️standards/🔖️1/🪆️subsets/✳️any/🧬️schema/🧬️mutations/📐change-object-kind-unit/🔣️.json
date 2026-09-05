@@ -5,7 +5,7 @@
   "displayName": "Change Object Kind Unit",
   "emoji": "📐",
   "aggregateVariant": "ChangeObjectKindUnit",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-object-kind-unit",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

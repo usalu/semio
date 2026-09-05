@@ -194,7 +194,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for RasterAnalyzerAnalysis {
         type Parts = RasterParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.raster", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.raster.raster", standard: StandardId("1"), subset: SubsetId("*") };
 
         fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium

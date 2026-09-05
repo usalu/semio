@@ -26,7 +26,7 @@ export {
   shortcodeEmoji,
   type ShortcodeCatalogName,
   type ShortcodeEmojiName,
-} from "../../🔣️icons/🤖️generated/🟦️shortcodes.ts";
+} from "../../🔣️icons/🤖️generated/🔤️shortcodes.ts";
 export { isMetabolismIconName, METABOLISM_ICONS, METABOLISM_ICON_NAMES, type MetabolismIconName } from "../../🌱️metabolism/🔣️icons/🤖️generated/🟦️metabolism_icons.ts";
 export { resolveMetabolismIconNameFromTheme, resolveMetabolismIconSvgFromTheme } from "../../🔍️resolver/🟦️.ts";
 //#endregion 🔖️Icons

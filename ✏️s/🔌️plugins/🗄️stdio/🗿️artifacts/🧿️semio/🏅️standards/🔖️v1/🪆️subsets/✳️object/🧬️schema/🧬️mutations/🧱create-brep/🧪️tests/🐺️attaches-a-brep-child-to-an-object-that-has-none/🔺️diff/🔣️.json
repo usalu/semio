@@ -1,0 +1,13 @@
+{
+  "brep": {
+    "childId": "brep-1",
+    "target": {
+      "artifactId": "kitchen-sink-brep",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "brep"
+      }
+    }
+  }
+}

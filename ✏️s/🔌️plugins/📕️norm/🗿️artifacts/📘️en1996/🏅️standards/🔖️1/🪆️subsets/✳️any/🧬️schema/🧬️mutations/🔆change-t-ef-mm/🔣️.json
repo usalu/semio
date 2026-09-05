@@ -5,7 +5,7 @@
   "displayName": "Change T Ef Mm",
   "emoji": "🔆",
   "aggregateVariant": "ChangeTEfMm",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

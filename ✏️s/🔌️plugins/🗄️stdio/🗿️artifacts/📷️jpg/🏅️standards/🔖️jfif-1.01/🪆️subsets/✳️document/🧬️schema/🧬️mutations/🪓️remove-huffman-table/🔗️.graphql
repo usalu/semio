@@ -1,3 +1,0 @@
-# 🧬️ remove-huffman-table/RemoveHuffmanTable
-scalar RemoveHuffmanTableMutationValue
-input RemoveHuffmanTableMutation { key: RemoveHuffmanTableMutationValue! }

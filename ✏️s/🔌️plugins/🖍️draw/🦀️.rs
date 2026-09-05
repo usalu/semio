@@ -37,6 +37,7 @@ pub fn plugin() -> Result<Plugin<DrawApps>, semio_framework_plugin::PluginAssemb
     Plugin::<DrawApps>::builder("draw")
         .label("Draw")
         .version("0.1.0")
+        .package_id("semio:draw")
         .declare_artifact(crate::artifacts::draw::artifact())
         .editor_mutation_roster::<crate::editor::draw::DrawPlayApp>()
         .viewer_mutation_roster::<crate::viewer::draw::DrawViewer>()

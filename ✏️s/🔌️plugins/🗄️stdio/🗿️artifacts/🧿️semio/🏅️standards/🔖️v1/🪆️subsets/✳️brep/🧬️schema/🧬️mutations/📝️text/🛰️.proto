@@ -1,3 +1,0 @@
-syntax = "proto3";
-package semio.s_stdio_semio_brep.mutations_text;
-message Artifact { string line = 1; }

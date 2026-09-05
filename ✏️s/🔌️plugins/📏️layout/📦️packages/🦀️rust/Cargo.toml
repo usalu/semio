@@ -35,8 +35,8 @@ semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀
 semio-framework-job = { workspace = true }
 serde.workspace = true
 serde_json.workspace = true
-ui_render = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🖼️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
-semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔢️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+ui_render = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
+semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

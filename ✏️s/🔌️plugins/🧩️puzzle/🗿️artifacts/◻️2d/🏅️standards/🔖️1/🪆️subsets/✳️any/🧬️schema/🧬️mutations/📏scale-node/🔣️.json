@@ -5,7 +5,7 @@
   "displayName": "Scale Node",
   "emoji": "📏",
   "aggregateVariant": "ScaleNode",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "scale-node",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

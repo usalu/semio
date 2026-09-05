@@ -5,7 +5,7 @@
   "displayName": "Replace Block",
   "emoji": "🔄",
   "aggregateVariant": "ReplaceBlock",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "replace-block",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

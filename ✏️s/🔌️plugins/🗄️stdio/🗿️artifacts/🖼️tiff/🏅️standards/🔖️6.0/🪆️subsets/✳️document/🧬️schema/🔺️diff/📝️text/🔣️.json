@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/stdio.tiff/diff/text.json",
-  "title": "TiffDiffText",
-  "type": "object"
-}

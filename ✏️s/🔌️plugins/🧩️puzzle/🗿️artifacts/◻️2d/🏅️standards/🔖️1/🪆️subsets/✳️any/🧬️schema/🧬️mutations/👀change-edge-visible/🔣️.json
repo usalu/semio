@@ -5,7 +5,7 @@
   "displayName": "Change Edge Visible",
   "emoji": "👀",
   "aggregateVariant": "ChangeEdgeVisible",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-edge-visible",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

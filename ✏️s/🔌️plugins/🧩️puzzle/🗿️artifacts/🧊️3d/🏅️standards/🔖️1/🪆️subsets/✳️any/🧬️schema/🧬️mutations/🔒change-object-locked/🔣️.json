@@ -5,7 +5,7 @@
   "displayName": "Change Object Locked",
   "emoji": "🔒",
   "aggregateVariant": "ChangeObjectLocked",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-object-locked",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

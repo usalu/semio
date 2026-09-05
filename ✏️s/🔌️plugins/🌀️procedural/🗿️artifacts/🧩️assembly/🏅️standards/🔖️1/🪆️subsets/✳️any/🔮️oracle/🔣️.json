@@ -1,0 +1,363 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution. `AssemblyMutation` is a semio-NATIVE vocabulary carried in `.dsl.semio`/`.pack.semio`, so no oracle is registered and the decision below records what stands in for one.",
+  "oracles": [
+    {
+      "id": "assembly-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "version": "",
+      "capabilities": [
+        "assembly-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "A second implementation of the `s.procedural.assembly` document and all nine typed mutations, in Python, at `../../../../../🧪️tests/mutate-assembly-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json` (the seven members), rules 2, 4 and 8 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` — the id-keyed slot and rule collections, `connect`/`disconnect` for the edge collection, and the domain verbs `change-weight`/`remove-weight` registered as an inverse PAIR — and the nine committed `(before, mutation, diff, outcome, after)` quintets, which are the only statement of three things: that this subset tags its mutations EXTERNALLY, the payload being `{\"CreateSlot\": {…}}` with a PascalCase variant name as its single key; that `delete-slot` DOES cascade into the edges naming it and says so with an info-level `mutation.cascade`; and that `change-weight` UPSERTS, writing an existing module's weight in place and appending an entry when the table holds none. It imports nothing from this repository and transliterates none of its Rust. This registration SUPERSEDES the `assembly-mutation-semantics` no-oracle decision, whose argument — that joining a slot lattice, an adjacency rule set and a per-module weight table under one seed, with a diff that SPLITS every collection into a `<name>Removed`/`<name>Upserted` pair, \"is this subset's own specification\" and so not a fact an external library could confirm or refute — was refuted in this same wave by `mutate-fem3d-1` and `mutate-gisterrain-1`, which took Python second implementations over this same carrier. A THIRD-PARTY library was declined, not merely absent: a WFC library computes a COLLAPSE and none of them carries the problem statement as a document, let alone reads this carrier. ALL NINE KINDS ARE ADJUDICATED AND NONE IS REFUSED: the module child handles are only ever read here, never re-addressed, so nothing depends on a content-addressing function no specification states. A CROSS-CASE DIVERGENCE THE REFERENCE SURFACED: `mutation.cascade` at level `info` means OPPOSITE things in this plugin — here it announces that `delete-slot` really did remove the edges naming the slot, while in the sibling `s.procedural.generation2d` the same code at the same level announces that `delete-widget` LEFT a dangling synapse standing. One diagnostic code, two contradictory readings, in one plugin. ONE CEILING ON WHAT THIS COMPARISON ESTABLISHES: the SUBJECT half does not run this subset's codec — `../../../../../🧪️tests/mutate-assembly-1/🦀️.rs` links no plugin crate and replays the committed vectors — so today it establishes that an independent implementation of the specification computes the committed after-snapshots, not yet our codec against a second producer. An `assembly_mutation_report_json` bridge beside the mutation enum closes it; it is not added here for two reasons, and neither is that the verb is hard: it is PRODUCTION code in a crate this test-side pass deliberately does not touch, and it could not be verified end to end today anyway. `parity` was not measured for any case in this pass: the single-case probe `parity exhaustive --owner 🗒️note --case mutate-note-1` was killed at the runner's OWN 900 s per-case budget while still COMPILING the generated subject host — the runner's message names the cause, shared cargo target-dir lock contention from a concurrent session — and then threw `spawnSync cargo ETIMEDOUT` out of `runProbe` with no summary line at all. `📓️w14-final-audit.md` §5.3 measured the underlying blocker one day earlier (`unresolved import component::component_persistent_local` in `semio-framework-plugin`, which sits in every generated host's dependency graph); this pass did NOT re-verify whether that is still the state, and says so rather than repeating it as fact. This subset's own plugin crate compiles clean at `cargo check --lib`. This case also reads no real-world artifact: all 45 of its fixtures are handcrafted specification vectors. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `assembly-1-mutate`'s external-oracle requirement for its 9-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 9 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.assembly",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "WFC-COLLAPSE",
+              "reason": "a WFC library computes a COLLAPSE and none of them carries the problem statement as a document, let alone reads this carrier."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md; ../🧬️schema/📸️snapshot/🔣️.json; .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md; ../../../../../🧪️tests/mutate-assembly-1/🦀️.rs; 📓️w14-final-audit.md; 🔒️dependencies.json",
+        "fixtureCoverage": {
+          "vectors": 9,
+          "capabilitiesCovered": [
+            "assembly-1-mutate"
+          ]
+        }
+      }
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "assembly-1-any",
+      "capability": "assembly-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-seed",
+          "sourceMutationDirectoryName": "🎲️change-seed",
+          "mutationDirectoryName": "🎲️change-seed",
+          "scenarios": [
+            {
+              "id": "reseeds-the-solve-from-7-to-99",
+              "directoryName": "🧪️reseeds-the-solve-from-7-to-99"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-weight",
+          "sourceMutationDirectoryName": "🔢️change-weight",
+          "mutationDirectoryName": "🔢️change-weight",
+          "scenarios": [
+            {
+              "id": "raises-the-wall-module-selection-bias",
+              "directoryName": "🧪️raises-the-wall-module-selection-bias"
+            }
+          ]
+        },
+        {
+          "mutationId": "connect-slots",
+          "sourceMutationDirectoryName": "🔗️connect-slots",
+          "mutationDirectoryName": "🔗️connect-slots",
+          "scenarios": [
+            {
+              "id": "joins-slot-b-to-slot-c-at-index-1",
+              "directoryName": "🧪️joins-slot-b-to-slot-c-at-index-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-rule",
+          "sourceMutationDirectoryName": "📏️create-rule",
+          "mutationDirectoryName": "📏️create-rule",
+          "scenarios": [
+            {
+              "id": "appends-a-rule-forbidding-roof-over-wall",
+              "directoryName": "🧪️appends-a-rule-forbidding-roof-over-wall"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-slot",
+          "sourceMutationDirectoryName": "🧩️create-slot",
+          "mutationDirectoryName": "🧩️create-slot",
+          "scenarios": [
+            {
+              "id": "appends-slot-c-at-index-2",
+              "directoryName": "🧪️appends-slot-c-at-index-2"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-rule",
+          "sourceMutationDirectoryName": "❌delete-rule",
+          "mutationDirectoryName": "❌delete-rule",
+          "scenarios": [
+            {
+              "id": "removes-the-wall-roof-rule",
+              "directoryName": "🧪️removes-the-wall-roof-rule"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-slot",
+          "sourceMutationDirectoryName": "🕳️delete-slot",
+          "mutationDirectoryName": "🕳️delete-slot",
+          "scenarios": [
+            {
+              "id": "removes-slot-a-and-cascades-edge-ab",
+              "directoryName": "🧪️removes-slot-a-and-cascades-edge-ab"
+            }
+          ]
+        },
+        {
+          "mutationId": "disconnect-slots",
+          "sourceMutationDirectoryName": "✂️disconnect-slots",
+          "mutationDirectoryName": "✂️disconnect-slots",
+          "scenarios": [
+            {
+              "id": "severs-edge-ab-leaving-both-slots",
+              "directoryName": "🧪️severs-edge-ab-leaving-both-slots"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-weight",
+          "sourceMutationDirectoryName": "🪶️remove-weight",
+          "mutationDirectoryName": "🪶️remove-weight",
+          "scenarios": [
+            {
+              "id": "drops-the-wall-module-weight-override",
+              "directoryName": "🧪️drops-the-wall-module-weight-override"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "create-slot",
+        "delete-slot",
+        "create-rule",
+        "delete-rule",
+        "change-weight",
+        "remove-weight",
+        "connect-slots",
+        "disconnect-slots",
+        "change-seed"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.assembly",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-seed",
+          "capability": "assembly-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-seed",
+            "bridgeVersion": 1,
+            "variant": "ChangeSeed"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "assembly-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-weight",
+          "capability": "assembly-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-weight",
+            "bridgeVersion": 1,
+            "variant": "ChangeWeight"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "assembly-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "connect-slots",
+          "capability": "assembly-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "connect-slots",
+            "bridgeVersion": 1,
+            "variant": "ConnectSlots"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "assembly-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-rule",
+          "capability": "assembly-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-rule",
+            "bridgeVersion": 1,
+            "variant": "CreateRule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "assembly-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-slot",
+          "capability": "assembly-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-slot",
+            "bridgeVersion": 1,
+            "variant": "CreateSlot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "assembly-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-rule",
+          "capability": "assembly-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-rule",
+            "bridgeVersion": 1,
+            "variant": "DeleteRule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "assembly-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-slot",
+          "capability": "assembly-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-slot",
+            "bridgeVersion": 1,
+            "variant": "DeleteSlot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "assembly-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "disconnect-slots",
+          "capability": "assembly-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "disconnect-slots",
+            "bridgeVersion": 1,
+            "variant": "DisconnectSlots"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "assembly-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-weight",
+          "capability": "assembly-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-weight",
+            "bridgeVersion": 1,
+            "variant": "RemoveWeight"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "assembly-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

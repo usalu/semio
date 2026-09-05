@@ -1,2 +1,0 @@
-# 🧬 set-doctype/SetDoctype
-input SetDoctypePayload { doctype: MutationPayload }

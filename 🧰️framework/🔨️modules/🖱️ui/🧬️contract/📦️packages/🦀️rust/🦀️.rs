@@ -21,31 +21,31 @@
 #[path = "../../🧬️schema/🦀️.rs"]
 pub mod schema_metadata;
 
-#[path = "🦀️accessibility.rs"]
+#[path = "♿️accessibility.rs"]
 mod accessibility;
-#[path = "🦀️action.rs"]
+#[path = "🎬️action.rs"]
 mod action;
-#[path = "🦀️builder.rs"]
+#[path = "🏗️builder.rs"]
 mod builder;
-#[path = "🦀️component.rs"]
+#[path = "🧩️component.rs"]
 mod component;
 /// 🧪️ Loads and asserts against `📚️examples/🧪️conformance/` — entirely `#[cfg(test)]` inside, so it
 /// mounts unconditionally here without affecting the wasm check targets (see the file's own header).
-#[path = "🦀️conformance.rs"]
+#[path = "🔬️conformance.rs"]
 mod conformance;
-#[path = "🦀️document.rs"]
+#[path = "📃️document.rs"]
 mod document;
-#[path = "🦀️layout.rs"]
+#[path = "📐️layout.rs"]
 mod layout;
-#[path = "🦀️limits.rs"]
+#[path = "🛡️limits.rs"]
 mod limits;
-#[path = "🦀️presence.rs"]
+#[path = "👥️presence.rs"]
 mod presence;
-#[path = "🦀️style.rs"]
+#[path = "🎨️style.rs"]
 mod style;
-#[path = "🦀️surface.rs"]
+#[path = "🗺️surface.rs"]
 mod surface;
-#[path = "🦀️text_edit.rs"]
+#[path = "🪢️text_edit.rs"]
 mod text_edit;
 
 pub use accessibility::*;

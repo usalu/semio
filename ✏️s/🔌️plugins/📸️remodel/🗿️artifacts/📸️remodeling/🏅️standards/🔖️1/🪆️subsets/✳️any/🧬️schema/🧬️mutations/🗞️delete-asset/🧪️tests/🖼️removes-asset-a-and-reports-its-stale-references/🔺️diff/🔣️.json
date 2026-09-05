@@ -1,0 +1,19 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "streams": null,
+  "assets": {},
+  "calibration": null,
+  "params": null,
+  "gcps": null,
+  "job": null,
+  "results": null,
+  "selection": null,
+  "activeUtilityId": null,
+  "reportTable": null,
+  "frameCursor": null,
+  "camera": null,
+  "layers": null,
+  "locale": null
+}

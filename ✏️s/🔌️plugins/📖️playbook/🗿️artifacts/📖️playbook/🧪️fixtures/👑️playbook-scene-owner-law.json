@@ -1,0 +1,13 @@
+{
+  "$schema": "./🎬️playbook-scene-owner.schema.json",
+  "schemaVersion": 1,
+  "ownedSlots": 1,
+  "maximumCases": 5,
+  "cases": [
+    { "law": "cloneIdentity", "first": "alpha", "second": "" },
+    { "law": "instanceIsolation", "first": "left", "second": "right" },
+    { "law": "abaIsolation", "first": "generation-a", "second": "generation-b" },
+    { "law": "wireOmission", "first": "ephemeral", "second": "" },
+    { "law": "boundedClose", "first": "close", "second": "" }
+  ]
+}

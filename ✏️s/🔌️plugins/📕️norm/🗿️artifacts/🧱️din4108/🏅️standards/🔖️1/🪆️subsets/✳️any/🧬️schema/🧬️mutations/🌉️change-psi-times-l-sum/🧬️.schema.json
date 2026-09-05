@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangePsiTimesLSum",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newPsiTimesLSum"
+  ],
+  "properties": {
+    "newPsiTimesLSum": {
+      "type": "number"
+    }
+  }
+}

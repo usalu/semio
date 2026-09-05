@@ -5,7 +5,7 @@
   "displayName": "Set Node Root",
   "emoji": "🚩",
   "aggregateVariant": "SetNodeRoot",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "set-node-root",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

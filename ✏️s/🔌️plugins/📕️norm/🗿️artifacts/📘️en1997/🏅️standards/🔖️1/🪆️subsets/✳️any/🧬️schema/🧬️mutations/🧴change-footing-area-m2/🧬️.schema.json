@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeFootingAreaM2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newFootingAreaM2"
+  ],
+  "properties": {
+    "newFootingAreaM2": {
+      "type": "number"
+    }
+  }
+}

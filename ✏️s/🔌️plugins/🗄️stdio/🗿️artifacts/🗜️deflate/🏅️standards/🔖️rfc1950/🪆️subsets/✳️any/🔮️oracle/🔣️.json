@@ -1,0 +1,279 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in the shared ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json manifest. `flate2` is already the plugin's registered zlib-compression oracle (capability zlib-compression), but that entry cannot cover mutation coverage without re-surveying it for this capability, so this is a distinct id.",
+  "oracles": [
+    {
+      "id": "flate2-deflate-rfc1950-mutate",
+      "ecosystem": "rust",
+      "package": "flate2",
+      "version": "1",
+      "capabilities": [
+        "deflate-rfc1950-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/rust-lang/flate2-rs",
+      "rationale": "The reference zlib/deflate implementation of the Rust ecosystem, used here as the independent encoder/decoder for every typed RFC1950 mutation kind. CMF/FLG/DICTID framing is fixed bit arithmetic RFC1950 mandates (not a competing 'implementation'), computed independently in this subset's own oracle module; flate2 supplies the actual DEFLATE entropy coding and the real Adler-32 trailer that arithmetic alone cannot fabricate. Deterministic given the same call sequence, no network, no system dependencies, cross-platform.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "flate2",
+        "implementation": "flate2 Rust zlib/DEFLATE implementation",
+        "version": "1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "deflate-rfc1950-any",
+      "capability": "deflate-rfc1950-mutate",
+      "standardDirectoryName": "🔖️rfc1950",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📸️set-snapshot",
+          "mutationDirectoryName": "📸️set-snapshot",
+          "scenarios": [
+            {
+              "id": "raises-the-flevel-hint-and-extends-the-payload",
+              "directoryName": "🧪️raises-the-flevel-hint-and-extends-the-payload"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "set-snapshot",
+        "set-compression-params",
+        "set-preset-dictionary",
+        "set-payload"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.deflate",
+      "standard": "rfc1950",
+      "subset": "any",
+      "standardDirectoryName": "🔖️rfc1950",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "set-compression-params",
+          "capability": "deflate-rfc1950-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-compression-params",
+            "bridgeVersion": 1,
+            "variant": "SetCompressionParams"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "deflate-rfc1950-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-payload",
+          "capability": "deflate-rfc1950-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-payload",
+            "bridgeVersion": 1,
+            "variant": "SetPayload"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "deflate-rfc1950-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-preset-dictionary",
+          "capability": "deflate-rfc1950-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-preset-dictionary",
+            "bridgeVersion": 1,
+            "variant": "SetPresetDictionary"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "deflate-rfc1950-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "deflate-rfc1950-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "deflate-rfc1950-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-preset-dictionary-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.deflate",
+        "standard": "rfc1950",
+        "subset": "any"
+      },
+      "mutation": "set-preset-dictionary",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📖️set-preset-dictionary/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7c20feff002488a20155e7b5ef9daa37b76c04529289a3b96f16aff035175f5a",
+          "bytes": 211
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📖️set-preset-dictionary/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:46d3b5f421e2f79158d7e622ca43460de061a098ca643987d36d8c1bae2d57ae",
+          "bytes": 216
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "deflate-carrier",
+      "notes": "SetPresetDictionary{dictId:Some(0x12345678)} sets FDICT and the DICTID trailer, RFC1950 §2.2's own preset-dictionary mechanism."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-payload-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.deflate",
+        "standard": "rfc1950",
+        "subset": "any"
+      },
+      "mutation": "set-payload",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📦️set-payload/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7c20feff002488a20155e7b5ef9daa37b76c04529289a3b96f16aff035175f5a",
+          "bytes": 211
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📦️set-payload/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:096ee10a06cd31711493d313511f6698f1563bc1525d926fdd300b9f653fdb18",
+          "bytes": 222
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "deflate-carrier",
+      "notes": "SetPayload replaces the decompressed RFC1951 payload bytes in place."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-compression-params-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.deflate",
+        "standard": "rfc1950",
+        "subset": "any"
+      },
+      "mutation": "set-compression-params",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🧮️set-compression-params/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7c20feff002488a20155e7b5ef9daa37b76c04529289a3b96f16aff035175f5a",
+          "bytes": 211
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🧮️set-compression-params/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:f7074731bea074eadd64046397e11a2cfbb009f6e9858483da226ea6e92d7fd7",
+          "bytes": 211
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "deflate-carrier",
+      "notes": "SetCompressionParams{method:8,windowBits:6,levelHint:maximum} overwrites the CMF/FLG header fields — window size (CINFO) and the FLEVEL hint — leaving `method` unchanged (still 8, deflate)."
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "title": "Block Plugin End To End",
+  "emoji": "🧱️",
+  "status": "open",
+  "description": "Get the 🧱️block plugin (apps block2d, block3d, block5d of ✏️s/🔌️plugins/🧱️block) working end to end: the crate builds natively and for wasm32-wasip2, its tests pass, the descriptor is regenerated, and `bun run dev:block:2d|3d|5d` boots with every window rendering non-empty content, examples loading and switchable, and editor actions dispatching at runtime.",
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": ["⚪2adc84fa-a75f-469f-a9a2-90ac34b45277"],
+  "note": "Ticket bookkeeping done manually on disk: repo MCP timed out at session start (2026-09-05)."
+}

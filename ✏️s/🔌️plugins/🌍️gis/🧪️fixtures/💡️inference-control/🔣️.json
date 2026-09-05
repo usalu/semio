@@ -1,0 +1,22 @@
+{
+  "schema": "semio.gis.inference-control/v1",
+  "snapshot": { "positions": [{ "id": "point-a", "data": { "lon": 7, "lat": 47 } }], "routes": [{ "id": "route-a", "data": { "points": [[8, 46], [9, 48]] } }], "regions": [] },
+  "expected": { "positionCount": 1, "routeCount": 1, "regionCount": 0, "bounds": { "lonMin": 7, "lonMax": 9, "latMin": 46, "latMax": 48 } },
+  "proposalJobId": "11111111111111111111111111111111",
+  "proposal": { "CreateRegion": { "index": 0, "item": { "id": "inference-11111111111111111111111111111111", "data": { "id": "inference-11111111111111111111111111111111", "kind": "inference-bounds", "ring": [[7.0, 46.0], [9.0, 46.0], [9.0, 48.0], [7.0, 48.0], [7.0, 46.0]] } } } },
+  "proposalRejections": [
+    { "case": "wrong-job", "error": "Identity" },
+    { "case": "duplicate-id", "error": "Stale" },
+    { "case": "stale-count", "error": "Stale" },
+    { "case": "no-bounds", "error": "Bounds" },
+    { "case": "non-finite", "error": "Bounds" },
+    { "case": "out-of-range", "error": "Bounds" },
+    { "case": "reversed", "error": "Bounds" }
+  ],
+  "checkpoints": [0, 1, 2, 3, 4, 5, 6, 7, 8, 8],
+  "interruptions": [
+    { "name": "cancel-before-decode", "at": 0, "error": "cancelled", "calls": 1 },
+    { "name": "cancel-mid-fold", "at": 4, "error": "cancelled", "calls": 5 },
+    { "name": "deadline-mid-fold", "at": 6, "error": "expired", "calls": 7 }
+  ]
+}

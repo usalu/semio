@@ -19,26 +19,26 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     use crate::artifacts::definition::{CapabilitySpec as C, ClaimSpec as Q, LocalizationSpec as L};
     const S: &[Q] = &[Q { namespace: "schema", value: "s.norm.en1997" }];
     const I: &[Q] = &[Q { namespace: "schema", value: "s.norm.en1997.inference" }];
-    const M: &[Q] = &[Q { namespace: "dialect", value: "s.en1997@1/*" }];
-    const K: &[Q] = &[Q { namespace: "codec", value: "semio.norm.en1997/v1" }, Q { namespace: "extension", value: "en1997" }];
+    const M: &[Q] = &[Q { namespace: "dialect", value: "s.norm.en1997@1/*" }];
+    const K: &[Q] = &[Q { namespace: "codec", value: "semio.norm.en1997/v1" }, Q { namespace: "codec-extension", value: "20:semio.norm.en1997/v1:en1997" }];
     const EN: &[L] = &[L { locale: "en", text: "EN 1997 geotechnical design" }];
     const DE: &[L] = &[L { locale: "de", text: "EN 1997 Entwurf, Berechnung und Bemessung in der Geotechnik" }];
     const ROWS: &[C] = &[
-        C { identity: "s.en1997.standard.v1", kind: "standard", descriptor: "v1", claims: &[], localizations: &[] },
-        C { identity: "s.en1997.standard.v1.profile.any", kind: "profile", descriptor: "any", claims: &[], localizations: &[] },
-        C { identity: "s.en1997.schema.artifact", kind: "schema", descriptor: "s.norm.en1997", claims: S, localizations: &[] },
-        C { identity: "s.en1997.inference.outline", kind: "inference", descriptor: "s.norm.en1997.inference", claims: I, localizations: &[] },
-        C { identity: "s.en1997.composer.any", kind: "composer", descriptor: "s.en1997@1/*", claims: M, localizations: &[] },
-        C { identity: "s.en1997.grammar.document", kind: "grammar", descriptor: "en1997.document", claims: &[Q { namespace: "grammar", value: "en1997.document" }], localizations: &[] },
-        C { identity: "s.en1997.grammar.op", kind: "grammar", descriptor: "en1997.op", claims: &[Q { namespace: "grammar", value: "en1997.op" }], localizations: &[] },
-        C { identity: "s.en1997.grammar.diff", kind: "grammar", descriptor: "en1997.diff", claims: &[Q { namespace: "grammar", value: "en1997.diff" }], localizations: &[] },
-        C { identity: "s.en1997.grammar.pack", kind: "grammar", descriptor: "en1997.pack", claims: &[Q { namespace: "grammar", value: "en1997.pack" }], localizations: &[] },
-        C { identity: "s.en1997.grammar.spr", kind: "grammar", descriptor: "en1997.spr", claims: &[Q { namespace: "grammar", value: "en1997.spr" }], localizations: &[] },
-        C { identity: "s.en1997.codec.document.v1", kind: "codec", descriptor: "semio.norm.en1997/v1:en1997", claims: K, localizations: &[] },
-        C { identity: "s.en1997.localization.en", kind: "localization", descriptor: "EN 1997 geotechnical design", claims: &[], localizations: EN },
-        C { identity: "s.en1997.localization.de", kind: "localization", descriptor: "EN 1997 Entwurf, Berechnung und Bemessung in der Geotechnik", claims: &[], localizations: DE },
+        C { identity: "s.norm.en1997.standard.v1", kind: "standard", descriptor: "v1", claims: &[], localizations: &[] },
+        C { identity: "s.norm.en1997.standard.v1.profile.any", kind: "profile", descriptor: "any", claims: &[], localizations: &[] },
+        C { identity: "s.norm.en1997.schema.artifact", kind: "schema", descriptor: "s.norm.en1997", claims: S, localizations: &[] },
+        C { identity: "s.norm.en1997.inference.outline", kind: "inference", descriptor: "s.norm.en1997.inference", claims: I, localizations: &[] },
+        C { identity: "s.norm.en1997.composer.any", kind: "composer", descriptor: "s.norm.en1997@1/*", claims: M, localizations: &[] },
+        C { identity: "s.norm.en1997.grammar.document", kind: "grammar", descriptor: "en1997.document", claims: &[Q { namespace: "grammar", value: "en1997.document" }], localizations: &[] },
+        C { identity: "s.norm.en1997.grammar.op", kind: "grammar", descriptor: "en1997.op", claims: &[Q { namespace: "grammar", value: "en1997.op" }], localizations: &[] },
+        C { identity: "s.norm.en1997.grammar.diff", kind: "grammar", descriptor: "en1997.diff", claims: &[Q { namespace: "grammar", value: "en1997.diff" }], localizations: &[] },
+        C { identity: "s.norm.en1997.grammar.pack", kind: "grammar", descriptor: "en1997.pack", claims: &[Q { namespace: "grammar", value: "en1997.pack" }], localizations: &[] },
+        C { identity: "s.norm.en1997.grammar.spr", kind: "grammar", descriptor: "en1997.spr", claims: &[Q { namespace: "grammar", value: "en1997.spr" }], localizations: &[] },
+        C { identity: "s.norm.en1997.codec.document.v1", kind: "codec", descriptor: "semio.norm.en1997/v1:en1997", claims: K, localizations: &[] },
+        C { identity: "s.norm.en1997.localization.en", kind: "localization", descriptor: "EN 1997 geotechnical design", claims: &[], localizations: EN },
+        C { identity: "s.norm.en1997.localization.de", kind: "localization", descriptor: "EN 1997 Entwurf, Berechnung und Bemessung in der Geotechnik", claims: &[], localizations: DE },
     ];
-    crate::artifacts::definition::assemble_definition("s.en1997", ROWS)
+    crate::artifacts::definition::assemble_definition("s.norm.en1997", ROWS)
 }
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {

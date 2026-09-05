@@ -5,7 +5,7 @@
   "displayName": "Replace Palette",
   "emoji": "🎨️",
   "aggregateVariant": "ReplacePalette",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "replace-palette",
   "binaryTag": 3,
   "invertibility": "explicit-mutation",

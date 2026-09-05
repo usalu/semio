@@ -21,6 +21,7 @@ pub fn plugin() -> Result<Plugin<WriterApps>, semio_framework_plugin::PluginAsse
     Plugin::<WriterApps>::builder("writer")
         .label("Writer")
         .version("0.1.0")
+        .package_id("semio:writer")
         .declare_artifact(crate::artifacts::writer::artifact())
         .editor_mutation_roster::<crate::editor::writer::WriterPlayApp>()
         .viewer_mutation_roster::<crate::viewer::writer::WriterViewer>()

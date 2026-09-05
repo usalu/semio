@@ -1,0 +1,16 @@
+{
+  "beforeFixtureJson": null,
+  "lhsJson": null,
+  "rhsJson": null,
+  "parameterBindings": null,
+  "ruleLayout": {
+    "c": {
+      "x": 24.0,
+      "y": 16.5
+    }
+  },
+  "lodModeByWindow": null,
+  "beforePaneCamera": null,
+  "reorganizeEpoch": null,
+  "locale": null
+}

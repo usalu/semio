@@ -74,7 +74,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/rejects-a-duplicate-node-id/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🚫️rejects-a-duplicate-node-id/🦀️.rs"]
                                     mod tests_rejects_a_duplicate_node_id;
                                 }
                                 #[path = "."]
@@ -86,7 +86,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/rejects-deleting-a-missing-node/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️rejects-deleting-a-missing-node/🦀️.rs"]
                                     mod tests_rejects_deleting_a_missing_node;
                                 }
                                 #[path = "."]
@@ -98,7 +98,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-node/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-node/🧪️tests/rejects-renaming-a-missing-node/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-node/🧪️tests/🚫️rejects-renaming-a-missing-node/🦀️.rs"]
                                     mod tests_rejects_renaming_a_missing_node;
                                 }
                                 #[path = "."]
@@ -110,7 +110,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-node-name/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-node-name/🧪️tests/rejects-renaming-the-label-of-a-missing-node/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-node-name/🧪️tests/🚫️rejects-renaming-the-label-of-a-missing-node/🦀️.rs"]
                                     mod tests_rejects_renaming_the_label_of_a_missing_node;
                                 }
                                 #[path = "."]
@@ -122,7 +122,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-node/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-node/🧪️tests/rejects-moving-a-missing-node/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-node/🧪️tests/🚫️rejects-moving-a-missing-node/🦀️.rs"]
                                     mod tests_rejects_moving_a_missing_node;
                                 }
                                 #[path = "."]
@@ -134,7 +134,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🧪️tests/rejects-resizing-a-missing-node/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🧪️tests/🚫️rejects-resizing-a-missing-node/🦀️.rs"]
                                     mod tests_rejects_resizing_a_missing_node;
                                 }
                                 #[path = "."]
@@ -146,7 +146,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-node-icon/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-node-icon/🧪️tests/rejects-reiconing-a-missing-node/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-node-icon/🧪️tests/🚫️rejects-reiconing-a-missing-node/🦀️.rs"]
                                     mod tests_rejects_reiconing_a_missing_node;
                                 }
                                 #[path = "."]
@@ -158,7 +158,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡change-node-abbreviation/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡change-node-abbreviation/🧪️tests/rejects-reabbreviating-a-missing-node/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡change-node-abbreviation/🧪️tests/🚫️rejects-reabbreviating-a-missing-node/🦀️.rs"]
                                     mod tests_rejects_reabbreviating_a_missing_node;
                                 }
                                 #[path = "."]
@@ -170,7 +170,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮change-node-operator-kind/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮change-node-operator-kind/🧪️tests/rejects-rebinding-the-operator-of-a-missing-node/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮change-node-operator-kind/🧪️tests/🔗️rejects-rebinding-the-operator-of-a-missing-node/🦀️.rs"]
                                     mod tests_rejects_rebinding_the_operator_of_a_missing_node;
                                 }
                                 #[path = "."]
@@ -182,7 +182,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-node-kind/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-node-kind/🧪️tests/rejects-rekinding-a-missing-node/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-node-kind/🧪️tests/🚫️rejects-rekinding-a-missing-node/🦀️.rs"]
                                     mod tests_rejects_rekinding_a_missing_node;
                                 }
                                 #[path = "."]
@@ -194,7 +194,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️replace-node-properties/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️replace-node-properties/🧪️tests/rejects-repropertying-a-missing-node/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️replace-node-properties/🧪️tests/🚫️rejects-repropertying-a-missing-node/🦀️.rs"]
                                     mod tests_rejects_repropertying_a_missing_node;
                                 }
                                 #[path = "."]
@@ -206,19 +206,19 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-nodes/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-nodes/🧪️tests/rejects-a-duplicate-id-in-the-order/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-nodes/🧪️tests/🚫️rejects-a-duplicate-id-in-the-order/🦀️.rs"]
                                     mod tests_rejects_a_duplicate_id_in_the_order;
                                 }
                                 #[path = "."]
                                 pub mod connect_nodes {
-                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-nodes/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-nodes/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-nodes/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-nodes/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-nodes/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-nodes/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-nodes/🧪️tests/rejects-a-missing-source-node/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-nodes/🧪️tests/🚫️rejects-a-missing-source-node/🦀️.rs"]
                                     mod tests_rejects_a_missing_source_node;
                                 }
                                 #[path = "."]
@@ -230,7 +230,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/rejects-disconnecting-a-missing-edge/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/🚫️rejects-disconnecting-a-missing-edge/🦀️.rs"]
                                     mod tests_rejects_disconnecting_a_missing_edge;
                                 }
                             }
@@ -292,7 +292,7 @@ pub mod artifacts {
                                             pub mod v_utf_8 {
                                                 #[path = "."]
                                                 pub mod any {
-                                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄️txt/🔖️utf-8/✳️any/🦀️.rs"]
+                                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
                                                     mod component;
                                                     pub use component::*;
                                                 }
@@ -373,7 +373,7 @@ pub mod artifacts {
                                             pub mod v_utf_8 {
                                                 #[path = "."]
                                                 pub mod any {
-                                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️txt/🔖️utf-8/✳️any/🦀️.rs"]
+                                                    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
                                                     mod component;
                                                     pub use component::*;
                                                 }
@@ -529,29 +529,29 @@ pub mod editor {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️add-node/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-node/🦀️.rs"]
             pub mod add_node;
-            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️connect-media-ports/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔌️connect-media-ports/🦀️.rs"]
             pub mod connect_media_ports;
-            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️delete-selection/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️delete-selection/🦀️.rs"]
             pub mod delete_selection;
-            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️disconnect/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✂️disconnect/🦀️.rs"]
             pub mod disconnect;
-            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️graph-pointer-down/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👇️graph-pointer-down/🦀️.rs"]
             pub mod graph_pointer_down;
-            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️move-media-node/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️move-media-node/🦀️.rs"]
             pub mod move_media_node;
-            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node-graph-edit/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🦀️.rs"]
             pub mod node_graph_edit;
-            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️node-graph-viewport/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔭️node-graph-viewport/🦀️.rs"]
             pub mod node_graph_viewport;
-            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️patch-dag-nodes/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-dag-nodes/🦀️.rs"]
             pub mod patch_dag_nodes;
-            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️remove-node/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➖️remove-node/🦀️.rs"]
             pub mod remove_node;
-            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️rename-dag-node/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏷️rename-dag-node/🦀️.rs"]
             pub mod rename_dag_node;
-            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️reorganize/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️reorganize/🦀️.rs"]
             pub mod reorganize;
             #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️.rs"]
             pub mod set_locale;
@@ -579,7 +579,7 @@ pub mod editor {
         pub mod panels {
             #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️.rs"]
             pub mod catalogue;
-            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
             pub mod document;
             #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
             pub mod inspection;

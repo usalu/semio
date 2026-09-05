@@ -55,6 +55,7 @@ pub fn plugin() -> Result<Plugin<PuzzleApps>, semio_framework_plugin::PluginAsse
     Plugin::<PuzzleApps>::builder("puzzle")
         .label("Puzzle")
         .version("0.1.0")
+        .package_id("semio:puzzle")
         .declare_artifact(crate::artifacts::puzzle2d::artifact())
         .declare_artifact(crate::artifacts::puzzle3d::artifact())
         .declare_artifact(crate::artifacts::puzzle5d::artifact())

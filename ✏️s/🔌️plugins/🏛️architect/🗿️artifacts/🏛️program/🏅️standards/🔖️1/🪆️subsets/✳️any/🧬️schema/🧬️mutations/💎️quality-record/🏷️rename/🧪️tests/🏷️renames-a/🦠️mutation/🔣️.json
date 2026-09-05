@@ -1,0 +1,5 @@
+{
+  "mutation": "renameQualityRecord",
+  "id": "quality-record-a",
+  "newName": "Renamed Quality Record A"
+}

@@ -1,0 +1,639 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎒️ ZIP 2.0/🌐️iso21320's own contribution to the repository test platform: the `zip` reference implementation registered for THIS subset's own 8-kind `ZipIso21320Mutation` vocabulary, and a comparison profile that — unlike the sibling `🧱️base` one — checks the ISO/IEC 21320-1 constraints the profile exists to enforce.",
+  "oracles": [
+    {
+      "id": "zip-2-0-iso21320-mutate",
+      "ecosystem": "rust",
+      "package": "zip",
+      "version": "6",
+      "capabilities": [
+        "zip-2-0-iso21320-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-zip-iso21320-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/zip-rs/zip2",
+      "rationale": "🩹️ RECLASSIFIED (ticket SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION, shard A10, 2026-09-02). This entry was registered `third-party-library` on the strength of a real crate that does genuine codec work, but the mutation's expected RESULT is computed by this owner's own `🦀️.rs` -- its dispatch function's catch-all arm is `\"mutation kind {...} has no oracle implementation\"`, proof that every OTHER arm is an implementation, not a reading. Both halves of the comparison then descend from the same specification, so a shared misreading produces two agreeing wrong answers -- the one failure a differential oracle exists to catch. This is a `cross-semio-implementation`: a required SUPPLEMENT (metamorphic/inverse/round-trip evidence), never a substitute. A qualifying third-party reference for the mutation semantics is still owed. See $TICKET/📓️a10-oracle-honesty.md.\n\nThe reference ZIP reader/writer of the Rust ecosystem, and the only producer in this comparison that can honour a per-member compression method: ZipWriter::start_file takes the method explicitly, and ZipFile::compression/encrypted expose on read exactly the two wire properties ISO/IEC 21320-1 §4.1 and §4.4 constrain. That is what makes it the right independent reference for this subset rather than for ZIP in general. A distinct id and capability from both the plugin-level `zip` entry (zip-archive: plain create/read/remove evidence) and the sibling `🧱️base` entry (zip-2-0-mutate): a mutation vocabulary belongs to the subset that declares it, and reusing an approved oracle outside its surveyed capability fails the contract's oracle-capability-mismatch check.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "zip",
+        "implementation": "zip Rust ZIP reader/writer",
+        "version": "6"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "yauzl-zip-2-0-iso21320-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "yauzl",
+      "version": "3.4.0",
+      "engine": {
+        "family": "yauzl",
+        "implementation": "yauzl streaming ZIP reader",
+        "version": "3.4.0"
+      },
+      "capabilities": [
+        "zip-2-0-iso21320-mutate"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://github.com/thejoshwolfe/yauzl",
+      "rationale": "📖️ A READER, registered separately from this file's `cross-semio-implementation` entry (the Rust `zip`-crate-backed dispatcher that COMPUTES what a mutation should produce). yauzl 3.4.0 is a from-scratch streaming ZIP reader written in JavaScript, entirely independent of this repository's Rust `zip` reimplementation and of any other ecosystem this file uses. `yauzl.open` walks the real central directory (`zipfile.entryCount`, per-entry `fileName`/`compressedSize`/`compressionMethod`/`crc32`, `openReadStream` for the raw bytes) and `zipfile.comment` for the archive comment — directly witnessing every kind this subset's catalog mutates (entry add/remove/rename, entry data, compression method, archive comment). Verified against this subset's own committed `shared://🗜️.zip` before registration: `yauzl.open` reported all 20 real entries with their genuine compressed sizes and DEFLATE compression method (8).",
+      "comparisonProfiles": [
+        "semantic-zip-iso21320-v1"
+      ]
+    },
+    {
+      "id": "yazl-zip-2-0-iso21320-mutate-writer",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "yazl",
+      "version": "2.5.1",
+      "engine": {
+        "family": "yazl",
+        "implementation": "yazl streaming ZIP writer",
+        "version": "2.5.1"
+      },
+      "capabilities": [
+        "zip-2-0-mutate"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://github.com/thejoshwolfe/yazl",
+      "rationale": "📖️ A WRITER, the sibling this subset's already-registered `yauzl` reader needs: yauzl has no encoder at all, so it cannot be the generator of a `third-party-generated` fixture on its own. yazl is the same author's (thejoshwolfe) companion ZIP writer, same reader/writer split precedent as this ticket's own wav artifact (hound+riff). Every fixture this oracle generates is written by yazl's own ZipFile encoder and then independently RE-READ and verified (entries, compression method, comment) with the already-registered yauzl reader before being committed -- see 🔨️f2-gen-zip-fixtures.cjs in this ticket's folder for the live verification output.",
+      "comparisonProfiles": [
+        "exact-bytes-v1"
+      ]
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "zip-2-0-iso21320",
+      "capability": "zip-2-0-iso21320-mutate",
+      "standardDirectoryName": "🔖️2.0",
+      "subsetDirectoryName": "🌐️iso21320",
+      "vectors": [],
+      "kinds": [
+        "set-snapshot",
+        "set-archive-comment",
+        "add-stored-entry",
+        "add-deflated-entry",
+        "remove-entry",
+        "rename-entry",
+        "set-entry-data"
+      ]
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-zip-iso21320-v1",
+      "description": "ISO/IEC 21320-1 archives compared as a SET of members by name, uncompressed size and content digest, plus the archive-level comment as a normative field, plus the two ISO/IEC 21320-1 predicates per member: isoCompressionAllowed (the wire compression method is Stored or Deflate, §4.4) and encrypted (§4.1 forbids it). The predicate and not the method: §4.4 admits BOTH Stored and Deflate, so which of the two a writer picks for a given member is writer freedom — comparing the method itself would compare this repository's own canonical_compression_method policy against a copy of that policy planted in the oracle, which is the exact failure this platform exists to prevent. Entry order, compression level, timestamps, attributes and the extra field remain writer freedom as in the base archive profile.",
+      "arrays": "set",
+      "ignoreKeys": [
+        "compressedSize",
+        "compressionMethod",
+        "compressionLevel",
+        "modified",
+        "created",
+        "accessed",
+        "externalAttributes",
+        "internalAttributes",
+        "extraField",
+        "crcOrder",
+        "centralDirectoryOffset",
+        "byteLength",
+        "fileSize"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.zip",
+      "standard": "2.0",
+      "subset": "iso21320",
+      "standardDirectoryName": "🔖️2.0",
+      "subsetDirectoryName": "🌐️iso21320",
+      "mutations": [
+        {
+          "id": "add-deflated-entry",
+          "capability": "zip-2-0-iso21320-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-deflated-entry",
+            "bridgeVersion": 1,
+            "variant": "AddDeflatedEntry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "zip-2-0-iso21320-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "yauzl-zip-2-0-iso21320-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "add-stored-entry",
+          "capability": "zip-2-0-iso21320-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-stored-entry",
+            "bridgeVersion": 1,
+            "variant": "AddStoredEntry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "zip-2-0-iso21320-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "yauzl-zip-2-0-iso21320-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-entry",
+          "capability": "zip-2-0-iso21320-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-entry",
+            "bridgeVersion": 1,
+            "variant": "RemoveEntry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "zip-2-0-iso21320-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "yauzl-zip-2-0-iso21320-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "rename-entry",
+          "capability": "zip-2-0-iso21320-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-entry",
+            "bridgeVersion": 1,
+            "variant": "RenameEntry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "zip-2-0-iso21320-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "yauzl-zip-2-0-iso21320-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-archive-comment",
+          "capability": "zip-2-0-iso21320-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-archive-comment",
+            "bridgeVersion": 1,
+            "variant": "SetArchiveComment"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "zip-2-0-iso21320-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "yauzl-zip-2-0-iso21320-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-entry-data",
+          "capability": "zip-2-0-iso21320-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-entry-data",
+            "bridgeVersion": 1,
+            "variant": "SetEntryData"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "zip-2-0-iso21320-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "yauzl-zip-2-0-iso21320-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "zip-2-0-iso21320-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "zip-2-0-iso21320-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "yauzl-zip-2-0-iso21320-mutate-reader"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "add-deflated-entry-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.zip",
+        "standard": "2.0",
+        "subset": "iso21320"
+      },
+      "mutation": "add-deflated-entry",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-zip",
+          "path": "../🧫️fixtures/💨️add-deflated-entry-applied/⬅️before.zip",
+          "mediaType": "application/zip",
+          "sha256": "sha256:315973b7855ec6e2b6d14e3242516301f07e4f8451f059ede2dc346555299a77",
+          "bytes": 123
+        },
+        {
+          "role": "expected-after-zip",
+          "path": "../🧫️fixtures/💨️add-deflated-entry-applied/➡️after.zip",
+          "mediaType": "application/zip",
+          "sha256": "sha256:fd29505738263e6ca59cb1743af3583e5bcc59943885bc497ff6ada822682413",
+          "bytes": 276
+        }
+      ],
+      "generator": {
+        "oracle": "yazl-zip-2-0-iso21320-mutate-writer",
+        "packageVersion": "2.5.1",
+        "engineFamily": "yazl",
+        "engineVersion": "2.5.1",
+        "command": "bun 🔨️f2-gen-zip-fixtures.cjs (yazl.ZipFile write, yauzl.fromBuffer read-verify)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (yazl)",
+        "attribution": "Written by yazl 2.5.1's own ZipFile encoder; independently re-read and verified with yauzl 3.4.0 before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A new entry added with DEFLATE compression (yazl compress:true), ISO 21320's own permitted method 8."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "add-stored-entry-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.zip",
+        "standard": "2.0",
+        "subset": "iso21320"
+      },
+      "mutation": "add-stored-entry",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-zip",
+          "path": "../🧫️fixtures/📦️add-stored-entry-applied/⬅️before.zip",
+          "mediaType": "application/zip",
+          "sha256": "sha256:315973b7855ec6e2b6d14e3242516301f07e4f8451f059ede2dc346555299a77",
+          "bytes": 123
+        },
+        {
+          "role": "expected-after-zip",
+          "path": "../🧫️fixtures/📦️add-stored-entry-applied/➡️after.zip",
+          "mediaType": "application/zip",
+          "sha256": "sha256:7609006c6330277442d61bc08701e3faa6377f1a92962ad5f0dc44069f0e355a",
+          "bytes": 220
+        }
+      ],
+      "generator": {
+        "oracle": "yazl-zip-2-0-iso21320-mutate-writer",
+        "packageVersion": "2.5.1",
+        "engineFamily": "yazl",
+        "engineVersion": "2.5.1",
+        "command": "bun 🔨️f2-gen-zip-fixtures.cjs (yazl.ZipFile write, yauzl.fromBuffer read-verify)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (yazl)",
+        "attribution": "Written by yazl 2.5.1's own ZipFile encoder; independently re-read and verified with yauzl 3.4.0 before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A new entry added with STORED (no) compression (yazl compress:false), ISO 21320's own permitted method 0."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-entry-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.zip",
+        "standard": "2.0",
+        "subset": "iso21320"
+      },
+      "mutation": "remove-entry",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-zip",
+          "path": "../🧫️fixtures/➖️remove-entry-applied/⬅️before.zip",
+          "mediaType": "application/zip",
+          "sha256": "sha256:01f3a36e3ab681d2c15fcbd3c15d27f4b416ee107108d645ed871a9825aff720",
+          "bytes": 222
+        },
+        {
+          "role": "expected-after-zip",
+          "path": "../🧫️fixtures/➖️remove-entry-applied/➡️after.zip",
+          "mediaType": "application/zip",
+          "sha256": "sha256:315973b7855ec6e2b6d14e3242516301f07e4f8451f059ede2dc346555299a77",
+          "bytes": 123
+        }
+      ],
+      "generator": {
+        "oracle": "yazl-zip-2-0-iso21320-mutate-writer",
+        "packageVersion": "2.5.1",
+        "engineFamily": "yazl",
+        "engineVersion": "2.5.1",
+        "command": "bun 🔨️f2-gen-zip-fixtures.cjs (yazl.ZipFile write, yauzl.fromBuffer read-verify)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (yazl)",
+        "attribution": "Written by yazl 2.5.1's own ZipFile encoder; independently re-read and verified with yauzl 3.4.0 before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The entry file2.txt removed from the archive."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "rename-entry-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.zip",
+        "standard": "2.0",
+        "subset": "iso21320"
+      },
+      "mutation": "rename-entry",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-zip",
+          "path": "../🧫️fixtures/🏷️rename-entry-applied/⬅️before.zip",
+          "mediaType": "application/zip",
+          "sha256": "sha256:805c9646deac20e102a4d474ddf7f4b78d9aa15aa65474a3ec00a046f454e786",
+          "bytes": 119
+        },
+        {
+          "role": "expected-after-zip",
+          "path": "../🧫️fixtures/🏷️rename-entry-applied/➡️after.zip",
+          "mediaType": "application/zip",
+          "sha256": "sha256:72681ff0f9284b82e5d0559e8320009c64166d5c46d6adf0fe46da696fe0a271",
+          "bytes": 119
+        }
+      ],
+      "generator": {
+        "oracle": "yazl-zip-2-0-iso21320-mutate-writer",
+        "packageVersion": "2.5.1",
+        "engineFamily": "yazl",
+        "engineVersion": "2.5.1",
+        "command": "bun 🔨️f2-gen-zip-fixtures.cjs (yazl.ZipFile write, yauzl.fromBuffer read-verify)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (yazl)",
+        "attribution": "Written by yazl 2.5.1's own ZipFile encoder; independently re-read and verified with yauzl 3.4.0 before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The single entry's name changed old.txt -> new.txt, content untouched."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-archive-comment-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.zip",
+        "standard": "2.0",
+        "subset": "iso21320"
+      },
+      "mutation": "set-archive-comment",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-zip",
+          "path": "../🧫️fixtures/💬️set-archive-comment-applied/⬅️before.zip",
+          "mediaType": "application/zip",
+          "sha256": "sha256:315973b7855ec6e2b6d14e3242516301f07e4f8451f059ede2dc346555299a77",
+          "bytes": 123
+        },
+        {
+          "role": "expected-after-zip",
+          "path": "../🧫️fixtures/💬️set-archive-comment-applied/➡️after.zip",
+          "mediaType": "application/zip",
+          "sha256": "sha256:da9433cac2ed045b0da8a431a9e193901c70b6534e91da088cb6b614ea756fcf",
+          "bytes": 146
+        }
+      ],
+      "generator": {
+        "oracle": "yazl-zip-2-0-iso21320-mutate-writer",
+        "packageVersion": "2.5.1",
+        "engineFamily": "yazl",
+        "engineVersion": "2.5.1",
+        "command": "bun 🔨️f2-gen-zip-fixtures.cjs (yazl.ZipFile write, yauzl.fromBuffer read-verify)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (yazl)",
+        "attribution": "Written by yazl 2.5.1's own ZipFile encoder; independently re-read and verified with yauzl 3.4.0 before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The end-of-central-directory record's archive comment set."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-entry-data-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.zip",
+        "standard": "2.0",
+        "subset": "iso21320"
+      },
+      "mutation": "set-entry-data",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-zip",
+          "path": "../🧫️fixtures/✍️set-entry-data-applied/⬅️before.zip",
+          "mediaType": "application/zip",
+          "sha256": "sha256:315973b7855ec6e2b6d14e3242516301f07e4f8451f059ede2dc346555299a77",
+          "bytes": 123
+        },
+        {
+          "role": "expected-after-zip",
+          "path": "../🧫️fixtures/✍️set-entry-data-applied/➡️after.zip",
+          "mediaType": "application/zip",
+          "sha256": "sha256:b0a71ad6b5eca84dc863a2181cb98bf8cc8e223cd72a12b04d067bc09e371b2c",
+          "bytes": 123
+        }
+      ],
+      "generator": {
+        "oracle": "yazl-zip-2-0-iso21320-mutate-writer",
+        "packageVersion": "2.5.1",
+        "engineFamily": "yazl",
+        "engineVersion": "2.5.1",
+        "command": "bun 🔨️f2-gen-zip-fixtures.cjs (yazl.ZipFile write, yauzl.fromBuffer read-verify)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (yazl)",
+        "attribution": "Written by yazl 2.5.1's own ZipFile encoder; independently re-read and verified with yauzl 3.4.0 before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The single entry's content replaced, Hello -> World, name untouched."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.zip",
+        "standard": "2.0",
+        "subset": "iso21320"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-zip",
+          "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.zip",
+          "mediaType": "application/zip",
+          "sha256": "sha256:315973b7855ec6e2b6d14e3242516301f07e4f8451f059ede2dc346555299a77",
+          "bytes": 123
+        },
+        {
+          "role": "expected-after-zip",
+          "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.zip",
+          "mediaType": "application/zip",
+          "sha256": "sha256:ebe925bcdab7443c3cce31ae7c4ea752177b65a318c73b6bdd65785b05d401ac",
+          "bytes": 226
+        }
+      ],
+      "generator": {
+        "oracle": "yazl-zip-2-0-iso21320-mutate-writer",
+        "packageVersion": "2.5.1",
+        "engineFamily": "yazl",
+        "engineVersion": "2.5.1",
+        "command": "bun 🔨️f2-gen-zip-fixtures.cjs (yazl.ZipFile write, yauzl.fromBuffer read-verify)",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (yazl)",
+        "attribution": "Written by yazl 2.5.1's own ZipFile encoder; independently re-read and verified with yauzl 3.4.0 before commit",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Whole-archive snapshot replace: an unrelated valid archive substituted wholesale."
+    }
+  ]
+}

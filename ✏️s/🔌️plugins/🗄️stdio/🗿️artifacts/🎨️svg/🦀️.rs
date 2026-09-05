@@ -50,12 +50,12 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// replaces the old side-effecting `crate::artifacts::svg::engine::register()`, previously called
 /// unconditionally from `🗄️stdio`'s plugin root. Mirrors `🗒️note`/`🔋️model`'s own `declaration()`
 /// exemplars: `.composers(...)` reaches `⚙️engine`'s OWN `io_registry` (the real `ComposerEntry`
-/// rows — ✳️any + ✳️tiny + ✳️basic already folded into one list there) by its FULLY QUALIFIED path,
+/// rows — ✳️any + 🔬️tiny + 🔰️basic already folded into one list there) by its FULLY QUALIFIED path,
 /// never the bare `io_registry::entries()` shortcut that would silently rebind to this file's own
 /// shadowing `io_registry` module below (repo-wide "silent rebind" hazard this ticket tracks —
 /// that module returns `&[&ComposerEntry]`, a different type, and is left in place as orphaned
 /// dead code, matching `🔋️model`'s own precedent for its orphaned wrapper). Both subset dialects'
-/// `SubsetValidator`s (`✳️tiny`/`✳️basic`'s own `SvgTinyValidator`/`SvgBasicValidator`, previously
+/// `SubsetValidator`s (`🔬️tiny`/`🔰️basic`'s own `SvgTinyValidator`/`SvgBasicValidator`, previously
 /// registered via `⚙️engine::register()`'s two trailing `subsets::{tiny,basic}::io::register()`
 /// calls) are re-derived here via `subset_validator_entry_of::<…>()` rather than reused from those
 /// files' own private `validator_entry()` caches (neither is `pub`) — same erasure helper, fresh
@@ -81,7 +81,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .try_build()
 }
 
-/// 🛡️ Re-derives the ✳️tiny and ✳️basic subsets' `SubsetValidatorEntry`s — see `declaration()`'s own
+/// 🛡️ Re-derives the 🔬️tiny and 🔰️basic subsets' `SubsetValidatorEntry`s — see `declaration()`'s own
 /// doc for why this calls `subset_validator_entry_of` directly instead of reusing either subset's
 /// own private cache.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

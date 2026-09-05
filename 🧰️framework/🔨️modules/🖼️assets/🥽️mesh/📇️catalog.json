@@ -1,0 +1,28 @@
+{
+  "$schema": "./🧬️catalog.schema.json",
+  "version": 1,
+  "collections": [
+    {
+      "catalog": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/📇️catalog.json",
+      "root": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation",
+      "output": "🌱️metabolism"
+    }
+  ],
+  "entries": [
+    {
+      "url": "/mesh/🧊️hexagonal-cut-concrete-forest-left.glb",
+      "source": "♻️mit-bestand/🖼️asset/🏚️abbau-aufbau/◀️hexagonal-cut-concrete-forest-left.glb",
+      "path": "🏚️abbau-aufbau/👈️hexagonal-cut-concrete-forest-left.glb"
+    },
+    {
+      "url": "/mesh/🧊️hexagonal-cut-concrete-forest-right.glb",
+      "source": "♻️mit-bestand/🖼️asset/🏚️abbau-aufbau/▶️hexagonal-cut-concrete-forest-right.glb",
+      "path": "🏚️abbau-aufbau/👉️hexagonal-cut-concrete-forest-right.glb"
+    },
+    {
+      "url": "/mesh/🧊️placeholder.glb",
+      "source": "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧊️placeholder.glb",
+      "path": "🥽️mesh/🧊️placeholder.glb"
+    }
+  ]
+}

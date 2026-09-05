@@ -1,0 +1,473 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution. Since ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION split every s.note.note mutation out to a real, non-wildcard owning subset (ink/text/math/table/asset/block/canvas/document — see ../🔣️.json), this subset owns zero mutations of its own and declares no mutationManifests/mutationCatalogs/fixtureManifests here. What DOES stay here is the shared, artifact-wide oracle registry those eight subsets' fixtureManifests cite by id: the whole-document note-python-independent cross-implementation oracle, and the three carrier-family third-party-library oracles (dxf/quick-xml/lopdf) — semio.repository-test's loadOracleRegistry merges every subset's contribution into one flat registry, so a fixture anywhere can reference an oracle declared here without redeclaring it.",
+  "oracles": [
+    {
+      "id": "note-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "version": "",
+      "capabilities": [
+        "note-1-mutate",
+        "note-1-asset-mutate",
+        "note-1-block-mutate",
+        "note-1-canvas-mutate",
+        "note-1-document-mutate",
+        "note-1-ink-mutate",
+        "note-1-math-mutate",
+        "note-1-table-mutate",
+        "note-1-text-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "A second implementation of the `s.note.note` document and all thirty-three typed mutations, in Python, at `../../../../../🧪️tests/mutate-note-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json` (the document's members and the six block kinds), rules 1, 2, 3, 5 and 7 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` — including rule 5's `move-to-<container>` for re-parenting and rule 7's absolute `move`/`resize` against relative `drag` — and the thirty-three committed `(before, mutation, after, outcome)` vectors, which are the only statement of five things: that `drag-blocks` translates a named block AND ITS WHOLE SUBTREE; that `delete-asset` removes the `assets` MEMBER outright when it empties the table; that `insert-table-column` names the appended column by its spreadsheet letter; that the two `insert-table-*` verbs append BLANK cells, which is what makes their inverses exact against the committed trailing-blank vectors; and how `duplicate-blocks` places its copies. It imports nothing from this repository and transliterates none of its Rust. This registration SUPERSEDES the `note-document-mutation-semantics` no-oracle decision, whose argument was refuted in this same wave by `mutate-semio-drawing`, `mutate-semio-mesh` and the fifteen `📕️norm` references, all of which took Python second implementations over this same carrier. A THIRD-PARTY library was declined, not merely absent: no canvas or whiteboard format models a z-ORDERED tree whose leaves are six differently-shaped typed blocks reached by different verbs, and none of them reads this carrier. TWO FINDINGS THE REFERENCE MADE WHILE BEING WRITTEN. First, `duplicate-blocks` computes each copy's insertion index against the PRE-MUTATION list and does not re-base it as earlier copies land: its committed vector duplicates `blk-ink` (root index 1) and `blk-table` (root index 2) in one mutation, and the committed after-snapshot orders the root `blk-text, blk-ink, blk-ink-copy, blk-table-COPY, blk-table, …` — the second copy lands BEFORE its own source, where the singular `duplicate-block` places its copy after. The reference reproduces the committed order and names the behaviour rather than quietly re-basing it. Second, the committed grammar and the committed artifact disagree, which is why `identity-round-trip` is refused below. THREE SCENARIOS THE REFERENCE REFUSES BY CLAUSE, and says so in role. `edit-block-text` in both roles: a text block does not hold its paragraphs, it holds a composed child handle into an `s.stdio.semio@v1/text` document, and the committed vector's whole observable effect is that handle's `childId` moving to a content address of the child AFTER the new paragraphs are written — a function no document in this repository states. Every OTHER verb over that same block is implemented. And `identity-round-trip`: unlike its `✒️writer`, `🌿️vcs` and `🔌️wires` siblings this subset commits a REAL grammar rather than the repository-wide `payload = OCTET+` placeholder, and grammar and artifact disagree on three points — `block = text-block | image-block | shape-block` covers three of the SIX declared block kinds, leaving stroke, table, math and group with no production at all; `block-field` names `paragraphs` and `asset-id` while the artifact writes neither and writes `content=child_id=… target=\"…\"`, a flattened nested record nothing bounds; and `artifact-mark = \"note.note\"` is contradicted by the artifact's own first line `semio note.note.dsl v1`. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `note-1-mutate`'s external-oracle requirement for its 33-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "dxf-crate-note-ink-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "dxf",
+      "version": "0.6",
+      "source": {
+        "repository": "https://github.com/IxMilia/dxf-rs",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "dxf-rs",
+        "implementation": "dxf crate ASCII group-code reader",
+        "version": "0.6"
+      },
+      "capabilities": [
+        "note-1-mutate",
+        "note.carrier.dxf",
+        "note.block.ink.geometry"
+      ],
+      "comparisonProfiles": [
+        "semantic-note-dxf-ink-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://github.com/IxMilia/dxf-rs",
+      "rationale": "🖊️ THE CARRIER READER for note's DXF export, and already the qualifying reference `s.stdio.dxf@r12/✳️any` registers under `dxf-crate-r12-mutate` (this repository's `🔒️dependencies.json`) — reused here for the SAME crate reading the SAME `print_dxf_document` text this subset's own `NoteIntoDxf` serializer calls (`../🚪️io/📤️export/🧵️serializers/🗿️artifacts/📐️dxf/🔖️r12/✳️any/🦀️.rs`), so nothing new is being asked of `dxf` — only a second registration of an already-qualified crate against a second subset's vocabulary.\n\nWHAT IT CAN AND CANNOT WITNESS, read from the serializer's own body rather than assumed. `NoteIntoDxf::serialize` walks `flatten_blocks(&from.blocks)` and emits a `DxfEntity::Line` for every consecutive pair of an `Ink` block's OWN `points` array — nothing else: `if let NoteBlockNode::Ink { points, .. } = block { for pair in points.windows(2) { entities.push(DxfEntity::Line { start: [pair[0][0], pair[0][1], 0.0], end: [pair[1][0], pair[1][1], 0.0], layer: \"0\".into(), unknown_group_codes: Vec::new() }); } }`. Three consequences, each MEASURED against the serializer body rather than guessed: (1) `points` are written RAW, with no `block.x`/`block.y`/`rotation` transform applied anywhere in this function — so `move-block`, `drag-blocks`, `resize-block` and `move-block-to-container` produce byte-IDENTICAL DXF output regardless of the mutation; only `edit-block-ink-stroke` (which rewrites `points` itself) and existence changes (`create-block`/`delete-block`/`delete-blocks`/`duplicate-block`/`duplicate-blocks` when they add or remove an Ink block) are witnessable. (2) `flatten_blocks` is never filtered by `block_visible` here — unlike the SVG bridge below — so `change-block-visible`/`change-block-locked` leave the DXF output unchanged even though the block visually disappears in SVG; this is a genuine cross-carrier inconsistency in the subject, not a limitation of the oracle, and is reported rather than worked around. (3) the `Line` entity carries no width/color field, so `change-block-ink-width` is invisible here (it IS visible via the SVG carrier's stroke-width style). Every other block kind (Text/Image/Table/Math/Group) and every document-root setting (grid/snap/pencil/eraser/rename-note) never reaches this serializer at all.",
+      "productionDebt": {
+        "reachableFrom": [],
+        "owner": "✏️s/🔌️plugins/🗒️note",
+        "plan": "n/a — dxf is test-only everywhere it is linked"
+      }
+    },
+    {
+      "id": "quick-xml-note-drawing-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "quick-xml",
+      "version": "0.42",
+      "source": {
+        "repository": "https://github.com/tafia/quick-xml",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "quick-xml",
+        "implementation": "quick-xml pull-parser over the SVG 1.1 XML this subset exports",
+        "version": "0.42"
+      },
+      "capabilities": [
+        "note-1-mutate",
+        "note.carrier.svg",
+        "note.block.transform",
+        "note.block.text.content",
+        "note.block.visibility",
+        "note.block.ink.stroke-width",
+        "note.block.image.payload"
+      ],
+      "comparisonProfiles": [
+        "semantic-note-svg-drawing-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://github.com/tafia/quick-xml",
+      "rationale": "🎨️ THE RICHEST CARRIER for this subset. `NoteIntoSvg::serialize` (`../🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️.rs`) delegates to `note_document_to_svg`, a REAL bridge (never a hand-rolled string): `note_document_to_drawing_snapshot` (`../🚪️io/🦀️.rs`) walks `flatten_blocks(&document.blocks).filter(|b| block_visible(b))` — visibility IS honoured here, unlike the DXF path above — and wraps every surviving block's shape in `DrawNode::Group { transform: note_block_transform(block), .. }`, where `note_block_transform` reads the block's OWN `x`/`y`/`rotation` into a real translate+rotate transform. `write_svg_xml` then prints that transform as the `<g transform=\"…\">` this probe reads back with quick-xml.\n\nPER-BLOCK-KIND WITNESSABILITY, read from `draw_node_from_note_block`. `Ink` → a real `<path>` (stroke geometry AND `stroke-width`, so `edit-block-ink-stroke` and `change-block-ink-width` are BOTH witnessable here, the second only here). `Text` → a real `<text>` element holding the joined paragraph text (`edit-block-text` witnessable) BUT `font_size` is wired to the glyph's `y` COORDINATE (`at: SemioPoint2 { x: 0.0, y: *font_size }`), never to a font-size style property — `change-block-font-size` therefore moves the baseline rather than changing any rendered size, a genuine subject bug this oracle exposes rather than one it can quietly confirm, so it is registered as unsupported/excluded from this mutation despite being numerically visible. `Image` → a real `<image>` with the asset's own bytes when the referenced asset exists (`create-asset`/`replace-asset-payload`/`delete-asset` witnessable ONLY when a visible Image block references that asset key), else a generic outline rectangle. `Table`/`Math`/`Group` → ALWAYS a generic gray outline rectangle keyed only to `width`/`height` — cell/formula CONTENT is invisible by construction (`edit-block-math` and the four table row/column verbs are un-witnessable here because their diffs mutate `rows`/`columns`/`cells`, never `width`/`height` — confirmed by reading `insert-table-row`'s own diff). `change-block-locked`, `rename-block` and `rename-note` have no rendered representation anywhere in this bridge.",
+      "productionDebt": {
+        "reachableFrom": [],
+        "owner": "✏️s/🔌️plugins/🗒️note",
+        "plan": "n/a — quick-xml is test-only everywhere it is linked"
+      }
+    },
+    {
+      "id": "lopdf-note-text-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "source": {
+        "repository": "https://github.com/J-F-Liu/lopdf",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "lopdf",
+        "implementation": "lopdf content-stream text extraction",
+        "version": "0.44"
+      },
+      "capabilities": [
+        "note-1-mutate",
+        "note.carrier.pdf",
+        "note.document.title",
+        "note.block.text.content"
+      ],
+      "comparisonProfiles": [
+        "semantic-note-pdf-text-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://github.com/J-F-Liu/lopdf",
+      "rationale": "📄️ `lopdf` is ALREADY an approved test-oracle in this repository (`🔒️dependencies.json` — capabilities `pdf-edit`/`pdf-parse`, linked into the very crate `../../../../../../../../✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml` this registration reuses); this entry is a second registration of that crate against `note-1-mutate` rather than a new dependency.\n\n`NoteIntoPdf::serialize` (`../🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️.rs`) flattens the document's `title` (if any) followed by EVERY `Text` block's paragraph runs, space-joined, onto ONE `PdfPage.text` field of a single-page `PdfSnapshot` — real page geometry (`PageDoc`/`w`/`h`) and a real `encode_pdf`, never a stub. Two consequences read directly from that body: (1) `rename-note` IS witnessable here — the title is the first thing concatenated — even though it is invisible to both DXF and SVG. (2) exactly like the DXF path, `flatten_blocks` here is never filtered by `block_visible`, so `change-block-visible` on a Text block leaves the PDF text unchanged (the same cross-carrier inconsistency the DXF entry reports, independently confirmed on a second serializer). Position, block existence order beyond concatenation order, and every non-Text block kind (Ink/Image/Table/Math/Group) are invisible: the serializer never reads their fields at all.",
+      "productionDebt": {
+        "reachableFrom": [],
+        "owner": "✏️s/🔌️plugins/🗒️note",
+        "plan": "n/a — lopdf is test-only everywhere it is linked"
+      }
+    }
+  ],
+  "probes": [
+    {
+      "id": "note-dxf-project",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "dxf",
+      "version": "0.6",
+      "engine": {
+        "family": "dxf-rs",
+        "implementation": "dxf crate ascii reader/writer",
+        "version": "0.6"
+      },
+      "capabilities": [
+        "note.carrier.dxf"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
+        "dxf-project"
+      ],
+      "rationale": "Reads DXF R12 bytes with the dxf crate and reports every LINE entity's (start,end) pair it recovers — nothing downstream means anything if the carrier does not parse at all. Shells to ../🏭️generator/🦀️note-oracle-codec, the SAME standalone crate that writes this subset's dxf fixtures.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "📓️note-1-any-fixture-corpus.md — dxf-project run against creates-an-ink-block/after.dxf recovered lineCount 6 (3 Ink blocks × 2 segments each), matching the recipe's own point counts exactly.",
+        "criteria": [
+          {
+            "id": "reads-the-committed-corpus",
+            "met": true,
+            "detail": "dxf-project on creates-an-ink-block/after.dxf returns lineCount:6 with every (start,end) pair matching the recipe's authored points"
+          }
+        ],
+        "checkedAt": "2026-08-28"
+      }
+    },
+    {
+      "id": "note-svg-project",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "quick-xml",
+      "version": "0.42",
+      "engine": {
+        "family": "quick-xml",
+        "implementation": "quick-xml pull-parser/writer",
+        "version": "0.42"
+      },
+      "capabilities": [
+        "note.carrier.svg"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
+        "svg-project"
+      ],
+      "rationale": "Reads the SVG XML with quick-xml and reports every visible block's <g transform> + kind-specific content it recovers. Shells to ../🏭️generator/🦀️note-oracle-codec, the SAME standalone crate that writes this subset's svg fixtures.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "📓️note-1-any-fixture-corpus.md — svg-project run against creates-an-ink-block/after.svg recovered blockCount 9 (8 base blocks + 1 new Ink block), each with its own decomposed transform matrix.",
+        "criteria": [
+          {
+            "id": "reads-the-committed-corpus",
+            "met": true,
+            "detail": "svg-project on creates-an-ink-block/after.svg returns blockCount:9, transforms decomposed to [a,b,c,d,e,f] per block, text/path/image/rect content per kind"
+          }
+        ],
+        "checkedAt": "2026-08-28"
+      }
+    },
+    {
+      "id": "note-pdf-project",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "engine": {
+        "family": "lopdf",
+        "implementation": "lopdf content-stream reader/writer",
+        "version": "0.44"
+      },
+      "capabilities": [
+        "note.carrier.pdf"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
+        "pdf-project"
+      ],
+      "rationale": "Reads the PDF with lopdf and reports the Tj text operands it recovers from the single page's content stream. Shells to ../🏭️generator/🦀️note-oracle-codec, the SAME standalone crate that writes this subset's pdf fixtures.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "📓️note-1-any-fixture-corpus.md — pdf-project run against retitles-the-document/after.pdf recovered text:[\"Project Kickoff Notes Welcome to the note.\"], title concatenated with the Text block's own content exactly as NoteIntoPdf's body specifies.",
+        "criteria": [
+          {
+            "id": "reads-the-committed-corpus",
+            "met": true,
+            "detail": "pdf-project on retitles-the-document/after.pdf returns pageCount:1, text:[\"Project Kickoff Notes Welcome to the note.\"]"
+          }
+        ],
+        "checkedAt": "2026-08-28"
+      }
+    },
+    {
+      "id": "note-dxf-compare",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "dxf",
+      "version": "0.6",
+      "engine": {
+        "family": "dxf-rs",
+        "implementation": "dxf crate ascii reader/writer",
+        "version": "0.6"
+      },
+      "capabilities": [
+        "note.carrier.dxf"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
+        "dxf-compare"
+      ],
+      "rationale": "Reads EXPECTED and ACTUAL DXF bytes and reports whether the SET of (start,end) LINE pairs agree, naming every unmatched line — the semantic-note-dxf-ink-v1 comparison profile's own 'arrays: set' rule. Shells to ../🏭️generator/🦀️note-oracle-codec.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "📓️note-1-any-fixture-corpus.md — validated BOTH ways: redraws-the-sketch-polyline/after.dxf vs itself -> agree:true, differenceCount:0; before.dxf vs after.dxf (a real point edit) -> agree:false, differenceCount:4, naming the exact unmatched start/end pairs on both sides.",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "after.dxf vs after.dxf -> agree:true, differenceCount:0"
+          },
+          {
+            "id": "rejects-a-known-bad-pair-by-name",
+            "met": true,
+            "detail": "before.dxf vs after.dxf -> agree:false, differenceCount:4, differences name the exact (start,end) pairs that do not match on either side"
+          }
+        ],
+        "checkedAt": "2026-08-28"
+      }
+    },
+    {
+      "id": "note-svg-compare",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "quick-xml",
+      "version": "0.42",
+      "engine": {
+        "family": "quick-xml",
+        "implementation": "quick-xml pull-parser/writer",
+        "version": "0.42"
+      },
+      "capabilities": [
+        "note.carrier.svg"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
+        "svg-compare"
+      ],
+      "rationale": "Reads EXPECTED and ACTUAL SVG bytes and reports whether every block's transform + kind-specific content agree, in document order (semantic-note-svg-drawing-v1 declares no set-arrays, so order IS significant). Shells to ../🏭️generator/🦀️note-oracle-codec.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "📓️note-1-any-fixture-corpus.md — validated BOTH ways: thickens-the-sketch-stroke/before.svg vs itself -> agree:true, differenceCount:0; before.svg vs after.svg (stroke-width 2->5) -> agree:false, differenceCount:1, naming block[1].strokeWidth differs: Some(2.0) vs Some(5.0).",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "before.svg vs before.svg -> agree:true, differenceCount:0"
+          },
+          {
+            "id": "rejects-a-known-bad-pair-by-name",
+            "met": true,
+            "detail": "before.svg vs after.svg -> agree:false, differenceCount:1, differences: ['block[1].strokeWidth differs: Some(2.0) vs Some(5.0)']"
+          }
+        ],
+        "checkedAt": "2026-08-28"
+      }
+    },
+    {
+      "id": "note-pdf-compare",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "engine": {
+        "family": "lopdf",
+        "implementation": "lopdf content-stream reader/writer",
+        "version": "0.44"
+      },
+      "capabilities": [
+        "note.carrier.pdf"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
+        "pdf-compare"
+      ],
+      "rationale": "Reads EXPECTED and ACTUAL PDF bytes and reports whether the extracted page text agrees exactly. Shells to ../🏭️generator/🦀️note-oracle-codec.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "📓️note-1-any-fixture-corpus.md — validated BOTH ways: retitles-the-document/before.pdf vs itself -> agree:true, differenceCount:0; before.pdf vs after.pdf (title swap) -> agree:false, differenceCount:1, naming the exact expected/actual text strings.",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "before.pdf vs before.pdf -> agree:true, differenceCount:0"
+          },
+          {
+            "id": "rejects-a-known-bad-pair-by-name",
+            "met": true,
+            "detail": "before.pdf vs after.pdf -> agree:false, differenceCount:1, differences: ['page text differs: expected [\"Untitled Note Welcome to the note.\"] actual [\"Project Kickoff Notes Welcome to the note.\"]']"
+          }
+        ],
+        "checkedAt": "2026-08-28"
+      }
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "note-1-any-document",
+      "capability": "note-1-document-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "rename-note"
+      ],
+      "vectors": []
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-note-dxf-ink-v1",
+      "description": "note→DXF compared by the SET of Line entities' (start,end) coordinate pairs the Ink blocks produce. Layer name, group codes and entity order are writer freedom. Position/rotation/visibility/lock/width are NOT carried by this serializer and are out of this profile's scope by construction.",
+      "tolerance": 1e-09,
+      "arrays": "set",
+      "ignoreKeys": [
+        "layer",
+        "unknownGroupCodes"
+      ]
+    },
+    {
+      "id": "semantic-note-svg-drawing-v1",
+      "description": "note→SVG compared by each surviving (visible) block's kind, its <g transform=\"…\"> translate+rotate, and kind-specific content: Ink path d + stroke-width, Text joined value, Image mime+bytes when a referenced asset exists, Table/Math/Group outline width/height. Style ids, path command formatting and XML attribute order are writer freedom.",
+      "tolerance": 1e-09,
+      "ignoreKeys": [
+        "styleId",
+        "id"
+      ]
+    },
+    {
+      "id": "semantic-note-pdf-text-v1",
+      "description": "note→PDF compared by the single page's extracted text stream (title + space-joined Text block runs, in document order) and page width/height. Object numbers, xref layout, compression and PDF producer metadata are writer freedom.",
+      "ignoreKeys": [
+        "objectNumber",
+        "xrefOffset",
+        "producer",
+        "creationDate",
+        "modificationDate",
+        "documentId",
+        "fileSize",
+        "byteLength",
+        "generation",
+        "streamFilter",
+        "streamLength"
+      ]
+    }
+  ],
+  "mutationManifests": [],
+  "fixtureManifests": []
+}

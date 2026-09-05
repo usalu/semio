@@ -5,7 +5,7 @@
   "displayName": "Change Design Approach",
   "emoji": "🛋️",
   "aggregateVariant": "ChangeDesignApproach",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

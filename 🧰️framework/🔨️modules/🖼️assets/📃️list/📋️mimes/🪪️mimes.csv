@@ -1,0 +1,29 @@
+MIME,Extension,Name,FullName,Neutral,Dir,Kind
+application/octet-stream,.bin,Binary,Raw Binary Bytes,Bytes,💾️binary,stdio.binary
+text/plain,.txt,Text,Plain Text,TextDoc,📄️txt,stdio.txt
+application/xml,.xml,XML,Extensible Markup Language,XmlDoc,📰️xml,stdio.xml
+application/zlib,.zz,Deflate,Zlib Deflate Stream,DeflateStream,🗜️deflate,stdio.deflate
+application/zip,.zip,ZIP,Zip Archive,Archive,🎒️zip,stdio.zip
+application/json,.json,JSON,JavaScript Object Notation,Value,🔣️json,stdio.json
+text/csv,.csv,CSV,Comma-Separated Values,TableDoc,📊️csv,stdio.csv
+text/markdown,.md,Markdown,Markdown Text,TextDoc,📝️md,stdio.md
+model/gltf+json,.gltf,GLTF,GL Transmission Format JSON,MeshData,🧊️gltf,stdio.gltf
+model/obj,.obj,OBJ,Wavefront Object,MeshData,🧊️obj,stdio.obj
+model/stl,.stl,STL,Stereolithography,MeshData,🔺️stl,stdio.stl
+model/ply,.ply,PLY,Polygon File Format,MeshData,🧱️ply,stdio.ply
+application/vnd.las,.las,LAS,ASPRS LAS Point Cloud,MeshData,☁️las,stdio.las
+model/step,.step,STEP,ISO 10303 STEP,Brep,📐️step,stdio.step
+application/x-ifc,.ifc,IFC,Industry Foundation Classes,Brep,🏗️ifc,stdio.ifc
+image/vnd.dwg,.dwg,DWG,Drawing,DwgDrawing,🖊️dwg,stdio.dwg
+image/vnd.dxf,.dxf,DXF,Drawing Exchange Format,DwgDrawing,🖊️dxf,stdio.dxf
+image/svg+xml,.svg,SVG,Scalable Vector Graphics,DwgDrawing,🎨️svg,stdio.svg
+image/png,.png,PNG,Portable Network Graphics,RasterImage,📷️png,stdio.png
+image/jpeg,.jpg,JPEG,Joint Photographic Experts Group,RasterImage,📷️jpg,stdio.jpg
+image/gif,.gif,GIF,Graphics Interchange Format,RasterImage,🎞️gif,stdio.gif
+image/bmp,.bmp,BMP,Bitmap,RasterImage,🖼️bmp,stdio.bmp
+image/tiff,.tiff,TIFF,Tagged Image File Format,RasterImage,🖼️tiff,stdio.tiff
+application/pdf,.pdf,PDF,Portable Document Format,PageDoc,📄️pdf,stdio.pdf
+application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx,DOCX,Office Open XML Word,PageDoc,📜️docx,stdio.docx
+application/vnd.openxmlformats-officedocument.presentationml.presentation,.pptx,PPTX,Office Open XML PowerPoint,PageDoc,🎞️pptx,stdio.pptx
+application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx,XLSX,Office Open XML Excel,TableDoc,📕️xlsx,stdio.xlsx
+application/vnd.bcf+xml,.bcf,BCF,BIM Collaboration Format,Archive,💬️bcf,stdio.bcf

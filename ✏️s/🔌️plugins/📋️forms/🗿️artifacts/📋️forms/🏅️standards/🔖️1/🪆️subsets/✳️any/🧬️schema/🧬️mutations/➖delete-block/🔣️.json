@@ -5,7 +5,7 @@
   "displayName": "Delete Block",
   "emoji": "➖",
   "aggregateVariant": "DeleteBlock",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

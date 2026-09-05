@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 💻️ .storybook/story/puzzle/2d/Board.stories.tsx
-// Specs: Host the framework renderer's `Board2dHost` for Storybook + Playwright selection/camera/utility checks.
+// Specs: Host the framework renderer's `🖥️Board2dHost` for Storybook + Playwright selection/camera/utility checks.
 // Summary: Mounts the host directly against a `UiComponentSceneNode`; a story-local reducer emulates the `puzzle2d-play` Rust plugin's `applyBoardEvents`/selection/utility actions so the controlled scene ⇄️ session loop round-trips without a running dev server.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
@@ -224,7 +224,7 @@ function catalogRowsSubset(catalogs: Record<string, unknown>, slice: string, key
   return Array.isArray(rows) ? rows.map((row) => catalogRowSubset(row as Record<string, unknown>, keys)) : undefined;
 }
 
-/** @emoji 🗂️ Story-local mirror of `board_kind_catalogs_json` — the document owns `nodes`/`handles`/`edges`/`wires`, the board engine reads `nodeKinds`/`handleKinds`/`edgeKinds`/`wireKinds` and rejects any row still carrying the document's `label`, so each row is narrowed to the keys the engine reads and an absent slice is omitted rather than emitted empty. Keeping the fixtures document-shaped is deliberate: hand-writing engine-shaped catalogs here is what let the missing production translation go unnoticed. */
+/** @emoji 🗂️ Story-local mirror of `board_kind_catalogs_json` — the document owns `nodes`/`🐙️handles`/`edges`/`wires`, the board engine reads `nodeKinds`/`handleKinds`/`edgeKinds`/`wireKinds` and rejects any row still carrying the document's `label`, so each row is narrowed to the keys the engine reads and an absent slice is omitted rather than emitted empty. Keeping the fixtures document-shaped is deliberate: hand-writing engine-shaped catalogs here is what let the missing production translation go unnoticed. */
 function storyBoardKindCatalogsJson(fixture: StoryPuzzle2dFixture): string {
   const catalogs = fixture.meta?.kindCatalogs as Record<string, unknown> | undefined;
   if (!catalogs) return "{}";
@@ -296,7 +296,7 @@ const STORY_BRUSH_FIXTURE: StoryPuzzle2dFixture = {
   },
 };
 
-/** @emoji 🖌️ Same board as `STORY_BRUSH_FIXTURE` but `alpha` carries a second, unconnected `port` handle (`alpha:v1`) so the brush has a free slot to preview and commit into, and the `seed` node kind declares a handle template so `brush_compatible_candidates` has something to offer. Catalogs stay in the **document** `nodes`/`handles` shape — `storyBoardKindCatalogsJson` does the translation, exactly as production does. */
+/** @emoji 🖌️ Same board as `STORY_BRUSH_FIXTURE` but `alpha` carries a second, unconnected `port` handle (`alpha:v1`) so the brush has a free slot to preview and commit into, and the `seed` node kind declares a handle template so `brush_compatible_candidates` has something to offer. Catalogs stay in the **document** `nodes`/`🐙️handles` shape — `storyBoardKindCatalogsJson` does the translation, exactly as production does. */
 const STORY_BRUSH_OPEN_SLOT_FIXTURE: StoryPuzzle2dFixture = {
   schema: "puzzle.2d.fixture",
   camera: { x: 140, y: 60, zoom: 1 },

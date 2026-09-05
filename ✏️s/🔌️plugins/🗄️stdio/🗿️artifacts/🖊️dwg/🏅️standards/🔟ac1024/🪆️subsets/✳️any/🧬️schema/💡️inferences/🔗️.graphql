@@ -1,0 +1,15 @@
+# 💡️ Dwg (ac1024) inference schema over logical drawing concepts.
+
+type DwgInference {
+  structure: DwgStructure! @derived
+}
+
+type DwgStructure {
+  layerCount: Int!
+  entityCount: Int!
+  geometryValueCount: Int!
+  geometryIndexCount: Int!
+  textCharacterCount: Int!
+  codepage: Int!
+  version: String!
+}

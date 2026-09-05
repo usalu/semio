@@ -80,7 +80,7 @@ pub enum Puzzle2dNodeAnchor {
 }
 
 /// 🔵️ One node — `shape: "circle"` (default, radius-sized) or `"rectangle"` (width/height-sized);
-/// `handles` are its rim ports. Mirrors `infinite_board_port_directed::scene_json::FixtureJson`'s
+/// `🐙️handles` are its rim ports. Mirrors `infinite_board_port_directed::scene_json::FixtureJson`'s
 /// per-node fields, the canonical parser this fixture format round-trips through.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -523,31 +523,31 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.puzzle2d.standard.v1", "standard", "1", &[], None),
-        ("s.puzzle2d.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.puzzle2d.schema.artifact", "schema", "s.puzzle.puzzle2d", &[("schema", "s.puzzle.puzzle2d")], None),
-        ("s.puzzle2d.inference.artifact", "inference", "s.puzzle.puzzle2d.inference", &[("schema", "s.puzzle.puzzle2d.inference")], None),
-        ("s.puzzle2d.composer.native", "composer", "s.puzzle2d@1/*", &[("dialect", "s.puzzle2d@1/*")], None),
-        ("s.puzzle2d.composer.format-1", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
-        ("s.puzzle2d.composer.format-2", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
-        ("s.puzzle2d.composer.format-3", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
-        ("s.puzzle2d.composer.format-4", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.puzzle2d.composer.format-5", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
-        ("s.puzzle2d.composer.format-6", "composer", "s.stdio.dxf@r12/*", &[("dialect", "s.stdio.dxf@r12/*")], None),
-        ("s.puzzle2d.grammar.1", "grammar", "puzzle.puzzle2d", &[("grammar", "puzzle.puzzle2d")], None),
-        ("s.puzzle2d.grammar.2", "grammar", "puzzle.puzzle2d.op", &[("grammar", "puzzle.puzzle2d.op")], None),
-        ("s.puzzle2d.grammar.3", "grammar", "puzzle.puzzle2d.diff", &[("grammar", "puzzle.puzzle2d.diff")], None),
-        ("s.puzzle2d.grammar.4", "grammar", "2d.pack", &[("grammar", "2d.pack")], None),
-        ("s.puzzle2d.grammar.5", "grammar", "2d.spr", &[("grammar", "2d.spr")], None),
+        ("s.puzzle.puzzle2d.standard.v1", "standard", "1", &[], None),
+        ("s.puzzle.puzzle2d.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.puzzle.puzzle2d.schema.artifact", "schema", "s.puzzle.puzzle2d", &[("schema", "s.puzzle.puzzle2d")], None),
+        ("s.puzzle.puzzle2d.inference.artifact", "inference", "s.puzzle.puzzle2d.inference", &[("schema", "s.puzzle.puzzle2d.inference")], None),
+        ("s.puzzle.puzzle2d.composer.native", "composer", "s.puzzle.puzzle2d@1/*", &[("dialect", "s.puzzle.puzzle2d@1/*")], None),
+        ("s.puzzle.puzzle2d.composer.format-1", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
+        ("s.puzzle.puzzle2d.composer.format-2", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
+        ("s.puzzle.puzzle2d.composer.format-3", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.puzzle.puzzle2d.composer.format-4", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.puzzle.puzzle2d.composer.format-5", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
+        ("s.puzzle.puzzle2d.composer.format-6", "composer", "s.stdio.dxf@r12/*", &[("dialect", "s.stdio.dxf@r12/*")], None),
+        ("s.puzzle.puzzle2d.grammar.1", "grammar", "puzzle.puzzle2d", &[("grammar", "puzzle.puzzle2d")], None),
+        ("s.puzzle.puzzle2d.grammar.2", "grammar", "puzzle.puzzle2d.op", &[("grammar", "puzzle.puzzle2d.op")], None),
+        ("s.puzzle.puzzle2d.grammar.3", "grammar", "puzzle.puzzle2d.diff", &[("grammar", "puzzle.puzzle2d.diff")], None),
+        ("s.puzzle.puzzle2d.grammar.4", "grammar", "2d.pack", &[("grammar", "2d.pack")], None),
+        ("s.puzzle.puzzle2d.grammar.5", "grammar", "2d.spr", &[("grammar", "2d.spr")], None),
         // 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Puzzle2dPlayApp>>()` derives
         // its extension claim from `<Puzzle2dPlaySnapshot as store::ArtifactDsl>::EXTENSION`
         // (`…/🧬️mutations/🦀️.rs`, the editor's real `Snapshot` type), which is
         // `"puzzle2d-play"`, not the base `Puzzle2dSnapshot`'s `"puzzle2d"`.
-        ("s.puzzle2d.codec.document-1", "codec", "puzzle.2d.fixture:puzzle2d-play", &[("codec", "puzzle.2d.fixture"), ("extension", "puzzle2d-play")], None),
-        ("s.puzzle2d.localization.en", "localization", "2D Puzzle", &[], Some(("en", "2D Puzzle"))),
-        ("s.puzzle2d.localization.de", "localization", "2D-Puzzle", &[], Some(("de", "2D-Puzzle"))),
+        ("s.puzzle.puzzle2d.codec.document-1", "codec", "puzzle.2d.fixture:puzzle2d-play", &[("codec", "puzzle.2d.fixture"), ("codec-extension", "17:puzzle.2d.fixture:puzzle2d-play")], None),
+        ("s.puzzle.puzzle2d.localization.en", "localization", "2D Puzzle", &[], Some(("en", "2D Puzzle"))),
+        ("s.puzzle.puzzle2d.localization.de", "localization", "2D-Puzzle", &[], Some(("de", "2D-Puzzle"))),
     ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.puzzle2d")?);
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.puzzle.puzzle2d")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
         for (namespace, value) in *claims {

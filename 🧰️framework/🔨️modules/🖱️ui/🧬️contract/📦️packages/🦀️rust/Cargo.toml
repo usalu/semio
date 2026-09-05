@@ -15,6 +15,10 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
+[[test]]
+name = "typegen_export"
+path = "tests/🧬️typegen_export.rs"
+
 [features]
 default = []
 # 🧬️ TypeScript mirror rendered from the contract's versioned owned schema metadata.

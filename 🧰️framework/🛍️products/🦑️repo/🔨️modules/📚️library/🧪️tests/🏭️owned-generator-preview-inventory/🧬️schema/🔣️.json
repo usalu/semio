@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "contract", "ownedGeneratorIds", "previewRoutes", "previewLimits", "compilerInputAuthorities", "compilerManifest"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contract": { "const": "owned-generator-preview-inventory-v1" },
+    "previewLimits": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["limits", "valid"],
+        "properties": { "limits": { "type": "object" }, "valid": { "type": "boolean" } }
+      }
+    },
+    "compilerInputAuthorities": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["authority", "valid"],
+        "properties": { "authority": { "type": "object" }, "valid": { "type": "boolean" } }
+      }
+    },
+    "compilerManifest": {
+      "type": "object", "additionalProperties": false, "required": ["version", "contractId", "layoutSha256", "inputs", "outputs"],
+      "properties": {
+        "version": { "const": 1 }, "contractId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }, "layoutSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "inputs": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["path", "bytes", "sha256"],
+            "properties": { "path": { "type": "string" }, "bytes": { "type": "integer", "minimum": 0 }, "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" } }
+          }
+        },
+        "outputs": { "type": "array" }
+      }
+    },
+    "previewRoutes": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["target", "previewTarget", "previewArguments", "valid"],
+        "properties": { "target": { "type": "string" }, "previewTarget": { "type": "string" }, "previewArguments": { "type": "array", "items": { "type": "string" } }, "valid": { "type": "boolean" } }
+      }
+    },
+    "ownedGeneratorIds": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z]+(?:-[a-z]+)*$" }
+    }
+  }
+}

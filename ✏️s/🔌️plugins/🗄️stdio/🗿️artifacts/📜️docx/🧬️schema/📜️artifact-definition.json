@@ -41,15 +41,35 @@
       "id": "s.stdio.docx.standard.ecma-376.representation.document",
       "standard": "s.stdio.docx.standard.ecma-376",
       "representation": "document",
-      "mimes": ["application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
-      "extensions": [".docx"],
+      "mimes": [
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      ],
+      "extensions": [
+        ".docx"
+      ],
       "is_binary": true,
       "aliases": [],
       "neutral": true,
       "status": "declared"
     }
   ],
-  "codecs": [],
+  "codecs": [
+    {
+      "id": "s.stdio.docx.standard.ecma-376.codec.native-document.v1",
+      "status": "implemented",
+      "from": "s.stdio.docx.standard.ecma-376.dialect.source",
+      "to": "s.stdio.docx.standard.ecma-376.dialect.source",
+      "executable_registration": true,
+      "native_factory": {
+        "factory_id": "stdio.native.docx.v1",
+        "artifact_kind": "stdio.docx",
+        "document_schema": "stdio.docx",
+        "extension": "docx",
+        "pack_schema_hash": "bc026d9b89ea95dc2ecf4570b51ddcb8b183caf0d84eaf397570f2926a13bbba",
+        "runtime_capability_id": "s.stdio.docx.standard.ecma-376.codec.codec-stdio-docx-extension-docx.v1"
+      }
+    }
+  ],
   "mutations": [],
   "inferences": [],
   "resources": [
@@ -84,22 +104,22 @@
   ],
   "runtime_capabilities": [
     {
-      "id": "s.stdio.docx.runtime.codec.codec-stdio-docx-extension-docx.v1",
+      "id": "s.stdio.docx.standard.ecma-376.codec.codec-stdio-docx-extension-docx.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec:stdio.docx|extension:docx",
+      "descriptor": "runtime-capability:codec:codec-extension:10:stdio.docx:docx|codec:stdio.docx",
       "claims": [
         {
           "namespace": "codec",
           "value": "stdio.docx"
         },
         {
-          "namespace": "extension",
-          "value": "docx"
+          "namespace": "codec-extension",
+          "value": "10:stdio.docx:docx"
         }
       ]
     },
     {
-      "id": "s.stdio.docx.runtime.composer.dialect-s-stdio-docx-ecma-376.v1",
+      "id": "s.stdio.docx.composer.dialect-s-stdio-docx-ecma-376.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.docx@ecma-376/*",
       "claims": [
@@ -110,7 +130,7 @@
       ]
     },
     {
-      "id": "s.stdio.docx.runtime.composer.dialect-s-stdio-docx-ecma-376-strict.v1",
+      "id": "s.stdio.docx.composer.dialect-s-stdio-docx-ecma-376-strict.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.docx@ecma-376/strict",
       "claims": [
@@ -121,7 +141,7 @@
       ]
     },
     {
-      "id": "s.stdio.docx.runtime.composer.dialect-s-stdio-docx-ecma-376-transitional.v1",
+      "id": "s.stdio.docx.composer.dialect-s-stdio-docx-ecma-376-transitional.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.docx@ecma-376/transitional",
       "claims": [
@@ -132,7 +152,7 @@
       ]
     },
     {
-      "id": "s.stdio.docx.runtime.grammar.grammar-stdio-docx.v1",
+      "id": "s.stdio.docx.grammar.grammar-stdio-docx.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.docx",
       "claims": [
@@ -143,7 +163,7 @@
       ]
     },
     {
-      "id": "s.stdio.docx.runtime.grammar.grammar-stdio-docx-diff.v1",
+      "id": "s.stdio.docx.grammar.grammar-stdio-docx-diff.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.docx.diff",
       "claims": [
@@ -154,7 +174,7 @@
       ]
     },
     {
-      "id": "s.stdio.docx.runtime.grammar.grammar-stdio-docx-op.v1",
+      "id": "s.stdio.docx.grammar.grammar-stdio-docx-op.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.docx.op",
       "claims": [
@@ -165,7 +185,7 @@
       ]
     },
     {
-      "id": "s.stdio.docx.runtime.grammar.grammar-stdio-docx-pack.v1",
+      "id": "s.stdio.docx.grammar.grammar-stdio-docx-pack.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.docx.pack",
       "claims": [
@@ -176,7 +196,7 @@
       ]
     },
     {
-      "id": "s.stdio.docx.runtime.grammar.grammar-stdio-docx-spr.v1",
+      "id": "s.stdio.docx.grammar.grammar-stdio-docx-spr.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.docx.spr",
       "claims": [
@@ -187,7 +207,7 @@
       ]
     },
     {
-      "id": "s.stdio.docx.runtime.inference.schema-s-stdio-docx-inference.v1",
+      "id": "s.stdio.docx.inference.schema-s-stdio-docx-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:s.stdio.docx.inference",
       "claims": [
@@ -198,7 +218,7 @@
       ]
     },
     {
-      "id": "s.stdio.docx.runtime.representation.mime-application-vnd-openxmlformats-officedocument-wordprocessingml-document-extension-docx.v1",
+      "id": "s.stdio.docx.standard.ecma-376.representation.mime-application-vnd-openxmlformats-officedocument-wordprocessingml-document-extension-docx",
       "category": "representation",
       "descriptor": "runtime-capability:representation:mime:application/vnd.openxmlformats-officedocument.wordprocessingml.document|extension:.docx",
       "claims": [
@@ -213,7 +233,7 @@
       ]
     },
     {
-      "id": "s.stdio.docx.runtime.schema.schema-s-stdio-docx.v1",
+      "id": "s.stdio.docx.schema.schema-s-stdio-docx.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.docx",
       "claims": [
@@ -224,23 +244,23 @@
       ]
     },
     {
-      "id": "s.stdio.docx.runtime.subset-validator.dialect-s-stdio-docx-ecma-376-strict.v1",
+      "id": "s.stdio.docx.subset-validator.validated-dialect-s-stdio-docx-ecma-376-strict.v1",
       "category": "subset-validator",
-      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.docx@ecma-376/strict",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.docx@ecma-376/strict",
       "claims": [
         {
-          "namespace": "dialect",
+          "namespace": "validated-dialect",
           "value": "s.stdio.docx@ecma-376/strict"
         }
       ]
     },
     {
-      "id": "s.stdio.docx.runtime.subset-validator.dialect-s-stdio-docx-ecma-376-transitional.v1",
+      "id": "s.stdio.docx.subset-validator.validated-dialect-s-stdio-docx-ecma-376-transitional.v1",
       "category": "subset-validator",
-      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.docx@ecma-376/transitional",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.docx@ecma-376/transitional",
       "claims": [
         {
-          "namespace": "dialect",
+          "namespace": "validated-dialect",
           "value": "s.stdio.docx@ecma-376/transitional"
         }
       ]

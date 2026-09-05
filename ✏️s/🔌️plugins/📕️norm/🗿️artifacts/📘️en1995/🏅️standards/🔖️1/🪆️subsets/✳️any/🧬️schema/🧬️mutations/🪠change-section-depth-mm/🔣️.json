@@ -5,7 +5,7 @@
   "displayName": "Change Section Depth Mm",
   "emoji": "🪠",
   "aggregateVariant": "ChangeSectionDepthMm",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

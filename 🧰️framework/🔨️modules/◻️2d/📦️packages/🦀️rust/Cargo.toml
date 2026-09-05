@@ -27,7 +27,7 @@ serde = ["dep:serde"]
 semio-framework-os-kernel = { workspace = true }
 # 🔢️ `⚙️engine`, mounted into this crate via `#[path]`, content-addresses its cache keys with
 # `semio_framework_hash::hash` — the dep travels with that mount.
-semio-framework-hash = { path = "../../../🔢️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 # 🪶 Optional — gated behind the `serde` feature above. See the `[features]` note and
 # `⚙️engine/🦀️.rs`'s `PathSegment` doc comment.
 serde = { workspace = true, optional = true }

@@ -1067,26 +1067,26 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     use crate::artifacts::definition::{CapabilitySpec as C, ClaimSpec as Q, LocalizationSpec as L};
     const S: &[Q] = &[Q { namespace: "schema", value: "s.norm.iso16757" }];
     const I: &[Q] = &[Q { namespace: "schema", value: "s.norm.iso16757.inference" }];
-    const M: &[Q] = &[Q { namespace: "dialect", value: "s.iso16757@1/*" }];
-    const K: &[Q] = &[Q { namespace: "codec", value: "semio.norm.iso16757/v1" }, Q { namespace: "extension", value: "iso16757" }];
+    const M: &[Q] = &[Q { namespace: "dialect", value: "s.norm.iso16757@1/*" }];
+    const K: &[Q] = &[Q { namespace: "codec", value: "semio.norm.iso16757/v1" }, Q { namespace: "codec-extension", value: "22:semio.norm.iso16757/v1:iso16757" }];
     const EN: &[L] = &[L { locale: "en", text: "ISO 16757 building-services product catalogue exchange" }];
     const DE: &[L] = &[L { locale: "de", text: "ISO 16757 Austausch von Produktdaten der technischen Gebäudeausrüstung" }];
     const ROWS: &[C] = &[
-        C { identity: "s.iso16757.standard.v1", kind: "standard", descriptor: "v1", claims: &[], localizations: &[] },
-        C { identity: "s.iso16757.standard.v1.profile.any", kind: "profile", descriptor: "any", claims: &[], localizations: &[] },
-        C { identity: "s.iso16757.schema.artifact", kind: "schema", descriptor: "s.norm.iso16757", claims: S, localizations: &[] },
-        C { identity: "s.iso16757.inference.outline", kind: "inference", descriptor: "s.norm.iso16757.inference", claims: I, localizations: &[] },
-        C { identity: "s.iso16757.composer.any", kind: "composer", descriptor: "s.iso16757@1/*", claims: M, localizations: &[] },
-        C { identity: "s.iso16757.grammar.document", kind: "grammar", descriptor: "iso16757.document", claims: &[Q { namespace: "grammar", value: "iso16757.document" }], localizations: &[] },
-        C { identity: "s.iso16757.grammar.op", kind: "grammar", descriptor: "iso16757.op", claims: &[Q { namespace: "grammar", value: "iso16757.op" }], localizations: &[] },
-        C { identity: "s.iso16757.grammar.diff", kind: "grammar", descriptor: "iso16757.diff", claims: &[Q { namespace: "grammar", value: "iso16757.diff" }], localizations: &[] },
-        C { identity: "s.iso16757.grammar.pack", kind: "grammar", descriptor: "iso16757.pack", claims: &[Q { namespace: "grammar", value: "iso16757.pack" }], localizations: &[] },
-        C { identity: "s.iso16757.grammar.spr", kind: "grammar", descriptor: "iso16757.spr", claims: &[Q { namespace: "grammar", value: "iso16757.spr" }], localizations: &[] },
-        C { identity: "s.iso16757.codec.document.v1", kind: "codec", descriptor: "semio.norm.iso16757/v1:iso16757", claims: K, localizations: &[] },
-        C { identity: "s.iso16757.localization.en", kind: "localization", descriptor: "ISO 16757 building-services product catalogue exchange", claims: &[], localizations: EN },
-        C { identity: "s.iso16757.localization.de", kind: "localization", descriptor: "ISO 16757 Austausch von Produktdaten der technischen Gebäudeausrüstung", claims: &[], localizations: DE },
+        C { identity: "s.norm.iso16757.standard.v1", kind: "standard", descriptor: "v1", claims: &[], localizations: &[] },
+        C { identity: "s.norm.iso16757.standard.v1.profile.any", kind: "profile", descriptor: "any", claims: &[], localizations: &[] },
+        C { identity: "s.norm.iso16757.schema.artifact", kind: "schema", descriptor: "s.norm.iso16757", claims: S, localizations: &[] },
+        C { identity: "s.norm.iso16757.inference.outline", kind: "inference", descriptor: "s.norm.iso16757.inference", claims: I, localizations: &[] },
+        C { identity: "s.norm.iso16757.composer.any", kind: "composer", descriptor: "s.norm.iso16757@1/*", claims: M, localizations: &[] },
+        C { identity: "s.norm.iso16757.grammar.document", kind: "grammar", descriptor: "iso16757.document", claims: &[Q { namespace: "grammar", value: "iso16757.document" }], localizations: &[] },
+        C { identity: "s.norm.iso16757.grammar.op", kind: "grammar", descriptor: "iso16757.op", claims: &[Q { namespace: "grammar", value: "iso16757.op" }], localizations: &[] },
+        C { identity: "s.norm.iso16757.grammar.diff", kind: "grammar", descriptor: "iso16757.diff", claims: &[Q { namespace: "grammar", value: "iso16757.diff" }], localizations: &[] },
+        C { identity: "s.norm.iso16757.grammar.pack", kind: "grammar", descriptor: "iso16757.pack", claims: &[Q { namespace: "grammar", value: "iso16757.pack" }], localizations: &[] },
+        C { identity: "s.norm.iso16757.grammar.spr", kind: "grammar", descriptor: "iso16757.spr", claims: &[Q { namespace: "grammar", value: "iso16757.spr" }], localizations: &[] },
+        C { identity: "s.norm.iso16757.codec.document.v1", kind: "codec", descriptor: "semio.norm.iso16757/v1:iso16757", claims: K, localizations: &[] },
+        C { identity: "s.norm.iso16757.localization.en", kind: "localization", descriptor: "ISO 16757 building-services product catalogue exchange", claims: &[], localizations: EN },
+        C { identity: "s.norm.iso16757.localization.de", kind: "localization", descriptor: "ISO 16757 Austausch von Produktdaten der technischen Gebäudeausrüstung", claims: &[], localizations: DE },
     ];
-    crate::artifacts::definition::assemble_definition("s.iso16757", ROWS)
+    crate::artifacts::definition::assemble_definition("s.norm.iso16757", ROWS)
 }
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {

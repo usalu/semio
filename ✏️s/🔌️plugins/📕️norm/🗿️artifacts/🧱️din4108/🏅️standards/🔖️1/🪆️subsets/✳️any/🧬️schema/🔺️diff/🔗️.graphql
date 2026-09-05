@@ -1,0 +1,46 @@
+# 🧬️ Din4108 diff schema — sparse field delta.
+
+type Din4108Diff {
+  artifact: Din @state(class: ARTIFACT)
+  category: String @state(class: ARTIFACT)
+  layers: Din @state(class: ARTIFACT)
+  climate: String @state(class: ARTIFACT)
+  airtightnessN50: Float @state(class: ARTIFACT)
+  psiTimesLSum: Float @state(class: ARTIFACT)
+  rhInt: Float @state(class: ARTIFACT)
+  catalogId: String @state(class: ARTIFACT)
+  materialId: String @state(class: ARTIFACT)
+  airtightnessClass: String @state(class: ARTIFACT)
+  tIntC: Float @state(class: ARTIFACT)
+  solarAbsorptance: Float @state(class: ARTIFACT)
+  irradianceWM2: Float @state(class: ARTIFACT)
+  moistureMuExterior: Float @state(class: ARTIFACT)
+  moistureMuInterior: Float @state(class: ARTIFACT)
+  envelopeAreaM2: Float @state(class: ARTIFACT)
+  bb2DetailsConform: Boolean @state(class: ARTIFACT)
+  applicationType: String @state(class: ARTIFACT)
+  declaredApplicationClass: String @state(class: ARTIFACT)
+  selectedCheckIndex: Int @state(class: PRESENCE)
+}
+
+type Din4108Artifact {
+  category: String
+  layers: [String!]!
+  climate: String
+  airtightnessN50: Float
+  psiTimesLSum: Float
+  rhInt: Float
+  catalogId: String
+  materialId: String
+  airtightnessClass: String
+  tIntC: Float
+  solarAbsorptance: Float
+  irradianceWM2: Float
+  moistureMuExterior: Float
+  moistureMuInterior: Float
+  envelopeAreaM2: Float
+  bb2DetailsConform: Boolean
+  applicationType: String
+  declaredApplicationClass: String
+  selectedCheckIndex: Int
+}

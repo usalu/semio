@@ -1,0 +1,39 @@
+# 🧬️ SemioBrepMutation facet mirror — see the `🦀️.rs` sibling for the real source of
+# truth. SMO's approved 13-verb brep vocabulary; `create-loop`/`delete-loop` deliberately absent.
+
+enum BrepMutationKind {
+  CREATE_VERTEX
+  DELETE_VERTEX
+  CREATE_EDGE
+  DELETE_EDGE
+  CREATE_FACE
+  DELETE_FACE
+  CREATE_SHELL
+  DELETE_SHELL
+  CREATE_SOLID
+  DELETE_SOLID
+  REPLACE_CURVE
+  REPLACE_SURFACE
+  MOVE_VERTEX
+}
+
+type SemioBrepMutation {
+  mutation: BrepMutationKind!
+  id: String
+  vertexId: String
+  edgeId: String
+  faceId: String
+  point: SemioPoint3
+  newPoint: SemioPoint3
+  startVertex: String
+  endVertex: String
+  curve: BrepCurve
+  newCurve: BrepCurve
+  outerLoop: String
+  innerLoops: [String!]
+  surface: BrepSurface
+  newSurface: BrepSurface
+  orientation: Boolean
+  faces: [BrepShellFace!]
+  shells: [BrepSolidShell!]
+}

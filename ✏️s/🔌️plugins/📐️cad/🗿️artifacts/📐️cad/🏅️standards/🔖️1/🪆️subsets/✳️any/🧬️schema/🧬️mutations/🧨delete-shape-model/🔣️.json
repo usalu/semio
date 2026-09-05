@@ -5,7 +5,7 @@
   "displayName": "Delete Shape Model",
   "emoji": "🧨",
   "aggregateVariant": "DeleteShapeModel",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "delete-shape-model",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

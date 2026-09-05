@@ -1,5 +1,0 @@
-{
-  "mutation": "changeShotShape",
-  "id": "shot-wide",
-  "new_shape": "ellipse"
-}

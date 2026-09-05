@@ -5,7 +5,7 @@
   "displayName": "Edit Paint Layer",
   "emoji": "🎨️",
   "aggregateVariant": "EditPaintLayer",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

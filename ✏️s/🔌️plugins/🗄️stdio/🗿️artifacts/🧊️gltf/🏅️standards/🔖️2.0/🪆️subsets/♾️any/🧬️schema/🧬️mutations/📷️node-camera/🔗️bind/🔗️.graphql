@@ -1,0 +1,6 @@
+# bind-node-camera mutation facet.
+input GltfBindNodeCameraPayloadV1 {
+  node: Int!
+  camera: Int!
+}
+type GltfBindNodeCameraMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

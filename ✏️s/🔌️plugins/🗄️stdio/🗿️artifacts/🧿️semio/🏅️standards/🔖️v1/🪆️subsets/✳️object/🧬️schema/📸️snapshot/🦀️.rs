@@ -341,7 +341,7 @@ impl store::ArtifactPack for SemioObjectSnapshot {
 
 //#region 🌉️ExternalCodecBridge
 /// 📤️ This subset's own `#[value(rename_all = "camelCase")]`-shaped structural JSON projection of
-/// `s.stdio.semio.object` — the shape `mutate-semio-object` compares under `ordered-json-v1`,
+/// `s.stdio.semio.object` — the shape `🪁️mutate-semio-object` compares under `ordered-json-v1`,
 /// derived from the snapshot type's own hand-written `ToValue` impl above (§ValueCodec) rather
 /// than hand-written a second time in the adapter, where it could drift away from the type it
 /// claims to project. This is the bridge that makes the CHILD slots reachable at all — `ToValue`
@@ -355,7 +355,7 @@ pub fn encode_semio_object_snapshot_json(snapshot: &SemioObjectSnapshot) -> Stri
 
 /// 📥️ The `pack::from_json_str` inverse of [`encode_semio_object_snapshot_json`] — decodes the
 /// committed `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
-/// specification vectors into real [`SemioObjectSnapshot`] values, so `mutate-semio-object`'s
+/// specification vectors into real [`SemioObjectSnapshot`] values, so `🪁️mutate-semio-object`'s
 /// adapter reads the committed fixture instead of re-declaring it as a Rust literal beside it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_object_snapshot_json(text: &str) -> Result<SemioObjectSnapshot, String> {
@@ -366,7 +366,7 @@ pub fn decode_semio_object_snapshot_json(text: &str) -> Result<SemioObjectSnapsh
 //#region 🔖️Wire
 /// 📝️ Parses `s.stdio.semio.object` DSL text into a [`SemioObjectSnapshot`] — a named pass-through of this snapshot's own
 /// `store::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
-/// crate, so `mutate-semio-object`'s `identity-round-trip` scenario reaches the real committed
+/// crate, so `🪁️mutate-semio-object`'s `identity-round-trip` scenario reaches the real committed
 /// artifact (`../../📚️examples/📦️crate/🖼️assets/🗣️.dsl.semio`) through this instead.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_object_dsl(text: &str) -> Result<SemioObjectSnapshot, String> {

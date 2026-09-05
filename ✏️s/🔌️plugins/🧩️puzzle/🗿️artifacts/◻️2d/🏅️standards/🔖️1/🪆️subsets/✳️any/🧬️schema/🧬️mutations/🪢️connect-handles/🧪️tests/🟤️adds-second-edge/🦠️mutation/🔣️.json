@@ -1,0 +1,17 @@
+{
+  "mutation": "connectHandles",
+  "id": "edge-2",
+  "source": "handle-spare",
+  "target": "handle-2",
+  "edgeKind": "edge-kind-b",
+  "gap": 0.0,
+  "shift": 0.0,
+  "rise": 0.0,
+  "rotation": 0.0,
+  "turn": 0.0,
+  "tilt": 0.0,
+  "x": 0.0,
+  "y": 0.0,
+  "sourceTip": null,
+  "targetTip": null
+}

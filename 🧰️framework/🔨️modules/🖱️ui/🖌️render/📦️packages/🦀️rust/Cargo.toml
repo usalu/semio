@@ -1,0 +1,36 @@
+[package]
+name = "semio-framework-ui-render"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Backend-neutral GPU UI core: transient elements, taffy layout, coherent frame snapshots, and the RenderPacket every graphics backend replays"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-render"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[features]
+default = []
+# 🧪️ Offscreen readback + forced device loss, for the cross-backend pixel conformance suite. Never on
+# in a shipping build — it exists so four hand-written backends can be proven to agree.
+backend-testing = []
+
+[dependencies]
+ui_styling = { path = "../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-geometry = { path = "../../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+bytemuck = { version = "1.24.0", features = ["derive"] }
+taffy = { version = "0.9", default-features = false, features = ["std", "flexbox", "grid", "taffy_tree"] }
+# 🖋️ CPU-side text only: shaping/fallback (parley) and glyph rasterization into our own atlas (swash).
+# The GPU copy of that atlas belongs to whichever backend is active — this crate never touches a device.
+parley = { version = "0.5.0" }
+swash = { version = "0.2.6", default-features = false, features = ["render", "std"] }
+
+[dev-dependencies]
+serde_json = { version = "1.0.140" }

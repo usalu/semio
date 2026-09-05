@@ -5,7 +5,7 @@
   "displayName": "Change N Cycles Bridge",
   "emoji": "🧼",
   "aggregateVariant": "ChangeNCyclesBridge",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

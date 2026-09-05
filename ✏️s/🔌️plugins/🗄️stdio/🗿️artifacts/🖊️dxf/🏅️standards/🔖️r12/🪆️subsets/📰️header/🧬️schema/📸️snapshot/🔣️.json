@@ -1,0 +1,104 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.dxf/snapshot.json",
+  "title": "DxfSnapshot",
+  "type": "object",
+  "$defs": {
+    "DxfValue": {
+      "oneOf": [
+        { "type": "object", "properties": { "kind": { "const": "str" }, "value": { "type": "string" } }, "required": ["kind", "value"] },
+        { "type": "object", "properties": { "kind": { "const": "int" }, "value": { "type": "integer" } }, "required": ["kind", "value"] },
+        { "type": "object", "properties": { "kind": { "const": "double" }, "value": { "type": "number" } }, "required": ["kind", "value"] },
+        { "type": "object", "properties": { "kind": { "const": "point" }, "value": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 } }, "required": ["kind", "value"] }
+      ]
+    },
+    "DxfGroupCode": { "type": "array", "prefixItems": [{ "type": "integer" }, { "$ref": "#/$defs/DxfValue" }], "minItems": 2, "maxItems": 2 },
+    "DxfTag": { "type": "object", "properties": { "code": { "type": "integer" }, "value": { "type": "string" } }, "required": ["code", "value"] },
+    "DxfHeaderVar": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "groupCode": { "type": "integer" },
+        "value": { "$ref": "#/$defs/DxfValue" },
+        "extraGroupCodes": { "type": "array", "items": { "$ref": "#/$defs/DxfGroupCode" } }
+      },
+      "required": ["name", "groupCode", "value"]
+    },
+    "Vec3": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+    "DxfLayer": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" }, "color": { "type": "integer" }, "linetype": { "type": "string" }, "flags": { "type": "integer" },
+        "unknownGroupCodes": { "type": "array", "items": { "$ref": "#/$defs/DxfGroupCode" } }
+      },
+      "required": ["name", "color", "linetype", "flags"]
+    },
+    "DxfStyle": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" }, "flags": { "type": "integer" }, "fontName": { "type": "string" },
+        "unknownGroupCodes": { "type": "array", "items": { "$ref": "#/$defs/DxfGroupCode" } }
+      },
+      "required": ["name", "flags", "fontName"]
+    },
+    "DxfLinetype": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" }, "flags": { "type": "integer" }, "description": { "type": "string" },
+        "unknownGroupCodes": { "type": "array", "items": { "$ref": "#/$defs/DxfGroupCode" } }
+      },
+      "required": ["name", "flags", "description"]
+    },
+    "DxfTables": {
+      "type": "object",
+      "properties": {
+        "layers": { "type": "array", "items": { "$ref": "#/$defs/DxfLayer" } },
+        "styles": { "type": "array", "items": { "$ref": "#/$defs/DxfStyle" } },
+        "linetypes": { "type": "array", "items": { "$ref": "#/$defs/DxfLinetype" } }
+      },
+      "required": ["layers", "styles", "linetypes"]
+    },
+    "DxfOtherTable": {
+      "type": "object",
+      "properties": { "name": { "type": "string" }, "tags": { "type": "array", "items": { "$ref": "#/$defs/DxfTag" } } },
+      "required": ["name", "tags"]
+    },
+    "DxfVertex": {
+      "type": "object",
+      "properties": {
+        "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" }, "bulge": { "type": "number" },
+        "unknownGroupCodes": { "type": "array", "items": { "$ref": "#/$defs/DxfGroupCode" } }
+      },
+      "required": ["x", "y", "z", "bulge"]
+    },
+    "DxfEntity": {
+      "oneOf": [
+        { "type": "object", "properties": { "line": { "type": "object", "properties": { "start": { "$ref": "#/$defs/Vec3" }, "end": { "$ref": "#/$defs/Vec3" }, "layer": { "type": "string" }, "unknownGroupCodes": { "type": "array", "items": { "$ref": "#/$defs/DxfGroupCode" } } }, "required": ["start", "end", "layer"] } }, "required": ["line"] },
+        { "type": "object", "properties": { "circle": { "type": "object", "properties": { "center": { "$ref": "#/$defs/Vec3" }, "radius": { "type": "number" }, "layer": { "type": "string" }, "unknownGroupCodes": { "type": "array", "items": { "$ref": "#/$defs/DxfGroupCode" } } }, "required": ["center", "radius", "layer"] } }, "required": ["circle"] },
+        { "type": "object", "properties": { "arc": { "type": "object", "properties": { "center": { "$ref": "#/$defs/Vec3" }, "radius": { "type": "number" }, "startAngle": { "type": "number" }, "endAngle": { "type": "number" }, "layer": { "type": "string" }, "unknownGroupCodes": { "type": "array", "items": { "$ref": "#/$defs/DxfGroupCode" } } }, "required": ["center", "radius", "startAngle", "endAngle", "layer"] } }, "required": ["arc"] },
+        { "type": "object", "properties": { "polyline": { "type": "object", "properties": { "vertices": { "type": "array", "items": { "$ref": "#/$defs/DxfVertex" } }, "closed": { "type": "boolean" }, "layer": { "type": "string" }, "unknownGroupCodes": { "type": "array", "items": { "$ref": "#/$defs/DxfGroupCode" } } }, "required": ["vertices", "closed", "layer"] } }, "required": ["polyline"] },
+        { "type": "object", "properties": { "text": { "type": "object", "properties": { "position": { "$ref": "#/$defs/Vec3" }, "height": { "type": "number" }, "value": { "type": "string" }, "layer": { "type": "string" }, "unknownGroupCodes": { "type": "array", "items": { "$ref": "#/$defs/DxfGroupCode" } } }, "required": ["position", "height", "value", "layer"] } }, "required": ["text"] },
+        { "type": "object", "properties": { "solid": { "type": "object", "properties": { "points": { "type": "array", "items": { "$ref": "#/$defs/Vec3" }, "minItems": 4, "maxItems": 4 }, "layer": { "type": "string" }, "unknownGroupCodes": { "type": "array", "items": { "$ref": "#/$defs/DxfGroupCode" } } }, "required": ["points", "layer"] } }, "required": ["solid"] },
+        { "type": "object", "properties": { "insert": { "type": "object", "properties": { "blockName": { "type": "string" }, "position": { "$ref": "#/$defs/Vec3" }, "scale": { "$ref": "#/$defs/Vec3" }, "rotation": { "type": "number" }, "layer": { "type": "string" }, "unknownGroupCodes": { "type": "array", "items": { "$ref": "#/$defs/DxfGroupCode" } } }, "required": ["blockName", "position", "scale", "rotation", "layer"] } }, "required": ["insert"] },
+        { "type": "object", "properties": { "other": { "type": "object", "properties": { "kind": { "type": "string" }, "groupCodes": { "type": "array", "items": { "$ref": "#/$defs/DxfGroupCode" } } }, "required": ["kind"] } }, "required": ["other"] }
+      ]
+    },
+    "DxfBlock": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" }, "basePoint": { "$ref": "#/$defs/Vec3" },
+        "entities": { "type": "array", "items": { "$ref": "#/$defs/DxfEntity" } },
+        "unknownGroupCodes": { "type": "array", "items": { "$ref": "#/$defs/DxfGroupCode" } }
+      },
+      "required": ["name", "basePoint", "entities"]
+    }
+  },
+  "properties": {
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "headerVars": { "type": "array", "items": { "$ref": "#/$defs/DxfHeaderVar" }, "x-semio-state": "artifact" },
+    "tables": { "$ref": "#/$defs/DxfTables", "x-semio-state": "artifact" },
+    "otherTables": { "type": "array", "items": { "$ref": "#/$defs/DxfOtherTable" }, "x-semio-state": "artifact" },
+    "blocks": { "type": "array", "items": { "$ref": "#/$defs/DxfBlock" }, "x-semio-state": "artifact" },
+    "entities": { "type": "array", "items": { "$ref": "#/$defs/DxfEntity" }, "x-semio-state": "artifact" }
+  },
+  "required": ["schema", "headerVars", "tables", "otherTables", "blocks", "entities"]
+}

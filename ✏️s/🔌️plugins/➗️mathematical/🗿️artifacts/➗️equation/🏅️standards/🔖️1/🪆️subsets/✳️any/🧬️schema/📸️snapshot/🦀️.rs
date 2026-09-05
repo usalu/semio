@@ -77,7 +77,7 @@ impl FromValue for EquationSnapshot {
 
 //#region 🔖️Equation
 /// 🪪 A never-reused node identity issued at node birth and carried in the snapshot — mirrors
-/// `✳️brep`'s `PersistentLabel` shape. A mutation address built from THIS survives unrelated
+/// `🧊️brep`'s `PersistentLabel` shape. A mutation address built from THIS survives unrelated
 /// edits: unlike a positional path (`expr.children[2].children[0]`), which breaks the instant a
 /// sibling is inserted or removed anywhere in the tree (exactly the bug class documented in
 /// `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave4-reports/equation-report.md`'s

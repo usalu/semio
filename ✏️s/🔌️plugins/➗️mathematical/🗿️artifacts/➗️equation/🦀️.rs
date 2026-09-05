@@ -479,22 +479,22 @@ async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.mathematical.standard.v1", "standard", "1", &[], None),
-        ("s.mathematical.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.mathematical.schema.artifact", "schema", "s.mathematical.equation", &[("schema", "s.mathematical.equation")], None),
-        ("s.mathematical.inference.artifact", "inference", "s.mathematical.equation.inference", &[("schema", "s.mathematical.equation.inference")], None),
-        ("s.mathematical.composer.md", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
-        ("s.mathematical.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.mathematical.grammar.document", "grammar", "equation.document", &[("grammar", "equation.document")], None),
-        ("s.mathematical.grammar.op", "grammar", "equation.op", &[("grammar", "equation.op")], None),
-        ("s.mathematical.grammar.diff", "grammar", "equation.diff", &[("grammar", "equation.diff")], None),
-        ("s.mathematical.grammar.pack", "grammar", "equation.pack", &[("grammar", "equation.pack")], None),
-        ("s.mathematical.grammar.spr", "grammar", "equation.spr", &[("grammar", "equation.spr")], None),
-        ("s.mathematical.codec.document.v1", "codec", "semio.equation/v1:equation", &[("codec", "semio.equation/v1"), ("extension", "equation")], None),
-        ("s.mathematical.localization.en", "localization", "Equation", &[], Some(("en", "Equation"))),
-        ("s.mathematical.localization.de", "localization", "Gleichung", &[], Some(("de", "Gleichung"))),
+        ("s.mathematical.equation.standard.v1", "standard", "1", &[], None),
+        ("s.mathematical.equation.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.mathematical.equation.schema.artifact", "schema", "s.mathematical.equation", &[("schema", "s.mathematical.equation")], None),
+        ("s.mathematical.equation.inference.artifact", "inference", "s.mathematical.equation.inference", &[("schema", "s.mathematical.equation.inference")], None),
+        ("s.mathematical.equation.composer.md", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
+        ("s.mathematical.equation.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.mathematical.equation.grammar.document", "grammar", "equation.document", &[("grammar", "equation.document")], None),
+        ("s.mathematical.equation.grammar.op", "grammar", "equation.op", &[("grammar", "equation.op")], None),
+        ("s.mathematical.equation.grammar.diff", "grammar", "equation.diff", &[("grammar", "equation.diff")], None),
+        ("s.mathematical.equation.grammar.pack", "grammar", "equation.pack", &[("grammar", "equation.pack")], None),
+        ("s.mathematical.equation.grammar.spr", "grammar", "equation.spr", &[("grammar", "equation.spr")], None),
+        ("s.mathematical.equation.codec.document.v1", "codec", "semio.equation/v1:equation", &[("codec", "semio.equation/v1"), ("codec-extension", "17:semio.equation/v1:equation")], None),
+        ("s.mathematical.equation.localization.en", "localization", "Equation", &[], Some(("en", "Equation"))),
+        ("s.mathematical.equation.localization.de", "localization", "Gleichung", &[], Some(("de", "Gleichung"))),
     ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.mathematical")?);
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.mathematical.equation")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
         for (namespace, value) in *claims {
@@ -588,7 +588,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn scene_owner_fixture_proves_identity_isolation_aba_wire_omission_and_bounded_close() {
-        let fixture: pack::json::Value = pack::json::parse(include_str!("🧪️fixtures/equation-scene-owner-law.json")).expect("language-neutral equation scene fixture");
+        let fixture: pack::json::Value = pack::json::parse(include_str!("🧪️fixtures/👑️equation-scene-owner-law.json")).expect("language-neutral equation scene fixture");
         let cases = fixture["cases"].as_array().expect("fixture cases");
         assert_eq!(fixture["schemaVersion"], 1);
         assert_eq!(fixture["ownedSlots"], 3);

@@ -1,0 +1,10 @@
+{
+  "$schema": "./🧬️.schema.json",
+  "contract": "semio.flow.presence-owners/v1",
+  "grants": [1, 64, 4096],
+  "cases": [
+    { "id": "empty", "local": { "unit": "", "repeat": 0 }, "peers": [], "sharedRoot": false, "expectedBytes": 0 },
+    { "id": "unicode-unshared", "local": { "unit": "🌊", "repeat": 2048 }, "peers": [{ "actor": "peer", "unit": "ä", "repeat": 4096 }], "sharedRoot": false, "expectedBytes": 16388 },
+    { "id": "unicode-shared", "local": { "unit": "🌊", "repeat": 2048 }, "peers": [{ "actor": "peer", "unit": "ä", "repeat": 4096 }], "sharedRoot": true, "expectedBytes": 16388 }
+  ]
+}

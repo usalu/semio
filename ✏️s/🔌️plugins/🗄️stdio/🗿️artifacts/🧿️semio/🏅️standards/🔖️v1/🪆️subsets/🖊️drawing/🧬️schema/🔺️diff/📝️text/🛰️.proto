@@ -1,0 +1,6 @@
+syntax = "proto3";
+// 📝️ Text-wire representation: space-separated field=value tokens. Real shape: 🅰️.g4.
+package semio.stdio_semio_drawing_diff.text;
+message SemioDrawingDiffText {
+  string line = 1;
+}

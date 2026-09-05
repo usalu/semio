@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "mutationRoot", "domains", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "mutationRoot": { "type": "string", "minLength": 1 },
+    "domains": { "type": "object", "minProperties": 1, "additionalProperties": {
+      "type": "object", "minProperties": 1,
+      "additionalProperties": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)+$" }
+    } },
+    "cases": { "type": "array", "minItems": 10, "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "owner", "source", "semanticKind", "accepted"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "owner": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "minLength": 1 },
+        "semanticKind": { "type": "string", "minLength": 1 },
+        "accepted": { "type": "boolean" },
+        "fault": { "enum": ["duplicate-identity", "symlink-domain", "empty-registry", "wrong-registry-root"] }
+      }
+    } }
+  }
+}

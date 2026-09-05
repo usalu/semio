@@ -1,2 +1,0 @@
-# 🧬 canonical remove-line/RemoveLine
-input RemoveLinePayload { index: TxtMutationUInt32V1! }

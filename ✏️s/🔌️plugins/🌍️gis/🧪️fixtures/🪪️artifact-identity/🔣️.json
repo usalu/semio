@@ -1,0 +1,10 @@
+{
+  "schema": "semio.gis.artifact-identity/v1",
+  "pluginId": "gis",
+  "packageId": "semio:gis",
+  "artifacts": [
+    { "kind": "s.gis.gismap", "nativeDialect": "s.gis.gismap@1/*", "documentSchema": "gis.map", "extension": "gismap", "codecExtension": "7:gis.map:gismap", "roles": ["editor", "viewer"] },
+    { "kind": "s.gis.gisterrain", "nativeDialect": "s.gis.gisterrain@1/*", "documentSchema": "gis.terrain", "extension": "gisterrain", "codecExtension": "11:gis.terrain:gisterrain", "roles": ["editor", "viewer"] }
+  ],
+  "hostileKinds": ["s.gismap", "s.gisterrain", "s.foreign.gismap", "gis.gismap", "s.gis.gismap.extra"]
+}

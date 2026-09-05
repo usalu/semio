@@ -86,7 +86,9 @@
       "status": "declared"
     }
   ],
-  "codecs": [],
+  "codecs": [
+    { "id": "s.stdio.dwg.standard.ac1024.codec.native-document.v1", "status": "implemented", "from": "s.stdio.dwg.standard.ac1024.dialect.source", "to": "s.stdio.dwg.standard.ac1024.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.dwg.v1", "artifact_kind": "stdio.dwg", "document_schema": "stdio.dwg", "extension": "dwg", "pack_schema_hash": "29035528709921a6dadecf2968004525baa90f33690d5dc5e09ee4fe49852bb5", "runtime_capability_id": "s.stdio.dwg.standard.ac1018.codec.codec-stdio-dwg-extension-dwg.v1" } }
+  ],
   "mutations": [],
   "inferences": [],
   "resources": [
@@ -121,22 +123,22 @@
   ],
   "runtime_capabilities": [
     {
-      "id": "s.stdio.dwg.runtime.codec.codec-stdio-dwg-extension-dwg.v1",
+      "id": "s.stdio.dwg.standard.ac1018.codec.codec-stdio-dwg-extension-dwg.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec:stdio.dwg|extension:dwg",
+      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.dwg:dwg|codec:stdio.dwg",
       "claims": [
         {
           "namespace": "codec",
           "value": "stdio.dwg"
         },
         {
-          "namespace": "extension",
-          "value": "dwg"
+          "namespace": "codec-extension",
+          "value": "9:stdio.dwg:dwg"
         }
       ]
     },
     {
-      "id": "s.stdio.dwg.runtime.composer.dialect-s-stdio-dwg-ac1024.v1",
+      "id": "s.stdio.dwg.composer.dialect-s-stdio-dwg-ac1024.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.dwg@ac1024/*",
       "claims": [
@@ -147,7 +149,7 @@
       ]
     },
     {
-      "id": "s.stdio.dwg.runtime.grammar.grammar-stdio-dwg.v1",
+      "id": "s.stdio.dwg.grammar.grammar-stdio-dwg.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.dwg",
       "claims": [
@@ -158,7 +160,7 @@
       ]
     },
     {
-      "id": "s.stdio.dwg.runtime.grammar.grammar-stdio-dwg-diff.v1",
+      "id": "s.stdio.dwg.grammar.grammar-stdio-dwg-diff.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.dwg.diff",
       "claims": [
@@ -169,7 +171,7 @@
       ]
     },
     {
-      "id": "s.stdio.dwg.runtime.grammar.grammar-stdio-dwg-op.v1",
+      "id": "s.stdio.dwg.grammar.grammar-stdio-dwg-op.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.dwg.op",
       "claims": [
@@ -180,7 +182,7 @@
       ]
     },
     {
-      "id": "s.stdio.dwg.runtime.grammar.grammar-stdio-dwg-pack.v1",
+      "id": "s.stdio.dwg.grammar.grammar-stdio-dwg-pack.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.dwg.pack",
       "claims": [
@@ -191,7 +193,7 @@
       ]
     },
     {
-      "id": "s.stdio.dwg.runtime.grammar.grammar-stdio-dwg-spr.v1",
+      "id": "s.stdio.dwg.grammar.grammar-stdio-dwg-spr.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.dwg.spr",
       "claims": [
@@ -202,7 +204,7 @@
       ]
     },
     {
-      "id": "s.stdio.dwg.runtime.inference.schema-s-stdio-dwg-inference.v1",
+      "id": "s.stdio.dwg.inference.schema-s-stdio-dwg-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:s.stdio.dwg.inference",
       "claims": [
@@ -213,7 +215,7 @@
       ]
     },
     {
-      "id": "s.stdio.dwg.runtime.representation.mime-image-vnd-dwg-extension-dwg.v1",
+      "id": "s.stdio.dwg.standard.ac1018.representation.mime-image-vnd-dwg-extension-dwg",
       "category": "representation",
       "descriptor": "runtime-capability:representation:mime:image/vnd.dwg|extension:.dwg",
       "claims": [
@@ -228,7 +230,7 @@
       ]
     },
     {
-      "id": "s.stdio.dwg.runtime.schema.schema-s-stdio-dwg.v1",
+      "id": "s.stdio.dwg.schema.schema-s-stdio-dwg.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.dwg",
       "claims": [

@@ -13,6 +13,32 @@
 //! client identity.
 
 use std::collections::BTreeMap;
+use semio_framework_plugin::Fault;
+
+/// 🧾️ Exact terminal proof that one authenticated directory frontier is the retained Home config.
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DirectoryProjectionReceiptV1 {
+    pub schema: String,
+    pub session_binding_sha256: String,
+    pub authorization_generation: u64,
+    pub through_seq_inclusive: u64,
+    pub receipt_sha256: String,
+}
+
+impl DirectoryProjectionReceiptV1 {
+    pub const SCHEMA: &'static str = "semio.space.home.directory-projection-receipt.v1";
+
+    /// 🛡️ Validates the complete browser-visible receipt without admitting resume-only fields.
+    pub fn validate(&self) -> bool {
+        self.schema == Self::SCHEMA
+            && directory_sha256_is_valid(&self.session_binding_sha256)
+            && self.authorization_generation > 0
+            && self.authorization_generation <= store::os_directory::DOCUMENT_OPEN_MAX_SAFE_INTEGER
+            && self.through_seq_inclusive <= store::os_directory::DOCUMENT_OPEN_MAX_SAFE_INTEGER
+            && directory_sha256_is_valid(&self.receipt_sha256)
+    }
+}
 
 //#region 🔖️DirectoryJson
 /// 📇️ `store::os_directory::DirectoryReadModel`/`DirectorySpace` carry no `Serialize`/`Deserialize`
@@ -25,38 +51,71 @@ use std::collections::BTreeMap;
 /// hand, entirely inside this file. `SpaceView`/`MemberView`/`UserView` (the read model's own leaves)
 /// already derive `Serialize`/`Deserialize`; only the two WRAPPER structs need a hand-written wire shape.
 #[derive(value_derive::ToValue, value_derive::FromValue)]
+#[value(deny_unknown_fields)]
 struct DirectorySpaceWire {
     view: store::os_directory::SpaceView,
     members: Vec<store::os_directory::MemberView>,
+    documents: Vec<store::os_directory::DocumentDescriptor>,
 }
 
-#[derive(value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(value_derive::ToValue, value_derive::FromValue)]
+#[value(deny_unknown_fields)]
 struct DirectoryReadModelWire {
-    #[value(default)]
     spaces: BTreeMap<String, DirectorySpaceWire>,
-    #[value(default)]
     cursor: u64,
-    #[value(default)]
     users: BTreeMap<String, store::os_directory::UserView>,
 }
 
 /// 📇️ Encodes a `DirectoryReadModel` as the `directory_json` DSL field's wire value.
 fn directory_to_json(model: &store::os_directory::DirectoryReadModel) -> String {
-    let wire = DirectoryReadModelWire { spaces: model.spaces.iter().map(|(id, space)| (id.clone(), DirectorySpaceWire { view: space.view.clone(), members: space.members.clone() })).collect(), cursor: model.cursor, users: model.users.clone() };
+    let wire = DirectoryReadModelWire {
+        spaces: model
+            .spaces
+            .iter()
+            .map(|(id, space)| (id.clone(), DirectorySpaceWire { view: space.view.clone(), members: space.members.clone(), documents: space.documents.clone() }))
+            .collect(),
+        cursor: model.cursor,
+        users: model.users.clone(),
+    };
     pack::to_json_string(&wire)
 }
 
-/// 📇️ Decodes `directory_json` back into a `DirectoryReadModel` — malformed/empty input yields the
-/// empty model (never panics: this reads persisted config text, which must never crash a boot).
-fn directory_from_json(json: &str) -> store::os_directory::DirectoryReadModel {
-    let wire: DirectoryReadModelWire = pack::from_json_str(json).unwrap_or_default();
-    store::os_directory::DirectoryReadModel { spaces: wire.spaces.into_iter().map(|(id, space)| (id, store::os_directory::DirectorySpace { view: space.view, members: space.members })).collect(), cursor: wire.cursor, users: wire.users }
+/// 📇️ Decodes `directory_json` without converting persisted corruption into an empty projection.
+fn directory_from_json(json: &str) -> Result<store::os_directory::DirectoryReadModel, Fault> {
+    let wire: DirectoryReadModelWire = pack::from_json_str(json).map_err(|_| Fault::from("s.home.directory-projection-malformed"))?;
+    Ok(store::os_directory::DirectoryReadModel {
+        spaces: wire
+            .spaces
+            .into_iter()
+            .map(|(id, space)| (id, store::os_directory::DirectorySpace { view: space.view, members: space.members, documents: space.documents }))
+            .collect(),
+        cursor: wire.cursor,
+        users: wire.users,
+    })
+}
+
+fn directory_sha256_is_valid(value: &str) -> bool {
+    value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
+}
+
+/// 🛡️ Validates the complete persisted projection authority, including the intentional unbound initial state.
+pub(crate) fn directory_projection_state_is_valid(directory_json: &str, session_binding_sha256: &str, authorization_generation: u64, receipt_sha256: &str) -> bool {
+    if directory_from_json(directory_json).is_err() {
+        return false;
+    }
+    if session_binding_sha256.is_empty() && authorization_generation == 0 && receipt_sha256.is_empty() {
+        return true;
+    }
+    authorization_generation > 0
+        && authorization_generation <= store::os_directory::DOCUMENT_OPEN_MAX_SAFE_INTEGER
+        && directory_sha256_is_valid(session_binding_sha256)
+        && directory_sha256_is_valid(receipt_sha256)
 }
 //#endregion 🔖️DirectoryJson
 
 //#region 🔖️Config
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(id = "home.config")]
 #[dsl(extension = "homecfg")]
 #[dsl(layout = "lines")]
@@ -69,6 +128,12 @@ pub struct HomeConfig {
     /// `HomeConfigMutation::FoldDirectoryEvent` as `/directory/ws` events arrive; read via `directory()`.
     /// No optimistic mutation (contract §C6): the ONLY writer is the fold over hub-confirmed events.
     pub directory_json: String,
+    /// 🔐️ Opaque digest binding the accepted page frontier to one authenticated hub session.
+    pub directory_session_binding_sha256: String,
+    /// 🛂️ Authorization generation under which the current projection was filtered.
+    pub directory_authorization_generation: u64,
+    /// 🧾️ Receipt of the last durably accepted directory page.
+    pub directory_receipt_sha256: String,
     /// 🪪️ The signed-in client's directory user id (`os.config.identity`'s `userId`); empty while
     /// offline/no identity yet. Threads into `SpaceUser` ownership on space creation.
     pub client_id: String,
@@ -78,8 +143,53 @@ pub struct HomeConfig {
 
 impl HomeConfig {
     /// 📇️ Decodes the folded hub directory read model.
-    pub fn directory(&self) -> store::os_directory::DirectoryReadModel {
+    pub fn directory(&self) -> Result<store::os_directory::DirectoryReadModel, Fault> {
         directory_from_json(&self.directory_json)
+    }
+
+    /// 🧾️ Projects the retained config's exact terminal acknowledgement authority.
+    pub fn directory_projection_receipt(&self) -> Option<DirectoryProjectionReceiptV1> {
+        let through_seq_inclusive = self.directory().ok()?.cursor;
+        let receipt = DirectoryProjectionReceiptV1 {
+            schema: DirectoryProjectionReceiptV1::SCHEMA.into(),
+            session_binding_sha256: self.directory_session_binding_sha256.clone(),
+            authorization_generation: self.directory_authorization_generation,
+            through_seq_inclusive,
+            receipt_sha256: self.directory_receipt_sha256.clone(),
+        };
+        receipt.validate().then_some(receipt)
+    }
+
+    /// 📄️ Applies one authenticated page to a replacement config without exposing partial folds.
+    pub fn apply_directory_event_page(&self, page: &store::os_directory::DirectoryEventPageV1) -> Result<Self, Fault> {
+        page.validate().map_err(|_| Fault::from("s.home.directory-event-page-invalid"))?;
+        let current = self.directory()?;
+        let same_authority = self.directory_session_binding_sha256 == page.session_binding_sha256
+            && self.directory_authorization_generation == page.authorization_generation;
+        if same_authority && current.cursor == page.through_seq_inclusive && self.directory_receipt_sha256 == page.receipt_sha256 {
+            return Ok(self.clone());
+        }
+        let mut directory = if same_authority {
+            if page.after_seq_exclusive != current.cursor {
+                return Err(Fault::from("s.home.directory-event-page-frontier-race"));
+            }
+            current
+        } else {
+            if page.after_seq_exclusive != 0 {
+                return Err(Fault::from("s.home.directory-event-page-rebootstrap-required"));
+            }
+            store::os_directory::DirectoryReadModel::default()
+        };
+        for event in &page.events {
+            directory = store::os_directory::fold(directory, event);
+        }
+        directory.cursor = page.through_seq_inclusive;
+        let mut next = self.clone();
+        next.directory_json = directory_to_json(&directory);
+        next.directory_session_binding_sha256 = page.session_binding_sha256.clone();
+        next.directory_authorization_generation = page.authorization_generation;
+        next.directory_receipt_sha256 = page.receipt_sha256.clone();
+        Ok(next)
     }
 }
 
@@ -129,7 +239,16 @@ impl store::ArtifactPack for HomeConfig {
 
 impl Default for HomeConfig {
     fn default() -> Self {
-        Self { active_panel_tab: String::new(), locale: "en-US".into(), directory_json: directory_to_json(&store::os_directory::DirectoryReadModel::default()), client_id: String::new(), client_name: String::new() }
+        Self {
+            active_panel_tab: String::new(),
+            locale: "en-US".into(),
+            directory_json: directory_to_json(&store::os_directory::DirectoryReadModel::default()),
+            directory_session_binding_sha256: String::new(),
+            directory_authorization_generation: 0,
+            directory_receipt_sha256: String::new(),
+            client_id: String::new(),
+            client_name: String::new(),
+        }
     }
 }
 
@@ -154,6 +273,14 @@ pub enum HomeConfigMutation {
     /// — the SOLE writer of the directory read model (contract §C6: no optimistic mutation).
     #[dsl(key = "fold-directory-event")]
     FoldDirectoryEvent { event_json: String },
+    /// 📄️ Atomically replaces the page-derived projection and its authenticated resume authority.
+    #[dsl(key = "replace-directory-projection")]
+    ReplaceDirectoryProjection {
+        directory_json: String,
+        session_binding_sha256: String,
+        authorization_generation: u64,
+        receipt_sha256: String,
+    },
     /// 🪪️ Sets the signed-in client identity (contract §C3 identity bootstrap).
     #[dsl(key = "set-client")]
     SetClient { client_id: String, client_name: String },
@@ -224,6 +351,7 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-active-panel-tab", semantic_kind: "set-active-panel-tab", display_name: "Set Active Panel Tab", emoji: "⚙️", aggregate_variant: "SetActivePanelTab", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-locale", semantic_kind: "set-locale", display_name: "Set Locale", emoji: "⚙️", aggregate_variant: "SetLocale", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️fold-directory-event", semantic_kind: "fold-directory-event", display_name: "Fold Directory Event", emoji: "⚙️", aggregate_variant: "FoldDirectoryEvent", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️replace-directory-projection", semantic_kind: "replace-directory-projection", display_name: "Replace Directory Projection", emoji: "📄️", aggregate_variant: "ReplaceDirectoryProjection", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-client", semantic_kind: "set-client", display_name: "Set Client", emoji: "⚙️", aggregate_variant: "SetClient", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
@@ -233,7 +361,8 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
             HomeConfigMutation::SetActivePanelTab { .. } => &Self::DESCRIPTORS[1],
             HomeConfigMutation::SetLocale { .. } => &Self::DESCRIPTORS[2],
             HomeConfigMutation::FoldDirectoryEvent { .. } => &Self::DESCRIPTORS[3],
-            HomeConfigMutation::SetClient { .. } => &Self::DESCRIPTORS[4],
+            HomeConfigMutation::ReplaceDirectoryProjection { .. } => &Self::DESCRIPTORS[4],
+            HomeConfigMutation::SetClient { .. } => &Self::DESCRIPTORS[5],
         }
     }
 
@@ -246,8 +375,16 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
             HomeConfigMutation::SetActivePanelTab { tab_id } => next.active_panel_tab = tab_id.clone(),
             HomeConfigMutation::SetLocale { value } => next.locale = value.clone(),
             HomeConfigMutation::FoldDirectoryEvent { event_json } => {
-                if let Ok(event) = pack::from_json_str::<store::os_directory::DirectoryEvent>(event_json) {
-                    next.directory_json = directory_to_json(&store::os_directory::fold(next.directory(), &event));
+                if let (Ok(event), Ok(directory)) = (pack::from_json_str::<store::os_directory::DirectoryEvent>(event_json), next.directory()) {
+                    next.directory_json = directory_to_json(&store::os_directory::fold(directory, &event));
+                }
+            }
+            HomeConfigMutation::ReplaceDirectoryProjection { directory_json, session_binding_sha256, authorization_generation, receipt_sha256 } => {
+                if directory_projection_state_is_valid(directory_json, session_binding_sha256, *authorization_generation, receipt_sha256) {
+                    next.directory_json = directory_json.clone();
+                    next.directory_session_binding_sha256 = session_binding_sha256.clone();
+                    next.directory_authorization_generation = *authorization_generation;
+                    next.directory_receipt_sha256 = receipt_sha256.clone();
                 }
             }
             HomeConfigMutation::SetClient { client_id, client_name } => {
@@ -288,12 +425,18 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::SetActivePanelTab { tab_id: "tab-1".into() });
         store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::SetLocale { value: "de".into() });
         store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::FoldDirectoryEvent { event_json: "{}".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::ReplaceDirectoryProjection {
+            directory_json: directory_to_json(&store::os_directory::DirectoryReadModel::default()),
+            session_binding_sha256: "a".repeat(64),
+            authorization_generation: 1,
+            receipt_sha256: "b".repeat(64),
+        });
         store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::SetClient { client_id: "u1".into(), client_name: "Ada".into() });
     }
 
     #[semio_framework_async_macros::async_test]
     async fn home_config_default_directory_is_empty() {
-        let model = HomeConfig::default().directory();
+        let model = HomeConfig::default().directory().expect("default directory projection");
         assert!(model.spaces.is_empty());
         assert_eq!(model.cursor, 0);
     }
@@ -312,7 +455,7 @@ mod tests {
         })
         .to_string();
         let next = HomeConfigMutation::FoldDirectoryEvent { event_json }.diff(&config).diff().clone();
-        let model = next.directory();
+        let model = next.directory().expect("folded directory projection");
         assert_eq!(model.cursor, 1);
         let space = model.spaces.get("sp-1").expect("space folded");
         assert_eq!(space.view.name, "Atelier");
@@ -323,6 +466,20 @@ mod tests {
         let config = HomeConfig::default();
         let next = HomeConfigMutation::FoldDirectoryEvent { event_json: "not json".into() }.diff(&config).diff().clone();
         assert_eq!(next.directory_json, config.directory_json, "malformed events never panic and never change the model");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn directory_projection_round_trip_preserves_documents_and_rejects_corruption() {
+        let fixture: pack::JsonValue = pack::from_json_str(include_str!("🧪️fixtures/📇️projection-persistence-v1/🔣️.json")).expect("language-neutral projection fixture");
+        let wire = fixture.get("wire").expect("fixture wire").to_string();
+        let model = directory_from_json(&wire).expect("fixture directory projection");
+        let document_ids = model.spaces.values().flat_map(|space| space.documents.iter().map(|document| document.document_id.as_str())).collect::<Vec<_>>();
+        assert_eq!(document_ids, vec!["document-雪"]);
+        let encoded: pack::JsonValue = pack::from_json_str(&directory_to_json(&model)).expect("encoded projection JSON");
+        assert_eq!(encoded, fixture["wire"]);
+        for malformed in fixture["malformed"].as_array().expect("malformed cases") {
+            assert!(directory_from_json(malformed.as_str().expect("malformed text")).is_err());
+        }
     }
 
     #[semio_framework_async_macros::async_test]

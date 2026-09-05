@@ -1,0 +1,27 @@
+{
+  "surface": "conformance.patch",
+  "baseRevision": 0,
+  "revision": 1,
+  "ops": [
+    {
+      "type": "upsert",
+      "id": 1,
+      "key": "a-replaced",
+      "component": {
+        "type": "button",
+        "icon": "star",
+        "label": "Now upserted"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Now upserted"
+      }
+    }
+  ]
+}

@@ -19,7 +19,7 @@
 //   bun 📜️script.ts generate                      # build the engine and write 🧫️fixtures/<kind>/{before,after}.svg
 //   bun 📜️script.ts manifests                     # (re)write 🧫️fixtures/🔣️.json
 //
-// @see ../../../../../🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🏭️generator/📜️script.ts
+// @see ../../../../../🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏭️generator/📜️script.ts
 //      — the carrier generator this file mirrors in CLI shape and manifest fields.
 
 //#endregion 🧲️Header

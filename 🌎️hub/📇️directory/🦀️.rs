@@ -234,6 +234,36 @@ pub mod model {
         pub revoked_at: Option<i64>,
         pub revoked_reason: Option<String>,
         pub accepted_at: Option<i64>,
+        pub accepted_event_id: Option<String>,
+    }
+
+    /// 🧑️ One backend-projected administration member row. Display columns only: no password
+    /// hash, SSO subject/provider, or session column ever crosses the backend boundary here.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct SpaceAdministrationMemberRow {
+        pub user_id: String,
+        pub email: String,
+        pub display_name: String,
+        pub role: SpaceRole,
+    }
+
+    /// 🎟️ One backend-projected administration invite row. Metadata only: the selector, secret
+    /// digest, revoke reason, and accepted event id are structurally absent, not redacted later.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct SpaceAdministrationInviteRow {
+        pub invite_id: String,
+        pub role: SpaceRole,
+        pub created_at_ms: i64,
+        pub expires_at_ms: i64,
+        pub revoked: bool,
+        pub accepted: bool,
+    }
+
+    /// 🎟️ Closed durable result of one backend-owned invitation claim.
+    #[derive(Clone, Debug)]
+    pub enum InviteRedemptionCommit {
+        NewlyCommitted { event: ::directory::os_directory::DirectoryEvent },
+        AlreadyCommitted { event: ::directory::os_directory::DirectoryEvent },
     }
 
     /// @emoji 🎁️ A newly issued document share plus its one-time plaintext capability.
@@ -311,6 +341,67 @@ pub mod model {
         pub fact: NewAdminOperationAuditRecord,
     }
 
+    /// 🎁️ Closed durable result class of one directory command; a capability plaintext is never stored.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum DirectoryCommandResultKindV1 {
+        None,
+        Invite,
+    }
+
+    /// 🧾️ Closed durable lifecycle of one idempotency key. `Pending` is the crash/in-flight window
+    /// between the claim and the durable completion; it never re-executes.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum DirectoryCommandDispositionV1 {
+        Pending,
+        Completed,
+    }
+
+    /// 🆕️ One `(actor, request id)` idempotency claim before the backend records it.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct NewDirectoryCommandReceipt {
+        pub actor_user_id: String,
+        pub request_id: String,
+        pub command_sha256: String,
+        pub result_kind: DirectoryCommandResultKindV1,
+        pub claimed_at: i64,
+    }
+
+    /// 🧾️ The durable completion written before any event publication.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct DirectoryCommandReceiptCompletion {
+        pub actor_user_id: String,
+        pub request_id: String,
+        pub event_seq_first: Option<u64>,
+        pub event_seq_last: Option<u64>,
+        pub receipt_sha256: String,
+        pub completed_at: i64,
+    }
+
+    /// 🧾️ One durable per-actor command idempotency row. It carries the command digest, result
+    /// class, event range, disposition, and the canonical redacted-replay receipt digest — never a
+    /// capability plaintext.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct DirectoryCommandReceiptRecord {
+        pub actor_user_id: String,
+        pub request_id: String,
+        pub command_sha256: String,
+        pub result_kind: DirectoryCommandResultKindV1,
+        pub disposition: DirectoryCommandDispositionV1,
+        pub event_seq_first: Option<u64>,
+        pub event_seq_last: Option<u64>,
+        pub receipt_sha256: Option<String>,
+        pub claimed_at: i64,
+        pub completed_at: Option<i64>,
+    }
+
+    /// 🔐️ Closed outcome of one atomic claim-or-read against the durable receipt store.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub enum DirectoryCommandClaimV1 {
+        Claimed(DirectoryCommandReceiptRecord),
+        Existing(DirectoryCommandReceiptRecord),
+        Conflict,
+    }
+
     /// 🔢️ Constant-space administrator overview projection owned by the backend.
     #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
     pub struct AdminDirectoryOverviewCounts {
@@ -333,7 +424,7 @@ pub mod model {
 
 use crate::artifact_authority::chunk_cas::{ArtifactCasDeleteFence, ArtifactCasDeleteOutcome, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation, ArtifactChunkCasStorage};
 use directory::os_directory::{
-    descriptor_digest_v1, ArtifactBlobRef, ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole,
+    descriptor_digest_v1, ArtifactBlobRef, ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandResultV1, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole,
     DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, Hlc, PublishedArtifactBlob, PublishedArtifactCheckpoint,
 };
 use directory::os_identity::time_ordered_id;
@@ -359,6 +450,10 @@ pub const ADMIN_PAGE_MAX: usize = 100;
 pub const ADMIN_PAGE_FETCH_MAX: usize = ADMIN_PAGE_MAX + 1;
 /// 🛡️ Exact serialized administrator response ceiling.
 pub const ADMIN_RESPONSE_MAX_BYTES: usize = 64 * 1024;
+/// 🏛️ Exact rows one space-administration page window returns.
+pub const SPACE_ADMINISTRATION_PAGE_MAX: usize = 64;
+/// 🏛️ One public window plus one private continuation probe.
+pub const SPACE_ADMINISTRATION_PAGE_FETCH_MAX: usize = SPACE_ADMINISTRATION_PAGE_MAX + 1;
 /// 🌐️ Largest exact integer shared by the Rust, JSON, and TypeScript contracts.
 pub const DIRECTORY_WIRE_INTEGER_MAX: u64 = 9_007_199_254_740_991;
 /// 🔑️ Fixed UTF-8 byte ceiling for one backend-private immutable blob locator.
@@ -872,12 +967,79 @@ pub(crate) fn prepare_invite(space_id: &str, role: SpaceRole, ttl_secs: i64, now
         revoked_at: None,
         revoked_reason: None,
         accepted_at: None,
+        accepted_event_id: None,
     };
     Ok(IssuedInvite { record, capability })
 }
 
 pub(crate) fn active_capability(selector: &str, stored_digest: &[u8; 32], expires_at: i64, revoked_at: Option<i64>, capability_selector: &str, candidate_digest: &[u8; 32], now: i64) -> bool {
     selector == capability_selector && revoked_at.is_none() && expires_at > now && constant_time_digest_eq(stored_digest, candidate_digest)
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum InviteRedemptionPreflight {
+    Claim,
+    AlreadyCommitted,
+    Revoked,
+    Expired,
+    Denied,
+    Corrupt,
+}
+
+/// 🎟️ Applies the backend-independent invitation claim decision without accepting client scope or role authority.
+pub(crate) fn invite_redemption_preflight(
+    record: Option<&InviteRecord>,
+    capability: &InviteCapability,
+    actor: &DirectoryActor,
+    user_id: &str,
+    user_exists: bool,
+    space_exists: bool,
+    now_ms: i64,
+) -> InviteRedemptionPreflight {
+    let actor_user_id = (actor.kind == DirectoryActorKind::User)
+        .then(|| actor.id.strip_prefix("user:").and_then(|rest| rest.split('#').next()))
+        .flatten();
+    let Some(record) = record else { return InviteRedemptionPreflight::Denied };
+    if actor_user_id != Some(user_id) || record.selector != capability.selector() || !constant_time_digest_eq(&record.secret_digest, &capability.secret_digest()) {
+        return InviteRedemptionPreflight::Denied;
+    }
+    if record.accepted_at.is_some() != record.accepted_event_id.is_some() {
+        InviteRedemptionPreflight::Corrupt
+    } else if record.accepted_at.is_some() {
+        InviteRedemptionPreflight::AlreadyCommitted
+    } else if !user_exists || !space_exists {
+        InviteRedemptionPreflight::Denied
+    } else if record.revoked_at.is_some() {
+        InviteRedemptionPreflight::Revoked
+    } else if record.expires_at <= now_ms {
+        InviteRedemptionPreflight::Expired
+    } else {
+        InviteRedemptionPreflight::Claim
+    }
+}
+
+/// 🎟️ Verifies the immutable event linked from an already-claimed invite before idempotent return.
+pub(crate) fn verify_invite_redemption_event(record: &InviteRecord, event: Option<DirectoryEvent>, authenticated_user_id: &str) -> DirectoryResult<DirectoryEvent> {
+    let accepted_at = record.accepted_at.ok_or_else(|| DirectoryError::Backend("invite acceptance marker is incomplete".into()))?;
+    let accepted_event_id = record.accepted_event_id.as_deref().ok_or_else(|| DirectoryError::Backend("invite acceptance event marker is incomplete".into()))?;
+    let event = event.ok_or_else(|| DirectoryError::Backend("invite acceptance event is missing".into()))?;
+    let valid_body = matches!(
+        &event.body,
+        DirectoryEventBody::InviteRedeemed { space_id, user_id, invite_id, role }
+            if space_id == &record.space_id
+                && invite_id == &record.id
+                && *role == role_to_wire(record.role)
+                && event.space_id.as_deref() == Some(space_id)
+                && event.user_id.as_deref() == Some(user_id)
+                && actor_user_id(&event.actor).ok() == Some(user_id.as_str())
+    );
+    if event.id != accepted_event_id || event.recorded_at_ms != accepted_at || !valid_body {
+        return Err(DirectoryError::Backend("invite acceptance marker and event differ".into()));
+    }
+    if event.user_id.as_deref() != Some(authenticated_user_id) {
+        return Err(DirectoryError::Conflict("invite already accepted".into()));
+    }
+    Ok(event)
 }
 
 pub(crate) fn auth_audit(
@@ -911,6 +1073,36 @@ pub(crate) fn auth_audit(
         correlation_id: correlation_id.to_string(),
         peer_class: peer_class.to_string(),
     })
+}
+
+/// 🛡️ Admits one durable command idempotency claim: bounded actor, 32-hex nonzero correlation, and
+/// a 64-hex lowercase canonical command digest. Backends call this before touching storage.
+pub(crate) fn validate_directory_command_claim(claim: &NewDirectoryCommandReceipt) -> DirectoryResult<()> {
+    validate_bounded_auth_text(&claim.actor_user_id, "command actor", AUTH_TEXT_MAX_BYTES)?;
+    if claim.request_id.len() != 32 || claim.request_id.bytes().all(|byte| byte == b'0') || !claim.request_id.bytes().all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()) {
+        return Err(DirectoryError::Conflict("command request id must be 32 lowercase nonzero hex digits".into()));
+    }
+    if claim.command_sha256.len() != 64 || !claim.command_sha256.bytes().all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()) {
+        return Err(DirectoryError::Conflict("command digest must be 64 lowercase hex digits".into()));
+    }
+    Ok(())
+}
+
+/// 🏷️ The exact stored spelling of one durable command result class.
+pub(crate) fn directory_command_result_kind_str(kind: DirectoryCommandResultKindV1) -> &'static str {
+    match kind {
+        DirectoryCommandResultKindV1::None => "none",
+        DirectoryCommandResultKindV1::Invite => "invite",
+    }
+}
+
+/// 🏷️ Reads back one stored command result class.
+pub(crate) fn directory_command_result_kind_from_str(value: &str) -> DirectoryResult<DirectoryCommandResultKindV1> {
+    match value {
+        "none" => Ok(DirectoryCommandResultKindV1::None),
+        "invite" => Ok(DirectoryCommandResultKindV1::Invite),
+        other => Err(DirectoryError::Backend(format!("unknown command result kind '{other}'"))),
+    }
 }
 
 pub(crate) fn validate_admin_operation_audit(fact: &NewAdminOperationAuditRecord) -> DirectoryResult<()> {
@@ -1318,7 +1510,7 @@ async fn require_space(dir: &HubDirectories, space_id: &str) -> DirectoryResult<
 fn actor_user_id(actor: &DirectoryActor) -> DirectoryResult<&str> {
     match actor.kind {
         DirectoryActorKind::User => actor.id.strip_prefix("user:").and_then(|rest| rest.split('#').next()).ok_or_else(|| DirectoryError::Backend(format!("malformed user actor id '{}'", actor.id))),
-        _ => Err(DirectoryError::Backend("create-space requires a user actor".into())),
+        _ => Err(DirectoryError::Backend("operation requires a user actor".into())),
     }
 }
 
@@ -1514,6 +1706,47 @@ async fn decide_verified_checkpoint(dir: &HubDirectories, actor: &DirectoryActor
 //#endregion 🔖️Decider
 
 //#region 🔖️Service
+#[cfg(test)]
+struct DirectoryPublicationTestFence {
+    claimed: std::sync::atomic::AtomicBool,
+    reached: tokio::sync::Notify,
+    release: tokio::sync::Notify,
+}
+
+#[cfg(test)]
+impl DirectoryPublicationTestFence {
+    /// 🧪️ Creates a one-shot pause immediately after durable append.
+    fn new() -> Self {
+        Self { claimed: std::sync::atomic::AtomicBool::new(false), reached: tokio::sync::Notify::new(), release: tokio::sync::Notify::new() }
+    }
+}
+
+/// 🧾️ Closed outcome of one idempotent directory-command execution.
+#[derive(Clone, Debug, PartialEq)]
+pub enum DirectoryCommandExecutionV1 {
+    Receipt(DirectoryCommandReceiptV1),
+    Conflict,
+}
+
+/// 🎁️ The durable result class one command will produce, known before it executes.
+pub fn directory_command_result_kind(command: &DirectoryCommand) -> DirectoryCommandResultKindV1 {
+    match command {
+        DirectoryCommand::CreateInvite { .. } => DirectoryCommandResultKindV1::Invite,
+        _ => DirectoryCommandResultKindV1::None,
+    }
+}
+
+/// 🔒️ Seals the redacted receipt any later resolution of one durable key returns. A completed
+/// secret-bearing command resolves as `secret-undeliverable` (no duplicate was minted, and the
+/// one-shot capability is honestly unrecoverable); a still-pending key is equally undeliverable.
+pub fn replay_directory_command_receipt(record: &DirectoryCommandReceiptRecord) -> DirectoryCommandReceiptV1 {
+    let outcome = match (record.disposition, record.result_kind) {
+        (DirectoryCommandDispositionV1::Completed, DirectoryCommandResultKindV1::None) => DirectoryCommandOutcomeV1::PreviouslyAccepted,
+        _ => DirectoryCommandOutcomeV1::SecretUndeliverable,
+    };
+    DirectoryCommandReceiptV1::seal(record.request_id.clone(), record.command_sha256.clone(), outcome, Vec::new(), DirectoryCommandResultV1::None)
+}
+
 /// @emoji 🏭️ The hub's single directory writer. Every command is serialized behind one
 /// `tokio::sync::Mutex<HubClock>` (dense, gap-free `seq` — two concurrent commands can never
 /// interleave their `append_events` calls) and every persisted event (plus connection/presence
@@ -1524,6 +1757,8 @@ pub struct DirectoryService {
     write: tokio::sync::Mutex<HubClock>,
     tx: tokio::sync::broadcast::Sender<DirectoryStreamMessage>,
     artifact_cas_sweep_secret: [u8; 32],
+    #[cfg(test)]
+    publication_test_fence: std::sync::Mutex<Option<Arc<DirectoryPublicationTestFence>>>,
 }
 
 #[derive(Clone, Copy)]
@@ -1543,7 +1778,53 @@ impl DirectoryService {
         let mut sweep_secret = Sha256::new();
         sweep_secret.update(ARTIFACT_CAS_SWEEP_CONTINUATION_DOMAIN_V1);
         sweep_secret.update(time_ordered_id().as_bytes());
-        Self { dir, write: tokio::sync::Mutex::new(HubClock::new()), tx, artifact_cas_sweep_secret: sweep_secret.finalize() }
+        Self {
+            dir,
+            write: tokio::sync::Mutex::new(HubClock::new()),
+            tx,
+            artifact_cas_sweep_secret: sweep_secret.finalize(),
+            #[cfg(test)]
+            publication_test_fence: std::sync::Mutex::new(None),
+        }
+    }
+
+    #[cfg(test)]
+    /// 🧪️ Arms a one-shot post-append fence for the writer-order concurrency law.
+    fn arm_publication_test_fence(&self) -> Arc<DirectoryPublicationTestFence> {
+        let fence = Arc::new(DirectoryPublicationTestFence::new());
+        *self.publication_test_fence.lock().expect("publication test fence lock") = Some(fence.clone());
+        fence
+    }
+
+    #[cfg(test)]
+    /// ⏸️ Pauses the first committed page so a competing writer can prove it remains excluded.
+    async fn pause_publication_test_fence_once(&self, persisted: &[DirectoryEvent]) {
+        if persisted.is_empty() {
+            return;
+        }
+        let fence = self.publication_test_fence.lock().expect("publication test fence lock").clone();
+        if let Some(fence) = fence {
+            if !fence.claimed.swap(true, std::sync::atomic::Ordering::SeqCst) {
+                fence.reached.notify_one();
+                fence.release.notified().await;
+            }
+        }
+    }
+
+    /// 🪝️ Publishes a committed event page while the caller still owns the single writer guard.
+    fn publish_persisted_locked(&self, _clock: &tokio::sync::MutexGuard<'_, HubClock>, persisted: Vec<DirectoryEvent>) -> Vec<DirectoryEvent> {
+        for event in &persisted {
+            let _ = self.tx.send(DirectoryStreamMessage::Event { event: event.clone() });
+        }
+        persisted
+    }
+
+    /// 🔗️ Keeps durable append and synchronous fanout in the same writer-guard lifetime.
+    async fn append_and_publish_locked(&self, clock: &tokio::sync::MutexGuard<'_, HubClock>, events: &[NewDirectoryEvent]) -> DirectoryResult<Vec<DirectoryEvent>> {
+        let persisted = if events.is_empty() { Vec::new() } else { self.dir.append_events(events).await? };
+        #[cfg(test)]
+        self.pause_publication_test_fence_once(&persisted).await;
+        Ok(self.publish_persisted_locked(clock, persisted))
     }
 
     fn artifact_cas_sweep_continuation(&self, position: ArtifactCasSweepPosition) -> ArtifactCasSweepContinuation {
@@ -1602,12 +1883,60 @@ impl DirectoryService {
     pub async fn execute(&self, actor: DirectoryActor, command: DirectoryCommand) -> DirectoryResult<(Vec<DirectoryEvent>, Option<CommandResult>)> {
         let mut clock = self.write.lock().await;
         let decision = decide(self.dir.as_ref(), &actor, command, &mut clock).await?;
-        let persisted = if decision.events.is_empty() { Vec::new() } else { self.dir.append_events(&decision.events).await? };
-        drop(clock);
-        for event in &persisted {
-            let _ = self.tx.send(DirectoryStreamMessage::Event { event: event.clone() });
-        }
+        let persisted = self.append_and_publish_locked(&clock, &decision.events).await?;
         Ok((persisted, decision.result))
+    }
+
+    /// 🆔️ The idempotent command pipeline: take the write lock → atomically claim or read the
+    /// durable `(actor, request id)` key → `decide` → `append_events` → record the durable
+    /// completion → only then publish. A duplicate key never re-executes, so a lost reply can never
+    /// mint a second invitation; the one-shot capability travels back on this call alone.
+    pub async fn execute_idempotent(&self, actor: DirectoryActor, claim: NewDirectoryCommandReceipt, command: DirectoryCommand) -> DirectoryResult<DirectoryCommandExecutionV1> {
+        let mut clock = self.write.lock().await;
+        match self.dir.claim_or_read_directory_command_receipt(&claim).await? {
+            DirectoryCommandClaimV1::Conflict => return Ok(DirectoryCommandExecutionV1::Conflict),
+            DirectoryCommandClaimV1::Existing(record) => return Ok(DirectoryCommandExecutionV1::Receipt(replay_directory_command_receipt(&record))),
+            DirectoryCommandClaimV1::Claimed(_) => {}
+        }
+        let decision = match decide(self.dir.as_ref(), &actor, command, &mut clock).await {
+            Ok(decision) => decision,
+            Err(error) => {
+                self.dir.release_directory_command_receipt(&claim.actor_user_id, &claim.request_id).await?;
+                return Err(error);
+            }
+        };
+        let persisted = if decision.events.is_empty() { Vec::new() } else { self.dir.append_events(&decision.events).await? };
+        let replay_receipt_sha256 = replay_directory_command_receipt(&DirectoryCommandReceiptRecord {
+            actor_user_id: claim.actor_user_id.clone(),
+            request_id: claim.request_id.clone(),
+            command_sha256: claim.command_sha256.clone(),
+            result_kind: claim.result_kind,
+            disposition: DirectoryCommandDispositionV1::Completed,
+            event_seq_first: persisted.first().map(|event| event.seq),
+            event_seq_last: persisted.last().map(|event| event.seq),
+            receipt_sha256: None,
+            claimed_at: claim.claimed_at,
+            completed_at: None,
+        })
+        .receipt_sha256;
+        self.dir
+            .complete_directory_command_receipt(&DirectoryCommandReceiptCompletion {
+                actor_user_id: claim.actor_user_id.clone(),
+                request_id: claim.request_id.clone(),
+                event_seq_first: persisted.first().map(|event| event.seq),
+                event_seq_last: persisted.last().map(|event| event.seq),
+                receipt_sha256: replay_receipt_sha256,
+                completed_at: now_ms(),
+            })
+            .await?;
+        #[cfg(test)]
+        self.pause_publication_test_fence_once(&persisted).await;
+        let published = self.publish_persisted_locked(&clock, persisted);
+        let result = match decision.result.and_then(|result| result.invite_token) {
+            Some(invite_token) => DirectoryCommandResultV1::Invite { invite_token },
+            None => DirectoryCommandResultV1::None,
+        };
+        Ok(DirectoryCommandExecutionV1::Receipt(DirectoryCommandReceiptV1::seal(claim.request_id, claim.command_sha256, DirectoryCommandOutcomeV1::Accepted, published, result)))
     }
 
     /// 🆔️ Appends an administrator-created space under its pre-audited stable resource id.
@@ -1617,24 +1946,14 @@ impl DirectoryService {
             return Err(DirectoryError::Conflict("administrator space id already exists".into()));
         }
         let decision = decide_create_space(&actor, space_id, name, space_kind, visibility, &mut clock)?;
-        let persisted = self.dir.append_events(&decision.events).await?;
-        drop(clock);
-        for event in &persisted {
-            let _ = self.tx.send(DirectoryStreamMessage::Event { event: event.clone() });
-        }
-        Ok(persisted)
+        self.append_and_publish_locked(&clock, &decision.events).await
     }
 
     /// 🏛️ Serializes a trusted server authority decision with its atomic event/projection append.
     pub async fn execute_artifact_authority(&self, actor: DirectoryActor, command: ArtifactDirectoryCommand) -> DirectoryResult<Vec<DirectoryEvent>> {
         let mut clock = self.write.lock().await;
         let decision = decide_artifact_authority(self.dir.as_ref(), &actor, command, &mut clock).await?;
-        let persisted = if decision.events.is_empty() { Vec::new() } else { self.dir.append_events(&decision.events).await? };
-        drop(clock);
-        for event in &persisted {
-            let _ = self.tx.send(DirectoryStreamMessage::Event { event: event.clone() });
-        }
-        Ok(persisted)
+        self.append_and_publish_locked(&clock, &decision.events).await
     }
 
     /// 🎫️ Commits one exact server-owned reachability reservation before CAS writes.
@@ -1655,44 +1974,25 @@ impl DirectoryService {
             [event] => self.dir.append_reserved_artifact_checkpoint(Some(event), &checkpoint, &reservation, now_ms).await?,
             _ => return Err(DirectoryError::Backend("verified checkpoint decision emitted more than one event".into())),
         };
-        drop(clock);
-        for event in &persisted {
-            let _ = self.tx.send(DirectoryStreamMessage::Event { event: event.clone() });
-        }
-        Ok(persisted)
+        Ok(self.publish_persisted_locked(&clock, persisted))
     }
 
-    /// @emoji 🎟️ Redeems a still-valid, unrevoked invite: resolves (or, same unknown-email law as
-    /// `upsert-member`, creates) the redeeming user, then emits `invite.redeemed` — appended and
-    /// published under the same write lock `execute` uses, so a redemption's `seq` never races a
-    /// concurrent command. `POST /directory/invites/{token}/redeem` (contract C2) is not a
-    /// `DirectoryCommand` (invites are not event-sourced themselves), so it calls this instead of
-    /// `execute`.
+    /// 🎟️ Atomically claims one invite with its event and membership, then publishes before releasing the writer.
     pub async fn redeem_invite(&self, actor: DirectoryActor, capability: &InviteCapability, user_id: &str) -> DirectoryResult<Vec<DirectoryEvent>> {
         let mut clock = self.write.lock().await;
-        let invite = self.dir.authenticate_invite(capability).await?.ok_or(DirectoryError::Unauthorized)?;
-        if invite.revoked_at.is_some() {
-            return Err(DirectoryError::Conflict("invite already revoked".into()));
-        }
-        if invite.expires_at < now_ms() {
-            return Err(DirectoryError::Conflict("invite expired".into()));
-        }
-        if self.dir.get_user(user_id).await?.is_none() {
+        if actor_user_id(&actor)? != user_id {
             return Err(DirectoryError::Unauthorized);
         }
-        let events = vec![new_event(
-            &mut clock,
-            &actor,
-            Some(invite.space_id.clone()),
-            Some(user_id.to_string()),
-            DirectoryEventBody::InviteRedeemed { space_id: invite.space_id.clone(), user_id: user_id.to_string(), invite_id: invite.id.clone(), role: role_to_wire(invite.role) },
-        )];
-        drop(clock);
-        let persisted = self.dir.append_events(&events).await?;
-        for event in &persisted {
-            let _ = self.tx.send(DirectoryStreamMessage::Event { event: event.clone() });
+        let hlc = clock.tick();
+        match self.dir.redeem_invite_atomic(capability, &actor, user_id, hlc).await? {
+            InviteRedemptionCommit::NewlyCommitted { event } => {
+                let persisted = vec![event];
+                #[cfg(test)]
+                self.pause_publication_test_fence_once(&persisted).await;
+                Ok(self.publish_persisted_locked(&clock, persisted))
+            }
+            InviteRedemptionCommit::AlreadyCommitted { event } => Ok(vec![event]),
         }
-        Ok(persisted)
     }
 
     /// @emoji 📡️ A fresh receiver over every future published `DirectoryStreamMessage` (events,
@@ -1979,6 +2279,9 @@ pub trait HubDirectory: Send + Sync + 'static {
     /// archive laws and to compute `archive-space`'s demote-every-author events.
     async fn list_members(&self, space_id: &str) -> DirectoryResult<Vec<(UserRecord, SpaceRole)>>;
     async fn get_role(&self, space_id: &str, user_id: &str) -> DirectoryResult<Option<SpaceRole>>;
+    /// 🏛️ One keyset-ordered bounded administration member window (`user_id ASC`), projected to
+    /// display columns inside the backend so no credential-bearing record is ever constructed.
+    async fn list_space_administration_members_page(&self, space_id: &str, after_user_id: Option<&str>, limit: usize) -> DirectoryResult<Vec<SpaceAdministrationMemberRow>>;
     //#endregion
 
     //#region Documents
@@ -2056,6 +2359,25 @@ pub trait HubDirectory: Send + Sync + 'static {
     async fn list_admin_operation_audit(&self, after_sequence: u64, limit: usize) -> DirectoryResult<Vec<AdminOperationAuditRecord>>;
     //#endregion
 
+    //#region CommandReceipts
+    /// 🔐️ Atomically claims one `(authenticated user id, request id)` idempotency key or reads the
+    /// row already under it. An equal key with an unequal command digest is `Conflict` and never
+    /// executes. This is the single serialization point the command writer holds across its whole
+    /// decide/append sequence, so a duplicate request can never mint a second invitation.
+    async fn claim_or_read_directory_command_receipt(&self, _claim: &NewDirectoryCommandReceipt) -> DirectoryResult<DirectoryCommandClaimV1> {
+        Err(DirectoryError::Backend("directory command receipts are unavailable for this backend".into()))
+    }
+    /// 🧾️ Records the durable completion of one claimed key. The caller publishes only after this
+    /// returns, so a delivered event is always covered by a durable receipt.
+    async fn complete_directory_command_receipt(&self, _completion: &DirectoryCommandReceiptCompletion) -> DirectoryResult<DirectoryCommandReceiptRecord> {
+        Err(DirectoryError::Backend("directory command receipts are unavailable for this backend".into()))
+    }
+    /// 🧹️ Releases one claimed key whose command failed before any durable event was appended.
+    async fn release_directory_command_receipt(&self, _actor_user_id: &str, _request_id: &str) -> DirectoryResult<()> {
+        Err(DirectoryError::Backend("directory command receipts are unavailable for this backend".into()))
+    }
+    //#endregion
+
     //#region Invites
     // 🎟️ Not event-sourced (contract's decider laws) — only redemption is (`invite.redeemed`, see
     // `DirectoryService::redeem_invite`). `create_invite`/`revoke_invite` are called directly by
@@ -2064,12 +2386,16 @@ pub trait HubDirectory: Send + Sync + 'static {
     async fn issue_invite(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, correlation_id: &str) -> DirectoryResult<IssuedInvite> {
         self.issue_invite_as(space_id, role, ttl_secs, None, correlation_id).await
     }
-    async fn authenticate_invite(&self, capability: &InviteCapability) -> DirectoryResult<Option<InviteRecord>>;
+    /// 🎟️ Claims `accepted_at`, appends the derived event and applies membership in one backend transaction.
+    async fn redeem_invite_atomic(&self, capability: &InviteCapability, actor: &DirectoryActor, user_id: &str, hlc: Hlc) -> DirectoryResult<InviteRedemptionCommit>;
     async fn revoke_invite_as(&self, invite_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()>;
     async fn revoke_invite(&self, invite_id: &str, reason: &str, correlation_id: &str) -> DirectoryResult<()> {
         self.revoke_invite_as(invite_id, reason, None, correlation_id).await
     }
     async fn list_invites(&self, space_id: &str) -> DirectoryResult<Vec<InviteRecord>>;
+    /// 🏛️ One keyset-ordered bounded administration invite window (`created_at DESC, id DESC`),
+    /// projected to metadata inside the backend so no selector or secret digest is ever read.
+    async fn list_space_administration_invites_page(&self, space_id: &str, after: Option<(i64, &str)>, limit: usize) -> DirectoryResult<Vec<SpaceAdministrationInviteRow>>;
     //#endregion
 
     //#region SyncSessions
@@ -2385,6 +2711,20 @@ impl HubDirectory for HubDirectories {
             Self::Postgres(inner) => inner.get_role(space_id, user_id).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(inner) => inner.get_role(space_id, user_id).await,
+        }
+    }
+
+    async fn list_space_administration_members_page(&self, space_id: &str, after_user_id: Option<&str>, limit: usize) -> DirectoryResult<Vec<SpaceAdministrationMemberRow>> {
+        if limit == 0 || limit > SPACE_ADMINISTRATION_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("space administration member page limit must be 1..={SPACE_ADMINISTRATION_PAGE_FETCH_MAX}")));
+        }
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.list_space_administration_members_page(space_id, after_user_id, limit).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.list_space_administration_members_page(space_id, after_user_id, limit).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.list_space_administration_members_page(space_id, after_user_id, limit).await,
         }
     }
 
@@ -2732,14 +3072,14 @@ impl HubDirectory for HubDirectories {
         }
     }
 
-    async fn authenticate_invite(&self, capability: &InviteCapability) -> DirectoryResult<Option<InviteRecord>> {
+    async fn redeem_invite_atomic(&self, capability: &InviteCapability, actor: &DirectoryActor, user_id: &str, hlc: Hlc) -> DirectoryResult<InviteRedemptionCommit> {
         match self {
             #[cfg(feature = "sqlite")]
-            Self::Sqlite(inner) => inner.authenticate_invite(capability).await,
+            Self::Sqlite(inner) => inner.redeem_invite_atomic(capability, actor, user_id, hlc).await,
             #[cfg(feature = "postgres")]
-            Self::Postgres(inner) => inner.authenticate_invite(capability).await,
+            Self::Postgres(inner) => inner.redeem_invite_atomic(capability, actor, user_id, hlc).await,
             #[cfg(feature = "neo4j")]
-            Self::Neo4j(inner) => inner.authenticate_invite(capability).await,
+            Self::Neo4j(inner) => inner.redeem_invite_atomic(capability, actor, user_id, hlc).await,
         }
     }
 
@@ -2762,6 +3102,20 @@ impl HubDirectory for HubDirectories {
             Self::Postgres(inner) => inner.list_invites(space_id).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(inner) => inner.list_invites(space_id).await,
+        }
+    }
+
+    async fn list_space_administration_invites_page(&self, space_id: &str, after: Option<(i64, &str)>, limit: usize) -> DirectoryResult<Vec<SpaceAdministrationInviteRow>> {
+        if limit == 0 || limit > SPACE_ADMINISTRATION_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("space administration invite page limit must be 1..={SPACE_ADMINISTRATION_PAGE_FETCH_MAX}")));
+        }
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.list_space_administration_invites_page(space_id, after, limit).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.list_space_administration_invites_page(space_id, after, limit).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.list_space_administration_invites_page(space_id, after, limit).await,
         }
     }
 
@@ -2960,7 +3314,7 @@ mod tests {
 
     #[test]
     fn typed_capabilities_match_neutral_sha256_vectors_and_fixed_boundaries() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🔐️auth/🧪️fixtures/🧬️capability-v1/🔣️.json")).expect("auth capability fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🔐️auth/🧪️fixtures/🔑️capability-v1/🔣️.json")).expect("auth capability fixture");
         let session = SessionCapability::parse(fixture["session"]["capability"].as_str().expect("session capability")).expect("session parser");
         let share = ShareCapability::parse(fixture["share"]["capability"].as_str().expect("share capability")).expect("share parser");
         let invite = InviteCapability::parse(fixture["invite"]["capability"].as_str().expect("invite capability")).expect("invite parser");
@@ -3044,7 +3398,7 @@ mod tests {
     }
 
     fn artifact_projection_fixture() -> (DocumentDescriptor, PublishedArtifactCheckpoint, PublishedArtifactCheckpoint, ArtifactRetention, u64) {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🔣️artifact-checkpoint-projection.json")).expect("checkpoint projection fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/📸️artifact-checkpoint-projection.json")).expect("checkpoint projection fixture");
         let decode = |field: &str| DslValue::from(fixture.get(field).expect("fixture field").clone());
         (
             DocumentDescriptor::from_value(decode("descriptor")).expect("fixture descriptor"),
@@ -3428,6 +3782,85 @@ mod tests {
         events[0].space_id.clone().expect("space id on space.created")
     }
 
+    /// 📣️ A committed page cannot be overtaken on the live channel while it still owns the writer guard.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn directory_append_and_live_broadcast_share_one_writer_guard_and_projection_order() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/📣️ordered-append-broadcast-v1/🔣️.json")).expect("language-neutral ordered publication fixture");
+        assert_eq!(fixture["schema"], "semio.hub.directory.ordered-append-broadcast/v1");
+        assert_eq!(fixture["cases"].as_array().expect("ordered publication cases").len(), 4);
+
+        let dir = fresh_dir().await;
+        let service = Arc::new(DirectoryService::new(dir.clone(), 16));
+        let owner = user_actor("u-owner");
+        let space_id = create_space(service.as_ref(), &owner, DirectorySpaceKind::Studio).await;
+        service
+            .execute(owner.clone(), DirectoryCommand::UpsertMember { space_id: space_id.clone(), email: "ordered@example.com".into(), role: DirectorySpaceRole::Spectator })
+            .await
+            .expect("seed ordered member");
+        let member_id = dir
+            .list_members(&space_id)
+            .await
+            .expect("seeded member projection")
+            .into_iter()
+            .find(|(user, _)| user.email == "ordered@example.com")
+            .expect("ordered member")
+            .0
+            .id;
+        let since = dir.head_seq().await.expect("head before concurrent publication");
+        let mut receiver = service.subscribe();
+        let fence = service.arm_publication_test_fence();
+
+        let first_service = service.clone();
+        let first_owner = owner.clone();
+        let first_space = space_id.clone();
+        let first = tokio::spawn(async move {
+            first_service
+                .execute(first_owner, DirectoryCommand::UpsertMember { space_id: first_space, email: "ordered@example.com".into(), role: DirectorySpaceRole::Author })
+                .await
+                .expect("first concurrent member update")
+                .0
+        });
+        tokio::time::timeout(std::time::Duration::from_secs(1), fence.reached.notified()).await.expect("first committed page reached publication fence");
+
+        let second_service = service.clone();
+        let second_owner = owner.clone();
+        let second_space = space_id.clone();
+        let second = tokio::spawn(async move {
+            second_service
+                .execute(second_owner, DirectoryCommand::UpsertMember { space_id: second_space, email: "ordered@example.com".into(), role: DirectorySpaceRole::Spectator })
+                .await
+                .expect("second concurrent member update")
+                .0
+        });
+        assert!(tokio::time::timeout(std::time::Duration::from_millis(50), receiver.recv()).await.is_err(), "a later writer cannot append or broadcast while the committed first page is fenced");
+        fence.release.notify_one();
+
+        let first_events = first.await.expect("first writer task");
+        let second_events = second.await.expect("second writer task");
+        assert_eq!(first_events.len(), 1);
+        assert_eq!(second_events.len(), 1);
+        assert_eq!([first_events[0].seq, second_events[0].seq], [since + 1, since + 2]);
+        let mut observed = Vec::new();
+        for _ in 0..2 {
+            match tokio::time::timeout(std::time::Duration::from_secs(1), receiver.recv()).await.expect("ordered live event deadline").expect("ordered live event") {
+                DirectoryStreamMessage::Event { event } => observed.push(event.seq),
+                _ => panic!("directory writer emitted a non-event message"),
+            }
+        }
+        assert_eq!(observed, vec![since + 1, since + 2]);
+        assert_eq!(dir.events_since(since, 2).await.expect("durable concurrent event page").iter().map(|event| event.seq).collect::<Vec<_>>(), observed);
+        assert_eq!(
+            dir.list_members(&space_id)
+                .await
+                .expect("final member projection")
+                .into_iter()
+                .find(|(user, _)| user.id == member_id)
+                .expect("final ordered member")
+                .1,
+            SpaceRole::Spectator,
+        );
+    }
+
     // 🔬️ Replaying the whole log through `rebuild_projections` reproduces the exact same
     // projections a live command stream built, and `events_since(0)` is dense `1..=head_seq()`.
     #[tokio::test]
@@ -3568,7 +4001,7 @@ mod tests {
 
     #[tokio::test]
     async fn artifact_chunk_cas_opaque_continuation_converges_after_page_overflow_cancel_and_resume() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🗿️artifact-authority/🧪️fixtures/🧬️artifact-chunk-cas/🔣️.json")).expect("artifact CAS fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🗿️artifact-authority/🧪️fixtures/🧱️artifact-chunk-cas/🔣️.json")).expect("artifact CAS fixture");
         let law = &fixture["sweepContinuation"];
         let object_counts = law["planObjectCounts"].as_array().expect("plan object counts");
         let total_objects = law["totalObjects"].as_u64().expect("total objects");
@@ -3635,7 +4068,7 @@ mod tests {
 
     #[tokio::test]
     async fn artifact_chunk_cas_two_service_sweep_and_reservation_race_is_serialized_before_rewrite() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🗿️artifact-authority/🧪️fixtures/🧬️artifact-chunk-cas/🔣️.json")).expect("artifact CAS fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🗿️artifact-authority/🧪️fixtures/🧱️artifact-chunk-cas/🔣️.json")).expect("artifact CAS fixture");
         let barrier = &fixture["deleteBarrier"];
         assert_eq!(barrier["leaseMaximumMs"].as_u64(), Some(ARTIFACT_CAS_DELETE_LEASE_TTL_MS));
         assert_eq!(barrier["dryRunAdvancesEpoch"].as_bool(), Some(false));
@@ -3908,7 +4341,7 @@ mod tests {
 
     #[test]
     fn artifact_public_scalars_and_private_locators_obey_exact_max_plus_one_laws() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🔣️artifact-checkpoint-projection.json")).expect("checkpoint projection fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/📸️artifact-checkpoint-projection.json")).expect("checkpoint projection fixture");
         assert_eq!(fixture["wireIntegerMaximum"].as_u64(), Some(DIRECTORY_WIRE_INTEGER_MAX));
         assert_eq!(fixture["privateLocatorMaximumBytes"].as_u64(), Some(ARTIFACT_PRIVATE_LOCATOR_MAX_BYTES as u64));
         assert_eq!(fixture["eventReadMaximum"].as_u64(), Some(DIRECTORY_EVENT_READ_MAX as u64));
@@ -4130,10 +4563,185 @@ mod tests {
 
         let invites = dir.list_invites(&space_id).await.expect("list invites");
         assert_eq!(invites.len(), 1);
-        dir.revoke_invite(&invites[0].id, "test-revoke", "invite-round-trip").await.expect("revoke");
-        let fetched = dir.list_invites(&space_id).await.expect("list revoked invite").pop().expect("invite still exists");
-        assert!(fetched.revoked_at.is_some());
-        assert_eq!(fetched.revoked_reason.as_deref(), Some("test-revoke"));
+        assert_eq!(invites[0].accepted_at, Some(redeemed[0].recorded_at_ms));
+        assert_eq!(invites[0].accepted_event_id.as_deref(), Some(redeemed[0].id.as_str()));
+        let retried = service.redeem_invite(user_actor(&invited.id), &capability, &invited.id).await.expect("idempotent same-user retry");
+        assert_eq!(retried, redeemed);
+        assert!(matches!(dir.revoke_invite(&invites[0].id, "test-revoke", "invite-round-trip").await, Err(DirectoryError::Conflict(message)) if message == "invite already accepted"));
+    }
+
+    /// 🎟️ Two independent service writers still produce one durable invitation claim across restart and rebuild.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn invite_redemption_sqlite_claim_is_exactly_once_across_concurrency_restart_and_rebuild() {
+        let root = std::env::temp_dir().join(format!("semio-invite-claim-{}", time_ordered_id()));
+        std::fs::create_dir(&root).expect("create invite test directory");
+        let path = root.join("directory.sqlite3");
+        let path_text = path.to_string_lossy().into_owned();
+        let primary_backend = SqliteDirectory::connect(&path_text).await.expect("connect primary");
+        primary_backend.seed().await.expect("seed");
+        let primary = Arc::new(HubDirectories::from(primary_backend));
+        let invited = primary.create_user("invite-race@example.com", "Invite Race", None, None, None).await.expect("create invited user");
+        let issued = primary.issue_invite("default", SpaceRole::Spectator, 3600, "invite-race").await.expect("issue invite");
+        let secondary = Arc::new(HubDirectories::from(SqliteDirectory::connect(&path_text).await.expect("connect secondary")));
+        let services = [Arc::new(DirectoryService::new(primary.clone(), 16)), Arc::new(DirectoryService::new(secondary.clone(), 16))];
+        let barrier = Arc::new(tokio::sync::Barrier::new(3));
+        let mut claims = Vec::new();
+        for service in services {
+            let barrier = barrier.clone();
+            let capability = issued.capability.clone();
+            let user_id = invited.id.clone();
+            claims.push(tokio::spawn(async move {
+                barrier.wait().await;
+                service.redeem_invite(user_actor(&user_id), &capability, &user_id).await
+            }));
+        }
+        barrier.wait().await;
+        let results = [claims.remove(0).await.expect("first claim task"), claims.remove(0).await.expect("second claim task")];
+        assert_eq!(results.iter().filter(|result| result.is_ok()).count(), 2);
+        let returned_ids: BTreeSet<_> = results.iter().map(|result| result.as_ref().expect("same-user claim result")[0].id.as_str()).collect();
+        assert_eq!(returned_ids.len(), 1, "the second service returns the original immutable event");
+        let events = primary.events_since(0, DIRECTORY_EVENT_PAGE_MAX).await.expect("durable events");
+        let redeemed: Vec<_> = events.iter().filter(|event| matches!(event.body, DirectoryEventBody::InviteRedeemed { .. })).collect();
+        assert_eq!(redeemed.len(), 1);
+        assert_eq!(primary.list_invites("default").await.expect("claimed invite")[0].accepted_at, Some(redeemed[0].recorded_at_ms));
+        assert_eq!(primary.list_members("default").await.expect("projected membership").iter().filter(|(user, _)| user.id == invited.id).count(), 1);
+
+        let other = primary.create_user("invite-race-other@example.com", "Invite Race Other", None, None, None).await.expect("create competing user");
+        let contested = primary.issue_invite("default", SpaceRole::Spectator, 3600, "invite-race-different-users").await.expect("issue contested invite");
+        let barrier = Arc::new(tokio::sync::Barrier::new(3));
+        let contenders = [(primary.clone(), invited.id.clone()), (secondary.clone(), other.id.clone())];
+        let mut claims = Vec::new();
+        for (directory, user_id) in contenders {
+            let barrier = barrier.clone();
+            let capability = contested.capability.clone();
+            claims.push(tokio::spawn(async move {
+                barrier.wait().await;
+                DirectoryService::new(directory, 16).redeem_invite(user_actor(&user_id), &capability, &user_id).await
+            }));
+        }
+        barrier.wait().await;
+        let contested_results = [claims.remove(0).await.expect("first contested claim"), claims.remove(0).await.expect("second contested claim")];
+        assert_eq!(contested_results.iter().filter(|result| result.is_ok()).count(), 1);
+        assert_eq!(contested_results.iter().filter(|result| matches!(result, Err(DirectoryError::Conflict(message)) if message == "invite already accepted")).count(), 1);
+        let contested_event = primary
+            .events_since(0, DIRECTORY_EVENT_PAGE_MAX)
+            .await
+            .expect("contested durable events")
+            .into_iter()
+            .find(|event| matches!(&event.body, DirectoryEventBody::InviteRedeemed { invite_id, .. } if invite_id == &contested.record.id))
+            .expect("one contested event");
+        let contested_user = contested_event.user_id.clone().expect("contested event user");
+        let contested_retry = DirectoryService::new(primary.clone(), 16)
+            .redeem_invite(user_actor(&contested_user), &contested.capability, &contested_user)
+            .await
+            .expect("winning user idempotent retry");
+        assert_eq!(contested_retry[0].id, contested_event.id);
+        drop(primary);
+        drop(secondary);
+
+        let reopened_backend = SqliteDirectory::connect(&path_text).await.expect("reopen");
+        let reopened = Arc::new(HubDirectories::from(reopened_backend));
+        let reopened_service = DirectoryService::new(reopened.clone(), 16);
+        let reopened_retry = reopened_service.redeem_invite(user_actor(&invited.id), &issued.capability, &invited.id).await.expect("restart same-user retry");
+        assert_eq!(reopened_retry[0].id, redeemed[0].id);
+        let reopened_contested = reopened_service.redeem_invite(user_actor(&contested_user), &contested.capability, &contested_user).await.expect("restart contested winner retry");
+        assert_eq!(reopened_contested[0].id, contested_event.id);
+        let before = reopened.events_since(0, DIRECTORY_EVENT_PAGE_MAX).await.expect("events before rebuild");
+        reopened.rebuild_projections().await.expect("rebuild projections");
+        let after = reopened.events_since(0, DIRECTORY_EVENT_PAGE_MAX).await.expect("events after rebuild");
+        assert_eq!(before, after);
+        assert_eq!(after.iter().filter(|event| matches!(event.body, DirectoryEventBody::InviteRedeemed { .. })).count(), 2);
+        assert_eq!(reopened.list_members("default").await.expect("rebuilt membership").iter().filter(|(user, _)| user.id == invited.id).count(), 1);
+        drop(reopened_service);
+        drop(reopened);
+        for target in [&path, &root.join("directory.sqlite3-wal"), &root.join("directory.sqlite3-shm")] {
+            if target.exists() {
+                std::fs::remove_file(target).expect("remove exact invite test file");
+            }
+        }
+        std::fs::remove_dir(&root).expect("remove invite test directory");
+    }
+
+    /// 🎟️ A projection failure rolls back the accepted marker and event so the exact capability remains retryable.
+    #[tokio::test]
+    async fn invite_redemption_projection_failure_rolls_back_claim_event_and_membership() {
+        let backend = SqliteDirectory::connect(":memory:").await.expect("connect");
+        backend.seed().await.expect("seed");
+        let mut clock = HubClock::new();
+        backend
+            .append_events(&[new_event(
+                &mut clock,
+                &DirectoryActor { kind: DirectoryActorKind::System, id: "system:invite-failure".into() },
+                None,
+                Some("u-invite-failure".into()),
+                DirectoryEventBody::UserCreated { user_id: "u-invite-failure".into(), email: "invite-failure@example.com".into(), display_name: "Invite Failure".into() },
+            )])
+            .await
+            .expect("seed failure user");
+        let issued = backend.issue_invite("default", SpaceRole::Spectator, 3600, "invite-failure").await.expect("issue invite");
+        let head_before_forgery = backend.head_seq().await.expect("head before forged redemption");
+        let forged = new_event(
+            &mut clock,
+            &user_actor("u-invite-failure"),
+            Some("default".into()),
+            Some("u-invite-failure".into()),
+            DirectoryEventBody::InviteRedeemed { space_id: "default".into(), user_id: "u-invite-failure".into(), invite_id: issued.record.id.clone(), role: DirectorySpaceRole::Spectator },
+        );
+        assert!(matches!(backend.append_events(&[forged]).await, Err(DirectoryError::Conflict(_))));
+        assert_eq!(backend.head_seq().await.expect("head after forged redemption"), head_before_forgery);
+        backend.install_invite_projection_failure().expect("install projection failure");
+        let directory = Arc::new(HubDirectories::from(backend));
+        let service = DirectoryService::new(directory.clone(), 16);
+        assert!(matches!(service.redeem_invite(user_actor("u-invite-failure"), &issued.capability, "u-invite-failure").await, Err(DirectoryError::Backend(_))));
+        assert_eq!(directory.list_invites("default").await.expect("invite after rollback")[0].accepted_at, None);
+        assert_eq!(directory.events_since(0, DIRECTORY_EVENT_PAGE_MAX).await.expect("events after rollback").iter().filter(|event| matches!(event.body, DirectoryEventBody::InviteRedeemed { .. })).count(), 0);
+        assert_eq!(directory.get_role("default", "u-invite-failure").await.expect("membership after rollback"), None);
+        let HubDirectories::Sqlite(backend) = directory.as_ref() else { panic!("invite rollback law requires SQLite") };
+        backend.clear_invite_projection_failure().expect("clear projection failure");
+        let redeemed = service.redeem_invite(user_actor("u-invite-failure"), &issued.capability, "u-invite-failure").await.expect("retry exact invite");
+        assert_eq!(redeemed.len(), 1);
+        assert_eq!(directory.get_role("default", "u-invite-failure").await.expect("membership after retry"), Some(SpaceRole::Spectator));
+        backend
+            .lock()
+            .expect("sqlite corruption fixture lock")
+            .execute("UPDATE hub_space_invite SET accepted_event_id = 'missing-event' WHERE id = ?1", [&issued.record.id])
+            .expect("install corrupt acceptance marker");
+        assert!(matches!(service.redeem_invite(user_actor("u-invite-failure"), &issued.capability, "u-invite-failure").await, Err(DirectoryError::Backend(_))));
+    }
+
+    /// 📣️ A committed redemption is broadcast before a later command can enter the shared writer.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn invite_redemption_commit_and_publication_precede_the_next_directory_command() {
+        let directory = fresh_dir().await;
+        let service = Arc::new(DirectoryService::new(directory.clone(), 16));
+        let owner = user_actor("u-owner");
+        let space_id = create_space(&service, &owner, DirectorySpaceKind::Studio).await;
+        let invited = directory.create_user("invite-order@example.com", "Invite Order", None, None, None).await.expect("create invited user");
+        let issued = directory.issue_invite(&space_id, SpaceRole::Spectator, 3600, "invite-order").await.expect("issue invite");
+        let mut receiver = service.subscribe();
+        let fence = service.arm_publication_test_fence();
+        let redeem_service = service.clone();
+        let redeem_user = invited.id.clone();
+        let capability = issued.capability.clone();
+        let redeem = tokio::spawn(async move { redeem_service.redeem_invite(user_actor(&redeem_user), &capability, &redeem_user).await });
+        fence.reached.notified().await;
+        let rename_service = service.clone();
+        let rename_actor = owner.clone();
+        let rename_space = space_id.clone();
+        let rename = tokio::spawn(async move { rename_service.execute(rename_actor, DirectoryCommand::RenameSpace { space_id: rename_space, name: "After Invite".into() }).await });
+        tokio::task::yield_now().await;
+        assert!(!rename.is_finished(), "later command remains excluded until redemption publication");
+        fence.release.notify_one();
+        let redeemed = redeem.await.expect("redeem task").expect("redeem");
+        let renamed = rename.await.expect("rename task").expect("rename").0;
+        assert!(redeemed[0].seq < renamed[0].seq);
+        let first = receiver.recv().await.expect("redeem publication");
+        let second = receiver.recv().await.expect("rename publication");
+        assert!(matches!(first, DirectoryStreamMessage::Event { event } if event.seq == redeemed[0].seq));
+        assert!(matches!(second, DirectoryStreamMessage::Event { event } if event.seq == renamed[0].seq));
+        let retried = service.redeem_invite(user_actor(&invited.id), &issued.capability, &invited.id).await.expect("same-user retry");
+        assert_eq!(retried, redeemed);
+        assert!(tokio::time::timeout(std::time::Duration::from_millis(25), receiver.recv()).await.is_err(), "idempotent retry never republishes the original event");
     }
 }
 //#endregion 🧪️Tests

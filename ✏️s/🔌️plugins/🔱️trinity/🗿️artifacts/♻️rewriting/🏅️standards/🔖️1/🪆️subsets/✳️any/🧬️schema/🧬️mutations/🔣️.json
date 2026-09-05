@@ -3,13 +3,13 @@
   "$id": "https://semio.tech/schema/s/trinity/rewriting/mutation.json",
   "title": "RewriteRuleMutation",
   "oneOf": [
-    { "$ref": "./🖼️edit-before-fixture/🔣️.schema.json" },
-    { "$ref": "./🔍️edit-lhs/🔣️.schema.json" },
-    { "$ref": "./🎯️edit-rhs/🔣️.schema.json" },
-    { "$ref": "./🔧️change-parameter-binding/🔣️.schema.json" },
-    { "$ref": "./🧹️remove-parameter-binding/🔣️.schema.json" },
-    { "$ref": "./📐️change-rule-layout-point/🔣️.schema.json" },
-    { "$ref": "./🗑️remove-rule-layout-point/🔣️.schema.json" }
+    { "$ref": "./🖼️edit-before-fixture/🧬️.schema.json" },
+    { "$ref": "./🔍️edit-lhs/🧬️.schema.json" },
+    { "$ref": "./🎯️edit-rhs/🧬️.schema.json" },
+    { "$ref": "./🔧️change-parameter-binding/🧬️.schema.json" },
+    { "$ref": "./🧹️remove-parameter-binding/🧬️.schema.json" },
+    { "$ref": "./📐️change-rule-layout-point/🧬️.schema.json" },
+    { "$ref": "./🗑️remove-rule-layout-point/🧬️.schema.json" }
   ],
   "x-semio-mutationKinds": [
     "edit-before-fixture",

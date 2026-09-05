@@ -317,7 +317,7 @@ impl store::ArtifactPack for SemioTableSnapshot {
 
 //#region 🌉️ExternalCodecBridge
 /// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
-/// `s.stdio.semio.table` — the shape `mutate-semio-table` compares under `ordered-json-v1`, derived from the
+/// `s.stdio.semio.table` — the shape `📌️mutate-semio-table` compares under `ordered-json-v1`, derived from the
 /// snapshot type itself rather than hand-written a second time in the adapter, where it could drift
 /// away from the type it claims to project. Cells are a discriminated value union rather than plain scalars, and rows are positional, so
 /// the projection has to preserve both the cell tagging and the row order the fixtures were authored
@@ -330,7 +330,7 @@ pub fn encode_semio_table_snapshot_json(snapshot: &SemioTableSnapshot) -> String
 
 /// 📥️ The `pack::from_json_str` inverse of [`encode_semio_table_snapshot_json`] — decodes the committed
 /// `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
-/// specification vectors into real [`SemioTableSnapshot`] values, so `mutate-semio-table`'s adapter reads the
+/// specification vectors into real [`SemioTableSnapshot`] values, so `📌️mutate-semio-table`'s adapter reads the
 /// committed fixture instead of re-declaring it as a Rust literal beside it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_table_snapshot_json(text: &str) -> Result<SemioTableSnapshot, String> {
@@ -341,7 +341,7 @@ pub fn decode_semio_table_snapshot_json(text: &str) -> Result<SemioTableSnapshot
 //#region 🔖️Wire
 /// 📝️ Parses `s.stdio.semio.table` DSL text into a [`SemioTableSnapshot`] — a named pass-through of this snapshot's own
 /// `store::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
-/// crate, so `mutate-semio-table`'s `identity-round-trip` scenario reaches the real committed
+/// crate, so `📌️mutate-semio-table`'s `identity-round-trip` scenario reaches the real committed
 /// artifact (`../../📚️examples/📃️sheet/🖼️assets/🗣️.dsl.semio`) through this instead.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_table_dsl(text: &str) -> Result<SemioTableSnapshot, String> {

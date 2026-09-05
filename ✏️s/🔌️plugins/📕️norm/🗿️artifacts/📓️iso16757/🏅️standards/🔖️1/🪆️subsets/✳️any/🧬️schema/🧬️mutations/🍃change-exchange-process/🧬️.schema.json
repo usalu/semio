@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeExchangeProcess",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newExchangeProcess"
+  ],
+  "properties": {
+    "newExchangeProcess": {
+      "type": "string",
+      "enum": [
+        "CreateFromDictionary",
+        "ProvideCatalogue",
+        "DetermineProduct",
+        "IntegrateIntoSystem",
+        "ExchangeSystemModel"
+      ]
+    }
+  }
+}

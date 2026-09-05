@@ -37,7 +37,7 @@ pub async fn definition() -> WindowKindDefinition {
     }
 }
 
-/// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
+/// ☑️ The live chrome measures for this window, collected from its `☑️options/*` components.
 pub async fn window_measures(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) -> Vec<WindowMeasure> {
     vec![
         representations::measure(definition, config, window_id, labels),

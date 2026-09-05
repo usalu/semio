@@ -9,6 +9,7 @@ use crate::artifacts::flow::schema::{FLOW_DEFAULT_GRID_FACTOR, FLOW_DEFAULT_PROX
 use crate::artifacts::flow::FlowSnapshot;
 use flow::{dag::DagFixture, flow_backed_node_graph_extras, flow_host_with_session, FlowEvalSession, FLOW_LOD_MODE_AUTOMATIC};
 use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
 //#region 🔖️Constants
@@ -98,7 +99,7 @@ pub fn render(document: &FlowSnapshot) -> UiAssemblyResult<BuiltNode> {
         preview_off_json: None,
         ..NodeGraphScene::base(nodes, edges, viewport)
     };
-    scene_surface(SURFACE_ID, SurfaceKind::NodeGraph, &scene)
+    scene_surface(SURFACE_ID, ContractSurfaceKind::NodeGraph, &scene)
 }
 //#endregion 🔖️Render
 

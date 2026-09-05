@@ -1,0 +1,185 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own mutation-catalog contribution to the repository test platform -- registers the asset slice of the glTF 2.0 mutation vocabulary (moved here from the artifact-level ♾️any catalog by shard A6, ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). The shared whole-document io/oracle/generator machinery, and every mutation's own manifest/fixture record, stay centralized at the artifact's ♾️any substrate; this file exists so the asset vocabulary directory has a claiming catalog of its own, per `unregistered-mutation-vocabulary`.",
+  "mutationCatalogs": [
+    {
+      "id": "gltf-2-0-asset",
+      "capability": "gltf-2-0-mutate",
+      "standardDirectoryName": "🔖️2.0",
+      "subsetDirectoryName": "🪪️asset",
+      "vectors": [
+        {
+          "mutationId": "change-asset-descriptive-metadata",
+          "sourceMutationDirectoryName": "📝️change-description",
+          "mutationDirectoryName": "📝️change-description",
+          "scenarios": [
+            {
+              "id": "restamps-generator-copyright-and-min-version",
+              "directoryName": "🧪️restamps-generator-copyright-and-min-version"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-asset-extension-data",
+          "sourceMutationDirectoryName": "🧩️change-extensions",
+          "mutationDirectoryName": "🧩️change-extensions",
+          "scenarios": [
+            {
+              "id": "attaches-an-xmp-extension-object-to-the-asset-block",
+              "directoryName": "🧪️attaches-an-xmp-extension-object-to-the-asset-block"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-asset-extra-data",
+          "sourceMutationDirectoryName": "🧾️change-extras",
+          "mutationDirectoryName": "🧾️change-extras",
+          "scenarios": [
+            {
+              "id": "attaches-a-pipeline-extras-object-to-the-asset-block",
+              "directoryName": "🧪️attaches-a-pipeline-extras-object-to-the-asset-block"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-asset-version",
+          "sourceMutationDirectoryName": "🔖️version",
+          "mutationDirectoryName": "🔖️version",
+          "scenarios": [
+            {
+              "id": "raises-the-asset-version-to-2-point-1",
+              "directoryName": "🧪️raises-the-asset-version-to-2-point-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-document-extension-data",
+          "sourceMutationDirectoryName": "🧩️change-extensions",
+          "mutationDirectoryName": "🧩️change-extensions",
+          "scenarios": [
+            {
+              "id": "attaches-punctual-lights-extension-to-document-root",
+              "directoryName": "🧪️attaches-punctual-lights-extension-to-document-root"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-document-extra-data",
+          "sourceMutationDirectoryName": "📝️change-extras",
+          "mutationDirectoryName": "📝️change-extras",
+          "scenarios": [
+            {
+              "id": "attaches-an-exporter-extras-object-to-the-document-root",
+              "directoryName": "🧪️attaches-an-exporter-extras-object-to-the-document-root"
+            }
+          ]
+        },
+        {
+          "mutationId": "add-used-extension",
+          "sourceMutationDirectoryName": "➕️add",
+          "mutationDirectoryName": "➕️add",
+          "scenarios": [
+            {
+              "id": "declares-the-unlit-extension-ahead-of-the-transform-extension",
+              "directoryName": "🧪️declares-the-unlit-extension-ahead-of-the-transform-extension"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-required-extension",
+          "sourceMutationDirectoryName": "🚚️move",
+          "mutationDirectoryName": "🚚️move",
+          "scenarios": [
+            {
+              "id": "moves-unlit-requirement-behind-transform-requirement",
+              "directoryName": "🧪️moves-unlit-requirement-behind-transform-requirement"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-used-extension",
+          "sourceMutationDirectoryName": "🚚️move",
+          "mutationDirectoryName": "🚚️move",
+          "scenarios": [
+            {
+              "id": "demotes-the-unlit-declaration-behind-the-transform-declaration",
+              "directoryName": "🧪️demotes-the-unlit-declaration-behind-the-transform-declaration"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-required-extensions",
+          "sourceMutationDirectoryName": "🔀️reorder",
+          "mutationDirectoryName": "🔀️reorder",
+          "scenarios": [
+            {
+              "id": "flips-the-two-required-extension-declarations",
+              "directoryName": "🧪️flips-the-two-required-extension-declarations"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-used-extensions",
+          "sourceMutationDirectoryName": "🔀️reorder",
+          "mutationDirectoryName": "🔀️reorder",
+          "scenarios": [
+            {
+              "id": "flips-the-two-used-extension-declarations",
+              "directoryName": "🧪️flips-the-two-used-extension-declarations"
+            }
+          ]
+        },
+        {
+          "mutationId": "add-required-extension",
+          "sourceMutationDirectoryName": "➕️add",
+          "mutationDirectoryName": "➕️add",
+          "scenarios": [
+            {
+              "id": "promotes-the-unlit-declaration-to-a-hard-requirement",
+              "directoryName": "🧪️promotes-the-unlit-declaration-to-a-hard-requirement"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-required-extension",
+          "sourceMutationDirectoryName": "➖️remove",
+          "mutationDirectoryName": "➖️remove",
+          "scenarios": [
+            {
+              "id": "relaxes-the-unlit-requirement-while-keeping-the-declaration",
+              "directoryName": "🧪️relaxes-the-unlit-requirement-while-keeping-the-declaration"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-used-extension",
+          "sourceMutationDirectoryName": "➖️remove",
+          "mutationDirectoryName": "➖️remove",
+          "scenarios": [
+            {
+              "id": "withdraws-the-unlit-declaration-that-nothing-requires",
+              "directoryName": "🧪️withdraws-the-unlit-declaration-that-nothing-requires"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "add-required-extension",
+        "add-used-extension",
+        "change-asset-descriptive-metadata",
+        "change-asset-extension-data",
+        "change-asset-extra-data",
+        "change-asset-version",
+        "change-document-extension-data",
+        "change-document-extra-data",
+        "move-required-extension",
+        "move-used-extension",
+        "remove-required-extension",
+        "remove-used-extension",
+        "reorder-required-extensions",
+        "reorder-used-extensions"
+      ]
+    }
+  ]
+}

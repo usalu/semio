@@ -680,7 +680,7 @@ export function uiInspectorMixedSlider(values: readonly number[]): { readonly va
 // `isUiControlNode`/`UI_CONTROL_NODE_TYPES` (an "editable field embedded inside a tree row"
 // inspector-panel builder) were removed here, not migrated — found NOT tractable within this
 // packet's scope, for two independent reasons, both real gaps rather than a syntax rename:
-// (1) `Interpreter/🟦️.tsx`'s current `TreeView`/`treeItemToTreeData` (see its `#region
+// (1) `🟦️Interpreter/🟦️.tsx`'s current `TreeView`/`treeItemToTreeData` (see its `#region
 //     Tree`) never recurses into a non-`treeItem` child as an inline row control — the rendering
 //     path this subsystem's output would need does not exist yet, so a type-correct `BuiltNode`
 //     tree here would still be a dead, unrenderable shape, not a working feature.

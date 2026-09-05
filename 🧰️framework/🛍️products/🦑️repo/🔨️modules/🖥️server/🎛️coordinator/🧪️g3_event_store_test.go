@@ -100,7 +100,7 @@ func TestG3LanguageNeutralGoldenEnvelope(t *testing.T) {
 		Fields   []string `json:"fields"`
 		Checksum string   `json:"checksum"`
 	}
-	schemaBytes, err := os.ReadFile(filepath.Join("🧫️fixtures", "g3-event-schema.json"))
+	schemaBytes, err := os.ReadFile(filepath.Join("🧫️fixtures", "🧬️g3-event-schema.json"))
 	if err != nil || json.Unmarshal(schemaBytes, &schema) != nil {
 		t.Fatalf("read language-neutral schema: %v", err)
 	}
@@ -121,7 +121,7 @@ func TestG3LanguageNeutralGoldenEnvelope(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expected, err := os.ReadFile(filepath.Join("🧫️fixtures", "g3-event-log.jsonl"))
+	expected, err := os.ReadFile(filepath.Join("🧫️fixtures", "📜️g3-event-log.jsonl"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -981,14 +981,14 @@ func TestG3OwnedSourceHasNoExternalOrLegacyStoreFallback(t *testing.T) {
 	if _, err := os.Stat("go.sum"); !os.IsNotExist(err) {
 		t.Fatalf("go.sum must be naturally absent: %v", err)
 	}
-	windowsDurability, err := os.ReadFile("🐹️durability_windows.go")
+	windowsDurability, err := os.ReadFile("🪟️durability_windows.go")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !bytes.Contains(windowsDurability, []byte("syscall.FlushFileBuffers")) || !bytes.Contains(windowsDurability, []byte("moveFileWriteThrough")) || bytes.Contains(windowsDurability, []byte("runtime.GOOS")) {
 		t.Fatal("Windows durability must write through replacements, flush metadata, or return its explicit error")
 	}
-	eventStoreSource, err := os.ReadFile("🐹️event_store.go")
+	eventStoreSource, err := os.ReadFile("🗄️event_store.go")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -997,7 +997,7 @@ func TestG3OwnedSourceHasNoExternalOrLegacyStoreFallback(t *testing.T) {
 			t.Fatalf("event-store mutation escaped the owned operation boundary: %s", mutation)
 		}
 	}
-	repositorySource, err := os.ReadFile("🐹️repository.go")
+	repositorySource, err := os.ReadFile("📚️repository.go")
 	if err != nil {
 		t.Fatal(err)
 	}

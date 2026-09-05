@@ -1,8 +1,8 @@
 //! 🖥️ Shell UI state single source of truth. `ShellState` + `ShellCommand` + `ShellEvent` +
 //! `ShellError` + the pure [`reduce`] function are the ONE place semantic shell UI state (which
 //! windows exist, what is focused, active mode/tool/utility, panel and dock layout,
-//! dialogs/overlays, sync/merge state, user-visible prefs) lives. The React `Shell/component.tsx`
-//! reducer, the ShellHost `useState`s, and the wgpu `Shell/component.rs` struct are three
+//! dialogs/overlays, sync/merge state, user-visible prefs) lives. The React `🐚️Shell/component.tsx`
+//! reducer, the ShellHost `useState`s, and the wgpu `🐚️Shell/component.rs` struct are three
 //! independent, drifting copies of this today; they become projections of this module in later
 //! adoption packets (H1–H4). Nothing outside those host files can observe or drive shell state
 //! today — that is exactly why the OS is not LLM-first. `shell_capabilities()` at the bottom of
@@ -2321,20 +2321,14 @@ mod tests {
         if let Some(path) = std::env::var_os("SEMIO_TYPEGEN_OUT") {
             std::fs::write(path, &rendered).unwrap();
         } else {
-            assert_eq!(rendered, include_str!("🤖️generated/🟦️shell.ts"));
+            assert_eq!(rendered, include_str!("🤖️generated/🟦️.ts"));
         }
     }
 
-    /// 🏭️ Dev-only fixture generator — NOT part of the public API, gated by `#[ignore]` so a plain
-    /// `cargo test` never writes files (this crate's normal test run stays pure/side-effect-free).
-    /// Run explicitly via `cargo test --ignored write_fixtures -- --nocapture` to (re)generate
-    /// `../../🧫️fixtures/*.json`. Every fixture here is a real `reduce()` output — the Rust parity
-    /// test below re-derives it (a regression guard), and the independent TypeScript reducer test
-    /// loads the same files and re-derives it against ITS OWN implementation (the real
-    /// twin-honesty check the packet brief asks for).
+    /// 🧾️ Verifies all authored case inputs and reducer outputs against the committed fixtures.
+    /// The independent TypeScript reducer checks the same language-neutral specimens.
     #[test]
-    #[ignore]
-    fn write_fixtures() {
+    fn constructed_cases_match_committed_fixtures() {
         use std::fs;
         use std::path::PathBuf;
 
@@ -2363,183 +2357,186 @@ mod tests {
         }
 
         let dir: PathBuf = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..").join("..").join("🧫️fixtures");
-        fs::create_dir_all(&dir).expect("create fixtures dir");
+        let mut fixtures = HashMap::new();
         for entry in fs::read_dir(&dir).expect("read fixtures dir") {
             let entry = entry.expect("dir entry");
             if entry.path().extension().and_then(|e| e.to_str()) == Some("json") {
-                fs::remove_file(entry.path()).expect("clear stale fixture");
+                let fixture: serde_json::Value = serde_json::from_str(&fs::read_to_string(entry.path()).expect("read committed fixture")).expect("parse committed fixture");
+                let name = fixture["name"].as_str().expect("fixture name").to_owned();
+                assert!(fixtures.insert(name, fixture).is_none(), "duplicate fixture identity");
             }
         }
+        assert_eq!(fixtures.len(), 75);
+        let compared = std::cell::RefCell::new(std::collections::HashSet::new());
 
-        let write_ok = |name: &str, state: ShellState, command: ShellCommand| {
+        let assert_ok = |name: &str, state: ShellState, command: ShellCommand| {
             let (result_state, result_events) = reduce(&state, &command, 1_700_000_000_000).expect(name);
             let fixture = FixtureOk { name, state: &state, command: &command, expected: FixtureOkExpected { state: &result_state, events: &result_events } };
-            let path = dir.join(format!("{name}.json"));
-            fs::write(&path, serde_json::to_string_pretty(&fixture).expect("serialize")).expect("write fixture");
+            assert_eq!(&serde_json::to_value(&fixture).expect("serialize"), fixtures.get(name).expect(name), "fixture {name}");
+            assert!(compared.borrow_mut().insert(name.to_owned()), "duplicate case {name}");
         };
-        let write_err = |name: &str, state: ShellState, command: ShellCommand| {
+        let assert_err = |name: &str, state: ShellState, command: ShellCommand| {
             let error = reduce(&state, &command, 1_700_000_000_000).expect_err(name);
             let fixture = FixtureErr { name, state: &state, command: &command, expected: FixtureErrExpected { error: &error } };
-            let path = dir.join(format!("{name}.json"));
-            fs::write(&path, serde_json::to_string_pretty(&fixture).expect("serialize")).expect("write fixture");
+            assert_eq!(&serde_json::to_value(&fixture).expect("serialize"), fixtures.get(name).expect(name), "fixture {name}");
+            assert!(compared.borrow_mut().insert(name.to_owned()), "duplicate case {name}");
         };
 
         let base = ShellState::default();
 
         // One fixture per ShellCommand variant.
-        write_ok("register-loaded-plugin", base.clone(), ShellCommand::RegisterLoadedPlugin { plugin: LoadedPlugin { plugin_id: "cad".to_string(), module_url: "https://plugins.example/cad.wasm".to_string(), label: Some("CAD".to_string()) } });
+        assert_ok("register-loaded-plugin", base.clone(), ShellCommand::RegisterLoadedPlugin { plugin: LoadedPlugin { plugin_id: "cad".to_string(), module_url: "https://plugins.example/cad.wasm".to_string(), label: Some("CAD".to_string()) } });
         {
             let mut s = base.clone();
             s.loaded_plugins.push(LoadedPlugin { plugin_id: "cad".to_string(), module_url: "https://plugins.example/cad.wasm".to_string(), label: None });
-            write_ok("unregister-loaded-plugin", s, ShellCommand::UnregisterLoadedPlugin { plugin_id: "cad".to_string() });
+            assert_ok("unregister-loaded-plugin", s, ShellCommand::UnregisterLoadedPlugin { plugin_id: "cad".to_string() });
         }
-        write_ok("set-plugin-status", base.clone(), ShellCommand::SetPluginStatus { plugin_id: "cad".to_string(), status: PluginPanelStatus::Open });
-        write_ok("set-plugin-supervisor-state", base.clone(), ShellCommand::SetPluginSupervisorState { plugin_id: "cad".to_string(), state: PluginSupervisorState { healthy: true, restart_count: 0, last_signal_ms: Some(1000) } });
-        write_ok("set-active-session", base.clone(), ShellCommand::SetActiveSession { session: Some(ActiveSession { plugin_id: "cad".to_string(), app_id: "modeler".to_string(), instance_id: 1 }) });
-        write_ok("set-session-error", base.clone(), ShellCommand::SetSessionError { error: Some("plugin failed to load".to_string()) });
-        write_ok("set-app-label-override", base.clone(), ShellCommand::SetAppLabelOverride { app_id: "cad".to_string(), label_key: "toolbar.extrude".to_string(), value: Some("Push/Pull".to_string()) });
-        write_ok("set-action-pane-folded", base.clone(), ShellCommand::SetActionPaneFolded { window_id: "w1".to_string(), folded: true });
-        write_ok("set-action-pane-expanded", base.clone(), ShellCommand::SetActionPaneExpanded { window_id: "w1".to_string(), action_id: Some("translateSelection".to_string()) });
-        write_ok("stage-action-arg", base.clone(), ShellCommand::StageActionArg { window_id: "w1".to_string(), action_id: "translateSelection".to_string(), arg_id: "dx".to_string(), value: serde_json::json!(1.5) });
+        assert_ok("set-plugin-status", base.clone(), ShellCommand::SetPluginStatus { plugin_id: "cad".to_string(), status: PluginPanelStatus::Open });
+        assert_ok("set-plugin-supervisor-state", base.clone(), ShellCommand::SetPluginSupervisorState { plugin_id: "cad".to_string(), state: PluginSupervisorState { healthy: true, restart_count: 0, last_signal_ms: Some(1000) } });
+        assert_ok("set-active-session", base.clone(), ShellCommand::SetActiveSession { session: Some(ActiveSession { plugin_id: "cad".to_string(), app_id: "modeler".to_string(), instance_id: 1 }) });
+        assert_ok("set-session-error", base.clone(), ShellCommand::SetSessionError { error: Some("plugin failed to load".to_string()) });
+        assert_ok("set-app-label-override", base.clone(), ShellCommand::SetAppLabelOverride { app_id: "cad".to_string(), label_key: "toolbar.extrude".to_string(), value: Some("Push/Pull".to_string()) });
+        assert_ok("set-action-pane-folded", base.clone(), ShellCommand::SetActionPaneFolded { window_id: "w1".to_string(), folded: true });
+        assert_ok("set-action-pane-expanded", base.clone(), ShellCommand::SetActionPaneExpanded { window_id: "w1".to_string(), action_id: Some("translateSelection".to_string()) });
+        assert_ok("stage-action-arg", base.clone(), ShellCommand::StageActionArg { window_id: "w1".to_string(), action_id: "translateSelection".to_string(), arg_id: "dx".to_string(), value: serde_json::json!(1.5) });
         {
             let mut s = base.clone();
             s.staged_action_args.entry("w1".to_string()).or_default().entry("translateSelection".to_string()).or_default().insert("dx".to_string(), serde_json::json!(1.5));
-            write_ok("reset-action-args", s, ShellCommand::ResetActionArgs { window_id: "w1".to_string(), action_id: "translateSelection".to_string() });
+            assert_ok("reset-action-args", s, ShellCommand::ResetActionArgs { window_id: "w1".to_string(), action_id: "translateSelection".to_string() });
         }
-        write_ok("set-active-utility", base.clone(), ShellCommand::SetActiveUtility { window_id: "w1".to_string(), utility_id: Some("inspect".to_string()) });
-        write_ok("set-active-tool", base.clone(), ShellCommand::SetActiveTool { tool_id: Some("draw".to_string()) });
-        write_ok("set-command-expanded", base.clone(), ShellCommand::SetCommandExpanded { command_id: Some("os.setAppearance".to_string()) });
-        write_ok("stage-command-arg", base.clone(), ShellCommand::StageCommandArg { command_id: "os.setAppearance".to_string(), arg_id: "value".to_string(), value: serde_json::json!("dark") });
+        assert_ok("set-active-utility", base.clone(), ShellCommand::SetActiveUtility { window_id: "w1".to_string(), utility_id: Some("inspect".to_string()) });
+        assert_ok("set-active-tool", base.clone(), ShellCommand::SetActiveTool { tool_id: Some("draw".to_string()) });
+        assert_ok("set-command-expanded", base.clone(), ShellCommand::SetCommandExpanded { command_id: Some("os.setAppearance".to_string()) });
+        assert_ok("stage-command-arg", base.clone(), ShellCommand::StageCommandArg { command_id: "os.setAppearance".to_string(), arg_id: "value".to_string(), value: serde_json::json!("dark") });
         {
             let mut s = base.clone();
             s.staged_command_args.entry("os.setAppearance".to_string()).or_default().insert("value".to_string(), serde_json::json!("dark"));
-            write_ok("reset-command-args", s, ShellCommand::ResetCommandArgs { command_id: "os.setAppearance".to_string() });
+            assert_ok("reset-command-args", s, ShellCommand::ResetCommandArgs { command_id: "os.setAppearance".to_string() });
         }
-        write_ok("set-panel-visible", base.clone(), ShellCommand::SetPanelVisible { anchor: Anchor::Left, visible: true });
-        write_ok("set-panel-size", base.clone(), ShellCommand::SetPanelSize { anchor: Anchor::Left, size: 320.0 });
-        write_ok("set-panel-path", base.clone(), ShellCommand::SetPanelPath { anchor: Anchor::Left, path: vec!["explorer".to_string(), "documents".to_string()] });
-        write_ok("set-dock-override", base.clone(), ShellCommand::SetDockOverride { dock: Some(LayoutNode::Leaf { window_id: "w1".to_string() }) });
-        write_ok("set-panel-path-memory", base.clone(), ShellCommand::SetPanelPathMemory { panel_key: "left".to_string(), path: Some("tab-a".to_string()) });
+        assert_ok("set-panel-visible", base.clone(), ShellCommand::SetPanelVisible { anchor: Anchor::Left, visible: true });
+        assert_ok("set-panel-size", base.clone(), ShellCommand::SetPanelSize { anchor: Anchor::Left, size: 320.0 });
+        assert_ok("set-panel-path", base.clone(), ShellCommand::SetPanelPath { anchor: Anchor::Left, path: vec!["explorer".to_string(), "documents".to_string()] });
+        assert_ok("set-dock-override", base.clone(), ShellCommand::SetDockOverride { dock: Some(LayoutNode::Leaf { window_id: "w1".to_string() }) });
+        assert_ok("set-panel-path-memory", base.clone(), ShellCommand::SetPanelPathMemory { panel_key: "left".to_string(), path: Some("tab-a".to_string()) });
         {
             let mut s = base.clone();
             s.panel_path_memory.insert("left".to_string(), "tab-a".to_string());
             s.panel_path_memory.insert("right".to_string(), "tab-b".to_string());
-            write_ok("panel-path-memory-keys-independent", s, ShellCommand::SetPanelPathMemory { panel_key: "right".to_string(), path: Some("tab-c".to_string()) });
+            assert_ok("panel-path-memory-keys-independent", s, ShellCommand::SetPanelPathMemory { panel_key: "right".to_string(), path: Some("tab-c".to_string()) });
         }
-        write_ok("set-tree-open-state", base.clone(), ShellCommand::SetTreeOpenState { tree_id: "layers".to_string(), open: true });
-        write_ok("hydrate-dock-ui", base.clone(), ShellCommand::HydrateDockUi { dock: Some(DockUiState { layout: Some(LayoutNode::Leaf { window_id: "w1".to_string() }), panels_visible: ByAnchor::uniform(true) }) });
+        assert_ok("set-tree-open-state", base.clone(), ShellCommand::SetTreeOpenState { tree_id: "layers".to_string(), open: true });
+        assert_ok("hydrate-dock-ui", base.clone(), ShellCommand::HydrateDockUi { dock: Some(DockUiState { layout: Some(LayoutNode::Leaf { window_id: "w1".to_string() }), panels_visible: ByAnchor::uniform(true) }) });
         {
             let mut s = base.clone();
             s.dock_override = Some(LayoutNode::Leaf { window_id: "w1".to_string() });
-            write_ok("reset-dock", s, ShellCommand::ResetDock);
+            assert_ok("reset-dock", s, ShellCommand::ResetDock);
         }
-        write_ok("focus-window", base.clone(), ShellCommand::FocusWindow { window_id: Some("w1".to_string()) });
+        assert_ok("focus-window", base.clone(), ShellCommand::FocusWindow { window_id: Some("w1".to_string()) });
         {
             let mut s = base.clone();
             s.extra_windows = vec![window("w1"), window("w2")];
             s.active_window_id = Some("w2".to_string());
-            write_ok("focus-after-closing-focused-window", s, ShellCommand::SetExtraWindows { windows: vec![window("w1")] });
+            assert_ok("focus-after-closing-focused-window", s, ShellCommand::SetExtraWindows { windows: vec![window("w1")] });
         }
-        write_ok(
+        assert_ok(
             "set-shell-layout",
             base.clone(),
             ShellCommand::SetShellLayout {
                 layout: Some(LayoutNode::Split { orientation: SplitOrientation::Horizontal, children: vec![LayoutNode::Leaf { window_id: "w1".to_string() }, LayoutNode::Leaf { window_id: "w2".to_string() }], sizes: vec![0.5, 0.5] }),
             },
         );
-        write_ok("set-active-example", base.clone(), ShellCommand::SetActiveExample { example_id: "gallery.chair".to_string() });
-        write_ok("set-mobile-panel-path", base.clone(), ShellCommand::SetMobilePanelPath { path: vec!["home".to_string()] });
-        write_ok("set-mobile-panel-visible", base.clone(), ShellCommand::SetMobilePanelVisible { visible: true });
-        write_ok("set-extra-windows", base.clone(), ShellCommand::SetExtraWindows { windows: vec![window("w1")] });
-        write_ok("set-window-title", base.clone(), ShellCommand::SetWindowTitle { window_id: "w1".to_string(), title: "Untitled Model".to_string() });
-        write_ok("set-window-icon", base.clone(), ShellCommand::SetWindowIcon { window_id: "w1".to_string(), icon: IconName("cube".to_string()) });
-        write_ok("set-search-open", base.clone(), ShellCommand::SetSearchOpen { open: true });
-        write_ok("set-find-open", base.clone(), ShellCommand::SetFindOpen { open: true });
-        write_ok("auto-start-introduction", base.clone(), ShellCommand::AutoStartIntroduction { key: "welcome".to_string() });
-        write_ok("set-introduction-step", base.clone(), ShellCommand::SetIntroductionStep { step_index: Some(2) });
-        write_ok("complete-introduction-interaction", base.clone(), ShellCommand::CompleteIntroductionInteraction { interaction_index: 3 });
-        write_ok("open-dialog", base.clone(), ShellCommand::OpenDialog { dialog_id: "settings".to_string(), seed_args: None });
+        assert_ok("set-active-example", base.clone(), ShellCommand::SetActiveExample { example_id: "gallery.chair".to_string() });
+        assert_ok("set-mobile-panel-path", base.clone(), ShellCommand::SetMobilePanelPath { path: vec!["home".to_string()] });
+        assert_ok("set-mobile-panel-visible", base.clone(), ShellCommand::SetMobilePanelVisible { visible: true });
+        assert_ok("set-extra-windows", base.clone(), ShellCommand::SetExtraWindows { windows: vec![window("w1")] });
+        assert_ok("set-window-title", base.clone(), ShellCommand::SetWindowTitle { window_id: "w1".to_string(), title: "Untitled Model".to_string() });
+        assert_ok("set-window-icon", base.clone(), ShellCommand::SetWindowIcon { window_id: "w1".to_string(), icon: IconName("cube".to_string()) });
+        assert_ok("set-search-open", base.clone(), ShellCommand::SetSearchOpen { open: true });
+        assert_ok("set-find-open", base.clone(), ShellCommand::SetFindOpen { open: true });
+        assert_ok("auto-start-introduction", base.clone(), ShellCommand::AutoStartIntroduction { key: "welcome".to_string() });
+        assert_ok("set-introduction-step", base.clone(), ShellCommand::SetIntroductionStep { step_index: Some(2) });
+        assert_ok("complete-introduction-interaction", base.clone(), ShellCommand::CompleteIntroductionInteraction { interaction_index: 3 });
+        assert_ok("open-dialog", base.clone(), ShellCommand::OpenDialog { dialog_id: "settings".to_string(), seed_args: None });
         {
             let mut s = base.clone();
             s.dialog_stack.push(DialogState { dialog_id: "settings".to_string(), seed_args: None });
-            write_ok("close-dialog-top", s, ShellCommand::CloseDialog { dialog_id: None });
+            assert_ok("close-dialog-top", s, ShellCommand::CloseDialog { dialog_id: None });
         }
         {
             let mut s = base.clone();
             s.dialog_stack.push(DialogState { dialog_id: "settings".to_string(), seed_args: None });
-            write_ok("dialog-stacking-open-second", s, ShellCommand::OpenDialog { dialog_id: "confirm".to_string(), seed_args: Some(serde_json::json!({"prompt": "Discard changes?"})) });
+            assert_ok("dialog-stacking-open-second", s, ShellCommand::OpenDialog { dialog_id: "confirm".to_string(), seed_args: Some(serde_json::json!({"prompt": "Discard changes?"})) });
         }
         {
             let mut s = base.clone();
             s.dialog_stack.push(DialogState { dialog_id: "settings".to_string(), seed_args: None });
             s.dialog_stack.push(DialogState { dialog_id: "confirm".to_string(), seed_args: None });
-            write_ok("dialog-stacking-close-top-keeps-rest", s, ShellCommand::CloseDialog { dialog_id: None });
+            assert_ok("dialog-stacking-close-top-keeps-rest", s, ShellCommand::CloseDialog { dialog_id: None });
         }
-        write_ok("show-transient-notice", base.clone(), ShellCommand::ShowTransientNotice { notice: TransientNotice { message: "Saved".to_string(), kind: NoticeKind::Success, expires_at_ms: Some(1_700_000_003_000) } });
+        assert_ok("show-transient-notice", base.clone(), ShellCommand::ShowTransientNotice { notice: TransientNotice { message: "Saved".to_string(), kind: NoticeKind::Success, expires_at_ms: Some(1_700_000_003_000) } });
         {
             let mut s = base.clone();
             s.transient_notice = Some(TransientNotice { message: "Saved".to_string(), kind: NoticeKind::Success, expires_at_ms: None });
-            write_ok("dismiss-transient-notice", s, ShellCommand::DismissTransientNotice);
+            assert_ok("dismiss-transient-notice", s, ShellCommand::DismissTransientNotice);
         }
-        write_ok("set-open-with-focus-role", base.clone(), ShellCommand::SetOpenWithFocusRole { role: Some(AppRole("editor".to_string())) });
-        write_ok("set-active-tutorial", base.clone(), ShellCommand::SetActiveTutorial { tutorial_id: Some("getting-started".to_string()) });
-        write_ok("set-ui-appearance", base.clone(), ShellCommand::SetUiAppearance { appearance: UiAppearance::Dark });
-        write_ok("set-ui-layout", base.clone(), ShellCommand::SetUiLayout { layout: UiChromeLayout::Compact });
-        write_ok("set-ui-driver", base.clone(), ShellCommand::SetUiDriver { driver_id: "default".to_string() });
-        write_ok(
+        assert_ok("set-open-with-focus-role", base.clone(), ShellCommand::SetOpenWithFocusRole { role: Some(AppRole("editor".to_string())) });
+        assert_ok("set-active-tutorial", base.clone(), ShellCommand::SetActiveTutorial { tutorial_id: Some("getting-started".to_string()) });
+        assert_ok("set-ui-appearance", base.clone(), ShellCommand::SetUiAppearance { appearance: UiAppearance::Dark });
+        assert_ok("set-ui-layout", base.clone(), ShellCommand::SetUiLayout { layout: UiChromeLayout::Compact });
+        assert_ok("set-ui-driver", base.clone(), ShellCommand::SetUiDriver { driver_id: "default".to_string() });
+        assert_ok(
             "set-ui-custom-driver",
             base.clone(),
             ShellCommand::SetUiCustomDriver { driver_id: "custom-1".to_string(), driver: Some(UiDriver { driver_id: "custom-1".to_string(), label: "My Driver".to_string(), config: serde_json::json!({}) }) },
         );
-        write_ok("set-ui-driver-draft", base.clone(), ShellCommand::SetUiDriverDraft { draft: Some(UiDriver { driver_id: "draft".to_string(), label: "Draft".to_string(), config: serde_json::json!({}) }) });
-        write_ok("set-ui-locale", base.clone(), ShellCommand::SetUiLocale { locale: UiLocale::De });
-        write_ok("set-ui-terminology", base.clone(), ShellCommand::SetUiTerminology { terminology_id: "architecture".to_string() });
-        write_ok("set-ui-theme", base.clone(), ShellCommand::SetUiTheme { theme_id: "mono".to_string() });
-        write_ok(
+        assert_ok("set-ui-driver-draft", base.clone(), ShellCommand::SetUiDriverDraft { draft: Some(UiDriver { driver_id: "draft".to_string(), label: "Draft".to_string(), config: serde_json::json!({}) }) });
+        assert_ok("set-ui-locale", base.clone(), ShellCommand::SetUiLocale { locale: UiLocale::De });
+        assert_ok("set-ui-terminology", base.clone(), ShellCommand::SetUiTerminology { terminology_id: "architecture".to_string() });
+        assert_ok("set-ui-theme", base.clone(), ShellCommand::SetUiTheme { theme_id: "mono".to_string() });
+        assert_ok(
             "set-ui-custom-theme",
             base.clone(),
             ShellCommand::SetUiCustomTheme { theme_id: "custom-1".to_string(), theme: Some(UiTheme { theme_id: "custom-1".to_string(), label: "My Theme".to_string(), tokens: HashMap::from([("accent".to_string(), "#f00".to_string())]) }) },
         );
-        write_ok("set-ui-theme-draft", base.clone(), ShellCommand::SetUiThemeDraft { draft: Some(UiTheme { theme_id: "draft".to_string(), label: "Draft".to_string(), tokens: HashMap::new() }) });
-        write_ok("set-ui-keybinding-override", base.clone(), ShellCommand::SetUiKeybindingOverride { control_id: "os.toggleFullscreen".to_string(), keys: Some("Cmd+Ctrl+F".to_string()) });
-        write_ok("set-sync-backbone-uri", base.clone(), ShellCommand::SetSyncBackboneUri { uri: Some("hub://space/doc".to_string()) });
-        write_ok("set-sync-card-kind", base.clone(), ShellCommand::SetSyncCardKind { kind: Some(SyncCardKind::Folder) });
-        write_ok("set-sync-draft-path", base.clone(), ShellCommand::SetSyncDraftPath { path: "/tmp/checkin".to_string() });
-        write_ok("set-document-sync-status", base.clone(), ShellCommand::SetDocumentSyncStatus { document_id: "doc-1".to_string(), status: ArtifactSyncStatus::Dirty });
-        write_ok("set-merge-policy", base.clone(), ShellCommand::SetMergePolicy { policy: MergePolicy::PreferLocal });
-        write_ok("set-conflicts", base.clone(), ShellCommand::SetConflicts { conflicts: vec![Conflict { conflict_id: "c1".to_string(), document_id: "doc-1".to_string(), description: "concurrent edit".to_string() }] });
+        assert_ok("set-ui-theme-draft", base.clone(), ShellCommand::SetUiThemeDraft { draft: Some(UiTheme { theme_id: "draft".to_string(), label: "Draft".to_string(), tokens: HashMap::new() }) });
+        assert_ok("set-ui-keybinding-override", base.clone(), ShellCommand::SetUiKeybindingOverride { control_id: "os.toggleFullscreen".to_string(), keys: Some("Cmd+Ctrl+F".to_string()) });
+        assert_ok("set-sync-backbone-uri", base.clone(), ShellCommand::SetSyncBackboneUri { uri: Some("hub://space/doc".to_string()) });
+        assert_ok("set-sync-card-kind", base.clone(), ShellCommand::SetSyncCardKind { kind: Some(SyncCardKind::Folder) });
+        assert_ok("set-sync-draft-path", base.clone(), ShellCommand::SetSyncDraftPath { path: "/tmp/checkin".to_string() });
+        assert_ok("set-document-sync-status", base.clone(), ShellCommand::SetDocumentSyncStatus { document_id: "doc-1".to_string(), status: ArtifactSyncStatus::Dirty });
+        assert_ok("set-merge-policy", base.clone(), ShellCommand::SetMergePolicy { policy: MergePolicy::PreferLocal });
+        assert_ok("set-conflicts", base.clone(), ShellCommand::SetConflicts { conflicts: vec![Conflict { conflict_id: "c1".to_string(), document_id: "doc-1".to_string(), description: "concurrent edit".to_string() }] });
         {
             let mut s = base.clone();
             s.conflicts = vec![Conflict { conflict_id: "c1".to_string(), document_id: "doc-1".to_string(), description: "concurrent edit".to_string() }];
-            write_ok("select-conflict", s, ShellCommand::SelectConflict { conflict_id: Some("c1".to_string()) });
+            assert_ok("select-conflict", s, ShellCommand::SelectConflict { conflict_id: Some("c1".to_string()) });
         }
-        write_ok("set-storage-scope", base.clone(), ShellCommand::SetStorageScope { scope: ShellScope::LocalStorage });
-        write_ok("set-opening-preference", base.clone(), ShellCommand::SetOpeningPreference { role: "editor".to_string(), dialect_id: Some("cad.modeler".to_string()) });
+        assert_ok("set-storage-scope", base.clone(), ShellCommand::SetStorageScope { scope: ShellScope::LocalStorage });
+        assert_ok("set-opening-preference", base.clone(), ShellCommand::SetOpeningPreference { role: "editor".to_string(), dialect_id: Some("cad.modeler".to_string()) });
 
         // Mode↔tool mutual exclusion tricky paths.
         {
             let mut s = base.clone();
             s.active_window_id = Some("w1".to_string());
             s.active_utility_by_window.insert("w1".to_string(), Some("inspect".to_string()));
-            write_ok("mode-tool-exclusion-tool-clears-utility", s, ShellCommand::SetActiveTool { tool_id: Some("draw".to_string()) });
+            assert_ok("mode-tool-exclusion-tool-clears-utility", s, ShellCommand::SetActiveTool { tool_id: Some("draw".to_string()) });
         }
         {
             let mut s = base.clone();
             s.active_window_id = Some("w1".to_string());
             s.active_tool_id = Some("draw".to_string());
-            write_ok("mode-tool-exclusion-utility-clears-tool", s, ShellCommand::SetActiveUtility { window_id: "w1".to_string(), utility_id: Some("inspect".to_string()) });
+            assert_ok("mode-tool-exclusion-utility-clears-tool", s, ShellCommand::SetActiveUtility { window_id: "w1".to_string(), utility_id: Some("inspect".to_string()) });
         }
 
         // Error fixtures.
-        write_err("error-unregister-unknown-plugin", base.clone(), ShellCommand::UnregisterLoadedPlugin { plugin_id: "missing".to_string() });
-        write_err("error-close-dialog-empty-stack", base.clone(), ShellCommand::CloseDialog { dialog_id: None });
-        write_err("error-close-dialog-unknown-id", base.clone(), ShellCommand::CloseDialog { dialog_id: Some("missing".to_string()) });
-        write_err("error-select-unknown-conflict", base.clone(), ShellCommand::SelectConflict { conflict_id: Some("missing".to_string()) });
-        write_err("error-set-panel-size-negative", base.clone(), ShellCommand::SetPanelSize { anchor: Anchor::Left, size: -5.0 });
-        write_err("error-set-window-title-empty-id", base, ShellCommand::SetWindowTitle { window_id: String::new(), title: "x".to_string() });
+        assert_err("error-unregister-unknown-plugin", base.clone(), ShellCommand::UnregisterLoadedPlugin { plugin_id: "missing".to_string() });
+        assert_err("error-close-dialog-empty-stack", base.clone(), ShellCommand::CloseDialog { dialog_id: None });
+        assert_err("error-close-dialog-unknown-id", base.clone(), ShellCommand::CloseDialog { dialog_id: Some("missing".to_string()) });
+        assert_err("error-select-unknown-conflict", base.clone(), ShellCommand::SelectConflict { conflict_id: Some("missing".to_string()) });
+        assert_err("error-set-panel-size-negative", base.clone(), ShellCommand::SetPanelSize { anchor: Anchor::Left, size: -5.0 });
+        assert_err("error-set-window-title-empty-id", base, ShellCommand::SetWindowTitle { window_id: String::new(), title: "x".to_string() });
 
-        let count = fs::read_dir(&dir).expect("read fixtures dir").filter(|e| e.as_ref().unwrap().path().extension().and_then(|x| x.to_str()) == Some("json")).count();
-        println!("wrote {count} fixtures to {}", dir.display());
+        assert_eq!(compared.into_inner().len(), fixtures.len());
     }
 
     /// 🧪️ Loads every committed fixture and re-derives it through `reduce` — the Rust half of the
@@ -2560,7 +2557,7 @@ mod tests {
 
         let dir: PathBuf = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..").join("..").join("🧫️fixtures");
         let entries: Vec<PathBuf> =
-            fs::read_dir(&dir).expect("fixtures dir must exist — run `cargo test --ignored write_fixtures` first").filter_map(|e| e.ok()).map(|e| e.path()).filter(|p| p.extension().and_then(|e| e.to_str()) == Some("json")).collect();
+            fs::read_dir(&dir).expect("committed fixtures dir must exist").filter_map(|e| e.ok()).map(|e| e.path()).filter(|p| p.extension().and_then(|e| e.to_str()) == Some("json")).collect();
         assert!(!entries.is_empty(), "no fixtures found in {}", dir.display());
 
         let mut checked = 0usize;

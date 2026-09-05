@@ -173,7 +173,7 @@ pub fn gis2d_io() -> AppIo {
         // mirroring the sibling `gis3d_io()` (gis3d app) fix already applied in this ticket.
         export_formats: Vec::new(),
         import_formats: Vec::new(),
-        artifact: semio_framework_plugin::ArtifactPresentation { id: "2d.map".into(), name: "2D Map".into(), dimension: "2d".into(), component_kind: "gismap".into() },
+        artifact: semio_framework_plugin::ArtifactPresentation { id: crate::artifacts::gismap::GISMAP_DIALECT.artifact_kind.into(), name: "2D Map".into(), dimension: "2d".into(), component_kind: "gismap".into() },
     }
 }
 
@@ -201,7 +201,7 @@ pub fn gis2d_map_out_port() -> semio_framework_plugin::MediaPortSpec {
         label: "Map".into(),
         direction: semio_framework_plugin::MediaPortDirection::Out,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
-        kind_id: Some("2d.map".into()),
+        kind_id: Some(crate::artifacts::gismap::GISMAP_DIALECT.artifact_kind.into()),
         required: false,
         multiplicity: semio_framework::PortMultiplicity::Many,
     }
@@ -1185,7 +1185,7 @@ mod tests {
         for body_key in [document_panel::GIS2D_PLAY_BODY_DOCUMENT, catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE, inspection_panel::GIS2D_PLAY_BODY_INSPECTION] {
             assert!(definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref() == Some(body_key)), "panel tab {body_key} is stitched into the manifest");
         }
-        assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "2d.map"));
+        assert!(definition.artifact_kinds.iter().any(|kind| kind.id == crate::artifacts::gismap::GISMAP_DIALECT.artifact_kind));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1234,12 +1234,12 @@ mod tests {
     async fn gis2d_io_declares_the_features_in_and_map_out_ports() {
         let io = gis2d_io();
         assert_eq!(io.document_schema, GIS_MAP_SCHEMA);
-        assert_eq!(io.artifact.id, "2d.map");
+        assert_eq!(io.artifact.id, crate::artifacts::gismap::GISMAP_DIALECT.artifact_kind);
         let ports = io.all_ports();
         assert!(ports.iter().any(|port| port.id == "features:in" && port.direction == semio_framework_plugin::MediaPortDirection::In));
         let map_out = ports.iter().find(|port| port.id == "map:out").expect("map:out declared");
         assert_eq!(map_out.direction, semio_framework_plugin::MediaPortDirection::Out);
-        assert_eq!(map_out.kind_id.as_deref(), Some("2d.map"));
+        assert_eq!(map_out.kind_id.as_deref(), Some(crate::artifacts::gismap::GISMAP_DIALECT.artifact_kind));
     }
 
     #[semio_framework_async_macros::async_test]

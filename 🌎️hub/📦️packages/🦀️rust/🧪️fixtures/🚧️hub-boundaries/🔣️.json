@@ -1,0 +1,54 @@
+{
+  "blobUtf8": "hello hub blob bytes",
+  "adminPageRoutes": {
+    "htmlPath": "🌐️.html",
+    "htmlUtf8": "<!doctype html><html><body>Declared admin entry</body></html>",
+    "assetPath": "📜️entry.mjs",
+    "assetUtf8": "export const admin = true;",
+    "absentAliases": ["index.html", "404.html"],
+    "requests": [
+      { "path": "/admin", "status": 200, "body": "html" },
+      { "path": "/admin/", "status": 200, "body": "html" },
+      { "path": "/admin/spaces/space-1", "status": 200, "body": "html" },
+      { "path": "/admin/%F0%9F%8C%90%EF%B8%8F.html", "status": 200, "body": "html" },
+      { "path": "/admin/%F0%9F%93%9C%EF%B8%8Fentry.mjs", "status": 200, "body": "asset" },
+      { "path": "/admin/%2e%2e/private", "status": 400, "body": "absent" }
+    ]
+  },
+  "extensionModuleRoutes": {
+    "publicRoot": "/🧩️extension-modules",
+    "encodedRoot": "/%F0%9F%A7%A9%EF%B8%8Fextension-modules",
+    "extensionId": "test.extension",
+    "assetPath": "📜️module.mjs",
+    "assetUtf8": "export const extension = 'test.extension';",
+    "requests": [
+      { "path": "/%F0%9F%A7%A9%EF%B8%8Fextension-modules", "status": 200, "body": "listing" },
+      { "path": "/%F0%9F%A7%A9%EF%B8%8Fextension-modules/test.extension/%F0%9F%93%9C%EF%B8%8Fmodule.mjs", "status": 200, "body": "asset" },
+      { "path": "/extensions", "status": 404, "body": "absent" },
+      { "path": "/extensions/test.extension/%F0%9F%93%9C%EF%B8%8Fmodule.mjs", "status": 404, "body": "absent" },
+      { "path": "/%F0%9F%A7%A9%EF%B8%8Fextension-modules/test.extension/%2e%2e/secret", "status": 400, "body": "absent" },
+      { "path": "/%F0%9F%A7%A9%EF%B8%8Fextension-modules/unknown/%F0%9F%93%9C%EF%B8%8Fmodule.mjs", "status": 404, "body": "absent" }
+    ]
+  },
+  "documentScopeKeyV1": [
+    { "scope": { "spaceId": "a:b", "documentId": "c" }, "encoded": "v1:3:1:a:bc" },
+    { "scope": { "spaceId": "a", "documentId": "b:c" }, "encoded": "v1:1:3:ab:c" },
+    { "scope": { "spaceId": "raum:ä", "documentId": "plan:東京" }, "encoded": "v1:7:11:raum:äplan:東京" },
+    { "scope": { "spaceId": "space-a", "documentId": "shared" }, "encoded": "v1:7:6:space-ashared" },
+    { "scope": { "spaceId": "space-b", "documentId": "shared" }, "encoded": "v1:7:6:space-bshared" }
+  ],
+  "mutationMessages": [
+    {
+      "level": "warning",
+      "code": "mutation.clamped",
+      "message": "height clamped",
+      "target": ["node", "height"],
+      "opIndex": 2
+    },
+    {
+      "level": "info",
+      "code": "mutation.cascade",
+      "message": "dependent value updated"
+    }
+  ]
+}

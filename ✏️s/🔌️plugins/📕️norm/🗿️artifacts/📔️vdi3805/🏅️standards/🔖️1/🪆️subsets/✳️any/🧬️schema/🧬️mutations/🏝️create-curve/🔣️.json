@@ -5,7 +5,7 @@
   "displayName": "Create Curve",
   "emoji": "🏝️",
   "aggregateVariant": "CreateCurve",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,7 +1,0 @@
-{
-  "mutation": "addAttribute",
-  "attribute": {
-    "key": "weight",
-    "value": "1400"
-  }
-}

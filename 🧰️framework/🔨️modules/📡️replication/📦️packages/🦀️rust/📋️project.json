@@ -9,6 +9,14 @@
     "default": ["{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/**/*.rs", "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*", "{projectRoot}/**/*"]
   },
   "targets": {
+    "retained-record-observation-check": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", "command": "bun ./📜️script.ts retained-record-observation-check", "forwardAllArgs": true }
+    },
+    "retained-verification-check": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", "command": "bun ./📜️script.ts retained-verification-check", "forwardAllArgs": true }
+    },
     "test-local-interaction-native": {
       "executor": "nx:run-commands",
       "options": { "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-local-interaction-native", "forwardAllArgs": true }

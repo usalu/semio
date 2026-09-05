@@ -1,0 +1,25 @@
+{
+  "blocks": {
+    "modified": [
+      {
+        "index": 1,
+        "diff": {
+          "kind": "paragraph",
+          "runs": {
+            "modified": [
+              {
+                "index": 0,
+                "diff": {
+                  "text": "Final copy.",
+                  "style": {
+                    "bold": true
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "$id": "https://semio.tech/schema/stdio.svg/mutations/text.svg",
+  "title": "SvgMutationText",
+  "description": "Structured tagged/hex text emitted by SvgMutation::print_op.",
+  "type": "string"
+}

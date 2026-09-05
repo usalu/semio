@@ -1,0 +1,167 @@
+{
+  "schema": "stdio.semio.brep",
+  "vertices": [
+    {
+      "id": "v1",
+      "point": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    {
+      "id": "v2",
+      "point": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    {
+      "id": "v3",
+      "point": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 0.0
+      }
+    },
+    {
+      "id": "v4",
+      "point": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "startVertex": "v1",
+      "endVertex": "v2",
+      "curve": {
+        "kind": "line",
+        "origin": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "direction": {
+          "x": 1.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      }
+    },
+    {
+      "id": "e2",
+      "startVertex": "v2",
+      "endVertex": "v3",
+      "curve": {
+        "kind": "line",
+        "origin": {
+          "x": 1.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "direction": {
+          "x": 0.0,
+          "y": 1.0,
+          "z": 0.0
+        }
+      }
+    },
+    {
+      "id": "e3",
+      "startVertex": "v3",
+      "endVertex": "v4",
+      "curve": {
+        "kind": "line",
+        "origin": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 0.0
+        },
+        "direction": {
+          "x": -1.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      }
+    },
+    {
+      "id": "e4",
+      "startVertex": "v4",
+      "endVertex": "v1",
+      "curve": {
+        "kind": "line",
+        "origin": {
+          "x": 0.0,
+          "y": 1.0,
+          "z": 0.0
+        },
+        "direction": {
+          "x": 0.0,
+          "y": -1.0,
+          "z": 0.0
+        }
+      }
+    }
+  ],
+  "loops": [
+    {
+      "id": "l1",
+      "edges": [
+        {
+          "edge": "e1",
+          "orientation": true
+        },
+        {
+          "edge": "e2",
+          "orientation": true
+        },
+        {
+          "edge": "e3",
+          "orientation": true
+        },
+        {
+          "edge": "e4",
+          "orientation": true
+        }
+      ]
+    }
+  ],
+  "faces": [
+    {
+      "id": "f1",
+      "outerLoop": "l1",
+      "innerLoops": [],
+      "surface": {
+        "kind": "plane",
+        "origin": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "normal": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 1.0
+        }
+      },
+      "orientation": true
+    }
+  ],
+  "shells": [],
+  "solids": [
+    {
+      "id": "so1",
+      "shells": [
+        {
+          "shell": "s1",
+          "isVoid": false
+        }
+      ]
+    }
+  ]
+}

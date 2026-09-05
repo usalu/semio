@@ -22,8 +22,8 @@ export default defineConfig({
     // `includeSource`. Listing the same files in BOTH keys made vitest collect each twice and report
     // double the real test count. Add new in-source files to `includeSource`/`coverage.include` only.
     include: [],
-    coverage: { include: ["../../🟦️.ts", "../../🟦️backbone-worker.ts", "../../🟦️effect-backbone.ts"] },
-    includeSource: ["../../🟦️.ts", "../../🟦️backbone-worker.ts", "../../🟦️effect-backbone.ts"],
+    coverage: { include: ["../../🟦️.ts", "../../🧵️backbone-worker.ts", "../../⚡️effect-backbone.ts"] },
+    includeSource: ["../../🟦️.ts", "../../🧵️backbone-worker.ts", "../../⚡️effect-backbone.ts"],
     passWithNoTests: false,
   },
 });

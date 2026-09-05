@@ -1,0 +1,12 @@
+# 💡️ Ply inference schema — vertex-element bounding box plus vertex/face counts.
+
+type PlyInference {
+  bounds: PlyBounds! @derived
+}
+
+type PlyBounds {
+  min: [Float!]!
+  max: [Float!]!
+  vertexCount: Int!
+  faceCount: Int!
+}

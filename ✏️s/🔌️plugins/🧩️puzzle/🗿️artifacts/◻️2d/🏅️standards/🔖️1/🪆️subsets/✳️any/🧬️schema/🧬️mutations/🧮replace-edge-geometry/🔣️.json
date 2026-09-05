@@ -5,7 +5,7 @@
   "displayName": "Replace Edge Geometry",
   "emoji": "🧮",
   "aggregateVariant": "ReplaceEdgeGeometry",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "replace-edge-geometry",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -38,7 +38,7 @@ serde_json = "1"
 
 [dev-dependencies]
 # 🧪️ `ordered-set-serde`: this crate's own `Widget::OutputPreview`/`FlowPreviewGui`
-# (📄️artifact/🦀️.rs) carry `#[cfg_attr(test, derive(Serialize, Deserialize))]` over an
+# (🗿️artifact/🦀️.rs) carry `#[cfg_attr(test, derive(Serialize, Deserialize))]` over an
 # `OrderedSet` field. `[dependencies]` above pulls plain `semio-framework-replication` (no extra
 # features, so `OrderedSet: Serialize`/`Deserialize` isn't compiled for a normal build); listing it
 # again here with the feature makes Cargo's dev-dependency feature unification enable it only for
@@ -68,7 +68,7 @@ ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/�
 # gate docstring) — its `ui_render` dependency drags `taffy`/`parley`/`swash`/`fontique` (text
 # shaping/layout) unconditionally, none of which a WASI guest needs. Narrowed here rather than
 # deleted: native keeps it for this crate's own `#[cfg(test)]` suite over the bridge protocol.
-ui_webgpu = { path = "../../../../../../🔨️modules/🖱️ui/🖼️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust", package = "semio-framework-ui-backend-webgpu" }
+ui_webgpu = { path = "../../../../../../🔨️modules/🖱️ui/🖌️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust", package = "semio-framework-ui-backend-webgpu" }
 
 # 🌉️ Browser-only: `getrandom`'s `wasm_js` backend and the `wasm_bridge` JS-callable tessellation
 # exports (`📐️brep-geometry/🦀️.rs`) both require an actual JS engine (the former backs

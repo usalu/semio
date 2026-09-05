@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.flow.retained-snapshot-lifecycle.fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "semio.flow.retained-snapshot-lifecycle/v1"
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "artifactId": {
+          "const": "flow-member"
+        },
+        "artifactKind": {
+          "const": "s.stdio.semio"
+        },
+        "standard": {
+          "const": "v1"
+        },
+        "subset": {
+          "const": "flow"
+        },
+        "identityBytes": {
+          "const": 30
+        }
+      },
+      "required": [
+        "artifactId",
+        "artifactKind",
+        "standard",
+        "subset",
+        "identityBytes"
+      ]
+    },
+    "admission": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "enum": [
+              "live",
+              "unadmitted",
+              "closing",
+              "retired",
+              "foreign"
+            ]
+          },
+          "state": {
+            "enum": [
+              "admitted",
+              "unadmitted",
+              "closing",
+              "retired"
+            ]
+          },
+          "subset": {
+            "enum": [
+              "flow",
+              "text"
+            ]
+          },
+          "reason": {
+            "enum": [
+              null,
+              "unsealed",
+              "stale",
+              "identity"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "subset",
+          "reason"
+        ]
+      }
+    },
+    "multiPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "const": "unicode"
+        },
+        "nodeIndex": {
+          "const": 0
+        },
+        "labelScalar": {
+          "const": "🧬"
+        },
+        "labelRepeats": {
+          "const": 1024
+        },
+        "wireBytes": {
+          "const": 4249
+        },
+        "inputBytes": {
+          "const": 4252
+        },
+        "inputPages": {
+          "const": 2
+        },
+        "snapshotRetiredBytes": {
+          "const": 4190
+        },
+        "totalRetiredBytes": {
+          "const": 8472
+        }
+      },
+      "required": [
+        "source",
+        "nodeIndex",
+        "labelScalar",
+        "labelRepeats",
+        "wireBytes",
+        "inputBytes",
+        "inputPages",
+        "snapshotRetiredBytes",
+        "totalRetiredBytes"
+      ]
+    },
+    "retirementGrants": {
+      "const": [
+        [
+          1
+        ],
+        [
+          7
+        ],
+        [
+          1,
+          3,
+          4096,
+          2
+        ]
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "request",
+    "admission",
+    "multiPage",
+    "retirementGrants"
+  ]
+}

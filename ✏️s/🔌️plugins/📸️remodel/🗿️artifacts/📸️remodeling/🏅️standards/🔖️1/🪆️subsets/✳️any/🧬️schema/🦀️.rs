@@ -325,7 +325,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for RemodelingAnalyzerAnalysis {
         type Parts = RemodelingParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.remodeling", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.remodel.remodeling", standard: StandardId("1"), subset: SubsetId("*") };
 
         async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium

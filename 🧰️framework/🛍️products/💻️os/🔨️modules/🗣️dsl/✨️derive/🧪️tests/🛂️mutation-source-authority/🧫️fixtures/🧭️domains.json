@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "mutationRoot": "domain/🧬️mutations",
+  "domains": {
+    "🎥️camera": { "🌱️create": "create-camera", "🔀️reorder": "reorder-cameras" },
+    "🌳️node": { "🏷️change-name": "change-node-name", "🎥️bind-camera": "bind-node-camera" }
+  },
+  "cases": [
+    { "name": "registered-plural", "owner": "🎥️camera/🔀️reorder", "source": "🦀️.rs", "semanticKind": "reorder-cameras", "accepted": true },
+    { "name": "registered-compound", "owner": "🌳️node/🏷️change-name", "source": "🦀️.rs", "semanticKind": "change-node-name", "accepted": true },
+    { "name": "registered-payload-facet", "owner": "🌳️node/🎥️bind-camera", "source": "🦠️mutation/🦀️.rs", "semanticKind": "bind-node-camera", "accepted": true },
+    { "name": "unregistered-operation", "owner": "🎥️camera/🏷️rename", "source": "🦀️.rs", "semanticKind": "rename-camera", "accepted": false },
+    { "name": "unregistered-domain", "owner": "🎞️animation/🔀️reorder", "source": "🦀️.rs", "semanticKind": "reorder-animations", "accepted": false },
+    { "name": "wrong-semantic-identity", "owner": "🎥️camera/🔀️reorder", "source": "🦀️.rs", "semanticKind": "reorder-camera", "accepted": false },
+    { "name": "flat-under-domain-root", "owner": "🌱️create-camera", "source": "🦀️.rs", "semanticKind": "create-camera", "accepted": false },
+    { "name": "excess-owner-depth", "owner": "🎥️camera/🔀️reorder/📥️nested", "source": "🦀️.rs", "semanticKind": "reorder-cameras", "accepted": false },
+    { "name": "wrong-payload-facet", "owner": "🎥️camera/🔀️reorder", "source": "🔺️diff/🦀️.rs", "semanticKind": "reorder-cameras", "accepted": false },
+    { "name": "excess-payload-depth", "owner": "🎥️camera/🔀️reorder", "source": "🦠️mutation/📥️nested/🦀️.rs", "semanticKind": "reorder-cameras", "accepted": false },
+    { "name": "duplicate-registry-identity", "owner": "🎥️camera/🔀️reorder", "source": "🦀️.rs", "semanticKind": "reorder-cameras", "fault": "duplicate-identity", "accepted": false },
+    { "name": "symlink-domain-owner", "owner": "🎥️camera/🔀️reorder", "source": "🦀️.rs", "semanticKind": "reorder-cameras", "fault": "symlink-domain", "accepted": false },
+    { "name": "empty-domain-registry", "owner": "🎥️camera/🔀️reorder", "source": "🦀️.rs", "semanticKind": "reorder-cameras", "fault": "empty-registry", "accepted": false },
+    { "name": "foreign-domain-registry", "owner": "🎥️camera/🔀️reorder", "source": "🦀️.rs", "semanticKind": "reorder-cameras", "fault": "wrong-registry-root", "accepted": false }
+  ]
+}

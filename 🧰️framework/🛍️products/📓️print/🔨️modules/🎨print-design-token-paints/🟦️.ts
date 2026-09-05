@@ -66,7 +66,7 @@ const CHROME_PAINT_KEYS = ["base", "borderNormal", "borderEmphasized", "activeBa
 const PRINT_LEVEL_SURFACE_KEYS = ["window", "pane", "panel", "dialog", "menu"] as const;
 const workspaceRoot = getWorkspaceRoot();
 const productRoot = join(workspaceRoot, "🧰️framework", "🛍️products", "📓️print");
-const tokensPath = join(workspaceRoot, "🧰️framework", "🔨️modules", "🖱️ui", "🎨️styling", "📦️packages", "🦀️rust", "🔣️.json");
+const tokensPath = join(workspaceRoot, "🧰️framework", "🔨️modules", "🖱️ui", "🎨️styling", "🔣️.json");
 const latexDirectory = join(productRoot, "🖋️latex");
 const latexTokensPath = join(latexDirectory, "semio-tokens.sty");
 

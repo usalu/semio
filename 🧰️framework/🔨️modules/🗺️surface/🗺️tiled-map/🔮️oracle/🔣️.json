@@ -1,0 +1,37 @@
+{
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ The tiled-map module's contribution to the repository test platform. `mercantile` is the published reference implementation of the EPSG:3857 Web-Mercator projection and the OSM/Mapbox XYZ slippy-tile scheme this module's `projection`/`tiles` implement, so it belongs to this owner rather than to the test framework.",
+  "oracles": [
+    {
+      "id": "mercantile",
+      "ecosystem": "python",
+      "package": "mercantile",
+      "version": "1.2.1",
+      "capabilities": [
+        "web-mercator-tile-selection"
+      ],
+      "comparisonProfiles": [
+        "floating-point-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "homepage": "https://github.com/mapbox/mercantile",
+      "rationale": "Pure-Python, zero-runtime-dependency reference implementation of the published EPSG:3857 Web-Mercator forward/inverse formulas and the OSM/Mapbox XYZ slippy-tile numbering scheme — the same published specification `projection::lonlat_to_world`/`world_to_lonlat` and `tiles::visible_tiles` implement. `🧪️tests/🕸️web-mercator-tile-oracle/🐍️.py` re-derives every vector in the case-local `local://🔣️.json` fixture from `mercantile` directly and asserts agreement with the frozen fixture; the sibling `tests/🗺️tiled_map_mercator_oracle.rs` Rust integration test reads the SAME frozen fixture and asserts this module's own implementation agrees with it, so oracle and subject are checked against identical inputs. `lodBands` in that fixture are NOT covered by this oracle — `GIS_MAP_LOD_MAX_SPAN_DEG`/`GIS_MAP_LOD_TILE_Z` are a repository-owned band scheme with no published external standard.",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "mercantile",
+        "implementation": "mercantile (Mapbox reference Web-Mercator/XYZ-tile library)",
+        "version": "1.2.1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    }
+  ],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [],
+  "oracleHostPackages": [],
+  "migrationStatus": {
+    "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map": "parity-green"
+  }
+}

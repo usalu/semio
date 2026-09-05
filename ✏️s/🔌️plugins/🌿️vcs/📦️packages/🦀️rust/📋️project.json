@@ -5,6 +5,15 @@
     "default": ["{workspaceRoot}/✏️s/🔌️plugins/🌿️vcs/**/*.rs", "{projectRoot}/**/*"]
   },
   "targets": {
+    "native-openable-identity-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts native-openable-identity-check",
+        "forwardAllArgs": true
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

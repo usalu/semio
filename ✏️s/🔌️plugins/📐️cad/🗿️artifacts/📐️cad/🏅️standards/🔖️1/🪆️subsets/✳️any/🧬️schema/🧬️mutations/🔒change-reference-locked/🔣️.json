@@ -5,7 +5,7 @@
   "displayName": "Change Reference Locked",
   "emoji": "🔒",
   "aggregateVariant": "ChangeReferenceLocked",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-reference-locked",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

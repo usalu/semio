@@ -1,0 +1,39 @@
+{
+  "schema": "raster.document",
+  "id": "photo-board",
+  "title": "Photo Board",
+  "layers": [
+    {
+      "kind": "pixel",
+      "id": "photo-plate",
+      "name": "Photo Plate",
+      "visible": true,
+      "opacity": 1.0,
+      "blendMode": "normal",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "scaleX": 1.0,
+        "scaleY": 1.0,
+        "rotation": 0.0
+      },
+      "mask": null,
+      "width": 256,
+      "height": 256,
+      "imageKey": "photo"
+    }
+  ],
+  "assets": {
+    "photo": {
+      "childId": "raster-asset-unresolved-fixture",
+      "target": {
+        "artifactId": "photo-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    }
+  }
+}

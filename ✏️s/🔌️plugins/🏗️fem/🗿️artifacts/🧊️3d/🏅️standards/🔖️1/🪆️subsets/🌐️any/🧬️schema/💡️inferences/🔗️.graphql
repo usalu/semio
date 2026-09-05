@@ -1,0 +1,16 @@
+# 💡️ Fem3d inference schema — bounds (3d extent + node/element counts).
+
+type Fem3dInference {
+  bounds: Fem3dBounds! @derived
+}
+
+type Fem3dBounds {
+  boundingBox: Fem3dBoundingBox!
+  nodeCount: Int!
+  elementCount: Int!
+}
+
+type Fem3dBoundingBox {
+  min: [Float!]!
+  max: [Float!]!
+}

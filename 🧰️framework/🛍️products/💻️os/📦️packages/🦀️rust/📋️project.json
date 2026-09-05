@@ -9,6 +9,46 @@
     "family:os-kernel"
   ],
   "targets": {
+    "directory-event-page-contract-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts directory-event-page-contract-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      }
+    },
+    "directory-event-page-contract-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts directory-event-page-contract-check --native",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      }
+    },
+    "directory-event-page-client-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts directory-event-page-client-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      }
+    },
+    "directory-event-page-client-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts directory-event-page-client-check --native",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      }
+    },
+    "directory-event-page-bootstrap-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts directory-event-page-bootstrap-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      }
+    },
     "test-directory-runtime-source": {
       "executor": "nx:run-commands",
       "options": {
@@ -29,6 +69,24 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "bun ./📜️script.ts test-backbone-detach-source",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "member-dialect-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts member-dialect-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "test-member-dialect-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-member-dialect-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }

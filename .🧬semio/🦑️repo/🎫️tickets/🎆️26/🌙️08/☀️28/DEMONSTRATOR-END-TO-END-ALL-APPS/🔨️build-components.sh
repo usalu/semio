@@ -4,9 +4,13 @@
 set -uo pipefail
 cd /Users/ueli/Documents/semio || exit 1
 export RUSTC_WRAPPER=""
-export SEMIO_BUILD_BUDGET_MS=7200000
-export SEMIO_CMD_BUDGET_MS=7200000
-DEV="🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts"
+export SEMIO_BUILD_BUDGET_MS="${SEMIO_BUILD_BUDGET_MS:-7200000}"
+export SEMIO_CMD_BUDGET_MS="${SEMIO_CMD_BUDGET_MS:-7200000}"
+# 🧭️ Resolved at run time: the dev module's directory name is being hand-repaired by a peer
+# (variation-selector spelling in flux), so a hardcoded path breaks mid-refactor.
+DEV=$(find 🧰️framework -maxdepth 8 -not -path "*/dist/*" -path "*dev/📦️packages/🟦️typescript/📜️script.ts" -print -quit 2>/dev/null)
+[ -n "$DEV" ] || { echo "FATAL: dev script.ts not found"; exit 2; }
+echo "DEV=$DEV"
 LOG="${LOG_DIR:?LOG_DIR required}"
 for pid in "$@"; do
   echo "=== BUILD $pid $(date '+%H:%M:%S') ==="

@@ -1,0 +1,26 @@
+{
+  "schema": "semio.hub.inference-approval-fixture/v1",
+  "maximumBytes": 1024,
+  "request": {
+    "schema": "semio.hub.inference-approval/v1",
+    "version": 1,
+    "jobId": "00112233445566778899aabbccddeeff",
+    "proposalHash": "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff"
+  },
+  "hostile": [
+    { "field": "schema", "value": "semio.hub.inference-request/v1" },
+    { "field": "version", "value": 2 },
+    { "field": "jobId", "value": "00112233445566778899AABBCCDDEEFF" },
+    { "field": "proposalHash", "value": "00" },
+    { "field": "jobId", "value": "00112233445566778899aabbccddeeff\n" },
+    { "field": "proposalHash", "value": "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff\n" },
+    { "field": "spaceId", "value": "00112233445566778899aabbccddeeff" },
+    { "field": "userId", "value": "00112233445566778899aabbccddeeff" },
+    { "field": "actor", "value": "admin" },
+    { "field": "command", "value": "00" },
+    { "field": "mutationId", "value": "00112233445566778899aabbccddeeff" },
+    { "field": "frontier", "value": {} },
+    { "field": "catalogExecutionGrant", "value": true },
+    { "field": "walWitness", "value": {} }
+  ]
+}

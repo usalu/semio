@@ -21,7 +21,7 @@ pub const ASSEMBLY_INFERENCE_PAYLOAD_SCHEMA: &str = "s.assembly.inference.reques
 pub const fn assembly_inference_metadata() -> semio_framework_plugin::ArtifactInferenceServiceMetadata {
     semio_framework_plugin::ArtifactInferenceServiceMetadata {
         owner: "procedural",
-        artifact_kind: "s.assembly",
+        artifact_kind: "s.procedural.assembly",
         artifact_schema: "s.assembly",
         artifact_schema_version: 1,
         document_schema: "s.assembly",
@@ -866,7 +866,7 @@ mod tests {
         let request = WireArtifactInferenceRequest {
             wire_version: ARTIFACT_INFERENCE_WIRE_VERSION,
             owner: "procedural".into(),
-            artifact_kind: "s.assembly".into(),
+            artifact_kind: "s.procedural.assembly".into(),
             artifact_schema: "s.assembly".into(),
             artifact_schema_version: 1,
             document_schema: "s.assembly".into(),

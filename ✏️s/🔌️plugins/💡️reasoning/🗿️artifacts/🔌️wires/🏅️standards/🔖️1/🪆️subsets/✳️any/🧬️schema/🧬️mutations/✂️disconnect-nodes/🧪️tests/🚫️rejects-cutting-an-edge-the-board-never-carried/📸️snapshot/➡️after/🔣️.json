@@ -1,0 +1,84 @@
+{
+  "wiresFixture": {
+    "schema": "reasoning.wires.fixture",
+    "identities": [
+      {
+        "identityId": 1.0,
+        "identityKind": "topic",
+        "label": "Source",
+        "nodeId": "node-source"
+      },
+      {
+        "identityId": 2.0,
+        "identityKind": "topic",
+        "label": "Sink",
+        "nodeId": "node-sink"
+      }
+    ],
+    "relationships": [
+      {
+        "relationshipId": 1.0,
+        "kind": "owns",
+        "sourceIdentityId": 1.0,
+        "targetIdentityId": 2.0,
+        "edgeId": "edge-owns"
+      }
+    ],
+    "board": {
+      "schema": "reasoning.mindmap.fixture",
+      "camera": {
+        "x": 0.0,
+        "y": 0.0,
+        "zoom": 1.0
+      },
+      "nodes": [
+        {
+          "id": "node-source",
+          "nodeKind": "identity",
+          "shape": "circle",
+          "x": 0.0,
+          "y": 0.0,
+          "radius": 24.0,
+          "text": "Source",
+          "handles": []
+        },
+        {
+          "id": "node-sink",
+          "nodeKind": "identity",
+          "shape": "circle",
+          "x": 60.0,
+          "y": 0.0,
+          "radius": 24.0,
+          "text": "Sink",
+          "handles": []
+        }
+      ],
+      "edges": [
+        {
+          "id": "edge-owns",
+          "edgeKind": "wires.owns",
+          "source": "node-source",
+          "target": "node-sink"
+        }
+      ],
+      "wires": []
+    }
+  },
+  "content": {
+    "childId": "wires-content-disconnect-miss-fixture",
+    "target": {
+      "artifactId": "wires-content",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "graph"
+      }
+    }
+  },
+  "camera": {
+    "x": 0.0,
+    "y": 0.0,
+    "zoom": 1.0
+  },
+  "meta": null
+}

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:gis:inference-control:v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "snapshot", "expected", "checkpoints", "interruptions", "proposalJobId", "proposal", "proposalRejections"],
+  "properties": {
+    "schema": { "const": "semio.gis.inference-control/v1" },
+    "proposalJobId": { "type": "string", "pattern": "^[a-f0-9]{32}$" },
+    "proposalRejections": {
+      "type": "array", "minItems": 7, "maxItems": 7, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["case", "error"],
+        "properties": {
+          "case": { "enum": ["wrong-job", "duplicate-id", "stale-count", "no-bounds", "non-finite", "out-of-range", "reversed"] },
+          "error": { "enum": ["Identity", "Stale", "Bounds"] }
+        }
+      }
+    },
+    "proposal": {
+      "type": "object", "additionalProperties": false, "required": ["CreateRegion"],
+      "properties": {
+        "CreateRegion": {
+          "type": "object", "additionalProperties": false, "required": ["index", "item"],
+          "properties": {
+            "index": { "type": "integer", "minimum": 0, "maximum": 65536 },
+            "item": {
+              "type": "object", "additionalProperties": false, "required": ["id", "data"],
+              "properties": {
+                "id": { "type": "string", "pattern": "^inference-[a-f0-9]{32}$" },
+                "data": {
+                  "type": "object", "additionalProperties": false, "required": ["kind", "ring"],
+                  "properties": {
+                    "kind": { "const": "inference-bounds" },
+                    "ring": { "type": "array", "minItems": 5, "maxItems": 5, "items": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number", "minimum": -180, "maximum": 180 } } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "snapshot": {
+      "type": "object", "additionalProperties": false, "required": ["positions", "routes", "regions"],
+      "properties": { "positions": { "$ref": "#/$defs/features" }, "routes": { "$ref": "#/$defs/features" }, "regions": { "$ref": "#/$defs/features" } }
+    },
+    "expected": {
+      "type": "object", "additionalProperties": false, "required": ["positionCount", "routeCount", "regionCount", "bounds"],
+      "properties": {
+        "positionCount": { "const": 1 }, "routeCount": { "const": 1 }, "regionCount": { "const": 0 },
+        "bounds": { "const": { "lonMin": 7, "lonMax": 9, "latMin": 46, "latMax": 48 } }
+      }
+    },
+    "checkpoints": { "type": "array", "minItems": 10, "maxItems": 10, "items": { "type": "integer", "minimum": 0, "maximum": 64 } },
+    "interruptions": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["name", "at", "error", "calls"],
+        "properties": { "name": { "type": "string", "maxLength": 32 }, "at": { "type": "integer", "minimum": 0, "maximum": 8 }, "error": { "enum": ["cancelled", "expired"] }, "calls": { "type": "integer", "minimum": 1, "maximum": 10 } }
+      }
+    }
+  },
+  "$defs": {
+    "features": { "type": "array", "maxItems": 4, "items": { "type": "object", "additionalProperties": false, "required": ["id", "data"], "properties": { "id": { "type": "string", "minLength": 1, "maxLength": 32 }, "data": { "type": "object" } } } }
+  }
+}

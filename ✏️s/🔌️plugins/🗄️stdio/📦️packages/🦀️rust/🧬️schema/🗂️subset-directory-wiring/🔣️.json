@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "artifact", "standard", "subset", "schema", "canonicalDirectory", "cases"],
+  "properties": {
+    "version": { "const": 1 },
+    "artifact": { "const": "semio" },
+    "standard": { "const": "v1" },
+    "subset": { "const": "mesh" },
+    "schema": { "const": "s.stdio.semio.mesh" },
+    "canonicalDirectory": { "const": "🔺️mesh" },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "directories", "reference", "outcome"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "directories": {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": 2,
+            "items": { "type": "string", "minLength": 1 },
+            "uniqueItems": true
+          },
+          "reference": { "type": "string", "minLength": 1 },
+          "outcome": { "enum": ["accepted", "rewritten", "missing-directory", "ambiguous-directory"] }
+        }
+      }
+    }
+  }
+}

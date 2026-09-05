@@ -1,5 +1,5 @@
 //! 🎬️ `spatial://schema/json/interaction` — the declarative construction-interaction spec types and
-//! their little expression interpreter, as authored in `🖼️assets/🏗️modelDefinitions/*/🎬️interactions/*.json`.
+//! their little expression interpreter, as authored in `🖼️assets/🏗️modelDefinitions/*/🕹️interactions/*.json`.
 //! Sibling topic file of the cad artifact's `🦀️.rs`; the statechart that RUNS these specs
 //! lives in the artifact engine (`⚙️engine/🕹️interaction/🦀️.rs`).
 
@@ -586,8 +586,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn interaction_spec_parses_box_asset() {
-        let raw = include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️box.json");
-        let spec: InteractionSpec = protocol::json::from_json_str(raw).expect("🔣️box.json parses as InteractionSpec");
+        let raw = include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/📦️box.json");
+        let spec: InteractionSpec = protocol::json::from_json_str(raw).expect("📦️box.json parses as InteractionSpec");
         assert_eq!(spec.id, "primitive.box");
         assert_eq!(spec.machine.initial, "idle");
         assert!(spec.state("first_corner").is_some());
@@ -601,8 +601,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn interaction_spec_parses_sphere_asset_with_command_finish() {
-        let raw = include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️sphere.json");
-        let spec: InteractionSpec = protocol::json::from_json_str(raw).expect("🔣️sphere.json parses as InteractionSpec");
+        let raw = include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌐️sphere.json");
+        let spec: InteractionSpec = protocol::json::from_json_str(raw).expect("🌐️sphere.json parses as InteractionSpec");
         assert_eq!(spec.id, "solid.sphere");
         assert_eq!(spec.commit.operation.action, "command.finish");
         assert!(spec.display.states.iter().any(|s| s.state == "radius"));
@@ -611,15 +611,15 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn interaction_spec_parses_all_energy_and_structure_classic_assets() {
         let sources = [
-            include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructBasePlate.json"),
-            include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructExternalWall.json"),
-            include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructHull.json"),
-            include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructRoof.json"),
-            include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructWindows.json"),
-            include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructOneWayReinforcedConcreteSlab.json"),
-            include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructReinforcedConcreteColumn.json"),
-            include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructReinforcedConcreteExternalWall.json"),
-            include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructReinforcedConcreteInternalWall.json"),
+            include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🧱️constructBasePlate.json"),
+            include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🚧️constructExternalWall.json"),
+            include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🚢️constructHull.json"),
+            include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🏠️constructRoof.json"),
+            include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🪟️constructWindows.json"),
+            include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🕹️interactions/🧱️constructOneWayReinforcedConcreteSlab.json"),
+            include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🕹️interactions/🏛️constructReinforcedConcreteColumn.json"),
+            include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🕹️interactions/🛡️constructReinforcedConcreteExternalWall.json"),
+            include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏺️aec.building.structure.classic/🕹️interactions/🚧️constructReinforcedConcreteInternalWall.json"),
         ];
         for raw in sources {
             let spec: InteractionSpec = protocol::json::from_json_str(raw).expect("asset parses as InteractionSpec");
@@ -642,7 +642,7 @@ mod tests {
                 let path = entry.path();
                 if path.is_dir() {
                     walk(&path, out);
-                } else if path.file_name().and_then(|n| n.to_str()).is_some_and(|n| n.ends_with(".json")) && path.parent().and_then(|p| p.file_name()).and_then(|n| n.to_str()) == Some("🎬️interactions") {
+                } else if path.file_name().and_then(|n| n.to_str()).is_some_and(|n| n.ends_with(".json")) && path.parent().and_then(|p| p.file_name()).and_then(|n| n.to_str()) == Some("🕹️interactions") {
                     out.push(path);
                 }
             }
@@ -692,7 +692,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn interaction_spec_guard_evaluates_against_context() {
-        let raw = include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructExternalWall.json");
+        let raw = include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🚧️constructExternalWall.json");
         let spec: InteractionSpec = protocol::json::from_json_str(raw).expect("parses");
         let mut context = std::collections::HashMap::new();
         let env_without = ExprEnv { context: &context, event: None };

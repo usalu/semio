@@ -1,0 +1,15 @@
+syntax = "proto3";
+package stdio.gltf.mutation.animation;
+import "🎞️animation/🌱️create/🛰️.proto";
+import "🎞️animation/🗑️delete/🛰️.proto";
+import "🎞️animation/🚚️move/🛰️.proto";
+import "🎞️animation/🔀️reorder/🛰️.proto";
+
+message GltfAnimationMutation {
+  oneof mutation {
+    GltfCreateAnimationPayloadV1 create_animation = 1;
+    GltfDeleteAnimationPayloadV1 delete_animation = 2;
+    GltfMoveAnimationPayloadV1 move_animation = 3;
+    GltfReorderAnimationsPayloadV1 reorder_animations = 4;
+  }
+}

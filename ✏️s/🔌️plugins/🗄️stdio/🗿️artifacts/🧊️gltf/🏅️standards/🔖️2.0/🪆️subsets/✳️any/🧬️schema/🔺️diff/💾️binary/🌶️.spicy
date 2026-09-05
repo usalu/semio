@@ -1,5 +1,0 @@
-module Stdio_gltf_diff_wire;
-# Structured 21-slot wire; the sibling Semio protocol defines every conditional slot.
-public type Document = unit {
-    ordered_diff_slots: bytes &eod;
-};

@@ -246,13 +246,13 @@ mod tests {
     use super::*;
 
     pub(super) fn assert_fixture_descriptor<T: crate::os_spr::MutationLeaf>(descriptor: &str) {
-        assert_eq!(serde_json::to_value(T::DESCRIPTOR).unwrap(), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
+        assert_eq!(serde_json::Value::from(T::DESCRIPTOR.to_value()), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
         assert!(T::DESCRIPTOR.validate().is_ok());
     }
 
     #[test]
     fn direct_presence_fixture_value_inverse() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
         let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["family"] == "presence").unwrap();
         let before = Value(serde_json::from_value(row["before"].clone()).unwrap());
         let mut wire = row["payload"].clone();
@@ -358,7 +358,7 @@ mod tests {
 
     #[test]
     fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_remains_open() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️retirement.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧹️retirement.json")).unwrap();
         let law = &fixture["localCapture"];
         let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let factory = Arc::new(Factory(count.clone()));
@@ -410,7 +410,7 @@ mod tests {
 
     #[test]
     fn retained_presence_local_replacements_release_shared_aliases_and_retire_exact_final_owners() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️retirement.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧹️retirement.json")).unwrap();
         let law = &fixture["localReplacements"];
         let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let factory = Arc::new(Factory(count.clone()));
@@ -486,7 +486,7 @@ mod tests {
 
     #[test]
     fn retained_presence_peer_commit_rejects_foreign_and_stale_roots_without_losing_exact_owners() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️peer-commit.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../📌️peer-commit.json")).unwrap();
         for law in fixture["cases"].as_array().unwrap() {
             let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
             let factory: Arc<dyn SnapshotRetirementFactory<Value>> = Arc::new(Factory(count.clone()));
@@ -546,7 +546,7 @@ mod tests {
 
     #[test]
     fn retained_presence_store_close_preserves_distinct_original_local_and_peer_factories() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️retirement.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧹️retirement.json")).unwrap();
         let law = &fixture["closeFactoryBinding"];
         let local = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let peer = Arc::new(std::sync::atomic::AtomicUsize::new(0));
@@ -577,7 +577,7 @@ mod tests {
 
     #[test]
     fn retained_presence_overlapping_rosters_retire_shared_entries_once_across_workers() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️retirement.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧹️retirement.json")).unwrap();
         let law = &fixture["overlap"];
         for race in [false, true] {
             let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
@@ -644,7 +644,7 @@ mod tests {
 
     #[test]
     fn retained_presence_read_return_releases_alias_before_cross_worker_reclamation() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️retirement.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧹️retirement.json")).unwrap();
         for variant in fixture["readerReturn"]["variants"].as_array().unwrap() {
             let registry = Arc::new(SnapshotReadLeaseRegistry::new());
             let root = Arc::new(fixture["readerReturn"]["text"].as_str().unwrap().to_string());
@@ -763,7 +763,7 @@ mod tests {
 
     #[test]
     fn retained_presence_store_close_keeps_captured_readers_and_retires_nonempty_peers() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️retirement.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧹️retirement.json")).unwrap();
         for case in fixture["cases"].as_array().unwrap() {
             let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
             let factory = Arc::new(Factory(count.clone()));

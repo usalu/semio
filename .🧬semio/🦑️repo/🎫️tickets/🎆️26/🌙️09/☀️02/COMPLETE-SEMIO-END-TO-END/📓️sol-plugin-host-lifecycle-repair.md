@@ -78,3 +78,17 @@ Current direct evidence on the source preceding the registered rerun is:
 - the owned diff check is clean.
 
 The permanent lifecycle gate now contains nineteen exact laws: the original replay/relay boundaries plus actor-owned budget, FIFO ingress, successful router compute, and stopped-pool owner release. It performs one complete test inventory and requires exactly one fully qualified match for every suffix before any exact run, avoiding nineteen redundant cold inventories. The launch entry uses the repository root `📜️script.ts nx` router, which disables Nx plugin-isolation IPC; raw isolated Nx corrupts long emoji project roots and is not the registered execution path. Registered session `74785` has passed the independent `6/6` oracle, repository production subject `5/5`, and exact-one discovery for all nineteen laws. Its exact laws, broad suite, and all-feature terminal are still running, so this section does not yet upgrade lifecycle acceptance.
+
+## Final registered acceptance
+
+The first final wrapper attempt exposed four stale broad-suite fixtures rather than a production lifecycle defect. They read generated `*.core.wasm` files and passed those core modules to Wasmtime's component parser. The tests now use one deterministic minimal valid component for cache round-trip, compile acceptance, wrong-world rejection, and package-isolation coverage; they no longer silently return when volatile generated files are absent.
+
+The resulting broad run exposed a separate scheduler-test race. `OutcomeSink::wait_for(1)` waits for at least one outcome but drains every outcome already queued. The mounted fixed-replay law called it twice, so a terminal job and actor turn arriving together could be drained by the first call and the required job discarded depending on order. The law now waits once for both outcomes and asserts their exact unordered membership. The repaired current binary survived twenty consecutive stress runs across worker counts `1`, `2`, `4`, and host-default without a failure.
+
+Registered lifecycle session `86914` is the terminal production-path evidence. The root-owned command was:
+
+```text
+bun ./📜️script.ts nx run @semio-tech/framework-plugin-host:lifecycle-check --skip-nx-cache
+```
+
+It passed the independent neutral oracle `6/6`, the repository production subject `5/5`, exact-one discovery and execution for all nineteen lifecycle laws, the complete 245-test library run (`244` passed, `0` failed, `1` ignored), and the all-feature Cargo check. Nx exited `0`. `git diff --check` also exits `0`. This accepts the plugin-host lifecycle boundary; it does not claim that the still-empty verified installed catalog or descriptor-owned MCP command ABI is usable.

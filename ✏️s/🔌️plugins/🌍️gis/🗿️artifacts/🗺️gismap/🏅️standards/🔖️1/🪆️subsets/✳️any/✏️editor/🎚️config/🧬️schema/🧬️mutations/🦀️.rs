@@ -22,7 +22,7 @@ pub use set_locale::SetLocale;
 
 //#region 🧬️Aggregate
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, dsl::DslOps, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields))]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = Gis2dConfig, diff = Gis2dConfigDiff, schema = "gis.gis2dcfg")]

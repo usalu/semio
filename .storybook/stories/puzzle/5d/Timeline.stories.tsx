@@ -1,7 +1,7 @@
 // #region 🧲️Header
 // 💻️ .storybook/story/puzzle/5d/Timeline.stories.tsx
-// Specs: Compose `World3dHost` + `GraphTimelineHost` against the real puzzle-5d example fixtures — "5D" (3 spatial + assembly-order + fastener graph) rendered as a 3D world you can scrub through an assembly history.
-// Summary: `puzzle/5d`'s real fixture schema (`puzzle/5d/example/*.puzzle5d`) has no persisted checkpoint history (the plugin's `d5` module doesn't wire `graph_timeline` yet — grepped `puzzle/plugin/rs/lib.rs`, no `HistoryColumn`/`checkoutCheckpoint` hits under `mod d5`), so this story *synthesizes* one checkpoint per fixture `parts[]` entry (assembly order = array order, newest first per `HistoryColumn`'s docstring in `framework/ui/js/react/index.tsx`) and lets `GraphTimelineHost`'s `checkoutCheckpoint` action scrub how many parts `World3dHost` reveals — same story-local-reducer pattern as `../3d/World.stories.tsx` and `../2d/Board.stories.tsx`. Fixture data comes from the real `.puzzle5d` DSL-text fixtures (`Puzzle5dProjection`'s `dsl::DslDocument` grammar) — raw-imported as text and parsed via `@semio-tech/puzzle-5d-rs`'s `puzzle5dParseDslJson` wasm export (the same `parse_dsl` Rust uses, reused as the single source of truth instead of duplicating the DSL grammar in TypeScript).
+// Specs: Compose `World3dHost` + `🌳️GraphTimelineHost` against the real puzzle-5d example fixtures — "5D" (3 spatial + assembly-order + fastener graph) rendered as a 3D world you can scrub through an assembly history.
+// Summary: `puzzle/5d`'s real fixture schema (`puzzle/5d/example/*.puzzle5d`) has no persisted checkpoint history (the plugin's `d5` module doesn't wire `graph_timeline` yet — grepped `puzzle/plugin/rs/lib.rs`, no `HistoryColumn`/`checkoutCheckpoint` hits under `mod d5`), so this story *synthesizes* one checkpoint per fixture `parts[]` entry (assembly order = array order, newest first per `HistoryColumn`'s docstring in `framework/ui/js/react/index.tsx`) and lets `🌳️GraphTimelineHost`'s `checkoutCheckpoint` action scrub how many parts `World3dHost` reveals — same story-local-reducer pattern as `../3d/World.stories.tsx` and `../2d/Board.stories.tsx`. Fixture data comes from the real `.puzzle5d` DSL-text fixtures (`Puzzle5dProjection`'s `dsl::DslDocument` grammar) — raw-imported as text and parsed via `@semio-tech/puzzle-5d-rs`'s `puzzle5dParseDslJson` wasm export (the same `parse_dsl` Rust uses, reused as the single source of truth instead of duplicating the DSL grammar in TypeScript).
 // Mesh/reference-asset caveats are identical to `../3d/World.stories.tsx`: no `mesh-collection` route for this scope and the referenced GLBs don't exist on disk, so parts render as `World3dHost`'s neutral placeholder box.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
@@ -146,7 +146,7 @@ function applyStoryMerge(current: readonly string[], id: string, merge: string):
   return [...set];
 }
 
-/** @emoji 🧩️ Story-local reducer: `checkoutCheckpoint` (from `GraphTimelineHost`) scrubs `revealCount`; `worldPick`/`setHover`/`setCamera` (from `World3dHost`) mirror the same subset `../3d/World.stories.tsx` implements, resolved against the *currently revealed* parts slice. */
+/** @emoji 🧩️ Story-local reducer: `checkoutCheckpoint` (from `🌳️GraphTimelineHost`) scrubs `revealCount`; `worldPick`/`setHover`/`setCamera` (from `World3dHost`) mirror the same subset `../3d/World.stories.tsx` implements, resolved against the *currently revealed* parts slice. */
 function reduceStoryPuzzle5dAction(state: StoryPuzzle5dState, action: string, args: Record<string, unknown> | undefined): StoryPuzzle5dState {
   const { fixture, runtime } = state;
   const revealed = fixture.parts.slice(0, runtime.revealCount);
@@ -307,7 +307,7 @@ export const ConcreteForest: Story = {
   },
 };
 
-/** 🏯️ The real Nakagin Capsule Tower 5D fixture (`puzzle/5d/example/nakagin-capsule-tower.puzzle5d`) — 180 parts; scrub `GraphTimelineHost`'s checkpoints to watch `World3dHost` reassemble the tower. */
+/** 🏯️ The real Nakagin Capsule Tower 5D fixture (`puzzle/5d/example/nakagin-capsule-tower.puzzle5d`) — 180 parts; scrub `🌳️GraphTimelineHost`'s checkpoints to watch `World3dHost` reassemble the tower. */
 export const NakaginCapsuleTower: Story = {
   args: {
     fixtureDsl: nakaginCapsuleTowerFixtureDsl,

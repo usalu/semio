@@ -5,7 +5,7 @@
   "displayName": "Edit Rhs",
   "emoji": "🎯️",
   "aggregateVariant": "EditRhs",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "edit-rhs",
   "binaryTag": 2,
   "invertibility": "explicit-mutation",

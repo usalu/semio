@@ -487,26 +487,26 @@ pub const DRAWING_DIALECT: semio_framework::Dialect = semio_framework::Dialect {
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.draw.standard.v1", "standard", "1", &[], None),
-        ("s.draw.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.draw.schema.artifact", "schema", "s.draw.drawing", &[("schema", "s.draw.drawing")], None),
-        ("s.draw.inference.artifact", "inference", "s.draw.drawing.inference", &[("schema", "s.draw.drawing.inference")], None),
-        ("s.draw.composer.svg", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
-        ("s.draw.composer.pdf", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
-        ("s.draw.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
-        ("s.draw.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.draw.composer.dwg", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
-        ("s.draw.composer.dxf", "composer", "s.stdio.dxf@r12/*", &[("dialect", "s.stdio.dxf@r12/*")], None),
-        ("s.draw.grammar.document", "grammar", "drawing.document", &[("grammar", "drawing.document")], None),
-        ("s.draw.grammar.op", "grammar", "drawing.op", &[("grammar", "drawing.op")], None),
-        ("s.draw.grammar.diff", "grammar", "drawing.diff", &[("grammar", "drawing.diff")], None),
-        ("s.draw.grammar.pack", "grammar", "drawing.pack", &[("grammar", "drawing.pack")], None),
-        ("s.draw.grammar.spr", "grammar", "drawing.spr", &[("grammar", "drawing.spr")], None),
-        ("s.draw.codec.document.v1", "codec", "drawing.document:drawing", &[("codec", "drawing.document"), ("extension", "drawing")], None),
-        ("s.draw.localization.en", "localization", "Drawing", &[], Some(("en", "Drawing"))),
-        ("s.draw.localization.de", "localization", "Zeichnung", &[], Some(("de", "Zeichnung"))),
+        ("s.draw.drawing.standard.v1", "standard", "1", &[], None),
+        ("s.draw.drawing.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.draw.drawing.schema.artifact", "schema", "s.draw.drawing", &[("schema", "s.draw.drawing")], None),
+        ("s.draw.drawing.inference.artifact", "inference", "s.draw.drawing.inference", &[("schema", "s.draw.drawing.inference")], None),
+        ("s.draw.drawing.composer.svg", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
+        ("s.draw.drawing.composer.pdf", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
+        ("s.draw.drawing.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.draw.drawing.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.draw.drawing.composer.dwg", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
+        ("s.draw.drawing.composer.dxf", "composer", "s.stdio.dxf@r12/*", &[("dialect", "s.stdio.dxf@r12/*")], None),
+        ("s.draw.drawing.grammar.document", "grammar", "drawing.document", &[("grammar", "drawing.document")], None),
+        ("s.draw.drawing.grammar.op", "grammar", "drawing.op", &[("grammar", "drawing.op")], None),
+        ("s.draw.drawing.grammar.diff", "grammar", "drawing.diff", &[("grammar", "drawing.diff")], None),
+        ("s.draw.drawing.grammar.pack", "grammar", "drawing.pack", &[("grammar", "drawing.pack")], None),
+        ("s.draw.drawing.grammar.spr", "grammar", "drawing.spr", &[("grammar", "drawing.spr")], None),
+        ("s.draw.drawing.codec.document.v1", "codec", "drawing.document:drawing", &[("codec", "drawing.document"), ("codec-extension", "16:drawing.document:drawing")], None),
+        ("s.draw.drawing.localization.en", "localization", "Drawing", &[], Some(("en", "Drawing"))),
+        ("s.draw.drawing.localization.de", "localization", "Zeichnung", &[], Some(("de", "Zeichnung"))),
     ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.draw")?);
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.draw.drawing")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
         for (namespace, value) in *claims {

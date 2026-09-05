@@ -11,19 +11,19 @@
   },
   "exports": {
     ".": "./🟦️.tsx",
-    "./runtime": "./🟦️runtime.ts",
-    "./test": "./🧪️render.ts",
-    "./🔣️components.json": "../../../../🔣️components.json",
-    "./🎨️.css": "../../../../🎨️.css",
-    "./🎨️globals-🎨️ui.css": "../../../../🎨️globals-ui.css",
-    "./🎨️theme.css": "../../../../🎨️theme.css",
-    "./tailwind.config": "./🎨️tailwind.config.ts",
-    "./postcss.config": "./🎨️postcss.config.ts",
-    "./eslint.config": "./🟦️eslint.config.ts"
+    "./runtime": "./⚛️runtime.ts",
+    "./test": "./🖌️render.ts",
+    "./components.json": "../../../../components.json",
+    "./🧵️.css": "../../../../🧵️.css",
+    "./🌐️globals-ui.css": "../../../../🌐️globals-ui.css",
+    "./🌓️theme.css": "../../../../🌓️theme.css",
+    "./tailwind.config": "./tailwind.config.ts",
+    "./postcss.config": "./postcss.config.ts",
+    "./eslint.config": "./eslint.config.ts"
   },
   "targets": {
     "lint": {
-      "command": "bunx eslint --max-warnings 0 --config 🟦️eslint.config.ts .",
+      "command": "bunx eslint --max-warnings 0 --config eslint.config.ts .",
       "cwd": "."
     }
   },

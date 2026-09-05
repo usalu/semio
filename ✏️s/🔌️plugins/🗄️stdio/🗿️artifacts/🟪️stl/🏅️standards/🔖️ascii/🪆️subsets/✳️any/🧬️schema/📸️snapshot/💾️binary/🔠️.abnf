@@ -1,8 +1,0 @@
-; abnf stdio.stl snapshot — binary STL (https://en.wikipedia.org/wiki/STL_(file_format)).
-document = header count *facet
-header = 80OCTET
-count = 4OCTET ; u32, little-endian
-facet = normal vertex vertex vertex attribute-byte-count
-normal = 12OCTET ; 3x f32-le
-vertex = 12OCTET ; 3x f32-le
-attribute-byte-count = 2OCTET ; u16-le

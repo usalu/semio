@@ -1,6 +1,0 @@
-syntax = "proto3";
-package semio.s_stdio_pdf_1_7_ua.mutation.remove_lang;
-
-// 🤐️ Direct remove-lang protobuf payload.
-message RemoveLangMutation {
-}

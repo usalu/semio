@@ -64,11 +64,11 @@ pub mod set_adjacency_kind {
                 } else {
                     new_adjacency(program, &a, &b, kind)
                 };
-                Ok(Emit::mutations(vec![ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::mutation::ConnectAdjacency { adjacency })]))
+                Ok(Emit::mutations(vec![ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency })]))
             }
             None => {
                 if let Some(row) = existing {
-                    Ok(Emit::mutations(vec![ProgramMutation::DisconnectAdjacency(leaves::disconnect_adjacency::mutation::DisconnectAdjacency { id: row.header.id.clone() })]))
+                    Ok(Emit::mutations(vec![ProgramMutation::DisconnectAdjacency(leaves::disconnect_adjacency::DisconnectAdjacency { id: row.header.id.clone() })]))
                 } else {
                     Ok(Emit::default())
                 }

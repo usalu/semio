@@ -1,47 +1,14 @@
 //! 🧬️ Exact retained recipes for the live delete, disconnect, move, and widget replacement lanes.
 
 use super::SceneCopy;
+use crate::artifacts::flow::retirement::MutationRetirementFactory;
 use super::super::{bytes::{Equality, TextCopy}, Owner, Retirement};
 use super::super::super::{flow_widget_id, FlowMutation, FlowWorkingScene};
-use crate::artifacts::flow::schema::mutations::{connect_widgets::mutation::ConnectWidgets, create_widget::mutation::CreateWidget, move_widgets::mutation::MoveWidgets, replace_widget::mutation::ReplaceWidget};
+use crate::artifacts::flow::schema::mutations::{connect_widgets::ConnectWidgets, create_widget::CreateWidget, move_widgets::MoveWidgets, replace_widget::ReplaceWidget};
 use flow::{FlowLayoutEntry, Widget, WidgetLayout};
 use flow::retained::{FlowCopyAllocationBudget, FlowWidgetCopy};
 use std::{mem::ManuallyDrop, sync::Arc};
 use store::os_dsl::schema::ordered::{Grant, RetirementStep, Step, UpdateCursor};
-
-//#region 🧹️MutationOwnership
-pub(in super::super::super) struct MutationRetirementFactory;
-
-impl store::ArtifactOwnedValueRetirementFactory<FlowMutation> for MutationRetirementFactory {
-    fn retire_owned(&self, mutation: FlowMutation) -> Box<dyn store::ErasedSnapshotRetirement> {
-        let mut retirement = Retirement::default(); retirement.push(Owner::Mutation(mutation)); Box::new(retirement)
-    }
-}
-
-impl store::SnapshotRetirementFactory<FlowMutation> for MutationRetirementFactory {
-    fn retire(&self, mutation: Arc<FlowMutation>) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(MutationRetirement { mutation: ManuallyDrop::new(Some(mutation)), retirement: Retirement::default() })
-    }
-}
-
-struct MutationRetirement { mutation: ManuallyDrop<Option<Arc<FlowMutation>>>, retirement: Retirement }
-
-impl store::ErasedSnapshotRetirement for MutationRetirement {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
-        if items == 0 || bytes == 0 { return Ok(store::SnapshotRetirementStep::Blocked); }
-        if let Some(mutation) = self.mutation.take() {
-            if let Some(mutation) = Arc::into_inner(mutation) { self.retirement.push(Owner::Mutation(mutation)); }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        store::ErasedSnapshotRetirement::close_step(&mut self.retirement, items, bytes)
-    }
-    fn terminal_is_empty(&self) -> bool { self.mutation.is_none() && self.retirement.is_empty() }
-}
-
-impl Drop for MutationRetirement {
-    fn drop(&mut self) { if !std::thread::panicking() { assert!(self.mutation.is_none() && self.retirement.is_empty(), "Flow mutation retirement must reach terminal emptiness"); } }
-}
-//#endregion 🧹️MutationOwnership
 
 //#region 🧬️Recipe
 struct RecipeState {
@@ -388,12 +355,12 @@ pub(super) mod tests {
         for bytes in fixture["grants"].as_array().unwrap() {
             let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: bytes.as_u64().unwrap() as usize };
             for row in fixture["cases"].as_array().unwrap() {
-                let root = Arc::new(source(&label)); let baseline = serde_json::to_value(&*root).unwrap(); let weak = Arc::downgrade(&root);
-                let mutation: FlowMutation = serde_json::from_value(row["mutation"].clone()).unwrap();
+                let root = Arc::new(source(&label)); let baseline = serde_json::Value::from(dsl::ToValue::to_value(&*root)); let weak = Arc::downgrade(&root);
+                let mutation: FlowMutation = dsl::FromValue::from_value(dsl::DslValue::from(row["mutation"].clone())).unwrap();
                 let mut recipe = Recipe::new(root, Arc::new(mutation));
                 for _ in 0..500_000 { if recipe.complete() { break; } assert!(recipe.advance(grant).unwrap().unwrap() <= grant.maximum_bytes); }
                 assert!(recipe.complete()); let (post, inverse) = recipe.take().unwrap();
-                let mut json = serde_json::to_value(&post).unwrap(); let inverse_json = serde_json::to_value(&inverse).unwrap();
+                let mut json = serde_json::Value::from(dsl::ToValue::to_value(&post)); let inverse_json = serde_json::Value::from(dsl::ToValue::to_value(&inverse));
                 assert_eq!(json["widgets"].as_array().unwrap().iter().map(|widget| widget["id"].clone()).collect::<Vec<_>>(), *row["widgets"].as_array().unwrap());
                 assert_eq!(json["synapses"].as_array().unwrap().iter().map(|edge| edge["id"].clone()).collect::<Vec<_>>(), *row["synapses"].as_array().unwrap());
                 assert_eq!(inverse_json.as_array().unwrap().iter().map(|mutation| mutation["mutation"].clone()).collect::<Vec<_>>(), *row["inverseKinds"].as_array().unwrap());
@@ -411,7 +378,7 @@ pub(super) mod tests {
             let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: bytes.as_u64().unwrap() as usize };
             for after in fixture["cancelAfterSteps"].as_array().unwrap() {
                 let root = Arc::new(source(&label)); let weak = Arc::downgrade(&root);
-                let mutation = serde_json::from_value(fixture["cases"][0]["mutation"].clone()).unwrap();
+                let mutation = dsl::FromValue::from_value(dsl::DslValue::from(fixture["cases"][0]["mutation"].clone())).unwrap();
                 let mut recipe = Recipe::new(root, Arc::new(mutation));
                 for _ in 0..after.as_u64().unwrap() { if recipe.complete() { break; } recipe.advance(grant).unwrap(); }
                 assert!(weak.upgrade().is_some()); let retired = close(&mut recipe, grant); assert!(weak.upgrade().is_none());

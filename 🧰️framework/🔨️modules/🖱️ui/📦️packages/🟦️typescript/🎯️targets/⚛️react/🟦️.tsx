@@ -1469,8 +1469,8 @@ export {
 // #endregion UiDriver
 
 // #region ⌨️UiKeybindings
-import { parseKeybindingChords, formatKeybindingShortcut } from "../../../../🔨️modules/⌨️keybinding-text-interpretation/🟦️.ts";
-import { formatControlTooltipText } from "../../../../🔨️modules/⌨️control-tooltip-presentation/🟦️.ts";
+import { parseKeybindingChords, formatKeybindingShortcut } from "../../../../🔨️modules/🔤️keybinding-text-interpretation/🟦️.ts";
+import { formatControlTooltipText } from "../../../../🔨️modules/💡️control-tooltip-presentation/🟦️.ts";
 import {
   buildKeysByActionId,
   SHELL_KEYBINDINGS,
@@ -1486,7 +1486,7 @@ import {
   type ControlKeybindingCallback,
   type ControlKeybindingOptions,
   type ControlKeybindingDependencies,
-} from "../../../../🔨️modules/⌨️control-keybinding-context/🟦️.tsx";
+} from "../../../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
 import { ControlHotkeyBadge, type ControlHotkeyBadgeProps } from "../../../../🔨️modules/⌨️control-hotkey-presentation/🟦️.tsx";
 import { readStoredUiKeybindingOverrides, writeStoredUiKeybindingOverrides } from "../../../../🔨️modules/💾️keybinding-persistence/🟦️.ts";
 export {
@@ -2098,7 +2098,7 @@ import {
   type WindowSilhouetteSafeClearances,
   type PendingWindowSilhouetteMetrics,
   type WindowSilhouetteGeometry,
-} from "../../../../🧱️elements/🪟️WindowSilhouette/🟦️.tsx";
+} from "../../../../🧱️elements/🔲️WindowSilhouette/🟦️.tsx";
 export {
   WINDOW_SILHOUETTE_GEOMETRY_SCHEMA,
   WINDOW_SILHOUETTE_PATH_INSET,
@@ -2148,7 +2148,7 @@ export { ChromeControlHint };
 /** @emoji 🪁️ Supported UI locale codes — the single source is `@semio-tech/framework`'s
  * `ShellLocale`, so a brand's `locks.locale` and this chrome bundle's coverage can never drift apart. */
 // #region UiLabel
-import { uiDataLabel, type UiLabel } from "../../../../🧱️elements/🏷️UiLabel/🟦️.tsx";
+import { uiDataLabel, type UiLabel } from "../../../../🧱️elements/🎗️UiLabel/🟦️.tsx";
 export { uiDataLabel, type UiLabel };
 // #endregion UiLabel
 
@@ -6425,7 +6425,7 @@ export const TutorialGhostPointer: React.FC<TutorialGhostPointerProps> = ({ cue,
 // #endregion 🎥️Tutorial
 
 // #region 🗨️Dialog
-import { UIDialog, type UIDialogProps } from "../../../../🧱️elements/💬️UIDialog/🟦️.tsx";
+import { UIDialog, type UIDialogProps } from "../../../../🧱️elements/📨️UIDialog/🟦️.tsx";
 export { UIDialog, type UIDialogProps };
 // #endregion 🗨️Dialog
 
@@ -6601,7 +6601,7 @@ import {
   type PanelTabSelectionOptions,
   type PanelDock,
   type PanelTabBarProps,
-} from "../../../../🧱️elements/📑️PanelTabBar/🟦️.tsx";
+} from "../../../../🧱️elements/🧭️PanelTabBar/🟦️.tsx";
 export {
   reconcileActivePath,
   singleTreeLeaf,
@@ -8563,7 +8563,7 @@ export { Action, ActionDropdown, ActionGroup, ActionGroupItem, actionGroupItemVa
 // #endregion 🌩️ActionGroup
 
 // #region 🌩️ButtonGroup
-import { ButtonGroup, ButtonGroupItem, buttonGroupItemVariants } from "../../../../🧱️elements/🎛️ButtonGroup/🟦️.tsx";
+import { ButtonGroup, ButtonGroupItem, buttonGroupItemVariants } from "../../../../🧱️elements/🔳️ButtonGroup/🟦️.tsx";
 export { ButtonGroup, ButtonGroupItem, buttonGroupItemVariants };
 // #endregion 🌩️ButtonGroup
 
@@ -8613,7 +8613,7 @@ import {
   type SelectSide,
   type SelectTriggerProps,
   type SelectValueProps,
-} from "../../../../🧱️elements/☑️Select/🟦️.tsx";
+} from "../../../../🧱️elements/🔽️Select/🟦️.tsx";
 export {
   Select,
   SelectContent,
@@ -8665,12 +8665,12 @@ export { Stepper };
 // #endregion 🏬️Stepper
 
 // #region 🎏️Textarea
-import { Textarea } from "../../../../🧱️elements/📄️Textarea/🟦️.tsx";
+import { Textarea } from "../../../../🧱️elements/🔤️Textarea/🟦️.tsx";
 export { Textarea };
 // #endregion 🎏️Textarea
 
 // #region 🗡️Toggle
-import { Toggle, type ToggleItem, type ToggleProps } from "../../../../🧱️elements/🎚️Toggle/🟦️.tsx";
+import { Toggle, type ToggleItem, type ToggleProps } from "../../../../🧱️elements/🔀️Toggle/🟦️.tsx";
 export { Toggle };
 export type { ToggleItem, ToggleProps };
 // #endregion 🗡️Toggle
@@ -8764,7 +8764,7 @@ import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from "../../../../🧱️elements/↕️Resizable/🟦️.tsx";
+} from "../../../../🧱️elements/↔️Resizable/🟦️.tsx";
 export {
   RESIZABLE_HIT_TARGET_MIN_FINE_PX,
   RESIZABLE_HIT_TARGET_MIN_COARSE_PX,
@@ -9007,7 +9007,7 @@ export type { TabsProps, TabsListProps, TabsTriggerProps, TabsContentProps, Tabs
 // #endregion 🏷️Tabs
 
 // #region 🖼️IconSelector
-import { IconSelector, type IconSelectorProps } from "../../../../🧱️elements/🔣️IconSelector/🟦️.tsx";
+import { IconSelector, type IconSelectorProps } from "../../../../🧱️elements/🎴️IconSelector/🟦️.tsx";
 export { IconSelector, type IconSelectorProps };
 // #endregion 🖼️IconSelector
 
@@ -9104,7 +9104,7 @@ import {
   type WindowMeasureTreeGroupProps,
   type WindowMeasureTreeLeafProps,
   type WindowPaneChromeToggleProps,
-} from "../../../../🧱️elements/🪵️Tree/🟦️.tsx";
+} from "../../../../🧱️elements/🌳️Tree/🟦️.tsx";
 export {
   BasicChatPanel,
   CATALOGUE_DRAG_MIME,
@@ -10497,7 +10497,7 @@ import {
   Diagram,
   useDiagramLayout,
   DiagramSkeleton,
-} from "../../../../🧱️elements/📊️Diagram/🟦️.tsx";
+} from "../../../../🧱️elements/🕸️Diagram/🟦️.tsx";
 export { DIAGRAM_UNIT, type DiagramLayoutDirection, type DiagramLayoutOptions, type DiagramForceConfig, defaultDiagramForceConfig, type DiagramProps, Diagram, useDiagramLayout, DiagramSkeleton };
 // #endregion 🧫️Diagram
 
@@ -10652,7 +10652,7 @@ export { type SortDirection, type TableColumn, type HierarchicalRowData, type Dr
 // #endregion 🛎️Table
 
 // #region 🗄️HistoryTable
-import { type HistoryColumnAuthor, type HistoryColumn, type HistoryTableProps, HistoryTable } from "../../../../🧱️elements/📜️HistoryTable/🟦️.tsx";
+import { type HistoryColumnAuthor, type HistoryColumn, type HistoryTableProps, HistoryTable } from "../../../../🧱️elements/🕰️HistoryTable/🟦️.tsx";
 export { type HistoryColumnAuthor, type HistoryColumn, type HistoryTableProps, HistoryTable };
 // #endregion 🗄️HistoryTable
 
@@ -10685,7 +10685,7 @@ import {
   type VirtualFileSystemNode,
   type VirtualFileSystemRow,
   type VirtualFileSystemProps,
-} from "../../../../🧱️elements/📁️VirtualFileSystem/🟦️.tsx";
+} from "../../../../🧱️elements/⚙️VirtualFileSystem/🟦️.tsx";
 export {
   VIRTUAL_FILE_SYSTEM_DEMO_DESCRIPTOR_KINDS,
   VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS,
@@ -10855,7 +10855,7 @@ export {
 if (import.meta.vitest) {
   const { describe, expect, it, vi } = import.meta.vitest;
   const { render, screen, fireEvent, waitFor, act } = await import("@testing-library/react");
-  const { calculateDiagramLayoutForBatchTest } = await import("../../../../🧱️elements/📊️Diagram/🟦️");
+  const { calculateDiagramLayoutForBatchTest } = await import("../../../../🧱️elements/🕸️Diagram/📐️layout.ts");
 
   describe("owned locale detector retirement", () => {
     it("normalizes the closed shell locale domain", () => {
@@ -11212,7 +11212,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/🎨️ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
       expect(css).toMatch(/@property --celebrate-border-angle[\s\S]*?inherits:\s*true/);
       expect(css).toMatch(/\[data-celebrated="true"\][\s\S]*?--celebrate-conic:/);
       expect(css).not.toMatch(/\[data-celebrated="true"\][\s\S]*?animation:\s*celebrate-border-spin/);
@@ -11244,7 +11244,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/🎨️ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
       const unlayeredRoot = css.match(/^:root \{[\s\S]*?\n\}/m)?.[0] ?? "";
       expect(unlayeredRoot).toMatch(/animation:[\s\S]*?loading-border-spin/);
       expect(unlayeredRoot).toMatch(/animation:[\s\S]*?waiting-border-spin/);
@@ -12031,7 +12031,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/🎨️ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
       expect(css).toContain('[data-slot="introduction-info-box"]');
       expect(css).toContain('[data-slot="dialog-box"]');
       expect(css).toContain("data-window-silhouette-border");
@@ -12177,7 +12177,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/🎨️ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
       expect(css).toMatch(/\[data-slot="introduction-info-box"\]\s*\[data-slot="introduction-body-paragraph"\]:hover\s*\{\s*color:\s*var\(--border-emphasized-color\);/);
       expect(css).not.toMatch(/\[data-slot="introduction-info-box"\]\s*\[data-slot="window-chrome-body"\]:hover/);
       expect(css).toMatch(
@@ -12230,8 +12230,8 @@ if (import.meta.vitest) {
                 interactions: [],
                 ordered: false,
                 logos: [
-                  { src: "/asset/logo/🖼️bbsr.png", darkSrc: "/asset/logo/🖼️bbsr-dark.png", alt: "BBSR", href: "https://www.bbsr.bund.de" },
-                  { src: "/asset/logo/🖼️zukunft-bau.png", darkSrc: null, alt: "Zukunft Bau", href: null },
+                  { src: "/🖼️assets/logo/🖼️bbsr.png", darkSrc: "/🖼️assets/logo/🖼️bbsr-dark.png", alt: "BBSR", href: "https://www.bbsr.bund.de" },
+                  { src: "/🖼️assets/logo/🖼️zukunft-bau.png", darkSrc: null, alt: "Zukunft Bau", href: null },
                 ],
                 demonstrations: [],
               },
@@ -12248,7 +12248,7 @@ if (import.meta.vitest) {
       expect(links?.[0].getAttribute("href")).toBe("https://www.bbsr.bund.de");
       const images = box?.querySelectorAll("img");
       expect(images).toHaveLength(3);
-      expect(Array.from(images ?? []).map((img) => img.getAttribute("src"))).toEqual(["/asset/logo/🖼️bbsr.png", "/asset/logo/🖼️bbsr-dark.png", "/asset/logo/🖼️zukunft-bau.png"]);
+      expect(Array.from(images ?? []).map((img) => img.getAttribute("src"))).toEqual(["/🖼️assets/logo/🖼️bbsr.png", "/🖼️assets/logo/🖼️bbsr-dark.png", "/🖼️assets/logo/🖼️zukunft-bau.png"]);
     });
 
     it("renders an interaction checklist instead of the Next button, ticking off completed rows", () => {
@@ -13108,7 +13108,7 @@ if (import.meta.vitest) {
     it("infers image, svg, and pdf kinds from paths", () => {
       expect(referenceMediaKindFromUrl("/infinite-fixture/🖼️sketch.png")).toBe("image");
       expect(referenceMediaKindFromUrl("/infinite-fixture/icon.svg")).toBe("svg");
-      expect(referenceMediaKindFromUrl("/infinite-fixture/📄️site.pdf")).toBe("pdf");
+      expect(referenceMediaKindFromUrl("/infinite-fixture/🗺️site.pdf")).toBe("pdf");
       expect(referenceMediaKindFromUrl("/unknown.bin")).toBeNull();
     });
   });
@@ -13514,7 +13514,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      return readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/🎨️ui.css"), "utf8");
+      return readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
     }
 
     it("gives every vendored icon id and non-catalog kind a hover keyframes block and animation assignment", async () => {
@@ -13942,7 +13942,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/🎨️ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
       expect(css).toContain("[data-window-silhouette-gap]");
       expect(css).toMatch(/\[data-window-silhouette-gap\][\s\S]*backdrop-filter:\s*none/);
       render(
@@ -18275,8 +18275,8 @@ export type { FuzzySearchField, FuzzySearchOptions, FuzzySearchResult };
 // #endregion 🔔️Search
 
 // #region 🌨️Styling
-export { styleVariants } from "../../../../🔨️modules/🏷️style-variants/🟦️.ts";
-export type { StyleCompoundVariant, StyleVariantCompiler, StyleVariantConfiguration, StyleVariantProps, StyleVariantSchema, StyleVariantSelection } from "../../../../🔨️modules/🏷️style-variants/🟦️.ts";
+export { styleVariants } from "../../../../🔨️modules/🧬️style-variants/🟦️.ts";
+export type { StyleCompoundVariant, StyleVariantCompiler, StyleVariantConfiguration, StyleVariantProps, StyleVariantSchema, StyleVariantSelection } from "../../../../🔨️modules/🧬️style-variants/🟦️.ts";
 // #endregion 🌨️Styling
 
 // #region 📮️Resizable Panels
@@ -20959,7 +20959,7 @@ if (treeVitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/🎨️ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
       expect(css).toContain('[data-slot="navbar"]::after');
       expect(css).toContain('[data-slot="footer"]::before');
       expect(css).toMatch(/\[data-slot="navbar"\]:hover::after/);
@@ -21863,7 +21863,7 @@ if (treeVitest) {
     //#region 🏠️LocalInteractionCompositionTests
     it("TutorialLocalInteraction preserves exact three-map authored changes against Immer", async () => {
       const source = await import("../../../../../🛂️manifest/🎬️tutorial/🏠️local-interaction/🟦️.ts");
-      const { readFileSync } = await import("node:fs"); const { fileURLToPath } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const fixture: unknown = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../🛂️manifest/🧪️fixtures/🔣️tutorial-local-interaction.json"), "utf8")); const { default: schema } = await import("../../../../../🛂️manifest/🧪️fixtures/🔣️tutorial-local-interaction.schema.json"); const { default: localSchema } = await import("../../../../../📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🏠️local-interaction/🔣️.schema.json");
+      const { readFileSync } = await import("node:fs"); const { fileURLToPath } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const fixture: unknown = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../🛂️manifest/🧪️fixtures/🖱️tutorial-local-interaction.json"), "utf8")); const { default: schema } = await import("../../../../../🛂️manifest/🧪️fixtures/🎛️tutorial-local-interaction.schema.json"); const { default: localSchema } = await import("../../../../../📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🏠️local-interaction/🔣️.schema.json");
       const { default: Ajv } = await import("ajv"); const { produce, enableMapSet } = await import("immer"); const assert: typeof import("node:assert") = (await import("node:assert")).default;
       type State = import("../../../../../📡️replication/📡️wire/🏠️local-interaction/🟦️.ts").LocalInteractionState; type Change = import("../../../../../🛂️manifest/🎬️tutorial/🏠️local-interaction/🟦️.ts").TutorialLocalInteractionChange;
       const validate = new Ajv({ strict: true, allErrors: true }).addSchema(localSchema).compile<{ cases: readonly { name: string; before: State; after: State; changes: readonly Change[] }[] }>(schema); expect(validate(fixture)).toBe(true); if (!validate(fixture)) throw new Error("Invalid tutorial local interaction fixture"); enableMapSet();

@@ -5,7 +5,7 @@
   "displayName": "Change Chromaticities",
   "emoji": "🌈️",
   "aggregateVariant": "ChangeChromaticities",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-chromaticities",
   "binaryTag": 6,
   "invertibility": "explicit-mutation",

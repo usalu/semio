@@ -21,8 +21,8 @@ semio-framework-job = { path = "../../🔨️modules/🧵️job/📦️packages/
 serde = { workspace = true }
 serde_json = { workspace = true }
 ui_wgpu = { path = "../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
-semio-framework-hash = { path = "../../🔨️modules/🔢️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
-semio-framework-mesh-engine = { path = "../../🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust", package = "semio-framework-mesh-engine" }
+semio-framework-hash = { path = "../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-mesh-engine = { path = "../../🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust", package = "semio-framework-mesh-engine" }
 # 🎯️ OS kernel owns spr/dsl types — aliases avoid dual trees / cycle with old implementations.
 semio-framework-os-kernel = { path = "../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-value-derive = { path = "../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
@@ -31,6 +31,6 @@ semio-framework-value-derive = { path = "../../🔨️modules/🌱️value/✨�
 semio-framework-async-macros = { path = "../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 
 [features]
-# 🧬️ Generates the TypeScript mirror for boundary/protocol types (see `<owner>/🤖️generated/🟦️manifest.ts`);
+# 🧬️ Generates the TypeScript mirror for boundary/protocol types (see `<owner>/🤖️generated/🪪️manifest.ts`);
 # never enabled by default so schema projection never affects the plain build/test path.
 typegen = []

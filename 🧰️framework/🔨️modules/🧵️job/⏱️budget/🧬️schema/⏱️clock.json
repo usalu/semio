@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.framework.job.host-clock.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "browser", "wasi", "installation", "watchdog"],
+  "properties": {
+    "$schema": { "const": "./🧬️schema/⏱️clock.json" },
+    "browser": { "type": "array", "minItems": 8, "items": {
+      "type": "object", "additionalProperties": false, "required": ["milliseconds", "microseconds"],
+      "properties": {
+        "milliseconds": { "type": "string", "pattern": "^-?[0-9]+(\\.[0-9]+)?$" },
+        "microseconds": { "anyOf": [{ "$ref": "#/definitions/unsigned" }, { "type": "null" }] }
+      }
+    } },
+    "watchdog": { "type": "array", "minItems": 3, "items": {
+      "type": "object", "additionalProperties": false, "required": ["elapsedMicroseconds", "violated"],
+      "properties": { "elapsedMicroseconds": { "$ref": "#/definitions/unsigned" }, "violated": { "type": "boolean" } }
+    } },
+    "installation": { "type": "array", "minItems": 4, "items": {
+      "type": "object", "additionalProperties": false, "required": ["current", "requested", "accepted", "retained"],
+      "properties": {
+        "current": { "enum": [null, "browser", "foreign"] },
+        "requested": { "enum": ["browser", "foreign"] },
+        "accepted": { "type": "boolean" },
+        "retained": { "enum": ["browser", "foreign"] }
+      }
+    } },
+    "wasi": { "type": "array", "minItems": 4, "items": {
+      "type": "object", "additionalProperties": false, "required": ["nanoseconds", "accepted"],
+      "properties": { "nanoseconds": { "$ref": "#/definitions/unsigned" }, "accepted": { "type": "boolean" } }
+    } }
+  },
+  "definitions": { "unsigned": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" } }
+}

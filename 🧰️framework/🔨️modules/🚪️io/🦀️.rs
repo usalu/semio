@@ -10,7 +10,7 @@ use std::sync::RwLock;
 
 //#region 🔖️Dialect
 /// 🧬️ `StandardId`/`SubsetId`/`Dialect`/`ArtifactDialect` moved verbatim to
-/// `🚪️io/🧬️schema/🦀️component.rs` (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-A
+/// `🚪️io/🧬️schema/🦀️.rs` (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-A
 /// task 1) so the vocabulary — and `ArtifactDialect::to_coordinate`/`parse_coordinate`, the ONE
 /// dialect-coordinate codec in the repo — has a single definition site regardless of which crate
 /// mounts this file. Re-exported here unchanged so every existing reference in this file (and
@@ -21,7 +21,7 @@ pub use crate::io_schema::{ArtifactDialect, Dialect, StandardId, SubsetId};
 
 //#region 🔖️ArtifactRef
 /// 🧬️ `ArtifactKindId`/`is_canonical_artifact_kind`/`ArtifactRef` moved verbatim to
-/// `🚪️io/🧬️schema/🦀️component.rs` alongside `🔖️Dialect` above — see that region's doc comment.
+/// `🚪️io/🧬️schema/🦀️.rs` alongside `🔖️Dialect` above — see that region's doc comment.
 pub use crate::io_schema::{is_canonical_artifact_kind, ArtifactKindId, ArtifactRef};
 //#endregion 🔖️ArtifactRef
 

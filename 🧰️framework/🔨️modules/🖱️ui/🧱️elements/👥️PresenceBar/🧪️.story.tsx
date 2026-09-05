@@ -6,7 +6,7 @@
 
 // #region 🔌️Adapters
 import { PresenceBar } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "../../🧪️🐨️story.ts";
+import type { Meta, StoryObj } from "../../🧪️story.ts";
 // #endregion 🔌️Adapters
 
 // #region 👥️PresenceBar

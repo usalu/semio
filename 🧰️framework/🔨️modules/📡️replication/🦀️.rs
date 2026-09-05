@@ -3,7 +3,7 @@
 //! record format, and the pack codec primitives underneath them. The optimistic local replica
 //! (os) and the authoritative server both speak exactly these bytes; neither owns them.
 //!
-//! Byte layout is frozen and cross-language: `🧫️fixtures/🧫️wire` holds the 20 canonical frames that
+//! Byte layout is frozen and cross-language: `🧫️fixtures/📡️wire` holds the 20 canonical frames that
 //! the Rust and TypeScript codecs must both reproduce byte-identically.
 
 use crate::format::{Blake3Hasher, FrameCursor, RecoveryMode, SprWriter};

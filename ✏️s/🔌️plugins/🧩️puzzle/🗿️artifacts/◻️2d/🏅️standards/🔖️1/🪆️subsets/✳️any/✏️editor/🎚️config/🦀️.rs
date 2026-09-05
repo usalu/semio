@@ -4,7 +4,7 @@
 //! patch it.
 //!
 //! 🎥️ The camera lives here, not on the document: moving it is an `ActionKind::View` action and must
-//! never create a VCS edit (see `setCamera`'s arm in `🎮️commands/🎥️set-camera`).
+//! never create a VCS edit (see `setCamera`'s arm in `🎮️commands/📷️set-camera`).
 
 use std::collections::BTreeMap;
 

@@ -1,0 +1,17 @@
+{
+  "id": "s.stdio.gltf.mutation.move-material.v1",
+  "version": 1,
+  "touchedPaths": [
+    "document/materials/0",
+    "document/materials/1"
+  ],
+  "payload": {
+    "index": 0,
+    "position": 1
+  },
+  "operation": {
+    "kind": "move",
+    "index": 0,
+    "position": 1
+  }
+}

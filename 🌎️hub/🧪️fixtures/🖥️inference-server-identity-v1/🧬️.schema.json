@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.hub.inference-server-identity-fixture/v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "maximumBytes", "fields", "cases"],
+  "properties": {
+    "schema": { "const": "semio.hub.inference-server-identity-fixture/v1" },
+    "maximumBytes": { "const": 96 },
+    "fields": { "const": ["userId", "sessionId", "spaceId", "documentId", "headEditId"] },
+    "cases": {
+      "type": "array", "minItems": 11, "maxItems": 11, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "value", "accepted"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 32 },
+          "value": { "type": "string", "maxLength": 97 },
+          "accepted": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

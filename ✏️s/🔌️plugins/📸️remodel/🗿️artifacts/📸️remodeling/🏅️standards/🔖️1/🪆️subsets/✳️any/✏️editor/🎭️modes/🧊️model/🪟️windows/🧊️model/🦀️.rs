@@ -38,7 +38,7 @@ pub async fn definition() -> WindowKindDefinition {
     }
 }
 
-/// 🎚️ The live chrome measures for this window, collected from its own `🎚️options/*`.
+/// ☑️ The live chrome measures for this window, collected from its own `☑️options/*`.
 pub async fn window_measures(config: &RemodelingConfig, labels: &RemodelingLabels) -> Vec<WindowMeasure> {
     vec![layers::measure(&config.layers, labels)]
 }

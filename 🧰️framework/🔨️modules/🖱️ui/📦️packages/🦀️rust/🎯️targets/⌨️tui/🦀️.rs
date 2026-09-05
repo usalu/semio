@@ -3,7 +3,7 @@
 #[path = "../../../../⌨️tui/🦀️.rs"]
 mod component;
 
-#[path = "../../../../🧱️elements/🏷️Chip/🎯️targets/⌨️tui/🦀️.rs"]
+#[path = "../../../../🧱️elements/🪙️Chip/🎯️targets/⌨️tui/🦀️.rs"]
 pub mod chip;
 #[path = "../../../../🧱️elements/➖️Divider/🎯️targets/⌨️tui/🦀️.rs"]
 pub mod divider;
@@ -19,7 +19,7 @@ pub mod list;
 pub mod log;
 #[path = "../../../../🧱️elements/🔝️Navbar/🎯️targets/⌨️tui/🦀️.rs"]
 pub mod navbar;
-#[path = "../../../../🧱️elements/☑️Select/🎯️targets/⌨️tui/🦀️.rs"]
+#[path = "../../../../🧱️elements/🔽️Select/🎯️targets/⌨️tui/🦀️.rs"]
 pub mod select;
 #[path = "../../../../🧱️elements/📊️Table/🎯️targets/⌨️tui/🦀️.rs"]
 pub mod table;

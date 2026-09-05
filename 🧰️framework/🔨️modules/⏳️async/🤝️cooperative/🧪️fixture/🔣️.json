@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "unitCost": 8,
+  "cases": [
+    { "lane": "Maintenance", "weight": 1, "deficits": [1, 2, 3, 4, 5, 6, 7, 0], "selected": [false, false, false, false, false, false, false, true] },
+    { "lane": "Background", "weight": 2, "deficits": [2, 4, 6, 0], "selected": [false, false, false, true] },
+    { "lane": "UserVisible", "weight": 4, "deficits": [4, 0], "selected": [false, true] },
+    { "lane": "Io", "weight": 4, "deficits": [4, 0], "selected": [false, true] },
+    { "lane": "Timer", "weight": 3, "deficits": [3, 6, 1], "selected": [false, false, true] },
+    { "lane": "Interactive", "weight": 8, "deficits": [0], "selected": [true] }
+  ]
+}

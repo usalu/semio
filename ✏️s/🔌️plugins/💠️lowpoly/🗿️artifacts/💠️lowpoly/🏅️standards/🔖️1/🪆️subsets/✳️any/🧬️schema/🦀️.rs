@@ -279,7 +279,7 @@ pub fn lowpoly_document_from_mesh(mesh: &MeshData) -> Result<serde_json::Value, 
 
 /// 🧊️ Minimal document wrapper for `3d.mesh` resources — no dedicated schema exists yet. Relocated
 /// from `⚙️engine/🧵️media`. `MeshData` implements `dsl::ToValue` first-party (hand-written in
-/// `🔺️mesh-engine/🦀️.rs`, since `serde`'s `Serialize` on it is `#[cfg(test)]`-only per the same
+/// `🏗️mesh-engine/🦀️.rs`, since `serde`'s `Serialize` on it is `#[cfg(test)]`-only per the same
 /// ticket), so this bridges through that instead of `serde_json::to_value(mesh)`.
 pub fn mesh_document_from_mesh(mesh: &MeshData) -> Result<serde_json::Value, String> {
     let document = dsl::DslValue::object([("schema".to_string(), dsl::DslValue::String("mesh.document".to_string())), ("mesh".to_string(), dsl::ToValue::to_value(mesh))]);
@@ -501,7 +501,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for LowpolyAnalyzerAnalysis {
         type Parts = LowpolyParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.lowpoly", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.lowpoly.lowpoly", standard: StandardId("1"), subset: SubsetId("*") };
 
         fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium

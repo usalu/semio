@@ -16,8 +16,9 @@ pub use add_rejected_counter::AddRejectedCounter;
 //#endregion 🧬️Leaves
 
 //#region 🧬️Aggregate
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl_derive::Mutations)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl_derive::Mutations, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
+#[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = i64, diff = super::CounterDiff, schema = "testkit.counter")]
 pub enum CounterMutation {
     AddCounter(AddCounter),

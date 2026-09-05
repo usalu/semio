@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.hub.native-openable-catalog-provider-fixture/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "providerProjection", "artifactDefinitionsRoot", "receiptCount", "attestation", "openTarget", "hostileCases"],
+  "properties": {
+    "schema": { "const": "semio.hub.native-openable-catalog-provider-fixture/v1" },
+    "providerProjection": { "type": "string", "minLength": 1, "maxLength": 1024 },
+    "artifactDefinitionsRoot": { "type": "string", "minLength": 1, "maxLength": 1024 },
+    "receiptCount": { "const": 26 },
+    "attestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["componentHex", "componentSha256", "descriptorProjectionHex", "descriptorProjectionSha256"],
+      "properties": {
+        "componentHex": { "const": "616263" },
+        "componentSha256": { "$ref": "#/$defs/digest" },
+        "descriptorProjectionHex": { "const": "737464696f2d64657363726970746f722d7631" },
+        "descriptorProjectionSha256": { "$ref": "#/$defs/digest" }
+      }
+    },
+    "openTarget": { "$ref": "#/$defs/openTarget" },
+    "hostileCases": {
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "mutation", "outcome", "publishedTargets"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "mutation": { "enum": ["missing-owner", "extra-projection", "duplicate-factory", "duplicate-descriptor-codec", "missing-runtime-capability", "wrong-protocol-hash", "zero-protocol-hash", "wrong-component-hash", "wrong-descriptor-hash", "wrong-surface", "wrong-role", "wrong-renderer", "duplicate-target"] },
+          "outcome": { "const": "denied" },
+          "publishedTargets": { "const": 0 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "identity": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[^\\u0000-\\u001f\\u007f]+$" },
+    "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$", "not": { "const": "0000000000000000000000000000000000000000000000000000000000000000" } },
+    "openTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactKind", "artifactSchema", "packSchemaHash", "surfaceId", "appId", "windowKindId", "role", "rendererTarget"],
+      "properties": {
+        "artifactKind": { "const": "stdio.json" },
+        "artifactSchema": { "const": "stdio.json" },
+        "packSchemaHash": { "$ref": "#/$defs/digest" },
+        "surfaceId": { "const": "s.stdio.json@rfc8259/*#viewer" },
+        "appId": { "const": "s.stdio.json@rfc8259/*#viewer" },
+        "windowKindId": { "const": "framework.window.tree" },
+        "role": { "const": "viewer" },
+        "rendererTarget": { "const": "wasm" }
+      }
+    }
+  }
+}

@@ -29,7 +29,7 @@ app = "s.cad.cad@1/*#editor"
 ports = { react = 6020, wgpu = 6120 }
 
 # 🎪️ The `koordinator` demonstrator row moved to
-# ✏️s/🔌️plugins/🎪️demonstrator/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml — see that
+# ✏️s/🔌️plugins/🎪️demonstrator/🪪️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml — see that
 # crate's docstring (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT). The `/cad-fixture` asset row below
 # stays here too (a copy also lives on the bundle crate) since the standalone `cad` dev variant needs
 # it independently of the demonstrator.

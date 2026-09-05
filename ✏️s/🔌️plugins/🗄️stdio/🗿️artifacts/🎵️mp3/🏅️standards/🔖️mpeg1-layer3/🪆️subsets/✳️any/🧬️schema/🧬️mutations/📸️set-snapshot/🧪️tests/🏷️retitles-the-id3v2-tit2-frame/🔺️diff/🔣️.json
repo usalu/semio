@@ -1,0 +1,16 @@
+{
+  "id3v2": {
+    "majorVersion": 3,
+    "minorVersion": 0,
+    "flags": 0,
+    "frames": [
+      {
+        "id": "TIT2",
+        "flags": 0,
+        "data": [
+          66
+        ]
+      }
+    ]
+  }
+}

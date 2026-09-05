@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
 description = "OS infinite family — world/canvas/board Shape V2 glue"
-build = "../../🖼️canvas/build.rs"
+build = "build.rs"
 
 [package.metadata.semio]
 role = "product"
@@ -25,7 +25,7 @@ session-bindgen = []
 
 [[bin]]
 name = "dump-guestslim-typst-fonts"
-path = "../../🖼️canvas/🔨️bin/dump_guestslim_typst_fonts.rs"
+path = "../../🖼️canvas/🔨️bin/📤️dump_guestslim_typst_fonts.rs"
 required-features = ["render"]
 
 [lib]
@@ -59,7 +59,7 @@ base64_codec = { path = "../../../../../../🔨️modules/🚪️io/🔤️base6
 # `miniz_oxide`/`fdeflate`/`crc32fast`/`adler2`/`simd-adler32`/`byteorder-lite` from EVERY target's
 # graph here, including `wasm32-wasip2` — this was the last unconditional `image` dependency in
 # this manifest. RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01).
-semio-framework-pixels = { path = "../../../../../../🔨️modules/🖼️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
+semio-framework-pixels = { path = "../../../../../../🔨️modules/🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
 
 # ⚠️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01): a prior attempt to move
 # `vello`/`vello_svg`'s `wgpu` feature and `ui_wgpu`'s `wgpu-engine` feature behind a
@@ -151,7 +151,7 @@ ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/�
 # dimension-only call sites (`icon_codec::decode_raster_icon_bytes`,
 # `svg_icon::svg_icon_content_bounds_from_str`). RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-
 # ARTIFACTS (26/09/01), `🔍️research/📓️intrinsic-size-wiring.md`.
-semio-framework-intrinsic-size = { path = "../../../../../../🔨️modules/📐️intrinsic-size/📦️packages/🦀️rust", package = "semio-framework-intrinsic-size" }
+semio-framework-intrinsic-size = { path = "../../../../../../🔨️modules/📏️intrinsic-size/📦️packages/🦀️rust", package = "semio-framework-intrinsic-size" }
 
 # 🌉️ Browser-only session bridges (`gpu_session`/`wasm_session`/`wasm_bridge` in `🖼️canvas` and
 # `🎲️board/…/🕸️dag`, plus the `wasm_bindgen_futures` alias their async-fn codegen needs). Excluded

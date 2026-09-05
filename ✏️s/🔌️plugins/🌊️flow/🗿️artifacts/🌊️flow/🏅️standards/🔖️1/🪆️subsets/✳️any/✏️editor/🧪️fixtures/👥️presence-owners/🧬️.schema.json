@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["$schema", "contract", "grants", "cases"],
+  "properties": {
+    "$schema": { "const": "./🧬️.schema.json" },
+    "contract": { "const": "semio.flow.presence-owners/v1" },
+    "grants": { "const": [1, 64, 4096] },
+    "cases": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "local", "peers", "sharedRoot", "expectedBytes"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "local": { "$ref": "#/definitions/text" },
+          "peers": {
+            "type": "array", "maxItems": 2,
+            "items": {
+              "type": "object", "additionalProperties": false, "required": ["actor", "unit", "repeat"],
+              "properties": {
+                "actor": { "type": "string", "minLength": 1, "maxLength": 32 },
+                "unit": { "type": "string", "maxLength": 1 },
+                "repeat": { "type": "integer", "minimum": 0, "maximum": 4096 }
+              }
+            }
+          },
+          "sharedRoot": { "type": "boolean" },
+          "expectedBytes": { "type": "integer", "minimum": 0, "maximum": 65536 }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "text": {
+      "type": "object", "additionalProperties": false, "required": ["unit", "repeat"],
+      "properties": { "unit": { "type": "string", "maxLength": 1 }, "repeat": { "type": "integer", "minimum": 0, "maximum": 4096 } }
+    }
+  }
+}

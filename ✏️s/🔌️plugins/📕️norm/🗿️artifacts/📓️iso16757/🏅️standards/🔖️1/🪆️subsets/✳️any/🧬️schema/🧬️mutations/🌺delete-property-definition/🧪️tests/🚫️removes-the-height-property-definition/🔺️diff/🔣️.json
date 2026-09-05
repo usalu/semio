@@ -1,0 +1,125 @@
+{
+  "artifact": null,
+  "catalogue": {
+    "id": "cat.fixture",
+    "metadata": {
+      "names": {
+        "preferred": {
+          "locale": "en",
+          "text": "Fixture Radiator Catalogue"
+        },
+        "short_name": "Fixture",
+        "alternatives": [
+          {
+            "locale": "de",
+            "text": "Musterkatalog Heizkörper"
+          }
+        ]
+      },
+      "lifecycle": {
+        "revision": "1",
+        "status": "published",
+        "valid_from": null,
+        "valid_to": null
+      },
+      "edition_profile": "FullPublished"
+    },
+    "manufacturer": {
+      "id": "mfg.fixture",
+      "names": {
+        "preferred": {
+          "locale": "en",
+          "text": "Fixture Heating Works"
+        },
+        "short_name": null,
+        "alternatives": []
+      }
+    },
+    "dictionary": {
+      "id": "bsdd.fixture",
+      "version": "2026-01"
+    },
+    "product_groups": [
+      {
+        "id": "group.radiators",
+        "names": {
+          "preferred": {
+            "locale": "en",
+            "text": "Radiators"
+          },
+          "short_name": null,
+          "alternatives": []
+        },
+        "dictionary_subject_id": "subject.radiator"
+      }
+    ],
+    "product_classes": [
+      {
+        "id": "class.panel-radiator",
+        "group_id": "group.radiators",
+        "parent_id": null,
+        "names": {
+          "preferred": {
+            "locale": "en",
+            "text": "Panel radiator"
+          },
+          "short_name": null,
+          "alternatives": []
+        },
+        "required_property_ids": [
+          "prop.height"
+        ],
+        "optional_property_ids": []
+      }
+    ],
+    "product_series": [
+      {
+        "id": "series.pr",
+        "class_id": "class.panel-radiator",
+        "names": {
+          "preferred": {
+            "locale": "en",
+            "text": "PR series"
+          },
+          "short_name": null,
+          "alternatives": []
+        },
+        "shared_property_values": {},
+        "geometry_id": null
+      }
+    ],
+    "products": [
+      {
+        "id": "product.pr600",
+        "series_id": "series.pr",
+        "names": {
+          "preferred": {
+            "locale": "en",
+            "text": "PR-600"
+          },
+          "short_name": null,
+          "alternatives": []
+        },
+        "parameter_domains": [],
+        "variants": [],
+        "static_properties": []
+      }
+    ],
+    "product_indexes": [],
+    "property_definitions": [],
+    "accessories": {},
+    "compositions": {},
+    "descriptive_objects": [],
+    "extensions": {
+      "fields": {}
+    }
+  },
+  "dictionary": null,
+  "geometry": null,
+  "selection": null,
+  "partNumberRule": null,
+  "partNumberInputs": null,
+  "scriptLimits": null,
+  "exchangeProcess": null,
+  "selectedCheckIndex": null
+}

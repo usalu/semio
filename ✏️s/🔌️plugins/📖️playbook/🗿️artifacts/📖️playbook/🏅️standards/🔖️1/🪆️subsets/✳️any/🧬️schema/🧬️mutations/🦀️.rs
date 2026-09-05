@@ -116,7 +116,7 @@ pub fn encode_playbook_snapshot_json(snapshot: &PlaybookSnapshot) -> String {
 /// `📸️snapshot/⬅️before/🔣️.json` vector is therefore only HALF of a before-state, and the
 /// other half lives today in each leaf's own `🧪️tests/<fixture>/🦀️.rs` as a Rust literal.
 /// An external conformance host cannot reach that, so this bridge lets the scene half travel as
-/// DATA — the exhaustive `mutate-playbook-1` case carries it in its own `Examples` table, with the leaf
+/// DATA — the exhaustive `🌾️mutate-playbook-1` case carries it in its own `Examples` table, with the leaf
 /// it was read from cited there. The right long-term fix is to commit the scene beside the snapshot
 /// as a fixture file of its own; until then this is the seam that makes the vectors runnable.
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
@@ -144,7 +144,7 @@ mod kinds_catalog {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔮️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

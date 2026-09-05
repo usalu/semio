@@ -380,7 +380,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for CadAnalyzerAnalysis {
         type Parts = CadParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.cad", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.cad.cad", standard: StandardId("1"), subset: SubsetId("*") };
 
         fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium

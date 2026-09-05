@@ -1,0 +1,9 @@
+{
+  "mutation": "clearDefaultApp",
+  "dialect": {
+    "artifactKind": "s.cad.cad",
+    "standard": "1",
+    "subset": "*"
+  },
+  "role": "editor"
+}

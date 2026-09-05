@@ -15,8 +15,8 @@ import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 // cn(...) at module top level (inside a top-level styleVariants(cn(...)) call), which requires a non-circular
 // import because the barrel imports this component.
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { styleVariants } from "../../🔨️modules/🏷️style-variants/🟦️.ts";
-import { type UiLabel } from "../🏷️UiLabel/🟦️.tsx";
+import { styleVariants } from "../../🔨️modules/🧬️style-variants/🟦️.ts";
+import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { Popover, PopoverTrigger, PopoverContent } from "../🗨️Popover/🟦️.tsx";
 import { interactiveHoverClass, interactiveActiveFillClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
 import { menuListItemClassName } from "../../🔨️modules/📋️menu-item-presentation/🟦️.ts";

@@ -21,7 +21,7 @@ pub const VCS_DIALECT: Dialect = Dialect { artifact_kind: "s.vcs.vcs", standard:
 /// `crate::editor::vcs::create_vcs_app`'s `🔖️Manifest` region.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
-        id: "vcs.document".into(),
+        id: VCS_DOCUMENT_SCHEMA.into(),
         name: "VCS Document".into(),
         source_format: VCS_DOCUMENT_SCHEMA.into(),
         component_kind: "vcs".into(),
@@ -39,27 +39,27 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#region 🔖️Declaration
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    ArtifactDefinition::new(ArtifactIdentity::parse("s.vcs")?)
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.vcs.vcs")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.vcs.vcs")?)?)?
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.vcs.vcs")?)
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.vcs.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.vcs.vcs")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.vcs.vcs")?)?)?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.inference.artifact")?, ArtifactCapabilityKind::inference())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.vcs.inference.artifact")?, ArtifactCapabilityKind::inference())
                 .descriptor(b"s.vcs.vcs.inference")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.vcs.vcs.inference")?)?,
         )?
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.vcs@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.vcs@1/*")?)?)?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.vcs.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.vcs.vcs@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.vcs.vcs@1/*")?)?)?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.composer.json")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.vcs.composer.json")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.json@rfc8259/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.codec.document")?, ArtifactCapabilityKind::codec())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.vcs.codec.document")?, ArtifactCapabilityKind::codec())
                 .descriptor(b"vcs.vcs:vcs")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "vcs.vcs")?)?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "vcs")?)?,
+                .claim(ArtifactIdentityClaim::codec_extension("vcs.vcs", "vcs")?)?,
         )?
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"VCS")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "VCS")?)?)?
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"VCS")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "VCS")?)?)
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.vcs.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"VCS")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "VCS")?)?)?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.vcs.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"VCS")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "VCS")?)?)
 }
 
 //#endregion 🔖️Declaration

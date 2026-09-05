@@ -31,7 +31,7 @@ mod db_facade;
 #[cfg(not(target_arch = "wasm32"))]
 pub use db_facade::*;
 
-#[path = "../../👁️preview/🦀️.rs"]
+#[path = "../../🔮️preview/🦀️.rs"]
 pub mod db_preview;
 
 #[path = "../../🔢️index/🦀️.rs"]
@@ -107,7 +107,7 @@ pub mod db_cluster;
 #[path = "../../🔄️sync/🦀️.rs"]
 pub mod db_sync;
 
-#[path = "../../📄️artifact/🦀️.rs"]
+#[path = "../../🗿️artifact/🦀️.rs"]
 pub mod db_artifact;
 
 #[path = "../../🔍️query/🦀️.rs"]

@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["contract", "grants", "cases"],
+  "properties": {
+    "contract": { "const": "semio.flow.store-owners/v1" },
+    "grants": { "const": [1, 64, 4096] },
+    "cases": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "lane", "unit", "repetitions", "payloadBytes", "terminalEmpty"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 }, "lane": { "enum": ["document", "config", "draft"] },
+          "unit": { "type": "string", "maxLength": 1 }, "repetitions": { "type": "integer", "minimum": 0, "maximum": 4096 },
+          "payloadBytes": { "type": "integer", "minimum": 0, "maximum": 16384 }, "terminalEmpty": { "const": true }
+        }
+      }
+    }
+  }
+}

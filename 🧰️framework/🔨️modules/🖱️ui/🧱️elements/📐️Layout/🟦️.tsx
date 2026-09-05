@@ -14,7 +14,7 @@ import { useFirstDraggableElementAlias } from "../🆔️ElementId/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { glassClass, surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { type PanelProps, Panel, PanelTreeUnitsPane } from "../🖼️Panel/🟦️.tsx";
-import { type PanelTabNode, usePanelTabSelection, findPanelTabNode, PanelTabBar, progressPanelTabSelection } from "../📑️PanelTabBar/🟦️.tsx";
+import { type PanelTabNode, usePanelTabSelection, findPanelTabNode, PanelTabBar, progressPanelTabSelection } from "../🧭️PanelTabBar/🟦️.tsx";
 import { Scrollable } from "../📜️Scrollable/🟦️.tsx";
 import { CanvasSkeleton } from "../🦴️Skeletons/🟦️.tsx";
 import { LevelProvider, SurfaceScope } from "../🌈️Surface/🟦️.tsx";

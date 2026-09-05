@@ -1,0 +1,9 @@
+{
+  "schema": "stdio.binary",
+  "bytes": [
+    0,
+    255,
+    254,
+    3
+  ]
+}

@@ -1,0 +1,2 @@
+""" 📝️ Structured tagged/hex stdio.svg mutation text representation. """
+scalar SvgMutationText

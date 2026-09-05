@@ -8,7 +8,7 @@
 //!   reactor and all actor deadlines use the pool's `TimerWheel`.
 //! - **Browser wgpu build** (`wasm32-unknown-unknown`): the actor runs on the owned browser-local
 //!   executor with a `web_sys::WebSocket` semio_hub transport (no threads, no filesystem). The
-//!   production browser shell instead uses a TS twin (`🟦️backbone-worker.ts`, WS-E); this wasm actor
+//!   production browser shell instead uses a TS twin (`🧵️backbone-worker.ts`, WS-E); this wasm actor
 //!   keeps the crate coherent for a future in-wasm host.
 //! - **WASI-P2 plugins never link this crate** — inside the sandbox a store attaches vcs's pure
 //!   `PortBackbone` (an in-memory queue relayed to the host). This actor is a host-side concern only.
@@ -592,7 +592,7 @@ pub enum CommandAckOutcome {
 
 //#region 🔖️BackboneWorkerWire
 /// @emoji 🧵️ Binary worker seam: `MAGIC` + `crate::os_store::pack_rt::encode_wire_value` over a `DslValue`
-/// tree (serde-shaped), shared by the wasm `store_worker` and `🟦️backbone-worker.ts`.
+/// tree (serde-shaped), shared by the wasm `store_worker` and `🧵️backbone-worker.ts`.
 pub mod backbone_worker_wire {
     use super::{ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, PersistenceBinding};
     use crate::os_dsl::{from_dsl_value, to_dsl_value};
@@ -4031,7 +4031,7 @@ pub enum FixtureInbound {
     /// @emoji 📬️ A raw `crate::os_spr::wire::ServerFrame`'s encoded bytes (`crate::os_spr::encode_server_frame`
     /// output, `lane` byte included), delivered as if received over the semio_hub WebSocket — already
     /// real binary, not document/op content, so it stays inline in the manifest as a JSON number
-    /// array. Driven by `🟦️backbone-worker.ts`'s TS fallback vitest harness (which decodes these
+    /// array. Driven by `🧵️backbone-worker.ts`'s TS fallback vitest harness (which decodes these
     /// bytes with its own binary decoder); the folder-only Rust harness skips these.
     HubFrame { frame_bytes: Vec<u8> },
     /// @emoji 📁️ An external folder edit: `.ops`-grammar text (one or more `edit ...` blocks) to
@@ -5174,7 +5174,7 @@ mod tests {
             DirectoryClientError, DocumentSocketAdmissionV1, DocumentSocketAuthorityV1, HubSocketGrantSource, LocalHubCredential, SocketGrantReceiptV1,
         };
         use crate::os_directory::{
-            DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenGrantV1, DocumentOpenPackageV1, DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1,
+            DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenGrantV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1,
             DocumentOpenSurfaceV1, DocumentScope,
         };
         use std::sync::atomic::{AtomicUsize, Ordering};
@@ -5218,6 +5218,7 @@ mod tests {
                             descriptor_byte_sha256: "8".repeat(64),
                         },
                         artifact: DocumentOpenArtifactV1 { kind: "trusted.document".into(), schema: expectation.artifact_schema.clone(), pack_schema_hash: "1".repeat(64) },
+                        parent_dialect: DocumentOpenParentDialectV1 { artifact_kind: "trusted.document".into(), standard: "1".into(), subset: "*".into() },
                         pack_schema_hash: [0x11; 32],
                         surface: DocumentOpenSurfaceV1 {
                             surface_id: "trusted.surface".into(),
@@ -5310,41 +5311,25 @@ mod tests {
         assert_ne!(rollback.mutation_id, envelope.mutation_id, "the undo gets its own operation id");
     }
 
-    /// @emoji 🎬️ Canonical wire-frame byte fixtures shared with `🟦️backbone-worker.ts`'s vitest suite
-    /// (`framework/product/os/core/js/🟦️backbone-worker.ts` `WireBridge` region / `index.ts`'s
-    /// `encodeClientFrame`/`decodeServerFrame` twins) — both sides decode the exact same committed
-    /// bytes under `store/sync/fixtures/wire/`, proving `protocol_wire`'s binary lane+tag codec
-    /// round-trips identically across Rust and TS. Regenerated deterministically by this test (every
-    /// value below is a fixed constant, never a clock/random read) rather than hand-authored, so a
-    /// `protocol_wire` field-order/shape change fails loudly here instead of silently diverging from
-    /// the TS twin. 🎯️ W5: extended to cover every `ClientFrame`/`ServerFrame` variant (19 fixtures
-    /// total, one per variant plus one extra each for `Welcome`'s `Bootstrap` and `Ack`'s
-    /// `ApplyOutcome` sub-variants) — the previous 4-fixture set (`client-hello`, `client-commands`,
-    /// `server-welcome`, `server-ack`) is superseded; the first two names are reused (byte-identical
-    /// role), the latter two are replaced by the more specific names below and deleted here. 🎯️
-    /// ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.2: extended
-    /// to 20 with `server-session.bin` (`ServerFrame::Session`, tag 9); `client-presence.bin`/
-    /// `server-presence.bin` regenerate off `sample_presence_peer_with_interaction`'s v3 shape
-    /// (`color`/`surface`/`views`/`ui`, no more `cursor`/`viewport`).
+    /// 🎬️ Compares nineteen committed wire specimens with Rust encoding and decoding without
+    /// modifying them. The TypeScript replication suite consumes the same semantic-owner files
+    /// under `🧰️framework/🔨️modules/📡️replication/🧫️fixtures/📡️wire`.
+    /// The current socket hello round-trips in memory; the committed obsolete hello must reject.
     #[semio_framework_async_macros::async_test]
     async fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
-        let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../fixtures/wire");
-        std::fs::create_dir_all(&fixtures_dir).expect("fixtures dir");
-        for stale in ["server-welcome.bin", "server-ack.bin"] {
-            let _ = std::fs::remove_file(fixtures_dir.join(stale));
-        }
+        let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../🔨️modules/📡️replication/🧫️fixtures/📡️wire");
 
-        async fn write_client(dir: &std::path::Path, name: &str, frame: &ClientFrame, lane: Lane) {
-            let bytes = encode_client_frame(frame, lane).await;
-            std::fs::write(dir.join(name), &bytes).unwrap_or_else(|error| panic!("write {name}: {error}"));
+        async fn check_client(dir: &std::path::Path, name: &str, frame: &ClientFrame, lane: Lane) {
+            let bytes = std::fs::read(dir.join(name)).unwrap_or_else(|error| panic!("read {name}: {error}"));
+            assert_eq!(encode_client_frame(frame, lane).await, bytes, "{name} committed bytes");
             let (decoded_lane, decoded) = crate::os_spr::decode_client_frame(&bytes).await.unwrap_or_else(|error| panic!("decode {name}: {error}"));
             assert_eq!(decoded_lane, lane, "{name} lane round trip");
             assert_eq!(&decoded, frame, "{name} frame round trip");
         }
 
-        async fn write_server(dir: &std::path::Path, name: &str, frame: &ServerFrame, lane: Lane) {
-            let bytes = crate::os_spr::encode_server_frame(frame, lane).await;
-            std::fs::write(dir.join(name), &bytes).unwrap_or_else(|error| panic!("write {name}: {error}"));
+        async fn check_server(dir: &std::path::Path, name: &str, frame: &ServerFrame, lane: Lane) {
+            let bytes = std::fs::read(dir.join(name)).unwrap_or_else(|error| panic!("read {name}: {error}"));
+            assert_eq!(crate::os_spr::encode_server_frame(frame, lane).await, bytes, "{name} committed bytes");
             let (decoded_lane, decoded) = decode_server_frame(&bytes).await.unwrap_or_else(|error| panic!("decode {name}: {error}"));
             assert_eq!(decoded_lane, lane, "{name} lane round trip");
             assert_eq!(&decoded, frame, "{name} frame round trip");
@@ -5362,43 +5347,43 @@ mod tests {
         };
 
         //#region 🔖️ClientFrame
-        write_client(
-            &fixtures_dir,
-            "📦️client-hello.bin",
-            &ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema: "demo/v1".to_string(), pack_schema_hash: [7u8; 32], resume_token: None, frontier: None },
-            Lane::Command,
-        )
-        .await;
-        write_client(&fixtures_dir, "📦️client-commands.bin", &ClientFrame::Commands { batch_id: 1, envelopes: vec![wire_envelope.clone()] }, Lane::Command).await;
-        write_client(&fixtures_dir, "📦️client-frontier-advertise.bin", &ClientFrame::FrontierAdvertise { frontier: frontier.clone() }, Lane::Command).await;
-        write_client(&fixtures_dir, "📦️client-preview-publish.bin", &ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, Lane::Preview).await;
-        write_client(&fixtures_dir, "📦️client-presence.bin", &ClientFrame::Presence { peer: presence_to_bytes(&sample_presence_peer_with_interaction().await).await }, Lane::Preview).await;
-        write_client(&fixtures_dir, "📦️client-credit-grant.bin", &ClientFrame::CreditGrant { n: 16 }, Lane::Command).await;
-        write_client(&fixtures_dir, "📦️client-bye.bin", &ClientFrame::Bye, Lane::Command).await;
+        let hello = ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema: "demo/v1".to_string(), pack_schema_hash: [7u8; 32], resume_token: None, frontier: None };
+        let hello_bytes = encode_client_frame(&hello, Lane::Command).await;
+        let (hello_lane, decoded_hello) = crate::os_spr::decode_client_frame(&hello_bytes).await.expect("decode current socket hello");
+        assert_eq!(hello_lane, Lane::Command, "current socket hello lane round trip");
+        assert_eq!(decoded_hello, hello, "current socket hello frame round trip");
+        let rejected_hello = std::fs::read(fixtures_dir.join("🚫️legacy-client-hello-rejected/💾️.bin")).expect("read rejected obsolete hello");
+        assert!(crate::os_spr::decode_client_frame(&rejected_hello).await.is_err(), "obsolete hello must reject");
+        check_client(&fixtures_dir, "🕹️client-commands/💾️.bin", &ClientFrame::Commands { batch_id: 1, envelopes: vec![wire_envelope.clone()] }, Lane::Command).await;
+        check_client(&fixtures_dir, "🚩️client-frontier-advertise/💾️.bin", &ClientFrame::FrontierAdvertise { frontier: frontier.clone() }, Lane::Command).await;
+        check_client(&fixtures_dir, "📣️client-preview-publish/💾️.bin", &ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, Lane::Preview).await;
+        check_client(&fixtures_dir, "🙋️client-presence/💾️.bin", &ClientFrame::Presence { peer: presence_to_bytes(&sample_presence_peer_with_interaction().await).await }, Lane::Preview).await;
+        check_client(&fixtures_dir, "🎟️client-credit-grant/💾️.bin", &ClientFrame::CreditGrant { n: 16 }, Lane::Command).await;
+        check_client(&fixtures_dir, "👋️client-bye/💾️.bin", &ClientFrame::Bye, Lane::Command).await;
         //#endregion 🔖️ClientFrame
 
         //#region 🔖️ServerFrame
-        write_server(&fixtures_dir, "📦️server-welcome-tail.bin", &ServerFrame::Welcome { session_id: "session-1".to_string(), resume_token: "resume-1".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Tail }, Lane::Command).await;
-        write_server(
+        check_server(&fixtures_dir, "🔗️server-welcome-tail/💾️.bin", &ServerFrame::Welcome { session_id: "session-1".to_string(), resume_token: "resume-1".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Tail }, Lane::Command).await;
+        check_server(
             &fixtures_dir,
-            "📦️server-welcome-snapshot-inline.bin",
+            "📸️server-welcome-snapshot-inline/💾️.bin",
             &ServerFrame::Welcome { session_id: "session-2".to_string(), resume_token: "resume-2".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Snapshot { pack_hash: [3u8; 32], inline: Some(vec![9, 9, 9]) } },
             Lane::Command,
         )
         .await;
-        write_server(&fixtures_dir, "📦️server-snapshot-chunk.bin", &ServerFrame::SnapshotChunk { seq: 0, bytes: crate::os_spr::SnapshotChunkBytes::try_from_slice(&[1, 2, 3, 4]).unwrap() }, Lane::Command).await;
-        write_server(&fixtures_dir, "📦️server-snapshot-done.bin", &ServerFrame::SnapshotDone { seq_count: 4 }, Lane::Command).await;
-        write_server(&fixtures_dir, "📦️server-commands.bin", &ServerFrame::Commands { envelopes: vec![wire_envelope], origin: ActorId("actor-1".to_string()), frontier: frontier.clone() }, Lane::Command).await;
-        write_server(
+        check_server(&fixtures_dir, "🧩️server-snapshot-chunk/💾️.bin", &ServerFrame::SnapshotChunk { seq: 0, bytes: crate::os_spr::SnapshotChunkBytes::try_from_slice(&[1, 2, 3, 4]).unwrap() }, Lane::Command).await;
+        check_server(&fixtures_dir, "🏁️server-snapshot-done/💾️.bin", &ServerFrame::SnapshotDone { seq_count: 4 }, Lane::Command).await;
+        check_server(&fixtures_dir, "🎮️server-commands/💾️.bin", &ServerFrame::Commands { envelopes: vec![wire_envelope], origin: ActorId("actor-1".to_string()), frontier: frontier.clone() }, Lane::Command).await;
+        check_server(
             &fixtures_dir,
-            "📦️server-ack-accepted.bin",
+            "✅️server-ack-accepted/💾️.bin",
             &ServerFrame::Ack { batch_id: 1, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }], frontier: frontier.clone() },
             Lane::Command,
         )
         .await;
-        write_server(
+        check_server(
             &fixtures_dir,
-            "📦️server-ack-transformed.bin",
+            "🔀️server-ack-transformed/💾️.bin",
             &ServerFrame::Ack {
                 batch_id: 2,
                 stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Transformed { envelope: Box::new(sample_wire_envelope_for_fixtures().await) }) }],
@@ -5407,9 +5392,9 @@ mod tests {
             Lane::Command,
         )
         .await;
-        write_server(
+        check_server(
             &fixtures_dir,
-            "📦️server-ack-rejected.bin",
+            "⛔️server-ack-rejected/💾️.bin",
             &ServerFrame::Ack {
                 batch_id: 3,
                 stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "conflict".to_string(), messages: vec![1, 2, 3] }) }],
@@ -5418,15 +5403,15 @@ mod tests {
             Lane::Command,
         )
         .await;
-        write_server(&fixtures_dir, "📦️server-preview.bin", &ServerFrame::Preview { actor: ActorId("actor-1".to_string()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview).await;
-        write_server(&fixtures_dir, "📦️server-presence.bin", &ServerFrame::Presence { peers: vec![b"{\"id\":\"a\"}".to_vec(), presence_to_bytes(&sample_presence_peer_with_interaction().await).await] }, Lane::Preview).await;
-        write_server(&fixtures_dir, "📦️server-credit-grant.bin", &ServerFrame::CreditGrant { n: 32 }, Lane::Command).await;
-        write_server(&fixtures_dir, "📦️server-error.bin", &ServerFrame::Error { code: "rejected".to_string(), message: "bad batch".to_string() }, Lane::Command).await;
-        write_server(&fixtures_dir, "📦️server-session.bin", &ServerFrame::Session { actor: "actor-1".to_string(), color: 5 }, Lane::Command).await;
+        check_server(&fixtures_dir, "👁️server-preview/💾️.bin", &ServerFrame::Preview { actor: ActorId("actor-1".to_string()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview).await;
+        check_server(&fixtures_dir, "👥️server-presence/💾️.bin", &ServerFrame::Presence { peers: vec![b"{\"id\":\"a\"}".to_vec(), presence_to_bytes(&sample_presence_peer_with_interaction().await).await] }, Lane::Preview).await;
+        check_server(&fixtures_dir, "🎫️server-credit-grant/💾️.bin", &ServerFrame::CreditGrant { n: 32 }, Lane::Command).await;
+        check_server(&fixtures_dir, "🚨️server-error/💾️.bin", &ServerFrame::Error { code: "rejected".to_string(), message: "bad batch".to_string() }, Lane::Command).await;
+        check_server(&fixtures_dir, "🪪️server-session/💾️.bin", &ServerFrame::Session { actor: "actor-1".to_string(), color: 5 }, Lane::Command).await;
         //#endregion 🔖️ServerFrame
     }
 
-    /// @emoji 🧸️ A second, distinct `MutationEnvelope` for `📦️server-ack-transformed.bin`'s
+    /// 🧸️ A second, distinct `MutationEnvelope` for `🔀️server-ack-transformed/💾️.bin`'s
     /// `ApplyOutcome::Transformed` payload — must differ from the primary `wire_envelope` fixture so
     /// the vitest canary can assert it decodes as its own value, not an accidental copy.
     async fn sample_wire_envelope_for_fixtures() -> MutationEnvelope {
@@ -5441,9 +5426,9 @@ mod tests {
         }
     }
 
-    /// @emoji 🕹️ A `PresencePeer` whose `interaction` carries THREE domains (one selection-only, one
+    /// 🕹️ A `PresencePeer` whose `interaction` carries THREE domains (one selection-only, one
     /// hover-only, one with both), TWO `views` (one Orbit with a pointer, one Canvas), a `color` +
-    /// `surface`, and a `ui` — `📦️client-presence.bin`/`📦️server-presence.bin` regenerate off this so
+    /// `surface`, and a `ui` — `🙋️client-presence/💾️.bin`/`👥️server-presence/💾️.bin` match this so
     /// the TS vitest twin exercises every `PresencePeer` v3 flag bit (§C7.1) with a realistic payload.
     async fn sample_presence_peer_with_interaction() -> PresencePeer {
         PresencePeer {
@@ -5805,6 +5790,7 @@ mod tests {
                 })
                 .await;
             let mut store_a = ArtifactStore::new(demo_envelope("shared").await).await.expect("valid shared actor A fixture");
+            let key_a = channels_a.document_key.clone();
             store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
 
             let host_b = ArtifactHost::new(test_pool());
@@ -5817,7 +5803,8 @@ mod tests {
                     actor: "B".into(),
                 })
                 .await;
-            let mut events_b = host_b.subscribe("shared").await;
+            let key_b = channels_b.document_key.clone();
+            let mut events_b = host_b.subscribe_key(&key_b).await;
             let mut store_b = ArtifactStore::new(demo_envelope("shared").await).await.expect("valid shared actor B fixture");
             store_b.attach_backbone(Backbones::Channel(channels_b.channel_backbone)).await.expect("attach b");
 
@@ -5835,8 +5822,8 @@ mod tests {
             store_b.tick().await.expect("tick b");
             assert_eq!(store_b.snapshot().expect("snapshot b").n, 7, "B converged on A's operation");
 
-            host_a.close("shared");
-            host_b.close("shared");
+            host_a.close_key(&key_a);
+            host_b.close_key(&key_b);
         }
 
         // 🔬️ Reconnect with `since` catch-up: after A appends operations while B is offline, B reconnects and
@@ -5857,6 +5844,7 @@ mod tests {
                 })
                 .await;
             let mut store_a = ArtifactStore::new(demo_envelope("catchup").await).await.expect("valid catchup actor A fixture");
+            let key_a = channels_a.document_key.clone();
             store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
@@ -5878,7 +5866,8 @@ mod tests {
                     actor: "B".into(),
                 })
                 .await;
-            let mut events_b = host_b.subscribe("catchup").await;
+            let key_b = channels_b.document_key.clone();
+            let mut events_b = host_b.subscribe_key(&key_b).await;
             let mut store_b = ArtifactStore::new(demo_envelope("catchup").await).await.expect("valid catchup actor B fixture");
             store_b.attach_backbone(Backbones::Channel(channels_b.channel_backbone)).await.expect("attach b");
 
@@ -5890,8 +5879,8 @@ mod tests {
             assert_eq!(store_b.envelope().vcs.edits.len(), 2, "B caught up on the full backlog");
             assert_eq!(store_b.snapshot().expect("snapshot b").n, 4);
 
-            host_a.close("catchup");
-            host_b.close("catchup");
+            host_a.close_key(&key_a);
+            host_b.close_key(&key_b);
         }
 
         // 🔬️ Detach drains the outbox: an operation applied right before close still reaches the semio_hub (and B).
@@ -5911,7 +5900,8 @@ mod tests {
                     actor: "B".into(),
                 })
                 .await;
-            let mut events_b = host_b.subscribe("drain").await;
+            let key_b = channels_b.document_key.clone();
+            let mut events_b = host_b.subscribe_key(&key_b).await;
             let mut store_b = ArtifactStore::new(demo_envelope("drain").await).await.expect("valid drain actor B fixture");
             store_b.attach_backbone(Backbones::Channel(channels_b.channel_backbone)).await.expect("attach b");
 
@@ -5926,12 +5916,13 @@ mod tests {
                 })
                 .await;
             let mut store_a = ArtifactStore::new(demo_envelope("drain").await).await.expect("valid drain actor A fixture");
+            let key_a = channels_a.document_key.clone();
             store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
             store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).await.expect("apply on a");
             // Immediately close A without waiting for the poll tick: Detach must flush the outbox first.
-            host_a.close("drain");
+            host_a.close_key(&key_a);
 
             let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::RemoteMutations { .. })).await;
             if let ArtifactEvent::RemoteMutations { envelopes } = event {
@@ -5939,7 +5930,7 @@ mod tests {
             }
             store_b.tick().await.expect("tick b");
             assert_eq!(store_b.snapshot().expect("snapshot b").n, 5);
-            host_b.close("drain");
+            host_b.close_key(&key_b);
         }
 
         // 🔬️ The mock semio_hub always Acks `Accepted` — confirms the new `ServerFrame::Ack` ->
@@ -5958,7 +5949,8 @@ mod tests {
                     actor: "A".into(),
                 })
                 .await;
-            let mut events = host.subscribe("outcome").await;
+            let key = channels.document_key.clone();
+            let mut events = host.subscribe_key(&key).await;
             let mut store = ArtifactStore::new(demo_envelope("outcome").await).await.expect("valid outcome actor fixture");
             store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
             tokio::time::sleep(Duration::from_millis(300)).await;
@@ -5971,7 +5963,7 @@ mod tests {
                 ArtifactEvent::CommandOutcome { outcome, .. } => assert_eq!(outcome, CommandAckOutcome::Accepted),
                 other => panic!("expected CommandOutcome, got {other:?}"),
             }
-            host.close("outcome");
+            host.close_key(&key);
         }
 
         // 🔬️ `SyncSession::publish_preview` -> `ClientFrame::PreviewPublish` -> the mock semio_hub's
@@ -5993,7 +5985,7 @@ mod tests {
                 .await;
 
             let host_b = ArtifactHost::new(test_pool());
-            host_b
+            let channels_b = host_b
                 .open(ArtifactActorConfig {
                     document_id: "preview".into(),
                     schema: "demo/v1".into(),
@@ -6002,7 +5994,9 @@ mod tests {
                     actor: "B".into(),
                 })
                 .await;
-            let mut events_b = host_b.subscribe("preview").await;
+            let key_a = channels_a.document_key.clone();
+            let key_b = channels_b.document_key.clone();
+            let mut events_b = host_b.subscribe_key(&key_b).await;
             tokio::time::sleep(Duration::from_millis(300)).await;
 
             channels_a.cmd_tx.send(ArtifactActorMsg::PublishPreview { key: "cursor".into(), seq: 1, payload: vec![1, 2, 3] }).expect("publish preview");
@@ -6016,8 +6010,8 @@ mod tests {
                 }
                 other => panic!("expected Preview, got {other:?}"),
             }
-            host_a.close("preview");
-            host_b.close("preview");
+            host_a.close_key(&key_a);
+            host_b.close_key(&key_b);
         }
 
         // 🔬️ Shared fixtures replay: each fixture's inbound stimuli produce the expected ArtifactEvent

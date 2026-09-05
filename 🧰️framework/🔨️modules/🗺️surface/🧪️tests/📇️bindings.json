@@ -1,0 +1,8 @@
+{
+  "directoryName": "🕸️bindings",
+  "module": "framework_surface.js",
+  "types": "framework_surface.d.ts",
+  "wasm": "framework_surface_bg.wasm",
+  "wasmTypes": "framework_surface_bg.wasm.d.ts",
+  "contracts": ["surface-binding-module", "surface-binding-types", "surface-binding-wasm", "surface-binding-wasm-types"]
+}

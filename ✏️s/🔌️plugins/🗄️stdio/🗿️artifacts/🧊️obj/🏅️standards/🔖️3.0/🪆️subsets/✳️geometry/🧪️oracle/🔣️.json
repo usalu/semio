@@ -126,8 +126,8 @@
       "vectors": [
         {
           "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📄set-snapshot",
-          "mutationDirectoryName": "📄set-snapshot",
+          "sourceMutationDirectoryName": "🟤️set-snapshot",
+          "mutationDirectoryName": "🟤️set-snapshot",
           "scenarios": [
             {
               "id": "lifts-the-third-vertex-and-gives-it-an-explicit-w",

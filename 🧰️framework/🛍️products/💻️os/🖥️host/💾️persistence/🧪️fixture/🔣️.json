@@ -1,0 +1,1168 @@
+{
+  "schema": "semio.shell.persistence-neutral/v1",
+  "capacity": 64,
+  "requests": [
+    {
+      "id": "create",
+      "value": {
+        "schema": "semio.shell.persistence-request/v1",
+        "correlation": {
+          "scope": {
+            "windowId": "window-a",
+            "spaceId": "space-a",
+            "sessionId": "session-a",
+            "generation": 7
+          },
+          "requestId": 1
+        },
+        "operation": {
+          "kind": "createSpace",
+          "name": "Überblick",
+          "spaceKind": "studio",
+          "visibility": "private",
+          "selectionId": "selection-a"
+        },
+        "deadlineMs": 30000
+      }
+    },
+    {
+      "id": "bind",
+      "value": {
+        "schema": "semio.shell.persistence-request/v1",
+        "correlation": {
+          "scope": {
+            "windowId": "window-a",
+            "spaceId": "space-a",
+            "sessionId": "session-a",
+            "generation": 7
+          },
+          "requestId": 1
+        },
+        "operation": {
+          "kind": "bindSpace",
+          "selectionId": "selection-a"
+        },
+        "deadlineMs": 30000
+      }
+    },
+    {
+      "id": "import",
+      "value": {
+        "schema": "semio.shell.persistence-request/v1",
+        "correlation": {
+          "scope": {
+            "windowId": "window-a",
+            "spaceId": "space-a",
+            "sessionId": "session-a",
+            "generation": 7
+          },
+          "requestId": 1
+        },
+        "operation": {
+          "kind": "importSpace",
+          "selectionId": "selection-a"
+        },
+        "deadlineMs": 30000
+      }
+    },
+    {
+      "id": "delete",
+      "value": {
+        "schema": "semio.shell.persistence-request/v1",
+        "correlation": {
+          "scope": {
+            "windowId": "window-a",
+            "spaceId": "space-a",
+            "sessionId": "session-a",
+            "generation": 7
+          },
+          "requestId": 1
+        },
+        "operation": {
+          "kind": "deleteEntry",
+          "entryId": "entry-a"
+        },
+        "deadlineMs": 30000
+      }
+    }
+  ],
+  "requestNegatives": [
+    {
+      "id": "unknown-field",
+      "path": "debugPath",
+      "value": "/private/path"
+    },
+    {
+      "id": "path-in-operation",
+      "path": "operation.path",
+      "value": "/private/path"
+    },
+    {
+      "id": "unknown-operation",
+      "path": "operation.kind",
+      "value": "save"
+    },
+    {
+      "id": "selection-traversal",
+      "path": "operation.selectionId",
+      "value": "../path"
+    },
+    {
+      "id": "empty-window",
+      "path": "correlation.scope.windowId",
+      "value": ""
+    },
+    {
+      "id": "unsafe-generation",
+      "path": "correlation.scope.generation",
+      "value": 9007199254740992
+    },
+    {
+      "id": "zero-request",
+      "path": "correlation.requestId",
+      "value": 0
+    },
+    {
+      "id": "unsafe-request",
+      "path": "correlation.requestId",
+      "value": 9007199254740992
+    },
+    {
+      "id": "short-deadline",
+      "path": "deadlineMs",
+      "value": 99
+    },
+    {
+      "id": "long-deadline",
+      "path": "deadlineMs",
+      "value": 30001
+    },
+    {
+      "id": "unicode-control",
+      "path": "operation.name",
+      "value": "badname"
+    },
+    {
+      "id": "long-name",
+      "path": "operation.name",
+      "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    {
+      "id": "unknown-class",
+      "path": "operation.spaceKind",
+      "value": "root"
+    },
+    {
+      "id": "unknown-visibility",
+      "path": "operation.visibility",
+      "value": "shared"
+    },
+    {
+      "id": "credential-scope",
+      "path": "correlation.scope.token",
+      "value": "secret"
+    },
+    {
+      "id": "wrong-schema",
+      "path": "schema",
+      "value": "semio.shell.persistence-request/v2"
+    }
+  ],
+  "traces": [
+    {
+      "id": "bind-commit",
+      "request": "bind",
+      "steps": [
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "queued",
+            "completedBytes": 0,
+            "totalBytes": 12
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "opening",
+            "completedBytes": 0,
+            "totalBytes": 12
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "writing",
+            "completedBytes": 6,
+            "totalBytes": 12
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "committing",
+            "completedBytes": 12,
+            "totalBytes": 12
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "terminal",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "outcome": {
+              "kind": "committed",
+              "spaceId": "space-a",
+              "catalogGeneration": 8,
+              "contentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "byteLength": 12
+            }
+          },
+          "accept": true
+        }
+      ],
+      "published": 1
+    },
+    {
+      "id": "create-commit",
+      "request": "create",
+      "steps": [
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "selecting",
+            "completedBytes": 0,
+            "totalBytes": 12
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "writing",
+            "completedBytes": 12,
+            "totalBytes": 12
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "committing",
+            "completedBytes": 12,
+            "totalBytes": 12
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "terminal",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "outcome": {
+              "kind": "committed",
+              "spaceId": "space-a",
+              "catalogGeneration": 8,
+              "contentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "byteLength": 12
+            }
+          },
+          "accept": true
+        }
+      ],
+      "published": 1
+    },
+    {
+      "id": "import-commit",
+      "request": "import",
+      "steps": [
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "opening",
+            "completedBytes": 0,
+            "totalBytes": 12
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "writing",
+            "completedBytes": 12,
+            "totalBytes": 12
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "committing",
+            "completedBytes": 12,
+            "totalBytes": 12
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "terminal",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "outcome": {
+              "kind": "committed",
+              "spaceId": "space-a",
+              "catalogGeneration": 8,
+              "contentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "byteLength": 12
+            }
+          },
+          "accept": true
+        }
+      ],
+      "published": 1
+    },
+    {
+      "id": "delete-commit",
+      "request": "delete",
+      "steps": [
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "opening",
+            "completedBytes": 0,
+            "totalBytes": 0
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "committing",
+            "completedBytes": 0,
+            "totalBytes": 0
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "terminal",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "outcome": {
+              "kind": "deleted",
+              "entryId": "entry-a",
+              "catalogGeneration": 8
+            }
+          },
+          "accept": true
+        }
+      ],
+      "published": 1
+    },
+    {
+      "id": "cancel-before-write",
+      "request": "bind",
+      "steps": [
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "opening",
+            "completedBytes": 0,
+            "totalBytes": 12
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "terminal",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "outcome": {
+              "kind": "cancelled"
+            }
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "terminal",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "outcome": {
+              "kind": "committed",
+              "spaceId": "space-a",
+              "catalogGeneration": 8,
+              "contentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "byteLength": 12
+            }
+          },
+          "accept": false
+        }
+      ],
+      "published": 0
+    },
+    {
+      "id": "capacity-terminal",
+      "request": "bind",
+      "steps": [
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "terminal",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "outcome": {
+              "kind": "failed",
+              "code": "capacity"
+            }
+          },
+          "accept": true
+        }
+      ],
+      "published": 0
+    },
+    {
+      "id": "write-failure",
+      "request": "bind",
+      "steps": [
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "opening",
+            "completedBytes": 0,
+            "totalBytes": 12
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "writing",
+            "completedBytes": 6,
+            "totalBytes": 12
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "terminal",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "outcome": {
+              "kind": "failed",
+              "code": "writeFailed"
+            }
+          },
+          "accept": true
+        }
+      ],
+      "published": 0
+    },
+    {
+      "id": "no-premature-commit",
+      "request": "bind",
+      "steps": [
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "terminal",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "outcome": {
+              "kind": "committed",
+              "spaceId": "space-a",
+              "catalogGeneration": 8,
+              "contentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "byteLength": 12
+            }
+          },
+          "accept": false
+        }
+      ],
+      "published": 0
+    },
+    {
+      "id": "no-cancel-after-commit-point",
+      "request": "bind",
+      "steps": [
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "committing",
+            "completedBytes": 12,
+            "totalBytes": 12
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "terminal",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "outcome": {
+              "kind": "cancelled"
+            }
+          },
+          "accept": false
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "terminal",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "outcome": {
+              "kind": "committed",
+              "spaceId": "space-a",
+              "catalogGeneration": 8,
+              "contentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "byteLength": 12
+            }
+          },
+          "accept": true
+        }
+      ],
+      "published": 1
+    },
+    {
+      "id": "no-replay",
+      "request": "bind",
+      "steps": [
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "committing",
+            "completedBytes": 12,
+            "totalBytes": 12
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "terminal",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "outcome": {
+              "kind": "committed",
+              "spaceId": "space-a",
+              "catalogGeneration": 8,
+              "contentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "byteLength": 12
+            }
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "terminal",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "outcome": {
+              "kind": "committed",
+              "spaceId": "space-a",
+              "catalogGeneration": 8,
+              "contentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "byteLength": 12
+            }
+          },
+          "accept": false
+        }
+      ],
+      "published": 1
+    },
+    {
+      "id": "monotonic-progress",
+      "request": "bind",
+      "steps": [
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "writing",
+            "completedBytes": 6,
+            "totalBytes": 12
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "opening",
+            "completedBytes": 6,
+            "totalBytes": 12
+          },
+          "accept": false
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "writing",
+            "completedBytes": 5,
+            "totalBytes": 12
+          },
+          "accept": false
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "writing",
+            "completedBytes": 7,
+            "totalBytes": 13
+          },
+          "accept": false
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "writing",
+            "completedBytes": 13,
+            "totalBytes": 12
+          },
+          "accept": false
+        }
+      ],
+      "published": 0
+    },
+    {
+      "id": "wrong-window-no-publication",
+      "request": "bind",
+      "steps": [
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-b",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "committing",
+            "completedBytes": 12,
+            "totalBytes": 12
+          },
+          "accept": false
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "terminal",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "outcome": {
+              "kind": "committed",
+              "spaceId": "space-a",
+              "catalogGeneration": 8,
+              "contentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "byteLength": 12
+            }
+          },
+          "accept": false
+        }
+      ],
+      "published": 0
+    },
+    {
+      "id": "wrong-generation-no-publication",
+      "request": "bind",
+      "steps": [
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "committing",
+            "completedBytes": 12,
+            "totalBytes": 12
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "terminal",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "outcome": {
+              "kind": "committed",
+              "spaceId": "space-a",
+              "catalogGeneration": 9,
+              "contentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "byteLength": 12
+            }
+          },
+          "accept": false
+        }
+      ],
+      "published": 0
+    },
+    {
+      "id": "wrong-target-no-publication",
+      "request": "bind",
+      "steps": [
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "committing",
+            "completedBytes": 12,
+            "totalBytes": 12
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "terminal",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "outcome": {
+              "kind": "committed",
+              "spaceId": "space-b",
+              "catalogGeneration": 8,
+              "contentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "byteLength": 12
+            }
+          },
+          "accept": false
+        }
+      ],
+      "published": 0
+    },
+    {
+      "id": "delete-target-no-publication",
+      "request": "delete",
+      "steps": [
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "progress",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "phase": "committing",
+            "completedBytes": 0,
+            "totalBytes": 0
+          },
+          "accept": true
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "terminal",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "outcome": {
+              "kind": "deleted",
+              "entryId": "entry-b",
+              "catalogGeneration": 8
+            }
+          },
+          "accept": false
+        },
+        {
+          "value": {
+            "schema": "semio.shell.persistence-event/v1",
+            "kind": "terminal",
+            "correlation": {
+              "scope": {
+                "windowId": "window-a",
+                "spaceId": "space-a",
+                "sessionId": "session-a",
+                "generation": 7
+              },
+              "requestId": 1
+            },
+            "outcome": {
+              "kind": "committed",
+              "spaceId": "space-a",
+              "catalogGeneration": 8,
+              "contentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "byteLength": 12
+            }
+          },
+          "accept": false
+        }
+      ],
+      "published": 0
+    }
+  ]
+}

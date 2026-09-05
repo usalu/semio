@@ -1,0 +1,265 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.jpg",
+  "artifact": "jpg",
+  "directory": "📸️jpg",
+  "dependencies": [
+    "s.stdio.binary"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.jpg.standard.jfif-1-01",
+      "revision": "jfif-1-01",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.jpg.standard.jfif-1-01.profile.any",
+      "standard": "s.stdio.jpg.standard.jfif-1-01",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.jpg.standard.jfif-1-01.dialect.source",
+      "standard": "s.stdio.jpg.standard.jfif-1-01",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.jpg.standard.jfif-1-01.representation.document",
+      "standard": "s.stdio.jpg.standard.jfif-1-01",
+      "representation": "document",
+      "mimes": [
+        "image/jpeg"
+      ],
+      "extensions": [
+        ".jpg"
+      ],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
+      "status": "declared"
+    }
+  ],
+  "codecs": [
+    {
+      "id": "s.stdio.jpg.standard.jfif-1-01.codec.native-document.v1",
+      "status": "implemented",
+      "from": "s.stdio.jpg.standard.jfif-1-01.dialect.source",
+      "to": "s.stdio.jpg.standard.jfif-1-01.dialect.source",
+      "executable_registration": true,
+      "native_factory": {
+        "factory_id": "stdio.native.jpg.v1",
+        "artifact_kind": "stdio.jpg",
+        "document_schema": "stdio.jpg",
+        "extension": "jpg",
+        "pack_schema_hash": "f219d5263766b5f60120ccd63da80058f6a6082b8347e1e220181a686f7c60ad",
+        "runtime_capability_id": "s.stdio.jpg.standard.jfif-1-01.codec.codec-stdio-jpg-extension-jpg.v1"
+      }
+    }
+  ],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.jpg.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.jpg.localization.en",
+      "locale": "en",
+      "name": "JPEG",
+      "description": "JPEG artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.jpg.localization.de",
+      "locale": "de",
+      "name": "JPEG",
+      "description": "JPEG-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.jpg.conformance-suite.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.jpg.standard.jfif-1-01.codec.codec-stdio-jpg-extension-jpg.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.jpg:jpg|codec:stdio.jpg",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.jpg"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "9:stdio.jpg:jpg"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.jpg.composer.dialect-s-stdio-jpg-jfif-1-01.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.jpg@jfif-1.01/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.jpg@jfif-1.01/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.jpg.composer.dialect-s-stdio-jpg-jfif-1-01-baseline.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.jpg@jfif-1.01/baseline",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.jpg@jfif-1.01/baseline"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.jpg.grammar.grammar-stdio-jpg.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.jpg",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.jpg"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.jpg.grammar.grammar-stdio-jpg-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.jpg.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.jpg.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.jpg.grammar.grammar-stdio-jpg-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.jpg.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.jpg.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.jpg.grammar.grammar-stdio-jpg-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.jpg.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.jpg.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.jpg.grammar.grammar-stdio-jpg-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.jpg.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.jpg.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.jpg.inference.schema-s-stdio-jpg-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.jpg.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.jpg.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.jpg.standard.jfif-1-01.representation.mime-image-jpeg-extension-jpg",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:image/jpeg|extension:.jpg",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "image/jpeg"
+        },
+        {
+          "namespace": "extension",
+          "value": ".jpg"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.jpg.schema.schema-s-stdio-jpg.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.jpg",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.jpg"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.jpg.subset-validator.validated-dialect-s-stdio-jpg-jfif-1-01-baseline.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.jpg@jfif-1.01/baseline",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.jpg@jfif-1.01/baseline"
+        }
+      ]
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.jpg.standard.jfif-1-01.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

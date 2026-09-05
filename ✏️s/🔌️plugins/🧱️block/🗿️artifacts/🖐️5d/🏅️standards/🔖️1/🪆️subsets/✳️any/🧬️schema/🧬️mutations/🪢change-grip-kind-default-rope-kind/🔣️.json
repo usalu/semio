@@ -5,7 +5,7 @@
   "displayName": "Change Grip Kind Default Rope Kind",
   "emoji": "🪢",
   "aggregateVariant": "ChangeGripKindDefaultRopeKind",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-grip-kind-default-rope-kind",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

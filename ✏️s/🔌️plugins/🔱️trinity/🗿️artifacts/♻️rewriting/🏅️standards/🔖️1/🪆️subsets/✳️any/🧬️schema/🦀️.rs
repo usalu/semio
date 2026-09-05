@@ -593,7 +593,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for RewritingAnalyzerAnalysis {
         type Parts = RewritingParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.rewriting", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.trinity.rewriting", standard: StandardId("1"), subset: SubsetId("*") };
 
         fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium

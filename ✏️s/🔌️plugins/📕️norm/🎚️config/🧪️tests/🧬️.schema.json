@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contractId", "cases", "invalid", "text", "binary"],
+  "properties": {
+    "contractId": { "const": "semio.norm.config-mutation/v1" },
+    "cases": {
+      "type": "array", "minItems": 5,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "before", "payload", "after", "warning"],
+        "properties": {
+          "id": { "$ref": "#/definitions/id" },
+          "before": { "$ref": "#/definitions/index" },
+          "payload": { "type": "object" },
+          "after": { "$ref": "#/definitions/index" },
+          "warning": { "type": "boolean" }
+        }
+      }
+    },
+    "invalid": { "type": "array", "minItems": 5, "items": { "type": "object" } },
+    "text": {
+      "type": "array", "minItems": 13,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "wire", "accepted"],
+        "properties": {
+          "id": { "$ref": "#/definitions/id" },
+          "wire": { "type": "string", "maxLength": 256 },
+          "accepted": { "type": "boolean" },
+          "after": { "$ref": "#/definitions/index" }
+        }
+      }
+    },
+    "binary": {
+      "type": "array", "minItems": 25,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "hex", "accepted"],
+        "properties": {
+          "id": { "$ref": "#/definitions/id" },
+          "hex": { "type": "string", "pattern": "^(?:[0-9a-f]{2})*$", "maxLength": 64 },
+          "accepted": { "type": "boolean" },
+          "after": { "$ref": "#/definitions/index" }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "index": { "type": ["integer", "null"], "minimum": 0, "maximum": 4294967295 }
+  }
+}

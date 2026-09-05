@@ -19,5 +19,8 @@ pub mod artifact_authority;
 #[path = "../../🛰️lag-rebootstrap/🦀️.rs"]
 pub mod lag_rebootstrap;
 
-#[path = "../../🔐️local-bootstrap/🦀️.rs"]
+#[path = "../../🚀️local-bootstrap/🦀️.rs"]
 pub mod local_bootstrap;
+
+#[path = "../../💡️inference/🦀️.rs"]
+pub mod inference;

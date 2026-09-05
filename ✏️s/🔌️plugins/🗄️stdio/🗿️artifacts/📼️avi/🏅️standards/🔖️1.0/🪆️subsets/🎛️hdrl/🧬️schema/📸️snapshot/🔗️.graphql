@@ -1,0 +1,16 @@
+type AviMainHeader { microSecPerFrame: Int! maxBytesPerSec: Int! paddingGranularity: Int! flags: Int! totalFrames: Int! initialFrames: Int! streams: Int! suggestedBufferSize: Int! width: Int! height: Int! reserved: [Int!]! }
+type AviStreamHeader { fccType: String! fccHandler: String! flags: Int! priority: Int! language: Int! initialFrames: Int! scale: Int! rate: Int! start: Int! length: Int! suggestedBufferSize: Int! quality: Int! sampleSize: Int! rcFrameLeft: Int! rcFrameTop: Int! rcFrameRight: Int! rcFrameBottom: Int! }
+union AviStreamFormat = AviBitmapInfo | AviWaveFormat | AviRawFormat
+type AviBitmapInfo { size: Int! width: Int! height: Int! planes: Int! bitCount: Int! compression: String! sizeImage: Int! xPelsPerMeter: Int! yPelsPerMeter: Int! colorsUsed: Int! colorsImportant: Int! }
+type AviWaveFormat { formatTag: Int! channels: Int! samplesPerSec: Int! avgBytesPerSec: Int! blockAlign: Int! bitsPerSample: Int! extra: [Int!]! }
+type AviRawFormat { data: [Int!]! }
+type AviChunk { fourcc: String! data: [Int!]! keyframe: Boolean! }
+type AviStream { strh: AviStreamHeader! strf: AviStreamFormat! chunks: [AviChunk!]! }
+type RiffChunk { fourcc: String! data: [Int!]! }
+type AviSnapshot {
+  schema: String! @state(class: ARTIFACT)
+  mainHeader: AviMainHeader! @state(class: ARTIFACT)
+  streams: [AviStream!]! @state(class: ARTIFACT)
+  idx1Present: Boolean! @state(class: ARTIFACT)
+  unknownChunks: [RiffChunk!]! @state(class: ARTIFACT)
+}

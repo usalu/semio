@@ -1,0 +1,4 @@
+{
+  "mutation": "changeHumidificationProvidedKgH",
+  "newHumidificationProvidedKgH": 1.25
+}

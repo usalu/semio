@@ -1,0 +1,6 @@
+{
+  "mutation": "moveGrip2d",
+  "id": "grip-north",
+  "newAngle": 1.5,
+  "newRadius2d": 0.45
+}

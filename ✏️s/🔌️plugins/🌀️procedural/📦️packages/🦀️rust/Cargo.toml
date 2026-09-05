@@ -28,7 +28,7 @@ aliases = ["procedural 3d"]
 ports = { react = 6018, wgpu = 6118 }
 
 # 🎪️ The `generator` demonstrator row moved to
-# ✏️s/🔌️plugins/🎪️demonstrator/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml — see that
+# ✏️s/🔌️plugins/🎪️demonstrator/🪪️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml — see that
 # crate's docstring (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT).
 
 [lib]

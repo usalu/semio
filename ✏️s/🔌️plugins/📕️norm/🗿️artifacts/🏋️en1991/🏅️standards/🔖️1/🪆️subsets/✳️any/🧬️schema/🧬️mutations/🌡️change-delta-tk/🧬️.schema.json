@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeDeltaTK",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newDeltaTK"
+  ],
+  "properties": {
+    "newDeltaTK": {
+      "type": "number"
+    }
+  }
+}

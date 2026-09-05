@@ -5,7 +5,7 @@
   "displayName": "Change Background",
   "emoji": "🖼️",
   "aggregateVariant": "ChangeBackground",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-background",
   "binaryTag": 10,
   "invertibility": "explicit-mutation",

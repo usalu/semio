@@ -1,9 +1,0 @@
-syntax = "proto3";
-package semio.s_stdio_svg.artifact;
-
-import "s_stdio_xml/snapshot.proto";
-
-message SvgArtifact {
-  string schema = 1;
-  semio.s_stdio_xml.snapshot.XmlDocument doc = 2;
-}

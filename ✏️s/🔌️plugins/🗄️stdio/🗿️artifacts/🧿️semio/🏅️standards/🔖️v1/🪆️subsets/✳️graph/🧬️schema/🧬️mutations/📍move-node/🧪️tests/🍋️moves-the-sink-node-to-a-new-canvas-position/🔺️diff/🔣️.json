@@ -1,0 +1,32 @@
+{
+  "nodes": {
+    "values": [
+      {
+        "id": {
+          "value": "a"
+        },
+        "kind": "source",
+        "label": "Source",
+        "position": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "ports": [],
+        "properties": []
+      },
+      {
+        "id": {
+          "value": "b"
+        },
+        "kind": "sink",
+        "label": "Sink",
+        "position": {
+          "x": 6.0,
+          "y": -2.5
+        },
+        "ports": [],
+        "properties": []
+      }
+    ]
+  }
+}

@@ -384,9 +384,19 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// and routes regardless of what `V::Mutation` is. See `viewer_mutation_roster` for the separate
     /// opt-in `contributor.list-artifact-mutations` capability (ticket 26/08/16/ARTIFACT-VIEWERS-
     /// AND-EDITORS-PER-SUBSET report `📓️w2-sdk2-report.md`).
-    pub fn viewer<V: crate::app::ArtifactViewer>(mut self, mut def: crate::app::AppDefinition) -> Self
+    pub fn viewer<V: crate::app::ArtifactViewer>(self, def: crate::app::AppDefinition) -> Self
     where
         PA: From<crate::app::VcsArtifactApp<crate::app::ViewerApp<V>>>,
+    {
+        self.viewer_with_members::<V, store::NoMembers>(def)
+    }
+
+    /// 🧸️ A read-only surface retains its exact typed child fleet without acquiring document write authority.
+    pub fn viewer_with_members<V, M>(mut self, mut def: crate::app::AppDefinition) -> Self
+    where
+        V: crate::app::ArtifactViewer,
+        M: store::SpaceMember + store::MemberFactory + Send + 'static,
+        PA: From<crate::app::VcsArtifactApp<crate::app::ViewerApp<V>, M>>,
     {
         use semio_framework::kernel::{ArtifactKind, Rights, Scope};
         // 🚫️async: E4 fn-pointer slot
@@ -394,8 +404,13 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             V::app_schema()
         }
         // 🚫️async: E4 fn-pointer slot — see `document_app`'s `factory` doc.
-        fn factory<V: crate::app::ArtifactViewer, PA: PluginApp + From<crate::app::VcsArtifactApp<crate::app::ViewerApp<V>>>>(def: &crate::app::AppDefinition) -> PA {
-            PA::from(resolve_ready(crate::app::VcsArtifactApp::with_registry(crate::app::ViewerApp::<V>::default(), crate::app::AppActionRegistry::from_definition(def))))
+        fn factory<V, M, PA>(def: &crate::app::AppDefinition) -> PA
+        where
+            V: crate::app::ArtifactViewer,
+            M: store::SpaceMember + store::MemberFactory + Send + 'static,
+            PA: PluginApp + From<crate::app::VcsArtifactApp<crate::app::ViewerApp<V>, M>>,
+        {
+            PA::from(resolve_ready(crate::app::VcsArtifactApp::<crate::app::ViewerApp<V>, M>::with_registry(crate::app::ViewerApp::<V>::default(), crate::app::AppActionRegistry::from_definition(def))))
         }
         // 🎯️ C8.2 — schema-first: `io.document_schema` names the schema this surface opens without
         // relying on the `artifact_kinds[0].schema` convention. Stamped only when the app left it
@@ -404,7 +419,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             def.io.document_schema = V::DOCUMENT_SCHEMA.to_string();
         }
         let app = App { definition: def.clone(), examples: Vec::new() };
-        self.app_defs.push((app, (def, factory::<V, PA>)));
+        self.app_defs.push((app, (def, factory::<V, M, PA>)));
         self.app_schema_descriptors.push(app_schema::<V>);
         // 🔒️ Contract §2.3 clause 4 — a viewer's document store attaches Read only, never Write.
         self.capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Read, scope: Scope::App })
@@ -626,18 +641,14 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         if package_suffix != plugin_id || package_suffix.is_empty() || package_suffix.starts_with('-') || package_suffix.ends_with('-') || package_suffix.contains("--") || !package_suffix.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-') {
             return Err(PluginAssemblyError::new("plugin-assembly.package-id", "component package identity must exactly match semio:<plugin-id> in canonical lowercase form"));
         }
-        // 🌳️ New declaration tree (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-C):
-        // committed FIRST, fully self-contained (own preflight-then-commit, own assembly-guard
-        // scoping — see `crate::app::declarations::commit_artifact_declarations`'s doc), so it never
-        // interleaves with the OLD registration path's own `store::begin_artifact_assembly()` use
-        // near the end of this function. Its surfaces/app-schemas/capabilities fold into the exact
-        // same vectors `.viewer()`/`.editor()`/`.capability()` already populate below.
-        let declared_registration = crate::app::declarations::commit_artifact_declarations(declared_artifacts)?;
+        crate::app::declarations::preflight_artifact_declarations(&plugin_id, &declared_artifacts)?;
+        let declared_registration = crate::app::declarations::project_artifact_declarations(&declared_artifacts);
         app_defs.extend(declared_registration.app_defs);
         app_schema_descriptors.extend(declared_registration.app_schema_descriptors);
         capabilities.extend(declared_registration.capabilities);
         let mut definitions = ArtifactDefinitionRegistry::new();
         for definition in artifact_definitions {
+            crate::app::preflight_artifact_identity(&plugin_id, definition.identity().as_str())?;
             definitions.register(definition).map_err(PluginAssemblyError::definition)?;
         }
         for declaration in &artifacts {
@@ -690,6 +701,8 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         crate::app::register_contributions(&plugin_id, &dependencies, &contribution_descriptors).map_err(|error| PluginAssemblyError::new("plugin-assembly.contribution-gate", error.to_string()))?;
         runtime.extend_contributions(contributed_inference_services, &owner_mutation_rosters, contributed_mutation_runtime)?;
 
+        crate::app::declarations::commit_artifact_declarations(&plugin_id, declared_artifacts)?;
+
         let mut plugin = Plugin::new(plugin_id.clone(), label, version).with_runtime_registry(runtime);
         plugin.manifest.dependencies = dependencies;
         plugin.manifest.contributions = contribution_descriptors;
@@ -734,6 +747,10 @@ impl<PA: PluginApp> Plugin<PA> {
 }
 
 //#region 🧪️DependencyContributionFixtureMount
+#[cfg(test)]
+#[path = "🧪️tests/🪪️artifact-admission/🦀️.rs"]
+mod artifact_admission_tests;
+
 #[cfg(test)]
 #[path = "🧪️tests/🔗️dependency-contribution/🦀️.rs"]
 mod dependency_fixture;
@@ -1048,7 +1065,8 @@ mod schema_stamping_tests {
             policy_version: 1,
         };
         let plugin = Plugin::<crate::app::NoPluginApp>::builder(metadata.owner).label("Builder Test Routed Inference").version("0.1.0").routed_inference(metadata).try_build().expect("metadata-only routed inference must assemble");
-        let roster: Vec<crate::app::WireArtifactInferenceMetadata> = serde_json::from_slice(&plugin.wire_list_artifact_inference_services().expect("frozen roster encodes")).expect("frozen roster decodes");
+        let bytes = plugin.wire_list_artifact_inference_services().expect("frozen roster encodes");
+        let roster: Vec<crate::app::WireArtifactInferenceMetadata> = protocol::json::from_json_str(std::str::from_utf8(&bytes).expect("roster UTF-8")).expect("frozen roster decodes");
         assert_eq!(roster, vec![metadata.into()]);
         assert!(crate::app::artifact_inference_service(metadata.artifact_kind, metadata.inference_schema).expect("global service lookup").is_none(), "route must not manufacture a synchronous service facade");
     }

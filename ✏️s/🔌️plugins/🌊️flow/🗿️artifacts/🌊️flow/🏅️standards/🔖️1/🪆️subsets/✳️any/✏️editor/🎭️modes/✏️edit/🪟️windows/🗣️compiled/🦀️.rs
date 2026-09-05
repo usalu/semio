@@ -3,9 +3,10 @@
 use crate::artifacts::flow::FlowSnapshot;
 use crate::editor::flow::config::FlowConfig;
 use crate::editor::flow::host_from_snapshot;
-use crate::editor::flow::FLOW_PLAY_APP_ID;
 use flow::FlowEvalSession;
-use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
+use ui_wgpu::wgpu::TextEditorScene;
 
 //#region 🔖️Constants
 pub const FLOW_PLAY_WINDOW_COMPILED: &str = "flow-compiled-dag";
@@ -35,9 +36,10 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession) -> UiNode {
+pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession) -> UiAssemblyResult<BuiltNode> {
     let host = host_from_snapshot(fixture, config, session);
-    build_text_editor_scene(FLOW_PLAY_SURFACE_COMPILED, FLOW_PLAY_APP_ID, TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None))
+    let scene = TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None);
+    scene_surface(FLOW_PLAY_SURFACE_COMPILED, ContractSurfaceKind::TextEditor, &scene)
 }
 //#endregion 🔖️Render
 
@@ -49,8 +51,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_compiled_wire_editor() {
-        let mut app = flow_app();
-        assert!(render_body(&mut app, FLOW_PLAY_BODY_COMPILED).contains("text-editor"));
+        let mut app = flow_app().await;
+        assert!(render_body(&mut app, FLOW_PLAY_BODY_COMPILED).await.contains("text-editor"));
     }
 }
 //#endregion 🧪️Tests

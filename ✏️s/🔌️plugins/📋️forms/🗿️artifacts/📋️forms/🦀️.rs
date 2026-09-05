@@ -459,21 +459,21 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.forms.standard.v1", "standard", "1", &[], None),
-        ("s.forms.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.forms.schema.artifact", "schema", "s.forms.forms", &[("schema", "s.forms.forms")], None),
-        ("s.forms.inference.artifact", "inference", "s.forms.forms.inference", &[("schema", "s.forms.forms.inference")], None),
-        ("s.forms.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.forms.grammar.document", "grammar", "forms.forms", &[("grammar", "forms.forms")], None),
-        ("s.forms.grammar.op", "grammar", "forms.forms.op", &[("grammar", "forms.forms.op")], None),
-        ("s.forms.grammar.diff", "grammar", "forms.forms.diff", &[("grammar", "forms.forms.diff")], None),
-        ("s.forms.grammar.pack", "grammar", "forms.pack", &[("grammar", "forms.pack")], None),
-        ("s.forms.grammar.spr", "grammar", "forms.spr", &[("grammar", "forms.spr")], None),
-        ("s.forms.codec.document.v1", "codec", "forms.form:forms", &[("codec", "forms.form"), ("extension", "forms")], None),
-        ("s.forms.localization.en", "localization", "Forms", &[], Some(("en", "Forms"))),
-        ("s.forms.localization.de", "localization", "Formulare", &[], Some(("de", "Formulare"))),
+        ("s.forms.forms.standard.v1", "standard", "1", &[], None),
+        ("s.forms.forms.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.forms.forms.schema.artifact", "schema", "s.forms.forms", &[("schema", "s.forms.forms")], None),
+        ("s.forms.forms.inference.artifact", "inference", "s.forms.forms.inference", &[("schema", "s.forms.forms.inference")], None),
+        ("s.forms.forms.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.forms.forms.grammar.document", "grammar", "forms.forms", &[("grammar", "forms.forms")], None),
+        ("s.forms.forms.grammar.op", "grammar", "forms.forms.op", &[("grammar", "forms.forms.op")], None),
+        ("s.forms.forms.grammar.diff", "grammar", "forms.forms.diff", &[("grammar", "forms.forms.diff")], None),
+        ("s.forms.forms.grammar.pack", "grammar", "forms.pack", &[("grammar", "forms.pack")], None),
+        ("s.forms.forms.grammar.spr", "grammar", "forms.spr", &[("grammar", "forms.spr")], None),
+        ("s.forms.forms.codec.document.v1", "codec", "forms.form:forms", &[("codec", "forms.form"), ("codec-extension", "10:forms.form:forms")], None),
+        ("s.forms.forms.localization.en", "localization", "Forms", &[], Some(("en", "Forms"))),
+        ("s.forms.forms.localization.de", "localization", "Formulare", &[], Some(("de", "Formulare"))),
     ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.forms")?);
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.forms.forms")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
         for (namespace, value) in *claims {

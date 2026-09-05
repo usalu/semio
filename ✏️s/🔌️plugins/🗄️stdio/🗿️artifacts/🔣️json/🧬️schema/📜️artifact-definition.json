@@ -40,15 +40,35 @@
       "id": "s.stdio.json.standard.rfc8259.representation.document",
       "standard": "s.stdio.json.standard.rfc8259",
       "representation": "document",
-      "mimes": ["application/json"],
-      "extensions": [".json"],
+      "mimes": [
+        "application/json"
+      ],
+      "extensions": [
+        ".json"
+      ],
       "is_binary": false,
       "aliases": [],
       "neutral": true,
       "status": "declared"
     }
   ],
-  "codecs": [],
+  "codecs": [
+    {
+      "id": "s.stdio.json.standard.rfc8259.codec.native-document.v1",
+      "status": "implemented",
+      "from": "s.stdio.json.standard.rfc8259.dialect.source",
+      "to": "s.stdio.json.standard.rfc8259.dialect.source",
+      "executable_registration": true,
+      "native_factory": {
+        "factory_id": "stdio.native.json.v1",
+        "artifact_kind": "stdio.json",
+        "document_schema": "stdio.json",
+        "extension": "json",
+        "pack_schema_hash": "7de40335bcca019c81ea7c1cb791e5e438358851fbe32117b5ad8276494b695e",
+        "runtime_capability_id": "s.stdio.json.standard.rfc8259.codec.codec-stdio-json-extension-json.v1"
+      }
+    }
+  ],
   "mutations": [],
   "inferences": [],
   "resources": [
@@ -83,22 +103,22 @@
   ],
   "runtime_capabilities": [
     {
-      "id": "s.stdio.json.runtime.codec.codec-stdio-json-extension-json.v1",
+      "id": "s.stdio.json.standard.rfc8259.codec.codec-stdio-json-extension-json.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec:stdio.json|extension:json",
+      "descriptor": "runtime-capability:codec:codec-extension:10:stdio.json:json|codec:stdio.json",
       "claims": [
         {
           "namespace": "codec",
           "value": "stdio.json"
         },
         {
-          "namespace": "extension",
-          "value": "json"
+          "namespace": "codec-extension",
+          "value": "10:stdio.json:json"
         }
       ]
     },
     {
-      "id": "s.stdio.json.runtime.composer.dialect-s-stdio-json-rfc8259.v1",
+      "id": "s.stdio.json.composer.dialect-s-stdio-json-rfc8259.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.json@rfc8259/*",
       "claims": [
@@ -109,7 +129,7 @@
       ]
     },
     {
-      "id": "s.stdio.json.runtime.composer.dialect-s-stdio-json-rfc8259-i-json.v1",
+      "id": "s.stdio.json.composer.dialect-s-stdio-json-rfc8259-i-json.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.json@rfc8259/i-json",
       "claims": [
@@ -120,7 +140,7 @@
       ]
     },
     {
-      "id": "s.stdio.json.runtime.grammar.grammar-stdio-json.v1",
+      "id": "s.stdio.json.grammar.grammar-stdio-json.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.json",
       "claims": [
@@ -131,7 +151,7 @@
       ]
     },
     {
-      "id": "s.stdio.json.runtime.grammar.grammar-stdio-json-diff.v1",
+      "id": "s.stdio.json.grammar.grammar-stdio-json-diff.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.json.diff",
       "claims": [
@@ -142,7 +162,7 @@
       ]
     },
     {
-      "id": "s.stdio.json.runtime.grammar.grammar-stdio-json-op.v1",
+      "id": "s.stdio.json.grammar.grammar-stdio-json-op.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.json.op",
       "claims": [
@@ -153,7 +173,7 @@
       ]
     },
     {
-      "id": "s.stdio.json.runtime.grammar.grammar-stdio-json-pack.v1",
+      "id": "s.stdio.json.grammar.grammar-stdio-json-pack.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.json.pack",
       "claims": [
@@ -164,7 +184,7 @@
       ]
     },
     {
-      "id": "s.stdio.json.runtime.grammar.grammar-stdio-json-spr.v1",
+      "id": "s.stdio.json.grammar.grammar-stdio-json-spr.v1",
       "category": "grammar",
       "descriptor": "runtime-capability:grammar:grammar:stdio.json.spr",
       "claims": [
@@ -175,7 +195,7 @@
       ]
     },
     {
-      "id": "s.stdio.json.runtime.inference.schema-s-stdio-json-inference.v1",
+      "id": "s.stdio.json.inference.schema-s-stdio-json-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:s.stdio.json.inference",
       "claims": [
@@ -186,7 +206,7 @@
       ]
     },
     {
-      "id": "s.stdio.json.runtime.representation.mime-application-json-extension-json.v1",
+      "id": "s.stdio.json.standard.rfc8259.representation.mime-application-json-extension-json",
       "category": "representation",
       "descriptor": "runtime-capability:representation:mime:application/json|extension:.json",
       "claims": [
@@ -201,7 +221,7 @@
       ]
     },
     {
-      "id": "s.stdio.json.runtime.schema.schema-s-stdio-json.v1",
+      "id": "s.stdio.json.schema.schema-s-stdio-json.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.json",
       "claims": [
@@ -212,12 +232,12 @@
       ]
     },
     {
-      "id": "s.stdio.json.runtime.subset-validator.dialect-s-stdio-json-rfc8259-i-json.v1",
+      "id": "s.stdio.json.subset-validator.validated-dialect-s-stdio-json-rfc8259-i-json.v1",
       "category": "subset-validator",
-      "descriptor": "runtime-capability:subset-validator:dialect:s.stdio.json@rfc8259/i-json",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.json@rfc8259/i-json",
       "claims": [
         {
-          "namespace": "dialect",
+          "namespace": "validated-dialect",
           "value": "s.stdio.json@rfc8259/i-json"
         }
       ]

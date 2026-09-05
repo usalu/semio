@@ -10,12 +10,12 @@
  * `policyMutationTsMirrorBreaches` gate (`📜️script.ts`) treats an absent leaf as "low" priority,
  * non-blocking advisory, so none were scaffolded — their payload shapes are inlined here instead,
  * each annotated with its Rust source. */
-import type { SetLayerVisible } from "../../../✳️metadata/🧬️schema/🧬️mutations/👁️set-layer-visible/🦠️mutation/🟦️.ts";
-import type { SetLayerLocked } from "../../../✳️metadata/🧬️schema/🧬️mutations/🔒️set-layer-locked/🦠️mutation/🟦️.ts";
-import type { SetLayerOpacity } from "../../../✳️style/🧬️schema/🧬️mutations/🌫️set-layer-opacity/🦠️mutation/🟦️.ts";
-import type { SetLayerBlendMode } from "../../../✳️style/🧬️schema/🧬️mutations/🖌️set-layer-blend-mode/🦠️mutation/🟦️.ts";
-import type { DuplicateLayer } from "../../../✳️structure/🧬️schema/🧬️mutations/🧬️duplicate-layer/🦠️mutation/🟦️.ts";
-import type { ReorderLayer } from "../../../✳️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🦠️mutation/🟦️.ts";
+import type { SetLayerVisible } from "../../../🏷️metadata/🧬️schema/🧬️mutations/👁️set-layer-visible/🦠️mutation/🟦️.ts";
+import type { SetLayerLocked } from "../../../🏷️metadata/🧬️schema/🧬️mutations/🔒️set-layer-locked/🦠️mutation/🟦️.ts";
+import type { SetLayerOpacity } from "../../../🎨️style/🧬️schema/🧬️mutations/🌫️set-layer-opacity/🦠️mutation/🟦️.ts";
+import type { SetLayerBlendMode } from "../../../🎨️style/🧬️schema/🧬️mutations/🖌️set-layer-blend-mode/🦠️mutation/🟦️.ts";
+import type { DuplicateLayer } from "../../../🧱️structure/🧬️schema/🧬️mutations/🧬️duplicate-layer/🦠️mutation/🟦️.ts";
+import type { ReorderLayer } from "../../../🧱️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🦠️mutation/🟦️.ts";
 import type { DrawingLayerNode } from "../🟦️.ts";
 
 /** ✏️ Mirrors Rust `RenameLayer` (`✏️rename-layer/🦠️mutation/🦀️.rs`). */

@@ -1,0 +1,5 @@
+{
+  "mutation": "renameEnvironmentalRequirement",
+  "id": "environmental-requirement-a",
+  "newName": "Renamed Environmental Requirement A"
+}

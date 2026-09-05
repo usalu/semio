@@ -1,4 +1,0 @@
-module Stdio_gif_89a_inference;
-type Document = unit {
-    payload: bytes &eod;
-};

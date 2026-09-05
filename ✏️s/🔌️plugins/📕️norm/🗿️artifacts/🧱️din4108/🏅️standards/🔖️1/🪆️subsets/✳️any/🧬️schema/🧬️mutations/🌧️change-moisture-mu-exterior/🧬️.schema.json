@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeMoistureMuExterior",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newMoistureMuExterior"
+  ],
+  "properties": {
+    "newMoistureMuExterior": {
+      "type": "number"
+    }
+  }
+}

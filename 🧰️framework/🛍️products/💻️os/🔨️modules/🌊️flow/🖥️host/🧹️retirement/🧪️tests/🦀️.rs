@@ -20,7 +20,7 @@ fn close(mut session: FlowEvalSession, maximum_bytes: usize) -> usize {
 
 #[test]
 fn session_semantic_bytes_larger_than_production_grant_retire_exactly_across_workers() {
-    let fixture = crate::os_pack::json::parse(include_str!("../🔣️session.json")).unwrap();
+    let fixture = crate::os_pack::json::parse(include_str!("../🔣️.json")).unwrap();
     for maximum_bytes in [1, 64, 4096] {
         let text = fixture.get("text").and_then(|v| v.get("text")).and_then(crate::os_pack::json::Value::as_str).unwrap().repeat(fixture.get("text").and_then(|v| v.get("repeat")).and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize);
         let preview = fixture.get("preview").and_then(|v| v.get("text")).and_then(crate::os_pack::json::Value::as_str).unwrap().repeat(fixture.get("preview").and_then(|v| v.get("repeat")).and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize);

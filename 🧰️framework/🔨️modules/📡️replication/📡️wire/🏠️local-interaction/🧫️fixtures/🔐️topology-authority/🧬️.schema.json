@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "domain", "generationEncoding", "cases", "overflowMutatesCache", "closedAuthorityReadable", "canonicalTopologyHash"],
+  "properties": {
+    "version": {"const": 1},
+    "domain": {"const": "semio.local-interaction.topology-authority.v1\u0000"},
+    "generationEncoding": {"const": "u64-le"},
+    "cases": {"type": "array", "minItems": 5, "items": {"type": "object", "additionalProperties": false, "required": ["id", "documentByte", "configByte", "uiGeneration", "expected"], "properties": {
+      "id": {"type": "string", "minLength": 1}, "documentByte": {"type": "integer", "minimum": 0, "maximum": 255}, "configByte": {"type": "integer", "minimum": 0, "maximum": 255},
+      "uiGeneration": {"$ref": "semio:local-interaction#/$defs/generation"}, "expected": {"$ref": "semio:local-interaction#/$defs/revision"}
+    }}},
+    "overflowMutatesCache": {"const": false}, "closedAuthorityReadable": {"const": false}, "canonicalTopologyHash": {"const": false}
+  }
+}

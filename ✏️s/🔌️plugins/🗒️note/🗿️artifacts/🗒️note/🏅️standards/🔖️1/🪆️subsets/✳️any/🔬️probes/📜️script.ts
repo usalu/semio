@@ -10,7 +10,7 @@
 // Everything here MARSHALS and INVOKES; nothing here reads a DXF/SVG/PDF file or projects a
 // semantic JSON shape — every measurement comes out of `../🏭️generator/🦀️note-oracle-codec`, the
 // SAME crate that writes the fixtures (`dxf` 0.6 / `quick-xml` 0.42 / `lopdf` 0.44, the three
-// already-registered oracles in `../🔣️oracle.json`). `*-project` takes one file and reports what
+// already-registered oracles in `../🔮️oracle/🔣️.json`). `*-project` takes one file and reports what
 // it contains; `*-compare` takes EXPECTED and ACTUAL and reports whether they agree — there,
 // identical readings ARE the pass, exactly the shape
 // `…✳️cad/🔬️probes/📜️script.ts` already establishes.
@@ -23,7 +23,7 @@
 //   bun 📜️script.ts svg-compare  --input <expected.svg> --input <actual.svg>
 //   bun 📜️script.ts pdf-compare  --input <expected.pdf> --input <actual.pdf>
 //
-// @see ../🏭️generator/🦀️note-oracle-codec/src/cli.rs — the binary that does the reading/comparing
+// @see ../🏭️generator/🦀️note-oracle-codec/⌨️cli/🦀️.rs — the binary that does the reading/comparing
 // @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 
 //#endregion 🧲️Header

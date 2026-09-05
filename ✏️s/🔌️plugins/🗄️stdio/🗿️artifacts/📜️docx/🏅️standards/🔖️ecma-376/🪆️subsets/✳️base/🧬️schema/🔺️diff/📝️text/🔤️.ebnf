@@ -1,3 +1,0 @@
-(* ebnf stdio.docx diff *)
-document = header, body ;
-header = 'schema', space, 'stdio.docx', newline ;

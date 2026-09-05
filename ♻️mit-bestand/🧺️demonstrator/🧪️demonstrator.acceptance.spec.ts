@@ -28,15 +28,15 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 // #endregion 🔌️Adapters
 
 //#region 🪪️BrandPaneIds
-/** @emoji 🪪️ Reads `🟦️brand.ts`'s pane ids as TEXT rather than importing it. Playwright loads specs
+/** @emoji 🪪️ Reads `🪧️brand.ts`'s pane ids as TEXT rather than importing it. Playwright loads specs
  * through Node's own ESM loader, and importing the brand module drags in the whole `@semio-tech/ui-react`
  * runtime — whose typed-scene catalog is a bare `.json` import that Node rejects without an
  * `import ... with { type: "json" }` attribute (`ERR_IMPORT_ATTRIBUTE_MISSING`). Vite rewrites that for the
  * app; Playwright does not, so this suite stays import-free of app modules exactly like `.storybook`'s specs. */
 function brandPaneIds(): readonly string[] {
-  const source = readFileSync(join(import.meta.dirname, "🟦️brand.ts"), "utf8");
+  const source = readFileSync(join(import.meta.dirname, "🪧️brand.ts"), "utf8");
   const block = /export const DEMONSTRATOR_PANES[^=]*=\s*\[(.*?)\n\];/s.exec(source);
-  if (!block) throw new Error("🟦️brand.ts no longer declares a DEMONSTRATOR_PANES array literal");
+  if (!block) throw new Error("🪧️brand.ts no longer declares a DEMONSTRATOR_PANES array literal");
   return [...block[1]!.matchAll(/\bid:\s*"([^"]+)"/g)].map((match) => match[1]!);
 }
 //#endregion 🪪️BrandPaneIds

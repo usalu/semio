@@ -37,12 +37,12 @@ serde_json = "1.0"
 # contain ASCII — so the repo's emoji filename convention needs an explicit name/path pair here.
 [[test]]
 name = "deny_unknown_fields_enums"
-path = "tests/🛡️deny-unknown-fields-enums.rs"
+path = "🧪️tests/🛡️deny-unknown-fields-enums.rs"
 
 [[test]]
 name = "flatten_with_skip"
-path = "tests/🌾flatten-with-skip.rs"
+path = "🧪️tests/🪗️flatten-with-skip.rs"
 
 [[test]]
 name = "newtype_transparent"
-path = "tests/🆔️newtype-transparent.rs"
+path = "🧪️tests/🆔️newtype-transparent.rs"

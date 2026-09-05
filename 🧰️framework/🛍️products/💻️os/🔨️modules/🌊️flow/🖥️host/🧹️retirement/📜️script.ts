@@ -4,8 +4,8 @@ import { strict as assert } from "node:assert";
 import stableStringify from "fast-json-stable-stringify";
 
 //#region 🔣️SessionOwnership
-const fixture = await Bun.file(new URL("./🔣️session.json", import.meta.url)).json();
-const schema = await Bun.file(new URL("./🔣️.schema.json", import.meta.url)).json();
+const fixture = await Bun.file(new URL("./🔣️.json", import.meta.url)).json();
+const schema = await Bun.file(new URL("./🧬️.schema.json", import.meta.url)).json();
 const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
 assert(validate(fixture), JSON.stringify(validate.errors));
 const text = fixture.text.text.repeat(fixture.text.repeat); const preview = fixture.preview.text.repeat(fixture.preview.repeat);

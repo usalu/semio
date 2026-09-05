@@ -1,0 +1,9 @@
+{
+  "schema": "artifact-store-runtime-seed/v1",
+  "maximumItems": 1,
+  "maximumBytes": 4096,
+  "identities": ["edit-a", "edit-a", "operation-a", "edit-b", "operation-a", "edit-b"],
+  "applied": ["edit-a", "operation-a", "edit-b"],
+  "retired": ["edit-a", "operation-a", "edit-b"],
+  "laws": ["duplicates-preserve-exact-rejected-owners", "preflight-before-populated-dag", "reset-reserves-retirement-before-seeding", "close-retires-one-owner-under-production-grant"]
+}

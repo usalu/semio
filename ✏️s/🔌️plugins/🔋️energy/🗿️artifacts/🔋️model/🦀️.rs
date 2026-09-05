@@ -283,25 +283,25 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 
     type CapabilityRow<'a> = (&'a str, &'a str, &'a str, &'a [(&'a str, &'a str)], Option<(&'a str, &'a str)>);
     let rows: &[CapabilityRow<'_>] = &[
-        ("s.model.standard.v1", "standard", "1", &[], None),
-        ("s.model.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.model.schema.artifact", "schema", "s.energy.model", &[("schema", "s.energy.model")], None),
-        ("s.model.inference.artifact", "inference", "s.energy.model.inference", &[("schema", "s.energy.model.inference")], None),
-        ("s.model.composer.native", "composer", "s.model@1/*", &[("dialect", "s.model@1/*")], None),
-        ("s.model.composer.format-1", "composer", "s.stdio.zip@2.0/*", &[("dialect", "s.stdio.zip@2.0/*")], None),
-        ("s.model.composer.format-2", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None),
-        ("s.model.composer.format-3", "composer", "s.stdio.xlsx@ecma-376/*", &[("dialect", "s.stdio.xlsx@ecma-376/*")], None),
-        ("s.model.composer.format-4", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.model.grammar.1", "grammar", "energy.model", &[("grammar", "energy.model")], None),
-        ("s.model.grammar.2", "grammar", "energy.model.op", &[("grammar", "energy.model.op")], None),
-        ("s.model.grammar.3", "grammar", "energy.model.diff", &[("grammar", "energy.model.diff")], None),
-        ("s.model.grammar.4", "grammar", "energy.model.pack", &[("grammar", "energy.model.pack")], None),
-        ("s.model.grammar.5", "grammar", "energy.model.spr", &[("grammar", "energy.model.spr")], None),
-        ("s.model.codec.document-1", "codec", "energy.model:energy", &[("codec", "energy.model"), ("extension", "energy")], None),
-        ("s.model.localization.en", "localization", "Energy Model", &[], Some(("en", "Energy Model"))),
-        ("s.model.localization.de", "localization", "Energiemodell", &[], Some(("de", "Energiemodell"))),
+        ("s.energy.model.standard.v1", "standard", "1", &[], None),
+        ("s.energy.model.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.energy.model.schema.artifact", "schema", "s.energy.model", &[("schema", "s.energy.model")], None),
+        ("s.energy.model.inference.artifact", "inference", "s.energy.model.inference", &[("schema", "s.energy.model.inference")], None),
+        ("s.energy.model.composer.native", "composer", "s.energy.model@1/*", &[("dialect", "s.energy.model@1/*")], None),
+        ("s.energy.model.composer.format-1", "composer", "s.stdio.zip@2.0/*", &[("dialect", "s.stdio.zip@2.0/*")], None),
+        ("s.energy.model.composer.format-2", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None),
+        ("s.energy.model.composer.format-3", "composer", "s.stdio.xlsx@ecma-376/*", &[("dialect", "s.stdio.xlsx@ecma-376/*")], None),
+        ("s.energy.model.composer.format-4", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.energy.model.grammar.1", "grammar", "energy.model", &[("grammar", "energy.model")], None),
+        ("s.energy.model.grammar.2", "grammar", "energy.model.op", &[("grammar", "energy.model.op")], None),
+        ("s.energy.model.grammar.3", "grammar", "energy.model.diff", &[("grammar", "energy.model.diff")], None),
+        ("s.energy.model.grammar.4", "grammar", "energy.model.pack", &[("grammar", "energy.model.pack")], None),
+        ("s.energy.model.grammar.5", "grammar", "energy.model.spr", &[("grammar", "energy.model.spr")], None),
+        ("s.energy.model.codec.document-1", "codec", "energy.model:energy", &[("codec", "energy.model"), ("codec-extension", "12:energy.model:energy")], None),
+        ("s.energy.model.localization.en", "localization", "Energy Model", &[], Some(("en", "Energy Model"))),
+        ("s.energy.model.localization.de", "localization", "Energiemodell", &[], Some(("de", "Energiemodell"))),
     ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.model")?);
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.energy.model")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
         for (namespace, value) in *claims {

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "limits", "expected", "dictionary", "docHex", "compositionHex", "unownedCompositionHex", "uuid", "cases"],
+  "properties": {
+    "schema": { "const": "semio.member.history-identity/v1" },
+    "limits": {
+      "type": "object", "additionalProperties": false, "required": ["dictionaryEntries", "dictionaryBytes", "identityBytes", "pinGroups", "pins"],
+      "properties": { "dictionaryEntries": { "const": 8192 }, "dictionaryBytes": { "const": 1048576 }, "identityBytes": { "const": 256 }, "pinGroups": { "const": 1024 }, "pins": { "const": 8192 } }
+    },
+    "expected": {
+      "type": "object", "additionalProperties": false, "required": ["artifactId", "schema", "dialect", "owner"],
+      "properties": { "artifactId": { "$ref": "#/$defs/text" }, "schema": { "$ref": "#/$defs/text" }, "dialect": { "$ref": "#/$defs/triple" }, "owner": { "$ref": "#/$defs/triple" } }
+    },
+    "dictionary": { "type": "array", "minItems": 7, "maxItems": 7, "items": { "$ref": "#/$defs/text" }, "uniqueItems": true },
+    "docHex": { "$ref": "#/$defs/hex" }, "compositionHex": { "$ref": "#/$defs/hex" }, "unownedCompositionHex": { "$ref": "#/$defs/hex" },
+    "uuid": {
+      "type": "object", "additionalProperties": false, "required": ["artifactId", "docHex", "compositionHex"],
+      "properties": { "artifactId": { "$ref": "#/$defs/text" }, "docHex": { "$ref": "#/$defs/hex" }, "compositionHex": { "$ref": "#/$defs/hex" } }
+    },
+    "cases": { "type": "array", "minItems": 32, "maxItems": 32, "items": { "$ref": "#/$defs/case" } }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "hex": { "type": "string", "pattern": "^(?:[a-f0-9]{2})+$", "maxLength": 4096 },
+    "triple": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/$defs/text" } },
+    "case": {
+      "type": "object", "additionalProperties": false, "required": ["id", "operation", "error"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z-]+$", "maxLength": 40 },
+        "operation": { "enum": ["unchanged", "unowned", "raw-document-id", "prefix-uuid-id", "earlier-foreign-composition", "earlier-malformed-composition", "dictionary-replace", "missing-composition", "duplicate-document", "replace-composition", "replace-doc", "dictionary-limit", "dictionary-byte-limit", "pin-limit"] },
+        "index": { "type": "integer", "minimum": 0, "maximum": 6 }, "text": { "$ref": "#/$defs/text" }, "hex": { "$ref": "#/$defs/hex" }, "expectedOwner": { "type": "null" },
+        "value": { "type": "integer", "minimum": 1, "maximum": 8192 }, "error": { "enum": [null, "identity", "malformed", "capacity"] }
+      },
+      "allOf": [
+        { "if": { "properties": { "operation": { "const": "unowned" } } }, "then": { "required": ["expectedOwner"], "properties": { "expectedOwner": true } }, "else": { "properties": { "expectedOwner": false } } },
+        { "if": { "properties": { "operation": { "const": "dictionary-replace" } } }, "then": { "required": ["index", "text"], "properties": { "index": true, "text": true, "hex": false, "value": false } } },
+        { "if": { "properties": { "operation": { "enum": ["replace-composition", "replace-doc", "earlier-malformed-composition"] } } }, "then": { "required": ["hex"], "properties": { "hex": true, "index": false, "text": false, "value": false } } },
+        { "if": { "properties": { "operation": { "enum": ["dictionary-limit", "dictionary-byte-limit"] } } }, "then": { "required": ["value"], "properties": { "value": true, "index": false, "text": false, "hex": false } } },
+        { "if": { "properties": { "operation": { "const": "pin-limit" } } }, "then": { "required": ["value", "hex"], "properties": { "value": true, "hex": true, "index": false, "text": false } } },
+        { "if": { "properties": { "operation": { "enum": ["unchanged", "unowned", "raw-document-id", "prefix-uuid-id", "earlier-foreign-composition", "missing-composition", "duplicate-document"] } } }, "then": { "properties": { "index": false, "text": false, "hex": false, "value": false } } }
+      ]
+    }
+  }
+}

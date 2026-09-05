@@ -152,14 +152,19 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
 }
 
 class PublicationAuthorityAuditScript extends BundleScript {
-  async run(): Promise<void> {
+  async run(segments: string[]): Promise<void> {
+    const onlyOwner = segments[0];
     const puzzleRoot = resolve(this.root, "../..");
     const fixture = await Bun.file(resolve(puzzleRoot, "🧪️publication-authority/🔣️.json")).json() as PublicationFixture;
-    const schema = await Bun.file(resolve(puzzleRoot, "🧪️publication-authority/🔣️.schema.json")).json();
+    const schema = await Bun.file(resolve(puzzleRoot, "🧪️publication-authority/🧬️.schema.json")).json();
     const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
     if (!validate(fixture)) throw new Error(`Puzzle publication fixture failed Ajv validation: ${JSON.stringify(validate.errors)}`);
     if (!fixtureOracle(fixture)) throw new Error("Puzzle publication fixture failed the independent semantic oracle");
-    for (const owner of fixture.owners) {
+    const auditedOwners = onlyOwner ? fixture.owners.filter((owner) => owner.owner === onlyOwner) : fixture.owners;
+    if (onlyOwner && auditedOwners.length === 0) {
+      throw new Error(`unknown owner ${JSON.stringify(onlyOwner)}; expected one of ${fixture.owners.map((owner) => owner.owner).join(", ")}`);
+    }
+    for (const owner of auditedOwners) {
       const source = await Bun.file(resolve(puzzleRoot, owner.source)).text();
       if (!ownerOracle(owner, source)) throw new Error(`${owner.owner} publication authority diverged from the fixture`);
       const blocked = owner.groups.find((group) => group.status === "BatchOnlyPendingRewrite")?.routes[0];
@@ -201,8 +206,8 @@ class PublicationAuthorityAuditScript extends BundleScript {
       { ...fixture, owners: fixture.owners.map((owner, index) => index === 0 ? { ...owner, groups: [{ ...owner.groups[0]!, status: "Migrated", blocker: owner.groups[0]!.blocker }] } : owner) },
     ];
     if (hostileFixtures.some((hostile) => Boolean(validate(hostile)) || fixtureOracle(hostile))) throw new Error("Puzzle publication fixture accepted a hostile schema/oracle mutation");
-    const admitted = fixture.owners.flatMap((owner) => owner.groups.filter((group) => group.status === "Migrated").flatMap((group) => group.routes));
-    console.error(`validated Puzzle publication authority; admitted=${admitted.join(",")}; schema=Ajv; oracle=independent`);
+    const admitted = auditedOwners.flatMap((owner) => owner.groups.filter((group) => group.status === "Migrated").flatMap((group) => group.routes));
+    console.error(`validated Puzzle publication authority; owners=${auditedOwners.map((owner) => owner.owner).join(",")}; admitted=${admitted.join(",")}; schema=Ajv; oracle=independent`);
   }
 }
 

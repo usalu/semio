@@ -1,0 +1,25 @@
+# 🧭️ Own workspace root, like every other bridge and probe here: the repository root manifest is a
+# shared leased file, and a member crate would serialise every concurrent session behind that lease.
+[workspace]
+
+[package]
+name = "semio-semio-v1-mesh-bridge"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🏭️ Production mutation bridge for s.stdio.semio@v1/🔺️mesh — answers listMutations from the production dispatch enum itself."
+
+[[bin]]
+name = "semio-semio-v1-mesh-bridge"
+path = "🦀️.rs"
+
+# 🔒️ It compiles THE PRODUCTION SOURCE FILES, via #[path], exactly as the plugin's own `🦀️.rs`
+# does — same bytes, smaller compilation unit. It deliberately does NOT depend on
+# `semio-s-plugin-stdio`: that crate carries every artifact in the plugin, so one unrelated artifact
+# mid-refactor blocks this subset's inventory for no reason. The dependency edge points one way and
+# the answer still comes from production dispatch.
+[dependencies]
+semio-framework-os-kernel = { path = "../../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-framework-schema = { path = "../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-plugin = { path = "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
+pack = { path = "../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }

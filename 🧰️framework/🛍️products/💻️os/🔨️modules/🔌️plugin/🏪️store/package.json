@@ -6,7 +6,7 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./📜️store.ts"
+    ".": "./📥️store.ts"
   },
   "dependencies": {
     "@semio-tech/framework-os": "workspace:*"

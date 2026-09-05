@@ -5,7 +5,7 @@
   "displayName": "Change Node Locked",
   "emoji": "🔒",
   "aggregateVariant": "ChangeNodeLocked",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-node-locked",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

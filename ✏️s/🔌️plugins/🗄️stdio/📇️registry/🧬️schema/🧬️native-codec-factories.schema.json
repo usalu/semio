@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.stdio.native-openable-catalog-provider/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "provider_id", "plugin_id", "package_id", "receipts"],
+  "properties": {
+    "schema": { "const": "semio.stdio.native-openable-catalog-provider/v1" },
+    "provider_id": { "const": "stdio/native-codecs/v1" },
+    "plugin_id": { "const": "stdio" },
+    "package_id": { "const": "semio:stdio" },
+    "receipts": {
+      "type": "array",
+      "minItems": 26,
+      "maxItems": 26,
+      "items": { "$ref": "#/$defs/receipt" }
+    }
+  },
+  "$defs": {
+    "identity": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[^\\u0000-\\u001f\\u007f]+$" },
+    "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$", "not": { "const": "0000000000000000000000000000000000000000000000000000000000000000" } },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact", "factory_id", "descriptor_codec_id", "runtime_capability_id", "artifact_kind", "document_schema", "extension", "pack_schema_sha256", "protocol_path"],
+      "properties": {
+        "artifact": { "$ref": "#/$defs/identity" },
+        "factory_id": { "$ref": "#/$defs/identity" },
+        "descriptor_codec_id": { "$ref": "#/$defs/identity" },
+        "runtime_capability_id": { "$ref": "#/$defs/identity" },
+        "artifact_kind": { "$ref": "#/$defs/identity" },
+        "document_schema": { "$ref": "#/$defs/identity" },
+        "extension": { "$ref": "#/$defs/identity" },
+        "pack_schema_sha256": { "$ref": "#/$defs/digest" },
+        "protocol_path": { "type": "string", "minLength": 1, "maxLength": 1024, "pattern": "^🗿️artifacts/.+/📡️\\.protocol\\.semio$" }
+      }
+    }
+  }
+}

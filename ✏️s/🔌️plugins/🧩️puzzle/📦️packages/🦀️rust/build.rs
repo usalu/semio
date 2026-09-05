@@ -1,6 +1,28 @@
 //! 📎️ Build script: metabolism SVG icon table for `include!` by the puzzle2d artifact engine.
 
-use std::path::PathBuf;
+use std::collections::BTreeMap;
+use std::path::{Path, PathBuf};
+
+/// 🌱️Indexes exact source paths by the case-sensitive public icon identity.
+fn icon_sources(root: &Path, directory: &Path, sources: &mut BTreeMap<String, PathBuf>) {
+    for entry in std::fs::read_dir(directory).expect("read metabolism source directory") {
+        let entry = entry.expect("read metabolism source entry");
+        if directory == root && entry.file_name() == "🤖️generated" {
+            continue;
+        }
+        let kind = entry.file_type().expect("read metabolism source kind");
+        assert!(!kind.is_symlink(), "linked metabolism source is not admitted");
+        let path = entry.path();
+        if kind.is_dir() {
+            icon_sources(root, &path, sources);
+        } else if kind.is_file() && path.extension().and_then(|value| value.to_str()) == Some("svg") {
+            let stem = path.file_stem().and_then(|value| value.to_str()).expect("UTF-8 metabolism stem");
+            let id = stem.trim_start_matches(|value: char| !value.is_ascii_alphanumeric());
+            assert!(!id.is_empty() && id.chars().all(|value| value.is_ascii_alphanumeric() || value == '-' || value == '_'), "invalid metabolism identity");
+            assert!(sources.insert(id.to_owned(), path.strip_prefix(root).expect("metabolism owner path").to_owned()).is_none(), "duplicate metabolism identity");
+        }
+    }
+}
 
 fn main() {
     let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -8,22 +30,15 @@ fn main() {
     println!("cargo:rerun-if-changed={}", icons_src.display());
 
     let mut arms = String::new();
-    if icons_src.is_dir() {
-        for ent in std::fs::read_dir(&icons_src).unwrap_or_else(|e| panic!("read_dir {}: {e}", icons_src.display())) {
-            let ent = ent.unwrap_or_else(|e| panic!("dir entry: {e}"));
-            let path = ent.path();
-            if path.extension().and_then(|x| x.to_str()) != Some("svg") {
-                continue;
-            }
-            let file_stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or_else(|| panic!("bad file name {:?}", path));
-            // 🔣️ Asset file names carry the repo's emoji prefix (`🔣️capsule_J.svg`); the board catalog
-            // key is the bare stem after it.
-            let stem = file_stem.trim_start_matches(|c: char| !c.is_ascii_alphanumeric());
-            let safe = stem.chars().map(|c| if c.is_ascii_alphanumeric() { c } else { '_' }).collect::<String>();
-            let dest = out_dir().join(format!("icon_{safe}.svg"));
-            std::fs::copy(&path, &dest).unwrap_or_else(|e| panic!("copy {:?} -> {:?}: {e}", path, dest));
-            arms.push_str(&format!("\t\t\"{stem}\" => Some(include_str!(concat!(env!(\"OUT_DIR\"), \"/icon_{safe}.svg\"))),\n"));
-        }
+    let mut sources = BTreeMap::new();
+    icon_sources(&icons_src, &icons_src, &mut sources);
+    assert!(!sources.is_empty(), "metabolism catalog must not be empty");
+    for (id, path) in sources {
+        let dest = out_dir().join("🌱️metabolism").join(&path);
+        std::fs::create_dir_all(dest.parent().expect("metabolism output parent")).expect("create metabolism output directory");
+        std::fs::copy(icons_src.join(&path), &dest).expect("copy metabolism source");
+        let path = path.to_str().expect("UTF-8 metabolism path").replace('\\', "/");
+        arms.push_str(&format!("\t\t\"{id}\" => Some(include_str!(\"🌱️metabolism/{path}\")),\n"));
     }
 
     let gen = format!(
@@ -38,7 +53,7 @@ pub fn board_metabolism_icon_svg(key: &str) -> Option<&'static str> {{
 "#
     );
     let mut gen_path = out_dir();
-    gen_path.push("board_metabolism_icon_match.rs");
+    gen_path.push("🧩️metabolism.rs");
     std::fs::write(&gen_path, gen).unwrap_or_else(|e| panic!("write {}: {e}", gen_path.display()));
 }
 

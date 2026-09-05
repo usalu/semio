@@ -345,7 +345,7 @@ fn generic_output_schema(capability_id: &str) -> serde_json::Value {
 //#endregion 🔖️SchemaBuilders
 
 //#region 🔖️FrameworkDedup
-/// 🕹️ The 5 framework-injected action ids that carry `ActionKind::View`/`Shell` (not
+/// 🕹️ The 5 framework-injected action ids that carry `ActionKind::View`/`🐚️Shell` (not
 /// `History`/`Clipboard`/`Interaction`, which are already unambiguous by kind) — see
 /// `🛂️manifest/🦀️.rs` `history_action_definitions`/`clipboard_action_definitions`/
 /// `set_active_utility_action_definition`/etc.'s own doc comments for the full auto-injection story.

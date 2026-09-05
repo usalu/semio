@@ -1,0 +1,42 @@
+# 🧬️ SemioMeshSnapshot schema — real mirror of `🦀️.rs`.
+enum SemioTopology { POINTS LINES LINE_STRIP TRIANGLES TRIANGLE_STRIP TRIANGLE_FAN }
+
+type SemioPoint3 { x: Float! y: Float! z: Float! }
+type SemioUv { u: Float! v: Float! }
+type SemioRgba { r: Float! g: Float! b: Float! a: Float! }
+
+type SemioPrimitive {
+  id: String!
+  topology: SemioTopology!
+  positions: [SemioPoint3!]!
+  normals: [SemioPoint3!]!
+  uvs: [SemioUv!]!
+  colors: [SemioRgba!]!
+  indices: [Int!]!
+  materialId: String
+}
+
+type SemioMesh {
+  id: String!
+  primitives: [SemioPrimitive!]!
+}
+
+type SemioMaterial {
+  id: String!
+  baseColor: SemioRgba!
+  metallic: Float!
+  roughness: Float!
+}
+
+type SemioTexture {
+  id: String!
+  mime: String!
+  bytes: [Int!]!
+}
+
+type SemioMeshSnapshot {
+  schema: String! @state(class: ARTIFACT)
+  meshes: [SemioMesh!]! @state(class: ARTIFACT)
+  materials: [SemioMaterial!]! @state(class: ARTIFACT)
+  textures: [SemioTexture!]! @state(class: ARTIFACT)
+}

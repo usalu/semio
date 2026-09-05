@@ -5,7 +5,7 @@
   "displayName": "Resize Source Frame",
   "emoji": "🔲",
   "aggregateVariant": "ResizeSourceFrame",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "resize-source-frame",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

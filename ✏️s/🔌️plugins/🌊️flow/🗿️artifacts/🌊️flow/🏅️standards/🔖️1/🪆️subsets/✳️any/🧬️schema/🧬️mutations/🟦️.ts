@@ -71,11 +71,11 @@ export interface MoveWidgets {
  * fields stay snake_case on the wire, unlike every other sibling in this union.
  */
 export interface DuplicateWidget {
-  source_id: string;
-  new_id: string;
-  synapse_id: string;
-  from_port: string;
-  to_port: string;
+  sourceId: string;
+  newId: string;
+  synapseId: string;
+  fromPort: string;
+  toPort: string;
 }
 
 export type FlowMutation =

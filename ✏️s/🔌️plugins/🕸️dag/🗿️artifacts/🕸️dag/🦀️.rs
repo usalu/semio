@@ -223,23 +223,23 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.dag.standard.v1", "standard", "1", &[], None),
-        ("s.dag.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.dag.schema.artifact", "schema", "s.dag.dag", &[("schema", "s.dag.dag")], None),
-        ("s.dag.inference.artifact", "inference", "s.dag.dag.inference", &[("schema", "s.dag.dag.inference")], None),
-        ("s.dag.composer.native", "composer", "s.dag@1/*", &[("dialect", "s.dag@1/*")], None),
-        ("s.dag.composer.format-1", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
-        ("s.dag.composer.format-2", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.dag.grammar.1", "grammar", "dag.document", &[("grammar", "dag.document")], None),
-        ("s.dag.grammar.2", "grammar", "dag.op", &[("grammar", "dag.op")], None),
-        ("s.dag.grammar.3", "grammar", "dag.diff", &[("grammar", "dag.diff")], None),
-        ("s.dag.grammar.4", "grammar", "dag.pack", &[("grammar", "dag.pack")], None),
-        ("s.dag.grammar.5", "grammar", "dag.spr", &[("grammar", "dag.spr")], None),
-        ("s.dag.codec.document-1", "codec", "dag.dag:dag", &[("codec", "dag.dag"), ("extension", "dag")], None),
-        ("s.dag.localization.en", "localization", "DAG", &[], Some(("en", "DAG"))),
-        ("s.dag.localization.de", "localization", "Gerichteter azyklischer Graph", &[], Some(("de", "Gerichteter azyklischer Graph"))),
+        ("s.dag.dag.standard.v1", "standard", "1", &[], None),
+        ("s.dag.dag.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.dag.dag.schema.artifact", "schema", "s.dag.dag", &[("schema", "s.dag.dag")], None),
+        ("s.dag.dag.inference.artifact", "inference", "s.dag.dag.inference", &[("schema", "s.dag.dag.inference")], None),
+        ("s.dag.dag.composer.native", "composer", "s.dag.dag@1/*", &[("dialect", "s.dag.dag@1/*")], None),
+        ("s.dag.dag.composer.format-1", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
+        ("s.dag.dag.composer.format-2", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.dag.dag.grammar.1", "grammar", "dag.document", &[("grammar", "dag.document")], None),
+        ("s.dag.dag.grammar.2", "grammar", "dag.op", &[("grammar", "dag.op")], None),
+        ("s.dag.dag.grammar.3", "grammar", "dag.diff", &[("grammar", "dag.diff")], None),
+        ("s.dag.dag.grammar.4", "grammar", "dag.pack", &[("grammar", "dag.pack")], None),
+        ("s.dag.dag.grammar.5", "grammar", "dag.spr", &[("grammar", "dag.spr")], None),
+        ("s.dag.dag.codec.document-1", "codec", "dag.dag:dag", &[("codec", "dag.dag"), ("codec-extension", "7:dag.dag:dag")], None),
+        ("s.dag.dag.localization.en", "localization", "DAG", &[], Some(("en", "DAG"))),
+        ("s.dag.dag.localization.de", "localization", "Gerichteter azyklischer Graph", &[], Some(("de", "Gerichteter azyklischer Graph"))),
     ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.dag")?);
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.dag.dag")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
         for (namespace, value) in *claims {

@@ -10,6 +10,7 @@
 //! from any module in this crate.
 
 use crate::artifacts::home::SHomeSnapshot;
+use crate::editor::home::commands::apply_directory_event_page;
 use crate::editor::home::commands::set_active_panel_tab;
 use crate::editor::home::commands::{bind_space_file, create_studio, import_space, open_space};
 use crate::editor::home::commands::{copy_invite_link, create_space, delete_space, fold_directory_events, presence_heartbeat, rename_space, set_client, share_space};
@@ -32,6 +33,7 @@ app_commands! {
     /// 🎯️ `HomeApp::Command` — the SOLE dispatch surface for the Home launcher's own behavior, one
     /// variant per action declared in `create_home_app`'s manifest.
     pub enum HomeCommand for SHomeSnapshot, crate::artifacts::home::op::SHomeMutation, HomeConfig, crate::editor::home::config::HomeConfigMutation {
+        "applyDirectoryEventPage" as "apply-directory-event-page" => apply_directory_event_page::ApplyDirectoryEventPage,
         "createStudio" as "create-studio" => create_studio::CreateStudio,
         "bindSpaceFile" as "bind-space-file" => bind_space_file::BindSpaceFile,
         "importSpace" as "import-space" => import_space::ImportSpace,
@@ -56,15 +58,16 @@ app_commands! {
 
 //#region 🧵️RetainedCommands
 const HOME_RETAINED_TOOL_IDS: &[&str] = &[
-    "openSpace", "navigateVirtualFileSystemNode", "goHome", "setActivePanelTab", "createSpace", "deleteSpace", "shareSpace", "copyInviteLink", "presenceHeartbeat", "setClient",
+    "applyDirectoryEventPage", "openSpace", "navigateVirtualFileSystemNode", "goHome", "setActivePanelTab", "createSpace", "deleteSpace", "shareSpace", "copyInviteLink", "presenceHeartbeat", "setClient",
 ];
 const HOME_RETAINED_PAYLOAD_SCHEMA: &str = "space.home.tool-command.v1";
-const HOME_RETAINED_RAW_BYTES: usize = 8_192;
+const HOME_RETAINED_RAW_BYTES: usize = 128 * 1024;
 const HOME_RETAINED_WORK_ITEMS: usize = 1;
 const HOME_CONFIG_VALUE_BYTES: usize = 512;
-const HOME_CONFIG_BASE_BYTES: usize = 512;
-const HOME_CONFIG_STEP_BYTES: usize = 4_096;
+const HOME_CONFIG_BASE_BYTES: usize = 4 * 1024 * 1024;
+const HOME_CONFIG_STEP_BYTES: usize = 16 * 1024 * 1024;
 const HOME_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "applyDirectoryEventPage", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "openSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "navigateVirtualFileSystemNode", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "goHome", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -78,11 +81,12 @@ const HOME_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = 
 ];
 
 fn home_retained_contract() -> ToolExecutionContract {
-    ToolExecutionContract::resumable(HOME_RETAINED_RAW_BYTES, 64, 1, 65_536, 7_500, 1, 1)
+    ToolExecutionContract::resumable(HOME_RETAINED_RAW_BYTES, 256, 1, HOME_CONFIG_STEP_BYTES, 7_500, 1, 1)
 }
 
 fn home_retained_extent(command: &HomeCommand, _snapshot: &SHomeSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     let admitted = match command {
+        HomeCommand::ApplyDirectoryEventPage(payload) => payload.page_json.len(),
         HomeCommand::OpenSpace(payload) => payload.space_id.len(),
         HomeCommand::NavigateVirtualFileSystemNode(payload) => payload.node_id.len(),
         HomeCommand::GoHome(_) | HomeCommand::PresenceHeartbeat(_) => 0,
@@ -174,7 +178,16 @@ struct HomeConfigPreparation {
 }
 
 fn home_config_retained_bytes(config: &HomeConfig) -> usize {
-    config.active_panel_tab.len().saturating_add(config.locale.len()).saturating_add(config.directory_json.len()).saturating_add(config.client_id.len()).saturating_add(config.client_name.len())
+    config
+        .active_panel_tab
+        .len()
+        .saturating_add(config.locale.len())
+        .saturating_add(config.directory_json.len())
+        .saturating_add(config.directory_session_binding_sha256.len())
+        .saturating_add(config.directory_receipt_sha256.len())
+        .saturating_add(std::mem::size_of_val(&config.directory_authorization_generation))
+        .saturating_add(config.client_id.len())
+        .saturating_add(config.client_name.len())
 }
 
 fn home_config_edit(forward: HomeConfigMutation, inverse: HomeConfigMutation, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<HomeConfigMutation> {
@@ -211,24 +224,38 @@ fn home_config_edit_bytes(edit: &protocol::Edit<HomeConfigMutation>) -> Result<u
 
 impl store::ArtifactStoreOneItemPreparationFactory<HomeConfig, HomeConfigMutation> for HomeConfigPreparationFactory {
     fn preflight(&self, mutation: &HomeConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        let mutation_bytes = match mutation {
-            HomeConfigMutation::SetActivePanelTab { tab_id } => tab_id.len(),
-            HomeConfigMutation::SetClient { client_id, client_name } => client_id.len().saturating_add(client_name.len()),
+        let (mutation_bytes, maximum_bytes) = match mutation {
+            HomeConfigMutation::SetActivePanelTab { tab_id } => (tab_id.len(), HOME_CONFIG_VALUE_BYTES),
+            HomeConfigMutation::SetClient { client_id, client_name } => (client_id.len().saturating_add(client_name.len()), HOME_CONFIG_VALUE_BYTES),
+            HomeConfigMutation::ReplaceDirectoryProjection { directory_json, session_binding_sha256, authorization_generation, receipt_sha256 }
+                if *authorization_generation > 0
+                    && directory_json.len() <= HOME_CONFIG_BASE_BYTES
+                    && crate::editor::home::config::directory_projection_state_is_valid(directory_json, session_binding_sha256, *authorization_generation, receipt_sha256) =>
+            {
+                (directory_json.len().saturating_add(session_binding_sha256.len()).saturating_add(receipt_sha256.len()).saturating_add(8), HOME_CONFIG_BASE_BYTES + 136)
+            }
             _ => return Err("Space Home config preparation rejects non-retained mutations".into()),
         };
-        if lane != store::HistoryLane::Document || mutation_bytes > HOME_CONFIG_VALUE_BYTES || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+        if lane != store::HistoryLane::Document || mutation_bytes > maximum_bytes || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("Space Home config preparation rejected its lane or byte envelope".into());
         }
         Ok(store::ArtifactStoreOneItemFootprint { work_items: 3, retained_bytes: HOME_CONFIG_STEP_BYTES })
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<HomeConfig, HomeConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<HomeConfig, HomeConfigMutation>> {
-        let mutation_bytes = match &request.mutation {
-            HomeConfigMutation::SetActivePanelTab { tab_id } => tab_id.len(),
-            HomeConfigMutation::SetClient { client_id, client_name } => client_id.len().saturating_add(client_name.len()),
+        let (mutation_bytes, maximum_bytes) = match &request.mutation {
+            HomeConfigMutation::SetActivePanelTab { tab_id } => (tab_id.len(), HOME_CONFIG_VALUE_BYTES),
+            HomeConfigMutation::SetClient { client_id, client_name } => (client_id.len().saturating_add(client_name.len()), HOME_CONFIG_VALUE_BYTES),
+            HomeConfigMutation::ReplaceDirectoryProjection { directory_json, session_binding_sha256, authorization_generation, receipt_sha256 }
+                if *authorization_generation > 0
+                    && directory_json.len() <= HOME_CONFIG_BASE_BYTES
+                    && crate::editor::home::config::directory_projection_state_is_valid(directory_json, session_binding_sha256, *authorization_generation, receipt_sha256) =>
+            {
+                (directory_json.len().saturating_add(session_binding_sha256.len()).saturating_add(receipt_sha256.len()).saturating_add(8), HOME_CONFIG_BASE_BYTES + 136)
+            }
             _ => return Err(request),
         };
-        if request.lane != store::HistoryLane::Document || mutation_bytes > HOME_CONFIG_VALUE_BYTES || request.description.as_ref().is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+        if request.lane != store::HistoryLane::Document || mutation_bytes > maximum_bytes || request.description.as_ref().is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
             return Err(request);
         }
         Ok(Box::new(HomeConfigPreparation {
@@ -254,6 +281,12 @@ impl store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation> for 
                     client_id: std::mem::replace(&mut post.client_id, client_id.clone()),
                     client_name: std::mem::replace(&mut post.client_name, client_name.clone()),
                 },
+                HomeConfigMutation::ReplaceDirectoryProjection { directory_json, session_binding_sha256, authorization_generation, receipt_sha256 } => HomeConfigMutation::ReplaceDirectoryProjection {
+                    directory_json: std::mem::replace(&mut post.directory_json, directory_json.clone()),
+                    session_binding_sha256: std::mem::replace(&mut post.directory_session_binding_sha256, session_binding_sha256.clone()),
+                    authorization_generation: std::mem::replace(&mut post.directory_authorization_generation, *authorization_generation),
+                    receipt_sha256: std::mem::replace(&mut post.directory_receipt_sha256, receipt_sha256.clone()),
+                },
                 _ => return Err("Space Home config preparation received a non-retained mutation".into()),
             };
             self.candidate = Some((post, inverse, mutation));
@@ -269,7 +302,7 @@ impl store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation> for 
             let (post, edit) = self.sealed_candidate.as_ref().ok_or_else(|| "Space Home config preparation lost its semantic edit".to_string())?;
             let bytes = home_config_edit_bytes(edit)?;
             if bytes.saturating_add(home_config_retained_bytes(post)).saturating_add(512) > HOME_CONFIG_STEP_BYTES {
-                return Err("Space Home config publication exceeds the 4096-byte complete envelope".into());
+                return Err("Space Home config publication exceeds its complete retained envelope".into());
             }
             self.serialized_bytes = Some(bytes);
             self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.checkpoint.completed_bytes.saturating_add(bytes as u64), digest: [0; 32] };
@@ -341,7 +374,7 @@ impl ArtifactEditor for HomeApp {
         factory: "HomeRetainedCommandJobFactory",
         factory_type: HomeRetainedCommandJobFactory,
         contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 65_536, 7_500),
-        tools: ["openSpace", "navigateVirtualFileSystemNode", "goHome", "setActivePanelTab", "createSpace", "deleteSpace", "shareSpace", "copyInviteLink", "presenceHeartbeat", "setClient"]
+        tools: ["applyDirectoryEventPage", "openSpace", "navigateVirtualFileSystemNode", "goHome", "setActivePanelTab", "createSpace", "deleteSpace", "shareSpace", "copyInviteLink", "presenceHeartbeat", "setClient"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -404,6 +437,9 @@ impl ArtifactEditor for HomeApp {
     fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<HomeCommand, Fault> {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(DslValue::as_str).map(str::to_string);
         match action {
+            "applyDirectoryEventPage" => Ok(HomeCommand::ApplyDirectoryEventPage(apply_directory_event_page::ApplyDirectoryEventPage {
+                page_json: str_field("pageJson").ok_or_else(|| Fault::from("s.home.directory-event-page-input-missing"))?,
+            })),
             "createStudio" => Ok(HomeCommand::CreateStudio(create_studio::CreateStudio {
                 name: str_field("name").unwrap_or_else(|| "Untitled".into()),
                 kind: str_field("kind").unwrap_or_else(|| "catalog".into()),
@@ -558,6 +594,7 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
                 .submit_label(LocalizedLabel::native("Share", "Teilen")),
         )
         .shell_action("copyInviteLink", LocalizedLabel::native("Copy Invite Link", "Einladungslink kopieren"))
+        .view_action("applyDirectoryEventPage", LocalizedLabel::native("Apply Directory Event Page", "Verzeichnis-Ereignisseite anwenden"))
         .view_action("foldDirectoryEvents", LocalizedLabel::native("Fold Directory Events", "Verzeichnisereignisse einspielen"))
         .view_action("presenceHeartbeat", LocalizedLabel::native("Presence Heartbeat", "Präsenz-Heartbeat"))
         .view_action("setClient", LocalizedLabel::native("Set Client", "Client setzen"))
@@ -574,6 +611,7 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("renameSpace", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("shareSpace", InteractiveJobClassification::Migrated)
         .action_interactive_job("copyInviteLink", InteractiveJobClassification::Migrated)
+        .action_interactive_job("applyDirectoryEventPage", InteractiveJobClassification::Migrated)
         .action_interactive_job("foldDirectoryEvents", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("presenceHeartbeat", InteractiveJobClassification::Migrated)
         .action_interactive_job("setClient", InteractiveJobClassification::Migrated)
@@ -651,16 +689,17 @@ mod tests {
             base: None, mutation: Some(HomeConfigMutation::SetActivePanelTab { tab_id: value }), description: None, authority: None, candidate: None, sealed_candidate: None, serialized_bytes: None, prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
         };
-        let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4_096 };
+        let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: HOME_CONFIG_STEP_BYTES };
         preparation.cancel();
         assert!(matches!(preparation.advance(grant).expect("cancelled step"), store::ArtifactStoreOneItemPreparationStep::Blocked));
         preparation.begin_close();
         assert!(matches!(preparation.close_step(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 }).expect("undersized close"), store::SnapshotRetirementStep::Blocked));
-        assert!(matches!(preparation.close_step(grant).expect("bounded close"), store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 4_096 }));
+        assert!(matches!(preparation.close_step(grant).expect("bounded close"), store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes } if released_bytes == HOME_CONFIG_STEP_BYTES));
         assert!(matches!(preparation.close_step(grant).expect("terminal close"), store::SnapshotRetirementStep::Complete));
         assert!(preparation.terminal_is_empty());
         let mut counter = HomeConfigByteCounter { bytes: 0 };
-        assert_eq!(counter.write(&[0; 4_096]).expect("maximum serialized envelope"), 4_096);
+        let maximum = vec![0; HOME_CONFIG_STEP_BYTES];
+        assert_eq!(counter.write(&maximum).expect("maximum serialized envelope"), HOME_CONFIG_STEP_BYTES);
         assert!(counter.write(&[0]).is_err());
     }
     //#endregion 🧪️RetainedCommandEnvelope

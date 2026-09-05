@@ -59,42 +59,42 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    ArtifactDefinition::new(ArtifactIdentity::parse("s.home")?)
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.home.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.space.home")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.space.home")?)?)?
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.space.home")?)
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.space.home")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.space.home")?)?)?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.home.inference.artifact")?, ArtifactCapabilityKind::inference())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.inference.artifact")?, ArtifactCapabilityKind::inference())
                 .descriptor(b"s.space.home.inference")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.space.home.inference")?)?,
         )?
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.home.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.home@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.home@1/*")?)?)?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.space.home@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.space.home@1/*")?)?)?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.home.composer.zip")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.composer.zip")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.zip@2.0/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.zip@2.0/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.home.composer.csv")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.composer.csv")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.csv@rfc4180/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.csv@rfc4180/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.home.composer.xlsx")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.composer.xlsx")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.xlsx@ecma-376/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.xlsx@ecma-376/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.home.composer.json")?, ArtifactCapabilityKind::composer())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.composer.json")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.json@rfc8259/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.home.codec.document")?, ArtifactCapabilityKind::codec())
+            ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.codec.document")?, ArtifactCapabilityKind::codec())
                 .descriptor(b"s.home:shome")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "s.home")?)?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "shome")?)?,
+                .claim(ArtifactIdentityClaim::codec_extension("s.home", "shome")?)?,
         )?
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.home.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Home")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Home")?)?)?
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.home.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Startseite")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Startseite")?)?)
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Home")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Home")?)?)?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Startseite")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Startseite")?)?)
 }
 
 /// 🔖️ Assembles s.home's typed runtime declaration.

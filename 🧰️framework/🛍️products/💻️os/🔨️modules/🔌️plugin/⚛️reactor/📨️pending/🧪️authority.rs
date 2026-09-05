@@ -2,7 +2,7 @@
 use super::*;
 use super::super::instance_lifetime::NativeCloseKey;
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧪️authority.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🛂️authority.json")).unwrap() }
 
 fn patch() -> UiPatch {
     UiPatch { surface: ui_contract::SurfaceId::try_from(fixture()["current"]["surface"].as_str().unwrap()).unwrap(), base_revision: ui_contract::UiRevision(0), revision: ui_contract::UiRevision(1), ops: Default::default() }

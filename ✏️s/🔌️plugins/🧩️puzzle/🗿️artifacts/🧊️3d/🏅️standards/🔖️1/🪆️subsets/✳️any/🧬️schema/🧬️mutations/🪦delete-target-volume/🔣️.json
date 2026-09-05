@@ -5,7 +5,7 @@
   "displayName": "Delete Target Volume",
   "emoji": "🪦",
   "aggregateVariant": "DeleteTargetVolume",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "delete-target-volume",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

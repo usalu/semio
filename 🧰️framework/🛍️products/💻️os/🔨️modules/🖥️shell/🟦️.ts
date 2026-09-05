@@ -1,6 +1,6 @@
 /** 🖥️ TypeScript twin of the Rust shell-state SSOT (`🦀️.rs`): the same `ShellState` +
  * `ShellCommand` + `ShellEvent` + `ShellError` vocabulary (re-exported from the owned-schema mirror at
- * `./🤖️generated/🟦️shell.js`) plus an independent `reduce()` implementation with the same
+ * `./🤖️generated/🟦️.js`) plus an independent `reduce()` implementation with the same
  * semantics. This file is NOT generated — it is hand-written to the same contract the Rust
  * `reduce` implements, and the parity fixtures under `../🧫️fixtures/*.json` are what keeps the two
  * honest: `component.rs`'s `fixtures_produce_expected_output` test re-derives every fixture
@@ -10,8 +10,8 @@
  *
  * Regenerate the type mirror via `bun nx run @semio-tech/framework-os-shell-rs:typegen`.
  */
-export * from "./🤖️generated/🟦️shell.js";
-import type { Anchor, ByAnchor, Conflict, DialogState, ExtraWindowInstance, LoadedPlugin, ShellCommand, ShellError, ShellEvent, ShellState } from "./🤖️generated/🟦️shell.js";
+export * from "./🤖️generated/🟦️.js";
+import type { Anchor, ByAnchor, Conflict, DialogState, ExtraWindowInstance, LoadedPlugin, ShellCommand, ShellError, ShellEvent, ShellState } from "./🤖️generated/🟦️.js";
 
 //#region 🛰️CapabilityIds
 /** 🛰️ `ShellCommand["type"]` → `ShellCapability.id`. Must stay in lockstep with

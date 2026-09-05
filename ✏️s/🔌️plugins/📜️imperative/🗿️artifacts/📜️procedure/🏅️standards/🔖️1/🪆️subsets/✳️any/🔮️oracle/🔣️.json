@@ -1,0 +1,205 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution. `procedure.document` is a semio-NATIVE program document composed over an `s.stdio.semio.flow` child and an `s.stdio.semio.text` child, so no oracle is registered and the evidence rests on the four committed per-kind vectors plus the inverse law (see noOracleDecisions).",
+  "oracles": [
+    {
+      "id": "procedure-1-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "capabilities": [
+        "procedure-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "🐍️ No third-party library reads or writes procedure.document's .procedure.dsl.semio carrier — a semio-NATIVE program document. The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution, which is why package is empty. The implementation is ../../../🧪️tests/mutate-procedure-1/🐍️component.py, written from this subset's own committed ../🧬️schema/📸️snapshot/🔣️.json and each mutation's 🧬️.schema.json, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's create/delete/reorder/edit verb entries and 📓️derivation-rules.md's collection recipes. It imports nothing from the Rust it judges and transliterates none of it. All four committed vectors are degenerate at the document projection (two Fatal/Error refusals, two Warning no-ops), so the second implementation computes and cross-checks the OUTCOME (duplicate-id, target-missing, both no-op guards) against the four addressed program trees, transcribed verbatim from this feature's own committed Examples table (the program column) since the document snapshot itself never carries the step tree, only a content-addressed handle to it. All four kinds' forward and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan — all eight passed. UNDER PROTOCOL V2 this registration is classified cross-semio-implementation — a required SUPPLEMENTAL oracle that does not discharge procedure-1-mutate's external-oracle requirement; a qualifying third-party reference is still owed and none exists for a semio-native nested program document.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 4 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.imperative.procedure",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "s.imperative.procedure",
+              "reason": "No third-party library in any ecosystem reads or writes this repository's own document format, per this entry's own rationale; the ecosystem's package index was searched by name and by domain keywords with no match."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's",
+        "fixtureCoverage": {
+          "vectors": 4,
+          "capabilitiesCovered": [
+            "procedure-1-mutate"
+          ]
+        }
+      }
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "procedure-1-any",
+      "capability": "procedure-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "create-step",
+          "sourceMutationDirectoryName": "🌱create-step",
+          "mutationDirectoryName": "🌱create-step",
+          "scenarios": [
+            {
+              "id": "rejects-a-duplicate-step-id-at-the-root-path",
+              "directoryName": "🧪️rejects-a-duplicate-step-id-at-the-root-path"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-step",
+          "sourceMutationDirectoryName": "🗑️delete-step",
+          "mutationDirectoryName": "🗑️delete-step",
+          "scenarios": [
+            {
+              "id": "rejects-a-root-step-id-addressed-inside-a-branch-body",
+              "directoryName": "🧪️rejects-a-root-step-id-addressed-inside-a-branch-body"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-step-params",
+          "sourceMutationDirectoryName": "🔧edit-step-params",
+          "mutationDirectoryName": "🔧edit-step-params",
+          "scenarios": [
+            {
+              "id": "warns-that-step-1-already-carries-the-requested-params",
+              "directoryName": "🧪️warns-that-step-1-already-carries-the-requested-params"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-steps",
+          "sourceMutationDirectoryName": "🔀reorder-steps",
+          "mutationDirectoryName": "🔀reorder-steps",
+          "scenarios": [
+            {
+              "id": "warns-that-an-over-clamped-index-leaves-the-tail-step-in-place",
+              "directoryName": "🧪️warns-that-an-over-clamped-index-leaves-the-tail-step-in-place"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "create-step",
+        "delete-step",
+        "reorder-steps",
+        "edit-step-params"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.imperative.procedure",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "create-step",
+          "capability": "procedure-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-step",
+            "bridgeVersion": 1,
+            "variant": "CreateStep"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedure-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-step",
+          "capability": "procedure-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-step",
+            "bridgeVersion": 1,
+            "variant": "DeleteStep"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedure-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "edit-step-params",
+          "capability": "procedure-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "edit-step-params",
+            "bridgeVersion": 1,
+            "variant": "EditStepParams"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedure-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "reorder-steps",
+          "capability": "procedure-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-steps",
+            "bridgeVersion": 1,
+            "variant": "ReorderSteps"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedure-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -4,7 +4,7 @@ use crate::{GatewayError, GatewayErrorCode};
 use semio_framework_async::{HostAsyncRuntime, OperationContext};
 use semio_framework_os_kernel::os_directory::{
     client::{DirectoryClient, DirectoryClientError, DirectoryTransport, HubSocketGrantSource, LocalHubCredential},
-    descriptor_digest_v1, hex_lower, DirectoryEventBody, DirectoryStreamMessage, DocumentScope, DocumentView, MemberView, SpaceView,
+    descriptor_digest_v1, hex_lower, DirectoryEventBody, DirectorySpaceDetailV1, DirectoryStreamMessage, DocumentScope, DocumentView, MemberSpaceViewV1, MemberView,
 };
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -33,7 +33,7 @@ pub struct AuthorizedDocumentView {
 pub struct AuthorizedDescriptorSnapshot {
     pub authenticated_user_id: String,
     pub session_expires_at_ms: i64,
-    pub space: SpaceView,
+    pub space: MemberSpaceViewV1,
     pub membership: MemberView,
     pub observed_event_seq: u64,
     pub documents: HashMap<DocumentScope, AuthorizedDocumentView>,
@@ -186,8 +186,12 @@ impl HubRemoteBinding {
             Ok(detail) => detail,
             Err(error) => return self.fail(generation, map_client_error(error)),
         };
+        let (space, members, documents) = match detail {
+            DirectorySpaceDetailV1::Member { space, members, documents } | DirectorySpaceDetailV1::Author { space, members, documents, .. } => (space, members, documents),
+            DirectorySpaceDetailV1::Public { .. } => return self.fail(generation, HubBindingError::MembershipRequired),
+        };
         let observed_event_seq = self.observed_event_seq.load(Ordering::SeqCst);
-        let snapshot = match self.validate_snapshot(session.user_id, session.expires_at_ms, detail.space, detail.members, detail.documents, observed_event_seq, ctx) {
+        let snapshot = match self.validate_snapshot(session.user_id, session.expires_at_ms, space, members, documents, observed_event_seq, ctx) {
             Ok(snapshot) => Arc::new(snapshot),
             Err(error) => return self.fail(generation, error),
         };
@@ -299,7 +303,7 @@ impl HubRemoteBinding {
         &self,
         authenticated_user_id: String,
         session_expires_at_ms: i64,
-        space: SpaceView,
+        space: MemberSpaceViewV1,
         members: Vec<MemberView>,
         documents: Vec<DocumentView>,
         observed_event_seq: u64,
@@ -310,7 +314,7 @@ impl HubRemoteBinding {
         }
         validate_identity("space id", &space.id)?;
         let membership = members.into_iter().find(|member| member.user_id == authenticated_user_id).ok_or(HubBindingError::MembershipRequired)?;
-        if space.role != Some(membership.role) {
+        if space.role != membership.role {
             return Err(HubBindingError::MembershipRequired);
         }
         validate_document_count(documents.len(), space.document_count)?;
@@ -534,7 +538,7 @@ impl NativeHubBindingDriver {
             DirectoryStreamTurn::Closed => {
                 return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "hub directory stream authority changed before activation").retryable());
             }
-            DirectoryStreamTurn::Dial { .. } | DirectoryStreamTurn::Message(_) | DirectoryStreamTurn::ReconnectAt(_) => {
+            DirectoryStreamTurn::Dial { .. } | DirectoryStreamTurn::DialScoped { .. } | DirectoryStreamTurn::Message(_) | DirectoryStreamTurn::ReconnectAt(_) | DirectoryStreamTurn::Revoked(_) => {
                 return Err(GatewayError::new(GatewayErrorCode::Internal, "hub directory stream returned an invalid activation turn"));
             }
         }
@@ -568,9 +572,9 @@ impl NativeHubBindingDriver {
                                             operation_now,
                                             Err(semio_framework_os_kernel::os_directory::client::TransportError::Io("authenticated authority refresh failed before directory dial".to_string())),
                                         ) {
-                                            DirectoryStreamTurn::Closed => break,
+                                            DirectoryStreamTurn::Closed | DirectoryStreamTurn::Revoked(_) => break,
                                             DirectoryStreamTurn::ReconnectAt(_) | DirectoryStreamTurn::Idle => {}
-                                            DirectoryStreamTurn::Dial { .. } | DirectoryStreamTurn::Message(_) => break,
+                                            DirectoryStreamTurn::Dial { .. } | DirectoryStreamTurn::DialScoped { .. } | DirectoryStreamTurn::Message(_) => break,
                                         }
                                         continue;
                                     }
@@ -582,15 +586,15 @@ impl NativeHubBindingDriver {
                                 Ok(connection) => {
                                     match complete_authorized_directory_dial(&mut stream, &thread_binding, &ctx, authority_generation, operation_now, connection) {
                                         DirectoryStreamTurn::Idle => {}
-                                        DirectoryStreamTurn::Closed => break,
-                                        DirectoryStreamTurn::Dial { .. } | DirectoryStreamTurn::Message(_) | DirectoryStreamTurn::ReconnectAt(_) => break,
+                                        DirectoryStreamTurn::Closed | DirectoryStreamTurn::Revoked(_) => break,
+                                        DirectoryStreamTurn::Dial { .. } | DirectoryStreamTurn::DialScoped { .. } | DirectoryStreamTurn::Message(_) | DirectoryStreamTurn::ReconnectAt(_) => break,
                                     }
                                 }
                                 Err(error) => {
                                     match stream.complete_dial(operation_now, Err(semio_framework_os_kernel::os_directory::client::TransportError::Io(error.to_string()))) {
-                                        DirectoryStreamTurn::Closed => break,
+                                        DirectoryStreamTurn::Closed | DirectoryStreamTurn::Revoked(_) => break,
                                         DirectoryStreamTurn::ReconnectAt(_) | DirectoryStreamTurn::Idle => {}
-                                        DirectoryStreamTurn::Dial { .. } | DirectoryStreamTurn::Message(_) => break,
+                                        DirectoryStreamTurn::Dial { .. } | DirectoryStreamTurn::DialScoped { .. } | DirectoryStreamTurn::Message(_) => break,
                                     }
                                 }
                             }
@@ -615,7 +619,7 @@ impl NativeHubBindingDriver {
                             }
                         }
                         DirectoryStreamTurn::Idle => std::thread::sleep(std::time::Duration::from_millis(10)),
-                        DirectoryStreamTurn::Closed => break,
+                        DirectoryStreamTurn::Closed | DirectoryStreamTurn::Revoked(_) | DirectoryStreamTurn::DialScoped { .. } => break,
                     }
                 }
                 stream.close();

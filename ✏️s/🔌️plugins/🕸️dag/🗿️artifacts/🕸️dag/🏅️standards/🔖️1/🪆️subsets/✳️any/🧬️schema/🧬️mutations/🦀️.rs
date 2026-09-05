@@ -61,7 +61,7 @@ pub use super::replace_node_properties::mutation::{replace_node_properties, Repl
 pub use super::resize_node::mutation::{resize_node, ResizeNode};
 
 /// 🏷️ Kebab-case spelling of every [`DagMutation`] variant, in declaration order — the vocabulary
-/// the `dag-1-any` mutation catalog (`../../🔣️oracle.json`) declares and `mutate-dag-1`'s
+/// the `dag-1-any` mutation catalog (`../../🔣️oracle.json`) declares and `🌳️mutate-dag-1`'s
 /// exhaustive case measures itself against. There is deliberately no `no-mutation` and no
 /// `set-snapshot`: whole-collection and whole-document replacement are banned vocabulary here (see
 /// the enum's own docstring) and reach the store through `ArtifactStore::reset` instead.
@@ -88,7 +88,7 @@ pub const KINDS: &[&str] = &[
 /// 📥️ Decodes this facet's internally-tagged (`{"mutation": "moveNode", …}`, camelCase payload
 /// fields) JSON projection — exactly the shape the committed
 /// `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` specification vectors and
-/// `mutate-dag-1`'s own `Examples` payloads carry — into a real [`DagMutation`]. The test adapter
+/// `🌳️mutate-dag-1`'s own `Examples` payloads carry — into a real [`DagMutation`]. The test adapter
 /// cannot reach `serde_json` (the generated host links only `semio-repo-test-host` and this crate)
 /// and cannot name this crate's private `protocol`/`store` extern-crate aliases either, so the
 /// bridge belongs here rather than there.
@@ -116,7 +116,7 @@ pub fn inverse_dag_mutation_steps(mutation: &DagMutation, base: &DagSnapshot) ->
 /// verb in this vocabulary with NO rejection branch on an empty scene, so its committed
 /// `mutation.duplicate-id` vector is only reachable once the id it collides with is actually
 /// present — which is precisely what
-/// `🌱create-node/🧪️tests/rejects-a-duplicate-node-id/🦀️.rs::before` does with
+/// `🌱create-node/🧪️tests/🚫️rejects-a-duplicate-node-id/🦀️.rs::before` does with
 /// its exact child owner. Exposed here because seeding from the committed payload is what keeps the
 /// vector free of any transcription: the seeded node IS the mutation JSON's own `node`.
 pub fn seed_dag_working_scene_with(snapshot: &mut DagSnapshot, mutation: &DagMutation) -> bool {
@@ -141,7 +141,7 @@ pub async fn inverse_dag_mutation(snapshot: &DagSnapshot, mutation: &DagMutation
 /// 🔀️ Diffs two snapshots into a minimal typed semantic mutation set — the re-expression the
 /// former whole-collection and whole-document replacement call sites (whole-fixture paste,
 /// auto-reorganize) now go through instead of a snapshot swap. Doesn't detect node id renames
-/// (shows as a delete+create pair); `🎮️commands/🔧️add-node::rename_dag_node` uses the dedicated
+/// (shows as a delete+create pair); `🎮️commands/➕️add-node::rename_dag_node` uses the dedicated
 /// `rename-node` mutation directly for that gesture instead of this generic differ.
 pub async fn dag_snapshot_mutations(before: &DagSnapshot, after: &DagSnapshot) -> Vec<DagMutation> {
     let before_nodes = before.nodes();
@@ -215,7 +215,7 @@ mod tests {
 
     /// 🏷️ The three declarations of this vocabulary — the enum, [`KINDS`] and the committed catalog
     /// — must agree, in spelling AND in order. The framework never parses Rust, so without this
-    /// test `KINDS` could drift from the enum and the catalog could keep measuring `mutate-dag-1`
+    /// test `KINDS` could drift from the enum and the catalog could keep measuring `🌳️mutate-dag-1`
     /// against a vocabulary the artifact no longer has.
     #[test]
     fn kinds_match_the_enum_and_the_catalog() {
@@ -224,7 +224,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔮️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

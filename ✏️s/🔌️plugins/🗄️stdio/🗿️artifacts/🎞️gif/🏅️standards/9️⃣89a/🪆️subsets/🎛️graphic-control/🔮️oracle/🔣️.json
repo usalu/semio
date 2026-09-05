@@ -1,0 +1,365 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "Ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION: split out of the former `✳️any` catch-all. The GIF89a Specification (CompuServe, 1990) §23 defines the Graphic Control Extension as a self-contained, optional block (block label 0x21 0xF9) carrying exactly four fields -- disposal method, user-input flag, transparent-color flag/delay time, transparent color index -- distinct from the core Image Descriptor/color-table/raster-data structure GIF87a already had. `set-frame-delay`/`set-frame-disposal`/`set-frame-transparency`/`set-frame-user-input` are that block's own four fields, so they are owned here rather than by `🧱️base`. The leaf struct definitions physically moved into this subset's own `🧬️schema/🧬️mutations`; the `GifMutation` enum, its diff dispatch and the real binary/text codec they compile into remain in `🧱️base` (the whole-frame-stream reader/writer is one shared, always-co-resident implementation -- moving it would duplicate the codec for a format with no alternate standalone document profile to justify it, the same family-module reuse this repo already uses for svg tiny/basic).",
+  "oracles": [],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.gif",
+      "standard": "89a",
+      "subset": "graphic-control",
+      "standardDirectoryName": "9️⃣89a",
+      "subsetDirectoryName": "🎛️graphic-control",
+      "mutations": [
+        {
+          "id": "set-frame-delay",
+          "capability": "gif-89a-graphic-control-mutate",
+          "payloadSchema": "../../🧱️base/🧬️schema/🧬️mutations/⏱️set-frame-delay/🦀️.rs#SetFrameDelay",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-frame-delay",
+            "bridgeVersion": 1,
+            "variant": "GifMutation::SetFrameDelay"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gif-89a-graphic-control-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "gif-89a-any-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "gif"
+          ],
+          "invariants": {
+            "local": [
+              "frame-delay-centiseconds-agree"
+            ],
+            "enclosing": [
+              "gif-reencode-round-trip-agrees-with-reference-decoder"
+            ]
+          }
+        },
+        {
+          "id": "set-frame-disposal",
+          "capability": "gif-89a-graphic-control-mutate",
+          "payloadSchema": "../../🧱️base/🧬️schema/🧬️mutations/♻️set-frame-disposal/🦀️.rs#SetFrameDisposal",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-frame-disposal",
+            "bridgeVersion": 1,
+            "variant": "GifMutation::SetFrameDisposal"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gif-89a-graphic-control-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "gif-89a-any-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "gif"
+          ],
+          "invariants": {
+            "local": [
+              "frame-disposal-method-agrees"
+            ],
+            "enclosing": [
+              "gif-reencode-round-trip-agrees-with-reference-decoder"
+            ]
+          }
+        },
+        {
+          "id": "set-frame-transparency",
+          "capability": "gif-89a-graphic-control-mutate",
+          "payloadSchema": "../../🧱️base/🧬️schema/🧬️mutations/👻set-frame-transparency/🦀️.rs#SetFrameTransparency",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-frame-transparency",
+            "bridgeVersion": 1,
+            "variant": "GifMutation::SetFrameTransparency"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gif-89a-graphic-control-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "gif-89a-any-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "gif"
+          ],
+          "invariants": {
+            "local": [
+              "frame-transparent-index-agrees"
+            ],
+            "enclosing": [
+              "gif-reencode-round-trip-agrees-with-reference-decoder"
+            ]
+          }
+        },
+        {
+          "id": "set-frame-user-input",
+          "capability": "gif-89a-graphic-control-mutate",
+          "payloadSchema": "../../🧱️base/🧬️schema/🧬️mutations/🕹️set-frame-user-input/🦀️.rs#SetFrameUserInput",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-frame-user-input",
+            "bridgeVersion": 1,
+            "variant": "GifMutation::SetFrameUserInput"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gif-89a-graphic-control-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "gif-89a-any-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "gif"
+          ],
+          "invariants": {
+            "local": [
+              "frame-user-input-flag-agrees"
+            ],
+            "enclosing": [
+              "gif-reencode-round-trip-agrees-with-reference-decoder"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-frame-delay-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.gif",
+        "standard": "89a",
+        "subset": "graphic-control"
+      },
+      "mutation": "set-frame-delay",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-gif",
+          "path": "../🧫️fixtures/⏱️set-frame-delay-applied/⬅️before.gif",
+          "mediaType": "image/gif",
+          "sha256": "sha256:16b92f04551d8cf8ddeb501db7ca2a5d70ee20d0a31bb6fa7400faa2a8988cc8",
+          "bytes": 149
+        },
+        {
+          "role": "expected-after-gif",
+          "path": "../🧫️fixtures/⏱️set-frame-delay-applied/➡️after.gif",
+          "mediaType": "image/gif",
+          "sha256": "sha256:ee5890af1203c0d855c9b35c52cc902b88ac1c48186cb1490ccf5404cdc3ddd2",
+          "bytes": 149
+        }
+      ],
+      "generator": {
+        "oracle": "gif-89a-any-mutate-reader",
+        "packageVersion": "0.13.3",
+        "engineFamily": "gif",
+        "engineVersion": "0.13.3",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-frame-delay-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (gif)",
+        "attribution": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🏭️generator/🦀️engine/src/📖️reader_main.rs",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-gif-89a-reader-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Frame 0's delay changes."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-frame-disposal-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.gif",
+        "standard": "89a",
+        "subset": "graphic-control"
+      },
+      "mutation": "set-frame-disposal",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-gif",
+          "path": "../🧫️fixtures/♻️set-frame-disposal-applied/⬅️before.gif",
+          "mediaType": "image/gif",
+          "sha256": "sha256:16b92f04551d8cf8ddeb501db7ca2a5d70ee20d0a31bb6fa7400faa2a8988cc8",
+          "bytes": 149
+        },
+        {
+          "role": "expected-after-gif",
+          "path": "../🧫️fixtures/♻️set-frame-disposal-applied/➡️after.gif",
+          "mediaType": "image/gif",
+          "sha256": "sha256:2493c46835a42bef008f8dd6cf8b55472751fa9bff0ce5cd25987a020c9db4bb",
+          "bytes": 149
+        }
+      ],
+      "generator": {
+        "oracle": "gif-89a-any-mutate-reader",
+        "packageVersion": "0.13.3",
+        "engineFamily": "gif",
+        "engineVersion": "0.13.3",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-frame-disposal-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (gif)",
+        "attribution": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🏭️generator/🦀️engine/src/📖️reader_main.rs",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-gif-89a-reader-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Frame 0's disposal method changes."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-frame-transparency-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.gif",
+        "standard": "89a",
+        "subset": "graphic-control"
+      },
+      "mutation": "set-frame-transparency",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-gif",
+          "path": "../🧫️fixtures/👻️set-frame-transparency-applied/⬅️before.gif",
+          "mediaType": "image/gif",
+          "sha256": "sha256:16b92f04551d8cf8ddeb501db7ca2a5d70ee20d0a31bb6fa7400faa2a8988cc8",
+          "bytes": 149
+        },
+        {
+          "role": "expected-after-gif",
+          "path": "../🧫️fixtures/👻️set-frame-transparency-applied/➡️after.gif",
+          "mediaType": "image/gif",
+          "sha256": "sha256:cd133e2b55cfb709e61a4cb767843f3b70b5079e49be42b3e5e75d584fb51b1e",
+          "bytes": 149
+        }
+      ],
+      "generator": {
+        "oracle": "gif-89a-any-mutate-reader",
+        "packageVersion": "0.13.3",
+        "engineFamily": "gif",
+        "engineVersion": "0.13.3",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-frame-transparency-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (gif)",
+        "attribution": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🏭️generator/🦀️engine/src/📖️reader_main.rs",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-gif-89a-reader-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Frame 0 gains a transparent index."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-frame-user-input-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.gif",
+        "standard": "89a",
+        "subset": "graphic-control"
+      },
+      "mutation": "set-frame-user-input",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-gif",
+          "path": "../🧫️fixtures/🕹️set-frame-user-input-applied/⬅️before.gif",
+          "mediaType": "image/gif",
+          "sha256": "sha256:16b92f04551d8cf8ddeb501db7ca2a5d70ee20d0a31bb6fa7400faa2a8988cc8",
+          "bytes": 149
+        },
+        {
+          "role": "expected-after-gif",
+          "path": "../🧫️fixtures/🕹️set-frame-user-input-applied/➡️after.gif",
+          "mediaType": "image/gif",
+          "sha256": "sha256:abfb7db7e74ae4ef343a87539dc4804596ef55bb82cee192c420d4b3dbc4ef8f",
+          "bytes": 149
+        }
+      ],
+      "generator": {
+        "oracle": "gif-89a-any-mutate-reader",
+        "packageVersion": "0.13.3",
+        "engineFamily": "gif",
+        "engineVersion": "0.13.3",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-frame-user-input-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (gif)",
+        "attribution": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🏭️generator/🦀️engine/src/📖️reader_main.rs",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-gif-89a-reader-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Frame 0's needs-user-input flag flips."
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "gif-89a-graphic-control",
+      "capability": "gif-89a-graphic-control-mutate",
+      "standardDirectoryName": "9️⃣89a",
+      "subsetDirectoryName": "🎛️graphic-control",
+      "vectors": [],
+      "kinds": [
+        "set-frame-delay",
+        "set-frame-disposal",
+        "set-frame-transparency",
+        "set-frame-user-input"
+      ]
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 //! 🧵️ `ShellBridge` frame codec (`📋️master.md` §2.2 verbatim variant list, `📌️sol-P1b-packet.md`
 //! §2.4) — hand-rolled binary framing (`tag: u8` + fields in declaration order), `BRIDGE_VERSION = 1`.
-//! This file is the Rust SSOT; `🟦️.ts` is the TS twin, and `🧫️fixtures/frames.json` is the
+//! This file is the Rust SSOT; `🟦️.ts` is the TS twin, and `🧫️fixtures/📨️frames.json` is the
 //! anti-drift mechanism proving both codecs agree byte-for-byte (`mod quick`'s
 //! `every_fixture_round_trips_through_the_rust_codec` test; the TS side of the same fixtures is
 //! exercised by a foreground `bun run` script, not wired into this crate's own test run).
@@ -3035,15 +3035,15 @@ mod quick {
     //#endregion 🔖️RoundTrip
 
     //#region 🔖️FixtureParity
-    /// 🧬️ The anti-drift mechanism: `🧫️fixtures/frames.json` holds `{direction, variant, frame, hex}`
+    /// 🧬️ The anti-drift mechanism: `🧫️fixtures/📨️frames.json` holds `{direction, variant, frame, hex}`
     /// rows. For each row this test (a) deserializes `frame` via serde into the real enum, (b) hand-
     /// encodes it and compares to `hex`, and (c) hex-decodes `hex` and compares the result back to the
     /// serde-deserialized frame — proving the fixture's `frame` JSON and `hex` bytes agree with THIS
     /// codec. The TS twin runs the mirror-image check against the SAME file.
     #[test]
     fn every_fixture_round_trips_through_the_rust_codec() {
-        let raw = include_str!("🧫️fixtures/frames.json");
-        let rows: Vec<serde_json::Value> = serde_json::from_str(raw).expect("fixtures/frames.json must parse");
+        let raw = include_str!("🧫️fixtures/📨️frames.json");
+        let rows: Vec<serde_json::Value> = serde_json::from_str(raw).expect("🧫️fixtures/📨️frames.json must parse");
         assert!(!rows.is_empty(), "fixture file must not be empty");
         let mut shell_to_gateway_count = 0;
         let mut gateway_to_shell_count = 0;

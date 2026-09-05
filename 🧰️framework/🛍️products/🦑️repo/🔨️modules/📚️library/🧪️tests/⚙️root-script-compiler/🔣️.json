@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "declarations": ["policyCollectGluePathTargets", "policySnakeToCamel"],
+  "fieldNames": [
+    { "input": "field_name", "output": "fieldName" },
+    { "input": "field__name", "output": "fieldName" },
+    { "input": "field_", "output": "field" },
+    { "input": "_field", "output": "Field" },
+    { "input": "a_1_field", "output": "a1Field" },
+    { "input": "alreadyCamel", "output": "alreadyCamel" },
+    { "input": "field_Name", "output": "fieldName" },
+    { "input": "___", "output": "" },
+    { "input": "", "output": "" }
+  ],
+  "schemaFields": ["field_name", "field__name", "field_", "a_1_field"],
+  "eagerVocabulary": {
+    "missingActiveOutput": "Strict workspace validation requires the missing active output",
+    "lookupCount": 26,
+    "values": {
+      "POLICY_TS_COMPONENT_LEAF": "../⚙️root-script-compiler/🟦️.ts",
+      "POLICY_RS_COMPONENT_LEAF_NAME": "🦀️.rs",
+      "POLICY_GRAMMAR_SPEC_LEAF": "📖️.grammar.semio",
+      "POLICY_PROTOCOL_SPEC_LEAF": "📡️.protocol.semio",
+      "POLICY_RS_COMPONENT_LEAF": "🦀️.rs",
+      "POLICY_STDIO_TEXT_SPEC_LEAVES": ["📖️.grammar.semio", "🔤️.ebnf", "🅰️.g4", "🔗️.graphql", "../⚙️root-script-compiler/🔣️.json", "🛰️.proto", "🦀️.rs", "../⚙️root-script-compiler/🟦️.ts"],
+      "POLICY_STDIO_BINARY_SPEC_LEAVES": ["📡️.protocol.semio", "🔠️.abnf", "🥋️.ksy", "🌶️.spicy", "🦀️.rs", "../⚙️root-script-compiler/🟦️.ts"],
+      "POLICY_GRAMMAR_HONESTY_LEAF_MARKERS": { "🅰️.g4": "DOCUMENT: 'schema' [ ]+", "🔤️.ebnf": "header = 'schema', space,", "📖️.grammar.semio": "payload = *OCTET", "🔠️.abnf": "payload = *OCTET", "📡️.protocol.semio": "payload = *OCTET", "🥋️.ksy": "size-eos: true", "🌶️.spicy": "payload: bytes &eod;" },
+      "POLICY_FACET_MIRROR_DRIFT_SIBLINGS": ["../⚙️root-script-compiler/🟦️.ts", "🔗️.graphql", "../⚙️root-script-compiler/🔣️.json", "🛰️.proto"]
+    }
+  },
+  "fixtureRetention": { "ownerPath": "📓️root-script-compiler/🧾️runs", "prefix": "🧪️glue-" },
+  "glue": {
+    "entry": "🦀️.rs",
+    "inputs": {
+      "🦀️.rs": "#[path = \"./first/🦀️.rs\"]\npub mod first;\n#[path = \"./second/🦀️.rs\"]\npub mod second;\nmod third;\n",
+      "first/🦀️.rs": "pub const VALUE: u8 = 1;\n",
+      "second/🦀️.rs": "pub const VALUE: u8 = 2;\n",
+      "third/mod.rs": "pub const VALUE: u8 = 3;\n"
+    },
+    "targets": ["first/🦀️.rs", "second/🦀️.rs", "third/mod.rs"]
+  },
+  "execution": {
+    "target": "test-root-script-compiler",
+    "command": "bun ./📜️script.ts test root-script-compiler",
+    "launchName": "🧹clean🧩️taxonomy⚙️root-script-compiler",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-root-script-compiler --skip-nx-cache",
+    "launchGroup": "4_gate",
+    "launchOrder": 410.11
+  }
+}

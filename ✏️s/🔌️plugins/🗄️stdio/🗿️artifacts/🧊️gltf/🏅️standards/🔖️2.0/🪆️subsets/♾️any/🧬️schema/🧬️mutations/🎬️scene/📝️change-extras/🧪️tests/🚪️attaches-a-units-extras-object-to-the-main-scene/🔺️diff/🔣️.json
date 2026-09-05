@@ -1,0 +1,17 @@
+{
+  "operation": {
+    "scene": 0,
+    "data": {
+      "state": "present",
+      "value": {
+        "units": "metre"
+      }
+    }
+  },
+  "after": {
+    "units": "metre"
+  },
+  "touchedPaths": [
+    "document/scenes/*/extras"
+  ]
+}

@@ -3,9 +3,9 @@
 //! shape mirrors puzzle3d's own `💡️inferences/` (this artifact's exemplar): this file is the
 //! family-root assembly (never mod's/includes the slug dirs directly — `🦀️.rs` is the sole
 //! mounting mechanism, same as mutations); each named inference gets its own `<emoji><slug>/` child
-//! (currently: `🎛flat-position/`).
+//! (currently: `🎛️flat-position/`).
 //!
-//! 🎛 Puzzle5d's flatten math lives at `💡️inferences/🎛flat-position` (`flatten_snapshot`, which maps
+//! 🎛️ Puzzle5d's flatten math lives at `💡️inferences/🎛️flat-position` (`flatten_snapshot`, which maps
 //! parts/grips/fasteners onto the 3d object/vortex/attraction graph and runs puzzle3d's own solver) —
 //! unlike puzzle3d's own inference, there is no separate low-level per-edge decomposition exposed
 //! here to drive an incremental `InferredField` chain, so this inference is a plain whole-snapshot
@@ -22,7 +22,7 @@ use std::collections::BTreeMap;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a puzzle5d snapshot. One field per named inference under
-/// `💡️inferences/` (currently: `flatPositions`, backed by the `🎛flat-position/` slug dir).
+/// `💡️inferences/` (currently: `flatPositions`, backed by the `🎛️flat-position/` slug dir).
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle5d.inference")]

@@ -5,7 +5,7 @@
   "displayName": "Edit Text",
   "emoji": "✏️",
   "aggregateVariant": "EditText",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "edit-text",
   "binaryTag": 3,
   "invertibility": "explicit-mutation",

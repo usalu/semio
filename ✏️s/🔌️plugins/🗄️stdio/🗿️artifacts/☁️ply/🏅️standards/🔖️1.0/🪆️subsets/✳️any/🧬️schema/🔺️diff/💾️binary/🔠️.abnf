@@ -1,3 +1,0 @@
-; abnf stdio.ply diff
-document = payload
-payload = *OCTET

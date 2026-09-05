@@ -1,0 +1,322 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🔄 This subset's own contribution — the inline labelled equation AST composed alongside the graph and geometry playgrounds (1 of s.mathematical.equation's 15 mutation kinds: change-coefficient; ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). The equation reaches the JSON export intact (unlike the graph/geometry scene, which is skipped entirely), so change-coefficient is witnessable there — discharged by the serde-json carrier reader below.",
+  "oracles": [
+    {
+      "id": "serde-json-equation-carrier-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "serde_json",
+      "version": "1",
+      "source": {
+        "repository": "https://github.com/serde-rs/json",
+        "license": "MIT OR Apache-2.0"
+      },
+      "engine": {
+        "family": "serde-json",
+        "implementation": "serde_json 1 value tree",
+        "version": "1"
+      },
+      "capabilities": [
+        "equation-1-mutate-carrier"
+      ],
+      "comparisonProfiles": [
+        "semantic-equation-carrier-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://docs.rs/serde_json",
+      "rationale": "📖️ A READER for the ONE remaining kind that is a fact about this subset's own carrier, and a precise statement of why the other nine are not.\n\nThis subset's state splits three ways. `equation` is INLINE in `EquationSnapshot`, so it reaches the JSON export intact and `change-coefficient` is witnessable here. The graph's NODES reach the CSV export as `id,label,x,y`, which is why the sibling csv oracle covers exactly the five node kinds. The graph's EDGES, its `directed` flag, its `algorithm` and the geometry's POINTS reach NO carrier at all: `EquationIntoCsv` is declared `IoFidelity::Lossy` and emits only nodes, and the JSON export carries `notation`/`results`/`computed` as `ArtifactChild` handles whose `local_owner` is `#[serde(skip)]`, so the scene behind them is never serialised.\n\nSo `connect-nodes`, `disconnect-nodes`, `change-graph-directed`, `update-graph-algorithm`, `replace-graph`, `insert-point`, `move-point`, `remove-point` and `replace-points` are blocked on EXPORT, not on oracles — the same category as `tiff::change-byte-order`. A reader cannot witness what no carrier records, and registering one against them would be a fiction."
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "equation-1-equation",
+      "capability": "equation-1-equation-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️equation",
+      "vectors": [
+        {
+          "mutationId": "change-coefficient",
+          "sourceMutationDirectoryName": "🔄️change-coefficient",
+          "mutationDirectoryName": "🔄️change-coefficient",
+          "scenarios": [
+            {
+              "id": "raises-the-leading-coefficient-to-three-halves",
+              "directoryName": "🧪️raises-the-leading-coefficient-to-three-halves"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "change-coefficient"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "id": "equation-carrier-project",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "serde_json",
+      "version": "1",
+      "engine": {
+        "family": "serde-json",
+        "implementation": "serde_json 1 value tree",
+        "version": "1"
+      },
+      "capabilities": [
+        "equation.carrier.project"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🦀️json-engine/target/release/reader",
+        "project"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways: (before,before) -> equal:true; (before,after) -> equal:false. Observability is also enforced at GENERATION time: the engine refuses to write a pair whose carrier projection does not move. The coefficient is compared as a Rational lexeme pair, so a value that round-tripped through f64 would read as a difference rather than as noise.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "identical (before,before) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "the kind's own (before,after) compares equal:false on the labelled coefficient node"
+          },
+          {
+            "id": "reads-only",
+            "met": true,
+            "detail": "The reader projects and compares; it neither applies a mutation nor computes an expected state"
+          },
+          {
+            "id": "scope-is-honest",
+            "met": true,
+            "detail": "Covers only the inline equation. The nine graph/geometry kinds reach no carrier and are left uncarried rather than claimed"
+          },
+          {
+            "id": "deterministic",
+            "met": true,
+            "detail": "Object keys sorted, array order preserved; the corpus regenerates byte-identically"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "serde_json 1 is vendored in the cargo registry cache; builds and runs with --offline"
+          }
+        ]
+      }
+    },
+    {
+      "id": "equation-carrier-compare",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "serde_json",
+      "version": "1",
+      "engine": {
+        "family": "serde-json",
+        "implementation": "serde_json 1 value tree",
+        "version": "1"
+      },
+      "capabilities": [
+        "equation.carrier.compare"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🦀️json-engine/target/release/reader",
+        "compare"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways: (before,before) -> equal:true; (before,after) -> equal:false. Observability is also enforced at GENERATION time: the engine refuses to write a pair whose carrier projection does not move. The coefficient is compared as a Rational lexeme pair, so a value that round-tripped through f64 would read as a difference rather than as noise.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "identical (before,before) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "the kind's own (before,after) compares equal:false on the labelled coefficient node"
+          },
+          {
+            "id": "reads-only",
+            "met": true,
+            "detail": "The reader projects and compares; it neither applies a mutation nor computes an expected state"
+          },
+          {
+            "id": "scope-is-honest",
+            "met": true,
+            "detail": "Covers only the inline equation. The nine graph/geometry kinds reach no carrier and are left uncarried rather than claimed"
+          },
+          {
+            "id": "deterministic",
+            "met": true,
+            "detail": "Object keys sorted, array order preserved; the corpus regenerates byte-identically"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "serde_json 1 is vendored in the cargo registry cache; builds and runs with --offline"
+          }
+        ]
+      }
+    }
+  ],
+  "comparisonPipelines": [
+    {
+      "id": "equation-1-carrier-compare-v1",
+      "description": "Carrier-level equality over the inline equation tree, read through serde_json. GATING for change-coefficient.",
+      "stages": [
+        {
+          "probe": "equation-carrier-project",
+          "description": "An independent JSON implementation accepts both files.",
+          "inputs": [
+            "expected-before-json",
+            "expected-after-json"
+          ],
+          "assertions": {
+            "bothImport": true
+          }
+        },
+        {
+          "probe": "equation-carrier-compare",
+          "description": "Equality over the equation tree — the operative equality.",
+          "inputs": [
+            "expected-before-json",
+            "expected-after-json"
+          ],
+          "assertions": {
+            "equal": true
+          }
+        }
+      ]
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-equation-carrier-v1",
+      "description": "The INLINE equation tree — labels, node kinds and lexemes — plus the composed-child handles exactly as they serialise. The handles are projected so that a change in which child a snapshot points at is a difference, NOT to witness the scene behind them, which they do not carry."
+    }
+  ],
+  "toleranceProfiles": [],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.mathematical.equation",
+      "standard": "1",
+      "subset": "equation",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️equation",
+      "mutations": [
+        {
+          "id": "change-coefficient",
+          "capability": "equation-1-equation-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-coefficient",
+            "bridgeVersion": 1,
+            "variant": "ChangeCoefficient"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "equation-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-equation-carrier-reader"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "node-identity-preserved-across-untouched-rows"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-change-coefficient",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.mathematical.equation",
+        "standard": "1",
+        "subset": "equation"
+      },
+      "mutation": "change-coefficient",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/🎚️change-coefficient/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:23ac796b09a3359c8fcee96e5fc265de2c3667df663c0162be94b85dbad5802d",
+          "bytes": 1280
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/🎚️change-coefficient/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a3ab2d3c849a3f2b5c51c390c93e81a37b174c7d1a171e1164356ff4ab7fb9d2",
+          "bytes": 1280
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-equation-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-equation-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic snapshot whose inline equation is 3/4·x + 2, with change-coefficient rewriting the labelled rational coefficient to 7/5 as an edit to the JSON CARRIER, read back through serde_json — never through this repository's own mutation engine. The coefficient is a Rational lexeme pair, never an f64, matching EquationNodeKind::Rational's own round-trip-exact representation. Observability is checked before the pair is written.",
+      "comparisonPipeline": "equation-1-carrier-compare-v1"
+    }
+  ]
+}

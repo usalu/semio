@@ -5,7 +5,7 @@
   "displayName": "Delete Handle",
   "emoji": "❌️",
   "aggregateVariant": "DeleteHandle",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "delete-handle",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

@@ -1,0 +1,7 @@
+dialect protocol
+protocol stdio.dwg.ac1018.snapshot
+version 1
+schema stdio.dwg
+start document
+framing record
+chain body bytes

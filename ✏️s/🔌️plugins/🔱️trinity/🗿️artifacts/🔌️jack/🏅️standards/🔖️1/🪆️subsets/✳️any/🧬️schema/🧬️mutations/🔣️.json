@@ -3,14 +3,14 @@
   "$id": "https://semio.tech/schema/s/trinity/jack/mutation.json",
   "title": "JackMutation",
   "oneOf": [
-    { "$ref": "./🌱️create-node/🔣️.schema.json" },
-    { "$ref": "./🗑️delete-node/🔣️.schema.json" },
-    { "$ref": "./🔗️create-edge/🔣️.schema.json" },
-    { "$ref": "./✂️delete-edge/🔣️.schema.json" },
-    { "$ref": "./✏️rename-node/🔣️.schema.json" },
-    { "$ref": "./📍️move-node/🔣️.schema.json" },
-    { "$ref": "./🔧️change-data-property/🔣️.schema.json" },
-    { "$ref": "./🧹️remove-data-property/🔣️.schema.json" }
+    { "$ref": "./🌱️create-node/🧬️.schema.json" },
+    { "$ref": "./🗑️delete-node/🧬️.schema.json" },
+    { "$ref": "./🌉️create-edge/🧬️.schema.json" },
+    { "$ref": "./✂️delete-edge/🧬️.schema.json" },
+    { "$ref": "./✏️rename-node/🧬️.schema.json" },
+    { "$ref": "./📍️move-node/🧬️.schema.json" },
+    { "$ref": "./🔧️change-data-property/🧬️.schema.json" },
+    { "$ref": "./🧹️remove-data-property/🧬️.schema.json" }
   ],
   "x-semio-mutationKinds": [
     "create-node",

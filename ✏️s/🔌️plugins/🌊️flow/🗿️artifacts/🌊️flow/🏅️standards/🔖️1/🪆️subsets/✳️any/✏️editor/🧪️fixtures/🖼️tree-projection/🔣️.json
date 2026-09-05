@@ -1,0 +1,42 @@
+{
+  "contractId": "semio.fixture.tree-projection/v1",
+  "maximumDepth": 64,
+  "maximumNodes": 384,
+  "retirementSteps": 12672,
+  "retirementProbe": { "reservedPages": 384, "childCapacity": 32, "ownedNodes": 12257, "closeSteps": 12641, "supersededLimit": 8192, "error": "rejected-children", "terminalEmpty": true },
+  "cases": [
+    {
+      "id": "leaf",
+      "input": { "key": "leaf", "component": { "type": "text", "value": "Grüße 🌊" }, "children": [] },
+      "expected": { "key": "leaf", "component": { "type": "text", "value": "Grüße 🌊" }, "children": [] }
+    },
+    {
+      "id": "populated-pages",
+      "input": { "key": "root", "component": { "type": "container" }, "children": [
+        { "key": "first", "component": { "type": "text", "value": "One" }, "children": [] },
+        { "key": "group", "component": { "type": "container" }, "children": [
+          { "key": "last", "component": { "type": "text", "value": "Two" }, "children": [] }
+        ] }
+      ] },
+      "expected": { "key": "root", "component": { "type": "container" }, "children": [
+        { "key": "first", "component": { "type": "text", "value": "One" }, "children": [] },
+        { "key": "group", "component": { "type": "container" }, "children": [
+          { "key": "last", "component": { "type": "text", "value": "Two" }, "children": [] }
+        ] }
+      ] }
+    },
+    {
+      "id": "duplicate-sibling",
+      "input": { "key": "root", "component": { "type": "container" }, "children": [
+        { "key": "same", "component": { "type": "text", "value": "One" }, "children": [] },
+        { "key": "same", "component": { "type": "text", "value": "Two" }, "children": [] }
+      ] },
+      "error": "duplicate-key"
+    },
+    {
+      "id": "rejected-child",
+      "input": { "key": "root", "component": { "type": "container" }, "children": [], "rejected": true },
+      "error": "rejected-children"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changePartAnchor",
+  "id": "part-a",
+  "newAnchor": "derived"
+}

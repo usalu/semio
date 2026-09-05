@@ -26,6 +26,7 @@ pub fn plugin() -> Result<Plugin<ProcessApps>, semio_framework_plugin::PluginAss
     Plugin::<ProcessApps>::builder("process")
         .label("Process")
         .version("0.1.0")
+        .package_id("semio:process")
         .artifact(crate::artifacts::process3d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .editor::<crate::editor::process3d::Process3dPlayApp>(crate::editor::process3d::create_process3d_app())
         .editor_mutation_roster::<crate::editor::process3d::Process3dPlayApp>()

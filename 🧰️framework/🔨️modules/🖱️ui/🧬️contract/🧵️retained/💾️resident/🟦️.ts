@@ -1,11 +1,11 @@
 //#region 💾️ResidentAdmission
 import type { ActorInstanceLifetime } from "../../../../🎭️actor/🚪️lifetime/🟦️.ts";
-import { ShardClient, type ShardActorActivationLease } from "../../../../🎭️actor/🧵️shard-client/🟦️.ts";
+import { ShardClient, type ShardActorActivationLease } from "../../../../🎭️actor/📮️shard-client/🟦️.ts";
 import type { NumericIndexGrant } from "../../../../🌱️value/🗂️ordered/🔢️numeric/🟦️.ts";
 import { OwnedResidentLedger, OwnedResidentRetirement, OwnedResidentRecordDetachment, type OwnedResidentAdmission, type OwnedResidentRecord, type ResidentResources } from "../../../../🌱️value/💾️resident/🟦️.ts";
 import type { RetainedUiWireStep } from "../📦️wire/🟦️.ts";
 import { OwnedUiInstance } from "../🏘️instance/🟦️.ts";
-import { OwnedUiOperationPayloadBuilder, type OwnedUiOperationInputCopied, type OwnedUiOperationInputCancelled } from "../🩹️operations/📥️wire/📄️pages/🟦️.ts";
+import { OwnedUiOperationPayloadBuilder, type OwnedUiOperationInputCopied, type OwnedUiOperationInputCancelled } from "../🩹️operations/📥️wire/📃️pages/🟦️.ts";
 import { uiResidentMetadataEnvelope } from "./🪪️metadata/🟦️.ts";
 import { OwnedKernelReturnInputField, OwnedKernelReturnPayloadDetachment } from "../../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts";
 
@@ -311,8 +311,8 @@ function observeBuilderSlot(state: Payload, slot: BuilderSlot | EvidenceSlot, gr
   if (slot.phase === "record-admitting") { slot.record = slot.cell!.result?.record ?? null; slot.phase = slot.record && slot.cell!.result?.step.kind === "ready" && !slot.cell!.hasFailure ? "record-held" : "fault-held"; return step(slot.phase === "record-held" ? "pending" : "rejected", "resident-builder-record-observation", 64); }
   return null;
 }
-function admitBuilder(state: Payload, field: OwnedKernelReturnInputField, grant: NumericIndexGrant): import("../🩹️operations/📥️wire/📄️pages/🟦️.ts").OwnedUiOperationPayloadAdmission {
-  const result = (current: RetainedUiWireStep): import("../🩹️operations/📥️wire/📄️pages/🟦️.ts").OwnedUiOperationPayloadAdmission => ({ step: current, builder: null });
+function admitBuilder(state: Payload, field: OwnedKernelReturnInputField, grant: NumericIndexGrant): import("../🩹️operations/📥️wire/📃️pages/🟦️.ts").OwnedUiOperationPayloadAdmission {
+  const result = (current: RetainedUiWireStep): import("../🩹️operations/📥️wire/📃️pages/🟦️.ts").OwnedUiOperationPayloadAdmission => ({ step: current, builder: null });
   if (!admitted(grant, 32)) return result(step("blocked", "resident-builder-admission")); const slot = state.pending;
   if (!activePayload(state) || !slot || state.field !== field || !OwnedKernelReturnInputField.matchesResidentPayload(field, state.facade)) return result(step("rejected", "resident-builder-owner"));
   if (pageSlot(slot) || readerSlot(slot) || evidenceSlot(slot)) return result(step("blocked", "resident-builder-slot-busy"));
@@ -466,7 +466,7 @@ export class OwnedUiResidentPayload {
     if (!slot || slot.phase !== "constructing" || slot.entry !== entry || !entry || entry.facade || !OwnedUiOperationPayloadBuilder.matchesResident(builder, this) || !OwnedUiOperationPayloadBuilder.matchesField(builder, state.field!)) return step("rejected", "resident-builder-install"); entry.facade = builder;
     return entry.record!.install(builder, grant);
   }
-  beginBuilder(field: OwnedKernelReturnInputField, grant: NumericIndexGrant): import("../🩹️operations/📥️wire/📄️pages/🟦️.ts").OwnedUiOperationPayloadAdmission { return admitBuilder(this.#state, field, grant); }
+  beginBuilder(field: OwnedKernelReturnInputField, grant: NumericIndexGrant): import("../🩹️operations/📥️wire/📃️pages/🟦️.ts").OwnedUiOperationPayloadAdmission { return admitBuilder(this.#state, field, grant); }
   beginEvidence(builder: OwnedUiOperationPayloadBuilder, grant: NumericIndexGrant): OwnedUiResidentEvidenceAdmission { return admitEvidence(this.#state, builder, grant); }
   static matchesInputCancellation(payload: unknown, builder: unknown): boolean { const state = payloadState(payload); return state !== null && state.closing && state.phase === "live" && state.failure === NO_POOL_FAULT && !state.cell?.hasFailure && state.builder !== null && state.builder.facade === builder && state.builder.phase === "live" && !state.builder.cell?.hasFailure && state.pending !== null && payloadSlotEmpty(state.pending) && !state.reader && !state.head && !state.evidence; }
   advanceEvidence(builder: OwnedUiOperationPayloadBuilder, grant: NumericIndexGrant): RetainedUiWireStep { return advanceEvidence(this.#state, builder, grant); }

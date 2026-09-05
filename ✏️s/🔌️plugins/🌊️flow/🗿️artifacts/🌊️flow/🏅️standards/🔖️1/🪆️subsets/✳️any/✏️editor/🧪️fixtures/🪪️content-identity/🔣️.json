@@ -1,0 +1,39 @@
+{
+  "schema": "semio.flow.content-identity",
+  "domain": "semio.flow.scene.sha256.v1\u0000",
+  "childIdPrefix": "flow-content-sha256-",
+  "childSlot": "content",
+  "targetIdentity": "child-id",
+  "dialect": {
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "flow"
+  },
+  "cases": [
+    {
+      "id": "baseline",
+      "canonicalJson": "{\"layout\":{\"height\":{\"x\":0.0,\"y\":0.0}},\"synapses\":[{\"from\":\"height\",\"fromPort\":\"number\",\"id\":\"e\",\"to\":\"n\",\"toPort\":\"in\"}],\"widgets\":[{\"id\":\"height\",\"kind\":\"inputSlider\",\"label\":\"Column Height\",\"max\":10.0,\"min\":0.0,\"step\":0.5,\"value\":6.0},{\"id\":\"n\",\"inputPorts\":[\"in\"],\"kind\":\"neuron\",\"neuronKind\":\"core.number\",\"outputPorts\":[\"out\"],\"params\":{\"nested\":{\"🌊\":\"value\"}},\"preview\":true}]}",
+      "expectedSha256": "05cbf9254ece6b1d3e02ccf528a92b2b286734e5c74b9baec0b57e9136462517"
+    },
+    {
+      "id": "label",
+      "canonicalJson": "{\"layout\":{\"height\":{\"x\":0.0,\"y\":0.0}},\"synapses\":[{\"from\":\"height\",\"fromPort\":\"number\",\"id\":\"e\",\"to\":\"n\",\"toPort\":\"in\"}],\"widgets\":[{\"id\":\"height\",\"kind\":\"inputSlider\",\"label\":\"Säulenhöhe 🌊\",\"max\":10.0,\"min\":0.0,\"step\":0.5,\"value\":6.0},{\"id\":\"n\",\"inputPorts\":[\"in\"],\"kind\":\"neuron\",\"neuronKind\":\"core.number\",\"outputPorts\":[\"out\"],\"params\":{\"nested\":{\"🌊\":\"value\"}},\"preview\":true}]}",
+      "expectedSha256": "d953e80e4c26b64e600316e99fbe2ec95b351bdbc3c0fd84a7a18fbe9d137e60"
+    },
+    {
+      "id": "dictionary",
+      "canonicalJson": "{\"layout\":{\"height\":{\"x\":0.0,\"y\":0.0}},\"synapses\":[{\"from\":\"height\",\"fromPort\":\"number\",\"id\":\"e\",\"to\":\"n\",\"toPort\":\"in\"}],\"widgets\":[{\"id\":\"height\",\"kind\":\"inputSlider\",\"label\":\"Column Height\",\"max\":10.0,\"min\":0.0,\"step\":0.5,\"value\":6.0},{\"id\":\"n\",\"inputPorts\":[\"in\"],\"kind\":\"neuron\",\"neuronKind\":\"core.number\",\"outputPorts\":[\"out\"],\"params\":{\"nested\":{\"🌊\":\"changed\"}},\"preview\":true}]}",
+      "expectedSha256": "ee474987236af1bdb1effd3b624ec506902dc00e204543148bf7e38841930671"
+    },
+    {
+      "id": "layout",
+      "canonicalJson": "{\"layout\":{\"height\":{\"x\":1.5,\"y\":0.0}},\"synapses\":[{\"from\":\"height\",\"fromPort\":\"number\",\"id\":\"e\",\"to\":\"n\",\"toPort\":\"in\"}],\"widgets\":[{\"id\":\"height\",\"kind\":\"inputSlider\",\"label\":\"Column Height\",\"max\":10.0,\"min\":0.0,\"step\":0.5,\"value\":6.0},{\"id\":\"n\",\"inputPorts\":[\"in\"],\"kind\":\"neuron\",\"neuronKind\":\"core.number\",\"outputPorts\":[\"out\"],\"params\":{\"nested\":{\"🌊\":\"value\"}},\"preview\":true}]}",
+      "expectedSha256": "4b96a3579f1e279e7007d134badc38ded4d0d972a67232018e3dfab1064b51d5"
+    },
+    {
+      "id": "synapse",
+      "canonicalJson": "{\"layout\":{\"height\":{\"x\":0.0,\"y\":0.0}},\"synapses\":[{\"from\":\"height\",\"fromPort\":\"value\",\"id\":\"e\",\"to\":\"n\",\"toPort\":\"in\"}],\"widgets\":[{\"id\":\"height\",\"kind\":\"inputSlider\",\"label\":\"Column Height\",\"max\":10.0,\"min\":0.0,\"step\":0.5,\"value\":6.0},{\"id\":\"n\",\"inputPorts\":[\"in\"],\"kind\":\"neuron\",\"neuronKind\":\"core.number\",\"outputPorts\":[\"out\"],\"params\":{\"nested\":{\"🌊\":\"value\"}},\"preview\":true}]}",
+      "expectedSha256": "6208950430f1a6d474d11668e3b154c6c12943b14cef597bef4f97a9e214d1ea"
+    }
+  ]
+}

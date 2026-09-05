@@ -5,7 +5,7 @@
   "displayName": "Reorder Tiles",
   "emoji": "🔀",
   "aggregateVariant": "ReorderTiles",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "reorder-tiles",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

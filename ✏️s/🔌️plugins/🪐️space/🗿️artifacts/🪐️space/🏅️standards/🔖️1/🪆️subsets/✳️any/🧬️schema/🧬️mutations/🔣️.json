@@ -3,10 +3,10 @@
   "$id": "https://semio.tech/schema/space/1/any/mutation.json",
   "title": "SSpaceMutation",
   "oneOf": [
-    {"$ref": "./🌱create-artifact/🔣️.schema.json"},
-    {"$ref": "./🏷️rename-artifact/🔣️.schema.json"},
-    {"$ref": "./🕒touch-artifact/🔣️.schema.json"},
-    {"$ref": "./🗑️delete-artifact/🔣️.schema.json"}
+    {"$ref": "./🌱create-artifact/🧬️.schema.json"},
+    {"$ref": "./🏷️rename-artifact/🧬️.schema.json"},
+    {"$ref": "./🕒touch-artifact/🧬️.schema.json"},
+    {"$ref": "./🗑️delete-artifact/🧬️.schema.json"}
   ],
   "x-semio-mutationKinds": ["create-artifact", "rename-artifact", "touch-artifact", "delete-artifact"]
 }

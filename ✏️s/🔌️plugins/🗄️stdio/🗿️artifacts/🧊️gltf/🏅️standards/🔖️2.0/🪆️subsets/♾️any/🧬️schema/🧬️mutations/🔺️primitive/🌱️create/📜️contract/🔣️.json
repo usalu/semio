@@ -1,0 +1,15 @@
+{
+  "id": "s.stdio.gltf.mutation.create-primitive.v1",
+  "laws": [
+    "typed validation rejection",
+    "direct sparse mesh diff",
+    "exact-base inverse",
+    "declared touched paths",
+    "reference repair or rejection",
+    "apply/replay/undo determinism"
+  ],
+  "touchedPaths": [
+    "document/meshes/*/primitives"
+  ],
+  "referencePolicy": "creates an empty primitive only at a valid mesh-local position"
+}

@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/s/fem/fem3d/snapshot/text.json",
-  "title": "Fem3dSnapshotText",
-  "type": "object"
-}

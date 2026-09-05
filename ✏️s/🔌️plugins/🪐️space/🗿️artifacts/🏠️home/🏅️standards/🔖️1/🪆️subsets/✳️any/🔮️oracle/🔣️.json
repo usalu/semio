@@ -1,0 +1,108 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution. A mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so `s.space.home`'s catalog and its no-oracle decision live here rather than in a shared manifest. The launcher artifact is semio-NATIVE and its entire mutable artifact-lane surface is one counter — see `noOracleDecisions` below for why no third party can be authoritative over it.",
+  "oracles": [
+    {
+      "id": "s-home-1-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "capabilities": [
+        "s-home-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "🐍️ No third-party library in any ecosystem reads or writes s.space.home's .shome.dsl.semio carrier or its .pack.semio twin — the candidate category is empty rather than merely unexplored. The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution, which is why package is empty. The implementation is ../../../🧪️tests/mutate-s-home-1/🐍️component.py, written from this subset's own committed ../🧬️schema/📸️snapshot/🔣️.json and ../🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧬️.schema.json, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's change verb entry. It imports nothing from the Rust it judges and transliterates none of it — catalogGeneration is a SETTER, and the committed vector pins 3 to 7 (not 0 to 1) specifically so an implementation that incremented rather than set would be caught. Executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan pointing at the two scenario ids — both passed. UNDER PROTOCOL V2 this registration is classified cross-semio-implementation — a required SUPPLEMENTAL oracle that does not discharge s-home-1-mutate's external-oracle requirement; a qualifying third-party reference is still owed and none exists for a semio-native launcher document. [history, kept verbatim from the no-oracle decision this replaces] The candidate category is empty rather than merely unexplored.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 1 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.space.home",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "s.space.home",
+              "reason": "No third-party library in any ecosystem reads or writes this repository's own document format, per this entry's own rationale; the ecosystem's package index was searched by name and by domain keywords with no match."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's",
+        "fixtureCoverage": {
+          "vectors": 1,
+          "capabilitiesCovered": [
+            "s-home-1-mutate"
+          ]
+        }
+      }
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "s-home-1-any",
+      "capability": "s-home-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-catalog-generation",
+          "sourceMutationDirectoryName": "🔢️change-catalog-generation",
+          "mutationDirectoryName": "🔢️change-catalog-generation",
+          "scenarios": [
+            {
+              "id": "bumps-the-catalog-generation-to-7",
+              "directoryName": "🧪️bumps-the-catalog-generation-to-7"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "change-catalog-generation"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.space.home",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-catalog-generation",
+          "capability": "s-home-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-catalog-generation",
+            "bridgeVersion": 1,
+            "variant": "ChangeCatalogGeneration"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "s-home-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

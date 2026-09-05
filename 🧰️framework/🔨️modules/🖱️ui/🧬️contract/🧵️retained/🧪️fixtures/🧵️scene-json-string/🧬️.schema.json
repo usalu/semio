@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["valid", "invalid", "large", "chunkCodeUnits", "maxItems", "maxBytes", "cancelPrefixes", "forgedCaptureCalls", "terminalChildBytes", "terminalReleaseBytes"],
+  "properties": {
+    "valid": { "type": "array", "minItems": 7, "items": { "type": "object", "additionalProperties": false, "required": ["name", "text", "ordinal", "value"], "properties": { "name": { "type": "string" }, "text": { "type": "string" }, "ordinal": { "type": "integer", "minimum": 0 }, "value": { "type": "string" } } } },
+    "invalid": { "type": "array", "minItems": 3, "items": { "type": "object", "additionalProperties": false, "required": ["text", "ordinal"], "properties": { "text": { "type": "string" }, "ordinal": { "type": "integer", "minimum": 0 } } } },
+    "large": { "type": "object", "additionalProperties": false, "required": ["value", "repeat"], "properties": { "value": { "type": "string" }, "repeat": { "const": 2048 } } },
+    "chunkCodeUnits": { "const": 128 },
+    "maxItems": { "const": 1 },
+    "maxBytes": { "const": 4096 },
+    "terminalChildBytes": { "const": 4096 },
+    "terminalReleaseBytes": { "const": 128 },
+    "cancelPrefixes": { "type": "array", "minItems": 8, "items": { "type": "integer", "minimum": 0 } },
+    "forgedCaptureCalls": { "const": 0 }
+  }
+}

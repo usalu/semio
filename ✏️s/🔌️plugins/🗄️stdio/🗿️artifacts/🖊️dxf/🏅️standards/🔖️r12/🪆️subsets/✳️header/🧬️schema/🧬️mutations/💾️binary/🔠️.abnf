@@ -1,7 +1,0 @@
-; abnf stdio.dxf mutations (binary) — DxfMutation's wire binary IS its serde_json encoding
-; (protocol::OpBinary); the shared `.semio` envelope wraps that JSON payload.
-document   = magic token-len token payload
-magic      = %x89 %x53 %x45 %x4D %x0D %x0A %x1A %x0A
-token-len  = 4OCTET                                     ; u32, little-endian
-token      = *OCTET                                     ; UTF-8 "stdio.dxf.mutation v1"
-payload    = *OCTET                                     ; UTF-8 JSON bytes of DxfMutation

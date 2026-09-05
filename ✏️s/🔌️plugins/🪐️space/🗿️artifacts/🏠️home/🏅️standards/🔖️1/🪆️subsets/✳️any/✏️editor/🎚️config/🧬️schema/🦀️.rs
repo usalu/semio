@@ -9,6 +9,18 @@ pub struct HomeConfig {
     pub active_panel_tab: String,
     #[state(config)]
     pub locale: String,
+    #[state(config)]
+    pub directory_json: String,
+    #[state(config)]
+    pub directory_session_binding_sha256: String,
+    #[state(config)]
+    pub directory_authorization_generation: u64,
+    #[state(config)]
+    pub directory_receipt_sha256: String,
+    #[state(config)]
+    pub client_id: String,
+    #[state(config)]
+    pub client_name: String,
 }
 
 //region 📎 App-schema descriptor

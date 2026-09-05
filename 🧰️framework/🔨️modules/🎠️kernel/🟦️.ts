@@ -2,7 +2,7 @@
 /// <reference types="vitest/importMeta" />
 /** @emoji 🎠️ `@semio-tech/framework` — plugin runtime, leases, invocation responses, and playground boot. */
 import type { IconName } from "@semio-tech/assets";
-import type { ShellLocale, ShellTerminology, LocalizedLabel } from "../🛂️manifest/🤖️generated/🟦️ui-axes.ts";
+import type { ShellLocale, ShellTerminology, LocalizedLabel } from "../🛂️manifest/🤖️generated/🎚️ui-axes.ts";
 
 import type {
   PluginManifest,
@@ -13,7 +13,7 @@ import type {
   NamedLayout,
 } from "../🛂️manifest/🟦️.ts";
 import type { StoragePort } from "../🖥️platform/🟦️.ts";
-import { ShardClient, type ShardAsset, type ShardBudget, type ShardCapabilityGrant, type ShardEventEnvelope } from "../🎭️actor/🧵️shard-client/🟦️.ts";
+import { ShardClient, type ShardAsset, type ShardBudget, type ShardCapabilityGrant, type ShardEventEnvelope } from "../🎭️actor/📮️shard-client/🟦️.ts";
 import { OwnedResidentLedger } from "../🌱️value/💾️resident/🟦️.ts";
 import { TurnScheduler, type Backpressure, type CoalesceKey, type Lane } from "../🎭️actor/📦️packages/🟦️typescript/🟦️.ts";
 export { KernelReturnContentFraming, type KernelReturnContentMetadata, type KernelReturnContentByte } from "./📤️return/📦️content/🟦️.ts";
@@ -1124,8 +1124,8 @@ export interface PluginCatalog {
   readonly extensions: readonly PluginCatalogTarget[];
   readonly hosts: readonly PluginHostConfig[];
   readonly playgrounds: readonly PlaygroundCatalogTarget[];
-  moduleUrl(pluginId: string, wasmOut: string): string;
-  extensionModuleUrl(pluginId: string, wasmOut: string): string;
+  moduleUrl(pluginId: string): string;
+  extensionModuleUrl(pluginId: string): string;
 }
 //#endregion 🗂️PluginCatalog
 
@@ -1580,7 +1580,7 @@ export type MergeReport = {
 // are DELETED (grepped clean: neither had a live caller left outside this file once
 // `loadPluginModuleViaWorker`/`loadPluginModuleUncached` went with them; see
 // `📓️terra-H2-web-shard-report.md`). Replaced by `ShardClient`
-// (`🎭️actor/🧵️shard-client/🟦️.ts` — a bounded pool multiplexed by actorId) and
+// (`🎭️actor/📮️shard-client/🟦️.ts` — a bounded pool multiplexed by actorId) and
 // `ActivationRegistry` below. `runSerialized`'s busy-retry/reload loop has no equivalent: the new
 // ABI's traps are `ActivationRegistry`'s `FailurePolicy` job (design-runtime.md §1) — drop + restore
 // from checkpoint — not a local blind-retry loop with no visibility into checkpoint state.
@@ -1701,7 +1701,7 @@ export function intersectCapabilityGrants(granted: readonly ShardCapabilityGrant
  * to the guest's `instance-open` event (see `🟦️.ts`'s `shardWorkerSource`) rather
  * than a worker-bootstrap special case — it must be resident before the first `surface-visible`. */
 function defaultGuestSlimAssetFetcher(moduleUrl: string): Promise<readonly ShardAsset[]> {
-  const vendorUrl = moduleUrl.split(/[?#]/)[0]!.replace(/\/[^/]+\/[^/]+\.js$/, "/_vendor/guestslim-typst-fonts.bin");
+  const vendorUrl = moduleUrl.split(/[?#]/)[0]!.replace(/\/[^/]+\/[^/]+\.js$/, "/🪞️vendor/🔤️guestslim-typst-fonts.bin");
   return fetch(vendorUrl)
     .then((response) => {
       if (!response.ok) throw new Error(`GuestSlim typst fonts asset fetch failed: ${response.status} ${vendorUrl}`);
@@ -1807,7 +1807,7 @@ export interface ActivationRegistryOptions {
    * {@link ActivationRegistry.enqueueTurn} surfaces verbatim. */
   readonly turnMailboxCapacity?: number;
   /** 🧵️ A turn's `ShardClient.turn` result — no effect/`UiPatch` routing exists on this side of the
-   * boundary yet (that belongs to the renderer's `ProgramBridge`), so the default is a documented
+   * boundary yet (that belongs to the renderer's `🌉️ProgramBridge`), so the default is a documented
    * no-op rather than a silent drop of something anyone actually reads. */
   readonly onTurnResult?: (actorId: string, result: unknown) => void;
   /** 🧵️ A rejected queued turn — default logs via `console.error`, same "never let one actor's
@@ -1816,7 +1816,7 @@ export interface ActivationRegistryOptions {
   /** 📈️ Set `true` to auto-start `startRuntimeMetricsPublisher` in the constructor, wired to this
    * registry's own {@link ActivationRegistry.metricsBus}. Defaults to `false` — opt-in, not opt-out —
    * so every OTHER existing/future construction site across the tree (this file's own tests, the
-   * `TaskManager` component's, …) keeps building a plain object with no live `setInterval`, exactly
+   * `🧵️TaskManager` component's, …) keeps building a plain object with no live `setInterval`, exactly
    * as before this option existed; a real caller (ShellHost, once it mounts the task-manager window)
    * turns this on explicitly. */
   readonly autoStartMetricsPublisher?: boolean;
@@ -1860,7 +1860,7 @@ export class ActivationRegistry {
   private readonly stopMetricsPublisher: () => void;
   /** 📡️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-activation): the platform's own pub-sub
    * primitive, not a bespoke one — no topic-subscriber bus exists anywhere in this codebase yet
-   * (native or web; see `TaskManager/🟦️.tsx`'s own header doc on why a real window mount is
+   * (native or web; see `🧵️TaskManager/🟦️.tsx`'s own header doc on why a real window mount is
    * still registrar-only work), so `startRuntimeMetricsPublisher`'s sink dispatches a
    * `CustomEvent(topic, { detail: snapshot })` here rather than inventing a second bus. Populated
    * (via `startRuntimeMetricsPublisher`) only when `autoStartMetricsPublisher: true` is passed; a real
@@ -1898,9 +1898,9 @@ export class ActivationRegistry {
    * every extension by its parent (`extensionsByParent`) so `activate()`'s cascade has something to
    * walk — descriptor-driven, zero special-casing per target. */
   registerCatalog(catalog: PluginCatalog): void {
-    for (const target of catalog.plugins) this.registerManifest({ pluginId: target.pluginId, moduleUrl: catalog.moduleUrl(target.pluginId, target.wasmOut), caps: [] });
+    for (const target of catalog.plugins) this.registerManifest({ pluginId: target.pluginId, moduleUrl: catalog.moduleUrl(target.pluginId), caps: [] });
     for (const target of catalog.extensions) {
-      this.registerManifest({ pluginId: target.pluginId, moduleUrl: catalog.extensionModuleUrl(target.pluginId, target.wasmOut), caps: [] });
+      this.registerManifest({ pluginId: target.pluginId, moduleUrl: catalog.extensionModuleUrl(target.pluginId), caps: [] });
       const parentId = target.dependsOn?.[0];
       if (!parentId) continue;
       const siblings = this.extensionsByParent.get(parentId) ?? [];
@@ -1964,7 +1964,7 @@ export class ActivationRegistry {
    * parameter (its own `assignShard` is a private least-loaded placement, mirroring the native
    * `ShardTable::pin`) — every extension lands on whichever shard `ShardClient` picks, not
    * necessarily the parent's own. A lease-request for a small additive `ShardClient.activate`
-   * overload is open against `🎭️actor/🧵️shard-client/🟦️.ts` (out of this
+   * overload is open against `🎭️actor/📮️shard-client/🟦️.ts` (out of this
    * packet's `path_scope`); see this ticket's report. The cascade LINK (`extensionChildren`), and
    * therefore zero-orphan teardown via `suspend`/`cancel`, is unaffected by this gap. */
   private async activateExtensionsOf(pluginId: string, parentActorId: string): Promise<void> {
@@ -2224,7 +2224,7 @@ export class ActivationRegistry {
    * different sink) is still supported for a caller that wants its own delivery instead of the bus.
    *
    * 🚧️ Honest remaining gap: no real CONSUMER subscribes to `metricsBus` yet anywhere in this codebase
-   * (native or web) — mounting the task-manager window that would (`TaskManager/🟦️.tsx`'s own
+   * (native or web) — mounting the task-manager window that would (`🧵️TaskManager/🟦️.tsx`'s own
    * header doc) is registrar-only, lease-requested work outside this packet's `path_scope`. */
   startRuntimeMetricsPublisher(sink: (topic: string, snapshot: RuntimeMetricsSnapshot) => void): () => void {
     const interval = setInterval(() => {
@@ -2417,8 +2417,8 @@ if (import.meta.vitest) {
       extensions: [{ pluginId: "p1-ext", wasmOut: "p1-ext.wasm", role: "extension", contributes: [], consumes: [], dependsOn: ["p1"] }],
       hosts: [],
       playgrounds: [],
-      moduleUrl: (pluginId, wasmOut) => `https://x/${pluginId}/${wasmOut}`,
-      extensionModuleUrl: (pluginId, wasmOut) => `https://x/ext/${pluginId}/${wasmOut}`,
+      moduleUrl: (pluginId) => `https://x/${pluginId}/🌉️bridge.js`,
+      extensionModuleUrl: (pluginId) => `https://x/ext/${pluginId}/🌉️bridge.js`,
     };
   }
 
@@ -2717,12 +2717,6 @@ if (import.meta.vitest) {
 //#endregion 🐚️ActivationRegistry
 
 //#region 🔌️PluginSource
-/** @emoji 🔌️ Dev-server SSE endpoint a `PluginSource` availability stream connects to (see
- * {@link createDevPluginSource}) — mounted by the dev runner's `semioPluginHotSwapVitePlugin`
- * alongside the `/plugin-modules` static alias it watches. Shared here (rather than duplicated as a
- * literal in both the dev vite plugin and the shell) so the two ends can't drift apart. */
-export const PLUGIN_SOURCE_WATCH_PATH = "/plugin-modules/watch";
-
 /** @emoji 🔌️ One entry of an availability stream: either the full set of currently-built plugins sent
  * once on connect (a reconnecting/late-connecting browser must not miss builds that already finished),
  * or a single plugin's rebuild landing. `rebuiltAt` is the artifact's build timestamp and doubles as
@@ -2750,11 +2744,11 @@ export interface PluginSource {
   subscribe(listener: (event: PluginSourceEvent) => void): () => void;
 }
 
-/** @emoji 🔌️ `PluginSource` backed by the dev server's static `/plugin-modules` output and its
- * {@link PLUGIN_SOURCE_WATCH_PATH} SSE stream. `EventSource` is unavailable under vitest/node, so
+/** @emoji 🔌️ `PluginSource` backed by an injected dev catalog and its owner's explicit watch URL.
+ * `EventSource` is unavailable under vitest/node, so
  * `subscribe` there is a harmless no-op (matches every other browser-only feature detection in this
  * module). */
-export function createDevPluginSource(registry: readonly PluginRegistryEntry[]): PluginSource {
+export function createDevPluginSource(registry: readonly PluginRegistryEntry[], watchUrl: string): PluginSource {
   const byId = new Map(registry.map((entry) => [entry.pluginId, entry] as const));
   const bootVersion = Date.now();
   return {
@@ -2770,7 +2764,7 @@ export function createDevPluginSource(registry: readonly PluginRegistryEntry[]):
     },
     subscribe(listener) {
       if (typeof EventSource === "undefined") return () => {};
-      const source = new EventSource(PLUGIN_SOURCE_WATCH_PATH);
+      const source = new EventSource(watchUrl);
       source.onmessage = (event) => {
         try {
           listener(JSON.parse(event.data) as PluginSourceEvent);
@@ -2782,10 +2776,6 @@ export function createDevPluginSource(registry: readonly PluginRegistryEntry[]):
     },
   };
 }
-
-/** @emoji 🧩️ Dev-server SSE endpoint for {@link createExtensionSource} — paired with the `/extensions`
- * static route the extension store materializes at install time. */
-export const EXTENSION_SOURCE_WATCH_PATH = "/extensions/watch";
 
 type ExtensionSourceWireEvent =
   | { readonly kind: "snapshot"; readonly extensions: readonly { readonly extensionId: string; readonly installedAt: number }[] }
@@ -2804,13 +2794,13 @@ export function extensionSourceEventToPluginSourceEvent(event: ExtensionSourceWi
   throw new Error("unknown extension source event kind");
 }
 
-/** @emoji 🧩️ `PluginSource` backed by the extension store's `/extensions` HTTP tree and its watch SSE
- * stream. Catalog rows come from the injected {@link PluginCatalog}'s `extensions`; runtime installs
+/** @emoji 🧩️ `PluginSource` backed by an extension catalog and its owner's explicit watch URL.
+ * Catalog rows come from the injected {@link PluginCatalog}'s `extensions`; runtime installs
  * add artifacts under each extension id without changing this list. */
-export function createExtensionSource(catalog: PluginCatalog): PluginSource {
+export function createExtensionSource(catalog: PluginCatalog, watchUrl: string): PluginSource {
   const registry: readonly PluginRegistryEntry[] = catalog.extensions.map((target) => ({
     pluginId: target.pluginId,
-    moduleUrl: catalog.extensionModuleUrl(target.pluginId, target.wasmOut),
+    moduleUrl: catalog.extensionModuleUrl(target.pluginId),
     contributes: target.contributes,
     consumes: target.consumes,
     dependencies: dependsOnToPluginDependencies(target.dependsOn),
@@ -2828,7 +2818,7 @@ export function createExtensionSource(catalog: PluginCatalog): PluginSource {
     },
     subscribe(listener) {
       if (typeof EventSource === "undefined") return () => {};
-      const source = new EventSource(EXTENSION_SOURCE_WATCH_PATH);
+      const source = new EventSource(watchUrl);
       source.onmessage = (event) => {
         try {
           const normalized = extensionSourceEventToPluginSourceEvent(JSON.parse(event.data) as ExtensionSourceWireEvent);
@@ -2842,8 +2832,8 @@ export function createExtensionSource(catalog: PluginCatalog): PluginSource {
   };
 }
 
-/** @emoji 🔌️ Merges multiple {@link PluginSource} implementations — dev `/plugin-modules` plus extension
- * `/extensions` — into one catalog the shell's incremental runtime can treat as a single source. */
+/** @emoji 🔌️ Merges multiple {@link PluginSource} implementations into one catalog the shell's
+ * incremental runtime can treat as a single source. */
 export function multiplexPluginSources(...sources: readonly PluginSource[]): PluginSource {
   if (sources.length === 0) throw new Error("[DEBUG] multiplexPluginSources requires at least one source");
   if (sources.length === 1) return sources[0];
@@ -2920,7 +2910,7 @@ export function resolvePlaygroundBoot(catalog: PluginCatalog, variant: string, s
   const hostMode = resolvePluginHostConfig(catalog, variant) !== undefined;
   const catalogPlugins: PluginRegistryEntry[] = [...catalog.plugins, ...catalog.extensions].map((target) => ({
     pluginId: target.pluginId,
-    moduleUrl: target.role === "extension" ? catalog.extensionModuleUrl(target.pluginId, target.wasmOut) : catalog.moduleUrl(target.pluginId, target.wasmOut),
+    moduleUrl: target.role === "extension" ? catalog.extensionModuleUrl(target.pluginId) : catalog.moduleUrl(target.pluginId),
     contributes: target.contributes,
     consumes: target.consumes,
     dependencies: dependsOnToPluginDependencies(target.dependsOn),

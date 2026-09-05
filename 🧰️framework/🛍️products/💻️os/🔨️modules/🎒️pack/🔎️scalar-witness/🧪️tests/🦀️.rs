@@ -20,7 +20,7 @@ struct Case { id: String, ordinal: u64, fields: [Option<Field>; 3], wire_bytes: 
 enum Field { Text { unit: String, repeat: usize, suffix: String }, U64 { value: String }, F64 { value: String } }
 struct Root { ordinal: u64, fields: [Option<FieldValue>; 3], dropped: Arc<AtomicUsize> }
 impl Drop for Root { fn drop(&mut self) { self.dropped.fetch_add(1, Ordering::SeqCst); } }
-fn fixture() -> Fixture { let fixture: Fixture = serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap(); assert_eq!(fixture.version, 1); assert!(fixture.terminal_empty); fixture }
+fn fixture() -> Fixture { let fixture: Fixture = serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap(); assert_eq!(fixture.version, 1); assert!(fixture.terminal_empty); fixture }
 fn root(case: &Case) -> Arc<Root> {
     Arc::new(Root { ordinal: case.ordinal, fields: std::array::from_fn(|index| case.fields[index].as_ref().map(|field| match field {
         Field::Text { unit, repeat, suffix } => FieldValue::Text(unit.repeat(*repeat) + suffix),

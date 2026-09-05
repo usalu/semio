@@ -5,7 +5,7 @@
   "displayName": "Change Handle Kind Default Wire Kind",
   "emoji": "🔌️",
   "aggregateVariant": "ChangeHandleKindDefaultWireKind",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-handle-kind-default-wire-kind",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

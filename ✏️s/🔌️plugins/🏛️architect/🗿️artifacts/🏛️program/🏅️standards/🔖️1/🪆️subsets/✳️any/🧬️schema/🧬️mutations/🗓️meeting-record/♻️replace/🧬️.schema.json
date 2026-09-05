@@ -1,0 +1,288 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplaceMeetingRecord",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "meetingRecord"
+  ],
+  "properties": {
+    "meetingRecord": {
+      "title": "MeetingRecord",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actionItems",
+        "agendaItems",
+        "approvalIds",
+        "artifactRefs",
+        "attendeeIds",
+        "decisionsMade",
+        "id",
+        "issueIds",
+        "meetingStatus",
+        "meetingType",
+        "name",
+        "notes",
+        "ownership",
+        "priority",
+        "quorumMet",
+        "requirementIds",
+        "stakeholderIds",
+        "status",
+        "tags",
+        "timestamps"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "title": "TextField",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string"
+            }
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "Draft",
+            "Proposed",
+            "UnderReview",
+            "Validated",
+            "Approved",
+            "Rejected",
+            "Deferred",
+            "Superseded",
+            "Archived",
+            "Open",
+            "Closed",
+            "AtRisk",
+            "Blocked",
+            "InProgress",
+            "Complete"
+          ]
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "Mandatory",
+            "Essential",
+            "Preferred",
+            "Optional",
+            "Deferred",
+            "Prohibited"
+          ]
+        },
+        "ownership": {
+          "title": "Ownership",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "consultantIds",
+            "participantIds"
+          ],
+          "properties": {
+            "ownerId": {
+              "type": "string"
+            },
+            "authorityId": {
+              "type": "string"
+            },
+            "consultantIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "participantIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "title": "TaggedNote",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "tag",
+              "text"
+            ],
+            "properties": {
+              "tag": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "timestamps": {
+          "title": "TimestampMeta",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "created",
+            "updated"
+          ],
+          "properties": {
+            "created": {
+              "type": "string"
+            },
+            "updated": {
+              "type": "string"
+            },
+            "createdBy": {
+              "type": "string"
+            },
+            "updatedBy": {
+              "type": "string"
+            }
+          }
+        },
+        "meetingType": {
+          "type": "string"
+        },
+        "scheduledDate": {
+          "type": "string"
+        },
+        "duration": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        },
+        "chairId": {
+          "type": "string"
+        },
+        "attendeeIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "agendaItems": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "minutes": {
+          "title": "TextField",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string"
+            }
+          }
+        },
+        "actionItems": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "decisionsMade": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "artifactRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "followUpDate": {
+          "type": "string"
+        },
+        "recordingRef": {
+          "type": "string"
+        },
+        "quorumMet": {
+          "type": "boolean"
+        },
+        "meetingStatus": {
+          "type": "string",
+          "enum": [
+            "Draft",
+            "Proposed",
+            "UnderReview",
+            "Validated",
+            "Approved",
+            "Rejected",
+            "Deferred",
+            "Superseded",
+            "Archived",
+            "Open",
+            "Closed",
+            "AtRisk",
+            "Blocked",
+            "InProgress",
+            "Complete"
+          ]
+        },
+        "workshopId": {
+          "type": "string"
+        },
+        "stakeholderIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "requirementIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "issueIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "approvalIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

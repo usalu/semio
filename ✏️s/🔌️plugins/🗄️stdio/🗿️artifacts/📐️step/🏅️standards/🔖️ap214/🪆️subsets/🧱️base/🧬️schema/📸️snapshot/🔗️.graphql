@@ -1,0 +1,65 @@
+# 🧬️ StepSnapshot — typed ISO 10303-21 HEADER triple + id-keyed entity graph.
+
+union StepValue =
+    StepValueUnset
+  | StepValueDerived
+  | StepValueInteger
+  | StepValueReal
+  | StepValueString
+  | StepValueEnum
+  | StepValueReference
+  | StepValueAggregate
+  | StepValueTypedValue
+
+type StepValueUnset { _: Boolean }
+type StepValueDerived { _: Boolean }
+type StepValueInteger { integer: Int! }
+type StepValueReal { real: Float! }
+type StepValueString { string: String! }
+type StepValueEnum { enum: String! }
+type StepValueReference { reference: Int! }
+type StepValueAggregate { aggregate: [StepValue!]! }
+type StepValueTypedValue { typeName: String!, value: StepValue! }
+
+type StepFileDescription {
+  description: [String!]!
+  implementationLevel: String!
+}
+
+type StepFileName {
+  name: String!
+  timestamp: String!
+  author: [String!]!
+  organization: [String!]!
+  preprocessorVersion: String!
+  originatingSystem: String!
+  authorization: String!
+}
+
+type StepFileSchema {
+  schemas: [String!]!
+}
+
+type StepHeader {
+  fileDescription: StepFileDescription!
+  fileName: StepFileName!
+  fileSchema: StepFileSchema!
+}
+
+type StepComplexType {
+  name: String!
+  args: [StepValue!]!
+}
+
+type StepEntity {
+  id: Int!
+  name: String!
+  args: [StepValue!]!
+  complex: [StepComplexType!]
+}
+
+type StepSnapshot {
+  schema: String! @state(class: ARTIFACT)
+  header: StepHeader! @state(class: ARTIFACT)
+  entities: [StepEntity!]! @state(class: ARTIFACT)
+}

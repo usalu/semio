@@ -113,7 +113,7 @@ pub async fn inverse_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutat
 
 //#region 🔖️Kinds
 /// 🏷️ Kebab-case spelling of every [`NoteMutation`] variant, in declaration order — the vocabulary the
-/// `note-1-any` mutation catalog (`../../🔣️oracle.json`) declares and the
+/// `note-1-any` mutation catalog (`../../🔮️oracle/🔣️.json`) declares and the
 /// exhaustive `mutate-*` case measures itself against (9 document-root scalars, 3 asset-pool kinds and 21 block-tree kinds). The framework never
 /// parses Rust, so `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest
 /// against both the enum and the committed catalog.
@@ -213,15 +213,15 @@ mod kinds_catalog {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
         let manifest = concat!(
-            include_str!("../../🧪️oracle/🔣️.json"),
-            include_str!("../../../✳️ink/🧪️oracle/🔣️.json"),
-            include_str!("../../../✳️text/🧪️oracle/🔣️.json"),
-            include_str!("../../../✳️math/🧪️oracle/🔣️.json"),
-            include_str!("../../../✳️table/🧪️oracle/🔣️.json"),
-            include_str!("../../../✳️asset/🧪️oracle/🔣️.json"),
-            include_str!("../../../✳️block/🧪️oracle/🔣️.json"),
-            include_str!("../../../✳️canvas/🧪️oracle/🔣️.json"),
-            include_str!("../../../✳️document/🧪️oracle/🔣️.json"),
+            include_str!("../../🔮️oracle/🔣️.json"),
+            include_str!("../../../🖋️ink/🔮️oracle/🔣️.json"),
+            include_str!("../../../📝️text/🔮️oracle/🔣️.json"),
+            include_str!("../../../🧮️math/🔮️oracle/🔣️.json"),
+            include_str!("../../../📊️table/🔮️oracle/🔣️.json"),
+            include_str!("../../../🖼️asset/🔮️oracle/🔣️.json"),
+            include_str!("../../../🧱️block/🔮️oracle/🔣️.json"),
+            include_str!("../../../🎨️canvas/🔮️oracle/🔣️.json"),
+            include_str!("../../../📜️document/🔮️oracle/🔣️.json"),
         );
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in one of the committed subset oracle manifests' catalogs");

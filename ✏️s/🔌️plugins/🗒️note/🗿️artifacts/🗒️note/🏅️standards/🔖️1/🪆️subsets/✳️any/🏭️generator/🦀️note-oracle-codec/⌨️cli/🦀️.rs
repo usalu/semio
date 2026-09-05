@@ -1,10 +1,10 @@
 //! 🚪️ Entry point — two roles, one binary, exactly `…✳️cad/🔬️probes/🦀️oracle-probe`'s shape:
 //!
-//!   note-oracle-codec generate --out <dir> [--only <recipe-id>]*
+//!   note-oracle-codec generate --out <dir> [--physical-directories] [--only <recipe-id>]*
 //!   note-oracle-codec dxf-project|svg-project|pdf-project --input <path>
 //!   note-oracle-codec dxf-compare|svg-compare|pdf-compare --input <expected> --input <actual>
 //!
-//! `generate` is called by `../📜️script.ts` (the fixture generator) and, via `fixture reproduce`, by
+//! `generate` is called by `../../📜️script.ts` (the fixture generator) and, via `fixture reproduce`, by
 //! the repository's own test harness. `*-project`/`*-compare` are called by `../../🔬️probes/📜️script.ts`.
 
 use crate::dxf_codec;
@@ -29,12 +29,81 @@ fn values(args: &[String], flag: &str) -> Vec<String> {
     out
 }
 
-fn ext_for(carrier: &str) -> &'static str {
-    match carrier {
-        "dxf" => "dxf",
-        "svg" => "svg",
-        "pdf" => "pdf",
-        other => panic!("unknown carrier {other}"),
+fn physical_directory(id: &str) -> &'static str {
+    match id {
+        "retitles-the-document" => "📜️document/🧫️fixtures/🏷️retitles-the-document",
+        "adds-the-diagram-asset" => "🖼️asset/🧫️fixtures/➕️adds-the-diagram-asset",
+        "swaps-the-logo-payload" => "🖼️asset/🧫️fixtures/🔁️swaps-the-logo-payload",
+        "removes-the-logo-asset" => "🖼️asset/🧫️fixtures/🗑️removes-the-logo-asset",
+        "creates-an-ink-block" => "🧱️block/🧫️fixtures/🖋️creates-an-ink-block",
+        "deletes-the-intro-text-block" => "🧱️block/🧫️fixtures/✂️deletes-the-intro-text-block",
+        "deletes-the-ink-and-text-blocks" => "🧱️block/🧫️fixtures/🗑️deletes-the-ink-and-text-blocks",
+        "duplicates-the-ink-block" => "🧱️block/🧫️fixtures/📋️duplicates-the-ink-block",
+        "duplicates-the-ink-and-text-blocks" => "🧱️block/🧫️fixtures/👥️duplicates-the-ink-and-text-blocks",
+        "drags-the-callout-group-subtree" => "🧱️block/🧫️fixtures/🤏️drags-the-callout-group-subtree",
+        "moves-the-math-block" => "🧱️block/🧫️fixtures/🚚️moves-the-math-block",
+        "resizes-the-image-block" => "🧱️block/🧫️fixtures/↔️resizes-the-image-block",
+        "hides-the-intro-text-block" => "🧱️block/🧫️fixtures/🙈️hides-the-intro-text-block",
+        "edits-the-intro-paragraph" => "📝️text/🧫️fixtures/✏️edits-the-intro-paragraph",
+        "thickens-the-sketch-stroke" => "🖋️ink/🧫️fixtures/🖊️thickens-the-sketch-stroke",
+        "redraws-the-sketch-polyline" => "🖋️ink/🧫️fixtures/🎨️redraws-the-sketch-polyline",
+        other => panic!("unknown recipe {other}"),
+    }
+}
+
+fn physical_filename(id: &str, label: &str, carrier: &str) -> &'static str {
+    match (id, label, carrier) {
+        ("retitles-the-document", "before", "pdf") => "⬅️before.pdf",
+        ("retitles-the-document", "after", "pdf") => "➡️after.pdf",
+        ("adds-the-diagram-asset", "before", "svg") => "⬅️before.svg",
+        ("adds-the-diagram-asset", "after", "svg") => "➡️after.svg",
+        ("swaps-the-logo-payload", "before", "svg") => "⬅️before.svg",
+        ("swaps-the-logo-payload", "after", "svg") => "➡️after.svg",
+        ("removes-the-logo-asset", "before", "svg") => "⬅️before.svg",
+        ("removes-the-logo-asset", "after", "svg") => "➡️after.svg",
+        ("creates-an-ink-block", "before", "dxf") => "🖊️before.dxf",
+        ("creates-an-ink-block", "after", "dxf") => "📐️after.dxf",
+        ("creates-an-ink-block", "before", "svg") => "🖼️before.svg",
+        ("creates-an-ink-block", "after", "svg") => "🎨️after.svg",
+        ("deletes-the-intro-text-block", "before", "svg") => "🖼️before.svg",
+        ("deletes-the-intro-text-block", "after", "svg") => "🎨️after.svg",
+        ("deletes-the-intro-text-block", "before", "pdf") => "📖️before.pdf",
+        ("deletes-the-intro-text-block", "after", "pdf") => "📕️after.pdf",
+        ("deletes-the-ink-and-text-blocks", "before", "dxf") => "🖊️before.dxf",
+        ("deletes-the-ink-and-text-blocks", "after", "dxf") => "📐️after.dxf",
+        ("deletes-the-ink-and-text-blocks", "before", "svg") => "🖼️before.svg",
+        ("deletes-the-ink-and-text-blocks", "after", "svg") => "🎨️after.svg",
+        ("deletes-the-ink-and-text-blocks", "before", "pdf") => "📖️before.pdf",
+        ("deletes-the-ink-and-text-blocks", "after", "pdf") => "📕️after.pdf",
+        ("duplicates-the-ink-block", "before", "dxf") => "🖊️before.dxf",
+        ("duplicates-the-ink-block", "after", "dxf") => "📐️after.dxf",
+        ("duplicates-the-ink-block", "before", "svg") => "🖼️before.svg",
+        ("duplicates-the-ink-block", "after", "svg") => "🎨️after.svg",
+        ("duplicates-the-ink-and-text-blocks", "before", "dxf") => "🖊️before.dxf",
+        ("duplicates-the-ink-and-text-blocks", "after", "dxf") => "📐️after.dxf",
+        ("duplicates-the-ink-and-text-blocks", "before", "svg") => "🖼️before.svg",
+        ("duplicates-the-ink-and-text-blocks", "after", "svg") => "🎨️after.svg",
+        ("duplicates-the-ink-and-text-blocks", "before", "pdf") => "📖️before.pdf",
+        ("duplicates-the-ink-and-text-blocks", "after", "pdf") => "📕️after.pdf",
+        ("drags-the-callout-group-subtree", "before", "svg") => "⬅️before.svg",
+        ("drags-the-callout-group-subtree", "after", "svg") => "➡️after.svg",
+        ("moves-the-math-block", "before", "svg") => "⬅️before.svg",
+        ("moves-the-math-block", "after", "svg") => "➡️after.svg",
+        ("resizes-the-image-block", "before", "svg") => "⬅️before.svg",
+        ("resizes-the-image-block", "after", "svg") => "➡️after.svg",
+        ("hides-the-intro-text-block", "before", "svg") => "⬅️before.svg",
+        ("hides-the-intro-text-block", "after", "svg") => "➡️after.svg",
+        ("edits-the-intro-paragraph", "before", "pdf") => "📖️before.pdf",
+        ("edits-the-intro-paragraph", "after", "pdf") => "📕️after.pdf",
+        ("edits-the-intro-paragraph", "before", "svg") => "🖼️before.svg",
+        ("edits-the-intro-paragraph", "after", "svg") => "🎨️after.svg",
+        ("thickens-the-sketch-stroke", "before", "svg") => "⬅️before.svg",
+        ("thickens-the-sketch-stroke", "after", "svg") => "➡️after.svg",
+        ("redraws-the-sketch-polyline", "before", "dxf") => "🖊️before.dxf",
+        ("redraws-the-sketch-polyline", "after", "dxf") => "📐️after.dxf",
+        ("redraws-the-sketch-polyline", "before", "svg") => "🖼️before.svg",
+        ("redraws-the-sketch-polyline", "after", "svg") => "🎨️after.svg",
+        other => panic!("unknown fixture coordinate {other:?}"),
     }
 }
 
@@ -56,6 +125,7 @@ fn cmd_generate(args: &[String]) -> i32 {
             return 2;
         }
     };
+    let physical_directories = args.iter().any(|arg| arg == "--physical-directories");
     let only = values(args, "--only");
     let all = recipes();
     let selected: Vec<_> = if only.is_empty() { all.iter().collect() } else { all.iter().filter(|r| only.iter().any(|o| o == r.id)).collect() };
@@ -65,7 +135,7 @@ fn cmd_generate(args: &[String]) -> i32 {
     }
     let mut failed = 0;
     for recipe in selected {
-        let dir = Path::new(&out).join(recipe.id);
+        let dir = Path::new(&out).join(if physical_directories { physical_directory(recipe.id) } else { recipe.id });
         if let Err(e) = fs::create_dir_all(&dir) {
             eprintln!("[generate] {}: mkdir failed: {e}", recipe.id);
             failed += 1;
@@ -76,7 +146,7 @@ fn cmd_generate(args: &[String]) -> i32 {
             for (label, state) in [("before", &recipe.before), ("after", &recipe.after)] {
                 match encode(carrier, state) {
                     Ok(bytes) => {
-                        let path = dir.join(format!("{label}.{}", ext_for(carrier)));
+                        let path = dir.join(physical_filename(recipe.id, label, carrier));
                         if let Err(e) = fs::write(&path, &bytes) {
                             eprintln!("[generate] {}: write {path:?} failed: {e}", recipe.id);
                             ok = false;

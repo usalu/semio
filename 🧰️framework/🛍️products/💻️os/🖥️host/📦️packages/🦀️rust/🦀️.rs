@@ -9,6 +9,13 @@ extern crate semio_framework_value_derive as value_derive;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 
+#[path = "../../💾️persistence/🦀️.rs"]
+pub mod persistence;
+
+#[cfg(feature = "os-host-full")]
+#[path = "../../♻️retirement/🦀️.rs"]
+mod retirement;
+
 //#region 🔖️OsHostFull
 // 🧬️ `workflow_kernel` is the private path-mount of `🔨️modules/🔁️workflow` — kept distinct from the
 // public OS-layer `pub mod workflow` in host so that module can re-export the kernel vocabulary and

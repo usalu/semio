@@ -82,7 +82,7 @@ pub fn mp3_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#region 🔖️SampleRateTable
 /// 📐️ Sample rate table (Hz), keyed by `(version_id, index)`. Index `3` is reserved. Lives in
 /// `🧬️schema/` (not `🚪️io/`, where the frame-header codec that also calls it lives) because
-/// `💡️inferences/⏱duration` needs the same real table for its duration derivation and
+/// `💡️inferences/⏱️duration` needs the same real table for its duration derivation and
 /// `🧬️schema` must never depend on `🚪️io` — `🚪️io` depends on `🧬️schema` instead (both call
 /// sites reuse this one definition, never re-declare it).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

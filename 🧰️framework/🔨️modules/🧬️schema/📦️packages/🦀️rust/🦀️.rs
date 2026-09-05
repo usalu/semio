@@ -3,9 +3,9 @@
 #[allow(unused_extern_crates)]
 extern crate self as semio_framework_schema;
 
-#[path = "../../🦀️component.rs"]
+#[path = "../../⚛️component.rs"]
 mod component;
-#[path = "../../🦀️validator.rs"]
+#[path = "../../✅️validator.rs"]
 mod validator;
 
 pub use component::*;

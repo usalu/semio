@@ -2,7 +2,7 @@ use super::*;
 
 //#region 📐️Fixtures
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap()
 }
 
 fn census(node: &crate::TreeNode) -> SurfaceSemanticUsage {
@@ -457,7 +457,7 @@ fn surface_ownership_native_backing_inventory_preserves_capacity() {
         ("ids-backing", SURFACE_RECONCILE_FIXED_NODES * size_of::<Option<ui_contract::UiNodeId>>()),
         ("removal-backing", SURFACE_RECONCILE_FIXED_NODES * size_of::<Option<RemovalFrame>>()),
         ("semantic-value-stack", SURFACE_RECONCILE_VALUE_DEPTH * size_of::<Option<SurfaceSemanticValueFrame>>()),
-        ("tree-retirement-stack", SURFACE_RECONCILE_TREE_RETIRE_DEPTH * size_of::<Option<ui_contract::BuiltChildrenIntoIter>>()),
+        ("lazy-tree-retirement-stack", ui_contract::UI_BUILT_CHILD_RETIRE_SLOTS * size_of::<Option<ui_contract::BuiltChildrenIntoIter>>()),
         ("hypothetical-inline-patch-op-backing", SURFACE_RECONCILE_FIXED_OPS * size_of::<ui_contract::UiPatchOp>()),
         ("patch-directory-backing", SURFACE_RECONCILE_FIXED_OPS * size_of::<Vec<ui_contract::UiPatchOp>>()),
         ("patch-first-payload-backing", size_of::<ui_contract::UiPatchOp>()),
@@ -472,7 +472,7 @@ fn surface_ownership_native_backing_inventory_preserves_capacity() {
 }
 #[test]
 fn surface_ownership_resident_reservation_uses_one_shared_aggregate_ledger() {
-    let data: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🎟️resident/🧪️fixture/🔣️.json")).unwrap();
+    let data: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🎟️resident/🧫️fixture/🔣️.json")).unwrap();
     assert!(register_surface_reconcile_backing(32768).unwrap());
     let before = ui_contract::UiResidentPermit::snapshot().unwrap();
     let bytes = data["smallBytes"].as_u64().unwrap() as usize;

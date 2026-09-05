@@ -9,7 +9,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let target_dir = manifest_dir.join("🎯️targets").join("🧊️wgpu");
     let generated = target_dir.join("🤖️generated.rs");
     println!("cargo:rerun-if-changed={}", generated.display());
-    println!("cargo:rerun-if-changed={}", target_dir.join("🔣️ui-axes.json").display());
+    println!("cargo:rerun-if-changed={}", manifest_dir.join("../../🔣️ui-axes.json").display());
     println!("cargo:rerun-if-changed={}", manifest_dir.join("📜️script.ts").display());
     if !generated.is_file() {
         let status = std::process::Command::new("bun").args(["./📜️script.ts", "generate"]).current_dir(&manifest_dir).status()?;

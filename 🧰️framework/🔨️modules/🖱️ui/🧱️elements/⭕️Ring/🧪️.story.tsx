@@ -10,7 +10,7 @@
 
 import type { RingOrbData } from "@semio-tech/ui-react";
 import { Ring } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "../../🧪️🐨️story.ts";
+import type { Meta, StoryObj } from "../../🧪️story.ts";
 import { useState } from "react";
 
 // 🔷️#region 🧫️Ring

@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "contractId": "resident-native-package-metadata-v1",
+  "ownerPath": "🧰️framework/🔨️modules/🌱️value/💾️resident",
+  "packagePath": "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust",
+  "sourcePath": "🧰️framework/🔨️modules/🌱️value/💾️resident/🦀️.rs",
+  "testPath": "🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️tests/🦀️.rs",
+  "fixturePath": "🧰️framework/🔨️modules/🌱️value/💾️resident/🧫️fixture/🔣️.json",
+  "member": {
+    "registry": "members-of-members-of-modules",
+    "name": "💾️resident",
+    "ownerKindId": "members-of-modules"
+  },
+  "packageFiles": [
+    "Cargo.toml",
+    "📋️project.json",
+    "📜️script.ts"
+  ],
+  "cargo": {
+    "package": {
+      "name": "semio-framework-value-resident",
+      "version": {
+        "workspace": true
+      },
+      "edition": {
+        "workspace": true
+      },
+      "rust-version": {
+        "workspace": true
+      },
+      "metadata": {
+        "semio": {
+          "role": "framework",
+          "id": "value-resident"
+        }
+      }
+    },
+    "lints": {
+      "workspace": true
+    },
+    "lib": {
+      "name": "semio_framework_value_resident",
+      "path": "../../🦀️.rs"
+    },
+    "dev-dependencies": {
+      "serde_json": {
+        "workspace": true
+      }
+    }
+  },
+  "project": {
+    "name": "@semio-tech/value-resident-rs",
+    "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust",
+    "projectType": "library",
+    "namedInputs": {
+      "default": [
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️tests/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧫️fixture/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/📐️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧬️schema.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🤝️contract.json",
+        "sharedGlobals"
+      ]
+    },
+    "targets": {
+      "test": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test",
+          "forwardAllArgs": true
+        }
+      },
+      "check-wasm": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts check-wasm",
+          "forwardAllArgs": true
+        }
+      }
+    }
+  },
+  "wasmTargets": [
+    "wasm32-wasip2",
+    "wasm32-unknown-unknown"
+  ],
+  "imports": [
+    "BundleScript",
+    "ScriptRouter",
+    "buildBudgetMs",
+    "runBundleScriptMain",
+    "runCargoTestBudgeted",
+    "runTestBudgeted"
+  ],
+  "rejectedEntryPaths": [
+    "../../../🦀️.rs",
+    "../../../🦀️missing.rs",
+    "../../🦀️missing.rs",
+    "../🦀️.rs",
+    "../../🧪️.rs",
+    "../../🧪️test/🦀️s.rs"
+  ],
+  "launch": [
+    {
+      "name": "⚖️gate🌱️value💾️resident🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/value-resident-rs:test --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.33
+      }
+    },
+    {
+      "name": "⚖️gate🌱️value💾️resident🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/value-resident-rs:check-wasm --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.34
+      }
+    }
+  ],
+  "existingTs": {
+    "projectName": "@semio-tech/value-resident",
+    "launch": {
+      "name": "⚖️gate🌱️value💾️resident",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/value-resident:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.32
+      }
+    }
+  }
+}

@@ -38,11 +38,11 @@ pub const REMODELING_PLAY_APP_ID: &str = "remodeling-play";
 /// 🔌️ Well-known stream id every `photos:in` import lands on — a stable identity so successive workflow
 /// imports keep appending frames to the SAME stream (a pure `import_media` call has no runtime scratch
 /// to remember which stream the last call used, unlike a UI drag-drop batch's `index == 0`/`> 0`
-/// convention — see `🎮️commands/📥️import-frame-payload` for that one).
+/// convention — see `🎮️commands/🖼️import-frame-payload` for that one).
 const REMODELING_WORKFLOW_PHOTOS_STREAM_ID: &str = "workflow-photos";
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
-/// (`📌️panels/*`, `🎚️options/*`) builds its `on_change`/item actions with.
+/// (`📌️panels/*`, `☑️options/*`) builds its `on_change`/item actions with.
 pub fn remodeling_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     semio_framework_plugin::ActionFactory::new(REMODELING_PLAY_APP_ID).action(action, args)
 }
@@ -164,7 +164,7 @@ pub async fn remodeling_mesh_out_port() -> MediaPortSpec {
 //#region 🔖️Payloads
 /// 📦️ Decodes a `requestFileOpen(readAs: "dataUrl")`/`RequestMediaFrames` payload into `(mime, bytes)`.
 /// Relocated from the artifact's `⚙️engine/🦀️.rs` (#2553): its only three consumers are all
-/// app-side (`🎮️commands/📥️import-frame-payload`, `🎮️commands/🚀️run-reconstruction`, this app's own `import_media`).
+/// app-side (`🎮️commands/🖼️import-frame-payload`, `🎮️commands/🏗️run-reconstruction`, this app's own `import_media`).
 pub fn payload_from_data_url(data_url: &str) -> Option<(String, Vec<u8>)> {
     let (header, encoded) = data_url.split_once(',')?;
     let mime = header.strip_prefix("data:")?.split(';').next().unwrap_or("application/octet-stream").to_string();
@@ -172,8 +172,8 @@ pub fn payload_from_data_url(data_url: &str) -> Option<(String, Vec<u8>)> {
     Some((mime, bytes))
 }
 
-/// 🖼️ Decodes a still-image payload by mime — three consumers (`🎮️commands/📥️import-frame-payload`,
-/// `🎮️commands/🚀️run-reconstruction`, this app's own `import_media`), and it takes no artifact-schema
+/// 🖼️ Decodes a still-image payload by mime — three consumers (`🎮️commands/🖼️import-frame-payload`,
+/// `🎮️commands/🏗️run-reconstruction`, this app's own `import_media`), and it takes no artifact-schema
 /// type, so it stays app-side (relocated from `⚙️engine/🦀️.rs`, #2553).
 pub fn decode_still_image(mime: &str, bytes: &[u8]) -> Result<remodeling_image::ImageRgba8, remodeling_image::ImageError> {
     if mime.contains("jpeg") || mime.contains("jpg") {

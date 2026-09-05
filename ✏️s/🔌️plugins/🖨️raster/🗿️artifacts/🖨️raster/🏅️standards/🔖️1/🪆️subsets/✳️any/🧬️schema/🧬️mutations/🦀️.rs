@@ -415,7 +415,7 @@ pub fn apply_raster_mutation_json(snapshot_json: &str, mutation_json: &str) -> R
 }
 
 /// ↩️ Applies one committed mutation payload and then EVERY step of its own computed inverse,
-/// answering in the same shape — the metamorphic half of what `mutate-raster-1` compares against its
+/// answering in the same shape — the metamorphic half of what `🟠️mutate-raster-1` compares against its
 /// Python second implementation. The inverse is computed against the PRE-mutation document, which is
 /// the only state that carries what a delete removed.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -452,7 +452,7 @@ pub fn round_trip_raster_dsl(text: &str) -> Result<String, String> {
 //#region 🔖️Kinds
 /// 🏷️ Kebab-case spelling of every `RasterMutation` variant, in declaration order — the vocabulary
 /// the `raster-1-any` catalog (`../../🔣️oracle.json`) declares and the
-/// `mutate-raster-1` exhaustive case measures itself against. Ten address the recursive layer tree;
+/// `🟠️mutate-raster-1` exhaustive case measures itself against. Ten address the recursive layer tree;
 /// the last two join that tree to the document's root `assets` pool by id.
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against the enum,
 /// since the framework never parses Rust.
@@ -489,7 +489,7 @@ mod kinds_catalog_tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔮️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed raster-1-any catalog");
         }

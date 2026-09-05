@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "items": {
+    "type": "object", "additionalProperties": false, "required": ["module", "engine"],
+    "properties": {
+      "module": { "type": "string", "minLength": 1 },
+      "engine": { "type": "string", "pattern": "^\\./(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$" }
+    }
+  }
+}

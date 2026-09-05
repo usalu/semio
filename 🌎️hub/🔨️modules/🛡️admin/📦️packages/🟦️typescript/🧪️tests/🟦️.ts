@@ -8,7 +8,7 @@ import { defineConfig } from "vitest/config";
 const dir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = resolve(dir, "../../../../..");
 
-/** @emoji 🧪️ Vitest for `@semio-tech/hub-admin` — component tests in `🧪️admin.test.tsx`, plus the
+/** @emoji 🧪️ Vitest for `@semio-tech/hub-admin` — component tests in `🛡️admin.test.tsx`, plus the
  * `📚️I18n` element's own in-source `import.meta.vitest` parity test. */
 export default defineConfig({
   root: dir,
@@ -23,9 +23,9 @@ export default defineConfig({
   test: {
     name: "@semio-tech/hub-admin",
     environment: "jsdom",
-    include: ["🧪️admin.test.tsx"],
+    include: ["🛡️admin.test.tsx"],
     includeSource: ["../../🧱️elements/📚️I18n/🟦️.tsx"],
-    coverage: { include: ["🧪️admin.test.tsx", "../../🧱️elements/**/🟦️.tsx"] },
+    coverage: { include: ["🛡️admin.test.tsx", "../../🧱️elements/**/🟦️.tsx"] },
     setupFiles: [resolve(dir, "🟦️.ts")],
     passWithNoTests: false,
   },

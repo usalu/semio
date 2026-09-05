@@ -665,6 +665,14 @@ pub fn parse(text: &str, spec: &RecordSpec, opts: &ParseOptions) -> Result<Cst, 
     parse_tokens(tokens, spec, opts)
 }
 
+/// 🛑️ Parses one terminal record and rejects every token outside its schema-owned body.
+pub fn parse_exact(text: &str, spec: &RecordSpec, opts: &ParseOptions) -> Result<Cst, TextError> {
+    let mut cursor = Cursor::new(lex(text, &opts.limits, false)?, opts.limits);
+    let record = parse_record_body(&mut cursor, spec, 0)?;
+    cursor.expect(TokenKind::Eof)?;
+    Ok(record)
+}
+
 fn ident_like_text(token: &SpannedToken) -> String {
     token.text.as_str().to_string()
 }
@@ -2394,6 +2402,20 @@ mod tests {
         assert_eq!(value.get(3), Some(&FieldValue::Absent));
         let printed = print(&value, &spec, JoinMode::Document);
         assert!(!printed.contains("label"), "optional absent field must be omitted: {printed}");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn exact_record_parse_rejects_tokens_outside_the_terminal_schema() {
+        let spec = camera_spec();
+        let options = ParseOptions::default();
+        let wire = "camera x=1 y=2 zoom=3";
+        let expected = parse(wire, &spec, &options).unwrap();
+        assert_eq!(parse_exact(&format!(" \t{wire}\t "), &spec, &options).unwrap(), expected);
+        for tail in ["unknown=4", "x=4", "camera x=4 y=5 zoom=6", "garbage"] {
+            let composed = format!("{wire} {tail}");
+            assert_eq!(parse(&composed, &spec, &options).unwrap(), expected);
+            assert!(parse_exact(&composed, &spec, &options).is_err(), "{tail}");
+        }
     }
 
     // --- primitive: embed — fenced verbatim text (Document) / escaped Text (Inline) ---

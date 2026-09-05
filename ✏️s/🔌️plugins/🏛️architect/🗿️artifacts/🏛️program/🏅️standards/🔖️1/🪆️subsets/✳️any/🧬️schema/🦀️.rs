@@ -531,7 +531,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for ProgramAnalyzerAnalysis {
         type Parts = ProgramParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.program", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.architect.program", standard: StandardId("1"), subset: SubsetId("*") };
 
         async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium

@@ -2,6 +2,14 @@
   "name": "@semio-tech/ui-runtime-rs",
   "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
+    "tree-retirement-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts tree-retirement-check",
+        "forwardAllArgs": true
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

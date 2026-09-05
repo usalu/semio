@@ -1,0 +1,20 @@
+{
+  "schema": "spatial.action",
+  "id": "transform.mirror",
+  "version": "1.0.0",
+  "label": "Mirror",
+  "steps": [
+    {
+      "operation": "kernel.call",
+      "function": "spatial.action.capability",
+      "assignTo": "result"
+    },
+    {
+      "operation": "return",
+      "result": {
+        "kind": "var",
+        "name": "result"
+      }
+    }
+  ]
+}

@@ -1,3 +1,0 @@
-(* ebnf s.stdio.semio.audio.inference *)
-document = header, body ;
-header = 'schema', space, 's.stdio.semio.audio.inference', newline ;

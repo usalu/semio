@@ -1,0 +1,3 @@
+(* ebnf stdio.svg.inference *)
+document = header, body ;
+header = 'schema', space, 'stdio.svg.inference', newline ;

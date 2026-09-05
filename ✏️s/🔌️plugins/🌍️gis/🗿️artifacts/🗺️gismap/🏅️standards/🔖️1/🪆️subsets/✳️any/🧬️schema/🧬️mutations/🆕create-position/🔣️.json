@@ -5,7 +5,7 @@
   "displayName": "Create Position",
   "emoji": "🆕",
   "aggregateVariant": "CreatePosition",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "create-position",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

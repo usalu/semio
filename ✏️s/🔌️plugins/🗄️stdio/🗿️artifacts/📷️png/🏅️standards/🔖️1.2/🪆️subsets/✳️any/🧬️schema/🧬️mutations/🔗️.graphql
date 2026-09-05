@@ -11,7 +11,7 @@
 # insert-text-chunk/InsertTextChunk: 📥️insert-text-chunk/🔗️.graphql
 # remove-text-chunk/RemoveTextChunk: 🗑️remove-text-chunk/🔗️.graphql
 # replace-text-chunk/ReplaceTextChunk: ✏️replace-text-chunk/🔗️.graphql
-# replace-pixels/ReplacePixels: 🟪️replace-pixels/🔗️.graphql
+# replace-pixels/ReplacePixels: 🔲️replace-pixels/🔗️.graphql
 # insert-unknown-chunk/InsertUnknownChunk: 📦️insert-unknown-chunk/🔗️.graphql
 # remove-unknown-chunk/RemoveUnknownChunk: 📤️remove-unknown-chunk/🔗️.graphql
 enum PngMutationKind { CHANGE_HEADER REPLACE_PALETTE CHANGE_TRANSPARENCY CHANGE_GAMMA CHANGE_CHROMATICITIES CHANGE_SRGB_INTENT CHANGE_PHYSICAL_DIMS CHANGE_TIMESTAMP CHANGE_BACKGROUND INSERT_TEXT_CHUNK REMOVE_TEXT_CHUNK REPLACE_TEXT_CHUNK REPLACE_PIXELS INSERT_UNKNOWN_CHUNK REMOVE_UNKNOWN_CHUNK }

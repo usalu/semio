@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/norm/din18599/snapshot/text.json",
+  "title": "Din18599SnapshotText",
+  "type": "object"
+}

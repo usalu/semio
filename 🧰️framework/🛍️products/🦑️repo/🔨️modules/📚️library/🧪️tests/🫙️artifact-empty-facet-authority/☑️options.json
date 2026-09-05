@@ -1,0 +1,13 @@
+{
+  "contractId": "artifact-empty-facet-primary-markdown-v1",
+  "cases": [
+    { "id": "artifact-window", "sourcePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/☑️options/📌️.empty.md", "fileKindId": "markdown", "ownerForm": "artifact-window" },
+    { "id": "engine-window", "sourcePath": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎭️modes/🌐️main/🪟️windows/🔄️workflow/☑️options/📌️.empty.md", "fileKindId": "markdown", "ownerForm": "engine-window" },
+    { "id": "extension-window", "sourcePath": "✏️s/🔌️plugins/🪐️space/🧩️extensions/🪟️windows/☑️options/📌️.empty.md", "fileKindId": "markdown", "ownerForm": "extension-window" },
+    { "id": "old-generic-options", "sourcePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🎚️options/📌️.empty.md", "fileKindId": "markdown", "ownerForm": null },
+    { "id": "unknown-owner", "sourcePath": "✏️s/🔌️plugins/🧪️unknown/🧩️extensions/🪟️windows/☑️options/📌️.empty.md", "fileKindId": "markdown", "ownerForm": null },
+    { "id": "wrong-parent", "sourcePath": "✏️s/🔌️plugins/🪐️space/☑️options/📌️.empty.md", "fileKindId": "markdown", "ownerForm": null },
+    { "id": "wrong-kind", "sourcePath": "✏️s/🔌️plugins/🪐️space/🧩️extensions/🪟️windows/☑️options/📌️.empty.md", "fileKindId": "text", "ownerForm": null },
+    { "id": "traversal", "sourcePath": "✏️s/🔌️plugins/🪐️space/../🪐️space/🧩️extensions/🪟️windows/☑️options/📌️.empty.md", "fileKindId": "markdown", "ownerForm": null }
+  ]
+}

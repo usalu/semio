@@ -1,5 +1,0 @@
-{
-  "mutation": "changeVortexVortexKind",
-  "id": "vortex-front",
-  "newVortexKind": "hatch"
-}

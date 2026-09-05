@@ -1,0 +1,61 @@
+{
+  "$id": "https://semio.tech/schema/app/fem/2d/config.json",
+  "title": "Fem2dConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "resultMode",
+    "resultModeIndex",
+    "camera",
+    "locale"
+  ],
+  "properties": {
+    "resultSourceId": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "resultMode": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "resultModeIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "config"
+    },
+    "camera": {
+      "$ref": "#/$defs/FemCamera",
+      "x-semio-state": "config"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "config"
+    }
+  },
+  "$defs": {
+    "FemCamera": {
+      "title": "FemCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    }
+  }
+}

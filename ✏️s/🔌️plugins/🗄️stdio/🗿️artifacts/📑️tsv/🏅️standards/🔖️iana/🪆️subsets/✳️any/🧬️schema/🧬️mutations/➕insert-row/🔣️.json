@@ -5,7 +5,7 @@
   "displayName": "Insert Row",
   "emoji": "➕",
   "aggregateVariant": "InsertRow",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "insert-row",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

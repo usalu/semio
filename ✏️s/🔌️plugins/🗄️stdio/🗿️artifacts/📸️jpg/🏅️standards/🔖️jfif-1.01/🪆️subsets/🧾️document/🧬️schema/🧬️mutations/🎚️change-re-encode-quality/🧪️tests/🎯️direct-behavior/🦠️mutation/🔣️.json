@@ -1,0 +1,6 @@
+{
+  "mutation": "change-re-encode-quality",
+  "payload": {
+    "quality": 75
+  }
+}

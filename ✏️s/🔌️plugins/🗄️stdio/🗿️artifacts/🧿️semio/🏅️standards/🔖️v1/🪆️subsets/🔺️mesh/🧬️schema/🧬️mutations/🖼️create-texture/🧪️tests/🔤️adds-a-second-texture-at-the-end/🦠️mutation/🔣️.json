@@ -1,0 +1,13 @@
+{
+  "CreateTexture": {
+    "texture": {
+      "id": "tex-b",
+      "mime": "image/jpeg",
+      "bytes": [
+        9,
+        8,
+        7
+      ]
+    }
+  }
+}

@@ -51,8 +51,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// `ASSEMBLY_DIALECT` above derives from (verified against the schema tree, not guessed).
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace};
-    ArtifactDefinition::new(ArtifactIdentity::parse("s.assembly")?)
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.assembly.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.assembly")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.assembly")?)?)
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.procedural.assembly")?)
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.procedural.assembly.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.procedural.assembly")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.procedural.assembly")?)?)
 }
 
 // 🚧️ NO `declaration()` here yet — deliberately, not an oversight. `ArtifactDeclaration::builder(...)

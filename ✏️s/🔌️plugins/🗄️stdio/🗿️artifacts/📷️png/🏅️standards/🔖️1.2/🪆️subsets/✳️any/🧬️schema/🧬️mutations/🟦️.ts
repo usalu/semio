@@ -11,7 +11,7 @@ import type { ChangeBackgroundMutation } from './🖼️change-background/🟦�
 import type { InsertTextChunkMutation } from './📥️insert-text-chunk/🟦️.ts';
 import type { RemoveTextChunkMutation } from './🗑️remove-text-chunk/🟦️.ts';
 import type { ReplaceTextChunkMutation } from './✏️replace-text-chunk/🟦️.ts';
-import type { ReplacePixelsMutation } from './🟪️replace-pixels/🟦️.ts';
+import type { ReplacePixelsMutation } from './🔲️replace-pixels/🟦️.ts';
 import type { InsertUnknownChunkMutation } from './📦️insert-unknown-chunk/🟦️.ts';
 import type { RemoveUnknownChunkMutation } from './📤️remove-unknown-chunk/🟦️.ts';
 export type PngMutation =

@@ -5,7 +5,7 @@ use super::*;
 //#region 🧪️InitializedOwnership
 #[test]
 fn instance_lifetime_ui_fixed_list_initializes_only_owned_payloads() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let mut values: UiFixedList<serde_json::Value, 4> = serde_json::from_value(row["values"].clone()).unwrap();
         assert_eq!(serde_json::to_value(&values).unwrap(), row["values"]);
@@ -26,7 +26,7 @@ impl Drop for CountedPayload {
 
 #[test]
 fn instance_lifetime_ui_fixed_list_empty_release_preserves_transferred_payload() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap();
     let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let mut values = UiFixedList::<CountedPayload, 4>::default();
     assert!(values.try_reserve().unwrap());
@@ -47,7 +47,7 @@ fn instance_lifetime_ui_fixed_list_empty_release_preserves_transferred_payload()
 
 #[test]
 fn instance_lifetime_ui_fixed_list_reservation_preserves_fixed_envelope() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap();
     let mut values = UiFixedList::<u32, 4>::default();
     assert_eq!(values.try_push_reserved(99).is_ok(), fixture["ownership"]["unreservedPushAccepted"].as_bool().unwrap());
     assert!(values.terminal_is_empty());

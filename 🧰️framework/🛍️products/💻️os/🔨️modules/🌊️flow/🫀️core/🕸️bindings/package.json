@@ -1,0 +1,17 @@
+{
+  "type": "module",
+  "version": "0.1.0",
+  "sideEffects": [
+    "./snippets/*"
+  ],
+  "name": "@semio-tech/flow-core",
+  "files": [
+    "flow_core_bg.wasm",
+    "flow_core.js",
+    "flow_core.d.ts",
+    "flow_core_bg.wasm.d.ts"
+  ],
+  "main": "flow_core.js",
+  "module": "flow_core.js",
+  "types": "flow_core.d.ts"
+}

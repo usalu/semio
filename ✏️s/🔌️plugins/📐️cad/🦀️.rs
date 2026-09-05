@@ -26,6 +26,7 @@ pub fn plugin() -> Result<Plugin<CadApps>, semio_framework_plugin::PluginAssembl
     Plugin::<CadApps>::builder("cad")
         .label("CAD")
         .version("0.1.0")
+        .package_id("semio:cad")
         .artifact(crate::artifacts::cad::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .host_media_handler(HostMediaHandlerDeclaration::mesh_dwg_bridge("s.cad.host-media.mesh-dwg", crate::artifacts::cad::artifact_kind(), crate::artifacts::cad::CAD_DOCUMENT_SCHEMA, crate::artifacts::cad::io::cad_document_from_mesh)?)
         .editor::<crate::editor::cad::CadPlayApp>(crate::editor::cad::create_cad_app())

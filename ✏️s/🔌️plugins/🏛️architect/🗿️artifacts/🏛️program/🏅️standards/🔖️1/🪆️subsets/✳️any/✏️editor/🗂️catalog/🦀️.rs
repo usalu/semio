@@ -528,7 +528,7 @@ pub async fn add_register_item_operation(program: &ProgramSnapshot, register: &s
         ($variant:ident, $module:ident, $field:ident, $item:expr) => {{
             let item = $item;
             let id = item.header.id.clone();
-            (ProgramMutation::$variant(leaves::$module::mutation::$variant { $field: item }), id)
+            (ProgramMutation::$variant(leaves::$module::$variant { $field: item }), id)
         }};
     }
     Some(match register {
@@ -662,7 +662,7 @@ pub async fn add_register_item_operation(program: &ProgramSnapshot, register: &s
             let to = program.elements.get(1).map_or_else(|| EntityId::new_serial("to", "to"), |element| element.header.id.clone());
             let item = TraceLink::new(from, to, TraceKind::FunctionToProgramElement);
             let id = item.id.clone();
-            (ProgramMutation::ConnectTrace(leaves::connect_trace::mutation::ConnectTrace { trace: item }), id)
+            (ProgramMutation::ConnectTrace(leaves::connect_trace::ConnectTrace { trace: item }), id)
         }
         _ => return None,
     })
@@ -671,7 +671,7 @@ pub async fn add_register_item_operation(program: &ProgramSnapshot, register: &s
 pub async fn remove_register_item_operation(register: &str, entity_id: EntityId) -> Option<ProgramMutation> {
     macro_rules! delete {
         ($variant:ident, $module:ident) => {
-            ProgramMutation::$variant(leaves::$module::mutation::$variant { id: entity_id })
+            ProgramMutation::$variant(leaves::$module::$variant { id: entity_id })
         };
     }
     Some(match register {
@@ -682,7 +682,7 @@ pub async fn remove_register_item_operation(register: &str, entity_id: EntityId)
         "elements" => delete!(DeleteProgramElement, delete_program_element),
         "quantities" => delete!(DeleteQuantityRequirement, delete_quantity_requirement),
         "relationships" => delete!(DeleteRelationship, delete_relationship),
-        "adjacencies" => ProgramMutation::DisconnectAdjacency(leaves::disconnect_adjacency::mutation::DisconnectAdjacency { id: entity_id }),
+        "adjacencies" => ProgramMutation::DisconnectAdjacency(leaves::disconnect_adjacency::DisconnectAdjacency { id: entity_id }),
         "processes" => delete!(DeleteProcess, delete_process),
         "flows" => delete!(DeleteFlowRequirement, delete_flow_requirement),
         "access_rules" => delete!(DeleteAccessRule, delete_access_rule),
@@ -740,7 +740,7 @@ pub async fn remove_register_item_operation(register: &str, entity_id: EntityId)
         "templates" => delete!(DeleteTemplateRecord, delete_template_record),
         "knowledge" => delete!(DeleteKnowledgeRecord, delete_knowledge_record),
         "benchmarks" => delete!(DeleteBenchmarkRecord, delete_benchmark_record),
-        "traces" => ProgramMutation::DisconnectTrace(leaves::disconnect_trace::mutation::DisconnectTrace { id: entity_id }),
+        "traces" => ProgramMutation::DisconnectTrace(leaves::disconnect_trace::DisconnectTrace { id: entity_id }),
         _ => return None,
     })
 }
@@ -762,42 +762,42 @@ pub async fn patch_register_item_operation(program: &ProgramSnapshot, register: 
         "stakeholders" => {
             let existing = program.stakeholders.iter().find(|row| row.header.id == entity_id)?;
             let merged = merge_json_patch(existing, &patch)?;
-            ProgramMutation::ReplaceStakeholder(leaves::replace_stakeholder::mutation::ReplaceStakeholder { stakeholder: merged })
+            ProgramMutation::ReplaceStakeholder(leaves::replace_stakeholder::ReplaceStakeholder { stakeholder: merged })
         }
         "elements" => {
             let existing = program.elements.iter().find(|row| row.header.id == entity_id)?;
             let merged = merge_json_patch(existing, &patch)?;
-            ProgramMutation::ReplaceProgramElement(leaves::replace_program_element::mutation::ReplaceProgramElement { program_element: merged })
+            ProgramMutation::ReplaceProgramElement(leaves::replace_program_element::ReplaceProgramElement { program_element: merged })
         }
         "adjacencies" => {
             let existing = program.adjacencies.iter().find(|row| row.header.id == entity_id)?;
             let merged = merge_json_patch(existing, &patch)?;
-            ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::mutation::ConnectAdjacency { adjacency: merged })
+            ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency: merged })
         }
         "requirements" => {
             let existing = program.requirements.iter().find(|row| row.header.id == entity_id)?;
             let merged = merge_json_patch(existing, &patch)?;
-            ProgramMutation::ReplaceRequirement(leaves::replace_requirement::mutation::ReplaceRequirement { requirement: merged })
+            ProgramMutation::ReplaceRequirement(leaves::replace_requirement::ReplaceRequirement { requirement: merged })
         }
         "risks" => {
             let existing = program.risks.iter().find(|row| row.header.id == entity_id)?;
             let merged = merge_json_patch(existing, &patch)?;
-            ProgramMutation::ReplaceRisk(leaves::replace_risk::mutation::ReplaceRisk { risk: merged })
+            ProgramMutation::ReplaceRisk(leaves::replace_risk::ReplaceRisk { risk: merged })
         }
         "issues" => {
             let existing = program.issues.iter().find(|row| row.header.id == entity_id)?;
             let merged = merge_json_patch(existing, &patch)?;
-            ProgramMutation::ReplaceIssue(leaves::replace_issue::mutation::ReplaceIssue { issue: merged })
+            ProgramMutation::ReplaceIssue(leaves::replace_issue::ReplaceIssue { issue: merged })
         }
         "functions" => {
             let existing = program.functions.iter().find(|row| row.header.id == entity_id)?;
             let merged = merge_json_patch(existing, &patch)?;
-            ProgramMutation::ReplaceFunction(leaves::replace_function::mutation::ReplaceFunction { function: merged })
+            ProgramMutation::ReplaceFunction(leaves::replace_function::ReplaceFunction { function: merged })
         }
         "users" => {
             let existing = program.users.iter().find(|row| row.header.id == entity_id)?;
             let merged = merge_json_patch(existing, &patch)?;
-            ProgramMutation::ReplaceUserProfile(leaves::replace_user_profile::mutation::ReplaceUserProfile { user_profile: merged })
+            ProgramMutation::ReplaceUserProfile(leaves::replace_user_profile::ReplaceUserProfile { user_profile: merged })
         }
         _ => return None,
     })

@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/s/stdio/semio/audio/inference/text.json",
-  "title": "SemioAudioInferenceText",
-  "type": "object"
-}

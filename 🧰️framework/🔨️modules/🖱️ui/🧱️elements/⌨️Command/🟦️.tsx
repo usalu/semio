@@ -11,7 +11,7 @@ import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.t
 import { borderNormalBottomClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { uiFormControlBrowserDefaultProps } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";
 import { menuListItemClassName } from "../../🔨️modules/📋️menu-item-presentation/🟦️.ts";
-import { type UiLabel } from "../🏷️UiLabel/🟦️.tsx";
+import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { SearchIcon } from "../🔣️Icons/🟦️.tsx";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, type DialogProps } from "../💬️Dialog/🟦️.tsx";

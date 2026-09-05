@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.create-scene.v1.mutation",
+  "title": "GltfCreateScenePayloadV1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "position": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    }
+  },
+  "required": [
+    "position"
+  ],
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.create-scene.v1",
+    "version": 1,
+    "phase": "mutation",
+    "touchedPathPattern": "document/scenes/{position}"
+  },
+  "x-semio-mutation": "create-scene"
+}

@@ -5,7 +5,7 @@
   "displayName": "Remove Step",
   "emoji": "➖",
   "aggregateVariant": "RemoveStep",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "remove-step",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

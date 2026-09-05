@@ -5,7 +5,7 @@
   "displayName": "Create Block",
   "emoji": "➕",
   "aggregateVariant": "CreateBlock",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

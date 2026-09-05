@@ -1,6 +1,6 @@
 use super::*;
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap() }
 
 fn close_typed<T: UiTypedRetire>(root: &mut T, grant: usize) -> usize {
     let mut cursor = UiTypedRetirementCursor::default();
@@ -50,7 +50,7 @@ fn instance_lifetime_ui_document_terminal_includes_typed_value_descendants() {
 
 #[test]
 fn instance_lifetime_ui_typed_all_components_account_exact_payload_bytes() {
-    let components: serde_json::Value = serde_json::from_str(include_str!("../🧪️components.json")).unwrap();
+    let components: serde_json::Value = serde_json::from_str(include_str!("../🧩️components.json")).unwrap();
     let fixture = fixture();
     let actual: Vec<_> = components["cases"].as_array().unwrap().iter().map(|row| row["component"]["type"].clone()).collect();
     assert_eq!(serde_json::Value::Array(actual), fixture["componentVariants"]);

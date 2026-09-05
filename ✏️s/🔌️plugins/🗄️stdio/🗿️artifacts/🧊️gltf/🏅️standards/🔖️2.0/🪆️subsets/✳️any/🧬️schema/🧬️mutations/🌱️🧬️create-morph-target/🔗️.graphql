@@ -1,7 +1,0 @@
-# create-morph-target mutation facet.
-input GltfCreateMorphTargetPayloadV1 {
-  mesh: Int!
-  primitive: Int!
-  position: Int!
-}
-type GltfCreateMorphTargetMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

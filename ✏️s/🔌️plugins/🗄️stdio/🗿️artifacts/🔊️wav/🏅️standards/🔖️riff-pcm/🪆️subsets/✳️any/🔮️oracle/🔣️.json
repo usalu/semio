@@ -1,0 +1,305 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset contributes the exhaustive WAV RIFF-PCM mutation vocabulary. The root stdio oracle manifest owns the shared dependency-free PCM16 oracle for both creation and mutation capabilities.",
+  "oracles": [
+    {
+      "id": "hound-wav-riff-pcm-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "hound",
+      "version": "3.5.1",
+      "engine": {
+        "family": "hound",
+        "implementation": "hound WAV PCM encoder/decoder",
+        "version": "3.5.1"
+      },
+      "capabilities": [
+        "wav-riff-pcm-mutate"
+      ],
+      "license": "Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://github.com/ruuda/hound",
+      "rationale": "📖️ A READER (this subset carries no reimplementation oracle at all — no `oracles` entry existed in this file before this registration). hound 3.5.1 is a from-scratch RIFF/WAVE PCM encoder+decoder, entirely independent of this repository's own WAV codec. `WavReader::open(path).spec()` exposes `channels`, `sample_rate`, `bits_per_sample` and `sample_format` read directly from the real `fmt ` chunk, and `.duration()`/the sample iterator read the real `data` chunk — directly witnessing `set-fmt`, `set-data` and `set-snapshot`. Verified against this subset's own committed `shared://🧪️bauen-mit-bestand-ausschnitt/🔊️.wav`: `spec()` reported the real `channels=1 sample_rate=8000 bits_per_sample=16` PCM16 format and a real 96000-sample duration. HONEST PARTIAL: hound's own reader explicitly skips any RIFF chunk besides `fmt `/`fact`/`data` (confirmed by reading its vendored source, `read.rs`'s own comment \"Ignore the chunk; skip all of its bytes\") — it cannot witness `set-other-chunks` on its own; the sibling `riff-wav-riff-pcm-mutate-chunk-reader` entry below covers that kind.",
+      "comparisonProfiles": [
+        "semantic-audio-v1"
+      ]
+    },
+    {
+      "id": "riff-wav-riff-pcm-mutate-chunk-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "riff",
+      "version": "2.0.0",
+      "engine": {
+        "family": "riff",
+        "implementation": "riff generic RIFF container reader",
+        "version": "2.0.0"
+      },
+      "capabilities": [
+        "wav-riff-pcm-mutate"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://github.com/frabert/riff",
+      "rationale": "📖️ A generic RIFF chunk-sequence READER, covering the one kind the sibling `hound` entry above cannot: `set-other-chunks`. `riff` 2.0.0 is a from-scratch generic RIFF-container walker (used nowhere else by this repository's WAV path), and `riff::Chunk::read` + `.iter()` enumerate every top-level chunk by id and length without interpreting PCM semantics at all — so an inserted/removed/resized LIST/INFO-style chunk is directly observable as a change in the enumerated chunk sequence. Verified against this subset's own committed `shared://🧪️bauen-mit-bestand-ausschnitt/🔊️.wav`: the walker reported the real top-level `fmt `(16 bytes)/`data`(192000 bytes) chunk sequence.",
+      "comparisonProfiles": [
+        "semantic-audio-v1"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "wav-riff-pcm-any",
+      "capability": "wav-riff-pcm-mutate",
+      "standardDirectoryName": "🔖️riff-pcm",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "🟤️set-snapshot",
+          "mutationDirectoryName": "📸️set-snapshot",
+          "scenarios": [
+            {
+              "id": "resamples-to-16-khz-and-doubles-the-pcm16-amplitude",
+              "directoryName": "🔊️resamples-to-16-khz-and-doubles-the-pcm16-amplitude"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "set-snapshot",
+        "set-fmt",
+        "set-data",
+        "set-other-chunks"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.wav",
+      "standard": "riff-pcm",
+      "subset": "any",
+      "standardDirectoryName": "🔖️riff-pcm",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "set-data",
+          "capability": "wav-riff-pcm-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-data",
+            "bridgeVersion": 1,
+            "variant": "SetData"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wav-riff-pcm-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "hound-wav-riff-pcm-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-fmt",
+          "capability": "wav-riff-pcm-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-fmt",
+            "bridgeVersion": 1,
+            "variant": "SetFmt"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wav-riff-pcm-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "hound-wav-riff-pcm-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-other-chunks",
+          "capability": "wav-riff-pcm-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-other-chunks",
+            "bridgeVersion": 1,
+            "variant": "SetOtherChunks"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wav-riff-pcm-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "hound-wav-riff-pcm-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "wav-riff-pcm-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wav-riff-pcm-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "hound-wav-riff-pcm-mutate-reader"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-fmt-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.wav",
+        "standard": "riff-pcm",
+        "subset": "any"
+      },
+      "mutation": "set-fmt",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🎚️set-fmt/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3cc85e200389bb9225b7d59e078e7521e82348d00fbe50e892224d81208a0633",
+          "bytes": 299
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🎚️set-fmt/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:dfcd022d3723102802a254da56b9313636fa2d54549b581e90ac8e0bc1c4d6d3",
+          "bytes": 300
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "wav-carrier",
+      "notes": "SetFmt replaces the whole `fmt ` chunk — mono 44.1kHz becomes real stereo 48kHz, with byteRate/blockAlign recomputed consistently, as RIFF-PCM's own fmt chunk requires."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-other-chunks-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.wav",
+        "standard": "riff-pcm",
+        "subset": "any"
+      },
+      "mutation": "set-other-chunks",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📎️set-other-chunks/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3cc85e200389bb9225b7d59e078e7521e82348d00fbe50e892224d81208a0633",
+          "bytes": 299
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📎️set-other-chunks/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d05ce7fd4c11d851cde5cb418dc7f58af16147f439ef4388e509beade6db9fdd",
+          "bytes": 409
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "wav-carrier",
+      "notes": "SetOtherChunks replaces the non-fmt/non-data RIFF chunk list with a real LIST/INFO chunk."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-data-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.wav",
+        "standard": "riff-pcm",
+        "subset": "any"
+      },
+      "mutation": "set-data",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🔊️set-data/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3cc85e200389bb9225b7d59e078e7521e82348d00fbe50e892224d81208a0633",
+          "bytes": 299
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🔊️set-data/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:de3d7fda6254b7759804e317712e2090b38b605873be22b01c66c924729c50aa",
+          "bytes": 321
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "wav-carrier",
+      "notes": "SetData replaces the whole `data` chunk with a longer real PCM16 sample sequence."
+    }
+  ]
+}

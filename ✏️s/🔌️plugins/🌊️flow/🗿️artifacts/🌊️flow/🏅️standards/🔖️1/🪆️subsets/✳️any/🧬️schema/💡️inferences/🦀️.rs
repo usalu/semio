@@ -83,7 +83,7 @@ mod tests {
     use flow::Widget;
     use protocol::Inference;
 
-    async fn chain_snapshot() -> FlowSnapshot {
+    fn chain_snapshot() -> FlowSnapshot {
         let mut fixture = FlowSnapshot::default().to_fixture();
         fixture.widgets = vec![Widget::InputSlider { id: "a".into(), label: "A".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 }, Widget::InputSlider { id: "b".into(), label: "B".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 }];
         fixture.synapses = vec![flow::SynapseSpec { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: String::new(), to_port: String::new() }];

@@ -54,29 +54,29 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.remodeling.standard.v1", "standard", "1", &[], None),
-        ("s.remodeling.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.remodeling.schema.artifact", "schema", "s.remodeling.remodeling", &[("schema", "s.remodeling.remodeling")], None),
-        ("s.remodeling.inference.artifact", "inference", "s.remodeling.remodeling.inference", &[("schema", "s.remodeling.remodeling.inference")], None),
-        ("s.remodeling.composer.native", "composer", "s.remodeling@1/*", &[("dialect", "s.remodeling@1/*")], None),
-        ("s.remodeling.composer.format-1", "composer", "s.stdio.las@1.0/*", &[("dialect", "s.stdio.las@1.0/*")], None),
-        ("s.remodeling.composer.format-2", "composer", "s.stdio.ply@1.0/*", &[("dialect", "s.stdio.ply@1.0/*")], None),
-        ("s.remodeling.composer.format-3", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
-        ("s.remodeling.composer.format-4", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.remodeling.composer.format-5", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
-        ("s.remodeling.composer.format-6", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
-        ("s.remodeling.composer.format-7", "composer", "s.stdio.gltf@2.0/*", &[("dialect", "s.stdio.gltf@2.0/*")], None),
-        ("s.remodeling.composer.format-8", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
-        ("s.remodeling.grammar.1", "grammar", "remodeling.document", &[("grammar", "remodeling.document")], None),
-        ("s.remodeling.grammar.2", "grammar", "remodeling.op", &[("grammar", "remodeling.op")], None),
-        ("s.remodeling.grammar.3", "grammar", "remodeling.diff", &[("grammar", "remodeling.diff")], None),
-        ("s.remodeling.grammar.4", "grammar", "remodeling.pack", &[("grammar", "remodeling.pack")], None),
-        ("s.remodeling.grammar.5", "grammar", "remodeling.spr", &[("grammar", "remodeling.spr")], None),
-        ("s.remodeling.codec.document-1", "codec", "remodeling.scene:remodeling", &[("codec", "remodeling.scene"), ("extension", "remodeling")], None),
-        ("s.remodeling.localization.en", "localization", "Remodeling", &[], Some(("en", "Remodeling"))),
-        ("s.remodeling.localization.de", "localization", "Umbau", &[], Some(("de", "Umbau"))),
+        ("s.remodel.remodeling.standard.v1", "standard", "1", &[], None),
+        ("s.remodel.remodeling.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.remodel.remodeling.schema.artifact", "schema", "s.remodeling.remodeling", &[("schema", "s.remodeling.remodeling")], None),
+        ("s.remodel.remodeling.inference.artifact", "inference", "s.remodeling.remodeling.inference", &[("schema", "s.remodeling.remodeling.inference")], None),
+        ("s.remodel.remodeling.composer.native", "composer", "s.remodel.remodeling@1/*", &[("dialect", "s.remodel.remodeling@1/*")], None),
+        ("s.remodel.remodeling.composer.format-1", "composer", "s.stdio.las@1.0/*", &[("dialect", "s.stdio.las@1.0/*")], None),
+        ("s.remodel.remodeling.composer.format-2", "composer", "s.stdio.ply@1.0/*", &[("dialect", "s.stdio.ply@1.0/*")], None),
+        ("s.remodel.remodeling.composer.format-3", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.remodel.remodeling.composer.format-4", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.remodel.remodeling.composer.format-5", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
+        ("s.remodel.remodeling.composer.format-6", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
+        ("s.remodel.remodeling.composer.format-7", "composer", "s.stdio.gltf@2.0/*", &[("dialect", "s.stdio.gltf@2.0/*")], None),
+        ("s.remodel.remodeling.composer.format-8", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
+        ("s.remodel.remodeling.grammar.1", "grammar", "remodeling.document", &[("grammar", "remodeling.document")], None),
+        ("s.remodel.remodeling.grammar.2", "grammar", "remodeling.op", &[("grammar", "remodeling.op")], None),
+        ("s.remodel.remodeling.grammar.3", "grammar", "remodeling.diff", &[("grammar", "remodeling.diff")], None),
+        ("s.remodel.remodeling.grammar.4", "grammar", "remodeling.pack", &[("grammar", "remodeling.pack")], None),
+        ("s.remodel.remodeling.grammar.5", "grammar", "remodeling.spr", &[("grammar", "remodeling.spr")], None),
+        ("s.remodel.remodeling.codec.document-1", "codec", "remodeling.scene:remodeling", &[("codec", "remodeling.scene"), ("codec-extension", "16:remodeling.scene:remodeling")], None),
+        ("s.remodel.remodeling.localization.en", "localization", "Remodeling", &[], Some(("en", "Remodeling"))),
+        ("s.remodel.remodeling.localization.de", "localization", "Umbau", &[], Some(("de", "Umbau"))),
     ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.remodeling")?);
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.remodel.remodeling")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
         for (namespace, value) in *claims {
@@ -177,7 +177,7 @@ pub const REMODELING_DOCUMENT_SCHEMA: &str = "remodeling.scene";
 /// row `("s.remodeling.schema.artifact", "schema", "s.remodeling.remodeling", …)` above — the schema-artifact
 /// descriptor, not `artifact_kind()`'s OS-level `"3d.remodeling"` kind id (a different, unrelated
 /// namespace). `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location.
-pub const REMODELING_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.remodeling.remodeling", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
+pub const REMODELING_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.remodel.remodeling.remodeling", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
 
 //#region 🧩️Composition
 /// 🧩️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (design map §4: "remodeling→C:mesh R:image").

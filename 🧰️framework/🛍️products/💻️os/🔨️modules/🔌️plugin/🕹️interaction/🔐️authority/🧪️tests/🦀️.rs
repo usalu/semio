@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn local_interaction_topology_input_authority_matches_node_crypto_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️fixtures/🔐️topology-authority/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🔐️topology-authority/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let authority = LocalInteractionTopologyAuthority { ui_generation: row["uiGeneration"].as_str().unwrap().parse().unwrap(), closed: false };
         let actual = authority.revision([row["documentByte"].as_u64().unwrap() as u8; 32], [row["configByte"].as_u64().unwrap() as u8; 32]).unwrap();

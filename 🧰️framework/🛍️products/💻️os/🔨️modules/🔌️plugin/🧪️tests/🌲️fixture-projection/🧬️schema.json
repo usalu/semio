@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contractId", "cases", "reservedPages", "foreign", "terminalBeforeOutcome"],
+  "properties": {
+    "contractId": { "const": "semio.fixture.projection-retirement/v1" },
+    "cases": { "const": ["success", "rejection", "panic"] },
+    "reservedPages": { "const": 384 },
+    "foreign": { "const": { "foreign": ["Grüße 🌊"] } },
+    "terminalBeforeOutcome": { "const": true }
+  }
+}

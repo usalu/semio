@@ -1,0 +1,333 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution. `s.trinity.jack` is a semio-NATIVE assembly scene: a labelled property graph whose edges address PORTS over a kind manifest. No graph library models a port-addressed endpoint and none reads `.dsl.semio`, so the reference is a SECOND IMPLEMENTATION in Python written from this subset's committed snapshot schema, mutation grammar and specification vectors.",
+  "oracles": [
+    {
+      "id": "jack-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "version": "",
+      "capabilities": [
+        "jack-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "A second implementation of the `s.trinity.jack` scene, of its `.dsl.semio` carrier and of all eight typed mutations, in Python, at `../../../../../🧪️tests/mutate-jack-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json` (the document: nodes with ports, edges over `node@port` endpoints, a manifest, a camera and a root node id), `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` (the eight verbs and their positional argument lists) and the eight committed specification vectors. It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `networkx`, `igraph` and `petgraph` model vertices and edges but have no notion of a PORT-addressed endpoint, of a manifest that closes the kind vocabulary, or of the untyped property bag `change-data-property` and `remove-data-property` edit, and none of them reads this carrier. THREE FINDINGS reported rather than worked around: (1) `../🧬️schema/🧬️mutations/🔣️.json` does not describe the mutations — it is a verbatim copy of the snapshot schema with the title changed — so the wire form was read off the vectors, which inconsistently mix camelCase discriminators with snake_case arguments; (2) nothing states whether deleting a node cascades to its edges, so the reference cascades on the grounds of the invariant `create-edge`'s own rejection establishes, and the feature's `delete-node` row addresses a node no edge names so the comparison never rests on the inference; (3) all eight committed vectors are NEGATIVE, three rejections and five accepted no-ops, so the accepting direction of this vocabulary had no committed evidence before this case's real-document scenarios. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `jack-1-mutate`'s external-oracle requirement for its 8-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 8 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.trinity.jack",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "networkx-igraph-petgraph",
+              "reason": "`networkx`, `igraph` and `petgraph` model vertices and edges but have no notion of a PORT-addressed endpoint, of a manifest that closes the kind vocabulary, or of the untyped property bag `change-data-property` and `remove-data-property` edit, and none of them reads this carrier."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".dsl.semio; ../🧬️schema/📸️snapshot/🔣️.json; ../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio; ../🧬️schema/🧬️mutations/🔣️.json; 🔒️dependencies.json",
+        "fixtureCoverage": {
+          "vectors": 8,
+          "capabilitiesCovered": [
+            "jack-1-mutate"
+          ]
+        }
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "jack-1-any",
+      "capability": "jack-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-data-property",
+          "sourceMutationDirectoryName": "🔧️change-data-property",
+          "mutationDirectoryName": "🔧️change-data-property",
+          "scenarios": [
+            {
+              "id": "keeps-a-node-property-at-the-value-it-already-holds",
+              "directoryName": "📖️keeps-a-node-property-at-the-value-it-already-holds"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-edge",
+          "sourceMutationDirectoryName": "🌉️create-edge",
+          "mutationDirectoryName": "🌉️create-edge",
+          "scenarios": [
+            {
+              "id": "rejects-an-edge-whose-endpoints-are-absent",
+              "directoryName": "🚫️rejects-an-edge-whose-endpoints-are-absent"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-node",
+          "sourceMutationDirectoryName": "🌱️create-node",
+          "mutationDirectoryName": "🌱️create-node",
+          "scenarios": [
+            {
+              "id": "rejects-a-node-id-the-scene-already-holds",
+              "directoryName": "🚫️rejects-a-node-id-the-scene-already-holds"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-edge",
+          "sourceMutationDirectoryName": "✂️delete-edge",
+          "mutationDirectoryName": "✂️delete-edge",
+          "scenarios": [
+            {
+              "id": "rejects-cutting-an-edge-the-scene-never-had",
+              "directoryName": "🚫️rejects-cutting-an-edge-the-scene-never-had"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-node",
+          "sourceMutationDirectoryName": "🗑️delete-node",
+          "mutationDirectoryName": "🗑️delete-node",
+          "scenarios": [
+            {
+              "id": "rejects-deleting-a-node-the-scene-never-had",
+              "directoryName": "🚫️rejects-deleting-a-node-the-scene-never-had"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-node",
+          "sourceMutationDirectoryName": "📍️move-node",
+          "mutationDirectoryName": "📍️move-node",
+          "scenarios": [
+            {
+              "id": "keeps-a-node-at-the-point-it-already-occupies",
+              "directoryName": "📖️keeps-a-node-at-the-point-it-already-occupies"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-data-property",
+          "sourceMutationDirectoryName": "🧹️remove-data-property",
+          "mutationDirectoryName": "🧹️remove-data-property",
+          "scenarios": [
+            {
+              "id": "keeps-an-edge-without-the-property-it-never-had",
+              "directoryName": "🟢️keeps-an-edge-without-the-property-it-never-had"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-node",
+          "sourceMutationDirectoryName": "✏️rename-node",
+          "mutationDirectoryName": "✏️rename-node",
+          "scenarios": [
+            {
+              "id": "keeps-the-name-a-node-already-carries",
+              "directoryName": "📖️keeps-the-name-a-node-already-carries"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "create-node",
+        "delete-node",
+        "create-edge",
+        "delete-edge",
+        "rename-node",
+        "move-node",
+        "change-data-property",
+        "remove-data-property"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.trinity.jack",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-data-property",
+          "capability": "jack-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-data-property",
+            "bridgeVersion": 1,
+            "variant": "ChangeDataProperty"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jack-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-edge",
+          "capability": "jack-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-edge",
+            "bridgeVersion": 1,
+            "variant": "CreateEdge"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jack-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-node",
+          "capability": "jack-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-node",
+            "bridgeVersion": 1,
+            "variant": "CreateNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jack-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-edge",
+          "capability": "jack-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-edge",
+            "bridgeVersion": 1,
+            "variant": "DeleteEdge"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jack-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-node",
+          "capability": "jack-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-node",
+            "bridgeVersion": 1,
+            "variant": "DeleteNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jack-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "move-node",
+          "capability": "jack-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "move-node",
+            "bridgeVersion": 1,
+            "variant": "MoveNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jack-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-data-property",
+          "capability": "jack-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-data-property",
+            "bridgeVersion": 1,
+            "variant": "RemoveDataProperty"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jack-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "rename-node",
+          "capability": "jack-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "rename-node",
+            "bridgeVersion": 1,
+            "variant": "RenameNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jack-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

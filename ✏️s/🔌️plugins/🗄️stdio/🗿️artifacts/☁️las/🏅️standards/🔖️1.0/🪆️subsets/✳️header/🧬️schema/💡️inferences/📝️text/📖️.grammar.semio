@@ -1,9 +1,0 @@
-dialect grammar
-grammar stdio.las.inference
-extension las.inference
-start document
-
-document = header body
-header = "schema" SP "s.stdio.las.inference" NL
-body = payload NL?
-payload = OCTET+

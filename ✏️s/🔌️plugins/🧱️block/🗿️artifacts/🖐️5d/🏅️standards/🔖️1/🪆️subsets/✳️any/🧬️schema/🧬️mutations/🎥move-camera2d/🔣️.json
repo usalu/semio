@@ -5,7 +5,7 @@
   "displayName": "Move Camera2d",
   "emoji": "🎥",
   "aggregateVariant": "MoveCamera2d",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "move-camera2d",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

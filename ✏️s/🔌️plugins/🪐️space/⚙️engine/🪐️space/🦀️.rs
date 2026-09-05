@@ -581,6 +581,7 @@ impl store::ArtifactStoreOneItemPreparation<SpaceConfig, SpaceConfigMutation> fo
 //#endregion 📬️ConfigStorePreparation
 
 impl ArtifactApp for SpaceApp {
+    const DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.space.studio", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
     type Snapshot = WorkflowSnapshot;
     type Mutation = WorkflowMutation;
     type Config = SpaceConfig;

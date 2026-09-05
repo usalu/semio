@@ -4,7 +4,7 @@
 //! reaches it through [`puzzle_themed_icon_lookup`].
 
 mod board_metabolism_icons {
-    include!(concat!(env!("OUT_DIR"), "/board_metabolism_icon_match.rs"));
+    include!(concat!(env!("OUT_DIR"), "/🧩️metabolism.rs"));
 }
 
 /// 🔣️ Resolves a board catalog icon key to its SVG source, or `None` when the key is not a

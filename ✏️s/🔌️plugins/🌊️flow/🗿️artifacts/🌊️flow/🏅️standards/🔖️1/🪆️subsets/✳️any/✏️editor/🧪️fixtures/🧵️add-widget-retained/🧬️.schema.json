@@ -1,0 +1,169 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "registration", "limits", "progress", "canonical", "accepted", "denials"],
+  "properties": {
+    "contract": { "const": "flow-add-widget-retained-child-v1" },
+    "registration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["controller", "tool", "schema", "classification", "publication", "execution"],
+      "properties": {
+        "controller": { "const": "s.flow.flow@1/*#editor" },
+        "tool": { "const": "addWidget" },
+        "schema": { "const": "flow.fixture" },
+        "classification": { "const": "migrated" },
+        "publication": { "type": "array", "const": ["child"] },
+        "execution": { "type": "array", "const": [16384, 256, 1, 16384, 7500, 1, 1] }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rawBytes", "checkpointBytes", "textBytes", "childItems"],
+      "properties": {
+        "rawBytes": { "const": 16384 },
+        "checkpointBytes": { "const": 512 },
+        "textBytes": { "const": 16384 },
+        "childItems": { "const": 256 }
+      }
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {
+        "en": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "de": { "type": "string", "minLength": 1, "maxLength": 128 }
+      }
+    },
+    "canonical": { "$ref": "#/$defs/request" },
+    "accepted": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "command", "inserted", "expected"],
+        "properties": {
+          "id": { "enum": ["note", "slider"] },
+          "command": { "$ref": "#/$defs/command" },
+          "inserted": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "x", "y"],
+            "properties": {
+              "kind": { "type": "string", "minLength": 1, "maxLength": 256 },
+              "x": { "type": "number" },
+              "y": { "type": "number" }
+            }
+          },
+          "expected": { "$ref": "#/$defs/outcome" }
+        }
+      }
+    },
+    "denials": {
+      "type": "array",
+      "minItems": 24,
+      "maxItems": 24,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "change", "expected"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "change": {
+            "enum": [
+              "wrong-controller", "wrong-tool", "wrong-schema", "oversize-raw", "oversize-checkpoint",
+              "malformed-wire", "trailing-wire", "oversize-kind", "oversize-neuron-kind", "unknown-descriptor", "nonfinite-x",
+              "nonfinite-y", "missing-child", "wrong-slot", "wrong-child-id", "wrong-dialect",
+              "stale-parent", "stale-root", "stale-child", "duplicate-target", "owner-busy",
+              "owner-closing", "cancel-before-work", "cancel-after-plan"
+            ]
+          },
+          "expected": { "$ref": "#/$defs/outcome" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "coordinate": { "oneOf": [{ "type": "number" }, { "enum": ["nan", "positive-infinity", "negative-infinity"] }] },
+    "dialect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactKind", "standard", "subset"],
+      "properties": {
+        "artifactKind": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "standard": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "subset": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "neuronKind", "x", "y"],
+      "properties": {
+        "kind": { "type": "string" },
+        "neuronKind": { "type": ["string", "null"] },
+        "x": { "$ref": "#/$defs/coordinate" },
+        "y": { "$ref": "#/$defs/coordinate" }
+      }
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["controller", "tool", "schema", "rawBytes", "checkpointBytes", "wire", "command", "parent", "child", "owner", "cancel", "duplicateTarget"],
+      "properties": {
+        "controller": { "type": "string" },
+        "tool": { "type": "string" },
+        "schema": { "type": "string" },
+        "rawBytes": { "type": "integer", "minimum": 0 },
+        "checkpointBytes": { "type": "integer", "minimum": 0 },
+        "wire": { "enum": ["canonical", "malformed", "trailing"] },
+        "command": { "$ref": "#/$defs/command" },
+        "parent": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["childId", "revisionCurrent", "rootCurrent"],
+          "properties": {
+            "childId": { "type": "string" },
+            "revisionCurrent": { "type": "boolean" },
+            "rootCurrent": { "type": "boolean" }
+          }
+        },
+        "child": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["present", "slot", "id", "dialect", "revisionCurrent", "nodes", "edges"],
+          "properties": {
+            "present": { "type": "boolean" },
+            "slot": { "type": "string" },
+            "id": { "type": "string" },
+            "dialect": { "$ref": "#/$defs/dialect" },
+            "revisionCurrent": { "type": "boolean" },
+            "nodes": { "type": "integer", "minimum": 0 },
+            "edges": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "owner": { "enum": ["ready", "busy", "closing"] },
+        "cancel": { "enum": ["none", "before-work", "after-plan"] },
+        "duplicateTarget": { "type": "boolean" }
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["accepted", "sessionCalls", "parentMutations", "childGroups", "visibleGroups"],
+      "properties": {
+        "accepted": { "type": "boolean" },
+        "sessionCalls": { "type": "integer", "minimum": 0, "maximum": 1 },
+        "parentMutations": { "const": 0 },
+        "childGroups": { "type": "integer", "minimum": 0, "maximum": 1 },
+        "visibleGroups": { "type": "integer", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}

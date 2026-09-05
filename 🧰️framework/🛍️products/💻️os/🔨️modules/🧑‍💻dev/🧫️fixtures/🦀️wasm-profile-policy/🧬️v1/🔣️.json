@@ -1,0 +1,19 @@
+{
+  "schema": "semio.build.wasi-profile-policy/v1",
+  "runtimeDirectories": ["wasm-dev", "wasm-release"],
+  "publicationProfile": "wasm-release",
+  "cases": [
+    { "mode": "dev", "override": null, "expectedProfile": "wasm-dev", "expectedDirectory": "wasm-dev" },
+    { "mode": "ship", "override": null, "expectedProfile": "wasm-release", "expectedDirectory": "wasm-release" },
+    { "mode": "dev", "override": "wasm-dev", "expectedProfile": "wasm-dev", "expectedDirectory": "wasm-dev" },
+    { "mode": "dev", "override": "wasm-release", "expectedProfile": "wasm-release", "expectedDirectory": "wasm-release" },
+    { "mode": "ship", "override": "wasm-dev", "expectedProfile": "wasm-dev", "expectedDirectory": "wasm-dev" },
+    { "mode": "ship", "override": "wasm-release", "expectedProfile": "wasm-release", "expectedDirectory": "wasm-release" },
+    { "mode": "dev", "override": "dev", "expectedProfile": null, "expectedDirectory": null },
+    { "mode": "dev", "override": "debug", "expectedProfile": null, "expectedDirectory": null },
+    { "mode": "ship", "override": "release", "expectedProfile": null, "expectedDirectory": null },
+    { "mode": "dev", "override": "", "expectedProfile": null, "expectedDirectory": null },
+    { "mode": "ship", "override": "wasm-release ", "expectedProfile": null, "expectedDirectory": null },
+    { "mode": "dev", "override": "foreign", "expectedProfile": null, "expectedDirectory": null }
+  ]
+}

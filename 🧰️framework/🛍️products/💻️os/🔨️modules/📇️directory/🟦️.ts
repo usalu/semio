@@ -44,6 +44,12 @@ export type {
   DirectoryEventSpaceRenamed,
   DirectoryEventSpaceVisibilityChanged,
   DirectoryEventUserCreated,
+  DirectorySpaceAdministrationCapabilitiesV1,
+  DirectorySpaceAdministrationInviteRowV1,
+  DirectorySpaceAdministrationMemberRowV1,
+  DirectorySpaceAdministrationPageV1,
+  DirectorySpaceAdministrationSectionV1,
+  DirectorySpaceAdministrationWindowV1,
   DirectorySpaceKind,
   DirectorySpaceRole,
   DirectorySpaceVisibility,
@@ -60,7 +66,7 @@ export type {
   UserView,
 } from "./🧬️schema/🟦️.ts";
 
-export { descriptorDigestEncodingV1, descriptorDigestV1, DESCRIPTOR_DIGEST_V1_DOMAIN } from "./🧬️schema/🟦️.ts";
+export { descriptorDigestEncodingV1, descriptorDigestV1, parseDirectorySpaceAdministrationPageV1, DESCRIPTOR_DIGEST_V1_DOMAIN, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS, DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA } from "./🧬️schema/🟦️.ts";
 
 import type { DirectoryCommand, DirectoryEvent, DirectoryEventBody, DirectoryStreamMessage, DocumentDescriptor, MemberView, SpaceView, UserView } from "./🧬️schema/🟦️.ts";
 

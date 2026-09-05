@@ -505,7 +505,7 @@ mod oracles {
         }
     }
 
-    /// 🔨 Every `blip_rel_id` referenced by a `Picture` shape in `slide`, mapped to the one real
+    /// 🔨 Every `blip_rel_id` referenced by a `Picture` shape in `🎞️slide`, mapped to the one real
     /// embedded image this fixture's closed relationship graph carries (`ppt/media/image3.png`) —
     /// keeps a rebuilt slide's own `.rels` genuinely resolvable rather than dangling.
     fn slide_rels_document(slide: &PSlide) -> XNode {
@@ -894,19 +894,19 @@ mod tests {
     use super::*;
     use crate::law::feature_rows;
 
-    /// 🧫️ The real committed package `mutate-pptx-ecma-376` runs on — the seven-slide subset derived
+    /// 🧫️ The real committed package `🌴️mutate-pptx-ecma-376` runs on — the seven-slide subset derived
     /// once from a real 62-slide conference deck, with real titles, real placeholders and real
     /// `a:xfrm` geometry in EMUs.
     const FIXTURE: &[u8] = include_bytes!("../../../../../🧫️fixtures/📽️.pptx");
 
     /// 🧾️ The case's own `Examples` rows, read rather than restated — see [`crate::law::feature_rows`].
-    const FEATURE: &str = include_str!("../../../../../🧪️tests/mutate-pptx-ecma-376/🥒️.feature");
+    const FEATURE: &str = include_str!("../../../../../🧪️tests/🌴️mutate-pptx-ecma-376/🥒️.feature");
 
     fn spec(kind: &str, params: &Json) -> Json {
         Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), params.clone())])
     }
 
-    /// ⚖️ The two laws `mutate-pptx-ecma-376`'s adapter asserts in role, proven here against the real
+    /// ⚖️ The two laws `🌴️mutate-pptx-ecma-376`'s adapter asserts in role, proven here against the real
     /// deck without the runner: every declared kind moves the ordered slide/shape projection, and
     /// every declared kind's own computed inverse lands back on the untouched deck's projection.
     /// Nothing is exempt from either — every one of the nine kinds is defined on the slide list or

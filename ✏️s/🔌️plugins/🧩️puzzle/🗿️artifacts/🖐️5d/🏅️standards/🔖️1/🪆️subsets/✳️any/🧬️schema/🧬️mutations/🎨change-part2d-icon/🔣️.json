@@ -5,7 +5,7 @@
   "displayName": "Change Part2d Icon",
   "emoji": "🎨",
   "aggregateVariant": "ChangePart2dIcon",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "change-part2d-icon",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

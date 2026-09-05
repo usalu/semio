@@ -1890,6 +1890,9 @@ impl DbIoU64List {
 
     pub fn close_step(&mut self) -> bool {
         if self.len == 0 {
+            if self.values.take().is_some() {
+                return true;
+            }
             if let Some(handle) = self.result_handback {
                 if db_io_result_handback(handle).is_ok() {
                     self.result_handback = None;
@@ -1903,7 +1906,7 @@ impl DbIoU64List {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.len == 0 && self.result_handback.is_none()
+        self.len == 0 && self.values.is_none() && self.result_handback.is_none()
     }
 }
 
@@ -2398,6 +2401,7 @@ struct DbIoBackendRegistrySlot {
     close_requested: bool,
     leased_operation: u64,
     admitted_operation: u64,
+    pending_operations: usize,
     owner_operation: u64,
     owner_credit: DbIoCredit,
     mode: DbIoExecutorMode,
@@ -2427,6 +2431,7 @@ impl DbIoBackendRegistry {
                 close_requested: false,
                 leased_operation: 0,
                 admitted_operation: 0,
+                pending_operations: 0,
                 owner_operation: 0,
                 owner_credit: DbIoCredit { pages: 0, bytes: 0, items: 0, controls: 0 },
                 mode: DbIoExecutorMode::BlockingLane,
@@ -2624,7 +2629,7 @@ fn db_io_rejected_backend_maintenance_step() -> Result<bool, DbError> {
     db_io_request_rejected_backend_close(index, generation)
 }
 
-pub fn register_db_io_backend(kind: DbIoBackendKind, mut executor: Box<dyn DbIoTaskExecutor>, pool: Arc<WorkerPool>) -> Result<DbIoBackendControl, DbError> {
+pub fn register_db_io_backend(kind: DbIoBackendKind, executor: Box<dyn DbIoTaskExecutor>, pool: Arc<WorkerPool>) -> Result<DbIoBackendControl, DbError> {
     let owner_credit = DbIoCredit { pages: 0, bytes: executor.owner_backing_bytes(), items: 1, controls: 1 };
     let owner_operation = match db_io_backend_owner_reserve(owner_credit) {
         Ok(operation) => operation,
@@ -2633,6 +2638,14 @@ pub fn register_db_io_backend(kind: DbIoBackendKind, mut executor: Box<dyn DbIoT
             return Err(error);
         }
     };
+    register_db_io_backend_reserved(kind, executor, pool, owner_operation, owner_credit)
+}
+
+fn register_db_io_backend_reserved(kind: DbIoBackendKind, mut executor: Box<dyn DbIoTaskExecutor>, pool: Arc<WorkerPool>, owner_operation: u64, owner_credit: DbIoCredit) -> Result<DbIoBackendControl, DbError> {
+    if executor.owner_backing_bytes() != owner_credit.bytes {
+        let _ = db_io_park_lost_owner(DbIoLostOwner::Backend { owner: Some(executor), operation: owner_operation, credit: owner_credit, pool: Some(pool) });
+        return Err(DbError::Internal("DB I/O backend backing differs from reserved bytes".to_string()));
+    }
     if let Err(error) = executor.bind_owner_operation(owner_operation) {
         let _ = db_io_park_lost_owner(DbIoLostOwner::Backend { owner: Some(executor), operation: owner_operation, credit: owner_credit, pool: Some(pool) });
         return Err(error);
@@ -2657,6 +2670,7 @@ pub fn register_db_io_backend(kind: DbIoBackendKind, mut executor: Box<dyn DbIoT
         close_requested: false,
         leased_operation: 0,
         admitted_operation: 0,
+        pending_operations: 0,
         owner_operation,
         owner_credit,
         mode,
@@ -2710,7 +2724,7 @@ pub fn retire_db_io_backend(control: DbIoBackendControl) -> Result<(), DbError> 
 }
 
 pub async fn close_db_io_backend(control: DbIoBackendControl) -> Result<(), DbError> {
-    retire_db_io_backend(control)?;
+    let _ = db_io_request_backend_close(control)?;
     std::future::poll_fn(|context| {
         let (slot, generation) = db_io_backend_parts(control);
         let (terminal, fault) = {
@@ -2775,31 +2789,35 @@ fn db_io_executor_mode(control: DbIoBackendControl) -> Result<DbIoExecutorMode, 
     Ok(owner.mode)
 }
 
-fn db_io_backend_admit_async_operation(control: DbIoBackendControl, operation: u64) -> Result<bool, DbError> {
+fn db_io_backend_admit_operation(control: DbIoBackendControl, operation: u64) -> Result<bool, DbError> {
     let (slot, generation) = db_io_backend_parts(control);
     let mut registry = db_io_backend_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let owner = &mut registry.slots[slot as usize];
     if owner.generation != generation {
         return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(generation), actual: crate::db_ids::GenerationId(owner.generation) });
     }
-    if owner.mode == DbIoExecutorMode::BlockingLane {
-        return Ok(false);
+    if owner.close_requested || owner.executor_retired {
+        return Err(DbError::Closed);
     }
-    if owner.admitted_operation != 0 {
+    if owner.mode != DbIoExecutorMode::BlockingLane && owner.admitted_operation != 0 {
         return Err(DbError::Unavailable("DB I/O async-native backend operation capacity exhausted".to_string()));
     }
-    owner.admitted_operation = operation;
+    let pending = owner.pending_operations.checked_add(1).filter(|count| *count <= DB_IO_OPERATION_ITEMS).ok_or(DbError::LimitExceeded("DB I/O backend pending operations"))?;
+    if owner.mode != DbIoExecutorMode::BlockingLane { owner.admitted_operation = operation; }
+    owner.pending_operations = pending;
     Ok(true)
 }
 
-fn db_io_backend_return_async_operation(control: DbIoBackendControl, operation: u64) -> Result<(), DbError> {
+fn db_io_backend_return_operation(control: DbIoBackendControl, operation: u64) -> Result<(), DbError> {
     let (slot, generation) = db_io_backend_parts(control);
     let mut registry = db_io_backend_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let owner = &mut registry.slots[slot as usize];
-    if owner.generation != generation || owner.admitted_operation != operation || owner.leased_operation != 0 {
+    if owner.generation != generation || owner.pending_operations == 0
+        || owner.mode != DbIoExecutorMode::BlockingLane && (owner.admitted_operation != operation || owner.leased_operation != 0) {
         return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(generation), actual: crate::db_ids::GenerationId(owner.generation) });
     }
-    owner.admitted_operation = 0;
+    if owner.mode != DbIoExecutorMode::BlockingLane { owner.admitted_operation = 0; }
+    owner.pending_operations -= 1;
     Ok(())
 }
 
@@ -2848,7 +2866,7 @@ fn db_io_backend_close_lane_step(control: DbIoBackendControl, context: &mut std:
         if owner.generation != generation {
             return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(generation), actual: crate::db_ids::GenerationId(owner.generation) });
         }
-        if owner.admitted_operation != 0 || owner.leased_operation != 0 {
+        if owner.pending_operations != 0 || owner.admitted_operation != 0 || owner.leased_operation != 0 {
             return Ok(false);
         }
         if owner.executor_retired {
@@ -2898,6 +2916,7 @@ fn db_io_backend_close_lane_step(control: DbIoBackendControl, context: &mut std:
         close_requested: false,
         leased_operation: 0,
         admitted_operation: 0,
+        pending_operations: 0,
         owner_operation: 0,
         owner_credit: DbIoCredit::default(),
         mode: DbIoExecutorMode::BlockingLane,
@@ -3173,7 +3192,7 @@ struct DbIoTaskSlot {
     async_ready: bool,
     async_detached: bool,
     async_lane_turn: bool,
-    async_backend_admitted: bool,
+    backend_admitted: bool,
     async_driver: Option<DbIoAsyncDriverFuture>,
     async_driver_scheduled: bool,
     async_driver_wake_requested: bool,
@@ -3204,7 +3223,7 @@ impl DbIoTaskSlot {
             async_ready: false,
             async_detached: false,
             async_lane_turn: false,
-            async_backend_admitted: false,
+            backend_admitted: false,
             async_driver: None,
             async_driver_scheduled: false,
             async_driver_wake_requested: false,
@@ -3302,7 +3321,7 @@ fn db_io_allocate_task(pool: &WorkerPool, mut task: DbIoTask) -> Result<DbIoTask
         let _ = db_io_operation_detach_task(operation, aggregate_credit);
         return Err((error, task));
     }
-    let async_backend_admitted = match db_io_backend_admit_async_operation(task.backend(), operation) {
+    let backend_admitted = match db_io_backend_admit_operation(task.backend(), operation) {
         Ok(admitted) => admitted,
         Err(error) => {
             task.release_unstarted_list_backing();
@@ -3311,8 +3330,8 @@ fn db_io_allocate_task(pool: &WorkerPool, mut task: DbIoTask) -> Result<DbIoTask
         }
     };
     if let Err(error) = task.admit_pages() {
-        if async_backend_admitted {
-            let _ = db_io_backend_return_async_operation(task.backend(), operation);
+        if backend_admitted {
+            let _ = db_io_backend_return_operation(task.backend(), operation);
         }
         task.release_unstarted_list_backing();
         let _ = db_io_operation_detach_task(operation, aggregate_credit);
@@ -3354,7 +3373,7 @@ fn db_io_allocate_task(pool: &WorkerPool, mut task: DbIoTask) -> Result<DbIoTask
         async_ready: false,
         async_detached: false,
         async_lane_turn: false,
-        async_backend_admitted,
+        backend_admitted,
         async_driver: None,
         async_driver_scheduled: false,
         async_driver_wake_requested: false,
@@ -3394,24 +3413,20 @@ fn db_io_wake(owner: &mut DbIoTaskSlot) -> Option<std::task::Waker> {
 
 fn db_io_submit_job(handle: DbIoTaskHandle, job: Job, attempt: u8) {
     let pool = {
-        let owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if !db_io_slot_matches(&owner, handle) {
             return;
         }
+        owner.phase = DbIoTaskPhase::Queued;
         owner.pool.clone()
     };
     let Some(pool) = pool else { return };
     match pool.try_submit(Lane::Io, job) {
-        Ok(()) => {
-            let mut owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            if db_io_slot_matches(&owner, handle) {
-                owner.phase = DbIoTaskPhase::Queued;
-            }
-        }
+        Ok(()) => {}
         Err(error) => match error.kind() {
             WorkerSubmitErrorKind::Contended | WorkerSubmitErrorKind::Saturated if attempt < DB_IO_RETRY_LIMIT => {
                 drop(error.into_job());
-                {
+                let generation = {
                     let mut owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
                     if !db_io_slot_matches(&owner, handle) {
                         return;
@@ -3429,7 +3444,9 @@ fn db_io_submit_job(handle: DbIoTaskHandle, job: Job, attempt: u8) {
                     };
                     owner.async_driver_scheduled = false;
                     owner.retry_generation = generation;
-                }
+                    generation
+                };
+                pool.callback_at(pool.now_ms().saturating_add(DB_IO_RETRY_DELAY_MS), move || db_io_retry(handle, generation));
             }
             kind => {
                 let job = error.into_job();
@@ -4063,6 +4080,28 @@ pub fn submit_db_io_task(pool: &WorkerPool, task: DbIoTask) -> Result<DbIoTaskOp
 }
 
 impl DbIoTaskOperation {
+    /// 🧹 Finishes one retained cleanup opportunity per poll before storage-result handoff.
+    pub async fn finish(self) -> Result<DbIoResult, DbError> {
+        let handle = self.handle;
+        match self.await {
+            Ok(lease) => {
+                db_io_wait_task_retirement(handle, true).await?;
+                let result = lease.into_result()?;
+                let retained = {
+                    let ledger = db_io_operation_ledger().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                    db_io_operation_slot(&ledger, handle.operation).is_some_and(|index| ledger.slots[index].result_leases != 0)
+                };
+                if !retained { db_io_wait_task_retirement(handle, false).await?; }
+                Ok(result)
+            }
+            Err(fault) => {
+                let error = fault.into_db_error();
+                db_io_wait_task_retirement(handle, false).await?;
+                Err(error)
+            }
+        }
+    }
+
     pub fn phase(&self) -> DbIoTaskPhase {
         let owner = DB_IO_TASK_SLOTS[self.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if db_io_slot_matches(&owner, self.handle) {
@@ -4246,6 +4285,19 @@ impl Future for DbIoTaskOperation {
     }
 }
 
+async fn db_io_wait_task_retirement(handle: DbIoTaskHandle, result_retained: bool) -> Result<(), DbError> {
+    std::future::poll_fn(|context| {
+        db_io_maintenance_step()?;
+        let owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if !db_io_slot_matches(&owner, handle)
+            || result_retained && owner.backend_cleanup_done && owner.task.is_none() && !owner.backend_admitted && owner.backend_to_close.is_none() {
+            return std::task::Poll::Ready(Ok(()));
+        }
+        context.waker().wake_by_ref();
+        std::task::Poll::Pending
+    }).await
+}
+
 /// @emoji 🧹 One fixed mounted DB I/O retry, page, platform or terminal-close opportunity.
 pub fn db_io_maintenance_step() -> Result<bool, DbError> {
     if db_io_lost_owner_close_step()? {
@@ -4292,7 +4344,14 @@ impl Drop for DbIoTaskOperation {
     }
 }
 
+static DB_IO_TASK_CLOSE_TURN: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
 pub fn db_io_task_close_step() -> Result<Option<usize>, DbError> {
+    let _turn = match DB_IO_TASK_CLOSE_TURN.try_lock() {
+        Ok(turn) => turn,
+        Err(std::sync::TryLockError::WouldBlock) => return Ok(Some(0)),
+        Err(std::sync::TryLockError::Poisoned(error)) => error.into_inner(),
+    };
     let handle = {
         let arena = db_io_task_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if arena.closing_len == 0 {
@@ -4309,9 +4368,16 @@ pub fn db_io_task_close_step() -> Result<Option<usize>, DbError> {
         db_io_rotate_close_head(handle)?;
         return Ok(Some(0));
     }
+    if !owner.abandoned && matches!(owner.terminal, Some(DbIoTerminal::Result(_) | DbIoTerminal::Fault(_))) {
+        drop(owner);
+        db_io_rotate_close_head(handle)?;
+        return Ok(Some(0));
+    }
     if !owner.backend_cleanup_done {
         let task = owner.task.as_ref().ok_or_else(|| DbError::Internal("DB I/O cleanup lost typed task owner".to_string()))?;
         if !db_io_executor_close_operation(task.backend(), handle.operation, task)? {
+            drop(owner);
+            db_io_rotate_close_head(handle)?;
             return Ok(Some(0));
         }
         owner.backend_cleanup_done = true;
@@ -4366,10 +4432,10 @@ pub fn db_io_task_close_step() -> Result<Option<usize>, DbError> {
         BLOCKING_QUEUE.dequeued(owner.aggregate_credit.bytes);
         return Ok(Some(0));
     }
-    if owner.async_backend_admitted {
-        let backend = owner.backend.ok_or_else(|| DbError::Internal("DB I/O async backend admission lost control".to_string()))?;
-        db_io_backend_return_async_operation(backend, handle.operation)?;
-        owner.async_backend_admitted = false;
+    if owner.backend_admitted {
+        let backend = owner.backend.ok_or_else(|| DbError::Internal("DB I/O backend admission lost control".to_string()))?;
+        db_io_backend_return_operation(backend, handle.operation)?;
+        owner.backend_admitted = false;
         return Ok(Some(0));
     }
     if let Some(backend) = owner.backend_to_close {
@@ -4377,17 +4443,30 @@ pub fn db_io_task_close_step() -> Result<Option<usize>, DbError> {
         let backend_live = db_io_backend_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).slots[slot as usize].generation == generation;
         if backend_live {
             let _ = db_io_request_backend_close(backend)?;
+            drop(owner);
+            db_io_rotate_close_head(handle)?;
             return Ok(Some(0));
         }
         owner.backend_to_close = None;
         return Ok(Some(0));
     }
     if !owner.aggregate_returned {
+        let retained = {
+            let ledger = db_io_operation_ledger().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            db_io_operation_slot(&ledger, handle.operation).is_some_and(|index| ledger.slots[index].result_leases != 0)
+        };
+        if retained {
+            drop(owner);
+            db_io_rotate_close_head(handle)?;
+            return Ok(Some(0));
+        }
         db_io_operation_detach_task(handle.operation, owner.aggregate_credit)?;
         owner.aggregate_returned = true;
         return Ok(Some(0));
     }
     if !db_io_operation_terminal_is_empty(handle.operation) {
+        drop(owner);
+        db_io_rotate_close_head(handle)?;
         return Ok(Some(0));
     }
     *owner = DbIoTaskSlot::empty();
@@ -4435,6 +4514,7 @@ fn db_io_remove_close_head(handle: DbIoTaskHandle) -> Result<(), DbError> {
 
 //#region 🔖️RetainedDbIo
 const DB_IO_RETRY_LIMIT: u8 = 8;
+const DB_IO_RETRY_DELAY_MS: u64 = 1;
 
 #[doc(hidden)]
 pub fn db_io_test_pool() -> Arc<WorkerPool> {
@@ -5467,13 +5547,13 @@ struct MemoryLeaseOwner {
 
 struct MemoryDbIoExecutor {
     wal: std::sync::Mutex<Box<[Option<MemoryWalOwner>]>>,
-    snapshots: std::sync::Mutex<[Option<MemoryPageOwner>; DB_IO_MEMORY_OWNERS]>,
-    payloads: std::sync::Mutex<[Option<MemoryPayloadOwner>; DB_IO_MEMORY_OWNERS]>,
+    snapshots: std::sync::Mutex<Box<[Option<MemoryPageOwner>]>>,
+    payloads: std::sync::Mutex<Box<[Option<MemoryPayloadOwner>]>>,
     catalog: std::sync::Mutex<Option<(DbIoPages, EpochFence)>>,
-    index_runs: std::sync::Mutex<[Option<MemoryPageOwner>; DB_IO_MEMORY_OWNERS]>,
-    leases: std::sync::Mutex<[Option<MemoryLeaseOwner>; DB_IO_MEMORY_OWNERS]>,
-    operations: std::sync::Mutex<[Option<MemoryDbIoCursor>; DB_IO_OPERATION_ITEMS]>,
-    retired_pages: std::sync::Mutex<[Option<DbIoPages>; DB_IO_OPERATION_ITEMS]>,
+    index_runs: std::sync::Mutex<Box<[Option<MemoryPageOwner>]>>,
+    leases: std::sync::Mutex<Box<[Option<MemoryLeaseOwner>]>>,
+    operations: std::sync::Mutex<Box<[Option<MemoryDbIoCursor>]>>,
+    retired_pages: std::sync::Mutex<Box<[Option<DbIoPages>]>>,
     retired_wal: std::sync::Mutex<Box<[Option<MemWalSegment>]>>,
     close_phase: std::sync::atomic::AtomicU8,
     backing_operation: std::sync::atomic::AtomicU64,
@@ -5499,13 +5579,13 @@ impl Default for MemoryDbIoExecutor {
     fn default() -> Self {
         Self {
             wal: std::sync::Mutex::new(memory_fixed_none_box(DB_IO_MEMORY_OWNERS)),
-            snapshots: std::sync::Mutex::new(std::array::from_fn(|_| None)),
-            payloads: std::sync::Mutex::new(std::array::from_fn(|_| None)),
+            snapshots: std::sync::Mutex::new(memory_fixed_none_box(DB_IO_MEMORY_OWNERS)),
+            payloads: std::sync::Mutex::new(memory_fixed_none_box(DB_IO_MEMORY_OWNERS)),
             catalog: std::sync::Mutex::new(None),
-            index_runs: std::sync::Mutex::new(std::array::from_fn(|_| None)),
-            leases: std::sync::Mutex::new(std::array::from_fn(|_| None)),
-            operations: std::sync::Mutex::new(std::array::from_fn(|_| None)),
-            retired_pages: std::sync::Mutex::new(std::array::from_fn(|_| None)),
+            index_runs: std::sync::Mutex::new(memory_fixed_none_box(DB_IO_MEMORY_OWNERS)),
+            leases: std::sync::Mutex::new(memory_fixed_none_box(DB_IO_MEMORY_OWNERS)),
+            operations: std::sync::Mutex::new(memory_fixed_none_box(DB_IO_OPERATION_ITEMS)),
+            retired_pages: std::sync::Mutex::new(memory_fixed_none_box(DB_IO_OPERATION_ITEMS)),
             retired_wal: std::sync::Mutex::new(memory_fixed_none_box(DB_IO_OPERATION_ITEMS)),
             close_phase: std::sync::atomic::AtomicU8::new(0),
             backing_operation: std::sync::atomic::AtomicU64::new(0),
@@ -5518,6 +5598,12 @@ fn memory_fixed_none_box<T>(items: usize) -> Box<[Option<T>]> {
 }
 
 impl MemoryDbIoExecutor {
+    fn backing_bytes() -> u64 {
+        (std::mem::size_of::<Self>()
+            + DB_IO_MEMORY_OWNERS * (std::mem::size_of::<Option<MemoryWalOwner>>() + 2 * std::mem::size_of::<Option<MemoryPageOwner>>() + std::mem::size_of::<Option<MemoryPayloadOwner>>() + std::mem::size_of::<Option<MemoryLeaseOwner>>())
+            + DB_IO_OPERATION_ITEMS * (std::mem::size_of::<Option<MemoryDbIoCursor>>() + std::mem::size_of::<Option<DbIoPages>>() + std::mem::size_of::<Option<MemWalSegment>>())) as u64
+    }
+
     fn retain_pages(&self, input: &mut DbIoPages) -> Result<DbIoPages, DbError> {
         let backend_operation = self.backing_operation.load(std::sync::atomic::Ordering::Acquire);
         if backend_operation == 0 {
@@ -5727,9 +5813,11 @@ impl DbIoTaskExecutor for MemoryDbIoExecutor {
     }
 
     fn owner_backing_bytes(&self) -> u64 {
-        let wal = lock(&self.wal);
-        let retired_wal = lock(&self.retired_wal);
-        (std::mem::size_of_val(self) + std::mem::size_of_val(wal.as_ref()) + std::mem::size_of_val(retired_wal.as_ref())) as u64
+        (std::mem::size_of_val(self)
+            + std::mem::size_of_val(lock(&self.wal).as_ref()) + std::mem::size_of_val(lock(&self.snapshots).as_ref())
+            + std::mem::size_of_val(lock(&self.payloads).as_ref()) + std::mem::size_of_val(lock(&self.index_runs).as_ref())
+            + std::mem::size_of_val(lock(&self.leases).as_ref()) + std::mem::size_of_val(lock(&self.operations).as_ref())
+            + std::mem::size_of_val(lock(&self.retired_pages).as_ref()) + std::mem::size_of_val(lock(&self.retired_wal).as_ref())) as u64
     }
 
     fn drive_async(self: Box<Self>, _operation: u64, task: DbIoTask) -> DbIoAsyncDriverFuture {
@@ -6195,7 +6283,7 @@ pub struct MemoryStorage {
 }
 
 async fn memory_execute(pool: &WorkerPool, task: DbIoTask) -> Result<DbIoResult, DbError> {
-    submit_db_io_task(pool, task).map_err(|(error, _)| error)?.await.map_err(DbIoFault::into_db_error)?.into_result()
+    submit_db_io_task(pool, task).map_err(|(error, _)| error)?.finish().await
 }
 
 fn memory_document(document: &ArtifactId) -> Result<DbIoText, DbError> {
@@ -6209,7 +6297,10 @@ fn memory_output(bytes: u64) -> Result<DbIoPageWriter, DbError> {
 
 impl MemoryStorage {
     pub async fn new(pool: Arc<WorkerPool>) -> Result<Self, DbError> {
-        let control = register_db_io_backend(DbIoBackendKind::Memory, Box::new(MemoryDbIoExecutor::default()), pool.clone())?;
+        let credit = DbIoCredit { pages: 0, bytes: MemoryDbIoExecutor::backing_bytes(), items: 1, controls: 1 };
+        let owner = db_io_backend_owner_reserve(credit)?;
+        let executor = Box::new(MemoryDbIoExecutor::default());
+        let control = register_db_io_backend_reserved(DbIoBackendKind::Memory, executor, pool.clone(), owner, credit)?;
         let storage = Self { control, pool, closed: std::sync::atomic::AtomicBool::new(false) };
         if let Err(error) = memory_execute(storage.pool.as_ref(), DbIoTask::BackendOpen { backend: control, path: DbIoText::try_from_str("memory://fixed")? }).await {
             let _ = memory_execute(storage.pool.as_ref(), DbIoTask::BackendClose { backend: control }).await;
@@ -7043,7 +7134,7 @@ mod fs_storage {
     }
 
     async fn execute(pool: &WorkerPool, task: DbIoTask) -> Result<DbIoResult, DbError> {
-        submit_db_io_task(pool, task).map_err(|(error, _)| error)?.await.map_err(super::DbIoFault::into_db_error)?.into_result()
+        submit_db_io_task(pool, task).map_err(|(error, _)| error)?.finish().await
     }
 
     fn document_text(document: &ArtifactId) -> Result<DbIoText, DbError> {
@@ -8505,6 +8596,39 @@ mod db_io_retained_fixtures {
 
     #[cfg(not(target_arch = "wasm32"))]
     #[semio_framework_async_macros::async_test]
+    async fn db_io_saturated_task_retry_wakes_parked_caller_without_unrelated_ingress() {
+        let _serial = fixture_serial();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🧮️memory-backing/🔣️.json")).unwrap();
+        assert_eq!(u64::from(DB_IO_RETRY_LIMIT), fixture["retry"]["maximumAttempts"].as_u64().unwrap());
+        assert_eq!(DB_IO_RETRY_DELAY_MS, fixture["retry"]["timerDelayMs"].as_u64().unwrap());
+        let before = ledger_witness();
+        let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+        let control = register_db_io_backend(DbIoBackendKind::Filesystem, Box::new(BlockingCompleteLawExecutor { terminal: false }), pool.clone()).unwrap();
+        let (started_tx, started_rx) = std::sync::mpsc::channel();
+        let (release_tx, release_rx) = std::sync::mpsc::channel();
+        pool.try_submit(Lane::Io, Box::new(move || { started_tx.send(()).unwrap(); release_rx.recv_timeout(std::time::Duration::from_secs(5)).unwrap(); })).ok().expect("retry blocker admitted");
+        started_rx.recv_timeout(std::time::Duration::from_secs(2)).unwrap();
+        for _ in 0..semio_framework_async::WORKER_JOBS_PER_LANE { pool.try_submit(Lane::Io, Box::new(|| {})).ok().expect("exact queue capacity"); }
+        let mut operation = submit_db_io_task(pool.as_ref(), DbIoTask::BackendOpen { backend: control, path: DbIoText::try_from_str("fixture://parked-retry").unwrap() }).unwrap_or_else(|(error, _)| panic!("{error}"));
+        assert!(DB_IO_TASK_SLOTS[operation.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner).retry_attempt.is_some());
+        struct WakeSender(std::sync::mpsc::Sender<()>);
+        impl std::task::Wake for WakeSender { fn wake(self: Arc<Self>) { let _ = self.0.send(()); } }
+        let (wake_tx, wake_rx) = std::sync::mpsc::channel();
+        let waker = std::task::Waker::from(Arc::new(WakeSender(wake_tx)));
+        let mut context = std::task::Context::from_waker(&waker);
+        DB_IO_RETRY_MAINTENANCE_CURSOR.store((operation.handle.slot as usize + 1) % DB_IO_OPERATION_ITEMS, std::sync::atomic::Ordering::Release);
+        assert!(Pin::new(&mut operation).poll(&mut context).is_pending());
+        release_tx.send(()).unwrap();
+        assert_eq!(wake_rx.recv_timeout(std::time::Duration::from_secs(2)).is_ok(), fixture["retry"]["terminalAfterQueueRelease"].as_bool().unwrap(), "retry must wake the parked caller without another DB request or maintenance poll");
+        assert!(matches!(exact_fixture_result(operation.await, "parked retry"), DbIoResult::Unit));
+        drain_control_tasks(control).await;
+        close_db_io_backend(control).await.unwrap();
+        pool.shutdown();
+        assert_eq!(ledger_witness(), before);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[semio_framework_async_macros::async_test]
     async fn db_io_retry_generation_max_publishes_a_lossless_terminal_fault() {
         let _serial = fixture_serial();
         let before = ledger_witness();
@@ -8663,6 +8787,91 @@ mod db_io_retained_fixtures {
         assert_eq!(db_io_page_maintenance_step().unwrap(), Some(DB_IO_PAGE_BYTES));
         assert_eq!(db_io_page_maintenance_step().unwrap(), None);
         assert_ne!(operation, 0);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn db_io_memory_backend_heap_tables_have_exact_preflight_credit_and_terminal_return() {
+        let _serial = fixture_serial();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🧮️memory-backing/🔣️.json")).unwrap();
+        let inline = std::mem::size_of::<MemoryDbIoExecutor>() as u64;
+        assert!(inline <= fixture["maximumInlineBytes"].as_u64().unwrap(), "fixed backend tables must not occupy the caller stack");
+        let before = ledger_witness();
+        let expected = DbIoCredit { pages: 0, bytes: MemoryDbIoExecutor::backing_bytes(), items: 1, controls: 1 };
+        for case in fixture["admission"].as_array().unwrap() {
+            let remaining = match case["remaining"].as_str().unwrap() {
+                "exact" => expected.bytes,
+                "one-short" => expected.bytes - 1,
+                "zero" => 0,
+                other => panic!("unknown memory admission vector {other}"),
+            };
+            let filler = DbIoCredit { bytes: DB_IO_PROCESS_BYTES - before.0.bytes - remaining, ..DbIoCredit::default() };
+            let filler_operation = db_io_backend_owner_reserve(filler).unwrap();
+            let admitted = db_io_backend_owner_reserve(expected);
+            assert_eq!(admitted.is_ok(), case["accepted"].as_bool().unwrap());
+            if let Ok(operation) = admitted {
+                let ledger = lock(db_io_operation_ledger());
+                assert_eq!(ledger.slots[db_io_operation_slot(&ledger, operation).unwrap()].live, expected);
+                drop(ledger);
+                db_io_operation_return(operation, expected).unwrap();
+            }
+            db_io_operation_return(filler_operation, filler).unwrap();
+            assert_eq!(ledger_witness(), before);
+        }
+        let storage = MemoryStorage::new(db_io_test_pool()).await.unwrap();
+        let (slot, generation) = db_io_backend_parts(storage.control);
+        let owner_operation = {
+            let mut registry = lock(db_io_backend_registry());
+            let owner = &mut registry.slots[slot as usize];
+            assert_eq!(owner.generation, generation);
+            assert_eq!(owner.owner_credit, expected);
+            let executor = owner.executor.as_mut().unwrap().as_any_mut().downcast_mut::<MemoryDbIoExecutor>().unwrap();
+            fn table<T>(name: &'static str, cells: &std::sync::Mutex<Box<[Option<T>]>>) -> (&'static str, usize, usize) {
+                let cells = lock(cells);
+                (name, cells.len(), std::mem::size_of_val(cells.as_ref()))
+            }
+            let tables = [
+                table("wal", &executor.wal), table("snapshots", &executor.snapshots), table("payloads", &executor.payloads),
+                table("index-runs", &executor.index_runs), table("leases", &executor.leases), table("operations", &executor.operations),
+                table("retired-pages", &executor.retired_pages), table("retired-wal", &executor.retired_wal),
+            ];
+            assert_eq!(fixture["tables"].as_array().unwrap().len(), tables.len());
+            for ((name, slots, _), row) in tables.iter().zip(fixture["tables"].as_array().unwrap()) {
+                assert_eq!(row["name"].as_str().unwrap(), *name);
+                assert_eq!(row["slots"].as_u64().unwrap(), *slots as u64);
+            }
+            assert_eq!(inline + tables.iter().map(|(_, _, bytes)| *bytes as u64).sum::<u64>(), expected.bytes);
+            assert_eq!(executor.owner_backing_bytes(), expected.bytes);
+            owner.owner_operation
+        };
+        {
+            let ledger = lock(db_io_operation_ledger());
+            assert_eq!(ledger.slots[db_io_operation_slot(&ledger, owner_operation).unwrap()].live, expected);
+        }
+        let probe_credit = DbIoCredit { items: 1, ..DbIoCredit::default() };
+        let probe = db_io_operation_reserve(probe_credit).unwrap();
+        assert!(db_io_backend_admit_operation(storage.control, probe).unwrap());
+        let mut context = std::task::Context::from_waker(std::task::Waker::noop());
+        assert_eq!(db_io_backend_close_lane_step(storage.control, &mut context).unwrap(), fixture["closeWhileAdmitted"].as_bool().unwrap());
+        assert!(lock(db_io_backend_registry()).slots[slot as usize].executor.is_some());
+        db_io_backend_return_operation(storage.control, probe).unwrap();
+        db_io_operation_return(probe, probe_credit).unwrap();
+        let document = ArtifactId("memory-retirement-frontier".into());
+        storage.create_segment(&document, 0).await.unwrap();
+        let mut retained = storage.list_segments(&document).await.unwrap();
+        assert_eq!(retained.as_slice(), &[0]);
+        for index in 0..fixture["sequentialTasks"].as_u64().unwrap() {
+            assert_eq!(storage.segment_len(&document, 0).await.unwrap_or_else(|error| panic!("sequential task {index} lost capacity with one retained result: {error}")), 0);
+            assert_eq!(retained.as_slice(), &[0], "task retirement must preserve the caller-owned list");
+            let handle = retained.result_handback.unwrap();
+            let ledger = lock(db_io_operation_ledger());
+            assert!(ledger.slots[db_io_operation_slot(&ledger, handle.operation).unwrap()].live.bytes >= DB_IO_LIST_TRANSIENT_BYTES);
+        }
+        while retained.close_step() {}
+        assert!(retained.values.is_none());
+        storage.close().await.unwrap();
+        close_db_io_backend(storage.control).await.unwrap();
+        assert!(db_io_operation_slot(&lock(db_io_operation_ledger()), owner_operation).is_none());
+        assert_eq!(ledger_witness(), before);
     }
 
     #[semio_framework_async_macros::async_test]

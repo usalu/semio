@@ -1,0 +1,30 @@
+{
+  "receipt": {
+    "schema": "semio.space.home.directory-projection-receipt.v1",
+    "sessionBindingSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "authorizationGeneration": 7,
+    "throughSeqInclusive": 11,
+    "receiptSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "hostile": [
+    { "id": "extra", "patch": { "afterSeqExclusive": 10 } },
+    { "id": "wrong-schema", "patch": { "schema": "semio.directory.event-page.v1" } },
+    { "id": "binding-uppercase", "patch": { "sessionBindingSha256": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" } },
+    { "id": "generation-zero", "patch": { "authorizationGeneration": 0 } },
+    { "id": "frontier-unsafe", "patch": { "throughSeqInclusive": 9007199254740992 } },
+    { "id": "receipt-short", "patch": { "receiptSha256": "bbbb" } }
+  ],
+  "lifecycle": [
+    { "id": "owner-before-open", "action": "open", "expected": "open" },
+    { "id": "terminal-receipt", "action": "resolve", "expected": "ack" },
+    { "id": "recoverable-action", "action": "reject", "expected": "reject" },
+    { "id": "hostile-receipt", "action": "mismatch", "expected": "close" },
+    { "id": "cancel-late-result", "action": "cancel", "expected": "cancelled" },
+    { "id": "serialized-page", "action": "duplicate", "expected": "pending" },
+    { "id": "visible-switch", "action": "switch-visible", "expected": "retained" }
+  ],
+  "labels": {
+    "en": ["Updating directory", "Retrying directory update", "Directory update stopped", "Cancel directory update"],
+    "de": ["Verzeichnis wird", "Verzeichnisaktualisierung", "Verzeichnisaktualisierung angehalten", "Verzeichnisaktualisierung abbrechen"]
+  }
+}

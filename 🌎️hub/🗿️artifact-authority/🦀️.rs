@@ -5,7 +5,7 @@
 use ::directory::os_directory::{descriptor_digest_v1, hex_lower, ArtifactBlobRef, ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, DocumentDescriptor, DocumentScope};
 use semio_framework_hash::Sha256;
 
-#[path = "🗂️chunk-cas/🦀️.rs"]
+#[path = "🧱️chunk-cas/🦀️.rs"]
 pub mod chunk_cas;
 
 /// 🔐️ Domain prefix for a canonical checkpoint identity.
@@ -559,8 +559,11 @@ impl<C: TrustedArtifactCatalog> CanonicalArtifactAuthority for ValidatingCanonic
 #[path = "🔌️adapters/🦀️.rs"]
 pub mod adapters;
 
-#[path = "🗂️trusted-catalog/🦀️.rs"]
+#[path = "🔏️trusted-catalog/🦀️.rs"]
 pub mod trusted_catalog;
+
+#[path = "📇️native-openable-provider/🦀️.rs"]
+pub mod native_openable_provider;
 
 #[cfg(test)]
 mod tests {
@@ -840,7 +843,7 @@ mod tests {
 
     #[tokio::test]
     async fn canonical_authority_contract_matches_the_language_neutral_checkpoint_vector() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🧬️canonical-authority/🔣️.json")).expect("valid authority fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🏛️canonical-authority/🔣️.json")).expect("valid authority fixture");
         let required = TrustedArtifactIdentity::from_descriptor(&descriptor());
         let authority = ValidatingCanonicalArtifactAuthority::new(catalog(required));
         let control = control();
@@ -942,7 +945,7 @@ mod tests {
 
     #[tokio::test]
     async fn plugin_host_catalog_resolves_only_the_exact_live_package_manifest_kind_schema_and_codec_hash() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🧬️authority-adapter/🔣️.json")).expect("adapter fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔌️authority-adapter/🔣️.json")).expect("adapter fixture");
         register_document_codec(fixture_artifact_codec()).await.expect("register fixture codec");
         let graph = PluginGraph::new();
         graph.register(fixture_manifest()).await.expect("register fixture manifest");
@@ -986,7 +989,7 @@ mod tests {
 
     #[tokio::test]
     async fn publication_orchestrator_never_calls_the_publisher_before_both_exact_blob_readbacks() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🧬️authority-adapter/🔣️.json")).expect("adapter fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔌️authority-adapter/🔣️.json")).expect("adapter fixture");
         assert_eq!(fixture["failureStages"].as_array().expect("failure stages").len(), 5);
         for fail_on in 1..=4 {
             let control = control();

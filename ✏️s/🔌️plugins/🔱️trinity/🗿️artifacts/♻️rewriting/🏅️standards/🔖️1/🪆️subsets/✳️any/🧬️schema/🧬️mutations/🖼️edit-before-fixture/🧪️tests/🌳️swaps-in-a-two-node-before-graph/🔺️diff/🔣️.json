@@ -1,0 +1,11 @@
+{
+  "beforeFixtureJson": "{\"schema\":\"trinity.graph\",\"name\":\"capsule-stack\",\"nodes\":[{\"id\":\"shaft\"},{\"id\":\"c\"}]}",
+  "lhsJson": null,
+  "rhsJson": null,
+  "parameterBindings": null,
+  "ruleLayout": null,
+  "lodModeByWindow": null,
+  "beforePaneCamera": null,
+  "reorganizeEpoch": null,
+  "locale": null
+}

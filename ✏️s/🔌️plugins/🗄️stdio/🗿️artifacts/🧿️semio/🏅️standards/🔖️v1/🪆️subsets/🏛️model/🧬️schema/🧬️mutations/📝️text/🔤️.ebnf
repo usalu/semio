@@ -1,0 +1,52 @@
+(* ISO-14977-style EBNF for `stdio.semio.model`'s real op text line — descriptive mirror of the
+   authoritative `📖️.grammar.semio` (same production names). *)
+op = set snapshot | insert spatial node | remove spatial node | set spatial node
+   | insert element | remove element | set element | insert relation | remove relation | set relation ;
+
+set snapshot = 'set-snapshot', 'snapshot', '=', snapshot lit ;
+insert spatial node = 'insert-spatial-node', 'node', '=', spatial node ;
+remove spatial node = 'remove-spatial-node', 'id', '=', hex ;
+set spatial node = 'set-spatial-node', 'id', '=', hex, 'kind', '=', option spatial kind, 'name', '=', option hex, 'parent_id', '=', option option hex, 'placement', '=', option transform ;
+insert element = 'insert-element', 'element', '=', element ;
+remove element = 'remove-element', 'id', '=', hex ;
+set element = 'set-element', 'id', '=', hex, 'class', '=', option element class, 'placement', '=', option transform, 'geometry', '=', option geometry ref, 'spatial_id', '=', option option hex, 'psets', '=', option psets ;
+insert relation = 'insert-relation', 'relation', '=', relation ;
+remove relation = 'remove-relation', 'id', '=', hex ;
+set relation = 'set-relation', 'id', '=', hex, 'kind', '=', option relation kind, 'from', '=', option hex, 'to', '=', option hex ;
+
+snapshot lit = '[', hex, ',', '[', [ spatial list ], ']', ',', '[', [ element list ], ']', ',', '[', [ relation list ], ']', ']' ;
+spatial list = spatial node, { ',', spatial node } ;
+element list = element, { ',', element } ;
+relation list = relation, { ',', relation } ;
+
+spatial node = '[', hex, ',', spatial kind, ',', hex, ',', option hex, ',', transform, ']' ;
+spatial kind = 'S' | 'B' | 'T' | 'P' ;
+element = '[', hex, ',', element class, ',', transform, ',', geometry ref, ',', option hex, ',', '[', [ pset list ], ']', ']' ;
+element class = 'WA' | 'SL' | 'CO' | 'BE' | 'DO' | 'WI' | 'RO' | 'ST' | 'FU' | 'OT', '[', hex, ']' ;
+geometry ref = 'N' | 'B', '[', hex, ']' | 'M', '[', hex, ']' ;
+pset list = property set, { ',', property set } ;
+property set = '[', hex, ',', '[', [ property list ], ']', ']' ;
+property list = property, { ',', property } ;
+property = '[', hex, ',', pset value, ']' ;
+pset value = 'T', '[', hex, ']' | 'N', '[', number, ']' | 'B', '[', bit, ']' ;
+bit = '0' | '1' ;
+relation = '[', hex, ',', relation kind, ',', hex, ',', hex, ']' ;
+relation kind = 'AG' | 'CI' | 'CN' | 'FV' | 'VE' | 'OT', '[', hex, ']' ;
+transform = '[', point3, ',', quat, ',', point3, ']' ;
+point3 = '[', number, ',', number, ',', number, ']' ;
+quat = '[', number, ',', number, ',', number, ',', number, ']' ;
+
+option hex = '[', '0', ']' | '[', '1', ',', hex, ']' ;
+option option hex = '[', '0', ']' | '[', '1', ',', option hex, ']' ;
+option spatial kind = '[', '0', ']' | '[', '1', ',', spatial kind, ']' ;
+option transform = '[', '0', ']' | '[', '1', ',', transform, ']' ;
+option element class = '[', '0', ']' | '[', '1', ',', element class, ']' ;
+option geometry ref = '[', '0', ']' | '[', '1', ',', geometry ref, ']' ;
+option psets = '[', '0', ']' | '[', '1', ',', '[', [ pset list ], ']', ']' ;
+option relation kind = '[', '0', ']' | '[', '1', ',', relation kind, ']' ;
+
+number = int | float ;
+int = [ '-' ], digit, { digit } ;
+float = [ '-' ], digit, { digit }, '.', digit, { digit } ;
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
+hex = { digit | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' } ;

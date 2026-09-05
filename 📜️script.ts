@@ -20,6 +20,7 @@ import {
   discoverOwners,
   discoverPackages,
   discoverPackageProblems,
+  exactCargoGeneratedOutputHasLiveLease,
   dispatchPolicyArgv,
   dispatchSubcommand,
   defineLint,
@@ -97,10 +98,9 @@ import {
   workspaceAuthorityPath,
   noFollowDirectoryAncestry,
   semanticPackageAdapterPreview,
-  semanticPackageProjectionCatalog,
-  semanticPackageProjectionAuthority,
   semanticOwnedInputFileSnapshot,
   parseSemanticPackageBrowserProfile,
+  parseCanonicalWgpuPackageCatalog,
   parseGeneratorInputProjection,
   generatorProjectedInputView,
   registryCatalogInputView,
@@ -108,11 +108,13 @@ import {
   resolveWorkspaceTaxonomyAuthority,
   validateTaxonomy,
   type RegistryCatalogInputView,
-  type SemanticPackageProjectionCase,
-  type SemanticProjectionAuthorityNode,
   mutationPayloadSchemaRelativePath,
-  mutationDirectoryNameIsValid,
+  mutationPayloadSchemaProblems,
+  jsonDocumentDuplicateKeys,
+  mutationOwnerIdentity,
   pathEmojiStatuteFindings,
+  subsetDirectoryNameForId,
+  subsetIdForDirectoryName,
   type PathEmojiEntry,
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import {
@@ -764,12 +766,10 @@ export function runNestedCargoPackageAdapter(repoRoot: string, mode: string): vo
   }
 }
 /** 🌐️ Builds browser artifacts entirely in memory from exact no-follow source or projected inputs. */
-export async function renderWgpuBrowserBundles(repoRoot: string, input: unknown, owner: SemanticPackageProjectionCase, layout: "source" | "destination", options: { readonly taxonomy?: ReturnType<typeof loadTaxonomy>; readonly view?: RegistryCatalogInputView; readonly isCancelled?: () => boolean; readonly progress?: (event: { readonly phase: "module-input" | "bundle"; readonly completed: number; readonly total: number }) => void } = {}): Promise<{ readonly nodes: readonly { readonly path: string; readonly content: string; readonly mode: number; readonly inclusion: "tracked" | "ignored" }[]; readonly inputs: readonly string[] }> {
-  const profile = parseSemanticPackageBrowserProfile(input, owner), taxonomy = options.taxonomy ?? loadTaxonomy();
-  if (layout !== "source" && layout !== "destination") throw new Error("WGPU browser layout must be source or destination");
+export async function renderWgpuBrowserBundles(repoRoot: string, input: unknown, options: { readonly taxonomy?: ReturnType<typeof loadTaxonomy>; readonly view?: RegistryCatalogInputView; readonly isCancelled?: () => boolean; readonly progress?: (event: { readonly phase: "module-input" | "bundle"; readonly completed: number; readonly total: number }) => void } = {}): Promise<{ readonly nodes: readonly { readonly path: string; readonly content: string; readonly mode: number; readonly inclusion: "tracked" | "ignored" }[]; readonly inputs: readonly string[] }> {
+  const taxonomy = options.taxonomy ?? loadTaxonomy(), profile = parseSemanticPackageBrowserProfile(input, taxonomy.pathEmojiPolicy.genericEmojiIdentities);
   const view = options.view ?? registryCatalogInputView(repoRoot, taxonomy);
-  const projected = (path: string): string => layout === "destination" ? owner.mappings.find((mapping) => mapping.sourcePath === path)?.destinationPath ?? path : path;
-  const allowed = new Set(profile.sourceModulePaths.map(projected)), modules = new Set<string>(), contents = new Map<string, string>();
+  const allowed = new Set(profile.sourceModulePaths), modules = new Set<string>(), contents = new Map<string, string>();
   const nodes: { path: string; content: string; mode: number; inclusion: "tracked" | "ignored" }[] = [];
   const check = (): void => { if (options.isCancelled?.()) throw new Error("WGPU browser generation cancelled"); };
   const read = (path: string): string => {
@@ -777,8 +777,7 @@ export async function renderWgpuBrowserBundles(repoRoot: string, input: unknown,
     const cached = contents.get(path);
     if (cached !== undefined) return cached;
     if (view.kind(path) !== "file") throw new Error("WGPU browser input is missing or not a no-follow file: " + path);
-    const content = view.readText(path), mapping = owner.mappings.find((mapping) => mapping.sourcePath === path);
-    if (layout === "source" && mapping && (createHash("sha256").update(content).digest("hex") !== mapping.sourceHash || Buffer.byteLength(content) !== mapping.sourceSize)) throw new Error("WGPU browser source preimage drift: " + path);
+    const content = view.readText(path);
     contents.set(path, content);
     return content;
   };
@@ -789,8 +788,7 @@ export async function renderWgpuBrowserBundles(repoRoot: string, input: unknown,
   }
   for (const entry of profile.entries) {
     check();
-    const mapping = owner.mappings.find((mapping) => mapping.sourcePath === owner.sourceRoot + "/" + entry.sourceRelativePath)!;
-    const entryPath = projected(mapping.sourcePath), entryAbsolute = join(repoRoot, entryPath);
+    const entryPath = profile.ownerPath + "/" + entry.sourceRelativePath, entryAbsolute = join(repoRoot, entryPath);
     const result = await Bun.build({ root: repoRoot, entrypoints: [entryAbsolute], target: "browser", format: "esm", define: { "import.meta.vitest": profile.inlineTestDefine }, plugins: [{ name: "semantic-wgpu-owned-inputs", setup(builder) {
       builder.onResolve({ filter: /.*/u }, (request) => {
         check();
@@ -809,12 +807,13 @@ export async function renderWgpuBrowserBundles(repoRoot: string, input: unknown,
     } }] });
     check();
     if (!result.success || result.logs.length || result.outputs.length !== 1) throw new Error("WGPU browser compilation did not produce exactly one clean artifact: " + entry.id);
-    nodes.push({ path: dirname(mapping.destinationPath).replaceAll("\\", "/") + "/🤖️generated/🟨️.js", content: await result.outputs[0]!.text(), mode: 0o644, inclusion: entry.inclusion });
+    nodes.push({ path: profile.ownerPath + "/" + entry.outputRelativePath, content: await result.outputs[0]!.text(), mode: 0o644, inclusion: entry.inclusion });
     options.progress?.({ phase: "bundle", completed: nodes.length, total: profile.entries.length });
   }
   check();
   const unused = [...allowed].filter((path) => !modules.has(path));
   if (unused.length) throw new Error("WGPU browser module authority includes unread inputs: " + unused.join(" | "));
+  for (const [path, content] of contents) if (view.kind(path) !== "file" || createHash("sha256").update(view.readText(path)).digest("hex") !== createHash("sha256").update(content).digest("hex")) throw new Error("WGPU browser input changed during generation: " + path);
   const compare = (left: string, right: string): number => Buffer.compare(Buffer.from(left), Buffer.from(right));
   return { nodes: nodes.sort((left, right) => compare(left.path, right.path)), inputs: [...contents.keys()].sort(compare) };
 }
@@ -833,29 +832,32 @@ function loadWgpuPackageTaxonomy(repoRoot: string): ReturnType<typeof loadTaxono
   return taxonomy;
 }
 
-/** 🏗️ Renders six exact artifacts only after proving every canonical authored package leaf. */
+/** 🏗️ Renders six current artifacts from digest-bound declarations and exact package identities. */
 export async function renderWgpuPackageArtifacts(repoRoot: string, options: { readonly taxonomy?: ReturnType<typeof loadTaxonomy>; readonly view?: RegistryCatalogInputView; readonly isCancelled?: () => boolean; readonly progress?: (event: { readonly phase: "module-input" | "bundle"; readonly completed: number; readonly total: number }) => void } = {}) {
   const taxonomy = options.taxonomy ?? loadWgpuPackageTaxonomy(repoRoot), contract = taxonomy.generatorContracts["wgpu-frame-worker"];
-  const catalog = semanticPackageProjectionCatalog(repoRoot, taxonomy), owner = catalog?.packages.find((entry) => entry.id === "wgpu-renderer");
-  if (!catalog || !owner || !contract?.packageGeneration) throw new Error("WGPU package generation lacks exact catalog authority");
-  const view = options.view ?? registryCatalogInputView(repoRoot, taxonomy), inputs = new Set<string>();
+  if (!contract?.packageGeneration) throw new Error("WGPU package generation lacks exact current catalog authority");
+  const generation = contract.packageGeneration, view = options.view ?? registryCatalogInputView(repoRoot, taxonomy), contents = new Map<string, string>();
   const check = (): void => { if (options.isCancelled?.()) throw new Error("WGPU package generation cancelled"); };
-  const read = (path: string): string => { check(); if (view.kind(path) !== "file") throw new Error("WGPU canonical input is missing or not a no-follow file: " + path); inputs.add(path); return view.readText(path); };
+  const read = (path: string): string => { check(); if (view.kind(path) !== "file") throw new Error("WGPU canonical input is missing or not a no-follow file: " + path); const content = view.readText(path); contents.set(path, content); return content; };
   check();
-  if (owner.mappings.some((mapping) => view.kind(mapping.sourcePath) !== null)) throw new Error("WGPU generation requires canonical package inputs without old source leaves");
+  const owner = parseCanonicalWgpuPackageCatalog(read(generation.catalogPath), generation.catalogSha256, generation.browserProfile, taxonomy);
+  read(owner.ownerPath + "/🧬️package-catalog.schema.json");
+  const packageRoot = owner.ownerPath + "/" + owner.packageRelativePath;
+  const cargo = Bun.TOML.parse(read(packageRoot + "/Cargo.toml")) as { package?: { name?: string; build?: string }; lib?: { path?: string }; bin?: { name?: string; path?: string }[] };
+  const node = JSON.parse(read(packageRoot + "/package.json")), nx = JSON.parse(read(packageRoot + "/📋️project.json"));
+  if (cargo.package?.name !== owner.identity.cargoPackageName || cargo.package?.build !== owner.entryPaths.cargoBuild || cargo.lib?.path !== owner.entryPaths.cargoLibrary || !cargo.bin?.some((entry) => entry.name === "semio-wgpu-native" && entry.path === owner.entryPaths.cargoBinary) || node.name !== owner.identity.nodePackageName || node.exports?.["."] !== "./" + owner.entryPaths.nodeLibrary || nx.name !== owner.identity.nxProjectName || nx.sourceRoot !== packageRoot || !nx.targets || Object.values(nx.targets).some((target: any) => target.options?.cwd !== packageRoot)) throw new Error("WGPU current package manifest identity drift");
+  read(packageRoot + "/" + owner.entryPaths.cargoLibrary);
+  read(packageRoot + "/" + owner.entryPaths.cargoBuild);
+  for (const artifact of owner.artifacts) if (artifact.targetRelativePath) read(owner.ownerPath + "/" + artifact.targetRelativePath);
   const rootManifest = read("package.json");
   assertWgpuPackageToolchain(JSON.parse(rootManifest).packageManager);
-  const browser = await renderWgpuBrowserBundles(repoRoot, contract.packageGeneration.browserProfile, owner, "destination", { ...options, taxonomy, view });
-  const generated = [...owner.adapters.filter((adapter) => !owner.mappings.some((mapping) => mapping.destinationPath === adapter.path)), ...owner.derivedLeaves];
-  const nodes = [...generated.map(({ path, content }) => ({ path, content, mode: 0o644, inclusion: "tracked" as const })), ...browser.nodes].sort((left, right) => Buffer.compare(Buffer.from(left.path), Buffer.from(right.path)));
+  const browser = await renderWgpuBrowserBundles(repoRoot, generation.browserProfile, { ...options, taxonomy, view });
+  const nodes = [...owner.artifacts.map((artifact) => ({ path: owner.ownerPath + "/" + artifact.relativePath, content: artifact.content, mode: 0o644, inclusion: "tracked" as const })), ...browser.nodes].sort((left, right) => Buffer.compare(Buffer.from(left.path), Buffer.from(right.path)));
   if (canonicalJson(nodes.map(({ path, inclusion }) => ({ path, inclusion }))) !== canonicalJson(contract.outputRoots)) throw new Error("WGPU generated roots disagree with the exact package catalog");
   for (const node of nodes) { const kind = view.kind(node.path); if (kind !== null && kind !== "file") throw new Error("WGPU generated output is not a no-follow file: " + node.path); }
-  const facts: SemanticProjectionAuthorityNode[] = owner.mappings.map((mapping) => ({ path: mapping.destinationPath, nodeKind: "file", content: mapping.disposition === "generated" ? nodes.find((node) => node.path === mapping.destinationPath)!.content : read(mapping.destinationPath) }));
-  for (const leaf of generated) facts.push({ path: leaf.path, nodeKind: "file", content: view.kind(leaf.path) === "file" ? view.readText(leaf.path) : leaf.content });
-  const authority = semanticPackageProjectionAuthority({ packageId: owner.id, nodes: facts, layout: "destination", cargoWorkspaceContent: read("Cargo.toml"), nodeWorkspaceContent: rootManifest }, catalog, taxonomy);
-  if (authority.problems.length) throw new Error("WGPU canonical package identity: " + authority.problems.join(" | "));
+  for (const [path, content] of contents) if (view.kind(path) !== "file" || createHash("sha256").update(view.readText(path)).digest("hex") !== createHash("sha256").update(content).digest("hex")) throw new Error("WGPU current catalog input changed during generation: " + path);
   check();
-  return { nodes, inputs: [...new Set([...inputs, ...browser.inputs])].sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right))) };
+  return { nodes, inputs: [...new Set([...contents.keys(), ...browser.inputs])].sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right))) };
 }
 
 /** ⚙️ Executes exact preview, generation, or freshness commands without writing outside six owned leaves. */
@@ -1681,8 +1683,8 @@ function toolJobConcreteFactoryExact(files: ReadonlyMap<string, string>, proof: 
 /** 🧪️ Runs strict language-neutral cross-file factory laws and hostile module substitutions. */
 export function toolJobOwnerFactoryResolutionSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command");
-  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️owner-factory-resolution.schema.json"), "utf8"));
-  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🔣️owner-factory-resolution.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🏭️owner-factory-resolution.schema.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🏭️owner-factory-resolution.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
   if (!validate(fixture)) throw new Error(`owner factory fixture schema: ${JSON.stringify(validate.errors)}`);
@@ -1705,8 +1707,8 @@ export function toolJobOwnerFactoryResolutionSelfTests(): number {
 /** 🧪️ Compares the runtime join fixture with an independent Ajv exact-authority oracle and hostile source variants. */
 export function toolJobFactoryProofJoinSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin");
-  const fixture = JSON.parse(readFileSync(join(base, "🧪️tool-factory-proof.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(base, "🧬️tool-factory-proof.schema.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🔬️tool-factory-proof.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(base, "📐️tool-factory-proof.schema.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const ajv = new Ajv({ strict: true, allErrors: true });
   const validate = ajv.compile(schema);
@@ -1787,12 +1789,12 @@ function toolJobMicrosecondWorkerExact(pluginRaw: string, jobRaw: string, traceR
 }
 
 export function toolJobCooperativeMaintenanceSelfTests(): number {
-  const base = join(WORKSPACE_ROOT, "🧰️framework/🔨️modules/⏳️async/⏱️cooperative");
+  const base = join(WORKSPACE_ROOT, "🧰️framework/🔨️modules/⏳️async/🤝️cooperative");
   const fixture = JSON.parse(readFileSync(join(base, "🧪️fixture/🔣️.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(base, "🧬️schema.json"), "utf8")));
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8")));
   if (!validate(fixture)) throw new Error(`cooperative maintenance schema: ${JSON.stringify(validate.errors)}`);
-  const weights = new Map([["Maintenance", 1], ["Background", 2], ["UserVisible", 4], ["Timer", 3], ["Interactive", 8]]);
+  const weights = new Map([["Maintenance", 1], ["Background", 2], ["UserVisible", 4], ["Io", 4], ["Timer", 3], ["Interactive", 8]]);
   const seen = new Set<string>();
   for (const law of fixture.cases) {
     const cost = BigInt(fixture.unitCost), weight = BigInt(law.weight);
@@ -1812,8 +1814,8 @@ export function toolJobCooperativeMaintenanceSelfTests(): number {
 
 export function toolJobTelemetryContentionSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🔨️modules/⏱️trace/⏱️clock");
-  const fixture = JSON.parse(readFileSync(join(base, "🧪️contention.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(base, "🧬️contention.schema.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️contention/🔣️.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(base, "🧬️contention/🔣️.schema.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
   if (!validate(fixture)) throw new Error(`telemetry contention schema: ${JSON.stringify(validate.errors)}`);
@@ -1837,8 +1839,8 @@ export function toolJobTelemetryContentionSelfTests(): number {
 
 export function toolJobMicrosecondBudgetSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🔨️modules/🧵️job/⏱️budget");
-  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixture/🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧫️fixture/🔣️.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🪫️budget.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
   if (!validate(fixture)) throw new Error(`microsecond budget schema: ${JSON.stringify(validate.errors)}`);
@@ -1854,8 +1856,8 @@ export function toolJobMicrosecondBudgetSelfTests(): number {
   for (const change of [{ unit: "milliseconds" }, { extra: true }]) {
     if (validate({ ...fixture, ...change })) throw new Error("microsecond schema accepted a forged unit or field");
   }
-  const clocks = JSON.parse(readFileSync(join(base, "🧪️clock.json"), "utf8"));
-  const validateClocks = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(base, "🧬️schema/🔣️clock.json"), "utf8")));
+  const clocks = JSON.parse(readFileSync(join(base, "🕰️clock.json"), "utf8"));
+  const validateClocks = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(base, "🧬️schema/⏱️clock.json"), "utf8")));
   if (!validateClocks(clocks)) throw new Error(`host clock schema: ${JSON.stringify(validateClocks.errors)}`);
   for (const law of clocks.browser) {
     const [integer, fraction = ""] = law.milliseconds.split(".");
@@ -1880,8 +1882,8 @@ export function toolJobMicrosecondBudgetSelfTests(): number {
     if ((BigInt(law.elapsedMicroseconds) >= 8_000n) !== law.violated) throw new Error(`strict watchdog boundary oracle: ${law.elapsedMicroseconds}`);
   }
   for (const invalid of [Number.NaN, Number.POSITIVE_INFINITY]) if (microsecondsFromMilliseconds(invalid) !== null) throw new Error("invalid monotonic source was admitted");
-  const binding = JSON.parse(readFileSync(join(base, "🧪️binding.json"), "utf8"));
-  const validateBinding = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(base, "🧬️schema/🔣️binding.json"), "utf8")));
+  const binding = JSON.parse(readFileSync(join(base, "🪢️binding.json"), "utf8"));
+  const validateBinding = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(base, "🧬️schema/🪢️binding.json"), "utf8")));
   if (!validateBinding(binding)) throw new Error(`microsecond binding schema: ${JSON.stringify(validateBinding.errors)}`);
   const plugin = readFileSync(join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs"), "utf8");
   const job = readFileSync(join(base, "../🦀️.rs"), "utf8");
@@ -1935,8 +1937,8 @@ export function cadPresenceRetirementSelfTests(): number {
     if (validate(hostile)) throw new Error("CAD presence schema accepted an enlarged production grant");
   }
   const storeBase = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence");
-  const storeFixture = JSON.parse(readFileSync(join(storeBase, "🧪️retirement.json"), "utf8"));
-  const storeSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/🔣️.schema.json"), "utf8"));
+  const storeFixture = JSON.parse(readFileSync(join(storeBase, "🧹️retirement.json"), "utf8"));
+  const storeSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/🧹️retirement.schema.json"), "utf8"));
   const validateStore = new Ajv({ strict: true, allErrors: true }).compile(storeSchema);
   if (!validateStore(storeFixture)) throw new Error(`presence Store retirement schema: ${JSON.stringify(validateStore.errors)}`);
   for (const law of storeFixture.cases) {
@@ -2058,8 +2060,8 @@ export function cadPresenceRetirementSelfTests(): number {
   ];
   for (const hostile of closeSourceHostiles) if (hostile === retirementSource || exactCloseFactories(hostile)) throw new Error("Presence close guard admitted factory substitution or wrong returned-read retirement");
   const closeFactoryChecks = 2 + closeSchemaHostiles.length + closeSourceHostiles.length;
-  const commitFixture = JSON.parse(readFileSync(join(storeBase, "🧪️peer-commit.json"), "utf8"));
-  const commitSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/🔣️peer-commit.schema.json"), "utf8"));
+  const commitFixture = JSON.parse(readFileSync(join(storeBase, "📌️peer-commit.json"), "utf8"));
+  const commitSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/📌️peer-commit.schema.json"), "utf8"));
   const validateCommit = new Ajv({ strict: true, allErrors: true }).compile(commitSchema);
   if (!validateCommit(commitFixture)) throw new Error("Presence peer commit fixture violates strict schema");
   for (const law of commitFixture.cases) if (law.accepted !== (law.sameStore && law.sameFactory && !law.stale) || law.expectedSnapshots !== 3 + Number(law.stale)) throw new Error(`Presence peer commit independent identity oracle: ${law.name}`);
@@ -2076,8 +2078,8 @@ export function cadPresenceRetirementSelfTests(): number {
   ];
   for (const [store, retirement] of commitSourceHostiles) if (exactPeerCommit(store, retirement)) throw new Error("Presence peer commit guard admitted foreign/stale publication or lost base ownership");
   const commitChecks = 2 + commitFixture.cases.length + commitSchemaHostiles.length + commitSourceHostiles.length;
-  const peerFixture = JSON.parse(readFileSync(join(storeBase, "🧪️peer-admission.json"), "utf8"));
-  const peerSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/🔣️peer-admission.schema.json"), "utf8"));
+  const peerFixture = JSON.parse(readFileSync(join(storeBase, "🛂️peer-admission.json"), "utf8"));
+  const peerSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/🛂️peer-admission.schema.json"), "utf8"));
   const validatePeer = new Ajv({ strict: true, allErrors: true }).compile(peerSchema);
   if (!validatePeer(peerFixture)) throw new Error(`peer admission fixture schema: ${JSON.stringify(validatePeer.errors)}`);
   for (const law of peerFixture.cases) {
@@ -2138,12 +2140,15 @@ export function cadPresenceRetirementSelfTests(): number {
 /** 🧪️ Cross-checks full-domain scope fixtures with Ajv equality and guards the active retained admission/publication seam. */
 export function toolJobLatestWinsSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin");
-  const fixture = JSON.parse(readFileSync(join(base, "🧪️tool-latest-wins.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(base, "🧪️tool-latest-wins.schema.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🥇️tool-latest-wins.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(base, "📏️tool-latest-wins.schema.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const ajv = new Ajv({ strict: true, allErrors: true });
   const validate = ajv.compile(schema);
   if (!validate(fixture)) throw new Error(`latest-wins schema: ${JSON.stringify(validate.errors)}`);
+  const resultAckTrace = Array.from({ length: fixture.resultAck.preAckPolls + 1 }, (_, poll) => poll === 0 ? { attempt: 1 } : null);
+  const resultAckObservation = { preAckPolls: fixture.resultAck.preAckPolls, deliveries: resultAckTrace.filter(Boolean).length, attempt: resultAckTrace.find(Boolean)?.attempt };
+  if (!ajv.compile({ const: fixture.resultAck })(resultAckObservation)) throw new Error("latest-wins result ACK single-delivery oracle diverged");
   const equal = ajv.compile({ const: fixture.first });
   for (const law of fixture.cases) {
     if (Buffer.byteLength(law.next.target, "utf8") !== fixture.targetBytes || equal(law.next) !== law.superseded) throw new Error(`latest-wins exact scope oracle: ${law.id}`);
@@ -2155,8 +2160,8 @@ export function toolJobLatestWinsSelfTests(): number {
     { ...fixture, first: { ...fixture.first, inventedAuthority: true } },
   ];
   for (const hostile of hostiles) if (validate(hostile)) throw new Error("latest-wins schema accepted a forged scope or enlarged grant");
-  const integration = JSON.parse(readFileSync(join(base, "🧪️tool-latest-wins-integration.json"), "utf8"));
-  const integrationSchema = JSON.parse(readFileSync(join(base, "🧪️tool-latest-wins-integration.schema.json"), "utf8"));
+  const integration = JSON.parse(readFileSync(join(base, "🔗️tool-latest-wins-integration.json"), "utf8"));
+  const integrationSchema = JSON.parse(readFileSync(join(base, "⚖️tool-latest-wins-integration.schema.json"), "utf8"));
   const validateIntegration = ajv.compile(integrationSchema);
   if (!validateIntegration(integration)) throw new Error(`latest-wins integration schema: ${JSON.stringify(validateIntegration.errors)}`);
   for (const law of integration.cases) {
@@ -2199,6 +2204,9 @@ export function toolJobLatestWinsSelfTests(): number {
     ["rebind_keyed", "scope.operation.generation = generation"],
     ["advance_typed_operation_publication_one", "next_id_from(self.typed_publication_cursor)"],
     ["take_typed_operation_result_page", "next_id_from(self.typed_result_cursor)"],
+    ["take_result_page", "if self.result_page_presented"],
+    ["take_result_page", "return None"],
+    ["has_runnable_work", "MountedTypedCommandFullOperationStage::AwaitingAck => !self.result_page_presented"],
     ["cleanup_finished_slot", "scope.publication_claim.is_finished()"],
     ["release_current", "std::sync::Arc::ptr_eq(&scope.publication_claim, &self.publication_claim)"],
     ["try_claim_publication", "self.handle.publication_scope.try_claim()?"],
@@ -2210,11 +2218,11 @@ export function toolJobLatestWinsSelfTests(): number {
     && text.includes("self.token.child_now()")
     && text.includes("compare_exchange(0, 1, std::sync::atomic::Ordering::AcqRel")
     && text.includes("scope.operation")
-    && text.includes("retained_latest_wins_real_document_publication_cancellation_and_exhausted_ack_close");
+    && text.includes("retained_latest_wins_real_document_publication_cancellation_and_delayed_ack_close");
   if (!exact(source)) throw new Error("latest-wins production admission/publication authority is incomplete");
   for (const [, token] of obligations) if (exact(source.replaceAll(token, "unqualified_authority"))) throw new Error(`latest-wins accepts missing authority: ${token}`);
-  const rawFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧪️fixtures/🔣️raw-allocation-close.json"), "utf8"));
-  const rawSchema = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧬️schema/🔣️raw-allocation-close.schema.json"), "utf8"));
+  const rawFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧪️fixtures/🚪️raw-allocation-close.json"), "utf8"));
+  const rawSchema = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧬️schema/🚪️raw-allocation-close.schema.json"), "utf8"));
   const validateRaw = ajv.compile(rawSchema);
   if (!validateRaw(rawFixture)) throw new Error(`retained raw allocation schema: ${JSON.stringify(validateRaw.errors)}`);
   for (const law of rawFixture.cases) {
@@ -2227,15 +2235,40 @@ export function toolJobLatestWinsSelfTests(): number {
     && text.includes("fn test_raw_allocation_close<A: ArtifactApp>()");
   if (!rawClose(rawSource)) throw new Error("retained command raw capacity incorrectly consumes semantic byte credit");
   if (rawClose(rawSource.replace("if self.raw.capacity() != 0 {\n            if maximum_items == 0 {", "if self.raw.capacity() != 0 {\n            if maximum_items == 0 || maximum_bytes < self.raw.capacity() {"))) throw new Error("retained raw close accepts capacity-sized byte deadlock");
+  const childCloseFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧪️fixtures/🧩️child-prepublication-close.json"), "utf8"));
+  const childCloseSchema = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧬️schema/🧩️child-prepublication-close.schema.json"), "utf8"));
+  const validateChildClose = ajv.compile(childCloseSchema);
+  if (!validateChildClose(childCloseFixture)) throw new Error(`retained child close fixture: ${JSON.stringify(validateChildClose.errors)}`);
+  if (JSON.stringify(childCloseFixture.children.map((child: { id: string }) => child.id).reverse()) !== JSON.stringify(childCloseFixture.expectedRetirementOrder)) throw new Error("retained child close LIFO oracle diverged");
+  if (childCloseFixture.children.some((child: { slot: string; childId: string; value: string }) => [child.slot, child.childId, child.value].some(value => Buffer.byteLength(value, "utf8") <= value.length))) throw new Error("retained child close fixture lost its multibyte scalar oracle");
+  const childCloseExact = (main: string, retained: string): boolean => main.includes("pub(crate) fn close_one(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep")
+    && retained.includes("if let Some(step) = emit.close_child_one(maximum_items, maximum_bytes)")
+    && retained.includes("self.emit = rejected.emit.ok()")
+    && retained.includes("self.ephemeral = Some(rejected.ephemeral)")
+    && main.includes("self.emit = Some(rejected.emit)")
+    && main.includes("self.ephemeral = Some(rejected.ephemeral)")
+    && main.includes("typed child output lacks a retained nested producer");
+  if (!childCloseExact(source, rawSource)) throw new Error("retained ChildEmit close and rejected completion handback are incomplete");
+  const childCloseHostiles = [
+    [source.replace("pub(crate) fn close_one(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep", "fn close_one(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep"), rawSource],
+    [source, rawSource.replace("if let Some(step) = emit.close_child_one(maximum_items, maximum_bytes)", "drop(self.emit.take())")],
+    [source, rawSource.replace("self.emit = rejected.emit.ok()", "drop(rejected.emit)")],
+    [source.replace("self.emit = Some(rejected.emit)", "drop(rejected.emit)"), rawSource],
+    [source.replace("typed child output lacks a retained nested producer", "typed child output is accepted"), rawSource],
+  ];
+  for (const [hostileMain, hostileRetained] of childCloseHostiles) if (childCloseExact(hostileMain, hostileRetained)) throw new Error("retained ChildEmit close oracle accepted lost ownership or bounded-factory publication");
   const storeSource = readFileSync(join(base, "../🏪️store/🦀️.rs"), "utf8");
   const publisherStart = source.lastIndexOf("fn publish_mounted_typed_operation_unit(");
   const mutatePublisher = (before: string, after: string): string => source.slice(0, publisherStart) + source.slice(publisherStart).replace(before, after);
   const mountedChecks: Array<[string, (text: string) => boolean, string]> = [
     ["synchronous move-only unit", (text) => { const publisher = body(text, "publish_mounted_typed_operation_unit"); return text.includes("fn publish_mounted_typed_operation_unit") && !text.includes("async fn publish_mounted_typed_operation_unit") && ["artifact_mutations", "config_mutations", "draft_mutations", "presence", "transient"].every((lane) => publisher.includes(`${lane}.pop()`)) && !publisher.includes(".last().cloned()") && !publisher.includes(".await"); }, mutatePublisher("fn publish_mounted_typed_operation_unit", "async fn publish_mounted_typed_operation_unit")],
-    ["synchronous fresh publisher", toolJobPublicationFreshnessBeforeEveryTurn, source.replace("typed_operation_document_is_fresh(&mounted.operation", "accept_stale_operation(&mounted.operation")],
+    ["synchronous fresh publisher", toolJobPublicationFreshnessBeforeEveryTurn, mutatePublisher("typed_operation_document_is_fresh(&mounted.operation", "accept_stale_operation(&mounted.operation")],
     ["exact extracted setup", (text) => !!toolJobRetainedDispatchSetup(text), source.replace("self.start_typed_command_operation(command, admission, meta, operation_id, None).await", "self.unchecked_command_operation(command, admission, meta, operation_id, None).await")],
     ["unsupported generic reducer denial", toolJobTypedRouteFailsClosedBeforePreparation, source.replace("QualifiedToolProof::FrameworkOwned(_) | QualifiedToolProof::Bounded(_) => {", "QualifiedToolProof::FrameworkOwned(_) | QualifiedToolProof::Bounded(_) => { return Ok(());")],
     ["mounted persistent operation", toolJobTypedPersistentFoundation, source.replace("session.pump_one(pool, semio_framework_async::Lane::Interactive)", "session.run_to_terminal(pool)")],
+    ["full maintenance eligibility scan", toolJobTypedPersistentFoundation, source.replace("for offset in 0..ARTIFACT_LIVE_OUTPUT_SLOTS", "for offset in 0..1")],
+    ["worker input-wait classification", toolJobTypedPersistentFoundation, source.replace('Ok(_) => Ok(PluginCloseStep::AwaitingInput { reason: "typed operation mounted worker awaits its next outcome" })', 'Ok(_) => Ok(PluginCloseStep::Blocked { reason: "typed operation mounted worker awaits its next outcome" })')],
+    ["transient scheduler-wait classification", toolJobTypedPersistentFoundation, source.replace('Ok(PluginCloseStep::AwaitingInput { reason: "typed operation mounted worker awaits transient scheduler authority" })', 'Ok(PluginCloseStep::Blocked { reason: "typed operation mounted worker awaits transient scheduler authority" })')],
     ["retained ephemeral publisher", (text) => toolJobEphemeralOneItemPublicationBounded(storeSource, text), source.replace("self.presence_one_item_factory.as_deref()", "A::build_presence_store_one_item_preparation_factory()")],
   ];
   mountedChecks.push(["move-only mutation ownership", mountedChecks[0][1], mutatePublisher("emit.artifact_mutations.pop()", "emit.artifact_mutations.last().cloned()")]);
@@ -2246,8 +2279,8 @@ export function toolJobLatestWinsSelfTests(): number {
   if (!toolJobStoreOneItemPublicationBounded(storeSource, source)) throw new Error("mounted Store source binding lost its retained owned-preparation helper");
   const replayingOwnedBegin = storeSource.replace("let base = match self.snapshot_read() {", "replay_mutations(); let base = match self.snapshot_read() {");
   if (replayingOwnedBegin === storeSource || toolJobStoreOneItemPublicationBounded(replayingOwnedBegin, source)) throw new Error("mounted Store source binding accepted replay inside extracted preparation");
-  const dispatchFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧪️fixtures/🔣️mounted-dispatch-binding.json"), "utf8"));
-  const dispatchSchema = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧬️schema/🔣️mounted-dispatch-binding.schema.json"), "utf8"));
+  const dispatchFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧪️fixtures/📌️mounted-dispatch-binding.json"), "utf8"));
+  const dispatchSchema = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧬️schema/📌️mounted-dispatch-binding.schema.json"), "utf8"));
   const validateDispatch = ajv.compile(dispatchSchema);
   if (!validateDispatch(dispatchFixture)) throw new Error(`mounted dispatch fixture: ${JSON.stringify(validateDispatch.errors)}`);
   const validDispatch = ajv.compile({ const: "none" });
@@ -2276,7 +2309,7 @@ export function toolJobLatestWinsSelfTests(): number {
     if (validDispatch(law.mutation) !== law.admitted || (law.mutation !== "none" && changed === production)) throw new Error(`mounted dispatch fixture oracle: ${law.mutation}`);
     if (toolJobMountedDispatchOneTurnExact(changed) !== law.admitted) throw new Error(`mounted dispatch exact helper law: ${law.mutation}`);
   }
-  return fixture.cases.length + hostiles.length + obligations.length + integration.cases.length + integrationHostiles.length + rawFixture.cases.length + 4 + mountedChecks.length * 2 + 2 + dispatchFixture.cases.length * 2;
+  return fixture.cases.length + hostiles.length + obligations.length + integration.cases.length + integrationHostiles.length + rawFixture.cases.length + 4 + mountedChecks.length * 2 + 2 + dispatchFixture.cases.length * 2 + childCloseHostiles.length + 3;
 }
 //#endregion 🗝️LatestWinsAuthorityLaws
 
@@ -2285,8 +2318,8 @@ export function toolJobLatestWinsSelfTests(): number {
 export function storeCanonicalEditSealerSelfTests(): { grants: number; schemaHostiles: number; sourceHostiles: number; digestOracles: number; mapGrants: number; mapSchemaHostiles: number; mapSourceHostiles: number; mapDigestOracles: number; readerChecks: number } {
   const storePath = "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store";
   const base = join(WORKSPACE_ROOT, storePath, "🧵️canonical-edit");
-  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️canonical-edit-sealer.schema.json"), "utf8"));
-  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🔣️canonical-edit-sealer.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔏️canonical-edit-sealer.schema.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🔏️canonical-edit-sealer.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
   if (!validate(fixture)) throw new Error(`canonical edit fixture schema: ${JSON.stringify(validate.errors)}`);
@@ -2378,8 +2411,8 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; schemaHos
     [store, source.replace("self.encoder.encode_chunk(edit.as_ref(), &mut self.last_chunk[..maximum])", "serde_json::to_vec(edit.as_ref())")],
   ];
   for (const [candidateStore, candidateSealer] of sourceHostiles) if (exact(candidateStore, candidateSealer)) throw new Error("canonical Store sealer accepted hostile authority/serialization source");
-  const mapSchema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️canonical-borrowed-map.schema.json"), "utf8"));
-  const mapFixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🔣️canonical-borrowed-map.json"), "utf8"));
+  const mapSchema = JSON.parse(readFileSync(join(base, "🧬️schema/🗺️canonical-borrowed-map.schema.json"), "utf8"));
+  const mapFixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🗺️canonical-borrowed-map.json"), "utf8"));
   const validateMap = new Ajv({ strict: true, allErrors: true }).compile(mapSchema);
   if (!validateMap(mapFixture)) throw new Error(`borrowed map fixture schema: ${JSON.stringify(validateMap.errors)}`);
   const mapSchemaHostiles = [{ ...mapFixture, extra: true }, { ...mapFixture, longKeyBytes: 4096 }, { ...mapFixture, lifetime: { ...mapFixture.lifetime, iteratorDropsBeforeRoot: false } }, { ...mapFixture, hostile: ["unchecked-pointer"] }];
@@ -2427,8 +2460,8 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; schemaHos
     [source, borrowed.replace("maximum_depth: ARTIFACT_CANONICAL_JSON_DEPTH - top", "maximum_depth: ARTIFACT_CANONICAL_JSON_DEPTH")],
   ];
   for (const [parent, child] of mapSourceHostiles) if (borrowedExact(parent, child)) throw new Error("borrowed map accepted hostile lifetime/source substitution");
-  const readerSchema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️canonical-reader.schema.json"), "utf8"));
-  const readerFixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🔣️canonical-reader.json"), "utf8"));
+  const readerSchema = JSON.parse(readFileSync(join(base, "🧬️schema/📖️canonical-reader.schema.json"), "utf8"));
+  const readerFixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/📖️canonical-reader.json"), "utf8"));
   const readerValidate = new Ajv({ strict: true, allErrors: true }).compile(readerSchema);
   if (!readerValidate(readerFixture) || readerFixture.expectedByteLength !== mapExpected.length || createHash("sha256").update(mapExpected).digest("hex") !== readerFixture.expectedJsonSha256) throw new Error("typed canonical reader schema/Node byte oracle mismatch");
   const readerSchemaHostiles = [{ ...readerFixture, extra: true }, { ...readerFixture, sourceFixture: "unbound-root" }, { ...readerFixture, grants: [0, 1, 7, 4097] }];
@@ -2468,8 +2501,8 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; schemaHos
 
 export function canonicalErrorProgressSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit");
-  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🔣️canonical-error-progress.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️canonical-error-progress.schema.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🚧️canonical-error-progress.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🚧️canonical-error-progress.schema.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
   if (!validate(fixture)) throw new Error("canonical error-progress fixture violates strict schema");
@@ -2643,8 +2676,8 @@ export function flowSelectedCopySelfTests(): number {
 /** 🧪️ Checks scalar Config publication laws against strict Ajv, Immer, and exact live sources. */
 export function toolJobScalarConfigCohortSelfTests(): { routes: number; migrated: number; batchOnly: number; forbidden: number; mutationOracles: number; hostileCases: number } {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command");
-  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️scalar-config-cohort.schema.json"), "utf8"));
-  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🔣️scalar-config-cohort.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🎚️scalar-config-cohort.schema.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🎚️scalar-config-cohort.json"), "utf8"));
   const requireTest = createRequire(import.meta.url);
   const Ajv = requireTest("ajv");
   const { produceWithPatches, applyPatches, enablePatches } = requireTest("immer");
@@ -3214,7 +3247,15 @@ function toolJobTypedPersistentFoundation(source: string): boolean {
     active.body.includes("session.pump_one(pool, semio_framework_async::Lane::Interactive)") &&
     active.body.includes("session.take_checked_out_outcome()") &&
     active.body.includes("MountedTypedCommandFullOperationStage::AwaitingAck") &&
-    maintenance.body.includes("self.tool_operations.next_id_from(self.maintenance_tool_cursor)") &&
+    active.body.includes('Ok(_) => Ok(PluginCloseStep::AwaitingInput { reason: "typed operation mounted worker awaits its next outcome" })') &&
+    active.body.includes("WorkerJobSubmitFault::Contention(_)") &&
+    active.body.includes("WorkerSubmitErrorKind::Saturated") &&
+    active.body.includes("WorkerJobTakeFault::Pending") &&
+    active.body.includes('Ok(PluginCloseStep::AwaitingInput { reason: "typed operation mounted worker awaits transient scheduler authority" })') &&
+    maintenance.body.includes("for offset in 0..ARTIFACT_LIVE_OUTPUT_SLOTS") &&
+    maintenance.body.includes("self.tool_operations.entry(index)") &&
+    maintenance.body.includes("every_operation_awaits_presented_ack") &&
+    maintenance.body.includes("PluginCloseStep::AwaitingInput") &&
     maintenance.body.includes(".drive_worker_step(&pool)") &&
     maintenance.body.includes("operation.retirement_step(maximum_items.min(1), maximum_bytes)?") &&
     active.body.includes("fn terminal_is_empty") &&
@@ -6991,11 +7032,11 @@ function toolJobFemNumericalMicrocursorSelfTests(sparse: string, mesh: string, a
 /** 🧾️ Joins the native ARC1 contract to strict schema validation and independent platform byte encoders. */
 export function toolJobCheckpointSelfTests(): number {
   const base = join(getWorkspaceRoot(), "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command");
-  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🔣️artifact-command-checkpoint.json"), "utf8")) as {
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/📸️artifact-command-checkpoint.json"), "utf8")) as {
     format: string; version: number; maximumBytes: number; headerBytes: number;
     cases: { name: string; workPhase: boolean; rawPageCursor: number; rawBytes: number; workProgress: number; contextDigest: number; workspaceIdentity: number; workState: { bytes?: number[]; fill?: number; length?: number }; outcome: string }[];
   };
-  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️artifact-command-checkpoint.schema.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/📸️artifact-command-checkpoint.schema.json"), "utf8"));
   const Ajv2020 = createRequire(import.meta.url)("ajv/dist/2020").default;
   const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
   if (!validate(fixture)) throw new Error(`[verify interactivity tool-jobs] native checkpoint fixture/schema mismatch: ${JSON.stringify(validate.errors)}`);
@@ -8963,8 +9004,8 @@ function toolJobFixedOperationFixtureIndex(operation: number, generation: number
 }
 
 function toolJobFixedOperationFixtureRun(root: string): FixedOperationFixtureOutput {
-  const fixturePath = "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/fixed-operation-registry-law.json";
-  const schemaPath = "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/fixed-operation-registry.schema.json";
+  const fixturePath = "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/📇️fixed-operation-registry-law.json";
+  const schemaPath = "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/🧬️fixed-operation-registry.schema.json";
   const fixture = JSON.parse(policyReadFileSafe(root, fixturePath)) as FixedOperationFixture;
   const schema = JSON.parse(policyReadFileSafe(root, schemaPath)) as Record<string, unknown>;
   if (schema.$id !== "semio://framework/job/fixed-operation-registry-law/v1" || schema.$schema !== "https://json-schema.org/draft/2020-12/schema")
@@ -9099,8 +9140,8 @@ type SharedFrameworkActionRouteFixture = {
 };
 
 function toolJobSharedFrameworkActionFixtureRun(root: string): { schema: string; routes: string[]; descriptor: string[]; hostile: string[] } {
-  const fixture = JSON.parse(policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/shared-framework-action-routes-law.json")) as SharedFrameworkActionRouteFixture;
-  const schema = JSON.parse(policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/shared-framework-action-routes.schema.json")) as Record<string, unknown>;
+  const fixture = JSON.parse(policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/⚖️shared-framework-action-routes-law.json")) as SharedFrameworkActionRouteFixture;
+  const schema = JSON.parse(policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/📡️shared-framework-action-routes.schema.json")) as Record<string, unknown>;
   if (schema.$schema !== "https://json-schema.org/draft/2020-12/schema" || schema.$id !== "semio://framework/plugin/shared-framework-action-routes/v1")
     throw new Error("[verify interactivity tool-jobs shared-action-fixture] schema identity is not exact.");
   if (fixture.schema !== "semio.framework.plugin.shared-framework-action-routes.v1" || fixture.routes.length !== 12)
@@ -9162,7 +9203,7 @@ function toolJobSharedFrameworkActionFixtureRun(root: string): { schema: string;
     if (result !== law.expected) throw new Error(`[verify interactivity tool-jobs shared-action-fixture] hostile law ${law.id} differs from its expected result.`);
     return `${law.id}:${result}`;
   });
-  const shell = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🎯️targets/🧊️wgpu/🦀️.rs");
+  const shell = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs");
   const accepted = shell.indexOf("program.handle_action(session.instance_id, &action_json, &session.view_state).await?");
   const armed = shell.indexOf("if record_tutorial_after_acceptance", accepted);
   if (accepted < 0 || armed < accepted || shell.slice(0, accepted).includes("if action.action == semio_framework::RECORD_TUTORIAL_ACTION_ID {\n            self.tutorial_start_recording();"))
@@ -9172,9 +9213,9 @@ function toolJobSharedFrameworkActionFixtureRun(root: string): { schema: string;
 
 function toolJobFixedOperationRustFixtureSource(root: string): string {
   toolJobFixedOperationFixtureRun(root);
-  const fixture = JSON.parse(policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/fixed-operation-registry-law.json")) as FixedOperationFixture;
+  const fixture = JSON.parse(policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/📇️fixed-operation-registry-law.json")) as FixedOperationFixture;
   const lines = [
-    "// 🧪️ Generated from fixed-operation-registry-law.json by the root verifier.",
+    "// 🧪️ Generated from 📇️fixed-operation-registry-law.json by the root verifier.",
     "#[test]",
     "fn language_neutral_fixed_operation_registry_laws_execute_production_registry() {",
   ];
@@ -10160,8 +10201,8 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const pluginHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs");
   const mcpWorkspace = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs");
   const runHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️.rs");
-  const wgpuHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
-  const nativeIo = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️native_io.rs");
+  const wgpuHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
+  const nativeIo = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native_io.rs");
   const shardHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs");
   const jobRuntime = policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🦀️.rs");
   const puzzle5d = policyReadFileSafe(root, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
@@ -10199,7 +10240,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
     "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖼️tiff/🔖️6.0/✳️any/🦀️.rs",
     "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️.rs",
     "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖼️bmp/🔖️v3/✳️any/🦀️.rs",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️.rs",
+    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🌳️pdf/🔖️1.4/✳️any/🦀️.rs",
     "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️jpg/🔖️jfif-1.01/✳️any/🦀️.rs",
     "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️.rs",
     "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🔖️ac1018/✳️any/🦀️.rs",
@@ -10231,7 +10272,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   try {
     fixedOperationFixture = toolJobFixedOperationFixtureRun(root);
     fixedOperationRustFixtureFresh =
-      policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/fixed-operation-registry-cases.rs") === toolJobFixedOperationRustFixtureSource(root);
+      policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/🧪️fixed-operation-registry-cases.rs") === toolJobFixedOperationRustFixtureSource(root);
   } catch {
     fixedOperationFixture = undefined;
   }
@@ -10718,8 +10759,8 @@ export class VerifyScript extends Script {
       policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE),
       policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE),
       policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE),
-      policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🖱️ui/🖼️render/📦️packages/🦀️rust/🦀️frame.rs"),
-      policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🖱️ui/🖼️render/📦️packages/🦀️rust/🦀️scene.rs"),
+      policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust/🖼️frame.rs"),
+      policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust/🎬️scene.rs"),
     );
     if (failures.length > 0) throw new Error(`[verify interactivity p5d] ${failures.join("; ")}`);
     console.log("[verify interactivity p5d] live-source and hostile mutations clean.");
@@ -10750,7 +10791,7 @@ export class VerifyScript extends Script {
       policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE),
       policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_RENDERER_HOST_FILE),
       policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_WINIT_HOST_FILE),
-      policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️browser-worker/🦀️.rs"),
+      policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs"),
       policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE),
       policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/🦀️.rs"),
       policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs"),
@@ -10780,11 +10821,11 @@ export class VerifyScript extends Script {
       const actor = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🎭️actor/🦀️.rs");
       const shard = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs");
       const executor = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🧵️executor/🦀️.rs");
-      const wgpu = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
+      const wgpu = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
       const actionBus = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🎯️action-bus/🦀️.rs");
       const pluginApp = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
       const pluginHost = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs");
-      const programBridge = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs");
+      const programBridge = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs");
       const mutations = args.includes("--self-test") ? toolJobLiveFixedReplaySelfTests(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, programBridge) : 0;
       if (!toolJobLiveFixedReplayExact(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, programBridge)) throw new Error("[verify interactivity tool-jobs p2c] live fixed replay contract failed.");
       console.log(`[verify interactivity tool-jobs p2c] live-source clean; hostile-mutations=${mutations}.`);
@@ -10811,9 +10852,9 @@ export class VerifyScript extends Script {
       const femSparse = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs");
       const frameworkPlugin = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
       const frameworkWorld = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs");
-      const worldSnapshot = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/🦀️world3d_snapshot.rs");
-      const canvasSnapshot = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/🦀️canvas2d_snapshot.rs");
-      const canvasRenderer = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Scenes/🎯️targets/🧊️wgpu/🦀️.rs");
+      const worldSnapshot = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/🌍️world3d_snapshot.rs");
+      const canvasSnapshot = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/🖼️canvas2d_snapshot.rs");
+      const canvasRenderer = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs");
       const femAnalyses = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");
       const femMesh = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs");
       const mutations = args.includes("--self-test")
@@ -10841,7 +10882,7 @@ export class VerifyScript extends Script {
       const jobRuntime = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🦀️.rs");
       const artifactRetainedCommand = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs");
       const fixture = toolJobFixedOperationFixtureRun(this.root);
-      const rustFixture = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/fixed-operation-registry-cases.rs");
+      const rustFixture = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/🧪️fixed-operation-registry-cases.rs");
       if (rustFixture !== toolJobFixedOperationRustFixtureSource(this.root)) throw new Error("[verify interactivity tool-jobs] generated fixed-operation Rust fixture is stale.");
       const plugin = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
       const activation = toolJobFactoryProofActivationScan(this.root);
@@ -11219,7 +11260,7 @@ export class VerifyScript extends Script {
     return found.filter((abs) => {
       const rel = relative(this.root, abs).replace(/\\/g, "/");
       // Shared module stylesheets are sources in the chain, not app entries that must import themselves.
-      if (rel === "🧰️framework/🔨️modules/🖱️ui/🎨️.css") return false;
+      if (rel === "🧰️framework/🔨️modules/🖱️ui/🧵️.css") return false;
       if (rel.includes("/🎨️styling/")) return false;
       return true;
     });
@@ -11228,7 +11269,7 @@ export class VerifyScript extends Script {
   /** @emoji 🎨️ Relative path of the shared UI `🎨️.css` from the workspace root. */
   private findSharedUiGlobalsRel(): string | null {
     const candidates = [
-      "🧰️framework/🔨️modules/🖱️ui/🎨️.css",
+      "🧰️framework/🔨️modules/🖱️ui/🧵️.css",
     ];
     for (const rel of candidates) {
       if (existsSync(join(this.root, rel))) return rel;
@@ -11283,7 +11324,7 @@ const INTERACTIVITY_ALL_APP_LAUNCH_CAPACITY = 512;
 const INTERACTIVITY_ALL_APP_DESCRIPTOR_NAME = "🔣️.json";
 const INTERACTIVITY_ALL_APP_LAUNCH_FILE = ".vscode/launch.json";
 const INTERACTIVITY_ALL_APP_LAUNCH_SEED_FILE = ".vscode/🧩️launch.seed.jsonc";
-const INTERACTIVITY_ALL_APP_PLAYGROUND_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts";
+const INTERACTIVITY_ALL_APP_PLAYGROUND_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts";
 const INTERACTIVITY_ALL_APP_REQUIRED_GATES = [
   { name: "⚖️gate⚡️interactivity", command: "bun ./📜️script.ts verify interactivity" },
   { name: "⚖️gate⚡️interactivity🎯️tool-jobs", command: "bun ./📜️script.ts verify interactivity tool-jobs" },
@@ -11469,7 +11510,7 @@ function interactivityAllAppLaunchCoverageFailures(descriptors: readonly Interac
     const launcher = value && typeof value === "object" ? value as Record<string, unknown> : undefined;
     const prefix = typeof launcher?.namePrefix === "string" ? launcher.namePrefix : `🧩️${playground.variant}`;
     const browserCommand = typeof launcher?.command === "string" ? launcher.command : `bun ./📜️script.ts dev ${playground.variant}`;
-    const nativeCommand = `bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native ${playground.variant}`;
+    const nativeCommand = `bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native ${playground.variant}`;
     const expected = [
       { name: `🛠️dev${prefix}⚛️react`, command: browserCommand, renderer: "react" },
       { name: `🛠️dev${prefix}🧊️wgpu🌐️wasm`, command: browserCommand, renderer: "wgpu" },
@@ -11628,7 +11669,7 @@ async function interactivityAllAppDiscoverySelfTests(): Promise<number> {
   const fixtureLaunches = [
     { name: "🛠️dev🧪️fixture⚛️react", command: "bun ./📜️script.ts dev fixture", cwd: "${workspaceFolder}", env: { SEMIO_RENDERER: "react" } },
     { name: "🛠️dev🧪️fixture🧊️wgpu🌐️wasm", command: "bun ./📜️script.ts dev fixture", cwd: "${workspaceFolder}", env: { SEMIO_RENDERER: "wgpu" } },
-    { name: "🛠️dev🧪️fixture🧊️wgpu🖥️native", command: "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native fixture", cwd: "${workspaceFolder}", env: {} },
+    { name: "🛠️dev🧪️fixture🧊️wgpu🖥️native", command: "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native fixture", cwd: "${workspaceFolder}", env: {} },
   ];
   if (interactivityAllAppLaunchCoverageFailures([fixtureDescriptor], fixturePlayground, fixtureSeed, fixtureLaunches).length !== 0) throw new Error("[verify interactivity apps] complete owner-qualified launch self-test was falsely rejected");
   if (!interactivityAllAppLaunchCoverageFailures([fixtureDescriptor], fixturePlayground, fixtureSeed, fixtureLaunches.slice(0, 2)).some((failure) => failure.includes("WGPU native"))) throw new Error("[verify interactivity apps] missing native launch self-test was falsely accepted");
@@ -11660,7 +11701,7 @@ const INTERACTIVITY_P1X_CONTRACT_FILE = ".🧬semio/🦑️repo/🎫️tickets/�
 const INTERACTIVITY_P1Y_CONTRACT_FILE = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-ONE-POOL-WORKER-RUNTIME/📓️p1y-db-compaction-retained-job-caller-census-2026-08-23.md";
 const INTERACTIVITY_P1Z_CONTRACT_FILE = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-ONE-POOL-WORKER-RUNTIME/📓️p1z-db-sync-hello-retained-job-caller-census-2026-08-23.md";
 const INTERACTIVITY_AUDIT_DB_SYNC_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️.rs";
-const INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📄️artifact/🦀️.rs";
+const INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs";
 const INTERACTIVITY_AUDIT_DB_WAL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🦀️.rs";
 const INTERACTIVITY_AUDIT_SPR_FORMAT_FILE = "🧰️framework/🔨️modules/📡️replication/📐️format/🦀️.rs";
 const INTERACTIVITY_AUDIT_PACK_FORMAT_FILE = "🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs";
@@ -11674,52 +11715,52 @@ const INTERACTIVITY_AUDIT_DB_PROJECTION_FILE = "🧰️framework/🛍️products
 const INTERACTIVITY_AUDIT_DB_ROOT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🦀️.rs";
 const INTERACTIVITY_AUDIT_DB_CLI_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⌨️cli/🦀️.rs";
 const INTERACTIVITY_AUDIT_DB_TESTKIT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️test/🦀️kit.rs";
-const INTERACTIVITY_AUDIT_HUB_BIN_FILE = "🌎️hub/📦️packages/🦀️rust/📦️bin.rs";
-const INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️prepared.rs";
+const INTERACTIVITY_AUDIT_HUB_BIN_FILE = "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs";
+const INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️prepared.rs";
 const INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️.rs";
 const INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🦀️.rs";
 const INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/📐️geometry/🦀️.rs";
 const INTERACTIVITY_AUDIT_PUZZLE_FILL_ACTION_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪣️fill-build-tick/🦀️.rs";
 const INTERACTIVITY_AUDIT_PUZZLE_FILL_SCHEMA_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs";
 const INTERACTIVITY_AUDIT_PUZZLE_FILL_TRANSPORT_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️.rs";
-const INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️.tsx";
+const INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx";
 const INTERACTIVITY_AUDIT_PUZZLE5D_FILL_PRECOMPUTE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧠️precompute/🦀️.rs";
 const INTERACTIVITY_AUDIT_PUZZLE5D_FILL_WINDOW_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/🦀️.rs";
 const INTERACTIVITY_AUDIT_PUZZLE3D_TERMINOLOGY_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs";
 const INTERACTIVITY_AUDIT_PUZZLE5D_TERMINOLOGY_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs";
 const INTERACTIVITY_AUDIT_PUZZLE_FILL_PREVIEW_FIXTURE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🧪️fixtures/🔣️.json";
-const INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_TEST_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts";
-const INTERACTIVITY_AUDIT_UI_RECONCILE_FILE = "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs";
-const INTERACTIVITY_AUDIT_UI_VALUE_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️action.rs";
-const INTERACTIVITY_AUDIT_UI_LAYOUT_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️layout.rs";
-const INTERACTIVITY_AUDIT_UI_BUILDER_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️builder.rs";
-const INTERACTIVITY_AUDIT_UI_COMPONENT_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️component.rs";
-const INTERACTIVITY_AUDIT_UI_ACCESSIBILITY_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️accessibility.rs";
-const INTERACTIVITY_AUDIT_UI_SURFACE_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️surface.rs";
-const INTERACTIVITY_AUDIT_UI_DOCUMENT_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️document.rs";
-const INTERACTIVITY_AUDIT_UI_LIMITS_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️limits.rs";
-const INTERACTIVITY_AUDIT_UI_PRESENT_FILE = "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️present.rs";
+const INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_TEST_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts";
+const INTERACTIVITY_AUDIT_UI_RECONCILE_FILE = "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/♻️reconcile.rs";
+const INTERACTIVITY_AUDIT_UI_VALUE_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🎬️action.rs";
+const INTERACTIVITY_AUDIT_UI_LAYOUT_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📐️layout.rs";
+const INTERACTIVITY_AUDIT_UI_BUILDER_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🏗️builder.rs";
+const INTERACTIVITY_AUDIT_UI_COMPONENT_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🧩️component.rs";
+const INTERACTIVITY_AUDIT_UI_ACCESSIBILITY_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/♿️accessibility.rs";
+const INTERACTIVITY_AUDIT_UI_SURFACE_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🗺️surface.rs";
+const INTERACTIVITY_AUDIT_UI_DOCUMENT_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📃️document.rs";
+const INTERACTIVITY_AUDIT_UI_LIMITS_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🛡️limits.rs";
+const INTERACTIVITY_AUDIT_UI_PRESENT_FILE = "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🎭️present.rs";
 const INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/🦀️.rs";
 const INTERACTIVITY_AUDIT_REACTOR_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️.rs";
 const INTERACTIVITY_AUDIT_KERNEL_FILE = "🧰️framework/🔨️modules/🎠️kernel/🦀️.rs";
 const INTERACTIVITY_AUDIT_SHARD_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs";
 const INTERACTIVITY_AUDIT_RUN_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️.rs";
 const INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE = "🧰️framework/🛍️products/💻️os/🖥️host/🎠️activation/🦀️.rs";
-const INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🎠️runtime/🦀️.rs";
+const INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎠️runtime/🦀️.rs";
 const INTERACTIVITY_AUDIT_PLUGIN_CENTRAL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs";
-const INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs";
-const INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️gpu.rs";
-const INTERACTIVITY_AUDIT_CANVAS_RASTER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Scenes/🎯️targets/🧊️wgpu/🦀️.rs";
-const INTERACTIVITY_AUDIT_INTERPRETER_RASTER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🎯️targets/🧊️wgpu/🦀️.rs";
-const INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs";
-const INTERACTIVITY_AUDIT_RENDERER_HOST_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🏠️os-host/🦀️.rs";
-const INTERACTIVITY_AUDIT_SURFACE_LANE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📐️surface-lane/🦀️.rs";
-const INTERACTIVITY_AUDIT_WINIT_HOST_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs";
-const INTERACTIVITY_AUDIT_UI_ENGINE_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs";
-const INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs";
-const INTERACTIVITY_AUDIT_SHELL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🎯️targets/🧊️wgpu/🦀️.rs";
+const INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/✍️draw.rs";
+const INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🖥️gpu.rs";
+const INTERACTIVITY_AUDIT_CANVAS_RASTER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs";
+const INTERACTIVITY_AUDIT_INTERPRETER_RASTER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs";
+const INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs";
+const INTERACTIVITY_AUDIT_RENDERER_HOST_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏠️os-host/🦀️.rs";
+const INTERACTIVITY_AUDIT_SURFACE_LANE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📐️surface-lane/🦀️.rs";
+const INTERACTIVITY_AUDIT_WINIT_HOST_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs";
+const INTERACTIVITY_AUDIT_UI_ENGINE_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/⚙️engine.rs";
+const INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧩️component.rs";
+const INTERACTIVITY_AUDIT_SHELL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs";
 const INTERACTIVITY_AUDIT_OS_SERVICES_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️component.rs";
-const INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs";
+const INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs";
 const INTERACTIVITY_AUDIT_WORLD3D_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs";
 
 /**
@@ -11783,7 +11824,7 @@ type InteractivityAllowlistEntry = { file: string; lineHint: number; pattern: "b
  */
 const INTERACTIVITY_AUDIT_ALLOWLIST: readonly InteractivityAllowlistEntry[] = [
   {
-    file: "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs",
+    file: "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs",
     lineHint: 15,
     pattern: "block_on",
     reason: "Native process entry point — the single owned async driver for scale and headless smoke modes; never called by renderer/UI callbacks.",
@@ -11791,7 +11832,7 @@ const INTERACTIVITY_AUDIT_ALLOWLIST: readonly InteractivityAllowlistEntry[] = [
     inScope: true,
   },
   {
-    file: "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️bin.rs",
+    file: "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🚀️bin.rs",
     lineHint: 255,
     pattern: "block_on",
     reason: "CLI root — approved process entry point (semio_framework_async::block_on(run_async(args))).",
@@ -12086,24 +12127,24 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const reactor = [INTERACTIVITY_AUDIT_REACTOR_FILE, INTERACTIVITY_AUDIT_SHARD_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, INTERACTIVITY_AUDIT_RUN_FILE, INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE, INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE, INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE, INTERACTIVITY_AUDIT_SHELL_FILE].map((file) => policyReadFileSafe(repoRoot, file)).join("\n");
   for (const failure of interactivityLiveReconcileFailures(uiReconcile, reactorPatches, reactor, uiValue, uiSchema)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_UI_RECONCILE_FILE, line: 0, text: failure });
   interactivityMountedLayoutTextSelfTests(repoRoot);
-  const mountedLayout = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️mounted_layout.rs");
-  const mountedEngine = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs");
-  const mountedTree = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs");
-  const mountedPaint = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs");
-  const mountedEvents = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs");
-  const mountedSlots = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️scene_slots.rs");
-  const mountedInterpreter = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🎯️targets/🧊️wgpu/🦀️.rs");
-  for (const failure of interactivityMountedLayoutTextFailures(mountedLayout, mountedEngine, mountedTree, mountedPaint, mountedEvents, mountedSlots, mountedInterpreter, rendererGlue)) findings.push({ category: "blocking-bridge", file: "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️mounted_layout.rs", line: 0, text: failure });
+  const mountedLayout = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧵️mounted_layout.rs");
+  const mountedEngine = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/⚙️engine.rs");
+  const mountedTree = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🌲️tree.rs");
+  const mountedPaint = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🖌️paint.rs");
+  const mountedEvents = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🎯️events.rs");
+  const mountedSlots = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🎬️scene_slots.rs");
+  const mountedInterpreter = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs");
+  for (const failure of interactivityMountedLayoutTextFailures(mountedLayout, mountedEngine, mountedTree, mountedPaint, mountedEvents, mountedSlots, mountedInterpreter, rendererGlue)) findings.push({ category: "blocking-bridge", file: "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧵️mounted_layout.rs", line: 0, text: failure });
   interactivityMountedFrameTransactionSelfTests(repoRoot);
-  const mountedFrameJob = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
-  const mountedFrameHost = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
-  const mountedFrameSnapshot = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📸️render-snapshot/🦀️.rs");
+  const mountedFrameJob = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
+  const mountedFrameHost = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
+  const mountedFrameSnapshot = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📸️render-snapshot/🦀️.rs");
   const headlessUiRuntimeGlue = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️.rs");
   const mountedFrameShell = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_SHELL_FILE);
   const mountedFrameServices = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_OS_SERVICES_FILE);
   const mountedFrameEngineCanvas = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE);
   const mountedFrameWorld3d = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_WORLD3D_FILE);
-  const mountedFrameScenes = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Scenes/🎯️targets/🧊️wgpu/🦀️.rs");
+  const mountedFrameScenes = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs");
   for (const failure of interactivityMountedFrameTransactionFailures(rendererGlue, mountedFrameJob, mountedFrameHost, mountedFrameSnapshot, headlessUiRuntimeGlue, mountedFrameShell, mountedFrameEngineCanvas, mountedFrameWorld3d, preparedRaster, preparedRasterGpu, preparedRasterDraw, mountedInterpreter, mountedEngine, mountedPaint, mountedSlots, mountedFrameScenes, mountedFrameServices)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, line: 0, text: failure });
   const byCategory: Record<string, number> = {};
   for (const f of findings) byCategory[f.category] = (byCategory[f.category] ?? 0) + 1;
@@ -13571,14 +13612,14 @@ export function interactivityMountedLayoutTextFailures(mountedSource: string, en
 
 export function interactivityMountedLayoutTextSelfTests(repoRoot: string): void {
   const paths = [
-    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️mounted_layout.rs",
-    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs",
-    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs",
-    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs",
-    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs",
-    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️scene_slots.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🎯️targets/🧊️wgpu/🦀️.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧵️mounted_layout.rs",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/⚙️engine.rs",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🌲️tree.rs",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🖌️paint.rs",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🎯️events.rs",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🎬️scene_slots.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
   ] as const;
   const clean = paths.map((path) => policyReadFileSafe(repoRoot, path));
   const mutations: [string, number, string, string][] = [
@@ -14235,10 +14276,10 @@ export function interactivityMountedFrameTransactionFailures(
 
 export function interactivityMountedFrameTransactionSelfTests(repoRoot: string): void {
   const files = [
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📸️render-snapshot/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📸️render-snapshot/🦀️.rs",
     "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️.rs",
     INTERACTIVITY_AUDIT_SHELL_FILE,
     INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE,
@@ -14246,11 +14287,11 @@ export function interactivityMountedFrameTransactionSelfTests(repoRoot: string):
     INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE,
     INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE,
     INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE,
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🎯️targets/🧊️wgpu/🦀️.rs",
-    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs",
-    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs",
-    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️scene_slots.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Scenes/🎯️targets/🧊️wgpu/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/⚙️engine.rs",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🖌️paint.rs",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🎬️scene_slots.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs",
     INTERACTIVITY_AUDIT_OS_SERVICES_FILE,
   ];
   const clean = files.map((file) => policyReadFileSafe(repoRoot, file));
@@ -14549,7 +14590,7 @@ export function interactivityMountedEngineSurfaceLifetimeSelfTests(repoRoot: str
     INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE,
     INTERACTIVITY_AUDIT_RENDERER_HOST_FILE,
     INTERACTIVITY_AUDIT_WINIT_HOST_FILE,
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️browser-worker/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs",
     INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE,
     "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/🦀️.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs",
@@ -14743,8 +14784,8 @@ export function interactivityMountedPreparedRenderSelfTests(repoRoot: string): v
     INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE,
     INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE,
     INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE,
-    "🧰️framework/🔨️modules/🖱️ui/🖼️render/📦️packages/🦀️rust/🦀️frame.rs",
-    "🧰️framework/🔨️modules/🖱️ui/🖼️render/📦️packages/🦀️rust/🦀️scene.rs",
+    "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust/🖼️frame.rs",
+    "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust/🎬️scene.rs",
   ] as const;
   const clean = files.map((file) => policyReadFileSafe(repoRoot, file));
   const mutations: readonly [string, number, string, string][] = [
@@ -18404,8 +18445,9 @@ function dependencyFreezeCurrentThirdParty(repoRoot: string): DependencyBaseline
   dependencyCollectDotnet(repoRoot, record);
 
   const oracles = dependencyOracleRegistryPackages(repoRoot);
+  const contributionTaxonomy = repoTaxonomy(repoRoot);
   for (const entry of byKey.values()) {
-    dependencyClassifyOracleEntry(entry, oracles.get(entry.name));
+    dependencyClassifyOracleEntry(entry, oracles.get(entry.name), contributionTaxonomy.testContributionDirectoryOverrides, String(contributionTaxonomy.testContributionDirName));
     entry.declarations?.sort((left, right) => left.user.localeCompare(right.user) || left.kind.localeCompare(right.kind) || left.version.localeCompare(right.version));
     entry.kinds.sort();
     entry.users.sort();
@@ -18415,14 +18457,18 @@ function dependencyFreezeCurrentThirdParty(repoRoot: string): DependencyBaseline
 }
 
 /** 📇️A declaring manifest's path is test-domain when any segment is an oracle/test tree (`🧪️oracle`, `🧪️test`), an oracle probe (`🔬️probes`), a third-party-backed fixture generator (`🏭️generator`), or a fixture tree (`🧫️fixtures`) — see `🏭️generator/🦀️engine/Cargo.toml` docstrings across `✏️s/…/🗿️artifacts/**` for the "reference crate, never the in-house codec" contract these directories encode. */
-const DEPENDENCY_TEST_DOMAIN_PATH_RE = /(?:^|\/)(?:🧪️(?:oracle|test)|🔬️probes|🏭️generator|🧫️fixtures)\//u;
+const DEPENDENCY_TEST_DOMAIN_PATH_RE = /(?:^|\/)(?:🧪️test|🔬️probes|🏭️generator|🧫️fixtures)\//u;
 
 /** 📇️An oracle name changes classification only when every declaration is owned by the test/oracle domain OR is itself a non-production declaration (`dev-dependencies`/`devDependencies`, i.e. `test-runner`/`repository-tooling` kind) — per the ticket's own definition of done, a third-party dependency kept ONLY behind `[dev-dependencies]` is compliant from ANY directory, not just a test-domain one. A genuine conflict requires an actual production-runtime/production-build declaration outside the test domain; those remain honest and become conflicts. */
-function dependencyClassifyOracleEntry(entry: DependencyBaselineEntry, oracleIds: readonly string[] | undefined): void {
+function dependencyClassifyOracleEntry(entry: DependencyBaselineEntry, oracleIds: readonly string[] | undefined, directoryOverrides: Readonly<Record<string, string>>, defaultDirectoryName: string): void {
   if (!oracleIds) return;
   entry.oracleIds = [...oracleIds].sort();
   const declarations = entry.declarations ?? entry.users.map((user) => ({ user, version: entry.version, kind: entry.kinds[0] ?? "repository-tooling" }));
-  const productDeclarations = declarations.filter((declaration) => !DEPENDENCY_TEST_DOMAIN_PATH_RE.test(declaration.user) && (declaration.kind === "production-runtime" || declaration.kind === "production-build"));
+  const isContribution = (path: string): boolean => {
+    const parts = path.split("/");
+    return parts.slice(0, -1).some((name, index) => name === (directoryOverrides[parts.slice(0, index).join("/") || "."] ?? defaultDirectoryName));
+  };
+  const productDeclarations = declarations.filter((declaration) => !DEPENDENCY_TEST_DOMAIN_PATH_RE.test(declaration.user) && !isContribution(declaration.user) && (declaration.kind === "production-runtime" || declaration.kind === "production-build"));
   if (productDeclarations.length === 0) entry.kinds = ["test-oracle"];
   else entry.oracleConflictUsers = [...new Set(productDeclarations.map((declaration) => declaration.user))].sort();
 }
@@ -18438,7 +18484,7 @@ function dependencyOracleRegistryPackages(repoRoot: string): Map<string, string[
   const contributionFilename = taxonomy.testContributionFileKindId
     ? canonicalFilenameForKind(taxonomy.testContributionFileKindId, taxonomy)
     : "";
-  const manifests = [oracleRegistryPath, ...dependencyDiscoverContributionManifests(repoRoot, String(taxonomy.testContributionDirName ?? ""), contributionFilename)];
+  const manifests = [oracleRegistryPath, ...dependencyDiscoverContributionManifests(repoRoot, String(taxonomy.testContributionDirName ?? ""), contributionFilename, taxonomy.testContributionDirectoryOverrides)];
   for (const manifest of manifests) {
     if (manifest === "") continue;
     const content = policyReadFileSafe(repoRoot, manifest);
@@ -18455,7 +18501,7 @@ function dependencyOracleRegistryPackages(repoRoot: string): Map<string, string[
 }
 
 /** 🧩️Every `<owner>/<contributionDir>/<contributionFile>` manifest, found by convention. */
-function dependencyDiscoverContributionManifests(repoRoot: string, dirName: string, fileName: string): string[] {
+function dependencyDiscoverContributionManifests(repoRoot: string, dirName: string, fileName: string, directoryOverrides: Readonly<Record<string, string>>): string[] {
   if (dirName === "" || fileName === "") return [];
   const found: string[] = [];
   const walk = (relDir: string): void => {
@@ -18469,7 +18515,7 @@ function dependencyDiscoverContributionManifests(repoRoot: string, dirName: stri
       if (!entry.isDirectory()) continue;
       const childRel = relDir ? `${relDir}/${entry.name}` : entry.name;
       if (entry.name === "node_modules" || entry.name === ".git" || entry.name === ".nx" || entry.name === "target" || entry.name === "dist" || childRel.startsWith(".🧬semio")) continue;
-      if (entry.name === dirName) {
+      if (entry.name === (directoryOverrides[relDir || "."] ?? dirName)) {
         if (existsSync(join(repoRoot, childRel, fileName))) found.push(`${childRel}/${fileName}`);
         continue;
       }
@@ -18817,10 +18863,10 @@ function dependencyTruthSelfTests(): number {
   if (goExternal.some((entry) => entry.name === "github.com/example/first") || goExternal.some((entry) => entry.name === "github.com/example/replaced")) throw new Error("[verify dependencies self-test] first-party Go module or local replace was retained as external.");
   if (!goExternal.some((entry) => entry.name === "example.net/external" && entry.kind === "production-build")) throw new Error("[verify dependencies self-test] external indirect Go requirement was not retained as production build input.");
   const oracleRuntime: DependencyBaselineEntry = { ecosystem: "rust", name: "runtime-oracle-name", version: "1", kinds: ["production-runtime"], users: ["product/Cargo.toml"], productionReachable: true };
-  dependencyClassifyOracleEntry(oracleRuntime, ["claimed-oracle"]);
+  dependencyClassifyOracleEntry(oracleRuntime, ["claimed-oracle"], {}, "🧪️oracle");
   if (!oracleRuntime.kinds.includes("production-runtime") || oracleRuntime.oracleConflictUsers?.[0] !== "product/Cargo.toml") throw new Error("[verify dependencies self-test] direct runtime manifest hid behind an oracle registry name.");
   const oracleOnly: DependencyBaselineEntry = { ecosystem: "rust", name: "isolated-oracle", version: "1", kinds: ["test-runner"], users: ["unit/oracleCargo.toml"], productionReachable: false };
-  dependencyClassifyOracleEntry(oracleOnly, ["isolated"]);
+  dependencyClassifyOracleEntry(oracleOnly, ["isolated"], {}, "🧪️oracle");
   if (oracleOnly.kinds.join() !== "test-oracle" || oracleOnly.oracleConflictUsers) throw new Error("[verify dependencies self-test] isolated test-only oracle was not classified as an oracle.");
   const entry = (ecosystem: DependencyEcosystem, name: string, kind: DependencyKind, user: string, version = "1"): DependencyBaselineEntry => ({ ecosystem, name, version, kinds: [kind], users: [user], productionReachable: kind === "production-runtime" || kind === "production-build", declarations: [{ user, version, kind }] });
   const mixedEntry = (name: string): DependencyBaselineEntry => ({ ecosystem: "js", name, version: "1", kinds: ["repository-tooling"], users: ["package.json", "product/package.json"], productionReachable: false, declarations: [{ user: "package.json", version: "1", kind: "repository-tooling" }, { user: "product/package.json", version: "2", kind: "repository-tooling" }] });
@@ -19159,12 +19205,12 @@ export class TestScript extends Script {
 //#region 🔖️BenchScript
 /**
  * ⚖️ Plugin-runtime scale bench (ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`, packet
- * `V1`) — drives the seeded 50×50 scale fixture (`🧫️fixtures/🔌️scale`, 2550 records) through the
+ * `V1`) — drives the seeded 50×50 scale fixture (`🧫️fixtures/⚖️scale`, 2550 records) through the
  * pooled actor kernel on one renderer and asserts the eight `BENCH_BUDGETS` rows of
  * `📓️design-workforce.md` §4. The budgets and the harness live in the dev bundle beside the
  * fixture generator that emits the registry they read, so this verb is a thin router: the numbers
  * have exactly one home.
- * @see 🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts `#region 🔖️Bench`
+ * @see 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts `#region 🔖️Bench`
  */
 export class BenchScript extends Script {
   run(segments: string[]): void {
@@ -20008,7 +20054,7 @@ const CLEAN_CACHE_DIR_NAME = "⚡️cache";
 const CLEAN_TICKET_GENERATED_OUTPUT_DIRS = new Set(["🗑️generated", TICKET_GENERATED_OUTPUT_DIRECTORY, "🧾️runs", "🧪️runs", "🧾️taxonomy-transaction"]);
 const CLEAN_TICKET_GENERATED_PROBE_PREFIXES = ["🧪️purity-", "🧪️cli-", "🧪️inventory-"];
 
-type CleanRemovalKind = "misplaced" | "gitignore" | "ticket-file" | "ticket-dir" | "build-artifact" | "ticket-generated";
+type CleanRemovalKind = "misplaced" | "gitignore" | "ticket-file" | "ticket-dir" | "build-artifact" | "ticket-generated" | "windows-illegal";
 
 export type CleanRemoval = {
   kind: CleanRemovalKind;
@@ -21008,11 +21054,12 @@ export function inventoryMutationTaxonomy(repoRoot: string, options: MutationTax
       const rootSource = policyStructuralSource(view, rootComponent) ?? "";
       const variants = policyMutationEnumVariantNames(rootSource);
       const folders = policyStructuralMutationDirs(view, rootRel);
-      const folderByVariant = new Map(folders.map((folder) => [policyKebabToPascal(policyStripEmoji(folder)), folder]));
-      const identities = [...new Set([...folders.map((folder) => policyKebabToPascal(policyStripEmoji(folder))), ...variants])].sort();
+      const ownerTaxonomy = JSON.parse(view.taxonomySchema.bytes.toString("utf8")) as ReturnType<typeof loadTaxonomy>;
+      const folderByVariant = new Map(folders.map((folder) => [policyKebabToPascal(policyMutationSemanticIdentity(rootRel, folder, ownerTaxonomy)), folder]));
+      const identities = [...new Set([...folders.map((folder) => policyKebabToPascal(policyMutationSemanticIdentity(rootRel, folder, ownerTaxonomy))), ...variants])].sort();
       for (const identity of identities) {
         const folder = folderByVariant.get(identity);
-        const semantic = folder ? policyStripEmoji(folder) : identity.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+        const semantic = folder ? policyMutationSemanticIdentity(rootRel, folder, ownerTaxonomy) : identity.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
         const leafRel = folder ? `${rootRel}/${folder}` : rootRel;
         const leafFiles = files.filter((file) => file === leafRel || file.startsWith(`${leafRel}/`));
         leaves.push({ rootRel, leafRel, leafFiles, identity, folder, variants });
@@ -21051,7 +21098,7 @@ export function inventoryMutationTaxonomy(repoRoot: string, options: MutationTax
       const targetPath = leaf.leafFiles.find((path) => path.endsWith(`/${POLICY_RS_COMPONENT_LEAF_NAME}`));
       const rootFacts = inspectRustStructure(before.contents.get(rootComponent) ?? "");
       const rootSource = before.contents.get(rootComponent) ?? "";
-      const alias = targetPath ? mutationTaxonomyLeafAlias(targetPath) : "";
+      const alias = leaf.folder ? policyMutationSemanticIdentity(leaf.rootRel, leaf.folder, taxonomy).replaceAll("-", "_") : targetPath ? mutationTaxonomyLeafAlias(targetPath) : "";
       const mounted = rootFacts.modules.some((module) => module.name === alias);
       const mountedModule = rootFacts.modules.find((entry) => entry.modulePath.length === 1 && entry.name === alias && !entry.inline && entry.pathTarget !== null);
       const resolvedPath = mountedModule?.pathTarget ? posix.normalize(posix.join(leaf.rootRel, mountedModule.pathTarget)) : null;
@@ -21059,7 +21106,7 @@ export function inventoryMutationTaxonomy(repoRoot: string, options: MutationTax
       if (targetPath && mounted && (!explicitPath || resolvedPath === targetPath)) edgesByTarget.set(targetPath, [...(edgesByTarget.get(targetPath) ?? []), { sourcePath: rootComponent, targetPath, kind: "leaf", relation: "mount" }]);
     }
     for (const leaf of leaves) {
-      const semantic = leaf.folder ? policyStripEmoji(leaf.folder) : leaf.identity.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+      const semantic = leaf.folder ? policyMutationSemanticIdentity(leaf.rootRel, leaf.folder, taxonomy) : leaf.identity.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
       const direct = leaf.folder ? policyStructuralSource(view, `${leaf.leafRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`) !== null : false;
       const nested = leaf.folder ? policyStructuralSource(view, `${leaf.leafRel}/🦠️mutation/${POLICY_RS_COMPONENT_LEAF_NAME}`) !== null : false;
       const structuralState = direct ? "direct" as const : nested ? "legacy" as const : "central-only" as const;
@@ -21218,7 +21265,7 @@ export class CleanScript extends Script {
     const totalBytes = report.removals.reduce((n, r) => n + r.bytes, 0);
     const lines = [
       `[clean] ${dry ? "dry-run" : "applied"} removals=${report.removals.length} bytes=${totalBytes}`,
-      ...(["misplaced", "gitignore", "ticket-file", "ticket-dir", "ticket-generated", "build-artifact"] as const).map((kind) => {
+      ...(["misplaced", "gitignore", "ticket-file", "ticket-dir", "ticket-generated", "build-artifact", "windows-illegal"] as const).map((kind) => {
         const rows = report.removals.filter((r) => r.kind === kind);
         return `[clean] ${kind}: ${rows.length} (bytes=${rows.reduce((n, r) => n + r.bytes, 0)})`;
       }),
@@ -21365,6 +21412,18 @@ function cleanIsSemioRootName(name: string): boolean {
   return name === ".🧬semio" || (name.startsWith(".🧬") && name.endsWith("semio"));
 }
 
+const CLEAN_WINDOWS_RESERVED_DEVICE_NAMES = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\..*)?$/i;
+const CLEAN_WINDOWS_FORBIDDEN_CHARS = /[<>:"|?*\x00-\x1f]/;
+
+/** 🪟️ Checks whether a path component is forbidden on Windows filesystems (NTFS/Win32). */
+export function cleanIsWindowsIllegalName(name: string): boolean {
+  if (!name || name === "." || name === "..") return false;
+  if (name.trim().length === 0 || name.endsWith(" ") || name.endsWith(".") || name.startsWith(" ")) return true;
+  if (CLEAN_WINDOWS_FORBIDDEN_CHARS.test(name)) return true;
+  if (CLEAN_WINDOWS_RESERVED_DEVICE_NAMES.test(name)) return true;
+  return false;
+}
+
 function cleanProtectedPrefixes(root: string): string[] {
   const semio = getSemioRoot(root);
   return [
@@ -21420,6 +21479,18 @@ function cleanIsTicketFolderBoundary(root: string, directory: string): boolean {
   return segments.some((name, index) => cleanEndsWithAscii(name, "tickets") && segments.length - index - 1 === 4);
 }
 
+function cleanTicketFolderForPath(root: string, abs: string): string | undefined {
+  let ancestor = dirname(abs);
+  while (true) {
+    const local = relative(root, ancestor);
+    if (local === "" || local === ".." || local.startsWith(".." + sep) || isAbsolute(local)) return undefined;
+    if (cleanIsTicketFolderBoundary(root, ancestor)) return resolve(ancestor);
+    const parent = dirname(ancestor);
+    if (parent === ancestor) return undefined;
+    ancestor = parent;
+  }
+}
+
 /** 🛡️ Rejects a removal intersecting any non-closed ticket, unsafe path, or unreadable subtree without following symlinks. */
 export function cleanRemovalProtection(root: string, candidate: string, view: CleanProtectionView = CLEAN_PROTECTION_VIEW, allowedOpenTicket?: string): string[] {
   const workspace = resolve(root), target = resolve(workspace, candidate);
@@ -21469,7 +21540,11 @@ export function cleanRemovalProtection(root: string, candidate: string, view: Cl
 export function cleanProjectRemovals(root: string, removals: readonly CleanRemoval[], protectedPrefixes: readonly string[] = [], view: CleanProtectionView = CLEAN_PROTECTION_VIEW, onProtected?: (path: string) => void): CleanRemoval[] {
   return cleanDedupePreferShallowest(removals.filter((row) => {
     const absolute = resolve(root, row.path);
-    const allowedOpenTicket = row.kind === "ticket-generated" ? cleanTicketGeneratedOutputTicketRoot(root, absolute) : undefined;
+    const allowedOpenTicket = row.kind === "ticket-generated"
+      ? cleanTicketGeneratedOutputTicketRoot(root, absolute)
+      : row.kind === "windows-illegal"
+        ? cleanTicketFolderForPath(root, absolute)
+        : undefined;
     const applicablePrefixes = allowedOpenTicket ? protectedPrefixes.filter((prefix) => resolve(prefix) !== allowedOpenTicket) : protectedPrefixes;
     const protectedPaths = cleanIntersectsProtected(absolute, applicablePrefixes) ? [absolute] : allowedOpenTicket ? [] : cleanRemovalProtection(root, row.path, view, allowedOpenTicket);
     for (const path of protectedPaths) onProtected?.(path);
@@ -21491,12 +21566,21 @@ function cleanPathBytes(abs: string): number {
   }
 }
 
-function cleanRemovePath(root: string, abs: string, dry: boolean, protectedPrefixes: readonly string[], allowTicketGeneratedOutput = false): boolean {
-  const allowedOpenTicket = allowTicketGeneratedOutput ? cleanTicketGeneratedOutputTicketRoot(root, abs) : undefined;
+function cleanRemovePath(root: string, abs: string, dry: boolean, protectedPrefixes: readonly string[], allowTicketGeneratedOutput = false, allowWindowsIllegal = false): boolean {
+  const allowedOpenTicket = (allowTicketGeneratedOutput ? cleanTicketGeneratedOutputTicketRoot(root, abs) : undefined)
+    ?? (allowWindowsIllegal ? cleanTicketFolderForPath(root, abs) : undefined);
   const applicablePrefixes = allowedOpenTicket ? protectedPrefixes.filter((prefix) => resolve(prefix) !== allowedOpenTicket) : protectedPrefixes;
   if (cleanIntersectsProtected(abs, applicablePrefixes) || (!allowedOpenTicket && cleanRemovalProtection(root, abs, CLEAN_PROTECTION_VIEW, allowedOpenTicket).length !== 0)) return false;
+  if (allowedOpenTicket && exactCargoGeneratedOutputHasLiveLease(abs)) return false;
   if (dry) return true;
-  rmSync(abs, { recursive: true, force: true });
+  if (allowWindowsIllegal) {
+    try {
+      runProbe("git", ["rm", "-f", "--", relative(root, abs)], { cwd: root });
+    } catch {}
+  }
+  if (existsSync(abs)) {
+    rmSync(abs, { recursive: true, force: true });
+  }
   return true;
 }
 
@@ -21671,6 +21755,7 @@ function cleanTicketGeneratedOutputRemovals(root: string, ticketFolder: string, 
     if (!cleanIsTicketGeneratedOutputDir(name)) return "enter";
     const applicablePrefixes = protectedPrefixes.filter((prefix) => resolve(prefix) !== resolve(ticketFolder));
     if (cleanIntersectsProtected(abs, applicablePrefixes) || cleanIsProtected(abs, applicablePrefixes)) return "skip";
+    if (exactCargoGeneratedOutputHasLiveLease(abs)) return "skip";
     out.push({ kind: "ticket-generated", path: relative(root, abs), bytes: cleanPathBytes(abs) });
     return "skip";
   });
@@ -21684,15 +21769,84 @@ function cleanIsTicketGeneratedOutputDir(name: string): boolean {
 function cleanTicketGeneratedOutputTicketRoot(root: string, abs: string): string | undefined {
   const name = relative(dirname(abs), abs);
   if (name.includes(sep) || !cleanIsTicketGeneratedOutputDir(name)) return undefined;
-  let ancestor = dirname(abs);
-  while (true) {
-    const local = relative(root, ancestor);
-    if (local === "" || local === ".." || local.startsWith(".." + sep) || isAbsolute(local)) return undefined;
-    if (cleanIsTicketFolderBoundary(root, ancestor)) return resolve(ancestor);
-    const parent = dirname(ancestor);
-    if (parent === ancestor) return undefined;
-    ancestor = parent;
+  return cleanTicketFolderForPath(root, abs);
+}
+
+function cleanGitignoredMapForTicketRoots(root: string, ticketRoots: readonly string[]): Map<string, string[]> {
+  const map = new Map<string, string[]>();
+  for (const ticketRoot of ticketRoots) {
+    const rel = relative(root, ticketRoot);
+    const probe = runProbe("git", ["ls-files", "--others", "-i", "--exclude-standard", "--directory", "--", rel], {
+      cwd: root,
+      budgetMs: 120_000,
+    });
+    if ((probe.status ?? 1) !== 0) continue;
+    for (const line of probe.stdout.split("\n").map((l) => l.trim()).filter(Boolean)) {
+      const abs = join(root, line.replace(/\/$/, ""));
+      const folder = cleanTicketFolderForPath(root, abs);
+      if (folder) {
+        let list = map.get(folder);
+        if (!list) {
+          list = [];
+          map.set(folder, list);
+        }
+        list.push(abs);
+      }
+    }
   }
+  return map;
+}
+
+function cleanCollectWindowsIllegal(root: string, protectedPrefixes: readonly string[]): CleanRemoval[] {
+  const out: CleanRemoval[] = [];
+  const seen = new Set<string>();
+  const stack = [root];
+  while (stack.length > 0) {
+    const dir = stack.pop()!;
+    let entries: string[];
+    try {
+      entries = readdirSync(dir);
+    } catch {
+      continue;
+    }
+    for (const name of entries) {
+      if (name === ".git" || name === "node_modules") continue;
+      if (name === CLEAN_CACHE_DIR_NAME || name === MAP_CACHE_DIR_NAME || name === HUB_DATA_DIR_NAME || name === SPACE_DATA_DIR_NAME) continue;
+      if (cleanIsBuildArtifactDirName(name)) continue;
+      const abs = join(dir, name);
+      if (cleanIntersectsProtected(abs, protectedPrefixes)) continue;
+      if (cleanIsWindowsIllegalName(name)) {
+        if (!seen.has(abs)) {
+          seen.add(abs);
+          out.push({ kind: "windows-illegal", path: relative(root, abs), bytes: cleanPathBytes(abs) });
+        }
+        continue;
+      }
+      let st;
+      try {
+        st = lstatSync(abs);
+      } catch {
+        continue;
+      }
+      if (st.isDirectory() && !st.isSymbolicLink()) {
+        stack.push(abs);
+      }
+    }
+  }
+  const probe = runProbe("git", ["ls-files", "-z"], { cwd: root, budgetMs: 60_000 });
+  if ((probe.status ?? 1) === 0) {
+    for (const file of probe.stdout.split("\0").filter(Boolean)) {
+      const parts = file.split("/");
+      if (parts.some((part) => cleanIsWindowsIllegalName(part))) {
+        const abs = join(root, file);
+        if (!cleanIntersectsProtected(abs, protectedPrefixes) && !seen.has(abs)) {
+          seen.add(abs);
+          out.push({ kind: "windows-illegal", path: file, bytes: cleanPathBytes(abs) });
+        }
+      }
+    }
+  }
+  return out;
 }
 
 function cleanBuildArtifactRemovals(root: string, protectedPrefixes: readonly string[]): CleanRemoval[] {
@@ -21737,15 +21891,19 @@ function cleanDedupePreferShallowest(removals: readonly CleanRemoval[]): CleanRe
 
 function runWorkspaceClean(root: string, dry: boolean): { removals: CleanRemoval[]; skippedProtected: string[] } {
   const protectedPrefixes = cleanProtectedPrefixes(root);
-  const ticketFolders = cleanDiscoverTicketRoots(root).flatMap(cleanDiscoverTicketFolders);
+  const ticketRoots = cleanDiscoverTicketRoots(root);
+  const ticketFolders = ticketRoots.flatMap(cleanDiscoverTicketFolders);
   for (const folder of ticketFolders) if (!cleanTicketManifestIsClosed(folder, CLEAN_PROTECTION_VIEW)) protectedPrefixes.push(resolve(folder));
   const skippedProtected = protectedPrefixes.filter((p) => existsSync(p)).map((p) => relative(root, p) || p);
   const pending: CleanRemoval[] = [];
   pending.push(...cleanCollectMisplaced(root, protectedPrefixes));
+  pending.push(...cleanCollectWindowsIllegal(root, protectedPrefixes));
+  const gitignoredMap = cleanGitignoredMapForTicketRoots(root, ticketRoots);
   for (const ticketFolder of ticketFolders) {
     pending.push(...cleanTicketGeneratedOutputRemovals(root, ticketFolder, protectedPrefixes));
     if (cleanIsProtected(ticketFolder, protectedPrefixes) || !cleanTicketManifestIsClosed(ticketFolder, CLEAN_PROTECTION_VIEW)) continue;
-    for (const abs of cleanGitignoredUnder(root, ticketFolder)) {
+    const gitignored = gitignoredMap.get(resolve(ticketFolder)) ?? [];
+    for (const abs of gitignored) {
       if (!existsSync(abs) || cleanIntersectsProtected(abs, protectedPrefixes)) continue;
       pending.push({ kind: "gitignore", path: relative(root, abs), bytes: cleanPathBytes(abs) });
     }
@@ -21755,7 +21913,7 @@ function runWorkspaceClean(root: string, dry: boolean): { removals: CleanRemoval
   const candidates = cleanProjectRemovals(root, pending, protectedPrefixes, CLEAN_PROTECTION_VIEW, (path) => skippedProtected.push(relative(root, path) || path));
   const removals: CleanRemoval[] = [];
   for (const row of candidates) {
-    if (cleanRemovePath(root, resolve(root, row.path), dry, protectedPrefixes, row.kind === "ticket-generated")) removals.push(row);
+    if (cleanRemovePath(root, resolve(root, row.path), dry, protectedPrefixes, row.kind === "ticket-generated", row.kind === "windows-illegal")) removals.push(row);
     else skippedProtected.push(row.path);
   }
   return { removals, skippedProtected };
@@ -21781,16 +21939,16 @@ export class CommitScript extends Script {
 //#endregion 🔖️CommitScript
 
 //#region 🔖️OsScript
-/** 🧩️One `framework/os/dev` plugin registry row ([[🔣️plugins.json]]) — only the fields `os run`'s preflight needs. */
+/** 🧩️One `framework/os/dev` plugin registry row ([[🔌️plugins.json]]) — only the fields `os run`'s preflight needs. */
 type OsPluginArtifact = { pluginId: string; wasmOut: string };
 
 /**
  * 🔍️Plugin ids from the generated plugin registry with no built `.wasm` under
- * `target/wasm32-wasip2/{debug,wasm-release}/` — same resolution order as `resolve_plugin_paths` in
+ * `target/wasm32-wasip2/{wasm-dev,wasm-release}/` — same resolution order as `resolve_plugin_paths` in
  * `semio-framework-os-run`.
  */
 const PLUGIN_WASM_TARGET_DIR = "target/wasm32-wasip2";
-const PLUGIN_WASM_PROFILE_DIRS = ["debug", "wasm-release"] as const;
+const PLUGIN_WASM_PROFILE_DIRS = ["wasm-dev", "wasm-release"] as const;
 
 function pluginWasmArtifactExists(repoRoot: string, wasmOut: string): boolean {
   for (const profileDir of PLUGIN_WASM_PROFILE_DIRS) {
@@ -21800,7 +21958,7 @@ function pluginWasmArtifactExists(repoRoot: string, wasmOut: string): boolean {
 }
 
 function missingPluginWasmArtifacts(repoRoot: string): string[] {
-  const registryPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔣️plugins.json");
+  const registryPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json");
   if (!existsSync(registryPath)) return [];
   const entries = JSON.parse(readFileSync(registryPath, "utf8")) as OsPluginArtifact[];
   return entries.filter((entry) => !pluginWasmArtifactExists(repoRoot, entry.wasmOut)).map((entry) => entry.pluginId);
@@ -22121,9 +22279,9 @@ export type NewMutationScaffoldOptions = {
   readonly cancelled?: () => boolean;
 };
 
-function newMutationSemanticParts(name: string): { emoji: string; semanticKind: string; moduleName: string; variantName: string; verb: string; entity: string } {
-  const emoji = policyLeadingEmojiPrefix(name);
-  const semanticKind = policyStripEmoji(name);
+function newMutationSemanticParts(name: string, explicitIdentity?: string): { emoji: string; semanticKind: string; moduleName: string; variantName: string; verb: string; entity: string } {
+  const emoji = policyLeadingEmojiPrefix(posix.basename(name));
+  const semanticKind = explicitIdentity ?? policyStripEmoji(name);
   const parts = semanticKind.split("-").filter(Boolean);
   if (!emoji || parts.length < 2 || parts.some((part) => !/^[a-z][a-z0-9]*$/u.test(part))) throw new Error(`new mutation: "${name}" must be an emoji-prefixed semantic verb-noun kebab name.`);
   const [verb, ...entityParts] = parts;
@@ -22278,16 +22436,18 @@ export function newScaffoldMutationTree(repoRoot: string, mutationsRel: string, 
   const mutationRoot = resolve(normalizedRoot, mutationsRel);
   const rel = relative(normalizedRoot, mutationRoot).replaceAll("\\", "/");
   if (policyStructuralRelativeLocator(rel) === null || !rel.endsWith(`/${POLICY_MUTATIONS_FACET}`)) throw new Error(`new mutation: mutation root must be a safe repository-relative ${POLICY_MUTATIONS_FACET} directory: ${JSON.stringify(mutationsRel)}.`);
-  const parts = newMutationSemanticParts(name);
+  const taxonomy = loadTaxonomy();
+  const identity = mutationOwnerIdentity(rel, name, taxonomy);
+  if (Object.hasOwn(taxonomy.mutationDomainOwners, rel) && identity === null) throw new Error(`new mutation: owner ${rel}/${name} has no exact domain-operation registration.`);
+  const parts = newMutationSemanticParts(name, identity ?? undefined);
   for (const sibling of policyListMutationDirs(normalizedRoot, rel)) {
     if (sibling === name) continue;
-    const siblingParts = newMutationSemanticParts(sibling);
-    if (siblingParts.emoji === parts.emoji) throw new Error(`new mutation: emoji ${JSON.stringify(parts.emoji)} is already owned by ${sibling}.`);
+    const siblingParts = newMutationSemanticParts(sibling, mutationOwnerIdentity(rel, sibling, taxonomy) ?? undefined);
+    if (posix.dirname(sibling) === posix.dirname(name) && siblingParts.emoji === parts.emoji) throw new Error(`new mutation: emoji ${JSON.stringify(parts.emoji)} is already owned by ${sibling}.`);
     if (siblingParts.semanticKind === parts.semanticKind) throw new Error(`new mutation: semantic kind ${JSON.stringify(parts.semanticKind)} is already owned by ${sibling}.`);
     if (siblingParts.variantName === parts.variantName) throw new Error(`new mutation: aggregate variant ${parts.variantName} is already owned by ${sibling}.`);
   }
   const leafRel = `${rel}/${name}`;
-  const taxonomy = loadTaxonomy();
   const descriptorFilename = canonicalPrimaryFilenameForKind(taxonomy.mutationDescriptorFileKindId, taxonomy);
   const proposed: { relPath: string; content: string }[] = [
     { relPath: `${leafRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`, content: newMutationRustLeaf(parts) },
@@ -22420,7 +22580,8 @@ class CleanMechanismNewScript extends Script {
       const standardsAbs = join(artifactsAbs, artDir, taxonomy.standardsDirName);
       const standardDir = resolveExisting(standardsAbs, stdArg, "standard");
       const subsetsAbs = join(standardsAbs, standardDir, taxonomy.subsetsDirName);
-      if (taxonomy.subsetDirPrefix && !newDir.startsWith(taxonomy.subsetDirPrefix)) throw new Error(`new subset: "${newDir}" must start with subsetDirPrefix "${taxonomy.subsetDirPrefix}"`);
+      const subsetsRel = relative(repoRoot, subsetsAbs).replaceAll("\\", "/");
+      if (subsetIdForDirectoryName(subsetsRel, newDir, taxonomy) === null) throw new Error(`new subset: "${newDir}" is not a registered semantic directory for "${subsetsRel}"`);
       const subsetRel = relative(repoRoot, join(subsetsAbs, newDir)).replaceAll("\\", "/");
       const { created, skipped } = newScaffoldSubsetTree(repoRoot, subsetRel, taxonomy, dryRun);
       this.report(subsetRel, created, skipped, dryRun);
@@ -22774,7 +22935,7 @@ function policyAppIdFromCrateDir(cratePath: string): string {
   return appsIdx >= 0 && segments.length > appsIdx + 1 ? policyStripEmoji(segments[appsIdx + 1]!) : "";
 }
 
-/** 🧵Non-default file inside a crate/component dir (e.g. `benches/protocol.rs`) stays distinguishable from its crate's default entry file (`🦀️.rs` package glue, `🦀️.rs` domain leaf) instead of collapsing onto the same key — dropped extension, emoji-stripped, dash-joined. */
+/** 🧵Non-default file inside a crate/component dir (e.g. `🐞️benches/🦀️🟪️protocol.rs`) stays distinguishable from its crate's default entry file (`🦀️.rs` package glue, `🦀️.rs` domain leaf) instead of collapsing onto the same key — dropped extension, emoji-stripped, dash-joined. */
 function policyFileSuffix(tailSegments: readonly string[], defaultFile: string): string {
   if (tailSegments.length === 1 && tailSegments[0] === defaultFile) return "";
   return `#${tailSegments.map((s) => policyStripEmoji(s.replace(/\.rs$/, ""))).join("-")}`;
@@ -25748,9 +25909,13 @@ function policyFilenameContractApplies(repoRoot: string, relDir: string, name: s
       break;
     }
   }
-  const ecosystemId = packagesIndex >= 0 ? segments[packagesIndex + 1] : undefined;
-  const packageManifest = name === "package.json" || existsSync(join(repoRoot, relDir, "package.json"));
-  const packageRoot = packagesIndex === segments.length - 2 || packageManifest;
+  const adjacentEcosystem = ([
+    ["Cargo.toml", "🦀️rust"],
+    ["go.mod", "🐹️go"],
+    ["package.json", "🟦️typescript"],
+  ] as const).find(([manifest]) => name === manifest || existsSync(join(repoRoot, relDir, manifest)))?.[1];
+  const ecosystemId = packagesIndex >= 0 ? segments[packagesIndex + 1] : adjacentEcosystem;
+  const packageRoot = packagesIndex === segments.length - 2 || adjacentEcosystem !== undefined;
   const siblingFixedFilenameContractIds = existsSync(join(repoRoot, relDir, "📋️project.json")) ? ["nx-project-manifest"] : undefined;
   for (const contract of Object.values(taxonomy.configurableEntryContracts)) {
     if (contract.filename === name && contract.ecosystemId === ecosystemId && packageRoot) return true;
@@ -25771,9 +25936,7 @@ function policyFilenameContractApplies(repoRoot: string, relDir: string, name: s
 
 /** 🏭️Generated and framework-owned trees whose entry names are not repository taxonomy. */
 function policyEmojiEntryIsGeneratedOrFrameworkOwned(relDir: string, name: string): boolean {
-  const rel = `${relDir}/${name}`;
-  const segments = rel.split("/");
-  return name.startsWith(".") || name === "pkg" || name === "coverage" || name === "partial_movie_files" || name === "__pycache__" || name === "client" || name === "client_bin" || segments.includes("app");
+  return name.startsWith(".") || name === "pkg" || name === "coverage" || name === "partial_movie_files" || name === "__pycache__";
 }
 
 /** 🪪️Whether an entry is free to adopt the repository's emoji-prefixed identity. */
@@ -25781,28 +25944,6 @@ function policyEmojiEntryIsRenamable(repoRoot: string, relDir: string, name: str
   if (!name || name.startsWith(".") || policyEmojiEntryIsGeneratedOrFrameworkOwned(relDir, name)) return false;
   if (isDirectory) return true;
   return !policyFilenameContractApplies(repoRoot, relDir, name, taxonomy);
-}
-
-/** 🎭️Families whose shared leading emoji is a structural kind marker rather than a sibling identity.
- *
- * 🪟️ A window's and a mode's children are entirely taxonomy VOCABULARY (`windowChildDirs` /
- * `modeChildDirs`) — nobody authored those names locally, so they carry no local visual identity to
- * keep unique, and the vocabulary itself is free to spell two related capabilities with one family
- * emoji (`🎚️options` beside the `🎚️config` state lane). Renaming either at a site would break the
- * vocabulary it is a member of, so uniqueness is the wrong instrument here. */
-function policyEmojiSiblingIdentityIsStructural(relDir: string, name: string, taxonomy: ReturnType<typeof loadTaxonomy>): boolean {
-  const segments = relDir.split("/");
-  const parent = segments[segments.length - 1] ?? "";
-  const grandparent = segments[segments.length - 2] ?? "";
-  if (grandparent === taxonomy.windowsDirName && taxonomy.windowChildDirs.includes(name)) return true;
-  if (grandparent === taxonomy.modesDirName && (taxonomy.modeChildDirs ?? []).includes(name)) return true;
-  return name === "📝️text" || name === "💾️binary" || parent === "🏅️standards" || parent === "🪆️subsets" || parent === "💡️inferences" || parent === "🗿️artifacts" || parent === "📚️examples" || segments.includes("🖼️assets");
-}
-
-/** 🧬️Migration slug families whose bare-symbol presentation is enforced by their dedicated policy. */
-function policyEmojiPresentationIsStructural(relDir: string): boolean {
-  const segments = relDir.split("/");
-  return segments.includes("🧬️mutations") || segments.includes("💡️inferences");
 }
 
 /** ✨️Whether a name starts with an actual emoji sequence rather than arbitrary non-ASCII text. */
@@ -25835,20 +25976,30 @@ export function policyEmojiPrefixBreaches(repoRoot: string): BreachRecord[] {
     for (let parent = posix.dirname(entry.path); parent !== "." && parent !== ""; parent = posix.dirname(parent)) directories.add(parent);
   }
   const reservedSubtrees = new Set(taxonomy.pathEmojiPolicy.reservedSubtreeDirectoryNames.map((name) => name.normalize("NFC").replaceAll(POLICY_VS16, "")));
-  const isReservedSubtreeName = (name: string): boolean => reservedSubtrees.has(name.replaceAll(POLICY_VS16, "")) || reservedSubtrees.has(leadingEmojiIdentity(name).rest.replaceAll(POLICY_VS16, ""));
+  const isReservedSubtreeName = (name: string): boolean => reservedSubtrees.has(name.replaceAll(POLICY_VS16, "")) || reservedSubtrees.has(policyStripEmoji(name));
   const resolver = createFixedContractResolver(taxonomy);
-  const underReservedSubtree = (path: string): boolean => path.split("/").slice(0, -1).some(isReservedSubtreeName);
-  const directoryReserved = (path: string): boolean => resolver.directoryIdsForPath(path, {
+  const fixedDirectoryIds = new Map([...directories].map((path) => [path, resolver.directoryIdsForPath(path, {
     parentDirectoryKindId: semanticDirectoryKindId(posix.basename(posix.dirname(path)), taxonomy) ?? undefined,
-  }).length > 0;
+  })] as const));
+  const fixedReservedSubtreeRoots = [...fixedDirectoryIds].filter(([, ids]) => ids.some((id) => taxonomy.fixedDirectoryContracts[id]?.descendants === "reserved")).map(([path]) => path);
+  const underReservedSubtree = (path: string): boolean => path.split("/").slice(0, -1).some(isReservedSubtreeName) || fixedReservedSubtreeRoots.some((reservedRoot) => path.startsWith(`${reservedRoot}/`));
+  const directoryReserved = (path: string): boolean => (fixedDirectoryIds.get(path) ?? []).length > 0;
   const entries: PathEmojiEntry[] = [
-    ...[...directories].map((path): PathEmojiEntry => ({ path, nodeKind: "directory", reserved: underReservedSubtree(path) || isReservedSubtreeName(posix.basename(path)) || directoryReserved(path) })),
-    ...files.map((path): PathEmojiEntry => ({ path, nodeKind: "file", reserved: underReservedSubtree(path) || policyFilenameContractApplies(repoRoot, posix.dirname(path) === "." ? "" : posix.dirname(path), posix.basename(path), taxonomy, resolver) })),
+    ...[...directories].map((path): PathEmojiEntry => {
+      const relDir = posix.dirname(path) === "." ? "" : posix.dirname(path);
+      const name = posix.basename(path);
+      return { path, nodeKind: "directory", reserved: underReservedSubtree(path) || isReservedSubtreeName(name) || directoryReserved(path) || !policyEmojiEntryIsRenamable(repoRoot, relDir, name, true, taxonomy) };
+    }),
+    ...files.map((path): PathEmojiEntry => {
+      const relDir = posix.dirname(path) === "." ? "" : posix.dirname(path);
+      const name = posix.basename(path);
+      return { path, nodeKind: "file", reserved: underReservedSubtree(path) || !policyEmojiEntryIsRenamable(repoRoot, relDir, name, false, taxonomy) || policyFilenameContractApplies(repoRoot, relDir, name, taxonomy, resolver) };
+    }),
   ].filter((entry) => !taxonomyRelativePathIsExcluded(entry.path, taxonomy));
   const byPath = new Map(entries.map((entry) => [entry.path, entry]));
   return pathEmojiStatuteFindings(entries, taxonomy.pathEmojiPolicy.genericEmojiIdentities).map((finding): BreachRecord => {
     const entity = byPath.get(finding.path)?.nodeKind === "directory" ? "folder" : "file";
-    const label = { missing: "missing-emoji", generic: "generic-emoji", presentation: "noncanonical-emoji-presentation", spacing: "whitespace-after-emoji", duplicate: "emoji-not-unique" }[finding.kind];
+    const label = { missing: "missing-emoji", generic: "generic-emoji", presentation: "noncanonical-emoji-presentation", spacing: "whitespace-after-emoji", duplicate: "emoji-not-unique", multiple: "multiple-emojis", "reserved-emoji": "reserved-name-has-emoji" }[finding.kind];
     const detail = finding.kind === "duplicate" ? ` duplicates sibling "${finding.sibling}"` : finding.emoji ? ` uses "${finding.emoji}"` : "";
     return {
       id: `path-emoji-${finding.kind}-${finding.path}`,
@@ -25856,8 +26007,8 @@ export function policyEmojiPrefixBreaches(repoRoot: string): BreachRecord[] {
       kind: `${entity}/name/${label}`,
       scope: finding.path,
       priority: "high",
-      reason: "Every non-reserved file and folder has a canonical, non-generic leading emoji identity that is unique across its sibling namespace.",
-      solution: `Rename "${posix.basename(finding.path)}" with a semantic sibling-unique emoji prefix and update every reference.`,
+      reason: "Every non-reserved file and folder has exactly one handpicked, meaningful emoji, unique among siblings. Reserved filenames remain literal and unprefixed.",
+      solution: finding.kind === "reserved-emoji" ? `Restore the literal reserved basename of "${posix.basename(finding.path)}" and update its exact references.` : `Handpick one meaningful sibling-unique emoji for "${posix.basename(finding.path)}" and update only resolved path references.`,
     };
   });
 }
@@ -26053,7 +26204,7 @@ const POLICY_PLUGIN_CLOSED_SHAPE_DESTINATIONS: Readonly<Record<string, string>> 
   "✏️s/🔌️plugins/📐️cad/🧩️extensions": "Extension-crate axis (role=extension, extends=cad, 4 crates) — pending the §6 ruling in 📓️w0-census.md.",
   "✏️s/🔌️plugins/📕️norm/🎚️config": "Shared default for 15 norm apps — needs a cross-app-shared-code ruling (duplicate into each 🎛️apps/<norm-app>/🎚️config/, or a new sanctioned slot) — 📓️w0-census.md §6.",
   "✏️s/🔌️plugins/📕️norm/👥️presence": "Same shared-across-15-apps ruling as 🎚️config — 📓️w0-census.md §6.",
-  "✏️s/🔌️plugins/📕️norm/📄️artifact": "Feeds all 15 norm standard artifacts — needs a cross-artifact-shared-engine ruling (candidate: 🗿️artifacts/norm/🏅️standards/🔖️shared/⚙️engine/core/) — 📓️w0-census.md §6.",
+  "✏️s/🔌️plugins/📕️norm/⚖️compliance": "Feeds all 15 norm standard artifacts — needs a cross-artifact-shared-engine ruling (candidate: 🗿️artifacts/norm/🏅️standards/🔖️shared/⚙️engine/core/) — 📓️w0-census.md §6.",
   "✏️s/🔌️plugins/📕️norm/🖥️app-surface": "Same cross-app-shared ruling as fem's 🖥️app-surface — 📓️w0-census.md §6.",
   "✏️s/🔌️plugins/📖️playbook/🧩️extensions": "Extension-crate axis (role=extension, extends=playbook, 1 crate) — pending the §6 ruling in 📓️w0-census.md.",
   "✏️s/🔌️plugins/📜️imperative/🧩️extensions": "Extension-crate axis (role=extension, extends=imperative, 5 crates) — pending the §6 ruling in 📓️w0-census.md.",
@@ -26252,11 +26403,11 @@ function policyPluginPurityTsFiles(repoRoot: string, rootRel: string): string[] 
 /**
  * 🫧️Files that may touch browser/native storage directly, because they ARE a sanctioned storage owner:
  * - `🖥️platform` is the config lane's persistence adapter (`StoragePort`).
- * - `🟦️backbone-worker.ts` backs `BlobStore` — content-addressed ARTIFACT content (what a
+ * - `🧵️backbone-worker.ts` backs `BlobStore` — content-addressed ARTIFACT content (what a
  *   `LinkPin::Snapshot` escrows), which belongs to the artifact mechanism, not to config. Flagging it
  *   would be a category error: it is not local-only UI state routing around a lane.
  */
-const POLICY_STATE_LANE_CONFIG_ADAPTER_PREFIXES = ["🧰️framework/🔨️modules/🖥️platform/", "🧰️framework/🛍️products/💻️os/🟦️backbone-worker.ts"];
+const POLICY_STATE_LANE_CONFIG_ADAPTER_PREFIXES = ["🧰️framework/🔨️modules/🖥️platform/", "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"];
 
 /** 🫧️Trees excluded from the lane rules: the parallel `compose/` stack and product/site code that is not an app. */
 const POLICY_STATE_LANE_EXCLUDED_PREFIXES = ["compose/", "♻️mit-bestand/", "🌎️hub/", "🧰️framework/🛍️products/🦑️repo/"];
@@ -26966,8 +27117,9 @@ function policyListTopLevelSubsetDirs(repoRoot: string): string[] {
         if (!std.isDirectory() || !std.name.startsWith(taxonomy.standardDirPrefix ?? "🔖️")) continue;
         const subsets = join(standards, std.name, taxonomy.subsetsDirName ?? "🪆️subsets");
         if (!existsSync(subsets)) continue;
+        const subsetsRel = relative(repoRoot, subsets).replaceAll("\\", "/");
         for (const sub of readdirSync(subsets, { withFileTypes: true })) {
-          if (!sub.isDirectory() || !sub.name.startsWith(taxonomy.subsetDirPrefix ?? "✳️")) continue;
+          if (!sub.isDirectory() || subsetIdForDirectoryName(subsetsRel, sub.name, taxonomy) === null) continue;
           out.push(join("✏️s/🔌️plugins", plugin.name, taxonomy.artifactsDirName ?? "🗿️artifacts", art.name, taxonomy.standardsDirName ?? "🏅️standards", std.name, taxonomy.subsetsDirName ?? "🪆️subsets", sub.name).replaceAll("\\", "/"));
         }
       }
@@ -27909,6 +28061,8 @@ function policyLeadingEmojiPrefix(name: string): string {
 
 /** 🔎️Mutation-specific direct-owner dirs under `🧬️mutations/` (skips infrastructure facets). */
 function policyListMutationDirs(repoRoot: string, mutationsRel: string): string[] {
+  const taxonomy = loadTaxonomy(), domains = taxonomy.mutationDomainOwners[mutationsRel];
+  if (domains) return Object.entries(domains).flatMap(([domain, operations]) => policyReaddirSafe(repoRoot, `${mutationsRel}/${domain}`).filter((entry) => entry.isDirectory && Object.hasOwn(operations, entry.name)).map((entry) => `${domain}/${entry.name}`)).sort();
   const reserved = new Set<string>(["📚️examples", "💾️binary", "📝️text"]);
   return policyReaddirSafe(repoRoot, mutationsRel)
     .filter((e) => e.isDirectory && !reserved.has(e.name) && !e.name.startsWith("."))
@@ -27916,14 +28070,15 @@ function policyListMutationDirs(repoRoot: string, mutationsRel: string): string[
     .sort();
 }
 
-type PolicyStructuralMutationChildClassification = "direct-owner" | "root-infrastructure" | "malformed-child" | "unsafe-child" | "missing-directory-candidate" | "nonregular-or-unadmitted" | "root-file-evidence" | "absent" | "repository-boundary";
+type PolicyStructuralMutationChildClassification = "direct-owner" | "domain-owner" | "root-infrastructure" | "malformed-child" | "unsafe-child" | "missing-directory-candidate" | "nonregular-or-unadmitted" | "root-file-evidence" | "absent" | "repository-boundary";
 type PolicyStructuralMutationChild = { readonly name: string; readonly path: string; readonly classification: PolicyStructuralMutationChildClassification };
 
 function policyStructuralMutationChildren(view: MutationTaxonomyStructuralSourceView, mutationsRel: string): readonly PolicyStructuralMutationChild[] {
-  const taxonomy = JSON.parse(view.taxonomySchema.bytes.toString("utf8")) as ReturnType<typeof loadTaxonomy>, prefix = `${mutationsRel}/`;
+  const taxonomy = JSON.parse(view.taxonomySchema.bytes.toString("utf8")) as ReturnType<typeof loadTaxonomy>, prefix = `${mutationsRel}/`, domains = taxonomy.mutationDomainOwners[mutationsRel];
   const candidates = new Map<string, { directory: boolean; file: boolean; nonregular: boolean; absent: boolean; boundary: boolean }>();
   const add = (name: string, patch: Partial<{ directory: boolean; file: boolean; nonregular: boolean; absent: boolean; boundary: boolean }>): void => {
-    if (!name || name.includes("/")) return;
+    const parts = name.split("/");
+    if (!name || parts.length > 2 || parts.length === 2 && (!domains || !Object.hasOwn(domains, parts[0]!))) return;
     const prior = candidates.get(name) ?? { directory: false, file: false, nonregular: false, absent: false, boundary: false };
     candidates.set(name, { directory: prior.directory || patch.directory === true, file: prior.file || patch.file === true, nonregular: prior.nonregular || patch.nonregular === true, absent: prior.absent || patch.absent === true, boundary: prior.boundary || patch.boundary === true });
   };
@@ -27944,12 +28099,13 @@ function policyStructuralMutationChildren(view: MutationTaxonomyStructuralSource
     const path = `${mutationsRel}/${name}`;
     const classification: PolicyStructuralMutationChildClassification = state.boundary ? "repository-boundary"
       : state.nonregular || (state.directory && state.absent) ? "nonregular-or-unadmitted"
-      : state.directory && state.file ? mutationDirectoryNameIsValid(name, taxonomy) ? "missing-directory-candidate" : "nonregular-or-unadmitted"
+      : state.directory && state.file ? mutationOwnerIdentity(mutationsRel, name, taxonomy) !== null ? "missing-directory-candidate" : "nonregular-or-unadmitted"
       : state.directory && name.toLocaleLowerCase("en-US") === "compose" ? "unsafe-child"
-      : state.directory && mutationDirectoryNameIsValid(name, taxonomy) ? "direct-owner"
+      : state.directory && domains && Object.hasOwn(domains, name) ? "domain-owner"
+      : state.directory && mutationOwnerIdentity(mutationsRel, name, taxonomy) !== null ? "direct-owner"
       : state.directory && (taxonomy.mutationBehaviorFacetDirs.includes(name) || taxonomy.mutationOrganizationalFacetDirs.includes(name)) ? "root-infrastructure"
       : state.directory ? "malformed-child"
-      : state.file && mutationDirectoryNameIsValid(name, taxonomy) ? "missing-directory-candidate"
+      : state.file && mutationOwnerIdentity(mutationsRel, name, taxonomy) !== null ? "missing-directory-candidate"
       : state.file ? "root-file-evidence"
       : "absent";
     return { name, path, classification };
@@ -27958,6 +28114,14 @@ function policyStructuralMutationChildren(view: MutationTaxonomyStructuralSource
 
 function policyStructuralMutationDirs(view: MutationTaxonomyStructuralSourceView, mutationsRel: string): string[] {
   return policyStructuralMutationChildren(view, mutationsRel).filter((child) => child.classification === "direct-owner").map((child) => child.name);
+}
+
+/** 🪪️ Reads the explicit domain identity, or the existing direct-owner basename contract. */
+function policyMutationSemanticIdentity(mutationsRel: string, ownerPath: string, taxonomy: ReturnType<typeof loadTaxonomy> = loadTaxonomy()): string {
+  const identity = mutationOwnerIdentity(mutationsRel, ownerPath, taxonomy);
+  if (identity !== null) return identity;
+  if (Object.hasOwn(taxonomy.mutationDomainOwners, mutationsRel)) throw new Error(`Unregistered mutation owner ${mutationsRel}/${ownerPath}`);
+  return policyStripEmoji(ownerPath);
 }
 
 function policyStructuralSource(view: MutationTaxonomyStructuralSourceView, path: string): string | null {
@@ -27976,6 +28140,15 @@ function policyStructuralRelativeLocator(value: string): string | null {
   if (!value || value.includes("\\") || value.includes(":") || isAbsolute(value) || /[\u0000-\u001F\u007F\u2028\u2029]/u.test(value)) return null;
   const segments = value.split("/");
   return segments.some((segment) => !segment || segment === "." || segment === ".." || segment.toLocaleLowerCase("en-US") === "compose") || taxonomyRelativePathIsExcluded(value) ? null : value;
+}
+
+/** 🪬️ Checks schema ownership using only the captured structural source and admission evidence. */
+function policyMutationPayloadSchemaProblems(view: MutationTaxonomyStructuralSourceView, owner: string, pointer: string, taxonomy: ReturnType<typeof loadTaxonomy>): string[] {
+  return mutationPayloadSchemaProblems(owner, pointer, (path) => {
+    const observations = view.admission.observations.filter((observation) => observation.sourcePath === path);
+    const unsafe = observations.some((observation) => observation.observedKind !== "file" && observation.observedKind !== "directory");
+    return { kind: unsafe ? "unadmitted" : policyStructuralNodeState(view, path), content: policyStructuralSource(view, path) ?? undefined, repositoryBoundary: observations.some((observation) => observation.repositoryBoundary === "gitlink") };
+  }, taxonomy.mutationPayloadSchemaAuthority.jsonSchemaDialect);
 }
 
 function policyStructuralMutationRoots(view: MutationTaxonomyStructuralSourceView, mutationRoots: readonly string[]): string[] {
@@ -28214,24 +28387,14 @@ function policyOpGrammarStartMutationBreaches(repoRoot: string): BreachRecord[] 
   return breaches;
 }
 
-/**
- * 📏️Specific mutation directory emojis must be unique within one artifact's `🧬️mutations/` tree.
- *
- * Held at `"medium"` (advisory) rather than `"high"`: this rule was silently inert until its scan
- * depth was fixed (it walked the nonexistent `<artifact>/🧬️mutations` shape), and activating it at
- * gate strength would immediately red four facets whose collisions are semantically coherent —
- * `🏗️fem/🧊️3d` and `🏗️fem/◻️2d` (`🌱`create-*, `🔁`replace-*, `🗑`delete-*), `📐️cad` (7 prefixes) and
- * `🌊️flow` (`🔀️`reorder-*). Deliberately NOT seeded into a shrink-only allowlist: an allowlist is a
- * timestamp too, and this tree moves faster than a constant can track. Graduate to `"high"` once
- * those four dedup — the rule derives its population at run time, so no constant needs updating.
- */
+/** 🏘️ Concrete mutation emojis are compared within their actual sibling owner, including declared domains. */
 function policyMutationEmojiUniquenessBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const mutationsRel of policyFindAllMutationsDirs(repoRoot)) {
     const artRel = policyArtifactRootOfMutationsDir(mutationsRel);
     const seen = new Map<string, string>();
     for (const mutName of policyListMutationDirs(repoRoot, mutationsRel)) {
-      const emoji = policyLeadingEmojiPrefix(mutName);
+      const emoji = policyLeadingEmojiPrefix(posix.basename(mutName));
       if (!emoji) {
         breaches.push({
           id: `mutation-emoji-missing-${mutationsRel}/${mutName}`,
@@ -28239,12 +28402,13 @@ function policyMutationEmojiUniquenessBreaches(repoRoot: string): BreachRecord[]
           kind: "mutation-migration/emoji-uniqueness",
           scope: artRel,
           priority: "medium",
-          reason: "Each concrete mutation directory must pick a unique emoji within its artifact.",
+          reason: "Each concrete mutation directory must pick a unique emoji among its siblings.",
           solution: `Rename ${mutName} to include a unique emoji prefix (e.g. ➕️objects-add).`,
         });
         continue;
       }
-      const prev = seen.get(emoji);
+      const siblingKey = `${posix.dirname(mutName)}\0${emoji}`;
+      const prev = seen.get(siblingKey);
       if (prev) {
         breaches.push({
           id: `mutation-emoji-dup-${artRel}-${emoji}-${mutName}`,
@@ -28252,12 +28416,12 @@ function policyMutationEmojiUniquenessBreaches(repoRoot: string): BreachRecord[]
           kind: "mutation-migration/emoji-uniqueness",
           scope: artRel,
           priority: "medium",
-          reason: "Specific mutation dir emojis must be unique within an artifact.",
+          reason: "Specific mutation dir emojis must be unique among siblings.",
           solution: `Give ${mutName} a different emoji than ${prev}.`,
         });
         continue;
       }
-      seen.set(emoji, mutName);
+      seen.set(siblingKey, mutName);
     }
   }
   return breaches;
@@ -28395,7 +28559,7 @@ function policyMutationDispatchCoverageBreaches(repoRoot: string): BreachRecord[
     if (!existsSync(join(repoRoot, dispatchRel))) continue;
     const variantNames = new Set(policyMutationEnumVariantNames(policyReadFileSafe(repoRoot, dispatchRel)));
     if (variantNames.size === 0) continue;
-    const triadPascalNames = new Set(policyListMutationDirs(repoRoot, mutationsRel).map((dir) => policyKebabToPascal(policyStripEmoji(dir))));
+    const triadPascalNames = new Set(policyListMutationDirs(repoRoot, mutationsRel).map((dir) => policyKebabToPascal(policyMutationSemanticIdentity(mutationsRel, dir))));
     const uncoveredVariants = [...variantNames].filter((v) => !triadPascalNames.has(v));
     const orphanTriads = [...triadPascalNames].filter((t) => !variantNames.has(t));
     if (uncoveredVariants.length === 0 && orphanTriads.length === 0) continue;
@@ -28493,7 +28657,7 @@ type MutationLeafDescriptor = {
   readonly requiredLanguageSurfaces: readonly string[];
 };
 
-const MUTATION_DESCRIPTOR_SCHEMA_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️.schema.json";
+const MUTATION_DESCRIPTOR_SCHEMA_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️.schema.json";
 
 //#region 🔣️JsonSchemaSubset
 function jsonSchemaSubsetObject(value: unknown): Record<string, unknown> | undefined {
@@ -28564,7 +28728,7 @@ function policyMutationDescriptorView(view: MutationTaxonomyStructuralSourceView
   try {
     const schema = JSON.parse(view.mutationDescriptorSchema.bytes.toString("utf8"));
     const descriptor = JSON.parse(source) as MutationLeafDescriptor;
-    const errors = validateJsonSchemaSubset(schema, descriptor);
+    const errors = [...jsonDocumentDuplicateKeys(source), ...validateJsonSchemaSubset(schema, descriptor)];
     return errors.length === 0 ? { descriptor } : { problem: errors.join("; ") };
   } catch (error) { return { problem: error instanceof Error ? error.message : String(error) }; }
 }
@@ -28620,20 +28784,23 @@ export interface MutationRootReachability {
 
 /** 🔗️ Proves one wrapped aggregate payload's declared source without resolving a second source graph. */
 export function inspectMutationRootReachability(repoRoot: string, mutationsRel: string, rootSource: string, leafNames: readonly string[], rustFilename: string): readonly MutationRootReachability[] {
-  const unresolved = (reason: string): readonly MutationRootReachability[] => leafNames.map((leafName) => ({ leafName, variantName: policyKebabToPascal(policyStripEmoji(leafName)), moduleName: policyStripEmoji(leafName).replaceAll("-", "_"), mounted: false, wrapped: false, origin: null, reason }));
+  const unresolved = (reason: string): readonly MutationRootReachability[] => leafNames.map((leafName) => ({ leafName, variantName: policyKebabToPascal(policyMutationSemanticIdentity(mutationsRel, leafName)), moduleName: policyMutationSemanticIdentity(mutationsRel, leafName).replaceAll("-", "_"), mounted: false, wrapped: false, origin: null, reason }));
   const index = mutationTaxonomySourceIndex(repoRoot, {}), view = mutationTaxonomyStructuralView(index), rootLocator = policyStructuralRelativeLocator(mutationsRel), filename = policyStructuralRelativeLocator(rustFilename);
-  if (rootLocator === null || filename === null || filename.includes("/") || leafNames.some((leaf) => policyStructuralRelativeLocator(leaf) === null || leaf.includes("/"))) return unresolved("requires safe captured mutation source locators");
+  const taxonomy = JSON.parse(view.taxonomySchema.bytes.toString("utf8")) as ReturnType<typeof loadTaxonomy>;
+  if (rootLocator === null || filename === null || filename.includes("/") || leafNames.some((leaf) => policyStructuralRelativeLocator(leaf) === null || mutationOwnerIdentity(mutationsRel, leaf, taxonomy) === null)) return unresolved("requires safe captured mutation source locators");
   const captured = policyStructuralSource(view, `${rootLocator}/${filename}`);
   if (captured === null || captured !== rootSource) return unresolved("aggregate source is absent, changed, or outside the captured source view");
   return inspectMutationRootReachabilityView(view, rootLocator, captured, leafNames, filename);
 }
 function inspectMutationRootReachabilityView(view: MutationTaxonomyStructuralSourceView, mutationsRel: string, rootSource: string, leafNames: readonly string[], rustFilename: string): readonly MutationRootReachability[] {
-  const unresolved = (leafName: string, reason: string): MutationRootReachability => ({ leafName, variantName: policyKebabToPascal(policyStripEmoji(leafName)), moduleName: policyStripEmoji(leafName).replaceAll("-", "_"), mounted: false, wrapped: false, origin: null, reason });
+  const taxonomy = JSON.parse(view.taxonomySchema.bytes.toString("utf8")) as ReturnType<typeof loadTaxonomy>;
+  const identity = (leafName: string): string => policyMutationSemanticIdentity(mutationsRel, leafName, taxonomy);
+  const unresolved = (leafName: string, reason: string): MutationRootReachability => ({ leafName, variantName: policyKebabToPascal(identity(leafName)), moduleName: identity(leafName).replaceAll("-", "_"), mounted: false, wrapped: false, origin: null, reason });
   const graph = inspectRustModuleGraphFacts(rootSource), aggregates = inspectRustStructure(rootSource).enums.filter((item) => item.name.endsWith("Mutation") && item.visibility === "pub");
   if (aggregates.length !== 1 || aggregates[0]!.conditional) return leafNames.map((leafName) => unresolved(leafName, "requires exactly one unconditional public top-level aggregate Mutation enum"));
   const variants = aggregates[0]!.variants;
   return leafNames.map((leafName) => {
-    const moduleName = policyStripEmoji(leafName).replaceAll("-", "_"), variantName = policyKebabToPascal(policyStripEmoji(leafName));
+    const moduleName = identity(leafName).replaceAll("-", "_"), variantName = policyKebabToPascal(identity(leafName));
     const namedMounts = graph.modules.filter((module) => module.modulePath.length === 1 && module.name === moduleName);
     const mount = namedMounts.filter((module) => module.visibility === "pub" && !module.inline && !module.conditional && module.pathTarget === `${leafName}/${rustFilename}`);
     if (namedMounts.length !== 1 || mount.length !== 1) return unresolved(leafName, "requires exactly one unconditional public canonical direct-leaf mount");
@@ -28706,7 +28873,7 @@ function policyMutationStructuralBreachesView(view: MutationTaxonomyStructuralSo
     const mutationChildren = policyStructuralMutationChildren(view, mutationsRel);
     const leafNames = mutationChildren.filter((child) => child.classification === "direct-owner").map((child) => child.name);
     for (const child of mutationChildren) {
-      if (child.classification === "direct-owner" || child.classification === "root-file-evidence" || child.classification === "absent" || child.classification === "repository-boundary") continue;
+      if (child.classification === "direct-owner" || child.classification === "domain-owner" || child.classification === "root-file-evidence" || child.classification === "absent" || child.classification === "repository-boundary") continue;
       const detail = child.classification === "root-infrastructure" ? "is an optional mutation facet at the collection root"
         : child.classification === "missing-directory-candidate" ? "is a mutation-named regular file without its required direct owner directory"
         : child.classification === "nonregular-or-unadmitted" ? "is nonregular, conflicted, or outside the captured regular source view"
@@ -28717,7 +28884,7 @@ function policyMutationStructuralBreachesView(view: MutationTaxonomyStructuralSo
     const taxonomy = JSON.parse(view.taxonomySchema.bytes.toString("utf8")) as ReturnType<typeof loadTaxonomy>;
     const rustFilename = canonicalPrimaryFilenameForKind(taxonomy.componentFileKinds["🦀️rust"]!, taxonomy);
     const reachability = inspectMutationRootReachabilityView(view, mutationsRel, rootSource, leafNames, rustFilename);
-    const folderVariants = new Set(leafNames.map((name) => policyKebabToPascal(policyStripEmoji(name))));
+    const folderVariants = new Set(leafNames.map((name) => policyKebabToPascal(policyMutationSemanticIdentity(mutationsRel, name, taxonomy))));
     const missingFolders = [...variants].filter((name) => !folderVariants.has(name));
     const missingVariants = [...folderVariants].filter((name) => !variants.has(name));
     if (missingFolders.length > 0 || missingVariants.length > 0 || reachability.some((proof) => !proof.mounted || !proof.wrapped)) breaches.push(policyMutationStructuralBreach("mutation/folder-variant-bijection", mutationsRel, `"${mutationsRel}" lacks an exact public mount/wrapped-type/folder correspondence: ${reachability.filter((proof) => !proof.mounted || !proof.wrapped).map((proof) => `${proof.leafName}: ${proof.reason}`).join("; ") || `${missingFolders.length} orphan variant(s), ${missingVariants.length} orphan folder(s)`}`, "Make every aggregate variant a one-field wrapper of exactly one publicly mounted canonical direct leaf type, with matching semantic folder identity."));
@@ -28740,16 +28907,16 @@ function policyMutationStructuralBreachesView(view: MutationTaxonomyStructuralSo
       return { ...surface, source, identities: surface.id === "text" || surface.id === "binary" ? new Set(inspectRustSourceIdentities(source)) : null };
     });
     const subsetRoot = mutationsRel.endsWith("/🧬️schema/🧬️mutations") ? mutationsRel.slice(0, -"/🧬️schema/🧬️mutations".length) : null;
-    const catalogRel = subsetRoot ? `${subsetRoot}/oracle${canonicalPrimaryFilenameForKind(taxonomy.testContributionFileKindId, taxonomy)}` : null;
+    const catalogRel = subsetRoot ? `${subsetRoot}/${taxonomy.testContributionDirectoryOverrides[subsetRoot] ?? taxonomy.testContributionDirName}/${canonicalPrimaryFilenameForKind(taxonomy.testContributionFileKindId, taxonomy)}` : null;
     const catalogSource = catalogRel ? policyStructuralSource(view, catalogRel) ?? "" : "";
     for (const leafName of leafNames) {
       const leafRel = `${mutationsRel}/${leafName}`;
       const directRel = `${leafRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`, raw = policyStructuralSource(view, directRel);
       if (raw === null) continue;
       const facts = inspectRustStructure(raw);
-      const moduleName = policyStripEmoji(leafName).replaceAll("-", "_");
-      const variantName = policyKebabToPascal(policyStripEmoji(leafName));
-      const semanticKind = policyStripEmoji(leafName);
+      const semanticKind = policyMutationSemanticIdentity(mutationsRel, leafName, taxonomy);
+      const moduleName = semanticKind.replaceAll("-", "_");
+      const variantName = policyKebabToPascal(semanticKind);
       const descriptorRel = `${leafRel}/${descriptorFilename}`;
       const descriptorResult = policyMutationDescriptorView(view, descriptorRel);
       const descriptor = descriptorResult.descriptor;
@@ -28758,11 +28925,11 @@ function policyMutationStructuralBreachesView(view: MutationTaxonomyStructuralSo
         const identityProblems: string[] = [];
         if (descriptor.owner !== leafRel) identityProblems.push(`owner=${JSON.stringify(descriptor.owner)}`);
         if (descriptor.semanticKind !== semanticKind) identityProblems.push(`semanticKind=${JSON.stringify(descriptor.semanticKind)}`);
-        if (descriptor.emoji !== policyLeadingEmojiPrefix(leafName)) identityProblems.push(`emoji=${JSON.stringify(descriptor.emoji)}`);
+        if (descriptor.emoji !== policyLeadingEmojiPrefix(posix.basename(leafName))) identityProblems.push(`emoji=${JSON.stringify(descriptor.emoji)}`);
         if (descriptor.aggregateVariant !== variantName) identityProblems.push(`aggregateVariant=${JSON.stringify(descriptor.aggregateVariant)}`);
         const [payloadLeaf, payloadType, extraPayloadFragment] = descriptor.payloadSchema.split("#");
-        const payloadPointerCanonical = descriptor.requiredLanguageSurfaces.includes("json-schema") ? descriptor.payloadSchema === mutationPayloadSchemaRelativePath(taxonomy) : payloadLeaf === POLICY_RS_COMPONENT_LEAF_NAME && /^[A-Za-z_][A-Za-z0-9_]*$/u.test(payloadType ?? "") && extraPayloadFragment === undefined;
-        if (!payloadPointerCanonical) identityProblems.push(`payloadSchema=${JSON.stringify(descriptor.payloadSchema)}`);
+        const payloadProblems = descriptor.requiredLanguageSurfaces.includes("json-schema") ? policyMutationPayloadSchemaProblems(view, leafRel, descriptor.payloadSchema, taxonomy) : payloadLeaf === POLICY_RS_COMPONENT_LEAF_NAME && /^[A-Za-z_][A-Za-z0-9_]*$/u.test(payloadType ?? "") && extraPayloadFragment === undefined ? [] : ["non-JSON payload must name the direct Rust type"];
+        if (payloadProblems.length > 0) identityProblems.push(`payloadSchema=${JSON.stringify(descriptor.payloadSchema)}: ${payloadProblems.join("; ")}`);
         if (identityProblems.length > 0) breaches.push(policyMutationStructuralBreach("mutation/descriptor-bijection", descriptorRel, `"${descriptorRel}" identity disagrees with its direct owner: ${identityProblems.join(", ")}`, "Make the language-neutral descriptor exactly identify its owner folder, aggregate variant, payload schema, and completed classifications."));
         if (descriptor.textOpcode !== null) {
           const prior = seenTextOpcodes.get(descriptor.textOpcode);
@@ -28778,7 +28945,7 @@ function policyMutationStructuralBreachesView(view: MutationTaxonomyStructuralSo
           const rootExists = policyStructuralSource(view, surface.root) !== null;
           const descriptorRequires = descriptor.requiredLanguageSurfaces.includes(surface.id);
           if (!rootExists && !descriptorRequires) continue;
-          const leafSurfaceRel = `${leafRel}/${surface.leaf}`;
+          const leafSurfaceRel = `${leafRel}/${surface.id === "json-schema" ? descriptor.payloadSchema : surface.leaf}`;
           const leafSurfaceSource = policyStructuralSource(view, leafSurfaceRel) ?? "";
           const names = [semanticKind, variantName, `${variantName}Mutation`, moduleName, ...facts.inlinePayloads.map((payload) => payload.name), ...facts.enums.map((item) => item.name)];
           const leafIdentities = surface.identities === null ? null : new Set(inspectRustSourceIdentities(leafSurfaceSource));
@@ -28857,7 +29024,7 @@ function policyCommandFolderSemanticBreaches(repoRoot: string): BreachRecord[] {
             kind: "taxonomy/command-folder-semantic",
             scope: childRel,
             priority: "medium",
-            reason: "Each 🎮️commands/ leaf must be one command named like a mutation (verb-noun kebab, e.g. ✍️text-edit). Grouping under domain nouns (text, selection, locale, camera) is banned.",
+            reason: "Each 🎮️commands/ leaf must be one command named like a mutation (verb-noun kebab, e.g. 📝️text-edit). Grouping under domain nouns (text, selection, locale, camera) is banned.",
             solution: `Split ${childRel}/${folder} into one folder per command using an approved verb prefix (${[...POLICY_COMMAND_VERBS].slice(0, 8).join(", ")}, …).`,
           });
         }
@@ -31242,23 +31409,13 @@ type PolicyArtifactDialect = {
   artRel: string;
   standardRel: string;
   standardSlug: string;
+  subsetsRel: string;
   subsetRel: string;
-  /** 🪆️ Raw on-disk dir name, e.g. "✳️any", "✳️a", "✳️cc6" — kept for path-building. */
+  /** 🪆️ Raw on-disk semantic dir name — kept for path-building. */
   subsetDirName: string;
-  /** 🪆️ Logical subset id: `subsetDirName` with the `✳️` prefix stripped and "any" mapped to "*"
-   * (ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES) — this is what a standard's
-   * `🪆️subsets/🔣️.json` manifest and Rust `SubsetId` both speak. */
+  /** 🪆️ Logical subset id resolved through the exact owner-scoped roster. */
   subsetId: string;
 };
-
-/** 🪆 Maps a subset dir name to its logical id via taxonomy's subsetDirPrefix/subsetAnyId/subsetAnyDirName. */
-function policySubsetIdFromDirName(taxonomy: ReturnType<typeof loadTaxonomy>, dirName: string): string {
-  const anyDirName = (taxonomy as any).subsetAnyDirName ?? "✳️any";
-  const anyId = (taxonomy as any).subsetAnyId ?? "*";
-  if (dirName === anyDirName) return anyId;
-  const prefix = (taxonomy as any).subsetDirPrefix ?? "✳️";
-  return dirName.startsWith(prefix) ? dirName.slice(prefix.length) : dirName;
-}
 
 /** 🏅 One row per (migrated artifact, standard, subset) triple; empty until any artifact migrates. */
 function policyListArtifactDialectDirs(repoRoot: string): PolicyArtifactDialect[] {
@@ -31282,9 +31439,10 @@ function policyListArtifactDialectDirs(repoRoot: string): PolicyArtifactDialect[
           artRel,
           standardRel,
           standardSlug,
+          subsetsRel,
           subsetRel: `${subsetsRel}/${sub.name}`,
           subsetDirName: sub.name,
-          subsetId: policySubsetIdFromDirName(taxonomy, sub.name),
+          subsetId: subsetIdForDirectoryName(subsetsRel, sub.name, taxonomy) ?? sub.name,
         });
       }
     }
@@ -31299,8 +31457,6 @@ export function policyStandardsCoverageBreaches(repoRoot: string): BreachRecord[
   const standardChildDirs = ((taxonomy as any).standardChildDirs as string[] | undefined) ?? [];
   const subsetChildDirs = ((taxonomy as any).subsetChildDirs as string[] | undefined) ?? [];
   const slugPattern = new RegExp((taxonomy as any).standardSlugPattern ?? "^[a-z0-9][a-z0-9.\\-]*$");
-  const subsetDirPrefix = (taxonomy as any).subsetDirPrefix ?? "✳️";
-  const subsetAnyDirName = (taxonomy as any).subsetAnyDirName ?? "✳️any";
   const subsetSlugPattern = new RegExp((taxonomy as any).subsetSlugPattern ?? "^[a-z0-9][a-z0-9.\\-]*$");
   for (const dialect of policyListArtifactDialectDirs(repoRoot)) {
     if (!slugPattern.test(dialect.standardSlug)) {
@@ -31314,24 +31470,24 @@ export function policyStandardsCoverageBreaches(repoRoot: string): BreachRecord[
         solution: `Rename ${dialect.standardRel} to match the slug pattern.`,
       });
     }
-    if (!dialect.subsetDirName.startsWith(subsetDirPrefix)) {
+    if (subsetIdForDirectoryName(dialect.subsetsRel, dialect.subsetDirName, taxonomy) === null) {
       breaches.push({
         id: `standards-subset-prefix-${dialect.subsetRel}`,
-        summary: `"${dialect.subsetRel}" subset dir "${dialect.subsetDirName}" does not start with taxonomy's subsetDirPrefix "${subsetDirPrefix}"`,
+        summary: `"${dialect.subsetRel}" subset dir "${dialect.subsetDirName}" is not declared by its exact semantic subset roster`,
         kind: "stdio-artifacts/standards-coverage",
         scope: dialect.artRel,
         priority: "high",
-        reason: "Every subset dir under 🪆️subsets/ must be emoji-prefixed with subsetDirPrefix, symmetric with standards' 🔖️ prefix.",
-        solution: `Rename ${dialect.subsetRel} to start with "${subsetDirPrefix}".`,
+        reason: "Every subset dir under 🪆️subsets/ must resolve through either its owner-scoped semantic roster or the default subset convention.",
+        solution: `Rename ${dialect.subsetRel} to one registered semantic subset directory.`,
       });
-    } else if (dialect.subsetDirName !== subsetAnyDirName && !subsetSlugPattern.test(dialect.subsetId)) {
+    } else if (dialect.subsetId !== ((taxonomy as any).subsetAnyId ?? "*") && !subsetSlugPattern.test(dialect.subsetId)) {
       breaches.push({
         id: `standards-subset-slug-${dialect.subsetRel}`,
         summary: `"${dialect.subsetRel}" subset id "${dialect.subsetId}" does not match ${subsetSlugPattern}`,
         kind: "stdio-artifacts/standards-coverage",
         scope: dialect.artRel,
         priority: "high",
-        reason: "Real subset ids are normalized lowercase identifiers naming an industry conformance profile/class/view or semantic type (✳️a, ✳️cc6, ✳️rv, ✳️brep, ✳️mesh, …), never a version or a conformance level.",
+        reason: "Real subset ids are normalized lowercase identifiers naming an industry conformance profile/class/view or semantic type (✳️a, ✳️cc6, ✳️rv, 🧊️brep, 🔺️mesh, …), never a version or a conformance level.",
         solution: `Rename ${dialect.subsetRel} to match the slug pattern.`,
       });
     }
@@ -31461,8 +31617,6 @@ export function policyStandardSubsetVocabularyBreaches(repoRoot: string): Breach
   const breaches: BreachRecord[] = [];
   const taxonomy = loadTaxonomy();
   const anyId = (taxonomy as any).subsetAnyId ?? "*";
-  const anyDirName = (taxonomy as any).subsetAnyDirName ?? "✳️any";
-  const subsetDirPrefix = (taxonomy as any).subsetDirPrefix ?? "✳️";
   const subsetSlugPattern = new RegExp((taxonomy as any).subsetSlugPattern ?? "^[a-z0-9][a-z0-9.\\-]*$");
   const stdioPrefix = `${POLICY_STDIO_ARTIFACTS_REL}/`;
   for (const group of policyGroupDialectsByStandard(repoRoot)) {
@@ -31544,7 +31698,17 @@ export function policyStandardSubsetVocabularyBreaches(repoRoot: string): Breach
         });
       }
     }
-    const declaredDirs = new Set(declaredIds.map((id) => (id === anyId ? anyDirName : `${subsetDirPrefix}${id}`)));
+    const subsetsRel = `${group.standardRel}/${subsetsDirName}`;
+    const declaredDirs = new Set(declaredIds.map((id) => subsetDirectoryNameForId(subsetsRel, id, taxonomy)).filter((name): name is string => name !== null));
+    for (const id of declaredIds) if (subsetDirectoryNameForId(subsetsRel, id, taxonomy) === null) breaches.push({
+      id: `standards-subset-vocabulary-unmapped-id-${group.standardRel}-${id}`,
+      summary: `"${group.manifestRel}" declares subset id "${id}" without an owner-scoped physical directory identity`,
+      kind: "stdio-artifacts/standards-subset-vocabulary",
+      scope: group.artRel,
+      priority: "high",
+      reason: "Every declared logical subset id must map to one exact semantic directory in its standard's roster.",
+      solution: `Register an exact physical directory for "${id}" under ${subsetsRel}.`,
+    });
     const actualDirs = new Set(group.dialects.map((d) => d.subsetDirName));
     for (const dir of actualDirs) {
       if (!declaredDirs.has(dir)) {
@@ -32055,9 +32219,7 @@ function policyDialectLiteralPathBreaches(repoRoot: string): BreachRecord[] {
   const table = policyLoadStdioOwnerTable(repoRoot);
   if (!table) return breaches; // owner-table-missing is already flagged by policyStdioCatalogBreaches
   const taxonomy = loadTaxonomy();
-  const subsetAnyId = (taxonomy as any).subsetAnyId ?? "*";
-  const subsetAnyDirName = (taxonomy as any).subsetAnyDirName ?? "✳️any";
-  const subsetDirPrefix = (taxonomy as any).subsetDirPrefix ?? "✳️";
+  const subsetsDirName = (taxonomy as any).subsetsDirName ?? POLICY_SUBSETS_DIR;
   const dirToKey = new Map<string, string>();
   for (const [key, entry] of Object.entries(table.artifacts)) {
     dirToKey.set(entry.dir, key);
@@ -32072,7 +32234,11 @@ function policyDialectLiteralPathBreaches(repoRoot: string): BreachRecord[] {
     if (!ownKey) continue;
     const ownArtifactKind = `s.stdio.${ownKey}`;
     const standardMatch = relPath.match(/🏅️standards\/🔖️([^/]+)\//);
-    const subsetMatch = relPath.match(/🪆️subsets\/✳️([^/]+)\//);
+    const pathSegments = relPath.split("/");
+    const subsetsIndex = pathSegments.lastIndexOf(subsetsDirName);
+    const subsetsOwner = subsetsIndex >= 0 ? pathSegments.slice(0, subsetsIndex + 1).join("/") : null;
+    const physicalSubsetDirectory = subsetsIndex >= 0 ? pathSegments[subsetsIndex + 1] ?? null : null;
+    const pathSubsetId = subsetsOwner && physicalSubsetDirectory ? subsetIdForDirectoryName(subsetsOwner, physicalSubsetDirectory, taxonomy) : null;
     const content = policyReadFileSafe(repoRoot, relPath);
     POLICY_DIALECT_LITERAL_RE.lastIndex = 0;
     let m: RegExpExecArray | null;
@@ -32090,16 +32256,15 @@ function policyDialectLiteralPathBreaches(repoRoot: string): BreachRecord[] {
           solution: `Fix StandardId("${litStandard}") in ${relPath} to "${standardMatch[1]}", or move the file to 🏅️standards/🔖️${litStandard}/ if that's the one that's wrong.`,
         });
       }
-      const subsetDir = litSubset === subsetAnyId ? subsetAnyDirName.slice(subsetDirPrefix.length) : litSubset;
-      if (subsetMatch && subsetDir !== subsetMatch[1]) {
+      if (pathSubsetId !== null && litSubset !== pathSubsetId) {
         breaches.push({
           id: `dialect-literal-subset-${relPath}-${litSubset}`,
-          summary: `"${relPath}" declares SubsetId("${litSubset}") but lives under 🪆️subsets/${subsetDirPrefix}${subsetMatch[1]}/`,
+          summary: `"${relPath}" declares SubsetId("${litSubset}") but lives under ${subsetsOwner}/${physicalSubsetDirectory}/`,
           kind: "artifact-io/dialect-literal-path",
           scope: relPath,
           priority: "high",
-          reason: `A self-referential Dialect literal's subset must match the ${subsetDirPrefix}<subset> directory the file physically lives under (SubsetId("${subsetAnyId}") ⇔ ${subsetAnyDirName} by convention).`,
-          solution: `Fix SubsetId("${litSubset}") in ${relPath} to match ${subsetDirPrefix}${subsetMatch[1]}/, or move the file if the directory is what's wrong.`,
+          reason: "A self-referential Dialect literal's logical subset id must match the exact owner-scoped semantic directory it physically lives under.",
+          solution: `Fix SubsetId("${litSubset}") in ${relPath} to "${pathSubsetId}", or move the file if the directory is wrong.`,
         });
       }
     }
@@ -32412,7 +32577,7 @@ function policyMutationVocabularyBreaches(repoRoot: string): BreachRecord[] {
   const flagshipDirs = [
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif",
   ];
   for (const relPath of policyAllRustFiles(repoRoot)) {
@@ -34163,8 +34328,8 @@ function policyDissolvedWholeDocumentReplaceBreaches(repoRoot: string): BreachRe
   const breaches: BreachRecord[] = [];
   for (const relPath of policyAllRustFiles(repoRoot)) {
     if (!relPath.includes("🧬️mutations/")) continue;
-    if (!/\/📄set-snapshot\//.test(relPath)) continue;
-    const dir = relPath.slice(0, relPath.indexOf("/📄set-snapshot/") + "/📄set-snapshot".length);
+    if (!/\/🟤️set-snapshot\//.test(relPath)) continue;
+    const dir = relPath.slice(0, relPath.indexOf("/🟤️set-snapshot/") + "/🟤️set-snapshot".length);
     breaches.push({
       id: `dissolved-whole-document-replace-${dir}`,
       summary: `"${dir}" is a whole-document-replace triad directory`,

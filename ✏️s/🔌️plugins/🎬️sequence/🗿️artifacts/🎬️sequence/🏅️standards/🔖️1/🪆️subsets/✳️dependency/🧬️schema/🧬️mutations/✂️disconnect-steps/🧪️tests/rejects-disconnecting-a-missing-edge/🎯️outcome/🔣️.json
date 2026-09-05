@@ -1,7 +1,0 @@
-{
-  "status": "rejected",
-  "code": "mutation.target-missing",
-  "path": [
-    "edge-gone"
-  ]
-}

@@ -1,0 +1,13 @@
+(* ebnf s.stdio.dwg.inference (ac1024) *)
+document = 's.stdio.dwg.inference', structure ;
+structure = 'structure', '=', '{', layer-count, entity-count, geometry-value-count,
+            geometry-index-count, text-character-count, codepage, version, '}' ;
+layer-count = 'layer-count', '=', unsigned ;
+entity-count = 'entity-count', '=', unsigned ;
+geometry-value-count = 'geometry-value-count', '=', unsigned ;
+geometry-index-count = 'geometry-index-count', '=', unsigned ;
+text-character-count = 'text-character-count', '=', unsigned ;
+codepage = 'codepage', '=', unsigned ;
+version = 'version', '=', quoted-text ;
+unsigned = digit, { digit } ;
+quoted-text = '"', { character }, '"' ;

@@ -5,7 +5,7 @@
   "displayName": "Add Node Handle",
   "emoji": "➕",
   "aggregateVariant": "AddNodeHandle",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "add-node-handle",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

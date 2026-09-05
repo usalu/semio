@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeFireCurve",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newFireCurve"
+  ],
+  "properties": {
+    "newFireCurve": {
+      "type": "string",
+      "enum": [
+        "Standard",
+        "External",
+        "Hydrocarbon"
+      ]
+    }
+  }
+}

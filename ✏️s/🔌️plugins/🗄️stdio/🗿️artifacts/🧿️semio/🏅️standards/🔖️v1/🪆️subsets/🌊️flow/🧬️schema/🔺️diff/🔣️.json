@@ -1,0 +1,67 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.semio.flow/diff.json",
+  "title": "SemioFlowDiff",
+  "description": "🔺️ Real facet mirror of 🦀️.rs — sparse name-keyed triple diff over nodes/edges.",
+  "type": "object",
+  "definitions": {
+    "SemioPoint2": { "type": "object", "properties": { "x": { "type": "number" }, "y": { "type": "number" } } },
+    "PortRef": { "type": "object", "properties": { "node": { "type": "string" }, "port": { "type": "string" } } },
+    "FlowParam": { "type": "object", "properties": { "key": { "type": "string" }, "value": { "type": "string" } } },
+    "FlowNode": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "kind": { "type": "string" },
+        "label": { "type": "string" },
+        "params": { "type": "array", "items": { "$ref": "#/definitions/FlowParam" } },
+        "position": { "$ref": "#/definitions/SemioPoint2" }
+      }
+    },
+    "FlowEdge": {
+      "type": "object",
+      "properties": { "id": { "type": "string" }, "from": { "$ref": "#/definitions/PortRef" }, "to": { "$ref": "#/definitions/PortRef" }, "kind": { "type": "string" } }
+    },
+    "FlowParamDiff": { "type": "object", "properties": { "value": { "type": "string" } } },
+    "FlowParamsDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "modified": { "type": "array", "items": { "type": "object", "properties": { "key": { "type": "string" }, "diff": { "$ref": "#/definitions/FlowParamDiff" } } } },
+        "added": { "type": "array", "items": { "$ref": "#/definitions/FlowParam" } }
+      }
+    },
+    "FlowNodeDiff": {
+      "type": "object",
+      "properties": {
+        "kind": { "type": "string" },
+        "label": { "type": "string" },
+        "params": { "$ref": "#/definitions/FlowParamsDiff" },
+        "position": { "$ref": "#/definitions/SemioPoint2" }
+      }
+    },
+    "FlowNodesDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "modified": { "type": "array", "items": { "type": "object", "properties": { "key": { "type": "string" }, "diff": { "$ref": "#/definitions/FlowNodeDiff" } } } },
+        "added": { "type": "array", "items": { "$ref": "#/definitions/FlowNode" } }
+      }
+    },
+    "FlowEdgeDiff": {
+      "type": "object",
+      "properties": { "from": { "$ref": "#/definitions/PortRef" }, "to": { "$ref": "#/definitions/PortRef" }, "kind": { "type": "string" } }
+    },
+    "FlowEdgesDiff": {
+      "type": "object",
+      "properties": {
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "modified": { "type": "array", "items": { "type": "object", "properties": { "key": { "type": "string" }, "diff": { "$ref": "#/definitions/FlowEdgeDiff" } } } },
+        "added": { "type": "array", "items": { "$ref": "#/definitions/FlowEdge" } }
+      }
+    }
+  },
+  "properties": {
+    "nodes": { "$ref": "#/definitions/FlowNodesDiff", "x-semio-state": "artifact" },
+    "edges": { "$ref": "#/definitions/FlowEdgesDiff", "x-semio-state": "artifact" }
+  }
+}

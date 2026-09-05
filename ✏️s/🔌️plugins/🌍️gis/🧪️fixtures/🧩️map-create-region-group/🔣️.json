@@ -1,0 +1,44 @@
+{
+  "schema": "semio.gis.map-create-region-group/v1",
+  "jobId": "11111111111111111111111111111111",
+  "base": {
+    "positions": [{ "id": "point-a", "data": { "id": "point-a", "lon": 7, "lat": 47 } }],
+    "routes": [{ "id": "route-a", "data": { "id": "route-a", "points": [[8, 46], [9, 48]] } }],
+    "regions": [],
+    "drawingChildId": "gismap-drawing",
+    "valueChildId": "gismap-value"
+  },
+  "expected": {
+    "region": {
+      "id": "inference-11111111111111111111111111111111",
+      "data": {
+        "id": "inference-11111111111111111111111111111111",
+        "kind": "inference-bounds",
+        "ring": [[7, 46], [9, 46], [9, 48], [7, 48], [7, 46]]
+      }
+    },
+    "parentKind": "create-region",
+    "parentInverseKind": "delete-region",
+    "drawing": {
+      "kind": "create-node",
+      "slot": "drawing",
+      "childId": "gismap-drawing",
+      "parentLayer": 0,
+      "parentPath": [],
+      "index": 2,
+      "inverseKind": "delete-node"
+    },
+    "value": {
+      "kind": "insert-list-item",
+      "slot": "value",
+      "childId": "gismap-value",
+      "path": ["regions"],
+      "index": 0,
+      "inverseKind": "remove-list-item"
+    },
+    "touchedChildren": ["drawing", "value"],
+    "imageTouched": false,
+    "maximumBytes": 65536
+  },
+  "hostile": ["drawing-id", "value-id", "missing-drawing", "missing-value", "image-touch", "wrong-index", "wrong-job", "oversize"]
+}

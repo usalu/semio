@@ -7,14 +7,14 @@ import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runV
 function retainedUiNativeStripOnly(): void {
   const source = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts", import.meta.url).href;
   const numeric = new URL("../../🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts", import.meta.url).href;
-  const fixture = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔣️owned-nodes.json", import.meta.url).href;
+  const fixture = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🌳️owned-nodes/🔣️.json", import.meta.url).href;
   const validation = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🟦️.ts", import.meta.url).href;
   const nodes = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🗂️nodes/🟦️.ts", import.meta.url).href;
-  const validationFixture = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔣️owned-validation.json", import.meta.url).href;
+  const validationFixture = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🛡️owned-validation/🔣️.json", import.meta.url).href;
   const hash = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔢️hash/🟦️.ts", import.meta.url).href;
-  const hashFixture = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔣️owned-hash.json", import.meta.url).href;
+  const hashFixture = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔏️owned-hash/🔣️.json", import.meta.url).href;
   const readLease = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📖️read-lease/🟦️.ts", import.meta.url).href;
-  const readLeaseFixture = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🔣️read-lease.json", import.meta.url).href;
+  const readLeaseFixture = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️fixtures/🎟️read-lease/🔣️.json", import.meta.url).href;
   const program = `
     import assert from "node:assert/strict";
     import { createHash } from "node:crypto";

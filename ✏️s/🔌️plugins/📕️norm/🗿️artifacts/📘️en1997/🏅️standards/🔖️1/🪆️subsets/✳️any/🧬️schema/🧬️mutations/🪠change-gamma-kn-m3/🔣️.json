@@ -5,7 +5,7 @@
   "displayName": "Change Gamma Kn M3",
   "emoji": "🪠",
   "aggregateVariant": "ChangeGammaKnM3",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

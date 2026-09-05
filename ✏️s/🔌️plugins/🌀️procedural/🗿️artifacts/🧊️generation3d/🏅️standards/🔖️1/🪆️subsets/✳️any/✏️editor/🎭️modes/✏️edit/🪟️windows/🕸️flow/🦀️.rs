@@ -85,20 +85,20 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::generation3d::testkit::{app, render as render_body};
+    use crate::editor::generation3d::testkit::{app_with_registry, render as render_body};
 
-    #[test]
-    fn renders_node_graph_scene() {
+    #[semio_framework_async_macros::async_test]
+    async fn renders_node_graph_scene() {
         let _serial = crate::editor::generation3d::test_support::lock();
-        let mut app = app();
-        assert!(render_body(&mut app, GENERATION_3D_PLAY_BODY_MAIN).contains("node-graph"));
+        let mut app = app_with_registry().await;
+        assert!(render_body(&mut app, GENERATION_3D_PLAY_BODY_MAIN).await.contains("node-graph"));
     }
 
-    #[test]
-    fn main_graph_scene_exports_flow_backed_node_graph_fields() {
+    #[semio_framework_async_macros::async_test]
+    async fn main_graph_scene_exports_flow_backed_node_graph_fields() {
         let _serial = crate::editor::generation3d::test_support::lock();
-        let mut app = app();
-        let json = render_body(&mut app, GENERATION_3D_PLAY_BODY_MAIN);
+        let mut app = app_with_registry().await;
+        let json = render_body(&mut app, GENERATION_3D_PLAY_BODY_MAIN).await;
         let value: serde_json::Value = serde_json::from_str(&json).expect("ui node json");
         let graph = value.get("nodeGraph").expect("nodeGraph");
         assert!(graph.get("fixtureJson").and_then(|v| v.as_str()).is_some_and(|s| s.contains("flow.fixture")));

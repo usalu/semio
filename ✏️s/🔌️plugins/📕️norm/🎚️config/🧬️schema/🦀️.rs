@@ -1,10 +1,12 @@
-//! 🧬️ schema leaf
+//! 🧬️ The shared schema-owned norm editor configuration.
 use schema::ArtifactSchema;
 
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, dsl::DslArtifact, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
+#[dsl(id = "norm.config", extension = "normcfg")]
+#[dsl(layout = "lines")]
 #[artifact_schema(id = "s.norm.norm.config")]
 pub struct NormConfig {
     #[state(config)]

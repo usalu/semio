@@ -1,3 +1,0 @@
-(* ebnf stdio.ifc.2x3 diff *)
-document = header, body ;
-header = 'schema', space, 'stdio.ifc.2x3', newline ;

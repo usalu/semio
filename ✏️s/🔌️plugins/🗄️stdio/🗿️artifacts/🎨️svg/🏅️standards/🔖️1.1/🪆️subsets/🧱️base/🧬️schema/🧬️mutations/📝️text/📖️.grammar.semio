@@ -1,0 +1,7 @@
+dialect grammar
+grammar svg.mutations
+extension svg
+start document
+
+# Direct descriptor identities: set-declaration, set-doctype, insert-element, remove-element, set-element-name, set-attribute, set-text, set-view-box, set-transform.
+document = "svg-mutation" "payload" "=" hex

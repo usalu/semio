@@ -6,10 +6,10 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../☑️Select/🟦️.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../🔽️Select/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
-import { type UiLabel } from "../🏷️UiLabel/🟦️.tsx";
+import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { Label, useLabel } from "../🏷️Label/🟦️.tsx";
 import { Icon, type IconName } from "../🔣️Icons/🟦️.tsx";
 // #endregion 🔌️Adapters

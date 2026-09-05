@@ -1,0 +1,37 @@
+{
+  "schema": "semio.hub.native-openable-catalog-provider-fixture/v1",
+  "providerProjection": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/📜️native-codec-factories.json",
+  "artifactDefinitionsRoot": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts",
+  "receiptCount": 26,
+  "attestation": {
+    "componentHex": "616263",
+    "componentSha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+    "descriptorProjectionHex": "737464696f2d64657363726970746f722d7631",
+    "descriptorProjectionSha256": "9116b35f4d40ed475adf56f2c557ccb4c2ce1e823f15f2a52b65672b26b3fb15"
+  },
+  "openTarget": {
+    "artifactKind": "stdio.json",
+    "artifactSchema": "stdio.json",
+    "packSchemaHash": "7de40335bcca019c81ea7c1cb791e5e438358851fbe32117b5ad8276494b695e",
+    "surfaceId": "s.stdio.json@rfc8259/*#viewer",
+    "appId": "s.stdio.json@rfc8259/*#viewer",
+    "windowKindId": "framework.window.tree",
+    "role": "viewer",
+    "rendererTarget": "wasm"
+  },
+  "hostileCases": [
+    { "name": "owner receipt removed", "mutation": "missing-owner", "outcome": "denied", "publishedTargets": 0 },
+    { "name": "projection receipt added", "mutation": "extra-projection", "outcome": "denied", "publishedTargets": 0 },
+    { "name": "factory identity duplicated", "mutation": "duplicate-factory", "outcome": "denied", "publishedTargets": 0 },
+    { "name": "descriptor codec identity duplicated", "mutation": "duplicate-descriptor-codec", "outcome": "denied", "publishedTargets": 0 },
+    { "name": "runtime capability absent", "mutation": "missing-runtime-capability", "outcome": "denied", "publishedTargets": 0 },
+    { "name": "protocol hash substituted", "mutation": "wrong-protocol-hash", "outcome": "denied", "publishedTargets": 0 },
+    { "name": "protocol hash zeroed", "mutation": "zero-protocol-hash", "outcome": "denied", "publishedTargets": 0 },
+    { "name": "component hash substituted", "mutation": "wrong-component-hash", "outcome": "denied", "publishedTargets": 0 },
+    { "name": "descriptor hash substituted", "mutation": "wrong-descriptor-hash", "outcome": "denied", "publishedTargets": 0 },
+    { "name": "surface detached", "mutation": "wrong-surface", "outcome": "denied", "publishedTargets": 0 },
+    { "name": "role detached", "mutation": "wrong-role", "outcome": "denied", "publishedTargets": 0 },
+    { "name": "renderer detached", "mutation": "wrong-renderer", "outcome": "denied", "publishedTargets": 0 },
+    { "name": "open target duplicated", "mutation": "duplicate-target", "outcome": "denied", "publishedTargets": 0 }
+  ]
+}

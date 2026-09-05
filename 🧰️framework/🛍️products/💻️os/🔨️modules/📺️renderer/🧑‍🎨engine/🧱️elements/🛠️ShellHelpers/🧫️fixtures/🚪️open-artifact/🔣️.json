@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "manifests": [
+    {
+      "pluginId": "draw",
+      "artifactKinds": [{ "id": "s.draw.draw" }],
+      "apps": [
+        { "id": "s.draw.draw@1/*#viewer", "role": "viewer", "dialect": { "artifactKind": "s.draw.draw", "standard": "1", "subset": "*" } },
+        { "id": "s.draw.draw@1/*#editor", "role": "editor", "dialect": { "artifactKind": "s.draw.draw", "standard": "1", "subset": "*" } }
+      ]
+    },
+    {
+      "pluginId": "ink",
+      "dependencies": [{ "pluginId": "draw", "version": "*" }],
+      "apps": [
+        { "id": "s.draw.draw@1/*#editor", "role": "editor", "dialect": { "artifactKind": "s.draw.draw", "standard": "1", "subset": "*" } }
+      ]
+    }
+  ],
+  "preferences": {
+    "defaults": [
+      {
+        "dialect": { "artifactKind": "s.draw.draw", "standard": "1", "subset": "*" },
+        "role": "editor",
+        "app": { "pluginId": "ink", "appId": "s.draw.draw@1/*#editor" }
+      }
+    ]
+  },
+  "valid": [
+    {
+      "id": "plain-default-role-uses-pinned-editor",
+      "actionId": "os.open-artifact",
+      "args": { "artifactRef": "s.draw.draw@1/*", "documentId": "drawing-1", "spaceId": "space-a", "schema": "s.draw.draw@1" },
+      "expected": { "artifactRef": "s.draw.draw@1/*", "dialect": { "artifactKind": "s.draw.draw", "standard": "1", "subset": "*" }, "role": "editor", "app": { "pluginId": "ink", "appId": "s.draw.draw@1/*#editor" }, "documentId": "drawing-1", "spaceId": "space-a", "schema": "s.draw.draw@1" }
+    },
+    {
+      "id": "plain-numeric-viewer-uses-owner",
+      "actionId": "os.open-artifact",
+      "args": { "artifactRef": "s.draw.draw@1/*", "role": 0, "documentId": "drawing-2", "spaceId": "space-a", "schema": "s.draw.draw@1" },
+      "expected": { "artifactRef": "s.draw.draw@1/*", "dialect": { "artifactKind": "s.draw.draw", "standard": "1", "subset": "*" }, "role": "viewer", "app": { "pluginId": "draw", "appId": "s.draw.draw@1/*#viewer" }, "documentId": "drawing-2", "spaceId": "space-a", "schema": "s.draw.draw@1" }
+    },
+    {
+      "id": "plain-string-editor-uses-pinned-editor",
+      "actionId": "os.open-artifact",
+      "args": { "artifactRef": "s.draw.draw@1/*", "role": "editor", "documentId": "drawing-3", "spaceId": "space-b", "schema": "s.draw.draw@1" },
+      "expected": { "artifactRef": "s.draw.draw@1/*", "dialect": { "artifactKind": "s.draw.draw", "standard": "1", "subset": "*" }, "role": "editor", "app": { "pluginId": "ink", "appId": "s.draw.draw@1/*#editor" }, "documentId": "drawing-3", "spaceId": "space-b", "schema": "s.draw.draw@1" }
+    },
+    {
+      "id": "surface-ref-supplies-viewer-role",
+      "actionId": "os.open-artifact",
+      "args": { "artifactRef": "s.draw.draw@1/*#viewer", "documentId": "drawing-4", "spaceId": "space-b", "schema": "s.draw.draw@1" },
+      "expected": { "artifactRef": "s.draw.draw@1/*", "dialect": { "artifactKind": "s.draw.draw", "standard": "1", "subset": "*" }, "role": "viewer", "app": { "pluginId": "draw", "appId": "s.draw.draw@1/*#viewer" }, "documentId": "drawing-4", "spaceId": "space-b", "schema": "s.draw.draw@1" }
+    },
+    {
+      "id": "open-with-keeps-explicit-owner-editor",
+      "actionId": "os.open-artifact-with",
+      "args": { "artifactRef": "s.draw.draw@1/*", "role": 1, "pluginId": "draw", "appId": "s.draw.draw@1/*#editor", "documentId": "drawing-5", "spaceId": "space-c", "schema": "s.draw.draw@1" },
+      "expected": { "artifactRef": "s.draw.draw@1/*", "dialect": { "artifactKind": "s.draw.draw", "standard": "1", "subset": "*" }, "role": "editor", "app": { "pluginId": "draw", "appId": "s.draw.draw@1/*#editor" }, "documentId": "drawing-5", "spaceId": "space-c", "schema": "s.draw.draw@1" }
+    },
+    {
+      "id": "open-artifact-keeps-explicit-contributor-editor",
+      "actionId": "os.open-artifact",
+      "args": { "artifactRef": "s.draw.draw@1/*#editor", "role": "editor", "pluginId": "ink", "appId": "s.draw.draw@1/*#editor" },
+      "expected": { "artifactRef": "s.draw.draw@1/*", "dialect": { "artifactKind": "s.draw.draw", "standard": "1", "subset": "*" }, "role": "editor", "app": { "pluginId": "ink", "appId": "s.draw.draw@1/*#editor" } }
+    }
+  ],
+  "invalid": [
+    { "id": "unknown-role", "actionId": "os.open-artifact", "args": { "artifactRef": "s.draw.draw@1/*", "role": "author" }, "error": "opening.invalid-role" },
+    { "id": "surface-role-mismatch", "actionId": "os.open-artifact", "args": { "artifactRef": "s.draw.draw@1/*#viewer", "role": 1 }, "error": "opening.role-mismatch" },
+    { "id": "partial-app-ref", "actionId": "os.open-artifact", "args": { "artifactRef": "s.draw.draw@1/*", "pluginId": "draw" }, "error": "opening.partial-app-ref" },
+    { "id": "mismatched-explicit-app", "actionId": "os.open-artifact-with", "args": { "artifactRef": "s.draw.draw@1/*", "role": "editor", "pluginId": "draw", "appId": "s.draw.other@1/*#editor" }, "error": "opening.app-mismatch" },
+    { "id": "document-without-schema", "actionId": "os.open-artifact", "args": { "artifactRef": "s.draw.draw@1/*", "documentId": "drawing-6", "spaceId": "space-c" }, "error": "opening.partial-document-ref" },
+    { "id": "open-with-without-app", "actionId": "os.open-artifact-with", "args": { "artifactRef": "s.draw.draw@1/*", "role": "viewer" }, "error": "opening.explicit-app-required" },
+    { "id": "malformed-artifact-ref", "actionId": "os.open-artifact", "args": { "artifactRef": "s.draw.draw" }, "error": "opening.invalid-artifact-ref" }
+  ]
+}

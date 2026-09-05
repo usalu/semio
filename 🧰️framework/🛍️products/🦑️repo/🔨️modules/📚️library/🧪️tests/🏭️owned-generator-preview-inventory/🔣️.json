@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "contract": "owned-generator-preview-inventory-v1",
+  "previewLimits": [
+    { "limits": { "maxOutputBytes": 268435456, "timeoutMs": 240000 }, "valid": true },
+    { "limits": { "maxOutputBytes": 0, "timeoutMs": 240000 }, "valid": false },
+    { "limits": { "maxOutputBytes": 536870913, "timeoutMs": 240000 }, "valid": false },
+    { "limits": { "maxOutputBytes": 268435456, "timeoutMs": 0 }, "valid": false },
+    { "limits": { "maxOutputBytes": 268435456, "timeoutMs": 600001 }, "valid": false },
+    { "limits": { "maxOutputBytes": 268435456.5, "timeoutMs": 240000 }, "valid": false },
+    { "limits": { "maxOutputBytes": 268435456, "timeoutMs": 240000, "shell": true }, "valid": false }
+  ],
+  "compilerInputAuthorities": [
+    { "authority": { "kind": "compiler-input-manifest-v1", "manifestOutputPath": "🧰️framework/🔨️modules/🎭️actor/🤖️generated/🧾️manifest.json", "manifestSchemaPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml", "staticAuthorityPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts", "maxFiles": 10000 }, "valid": true },
+    { "authority": { "kind": "compiler-input-manifest-v2", "manifestOutputPath": "🧰️framework/🔨️modules/🎭️actor/🤖️generated/🧾️manifest.json", "manifestSchemaPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml", "staticAuthorityPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts", "maxFiles": 10000 }, "valid": false },
+    { "authority": { "kind": "compiler-input-manifest-v1", "manifestOutputPath": "outside/🧾️manifest.json", "manifestSchemaPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml", "staticAuthorityPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts", "maxFiles": 10000 }, "valid": false },
+    { "authority": { "kind": "compiler-input-manifest-v1", "manifestOutputPath": "🧰️framework/🔨️modules/🎭️actor/🤖️generated/🧾️manifest.json", "manifestSchemaPath": "unowned/🧬️schema.json", "staticAuthorityPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts", "maxFiles": 10000 }, "valid": false },
+    { "authority": { "kind": "compiler-input-manifest-v1", "manifestOutputPath": "🧰️framework/🔨️modules/🎭️actor/🤖️generated/🧾️manifest.json", "manifestSchemaPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml", "staticAuthorityPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts", "maxFiles": 0 }, "valid": false },
+    { "authority": { "kind": "compiler-input-manifest-v1", "manifestOutputPath": "🧰️framework/🔨️modules/🎭️actor/🤖️generated/🧾️manifest.json", "manifestSchemaPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml", "staticAuthorityPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts", "maxFiles": 10000, "fallback": "**/*" }, "valid": false }
+  ],
+  "compilerManifest": {
+    "version": 1,
+    "contractId": "neutral-compiler",
+    "layoutSha256": "003bec62b702577df88c0787f9dc9d0417b8abe78b910e23188f2987b02fdaef",
+    "inputs": [{ "path": "🌱️source/🟦️.ts", "bytes": 14, "sha256": "003bec62b702577df88c0787f9dc9d0417b8abe78b910e23188f2987b02fdaef" }],
+    "outputs": []
+  },
+  "previewRoutes": [
+    { "target": "@neutral/compiler:generate-browser", "previewTarget": "@neutral/compiler:preview-browser", "previewArguments": ["browser", "preview"], "valid": true },
+    { "target": "@neutral/compiler:generate-browser", "previewTarget": "@neutral/other:preview-browser", "previewArguments": ["browser", "preview"], "valid": false },
+    { "target": "@neutral/compiler:generate-browser", "previewTarget": "@neutral/compiler:preview-browser", "previewArguments": [], "valid": false },
+    { "target": "@neutral/compiler:generate-browser", "previewTarget": "@neutral/compiler:preview-browser", "previewArguments": ["browser;echo", "preview"], "valid": false },
+    { "target": "@neutral/compiler:generate-browser", "previewTarget": "@neutral/compiler:preview-browser", "previewArguments": ["browser", "generate"], "valid": false },
+    { "target": "@neutral/compiler:generate-browser", "previewTarget": "@neutral/compiler:generate-browser", "previewArguments": ["browser", "preview"], "valid": false }
+  ],
+  "ownedGeneratorIds": [
+    "actor-typegen",
+    "assets-build",
+    "async-typegen",
+    "dev-distribution-bundle",
+    "framework-manifest",
+    "graph-catalog",
+    "jco-package-adapter",
+    "plugin-registry",
+    "print-latex-tokens",
+    "scale-fixture",
+    "schema-entity-catalog",
+    "shell-typegen",
+    "styling-tokens",
+    "ticket-important-fem-handoff",
+    "ui-axes",
+    "ui-contract",
+    "wgpu-frame-worker"
+  ]
+}

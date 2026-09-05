@@ -13,7 +13,7 @@ id = "os-mcp"
 workspace = true
 
 [lib]
-path = "../../📦️packages/🦀️rust/🦀️.rs"
+path = "./🦀️.rs"
 # 📚️ This crate carries no ``` doc examples (verified: zero fenced blocks in its sources), so the
 # rustdoc pass has nothing to run — it only re-links every dependency rlib. With several sessions
 # rebuilding `semio-framework`/`semio-framework-ui` concurrently in this shared tree, that link
@@ -23,7 +23,7 @@ doctest = false
 
 [[bin]]
 name = "semio-os-mcp"
-path = "../../📦️bin.rs"
+path = "../../🚀️bin.rs"
 
 [dependencies]
 # 🔀️ O1 (drop dyn dispatch, dedyn-fw-os-misc): `#[dyn_enum]`/`dyn_enum_close!` — closes
@@ -34,13 +34,13 @@ semio-framework-dispatch-macros = { path = "../../../../../../🔨️modules/�
 # 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P2-catalog: the ONLY facet in
 # this crate that depends on `semio-framework` is `🗂️catalog` (it compiles `CapabilityDefinition`s
 # FROM `semio_framework::manifest::{PackageDescriptor, PluginManifest, AppDefinition, …}` — real types
-# P3-manifest-schema landed). Every other facet (protocol/transport/handles/audit/bridge/errors/schema)
+# P3-manifest-schema landed). Every other facet (protocol/transport/🐙️handles/audit/bridge/errors/schema)
 # stays framework-free, per D8/`📓️terra-P1a-report.md` §5 — this dependency does not change that.
 semio-framework = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-schema = { path = "../../../../../../🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 # 🎫️ P2-catalog: `LocalizedLabel`/`SurfaceKind` are NOT re-exported at the `semio-framework` crate
-# root (only `IconName`/`Locale`/`Terminology`/`ArtifactDialect` are — `../../📦️📦️packages/🦀️rust/🦀️.rs` lines 15-16, 91-92);
+# root (only `IconName`/`Locale`/`Terminology`/`ArtifactDialect` are — `../../📦️packages/🦀️rust/🦀️.rs` lines 15-16, 91-92);
 # they live in `ui_wgpu::wgpu`, the same crate `🛂️manifest/🦀️.rs` itself imports them from
 # (its own `use ui_wgpu::wgpu::{…, LocalizedLabel, …, SurfaceKind, …};`). `🧫️fixtures` constructs real
 # `AppDefinition`/`WindowKindDefinition` values and needs both directly, so this crate depends on the
@@ -77,7 +77,7 @@ semio-framework-actor = { path = "../../../../../../🔨️modules/🎭️actor/
 # `[target.'cfg(not(target_arch = "wasm32"))'.dependencies]` gate exactly (this crate never targets
 # wasm32 itself — it is a stdio/HTTP server binary — but the gate is kept for consistency with the
 # crate `semio-framework-plugin-host` itself requires it from).
-framework_hash = { path = "../../../../../../🔨️modules/🔢️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+framework_hash = { path = "../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }

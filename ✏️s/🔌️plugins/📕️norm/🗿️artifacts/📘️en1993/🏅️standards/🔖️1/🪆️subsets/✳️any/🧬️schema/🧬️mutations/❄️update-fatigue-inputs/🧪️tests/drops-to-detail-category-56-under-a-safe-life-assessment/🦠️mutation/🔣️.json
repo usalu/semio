@@ -1,7 +1,0 @@
-{
-  "UpdateFatigueInputs": {
-    "new_delta_sigma_mpa": 90.0,
-    "new_fatigue_category": 56,
-    "new_fatigue_method": "safe_life"
-  }
-}

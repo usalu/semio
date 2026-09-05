@@ -1,0 +1,24 @@
+# 🧬️ StepMutation union — discriminated on `mutation`, mirroring the Rust `StepMutation` enum.
+
+input StepSetSnapshotInput { snapshot: StepSnapshotInput! }
+input StepSetFileDescriptionInput { fileDescription: StepFileDescriptionInput! }
+input StepSetFileNameInput { fileName: StepFileNameInput! }
+input StepSetFileSchemaInput { fileSchema: StepFileSchemaInput! }
+input StepInsertEntityInput { index: Int!, entity: StepEntityInput! }
+input StepRemoveEntityInput { id: Int! }
+input StepSetEntityNameInput { id: Int!, name: String! }
+input StepSetEntityArgInput { id: Int!, argIndex: Int!, value: StepValueInput! }
+input StepInsertEntityArgInput { id: Int!, argIndex: Int!, value: StepValueInput! }
+input StepRemoveEntityArgInput { id: Int!, argIndex: Int! }
+
+union StepMutation =
+    StepSetSnapshotInput
+  | StepSetFileDescriptionInput
+  | StepSetFileNameInput
+  | StepSetFileSchemaInput
+  | StepInsertEntityInput
+  | StepRemoveEntityInput
+  | StepSetEntityNameInput
+  | StepSetEntityArgInput
+  | StepInsertEntityArgInput
+  | StepRemoveEntityArgInput

@@ -30,13 +30,13 @@ pub const STEP_ARTIFACT_SCHEMA_ID: &str = "s.stdio.step";
 /// `register_subset_validators()` — step's ONE extra call beyond schema/inferences/languages/codec
 /// — fans out to each of the six `cc1`..`cc6` conformance-class subsets' own `io::register()`,
 /// each of which is exactly one `register_subset_validator(...)` call (confirmed by reading
-/// `🪆️subsets/✳️cc1/🚪️io/🦀️.rs`, identical shape for cc2-cc6). That IS
+/// `🪆️subsets/1️⃣cc1/🚪️io/🦀️.rs`, identical shape for cc2-cc6). That IS
 /// `.subset_validators(...)`'s own job, so it is folded in here rather than left imperative — each
 /// subset's `SubsetValidator` type (`StepCc1Validator`..`StepCc6Validator`) is `pub`, reached via
 /// `subset_validator_entry_of::<T>()` the same way each subset's own `register()` builds its entry,
 /// just combined into one owned `&'static [SubsetValidatorEntry]` slice here since `.subset_
 /// validators()` takes one slice, not six separate calls. `dialect.artifact_kind` on all six is
-/// `"s.stdio.step"` (verified against `🪆️subsets/✳️cc1/🚪️io/🦀️.rs`'s own `DIALECT_SELF`),
+/// `"s.stdio.step"` (verified against `🪆️subsets/1️⃣cc1/🚪️io/🦀️.rs`'s own `DIALECT_SELF`),
 /// matching this declaration's `kind` exactly — the ownership check in `register_all` holds.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

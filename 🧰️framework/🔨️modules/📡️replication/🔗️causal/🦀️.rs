@@ -981,7 +981,7 @@ mod tests {
         display_name: "Causal Add",
         emoji: "➕️",
         aggregate_variant: "CausalAddOp",
-        payload_schema: "🛂️schema.json",
+        payload_schema: "🛂️schema/🔣️.json",
         text_opcode: None,
         binary_tag: None,
         invertibility: crate::mutation::MutationInvertibility::ExplicitMutation,
@@ -1059,21 +1059,13 @@ mod tests {
     }
     //#endregion 🧸️Fixtures
 
-    /// 🌱️ `#[cfg(test)]`-only bridge from a loaded `serde_json::Value` fixture to `DslValue`, so
-    /// this test can keep comparing against the on-disk JSON corpus without `MutationLeafDescriptor`
-    /// needing `serde::Deserialize` (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
-    /// 26/09/01) — same small helper as `📡️wire/🏠️local-interaction/🦀️.rs`'s `json_to_dsl`.
-    fn json_to_dsl(value: serde_json::Value) -> crate::value::DslValue {
-        crate::value::DslValue::from(&value)
-    }
-
     #[test]
     fn causal_add_fixture_has_exact_required_descriptor() {
         use crate::mutation::Mutation;
         let expected: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🧬️mutations/➕️causal-add/🧪️descriptor/🔣️.json")).unwrap();
         assert_eq!(CAUSAL_ADD_DESCRIPTOR.validate(), Ok(()));
         assert_eq!(CausalAddOp::DESCRIPTORS.len(), 1);
-        assert_eq!(crate::value::ToValue::to_value(CausalAddOp { delta: -7 }.descriptor()), json_to_dsl(expected));
+        assert_eq!(serde_json::Value::from(crate::value::ToValue::to_value(CausalAddOp { delta: -7 }.descriptor())), expected);
     }
 
     //#region 🔖️Envelope

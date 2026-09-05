@@ -1,0 +1,13 @@
+# 💡️ Bmp inference schema — BITMAPINFOHEADER-derived raster geometry.
+
+type BmpInference {
+  dimensions: BmpDimensions! @derived
+}
+
+type BmpDimensions {
+  width: Int!
+  height: Int!
+  bitDepth: Int!
+  hasAlpha: Boolean!
+  pixelCount: Int!
+}

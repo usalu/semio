@@ -271,7 +271,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for LayoutAnalyzerAnalysis {
         type Parts = LayoutParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.layout", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.layout.layout", standard: StandardId("1"), subset: SubsetId("*") };
 
         async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
@@ -451,7 +451,7 @@ pub async fn layout_sample_document_json() -> String {
 }
 
 /// 🎨️ Formats an optional RGBA color as a comma-separated text field value; two consumers
-/// (`📌️panels/🔍️inspection` reads it, `🎮️commands/✏️add-frame` parses it back via `text_to_rgba`).
+/// (`📌️panels/🔍️inspection` reads it, `🎮️commands/🖼️add-frame` parses it back via `text_to_rgba`).
 pub async fn rgba_to_text(color: &Option<[f32; 4]>) -> String {
     color.map(|channels| channels.iter().map(|channel| channel.to_string()).collect::<Vec<_>>().join(", ")).unwrap_or_default()
 }

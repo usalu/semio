@@ -1,3 +1,0 @@
-//! 💾️ Binary representation codec surface for `s.stdio.semio.flow` (snapshot) — protocol include.
-pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
-pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");

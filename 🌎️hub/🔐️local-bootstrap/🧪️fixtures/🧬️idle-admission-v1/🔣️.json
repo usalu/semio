@@ -1,7 +1,0 @@
-{
-  "schema": "semio.hub.local-bootstrap-idle-admission/v1",
-  "exchangeDeadlineMs": 15000,
-  "idleBeforeAdmissionMs": 15001,
-  "frameHex": "000000027b7d",
-  "payloadHex": "7b7d"
-}

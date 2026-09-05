@@ -1,7 +1,7 @@
 use super::*;
 
 //#region 🧪️PagedStorageLaws
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap() }
 
 #[test]
 fn retained_fixed_list_pages_preserve_order_without_all_n_allocation() {

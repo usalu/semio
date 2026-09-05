@@ -7,7 +7,7 @@
 //!
 //! Its `⚙️engine` B-Rep geometry-transfer types (`Vec3`/`Aabb`/`ParamDomain`/`FaceGroup`/
 //! `MeshTransfer`/`PointClassification`) moved OUT in ticket
-//! 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME wave 1 (W1-A): the stdio `✳️brep` kernel now owns
+//! 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME wave 1 (W1-A): the stdio `🧊️brep` kernel now owns
 //! its own neutral contract (`semio_s_plugin_stdio::…::subsets::brep::schema::engine::contract`)
 //! instead of reaching back across this crate for it — this crate had zero production consumers
 //! of those types left of its own (confirmed by repo-wide grep before the move).

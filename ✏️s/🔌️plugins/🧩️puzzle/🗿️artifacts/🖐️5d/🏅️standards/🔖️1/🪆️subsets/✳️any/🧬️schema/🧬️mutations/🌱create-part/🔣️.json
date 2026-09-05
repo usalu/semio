@@ -5,7 +5,7 @@
   "displayName": "Create Part",
   "emoji": "🌱",
   "aggregateVariant": "CreatePart",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "create-part",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

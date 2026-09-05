@@ -5,7 +5,7 @@
   "displayName": "Add Representation Tag",
   "emoji": "🔖",
   "aggregateVariant": "AddRepresentationTag",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "add-representation-tag",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

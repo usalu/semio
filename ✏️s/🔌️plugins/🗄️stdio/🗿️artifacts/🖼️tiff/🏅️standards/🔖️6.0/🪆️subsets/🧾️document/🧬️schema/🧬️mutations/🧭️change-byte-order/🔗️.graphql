@@ -1,0 +1,3 @@
+# 🧬️ change-byte-order/ChangeByteOrder
+scalar ChangeByteOrderMutationValue
+input ChangeByteOrderMutation { byteOrder: ChangeByteOrderMutationValue! }

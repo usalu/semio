@@ -9,7 +9,7 @@
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
-import { PropertyValueColumnContext } from "../🪵️Tree/🟦️.tsx";
+import { PropertyValueColumnContext } from "../🌳️Tree/🟦️.tsx";
 import { formatNumber } from "../✏️Input/🟦️.tsx";
 import { borderNormalClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { uiFormControlBrowserDefaultProps } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";

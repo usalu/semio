@@ -3,8 +3,9 @@ use serde::{Deserialize, Serialize};
 
 pub type Counter = i64;
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(deny_unknown_fields)]
+#[value(deny_unknown_fields)]
 pub struct CounterDiff { pub deltas: Vec<i64> }
 
 impl MutationDiff<Counter> for CounterDiff {
@@ -34,7 +35,7 @@ pub(super) fn foreign_step_fixture(n: u8) -> ForeignStep {
 }
 
 fn assert_counter_leaf_descriptor<T: crate::os_spr::MutationLeaf>(descriptor: &str) {
-    assert_eq!(serde_json::to_value(T::DESCRIPTOR).unwrap(), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&crate::os_pack::json::to_json_string(&T::DESCRIPTOR)).unwrap(), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
     assert!(T::DESCRIPTOR.validate().is_ok());
 }
 
@@ -52,6 +53,9 @@ mod tests {
             let mut wire = row["payload"].clone();
             wire["operation"] = row["operation"].clone();
             let op = serde_json::from_value::<CounterMutation>(wire.clone()).unwrap();
+            let value_op: CounterMutation = crate::os_pack::json::from_json_str(&wire.to_string()).unwrap();
+            assert_eq!(value_op, op, "first-party and independent serde parse the same neutral mutation");
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&crate::os_pack::json::to_json_string(&op)).unwrap(), wire);
             assert!(op.descriptor().validate().is_ok());
             assert_eq!(serde_json::from_value::<CounterMutation>(serde_json::to_value(&op).unwrap()).unwrap(), op);
             assert_eq!(CounterMutation::parse_op(&op.print_op()).unwrap(), op);
@@ -64,13 +68,16 @@ mod tests {
             assert_eq!(current, base);
             let mut unknown = wire.clone();
             unknown["unknown"] = serde_json::json!(true);
+            assert!(crate::os_pack::json::from_json_str::<CounterMutation>(&unknown.to_string()).is_err());
             assert!(serde_json::from_value::<CounterMutation>(unknown).is_err());
             for key in row["payload"].as_object().unwrap().keys() {
                 let mut missing = wire.clone();
                 missing.as_object_mut().unwrap().remove(key);
+                assert!(crate::os_pack::json::from_json_str::<CounterMutation>(&missing.to_string()).is_err());
                 assert!(serde_json::from_value::<CounterMutation>(missing).is_err());
                 for value in [serde_json::json!(null), serde_json::json!(true), serde_json::json!("1"), serde_json::json!(1e21)] {
                     let mut invalid = wire.clone(); invalid[key] = value;
+                    assert!(crate::os_pack::json::from_json_str::<CounterMutation>(&invalid.to_string()).is_err());
                     assert!(serde_json::from_value::<CounterMutation>(invalid).is_err());
                 }
             }
@@ -87,6 +94,8 @@ mod tests {
             if row["error"] == true { assert_eq!(result.unwrap_err().code, "mutation.apply.invariant"); continue; }
             let expected = row["after"].as_str().unwrap().parse::<i64>().unwrap();
             assert_eq!(result, Ok(expected));
+            assert_eq!(crate::os_pack::json::from_json_str::<CounterDiff>(&crate::os_pack::json::to_json_string(&diff)).unwrap().apply(&base), Ok(expected));
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&crate::os_pack::json::to_json_string(&diff)).unwrap(), serde_json::to_value(&diff).unwrap());
             assert_eq!(serde_json::from_value::<CounterDiff>(serde_json::to_value(&diff).unwrap()).unwrap().apply(&base), Ok(expected));
             let mut joined = CounterDiff::default();
             for delta in &diff.deltas { joined.absorb(CounterDiff { deltas: vec![*delta] }); }

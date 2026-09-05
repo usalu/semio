@@ -1,0 +1,437 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own mutation-catalog contribution to the repository test platform -- registers the mesh slice of the glTF 2.0 mutation vocabulary (moved here from the artifact-level ♾️any catalog by shard A6, ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). The shared whole-document io/oracle/generator machinery, and every mutation's own manifest/fixture record, stay centralized at the artifact's ♾️any substrate; this file exists so the mesh vocabulary directory has a claiming catalog of its own, per `unregistered-mutation-vocabulary`.",
+  "mutationCatalogs": [
+    {
+      "id": "gltf-2-0-mesh",
+      "capability": "gltf-2-0-mutate",
+      "standardDirectoryName": "🔖️2.0",
+      "subsetDirectoryName": "🕸️mesh",
+      "vectors": [
+        {
+          "mutationId": "bind-morph-target-attribute",
+          "sourceMutationDirectoryName": "🔗️bind",
+          "mutationDirectoryName": "🔗️bind",
+          "scenarios": [
+            {
+              "id": "binds-position-inside-the-first-morph-target",
+              "directoryName": "🧪️binds-position-inside-the-first-morph-target"
+            }
+          ]
+        },
+        {
+          "mutationId": "bind-primitive-attribute",
+          "sourceMutationDirectoryName": "🔗️bind",
+          "mutationDirectoryName": "🔗️bind",
+          "scenarios": [
+            {
+              "id": "binds-texcoord-0-to-the-second-accessor",
+              "directoryName": "🧪️binds-texcoord-0-to-the-second-accessor"
+            }
+          ]
+        },
+        {
+          "mutationId": "bind-primitive-indices",
+          "sourceMutationDirectoryName": "🔗️bind",
+          "mutationDirectoryName": "🔗️bind",
+          "scenarios": [
+            {
+              "id": "binds-the-scalar-index-accessor-to-the-primitive",
+              "directoryName": "🧪️binds-the-scalar-index-accessor-to-the-primitive"
+            }
+          ]
+        },
+        {
+          "mutationId": "bind-primitive-material",
+          "sourceMutationDirectoryName": "🔗️bind",
+          "mutationDirectoryName": "🔗️bind",
+          "scenarios": [
+            {
+              "id": "binds-the-steel-material-to-the-primitive",
+              "directoryName": "🧪️binds-the-steel-material-to-the-primitive"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-mesh-extension-data",
+          "sourceMutationDirectoryName": "🧩️change-extensions",
+          "mutationDirectoryName": "🧩️change-extensions",
+          "scenarios": [
+            {
+              "id": "attaches-an-unlit-extension-object-to-the-mesh",
+              "directoryName": "🧪️attaches-an-unlit-extension-object-to-the-mesh"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-mesh-extra-data",
+          "sourceMutationDirectoryName": "📝️change-extras",
+          "mutationDirectoryName": "📝️change-extras",
+          "scenarios": [
+            {
+              "id": "attaches-an-author-extras-object-to-the-mesh",
+              "directoryName": "🧪️attaches-an-author-extras-object-to-the-mesh"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-mesh-morph-weights",
+          "sourceMutationDirectoryName": "⚖️change-weights",
+          "mutationDirectoryName": "⚖️change-weights",
+          "scenarios": [
+            {
+              "id": "sets-the-two-mesh-morph-weights-to-a-half-and-a-quarter",
+              "directoryName": "🧪️sets-the-two-mesh-morph-weights-to-a-half-and-a-quarter"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-mesh-name",
+          "sourceMutationDirectoryName": "🏷️rename",
+          "mutationDirectoryName": "🏷️rename",
+          "scenarios": [
+            {
+              "id": "renames-the-hull-mesh-to-deck",
+              "directoryName": "🧪️renames-the-hull-mesh-to-deck"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-primitive-extension-data",
+          "sourceMutationDirectoryName": "🧩️change-extensions",
+          "mutationDirectoryName": "🧩️change-extensions",
+          "scenarios": [
+            {
+              "id": "attaches-a-draco-extension-object-to-the-primitive",
+              "directoryName": "🧪️attaches-a-draco-extension-object-to-the-primitive"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-primitive-extra-data",
+          "sourceMutationDirectoryName": "📝️change-extras",
+          "mutationDirectoryName": "📝️change-extras",
+          "scenarios": [
+            {
+              "id": "attaches-a-lod-extras-object-to-the-primitive",
+              "directoryName": "🧪️attaches-a-lod-extras-object-to-the-primitive"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-primitive-topology-mode",
+          "sourceMutationDirectoryName": "📐️change-topology",
+          "mutationDirectoryName": "📐️change-topology",
+          "scenarios": [
+            {
+              "id": "switches-primitive-from-triangles-to-triangle-strip",
+              "directoryName": "🧪️switches-primitive-from-triangles-to-triangle-strip"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-accessor",
+          "sourceMutationDirectoryName": "🌱️create",
+          "mutationDirectoryName": "🌱️create",
+          "scenarios": [
+            {
+              "id": "inserts-a-scalar-index-accessor-ahead-of-the-position-accessor",
+              "directoryName": "🧪️inserts-a-scalar-index-accessor-ahead-of-the-position-accessor"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-mesh",
+          "sourceMutationDirectoryName": "🌱️create",
+          "mutationDirectoryName": "🌱️create",
+          "scenarios": [
+            {
+              "id": "inserts-an-empty-mesh-ahead-of-the-hull-mesh",
+              "directoryName": "🧪️inserts-an-empty-mesh-ahead-of-the-hull-mesh"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-morph-target",
+          "sourceMutationDirectoryName": "🌱️create",
+          "mutationDirectoryName": "🌱️create",
+          "scenarios": [
+            {
+              "id": "inserts-an-empty-morph-target-ahead-of-the-existing-one",
+              "directoryName": "🧪️inserts-an-empty-morph-target-ahead-of-the-existing-one"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-primitive",
+          "sourceMutationDirectoryName": "🌱️create",
+          "mutationDirectoryName": "🌱️create",
+          "scenarios": [
+            {
+              "id": "inserts-an-empty-primitive-ahead-of-the-position-primitive",
+              "directoryName": "🧪️inserts-an-empty-primitive-ahead-of-the-position-primitive"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-accessor",
+          "sourceMutationDirectoryName": "🗑️delete",
+          "mutationDirectoryName": "🗑️delete",
+          "scenarios": [
+            {
+              "id": "removes-the-index-accessor-and-renumbers-the-position-attribute",
+              "directoryName": "🧪️removes-the-index-accessor-and-renumbers-the-position-attribute"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-mesh",
+          "sourceMutationDirectoryName": "🗑️delete",
+          "mutationDirectoryName": "🗑️delete",
+          "scenarios": [
+            {
+              "id": "removes-the-hull-mesh-and-renumbers-the-node-binding",
+              "directoryName": "🧪️removes-the-hull-mesh-and-renumbers-the-node-binding"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-morph-target",
+          "sourceMutationDirectoryName": "🗑️delete",
+          "mutationDirectoryName": "🗑️delete",
+          "scenarios": [
+            {
+              "id": "removes-the-first-of-two-morph-targets",
+              "directoryName": "🧪️removes-the-first-of-two-morph-targets"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-primitive",
+          "sourceMutationDirectoryName": "🗑️delete",
+          "mutationDirectoryName": "🗑️delete",
+          "scenarios": [
+            {
+              "id": "removes-the-trailing-empty-primitive",
+              "directoryName": "🧪️removes-the-trailing-empty-primitive"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-accessor",
+          "sourceMutationDirectoryName": "🚚️move",
+          "mutationDirectoryName": "🚚️move",
+          "scenarios": [
+            {
+              "id": "swaps-the-position-and-texcoord-accessors",
+              "directoryName": "🧪️swaps-the-position-and-texcoord-accessors"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-mesh",
+          "sourceMutationDirectoryName": "🚚️move",
+          "mutationDirectoryName": "🚚️move",
+          "scenarios": [
+            {
+              "id": "swaps-the-hull-and-deck-meshes",
+              "directoryName": "🧪️swaps-the-hull-and-deck-meshes"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-morph-target",
+          "sourceMutationDirectoryName": "🚚️move",
+          "mutationDirectoryName": "🚚️move",
+          "scenarios": [
+            {
+              "id": "swaps-the-two-morph-targets",
+              "directoryName": "🧪️swaps-the-two-morph-targets"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-morph-target-attribute",
+          "sourceMutationDirectoryName": "🚚️move",
+          "mutationDirectoryName": "🚚️move",
+          "scenarios": [
+            {
+              "id": "moves-position-behind-normal-inside-the-morph-target",
+              "directoryName": "🧪️moves-position-behind-normal-inside-the-morph-target"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-primitive",
+          "sourceMutationDirectoryName": "🚚️move",
+          "mutationDirectoryName": "🚚️move",
+          "scenarios": [
+            {
+              "id": "moves-the-position-primitive-behind-the-strip-primitive",
+              "directoryName": "🧪️moves-the-position-primitive-behind-the-strip-primitive"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-primitive-attribute",
+          "sourceMutationDirectoryName": "🚚️move",
+          "mutationDirectoryName": "🚚️move",
+          "scenarios": [
+            {
+              "id": "moves-position-behind-normal-in-the-attribute-map",
+              "directoryName": "🧪️moves-position-behind-normal-in-the-attribute-map"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-accessors",
+          "sourceMutationDirectoryName": "🔀️reorder",
+          "mutationDirectoryName": "🔀️reorder",
+          "scenarios": [
+            {
+              "id": "flips-the-two-accessors-and-remaps-both-attributes",
+              "directoryName": "🧪️flips-the-two-accessors-and-remaps-both-attributes"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-meshs",
+          "sourceMutationDirectoryName": "🔀️reorder",
+          "mutationDirectoryName": "🔀️reorder",
+          "scenarios": [
+            {
+              "id": "flips-the-hull-and-deck-meshes",
+              "directoryName": "🧪️flips-the-hull-and-deck-meshes"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-morph-target-attributes",
+          "sourceMutationDirectoryName": "🔀️reorder",
+          "mutationDirectoryName": "🔀️reorder",
+          "scenarios": [
+            {
+              "id": "orders-normal-before-position-in-morph-target",
+              "directoryName": "🧪️orders-normal-before-position-in-morph-target"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-morph-targets",
+          "sourceMutationDirectoryName": "🔀️reorder",
+          "mutationDirectoryName": "🔀️reorder",
+          "scenarios": [
+            {
+              "id": "flips-the-two-morph-targets",
+              "directoryName": "🧪️flips-the-two-morph-targets"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-primitive-attributes",
+          "sourceMutationDirectoryName": "🔀️reorder",
+          "mutationDirectoryName": "🔀️reorder",
+          "scenarios": [
+            {
+              "id": "flips-normal-ahead-of-position-in-the-attribute-map",
+              "directoryName": "🧪️flips-normal-ahead-of-position-in-the-attribute-map"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-primitives",
+          "sourceMutationDirectoryName": "🔀️reorder",
+          "mutationDirectoryName": "🔀️reorder",
+          "scenarios": [
+            {
+              "id": "flips-the-strip-primitive-ahead-of-the-position-primitive",
+              "directoryName": "🧪️flips-the-strip-primitive-ahead-of-the-position-primitive"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-morph-target-attribute",
+          "sourceMutationDirectoryName": "✂️unbind",
+          "mutationDirectoryName": "✂️unbind",
+          "scenarios": [
+            {
+              "id": "unbinds-normal-from-the-first-morph-target",
+              "directoryName": "🧪️unbinds-normal-from-the-first-morph-target"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-primitive-attribute",
+          "sourceMutationDirectoryName": "✂️unbind",
+          "mutationDirectoryName": "✂️unbind",
+          "scenarios": [
+            {
+              "id": "unbinds-normal-from-the-primitive",
+              "directoryName": "🧪️unbinds-normal-from-the-primitive"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-primitive-indices",
+          "sourceMutationDirectoryName": "✂️unbind",
+          "mutationDirectoryName": "✂️unbind",
+          "scenarios": [
+            {
+              "id": "returns-the-primitive-to-non-indexed-drawing",
+              "directoryName": "🧪️returns-the-primitive-to-non-indexed-drawing"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-primitive-material",
+          "sourceMutationDirectoryName": "✂️unbind",
+          "mutationDirectoryName": "✂️unbind",
+          "scenarios": [
+            {
+              "id": "returns-the-primitive-to-the-default-material",
+              "directoryName": "🧪️returns-the-primitive-to-the-default-material"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "bind-morph-target-attribute",
+        "bind-primitive-attribute",
+        "bind-primitive-indices",
+        "bind-primitive-material",
+        "change-mesh-extension-data",
+        "change-mesh-extra-data",
+        "change-mesh-morph-weights",
+        "change-mesh-name",
+        "change-primitive-extension-data",
+        "change-primitive-extra-data",
+        "change-primitive-topology-mode",
+        "create-accessor",
+        "create-mesh",
+        "create-morph-target",
+        "create-primitive",
+        "delete-accessor",
+        "delete-mesh",
+        "delete-morph-target",
+        "delete-primitive",
+        "move-accessor",
+        "move-mesh",
+        "move-morph-target",
+        "move-morph-target-attribute",
+        "move-primitive",
+        "move-primitive-attribute",
+        "reorder-accessors",
+        "reorder-meshs",
+        "reorder-morph-target-attributes",
+        "reorder-morph-targets",
+        "reorder-primitive-attributes",
+        "reorder-primitives",
+        "unbind-morph-target-attribute",
+        "unbind-primitive-attribute",
+        "unbind-primitive-indices",
+        "unbind-primitive-material"
+      ]
+    }
+  ]
+}

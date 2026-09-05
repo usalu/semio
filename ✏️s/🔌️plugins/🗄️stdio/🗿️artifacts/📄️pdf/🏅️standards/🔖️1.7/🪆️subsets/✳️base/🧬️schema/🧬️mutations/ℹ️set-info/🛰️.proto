@@ -1,7 +1,0 @@
-syntax = "proto3";
-package semio.s_stdio_pdf_1_7.mutation.set_info;
-
-// ℹ️ Direct set-info protobuf payload.
-message SetInfoMutation {
-  bytes info = 1;
-}

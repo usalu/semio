@@ -1,0 +1,5 @@
+{
+  "mutation": "renameStep",
+  "id": "step-basics",
+  "new_title": "Basics"
+}

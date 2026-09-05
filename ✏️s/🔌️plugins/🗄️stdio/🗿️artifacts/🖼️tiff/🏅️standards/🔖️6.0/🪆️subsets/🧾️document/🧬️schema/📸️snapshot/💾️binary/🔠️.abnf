@@ -1,0 +1,31 @@
+; abnf stdio.tiff snapshot (binary) — the shared `.semio` binary envelope wrapping the REAL
+; TIFF 6.0 file bytes (store::semio_format::wrap_binary; magic/token-len/token per that codec,
+; byte-order mark + IFD chain for the payload, TIFF6 §2).
+document       = envelope-magic token-len token tiff-file
+envelope-magic = %x89 %x53 %x45 %x4D %x0D %x0A %x1A %x0A   ; 8 bytes: 0x89 "SEM" CR LF SUB LF
+token-len      = 4OCTET                                     ; u32, little-endian
+token          = 19OCTET                                    ; UTF-8 "stdio.tiff.pack v1"
+
+; the real TIFF6 §2 file: byte-order mark, magic 42, first-IFD offset, then the whole
+; next-IFD-offset chain. Every multi-byte field after byte-order-mark uses THAT byte order.
+tiff-file      = byte-order-mark magic-42 first-ifd-offset 1*ifd
+byte-order-mark = %x49.49 / %x4D.4D                          ; "II" little-endian / "MM" big-endian
+magic-42       = 2OCTET
+first-ifd-offset = 4OCTET
+
+; one Image File Directory: entry count, N x 12-byte entries, next-IFD offset (0 = none).
+; TIFF6 §2 requires entries sorted ascending by tag.
+ifd            = entry-count *ifd-entry next-ifd-offset
+entry-count    = 2OCTET
+next-ifd-offset = 4OCTET
+
+; one tag/type/count/value-or-offset entry (TIFF6 §2 Table 2). `value-or-offset`'s real
+; interpretation is generic and count/type-dependent — see ../💾️binary/🥋️.ksy's
+; `element_size` table doc for the full inline-vs-offset rule; ABNF can't express that
+; conditional shape, so this stays the honest structural framing (tag/type/count fixed-size,
+; value bytes genuinely variable-interpretation).
+ifd-entry      = tag field-type value-count value-or-offset
+tag            = 2OCTET
+field-type     = 2OCTET                                     ; 1 Byte .. 12 Double (TIFF6 core table)
+value-count    = 4OCTET
+value-or-offset = 4OCTET

@@ -1,0 +1,24 @@
+dialect protocol
+protocol stdio.semio.cad.mutations
+version 1
+schema stdio.semio.cad
+start body
+framing record
+
+# cad wave: REAL binary op frame, replacing the old `print_op().into_bytes()` text-as-binary
+# shortcut (`🧬️mutations/🦀️.rs`'s old `OpBinary::encode_op`). `SemioCadMutation` is a
+# genuine data-carrying enum whose variants embed nested `CadLayer`/`CadBlock`/`CadEntityRecord`/
+# `CadEntity`/`SemioCadSnapshot` payloads — no `dsl::DslField` impl exists for the tagged
+# `CadEntity` enum (hand-rolled per this subset's own `🔺️diff`/`🧬️mutations` convention), so the
+# generic derive-based `format u8 | ordinal varint | record body` layout doesn't apply. Handcrafted
+# instead: `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (the `SemioCadMutation` variant
+# ordinal, `🧬️mutations/🦀️.rs`'s `OP_KEYWORDS`/`variant_ordinal`, same 0-15 ordering as
+# `parse_cad_mutation`'s keyword match) as two REAL fixed fields, then the variant's own
+# `key=value ...` argument payload as one opaque trailing `bytes` chain — the same honest boundary
+# the sibling `../../🔺️diff/💾️binary/📡️.protocol.semio` uses
+# (`protocol-array-of-records`/`protocol-prim-ref-recursion`, per the recipe's gap table).
+header fixed 2
+field format u8
+field tag u8
+
+chain payload bytes

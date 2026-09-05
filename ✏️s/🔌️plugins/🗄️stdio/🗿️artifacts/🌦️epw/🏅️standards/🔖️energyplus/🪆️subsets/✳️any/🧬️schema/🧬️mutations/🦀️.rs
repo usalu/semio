@@ -15,11 +15,11 @@ use protocol::{Mutation, OpText};
 /// `EpwSnapshot`/`EpwLocation`/`EpwDataPeriods`, none of which implement `dsl::DslField`; wiring
 /// that up is out of this ticket's scope, matching csv's/gif's own documented hand-roll rationale).
 //#region 🔖️Leaves
-#[path = "📄set-snapshot/🦀️.rs"]
+#[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "📍set-location/🦀️.rs"]
 pub mod set_location;
-#[path = "🌡set-design-conditions/🦀️.rs"]
+#[path = "🌡️set-design-conditions/🦀️.rs"]
 pub mod set_design_conditions;
 #[path = "📆set-typical-extreme-periods/🦀️.rs"]
 pub mod set_typical_extreme_periods;
@@ -29,7 +29,7 @@ pub mod set_ground_temperatures;
 pub mod set_holidays_dst;
 #[path = "💬set-comments1/🦀️.rs"]
 pub mod set_comments1;
-#[path = "🗨set-comments2/🦀️.rs"]
+#[path = "🗨️set-comments2/🦀️.rs"]
 pub mod set_comments2;
 #[path = "📅set-data-periods/🦀️.rs"]
 pub mod set_data_periods;
@@ -37,7 +37,7 @@ pub mod set_data_periods;
 pub mod insert_record;
 #[path = "📤remove-record/🦀️.rs"]
 pub mod remove_record;
-#[path = "🎚set-record-field/🦀️.rs"]
+#[path = "🎚️set-record-field/🦀️.rs"]
 pub mod set_record_field;
 //#endregion 🔖️Leaves
 
@@ -596,7 +596,7 @@ mod tests {
         let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
         assert_eq!(from_enum, KINDS, "KINDS must list every EpwMutation variant, in declaration order");
 
-        let manifest = include_str!("../../🧪️oracle/🔣️.json");
+        let manifest = include_str!("../../🔮️oracle/🔣️.json");
         let needle = "\"kinds\": [";
         let start = manifest.find(needle).expect("manifest declares a kinds array") + needle.len();
         let end = start + manifest[start..].find(']').expect("kinds array is closed");
@@ -616,7 +616,7 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📄set-snapshot/🧪️tests/warms-the-second-hour-and-restamps-the-station-city/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/🐼️warms-the-second-hour-and-restamps-the-station-city/🦀️.rs"]
     mod tests_set_snapshot_warms_the_second_hour_and_restamps_the_station_city;
 }
 //#endregion 🧪️FixtureTests

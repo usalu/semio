@@ -149,7 +149,7 @@ pub mod artifacts {
                                             pub mod v1_4 {
                                                 #[path = "."]
                                                 pub mod any {
-                                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️.rs"]
+                                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🌳️pdf/🔖️1.4/✳️any/🦀️.rs"]
                                                     mod component;
                                                     pub use component::*;
                                                 }
@@ -197,7 +197,7 @@ pub mod artifacts {
                                             pub mod v_r12 {
                                                 #[path = "."]
                                                 pub mod any {
-                                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖊️dxf/🔖️r12/✳️any/🦀️.rs"]
+                                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📐️dxf/🔖️r12/✳️any/🦀️.rs"]
                                                     mod component;
                                                     pub use component::*;
                                                 }
@@ -230,7 +230,7 @@ pub mod artifacts {
                                             pub mod v1_4 {
                                                 #[path = "."]
                                                 pub mod any {
-                                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️.rs"]
+                                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🌳️pdf/🔖️1.4/✳️any/🦀️.rs"]
                                                     mod component;
                                                     pub use component::*;
                                                 }
@@ -278,7 +278,7 @@ pub mod artifacts {
                                             pub mod v_r12 {
                                                 #[path = "."]
                                                 pub mod any {
-                                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dxf/🔖️r12/✳️any/🦀️.rs"]
+                                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📐️dxf/🔖️r12/✳️any/🦀️.rs"]
                                                     mod component;
                                                     pub use component::*;
                                                 }
@@ -297,50 +297,50 @@ pub mod artifacts {
                             pub mod mutations {
                                 #[path = "."]
                                 pub mod create_layer {
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️structure/🧬️schema/🧬️mutations/🌱create-layer/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🌱create-layer/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️structure/🧬️schema/🧬️mutations/🌱create-layer/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🌱create-layer/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️structure/🧬️schema/🧬️mutations/🌱create-layer/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🌱create-layer/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️structure/🧬️schema/🧬️mutations/🌱create-layer/🧪️tests/appends-shape-b-at-the-root/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🌱create-layer/🧪️tests/🍋️appends-shape-b-at-the-root/🦀️.rs"]
                                     mod tests_appends_shape_b_at_the_root;
                                 }
                                 #[path = "."]
                                 pub mod delete_layer {
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️structure/🧬️schema/🧬️mutations/🗑️delete-layer/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🗑️delete-layer/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️structure/🧬️schema/🧬️mutations/🗑️delete-layer/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🗑️delete-layer/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️structure/🧬️schema/🧬️mutations/🗑️delete-layer/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🗑️delete-layer/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️structure/🧬️schema/🧬️mutations/🗑️delete-layer/🧪️tests/removes-group-a-with-its-child/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🗑️delete-layer/🧪️tests/🚫️removes-group-a-with-its-child/🦀️.rs"]
                                     mod tests_removes_group_a_with_its_child;
                                 }
                                 #[path = "."]
                                 pub mod duplicate_layer {
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️structure/🧬️schema/🧬️mutations/🧬️duplicate-layer/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🧬️duplicate-layer/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️structure/🧬️schema/🧬️mutations/🧬️duplicate-layer/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🧬️duplicate-layer/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️structure/🧬️schema/🧬️mutations/🧬️duplicate-layer/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🧬️duplicate-layer/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️structure/🧬️schema/🧬️mutations/🧬️duplicate-layer/🧪️tests/rejects-a-missing-source-layer/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🧬️duplicate-layer/🧪️tests/🚫️rejects-a-missing-source-layer/🦀️.rs"]
                                     mod tests_rejects_a_missing_source_layer;
                                 }
                                 #[path = "."]
                                 pub mod reorder_layer {
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️structure/🧬️schema/🧬️mutations/🔃reorder-layer/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🔃reorder-layer/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🧪️tests/moves-shape-a-above-shape-b/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🧪️tests/🍎️moves-shape-a-above-shape-b/🦀️.rs"]
                                     mod tests_moves_shape_a_above_shape_b;
                                 }
                             }
@@ -354,50 +354,50 @@ pub mod artifacts {
                             pub mod mutations {
                                 #[path = "."]
                                 pub mod replace_layer_stroke {
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️style/🧬️schema/🧬️mutations/♻️replace-layer-stroke/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/♻️replace-layer-stroke/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️style/🧬️schema/🧬️mutations/♻️replace-layer-stroke/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/♻️replace-layer-stroke/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️style/🧬️schema/🧬️mutations/♻️replace-layer-stroke/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/♻️replace-layer-stroke/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️style/🧬️schema/🧬️mutations/♻️replace-layer-stroke/🧪️tests/adds-a-dashed-stroke/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/♻️replace-layer-stroke/🧪️tests/🟤️adds-a-dashed-stroke/🦀️.rs"]
                                     mod tests_adds_a_dashed_stroke;
                                 }
                                 #[path = "."]
                                 pub mod replace_layer_fill {
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️style/🧬️schema/🧬️mutations/🔁replace-layer-fill/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🔁replace-layer-fill/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️style/🧬️schema/🧬️mutations/🔁replace-layer-fill/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🔁replace-layer-fill/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️style/🧬️schema/🧬️mutations/🔁replace-layer-fill/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🔁replace-layer-fill/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️style/🧬️schema/🧬️mutations/🔁replace-layer-fill/🧪️tests/solid-to-linear-gradient/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🔁replace-layer-fill/🧪️tests/🌾️solid-to-linear-gradient/🦀️.rs"]
                                     mod tests_solid_to_linear_gradient;
                                 }
                                 #[path = "."]
                                 pub mod set_layer_blend_mode {
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️style/🧬️schema/🧬️mutations/🖌️set-layer-blend-mode/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🖌️set-layer-blend-mode/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️style/🧬️schema/🧬️mutations/🖌️set-layer-blend-mode/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🖌️set-layer-blend-mode/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️style/🧬️schema/🧬️mutations/🖌️set-layer-blend-mode/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🖌️set-layer-blend-mode/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️style/🧬️schema/🧬️mutations/🖌️set-layer-blend-mode/🧪️tests/normal-to-multiply/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🖌️set-layer-blend-mode/🧪️tests/🐯️normal-to-multiply/🦀️.rs"]
                                     mod tests_normal_to_multiply;
                                 }
                                 #[path = "."]
                                 pub mod set_layer_opacity {
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️style/🧬️schema/🧬️mutations/🌫️set-layer-opacity/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🌫️set-layer-opacity/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️style/🧬️schema/🧬️mutations/🌫️set-layer-opacity/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🌫️set-layer-opacity/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️style/🧬️schema/🧬️mutations/🌫️set-layer-opacity/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🌫️set-layer-opacity/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️style/🧬️schema/🧬️mutations/🌫️set-layer-opacity/🧪️tests/dims-shape-a-to-half/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🌫️set-layer-opacity/🧪️tests/🐼️dims-shape-a-to-half/🦀️.rs"]
                                     mod tests_dims_shape_a_to_half;
                                 }
                             }
@@ -411,38 +411,38 @@ pub mod artifacts {
                             pub mod mutations {
                                 #[path = "."]
                                 pub mod update_layer_transform {
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️transform/🧬️schema/🧬️mutations/🔄️update-layer-transform/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔄️update-layer-transform/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️transform/🧬️schema/🧬️mutations/🔄️update-layer-transform/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔄️update-layer-transform/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️transform/🧬️schema/🧬️mutations/🔄️update-layer-transform/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔄️update-layer-transform/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️transform/🧬️schema/🧬️mutations/🔄️update-layer-transform/🧪️tests/translates-and-scales-shape-a/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔄️update-layer-transform/🧪️tests/🔴️translates-and-scales-shape-a/🦀️.rs"]
                                     mod tests_translates_and_scales_shape_a;
                                 }
                                 #[path = "."]
                                 pub mod set_layer_boolean_operation {
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️transform/🧬️schema/🧬️mutations/🔀set-layer-boolean-operation/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔀set-layer-boolean-operation/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️transform/🧬️schema/🧬️mutations/🔀set-layer-boolean-operation/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔀set-layer-boolean-operation/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️transform/🧬️schema/🧬️mutations/🔀set-layer-boolean-operation/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔀set-layer-boolean-operation/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️transform/🧬️schema/🧬️mutations/🔀set-layer-boolean-operation/🧪️tests/union-to-subtract/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔀set-layer-boolean-operation/🧪️tests/🎈️union-to-subtract/🦀️.rs"]
                                     mod tests_union_to_subtract;
                                 }
                                 #[path = "."]
                                 pub mod update_layer_trace_params {
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️transform/🧬️schema/🧬️mutations/🔧update-layer-trace-params/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔧update-layer-trace-params/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️transform/🧬️schema/🧬️mutations/🔧update-layer-trace-params/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔧update-layer-trace-params/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️transform/🧬️schema/🧬️mutations/🔧update-layer-trace-params/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔧update-layer-trace-params/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️transform/🧬️schema/🧬️mutations/🔧update-layer-trace-params/🧪️tests/sharpens-the-trace/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔧update-layer-trace-params/🧪️tests/🟢️sharpens-the-trace/🦀️.rs"]
                                     mod tests_sharpens_the_trace;
                                 }
                             }
@@ -456,38 +456,38 @@ pub mod artifacts {
                             pub mod mutations {
                                 #[path = "."]
                                 pub mod rename_layer {
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️metadata/🧬️schema/🧬️mutations/✏️rename-layer/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🧪️tests/renames-shape-a-without-touching-its-id/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🧪️tests/✏️renames-shape-a-without-touching-its-id/🦀️.rs"]
                                     mod tests_renames_shape_a_without_touching_its_id;
                                 }
                                 #[path = "."]
                                 pub mod set_layer_visible {
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️metadata/🧬️schema/🧬️mutations/👁️set-layer-visible/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/👁️set-layer-visible/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️metadata/🧬️schema/🧬️mutations/👁️set-layer-visible/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/👁️set-layer-visible/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️metadata/🧬️schema/🧬️mutations/👁️set-layer-visible/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/👁️set-layer-visible/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️metadata/🧬️schema/🧬️mutations/👁️set-layer-visible/🧪️tests/hides-shape-a/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/👁️set-layer-visible/🧪️tests/🐙️hides-shape-a/🦀️.rs"]
                                     mod tests_hides_shape_a;
                                 }
                                 #[path = "."]
                                 pub mod set_layer_locked {
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️metadata/🧬️schema/🧬️mutations/🔒️set-layer-locked/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/🔒️set-layer-locked/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️metadata/🧬️schema/🧬️mutations/🔒️set-layer-locked/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/🔒️set-layer-locked/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️metadata/🧬️schema/🧬️mutations/🔒️set-layer-locked/🦠️mutation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/🔒️set-layer-locked/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️metadata/🧬️schema/🧬️mutations/🔒️set-layer-locked/🧪️tests/locks-shape-a/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/🔒️set-layer-locked/🧪️tests/🔒️locks-shape-a/🦀️.rs"]
                                     mod tests_locks_shape_a;
                                 }
                             }
@@ -583,57 +583,57 @@ pub mod editor {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️add-layer/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-layer/🦀️.rs"]
             pub mod add_layer;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-commit-draft/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️canvas-commit-draft/🦀️.rs"]
             pub mod canvas_commit_draft;
             #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-double-click/🦀️.rs"]
             pub mod canvas_double_click;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-escape/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚪️canvas-escape/🦀️.rs"]
             pub mod canvas_escape;
             #[path = "../../🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🦀️.rs"]
             pub mod canvas_pointer_down;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-move/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/↔️canvas-pointer-move/🦀️.rs"]
             pub mod canvas_pointer_move;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-up/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⬆️canvas-pointer-up/🦀️.rs"]
             pub mod canvas_pointer_up;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️combine-boolean/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔀️combine-boolean/🦀️.rs"]
             pub mod combine_boolean;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️commit-document/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📃️commit-document/🦀️.rs"]
             pub mod commit_document;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️delete-layer/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️delete-layer/🦀️.rs"]
             pub mod delete_layer;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️drop-layer-kind/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️drop-layer-kind/🦀️.rs"]
             pub mod drop_layer_kind;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️duplicate-layer/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📋️duplicate-layer/🦀️.rs"]
             pub mod duplicate_layer;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️engagement-input/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️engagement-input/🦀️.rs"]
             pub mod engagement_input;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️engagement-submit/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️engagement-submit/🦀️.rs"]
             pub mod engagement_submit;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️move-layer/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️move-layer/🦀️.rs"]
             pub mod move_layer;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️patch-layer/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-layer/🦀️.rs"]
             pub mod patch_layer;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️patch-layers/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧵️patch-layers/🦀️.rs"]
             pub mod patch_layers;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️set-active-example/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖼️set-active-example/🦀️.rs"]
             pub mod set_active_example;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-active-utility/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪛️set-active-utility/🦀️.rs"]
             pub mod set_active_utility;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-camera/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📷️set-camera/🦀️.rs"]
             pub mod set_camera;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-camera-zoom/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔭️set-camera-zoom/🦀️.rs"]
             pub mod set_camera_zoom;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️set-fixture-json/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧫️set-fixture-json/🦀️.rs"]
             pub mod set_fixture_json;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-locale/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️.rs"]
             pub mod set_locale;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️set-selected-opacity/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌫️set-selected-opacity/🦀️.rs"]
             pub mod set_selected_opacity;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️set-snapshot/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🟤️set-snapshot/🦀️.rs"]
             pub mod set_snapshot;
-            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️toggle-layer-visible/🦀️.rs"]
+            #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️toggle-layer-visible/🦀️.rs"]
             pub mod toggle_layer_visible;
         }
 

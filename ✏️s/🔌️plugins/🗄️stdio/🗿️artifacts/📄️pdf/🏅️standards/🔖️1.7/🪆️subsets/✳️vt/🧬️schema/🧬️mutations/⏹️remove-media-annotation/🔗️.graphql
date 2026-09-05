@@ -1,5 +1,0 @@
-# ⏹️ Direct remove-media-annotation GraphQL payload.
-input RemoveMediaAnnotationMutationInput {
-  subtype: String!
-  title: String!
-}

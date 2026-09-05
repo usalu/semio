@@ -27,7 +27,7 @@ semio-framework-replication = { workspace = true }
 # call dispatches onto the process-wide `WorkerPool` (`Lane::Io`) instead of a per-request
 # `std::thread::spawn`. Workspace-internal, not a new third-party dependency.
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
-semio-framework-hash = { path = "../../../🔢️hash/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../🔏️hash/📦️packages/🦀️rust" }
 ureq = { version = "2", optional = true }
 
 [dev-dependencies]

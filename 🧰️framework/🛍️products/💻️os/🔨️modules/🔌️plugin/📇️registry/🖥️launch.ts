@@ -15,7 +15,7 @@
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { PlaygroundEntry } from "../📇️registry/📜️script.ts";
+import type { PlaygroundEntry } from "./📜️script.ts";
 
 const SEED_REL_PATH = ".vscode/🧩️launch.seed.jsonc";
 /** @emoji 📄️ Repo-relative path of the generated output, shared with `📜️script.ts`'s freshness gate. */
@@ -113,7 +113,7 @@ function renderDiscoveredEntry(playground: PlaygroundEntry, namePrefix: string, 
       name: `🛠️dev${namePrefix}🧊️wgpu🖥️native`,
       type: "node-terminal",
       request: "launch",
-      command: `bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native ${playground.variant}`,
+      command: `bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native ${playground.variant}`,
       cwd: "${workspaceFolder}",
       env: { SEMIO_PLUGIN: playground.pluginId, ...(playground.app ? { SEMIO_APP: playground.app } : {}) },
       presentation: { group: "3_dev", order },

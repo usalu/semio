@@ -5,7 +5,7 @@
   "displayName": "Replace Attraction Geometry",
   "emoji": "🧮",
   "aggregateVariant": "ReplaceAttractionGeometry",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": "replace-attraction-geometry",
   "binaryTag": null,
   "invertibility": "explicit-mutation",

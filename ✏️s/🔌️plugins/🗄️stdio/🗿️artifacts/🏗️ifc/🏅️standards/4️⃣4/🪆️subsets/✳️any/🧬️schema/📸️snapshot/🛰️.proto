@@ -1,0 +1,52 @@
+syntax = "proto3";
+package semio.s_stdio_ifc.snapshot;
+
+// 🔤️ One typed value in IFC4's Part-21 argument-list syntax (own type, mirrors STEP's shape).
+message IfcValue {
+  enum Kind {
+    UNSET = 0;
+    DERIVED = 1;
+    INTEGER = 2;
+    REAL = 3;
+    STRING = 4;
+    ENUM = 5;
+    REFERENCE = 6;
+    AGGREGATE = 7;
+    TYPED_VALUE = 8;
+  }
+  Kind kind = 1;
+  int64 int_value = 2;
+  double real_value = 3;
+  string string_value = 4;
+  uint64 reference_value = 5;
+  repeated IfcValue aggregate = 6;
+  string typed_name = 7;
+  repeated IfcValue typed_args = 8;
+}
+
+// 🧩️ One additional `(TYPE(args...) ...)` member of an IFC4 COMPLEX instance.
+message IfcComplexType {
+  string name = 1;
+  repeated IfcValue args = 2;
+}
+
+// 📦️ One `#N = TYPE(args...);` IFC4 instance — id-keyed strong entity.
+message IfcEntity {
+  uint64 id = 1;
+  string name = 2;
+  repeated IfcValue args = 3;
+  repeated IfcComplexType complex = 4;
+}
+
+// 📇️ The three standard `HEADER;` records, typed via `IfcValue`.
+message IfcHeader {
+  repeated IfcValue file_description = 1;
+  repeated IfcValue file_name = 2;
+  repeated IfcValue file_schema = 3;
+}
+
+message IfcSnapshot {
+  string schema = 1;
+  IfcHeader header = 2;
+  repeated IfcEntity entities = 3;
+}

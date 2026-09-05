@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/stdio.step/mutations/text.json",
-  "title": "StepMutationsText",
-  "type": "object"
-}

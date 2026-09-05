@@ -170,7 +170,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for GisTerrainAnalyzerAnalysis {
         type Parts = GisTerrainParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.gisterrain", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.gis.gisterrain", standard: StandardId("1"), subset: SubsetId("*") };
 
         fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium

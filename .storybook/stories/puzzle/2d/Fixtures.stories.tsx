@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 💻️ .storybook/story/puzzle/2d/Fixtures.stories.tsx
-// Specs: Host the framework renderer's `Board2dHost` against the *real* puzzle-2d example fixtures (not hand-authored story data).
+// Specs: Host the framework renderer's `🖥️Board2dHost` against the *real* puzzle-2d example fixtures (not hand-authored story data).
 // Summary: Same story-local-reducer pattern as `./Board.stories.tsx` (emulating `apply_board_events_from_json`) for interaction, but the fixture data comes from the real `puzzle/2d/example/*.puzzle2d` DSL-text fixtures (`Puzzle2dProjection`'s `dsl::DslDocument` grammar) — raw-imported as text and parsed via `@semio-tech/puzzle-2d-rs`'s `puzzle2dParseDslJson` wasm export (the same `parse_dsl` Rust uses, reused as the single source of truth instead of duplicating the DSL grammar in TypeScript). This file only proves those real fixtures round-trip through the host; the interaction-mechanics coverage (lasso/brush/lod) lives in `Board.stories.tsx`.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header

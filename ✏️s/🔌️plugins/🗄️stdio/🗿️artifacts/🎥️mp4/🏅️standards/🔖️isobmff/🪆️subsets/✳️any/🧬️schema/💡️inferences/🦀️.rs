@@ -2,7 +2,7 @@
 //! 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING). Directory shape
 //! mirrors `🧬️mutations/`: this file is the family-root assembly (never mod's/includes the slug
 //! dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
-//! inference gets its own `<emoji><slug>/` child (currently: `⏱duration/`, derived from every
+//! inference gets its own `<emoji><slug>/` child (currently: `⏱️duration/`, derived from every
 //! track's real ISO-BMFF `stts`-flattened per-sample `duration`/`timescale` pair).
 
 use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
@@ -13,7 +13,7 @@ use super::duration::{compute_mp4_duration, Mp4Duration};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an mp4 snapshot. One field per named inference under
-/// `💡️inferences/` (currently: `duration`, backed by the `⏱duration/` slug dir).
+/// `💡️inferences/` (currently: `duration`, backed by the `⏱️duration/` slug dir).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.mp4.inference")]

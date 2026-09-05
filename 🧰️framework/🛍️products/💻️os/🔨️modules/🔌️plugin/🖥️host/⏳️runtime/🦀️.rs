@@ -11,7 +11,7 @@
 //! and `world actor-async` are both GONE. `world actor` now exports `reactor::poll` (`list<event>`,
 //! not a stream — request/response, exactly like the SYNC world's `execute_turn`) plus
 //! `jobs::{start-job,step-job,cancel-job}` and `checkpoint::{checkpoint,restore}`, all plain
-//! `async func`, called through `Store::run_concurrent` + `Accessor` — `../⏳️⚙️runtime/🦀️.rs`'s
+//! `async func`, called through `Store::run_concurrent` + `Accessor` — `../⏳️runtime/🦀️.rs`'s
 //! `WasmtimeRuntime` demonstrates the exact working call shape for every one of them, and this file
 //! reuses that shape rather than re-deriving it. See `📓️terra-world-collapse-report.md` (what the
 //! host side now does) and `📓️terra-async-runtime-report.md`'s `## harness` (six results proven
@@ -50,7 +50,7 @@
 //! carried are both gone: `host_async_bindings` (this crate's `actor_bindings` module) has been
 //! `pub(crate)` since `B1 world-collapse` landed, and `checkpoint`/`jobs` never grew `-async`
 //! suffixes (they went async IN PLACE — `bindings.semio_framework_checkpoint()`/
-//! `.semio_framework_jobs()`, unsuffixed, exactly as `../⏳️⚙️runtime/🦀️.rs` already calls them). It is
+//! `.semio_framework_jobs()`, unsuffixed, exactly as `../⏳️runtime/🦀️.rs` already calls them). It is
 //! still UNCALLED — nothing in `GuestRuntimes` constructs an `AsyncActorTask` yet (see
 //! `GuestRuntimes`'s own doc comment: "a later packet adds `AsyncActor(...)` here ... do not mount
 //! `⏳️runtime.rs` from this packet" — a PRIOR packet's note about ITSELF, not a standing
@@ -121,7 +121,7 @@ pub async fn build_async_engine(cfg: SharedEngineConfig) -> Result<(Engine, bool
 /// 🐎️ One async engine + its epoch ticker + a `Linker` with WASI-async and `world actor`'s whole
 /// import surface (`pure` + `host-async`, ONE call — `B1 world-collapse` made `Actor::add_to_linker`
 /// define both) already wired — built ONCE per process, `Arc`-shared into every
-/// [`AsyncActorTask::spawn`] call. Reuses `crate::EpochTicker` (already `pub` in `../⏳️⚙️runtime/🦀️.rs`)
+/// [`AsyncActorTask::spawn`] call. Reuses `crate::EpochTicker` (already `pub` in `../⏳️runtime/🦀️.rs`)
 /// rather than duplicating a THIRD 1ms ticker thread.
 pub struct AsyncEngineHandle {
     pub engine: Engine,

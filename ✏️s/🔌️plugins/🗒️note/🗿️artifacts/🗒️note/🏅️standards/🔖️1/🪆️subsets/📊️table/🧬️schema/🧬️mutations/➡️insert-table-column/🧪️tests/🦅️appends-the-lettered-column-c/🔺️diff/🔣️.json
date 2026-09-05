@@ -1,0 +1,37 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "title": null,
+  "blocks": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "blk-table",
+        "patch": {
+          "blockJson": "{\"kind\":\"table\",\"id\":\"blk-table\",\"name\":\"Samples\",\"x\":0.0,\"y\":220.0,\"width\":320.0,\"height\":160.0,\"rotation\":0.0,\"visible\":true,\"locked\":false,\"columns\":[\"A\",\"B\",\"C\"],\"rows\":[[{\"content\":\"Alpha\"},{\"content\":\"\"},{\"content\":\"\"}],[{\"content\":\"\"},{\"content\":\"\"},{\"content\":\"\"}]]}"
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "gridVisible": null,
+  "gridSpacing": null,
+  "gridSubdivisions": null,
+  "gridOpacity": null,
+  "snapEnabled": null,
+  "snapGridSpacing": null,
+  "pencilWidth": null,
+  "eraserRadius": null,
+  "assets": null,
+  "linkedArtifact": null,
+  "selectedBlockIds": null,
+  "activeUtilityId": null,
+  "engagementInput": null,
+  "cameraX": null,
+  "cameraY": null,
+  "cameraZoom": null,
+  "locale": null,
+  "hoveredBlockId": null
+}

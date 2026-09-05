@@ -1,0 +1,29 @@
+dialect protocol
+protocol stdio.semio.cad.snapshot
+version 1
+schema stdio.semio.cad
+start body
+framing record
+
+# cad wave (following the flow/brep pilots' proven template): REAL binary pack frame,
+# replacing the old `serde_json::to_vec`-in-envelope shortcut (`📸️snapshot/🦀️.rs`'s old
+# `ArtifactPack::encode_pack_with`). `format u8` (real, fixed) then `schema_len`/`schema_bytes`
+# (real, varint-length-prefixed UTF-8 — matches `write_str_lp`'s own wire exactly, PROVEN bare
+# `segment` form per the flow report's UPDATE §7 note) are genuinely, fully described. Past
+# that, `layers`/`blocks`/`entities` are HOMOGENEOUS but variable-length repeated records (`blocks`
+# itself holds a further variable-length `entities` sub-collection, and `blocks[].entities`/
+# `entities` both embed a data-carrying tagged `entity` union) — the `protocol-array-of-records` gap
+# (`repeat`'s own arms are tag-dispatched, not "repeat N times, N from a count field", for an
+# untagged homogeneous record): modeled as one opaque trailing `payload` chain, the same honest
+# boundary every P1-P3/flow/brep pilot's own nested/recursive payload uses. The real Rust
+# `encode_cad_snapshot_binary`/`decode_cad_snapshot_binary` stays genuinely, fully structured
+# (varint counts, per-field length-prefixes, real `f64` LE coordinates, a real per-variant tag byte
+# for `entity`) — round-trip tested independently by this facet's own tests, only the protocol
+# DESCRIPTION stops at this boundary.
+header fixed 1
+field format u8
+
+segment schema_len varint
+segment schema_bytes Array(u8, Field(schema_len))
+
+chain payload bytes

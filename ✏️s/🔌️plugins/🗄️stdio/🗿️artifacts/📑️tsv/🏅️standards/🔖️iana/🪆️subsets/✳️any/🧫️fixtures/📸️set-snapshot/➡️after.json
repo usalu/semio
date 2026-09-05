@@ -1,0 +1,15 @@
+{
+  "schema": "stdio.tsv",
+  "records": [
+    [
+      "id",
+      "name"
+    ],
+    [
+      "1",
+      "renamed-widget"
+    ]
+  ],
+  "trailingNewline": true,
+  "lineEnding": "lf"
+}

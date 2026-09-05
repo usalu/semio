@@ -1,9 +1,0 @@
-dialect grammar
-grammar en1991.mutations
-extension en1991
-start document
-
-document = header body
-header = "schema" SP "norm.en1991.mutations" NL
-body = payload NL?
-payload = OCTET+

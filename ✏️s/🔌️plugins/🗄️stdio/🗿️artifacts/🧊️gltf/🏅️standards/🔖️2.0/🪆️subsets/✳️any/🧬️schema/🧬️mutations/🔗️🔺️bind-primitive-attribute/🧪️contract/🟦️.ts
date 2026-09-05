@@ -1,6 +1,0 @@
-/** 🧪️ Focused bind-primitive-attribute mutation-law probe. */
-import type { GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
-import { applyGltfBindPrimitiveAttribute, type GltfBindPrimitiveAttributePayload } from './🟦️';
-import { deriveGltfBindPrimitiveAttributeDiff } from './🟦️';
-import { deriveGltfBindPrimitiveAttributeInverse } from './🟦️';
-export const assertGltfBindPrimitiveAttributeLaws = (base: GltfSnapshot, payload: GltfBindPrimitiveAttributePayload) => { const applied = applyGltfBindPrimitiveAttribute(base, payload); if (!applied.accepted) return applied; const replay = applyGltfBindPrimitiveAttribute(base, payload); const direct = deriveGltfBindPrimitiveAttributeDiff(base, payload); const undo = deriveGltfBindPrimitiveAttributeInverse(base, payload); if (!replay.accepted || !direct.accepted || !undo.accepted || JSON.stringify(applied.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(applied.diff) !== JSON.stringify(replay.diff) || JSON.stringify(applied.touchedPaths) !== JSON.stringify(undo.touchedPaths)) throw new Error('bind-primitive-attribute violates replay, direct-diff, or undo determinism'); return { applied, direct, undo }; };

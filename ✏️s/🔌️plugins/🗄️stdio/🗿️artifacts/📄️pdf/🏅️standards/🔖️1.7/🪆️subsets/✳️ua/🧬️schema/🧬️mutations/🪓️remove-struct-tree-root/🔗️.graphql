@@ -1,4 +1,0 @@
-# 🪓️ Direct remove-struct-tree-root GraphQL payload.
-input RemoveStructTreeRootMutationInput {
-  _unit: Boolean
-}

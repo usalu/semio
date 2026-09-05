@@ -25,7 +25,7 @@ const workspaceRoot = getWorkspaceRoot();
 const productRoot = join(workspaceRoot, "🧰️framework", "🛍️products", "📓️print");
 const packageRoot = join(productRoot, "📦️packages", "🟦️typescript");
 const latexDirectory = join(productRoot, "🖋️latex");
-const templateDirectory = join(productRoot, "📄️template");
+const templateDirectory = join(productRoot, "🧾️template");
 const assetDirectory = join(productRoot, "🖼️assets");
 const outputDirectory = join(packageRoot, "dist");
 const panelGlassDirectoryName = ".semio-panel-glass";
@@ -34,12 +34,12 @@ const panelRenderDpi = 200;
 const pointsPerInch = 72;
 const tectonicVersion = "0.16.9";
 const TEMPLATES: readonly PrintTemplate[] = [
-  { id: "report", texPath: "📄️template/📋️report/report.tex" },
-  { id: "paper", texPath: "📄️template/📄️paper/paper.tex" },
-  { id: "flyer", texPath: "📄️template/📰️flyer/flyer.tex" },
-  { id: "forschungsbericht", texPath: "📄️template/🏗️zukunftbau/forschungsbericht.tex" },
-  { id: "zwischenbericht", texPath: "📄️template/🏗️zukunftbau/zwischenbericht.tex" },
-  { id: "kompaktbericht", texPath: "📄️template/🏗️zukunftbau/kompaktbericht.tex" },
+  { id: "report", texPath: "🧾️template/📋️report/📋️report.tex" },
+  { id: "paper", texPath: "🧾️template/📃️paper/🎓️paper.tex" },
+  { id: "flyer", texPath: "🧾️template/📰️flyer/📰️flyer.tex" },
+  { id: "forschungsbericht", texPath: "🧾️template/🏗️zukunftbau/📑️forschungsbericht.tex" },
+  { id: "zwischenbericht", texPath: "🧾️template/🏗️zukunftbau/🚧️zwischenbericht.tex" },
+  { id: "kompaktbericht", texPath: "🧾️template/🏗️zukunftbau/📝️kompaktbericht.tex" },
 ];
 const tectonicCommandCache = ephemeralBox<string | undefined>("framework.products.print.tectonic-template-compilation.command", undefined);
 
@@ -78,6 +78,12 @@ export async function buildRegisteredPrintTemplates(filter: readonly string[]): 
   const tectonic = await ensureTectonic();
   writePrintLatexTokenStylesheet();
   for (const template of resolveRegisteredPrintTemplates(filter)) await compileTemplate(tectonic, template);
+}
+
+/** 📄️ Builds one caller-owned TeX document with the shared print pipeline. */
+export async function buildPrintDocument(texPath: string, outDirectory: string, workDirectory = dirname(texPath)): Promise<void> {
+  const tectonic = await ensureTectonic();
+  await compilePrintDocumentWithPanels(tectonic, texPath, outDirectory, workDirectory);
 }
 
 /** 👁️ Watches print inputs and rebuilds each requested template. */

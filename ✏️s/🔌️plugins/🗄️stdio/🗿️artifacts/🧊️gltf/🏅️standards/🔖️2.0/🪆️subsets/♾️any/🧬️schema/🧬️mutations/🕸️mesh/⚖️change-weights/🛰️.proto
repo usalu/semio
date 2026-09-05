@@ -1,0 +1,8 @@
+// change-mesh-morph-weights mutation facet.
+syntax = "proto3";
+package stdio.gltf.mutation;
+message GltfChangeMeshMorphWeightsPayloadV1 {
+  uint32 mesh = 1;
+  repeated double weights = 2;
+}
+message GltfChangeMeshMorphWeightsMutationV1 { string id = 1; uint32 version = 2; bool accepted = 3; repeated string touched_paths = 4; string rejection_code = 5; }

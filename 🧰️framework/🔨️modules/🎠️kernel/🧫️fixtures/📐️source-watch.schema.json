@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "streams"],
+  "properties": {
+    "version": { "const": 1 },
+    "streams": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "watchUrl"],
+        "properties": {
+          "source": { "enum": ["dev", "extension"] },
+          "watchUrl": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

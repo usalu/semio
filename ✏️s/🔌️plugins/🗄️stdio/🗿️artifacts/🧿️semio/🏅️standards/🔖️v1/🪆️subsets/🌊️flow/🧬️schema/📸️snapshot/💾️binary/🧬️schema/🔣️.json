@@ -1,0 +1,247 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.flow.retained-snapshot.fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "semio.flow.retained-snapshot/v1"
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nodes": {
+          "const": 256
+        },
+        "edges": {
+          "const": 512
+        },
+        "paramsPerNode": {
+          "const": 64
+        },
+        "stringBytes": {
+          "const": 4096
+        },
+        "totalStringBytes": {
+          "const": 1048576
+        }
+      },
+      "required": [
+        "nodes",
+        "edges",
+        "paramsPerNode",
+        "stringBytes",
+        "totalStringBytes"
+      ]
+    },
+    "valid": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "enum": [
+              "empty",
+              "unicode"
+            ]
+          },
+          "snapshot": {
+            "$ref": "#/$defs/snapshot"
+          },
+          "hex": {
+            "type": "string",
+            "pattern": "^(?:[0-9a-f]{2})+$"
+          }
+        },
+        "required": [
+          "id",
+          "snapshot",
+          "hex"
+        ]
+      }
+    },
+    "invalid": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "hex": {
+            "type": "string",
+            "pattern": "^(?:[0-9a-f]{2})+$"
+          },
+          "reason": {
+            "enum": [
+              "malformed",
+              "identity",
+              "capacity"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "hex",
+          "reason"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "limits",
+    "valid",
+    "invalid"
+  ],
+  "$defs": {
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "stdio.semio.flow"
+        },
+        "nodes": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "maxLength": 4096
+              },
+              "kind": {
+                "type": "string",
+                "maxLength": 4096
+              },
+              "label": {
+                "type": "string",
+                "maxLength": 4096
+              },
+              "params": {
+                "type": "array",
+                "maxItems": 64,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "maxLength": 4096
+                    },
+                    "value": {
+                      "type": "string",
+                      "maxLength": 4096
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "value"
+                  ]
+                }
+              },
+              "position": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "x",
+                  "y"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "label",
+              "params",
+              "position"
+            ]
+          }
+        },
+        "edges": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "maxLength": 4096
+              },
+              "from": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "node": {
+                    "type": "string",
+                    "maxLength": 4096
+                  },
+                  "port": {
+                    "type": "string",
+                    "maxLength": 4096
+                  }
+                },
+                "required": [
+                  "node",
+                  "port"
+                ]
+              },
+              "to": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "node": {
+                    "type": "string",
+                    "maxLength": 4096
+                  },
+                  "port": {
+                    "type": "string",
+                    "maxLength": 4096
+                  }
+                },
+                "required": [
+                  "node",
+                  "port"
+                ]
+              },
+              "kind": {
+                "type": "string",
+                "maxLength": 4096
+              }
+            },
+            "required": [
+              "id",
+              "from",
+              "to",
+              "kind"
+            ]
+          }
+        }
+      },
+      "required": [
+        "schema",
+        "nodes",
+        "edges"
+      ]
+    }
+  }
+}

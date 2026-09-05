@@ -4,8 +4,6 @@
 use crate::artifacts::en1997::En1997Snapshot;
 use crate::artifacts::en1997::diff::En1997Diff;
 use crate::artifacts::en1997::mutations::En1997Mutation;
-use crate::artifacts::en1997::mutations::change_footing_area_m2::ChangeFootingAreaM2;
-
 //#region 🔖️ChangeFootingAreaM2
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

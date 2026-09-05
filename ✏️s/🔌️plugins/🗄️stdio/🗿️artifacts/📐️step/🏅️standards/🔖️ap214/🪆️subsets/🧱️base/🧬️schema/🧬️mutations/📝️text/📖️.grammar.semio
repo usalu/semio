@@ -1,0 +1,51 @@
+# 📖️ P2-FG1: real `OpText::print_op`/`parse_op` shape for `StepMutation`, hand-rolled since
+# `#[derive(dsl::DslOps)]` fails (real `cargo check` output, `StepEntity`/`StepValue: DslField`
+# unsatisfied — see `🧬️mutations/🦀️.rs`'s own doc comment). One `keyword key=value ...`
+# line, space-separated, keys in the field's declared struct order. Every literal below is copied
+# verbatim from `print_step_mutation`'s real match arms
+# (`✏️s/…/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs`), not
+# invented. Replaces the old serde-JSON `{"mutation":"...",...}` ABNF placeholder this file used to
+# contain — that shape was never emitted by the real hand-rolled codec even before this rewrite.
+dialect grammar
+grammar stdio.step.mutation
+start document
+
+document = set-snapshot | set-file-description | set-file-name | set-file-schema | insert-entity | remove-entity | set-entity-name | set-entity-arg | insert-entity-arg | remove-entity-arg
+
+set-snapshot = "set-snapshot" "snapshot" "=" step-snapshot
+set-file-description = "set-file-description" "file-description" "=" file-description
+set-file-name = "set-file-name" "file-name" "=" file-name
+set-file-schema = "set-file-schema" "file-schema" "=" file-schema
+insert-entity = "insert-entity" "index" "=" INT "entity" "=" entity
+remove-entity = "remove-entity" "id" "=" INT
+set-entity-name = "set-entity-name" "id" "=" INT "name" "=" hex
+set-entity-arg = "set-entity-arg" "id" "=" INT "arg-index" "=" INT "value" "=" step-value
+insert-entity-arg = "insert-entity-arg" "id" "=" INT "arg-index" "=" INT "value" "=" step-value
+remove-entity-arg = "remove-entity-arg" "id" "=" INT "arg-index" "=" INT
+
+# `StepValue`'s single-uppercase-letter tag scheme (`enc_value`/`dec_value`): `U[]` Unset, `D[]`
+# Derived, `I[n]` Integer, `R[n]` Real (Rust's bare `Display` for `f64` — never forces a decimal
+# point, unlike Part-21 text's own `format_real`, so a whole real prints INT-shaped), `S[hex]`
+# String, `E[hex]` Enum, `F[n]` reFerence (`R` already taken by Real), `A[items]` Aggregate
+# (recursive list), `T[hex,value]` TypedValue (recursive, one wrapped value).
+step-value = "U" "[" "]" | "D" "[" "]" | "I" "[" INT "]" | "R" "[" real-num "]" | "S" "[" hex "]" | "E" "[" hex "]" | "F" "[" INT "]" | "A" "[" value-list "]" | "T" "[" hex "," step-value "]"
+real-num = INT | FLOAT
+value-list = {step-value {"," step-value}*}?
+
+# `enc_entity`: `[id,hexname,[args],[complex]]`. `enc_complex`/`complex-item`: `[hexname,[args]]`.
+entity = "[" INT "," hex "," "[" value-list "]" "," "[" complex-list "]" "]"
+complex-list = {complex-item {"," complex-item}*}?
+complex-item = "[" hex "," "[" value-list "]" "]"
+entity-list = {entity {"," entity}*}?
+hex-list = {hex {"," hex}*}?
+
+# `enc_file_description`: `[[desc-strings],implementation-level]`.
+file-description = "[" "[" hex-list "]" "," hex "]"
+# `enc_file_name`: `[name,timestamp,[author],[organization],preprocessor,originating,authorization]`.
+file-name = "[" hex "," hex "," "[" hex-list "]" "," "[" hex-list "]" "," hex "," hex "," hex "]"
+# `enc_file_schema`: `[schema-strings]`.
+file-schema = "[" hex-list "]"
+
+# `enc_step_snapshot` (only reachable via `SetSnapshot`'s payload): `[schema,fileDescription,
+# fileName,fileSchema,[entities]]`.
+step-snapshot = "[" hex "," file-description "," file-name "," file-schema "," "[" entity-list "]" "]"

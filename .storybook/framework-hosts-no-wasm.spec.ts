@@ -1,7 +1,7 @@
 // #region 🧲️Header
 // 💻️ .storybook/framework-hosts-no-wasm.spec.ts
 // Specs: End-to-end checks for the `framework/hosts` scope's zero-WASM host stories (`TableHost`,
-// `BlockListHost`, `GraphTimelineHost`, `IconRenderHost`, `InkCanvasHost`, `Canvas2dHost`, `UiInterpreter`).
+// `🧩️BlockListHost`, `🌳️GraphTimelineHost`, `IconRenderHost`, `InkCanvasHost`, `Canvas2dHost`, `UiInterpreter`).
 // Summary: Every story id gets a load check (200-equivalent — no "Couldn't find story"/preview-file-failure
 // text, no page/console errors); the reducer-backed hosts additionally get one real interaction assertion
 // against their `<pre data-testid="…-host-debug">` readout, modeled on `.storybook/puzzle-2d.spec.ts`.

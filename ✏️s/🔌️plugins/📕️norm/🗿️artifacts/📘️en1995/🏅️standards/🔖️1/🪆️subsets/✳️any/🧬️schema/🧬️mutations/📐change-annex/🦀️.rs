@@ -1,7 +1,7 @@
 //! 🔧 `change-annex` payload — changes the En1995 document's `annex` (national annex).
-//! Repurposes the pre-migration `📄set-snapshot/` triad directory in place: `🦀️.rs`
+//! Repurposes the pre-migration `🟤️set-snapshot/` triad directory in place: `🦀️.rs`
 //! path-includes this exact directory outside this facet's writable boundary, so the directory
-//! name stays `📄set-snapshot` while its content becomes `ChangeAnnex` — see this ticket's wave2
+//! name stays `🟤️set-snapshot` while its content becomes `ChangeAnnex` — see this ticket's wave2
 //! report `sharedFileRequests` for the rename once a later pass can touch `🦀️.rs` (mirrors the
 //! en1990/en1992 precedent).
 
@@ -9,7 +9,6 @@
 use crate::artifacts::en1995::En1995Snapshot;
 use crate::artifacts::en1995::diff::En1995Diff;
 use crate::artifacts::en1995::mutations::En1995Mutation;
-use crate::artifacts::en1995::mutations::set_snapshot::ChangeAnnex;
 use crate::document::AnnexChoice;
 
 //#region 🔖️ChangeAnnex

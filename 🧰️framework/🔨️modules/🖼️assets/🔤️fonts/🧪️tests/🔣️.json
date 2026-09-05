@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "css": "/* latin */\n@font-face {\n  font-family: 'Example';\n  font-weight: 400;\n  src: url(https://fonts.gstatic.com/s/example/latin.woff2) format('woff2');\n}\n@font-face {\n  font-family: 'Example';\n  font-weight: 400;\n  src: url(https://fonts.gstatic.com/s/example/emoji.0.woff2) format('woff2');\n}\n@font-face {\n  font-family: 'Example';\n  font-weight: 400;\n  src: url(https://fonts.gstatic.com/s/example/emoji.9.woff2) format('woff2');\n}\n",
+  "expectedSubsets": { "latin": "https://fonts.gstatic.com/s/example/latin.woff2", "0": "https://fonts.gstatic.com/s/example/emoji.0.woff2", "9": "https://fonts.gstatic.com/s/example/emoji.9.woff2" },
+  "cases": [
+    { "source": { "path": "🔤️fonts/🚀️anta/🏛️latin/📖️regular/🗜️compressed.woff2", "family": "Anta", "subset": "latin", "weight": 400, "format": "woff2" }, "expectedUrl": "https://fonts.gstatic.com/s/example/latin.woff2" },
+    { "source": { "path": "🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/🗜️compressed.woff2", "family": "Noto Emoji", "subset": "0", "weight": 400, "format": "woff2" }, "expectedUrl": "https://fonts.gstatic.com/s/example/emoji.0.woff2" },
+    { "source": { "path": "🔤️fonts/😀️noto-emoji/🪉️supplement/📖️regular/🗜️compressed.woff2", "family": "Noto Emoji", "subset": "11", "weight": 400, "format": "woff2" }, "expectedUrl": null },
+    { "source": { "path": "🔤️fonts/😀️noto-emoji/🌐️complete/📖️regular/🗜️compressed.woff2", "family": "Noto Emoji", "subset": null, "weight": 400, "format": "woff2" }, "expectedUrl": null },
+    { "source": { "path": "🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/🔤️outline.ttf", "family": "Noto Emoji", "subset": "0", "weight": 400, "format": "ttf" }, "expectedUrl": null }
+  ]
+}

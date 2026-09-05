@@ -2,7 +2,7 @@
 //! and the manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
-//! `🎭️modes/*/🪟️windows/*`, chrome measures in those windows' `🎚️options/*`, panel trees in
+//! `🎭️modes/*/🪟️windows/*`, chrome measures in those windows' `☑️options/*`, panel trees in
 //! `📌️panels/*`, labels in `🦀️terminology.rs`, view state in `🦀️config.rs`, shared compute in the
 //! artifact's `⚙️engine`. This file is a routing table: `handle` → `NoteCommand::dispatch`, `render` →
 //! body-key → node, and a `🔖️Manifest` region that calls one `definition()` per node.
@@ -62,7 +62,7 @@ pub async fn reset_document_effect(document: &NoteSnapshot) -> semio_framework::
 
 //#region 🔖️Utilities
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
-/// (`🎚️options/*`, `📌️panels/*`) builds its `on_change`/item actions with.
+/// (`☑️options/*`, `📌️panels/*`) builds its `on_change`/item actions with.
 pub async fn note_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
     ActionDescriptor { controller_id: NOTE_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }

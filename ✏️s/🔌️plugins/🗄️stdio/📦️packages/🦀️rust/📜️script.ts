@@ -4,11 +4,11 @@ import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, readSync, realpathSync, renameSync, rmSync, statSync, truncateSync, writeFileSync, writeSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { isAbsolute, join, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { decodePackValue, encodePackValue } from "../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
-import { BundleScript, ScriptRouter, buildBudgetMs, devToolingEnv, resolveTestLevel, resolveWorkspaceBin, runBundleScriptMain, runCargoTestBudgeted, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust/📜️script.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, devToolingEnv, resolveTestLevel, resolveWorkspaceBin, runBundleScriptMain, runCargoTestBudgeted, runCmd, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts";
 import { CATALOG_COMMIT_MARKER_FILENAME, auditPluginCatalogSources, createFreshCatalogBuildVerifier, createFreshCatalogCommitMarker } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts";
 
 const PACKAGE_NAME = "semio-s-plugin-stdio";
@@ -268,7 +268,7 @@ async function verifyIndependentOracles(rawPath: string, corePath: string, descr
 }
 
 async function runCatalogRootContractTests(root: string): Promise<void> {
-  const fixtureRoot = join(root, "🧪️fixtures", "catalog-root");
+  const fixtureRoot = join(root, "🧫️fixtures", "🌳️catalog-root");
   const schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8"));
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as {
     packageId: string;
@@ -363,6 +363,274 @@ async function runCatalogRootContractTests(root: string): Promise<void> {
   }
 }
 
+class FlowRetainedDecodeScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { default: assert } = await import("node:assert/strict");
+    const { default: Ajv } = await import("ajv/dist/2020.js");
+    const leb = await import("@webassemblyjs/leb128");
+    const base = join(this.root, "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/💾️binary");
+    const fixture = JSON.parse(readFileSync(join(base, "🧫️fixture/🔣️.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
+    const ajv = new Ajv({ strict: true });
+    const validate = ajv.compile(schema);
+    assert(validate(fixture), ajv.errorsText(validate.errors));
+    const header = Buffer.concat([Buffer.from([137,83,69,77,13,10,26,10,24,0,0,0]), Buffer.from("stdio.semio.flow.pack v1")]);
+    const decode = (hex: string): unknown => {
+      const bytes = Buffer.from(hex, "hex"); let offset = 0; let strings = 0;
+      const fail = (reason: string): never => { throw new Error(reason); };
+      const byte = (): number => offset < bytes.length ? bytes[offset++]! : fail("malformed");
+      const uint = (): number => {
+        const start = offset; let value = 0n;
+        for (let index = 0; index < 10; index++) {
+          const next = byte(); if (index === 9 && next > 1) fail("malformed");
+          value |= BigInt(next & 127) << BigInt(index * 7);
+          if (next < 128) {
+            if (index && next === 0) fail("malformed");
+            if (value <= 0xffffffffn) assert.deepEqual(bytes.subarray(start, offset), Buffer.from(leb.encodeU32(Number(value))));
+            return value > BigInt(Number.MAX_SAFE_INTEGER) ? Number.MAX_SAFE_INTEGER : Number(value);
+          }
+        }
+        return fail("malformed");
+      };
+      const text = (): string => {
+        const size = uint(); if (size > fixture.limits.stringBytes || strings + size > fixture.limits.totalStringBytes) fail("capacity");
+        strings += size; if (offset + size > bytes.length) fail("malformed");
+        let value: string; try { value = new TextDecoder("utf-8", { fatal: true }).decode(bytes.subarray(offset, offset + size)); } catch { return fail("malformed"); }
+        offset += size; return value;
+      };
+      const count = (maximum: number): number => { const value = uint(); return value <= maximum ? value : fail("capacity"); };
+      const number = (): number => { if (offset + 8 > bytes.length) fail("malformed"); const value = bytes.readDoubleLE(offset); offset += 8; return value; };
+      for (const expected of header) if (byte() !== expected) fail("malformed");
+      if (byte() !== 1) fail("malformed");
+      const identity = text(); if (identity !== "stdio.semio.flow") fail("identity");
+      const nodes = []; const nodeCount = count(fixture.limits.nodes);
+      for (let index = 0; index < nodeCount; index++) {
+        const id = text(), kind = text(), label = text(), params = []; const parameterCount = count(fixture.limits.paramsPerNode);
+        for (let parameter = 0; parameter < parameterCount; parameter++) params.push({ key: text(), value: text() });
+        nodes.push({ id, kind, label, params, position: { x: number(), y: number() } });
+      }
+      const edges = []; const edgeCount = count(fixture.limits.edges);
+      for (let index = 0; index < edgeCount; index++) edges.push({ id: text(), from: { node: text(), port: text() }, to: { node: text(), port: text() }, kind: text() });
+      if (offset !== bytes.length) fail("malformed");
+      return { schema: identity, nodes, edges };
+    };
+    const encode = (snapshot: any): Buffer => {
+      const chunks = [header, Buffer.from([1])];
+      const count = (value: number): void => { chunks.push(Buffer.from(leb.encodeU32(value))); };
+      const text = (value: string): void => { const bytes = Buffer.from(value); count(bytes.length); chunks.push(bytes); };
+      text(snapshot.schema); count(snapshot.nodes.length);
+      for (const node of snapshot.nodes) {
+        for (const value of [node.id, node.kind, node.label]) text(value);
+        count(node.params.length); for (const parameter of node.params) { text(parameter.key); text(parameter.value); }
+        const point = new ArrayBuffer(16), view = new DataView(point); view.setFloat64(0, node.position.x, true); view.setFloat64(8, node.position.y, true); chunks.push(Buffer.from(point));
+      }
+      count(snapshot.edges.length); for (const edge of snapshot.edges) for (const value of [edge.id, edge.from.node, edge.from.port, edge.to.node, edge.to.port, edge.kind]) text(value);
+      return Buffer.concat(chunks);
+    };
+    for (const row of fixture.valid) { assert.deepEqual(decode(row.hex), row.snapshot, row.id); assert.equal(encode(row.snapshot).toString("hex"), row.hex, row.id); }
+    for (const row of fixture.invalid) assert.throws(() => decode(row.hex), (error: Error) => error.message === row.reason, row.id);
+    console.log(`[DEBUG] Flow retained decoder independent oracle: ${fixture.valid.length} exact wire snapshots, ${fixture.invalid.length} hostile denials; third-party LEB128 and AJV agree`);
+    const lifecycle = JSON.parse(readFileSync(join(base, "🧫️fixture/♻️lifecycle/🔣️.json"), "utf8"));
+    const lifecycleSchema = JSON.parse(readFileSync(join(base, "🧬️schema/♻️lifecycle/🔣️.json"), "utf8"));
+    const validateLifecycle = ajv.compile(lifecycleSchema);
+    assert(validateLifecycle(lifecycle), ajv.errorsText(validateLifecycle.errors));
+    assert.equal(new Set(lifecycle.admission.map((row: any) => row.id)).size, 5);
+    for (const row of lifecycle.admission) {
+      const reason = row.state === "closing" || row.state === "retired" ? "stale" : row.state === "unadmitted" ? "unsealed" : row.subset !== "flow" ? "identity" : null;
+      assert.equal(reason, row.reason, row.id);
+    }
+    const large = structuredClone(fixture.valid.find((row: any) => row.id === lifecycle.multiPage.source).snapshot);
+    large.nodes[lifecycle.multiPage.nodeIndex].label = lifecycle.multiPage.labelScalar.repeat(lifecycle.multiPage.labelRepeats);
+    const largeWire = encode(large);
+    assert.deepEqual(decode(largeWire.toString("hex")), large);
+    const stringBytes = (value: any): number => typeof value === "string" ? Buffer.byteLength(value) : value && typeof value === "object" ? Object.values(value).reduce<number>((sum, field) => sum + stringBytes(field), 0) : 0;
+    const identityBytes = [lifecycle.request.artifactId, lifecycle.request.artifactKind, lifecycle.request.standard, lifecycle.request.subset].reduce((sum: number, value: string) => sum + Buffer.byteLength(value), 0);
+    const inputBytes = Buffer.from(leb.encodeU32(largeWire.length)).length + largeWire.length + 1;
+    const typedBytes = stringBytes(large) + large.nodes.length * 16;
+    assert.equal(largeWire.length, lifecycle.multiPage.wireBytes);
+    assert.equal(inputBytes, lifecycle.multiPage.inputBytes);
+    assert.equal(Math.ceil(inputBytes / 4096), lifecycle.multiPage.inputPages);
+    assert.equal(identityBytes, lifecycle.request.identityBytes);
+    assert.equal(typedBytes, lifecycle.multiPage.snapshotRetiredBytes);
+    assert.equal(inputBytes + identityBytes + typedBytes, lifecycle.multiPage.totalRetiredBytes);
+    console.log(`[DEBUG] Flow lifecycle independent oracle: ${lifecycle.admission.length} exact admission states, ${lifecycle.multiPage.inputPages} input pages, ${lifecycle.multiPage.totalRetiredBytes} retained bytes; third-party encoding and strict AJV agree`);
+    const source = readFileSync(join(base, "🧪️tests/🦀️.rs"), "utf8");
+    assert(source.includes("semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures"));
+    assert(source.includes("semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes"), "retained Flow lifecycle native law is absent");
+    if (segments.includes("--oracle-only")) return;
+    const receipts = await runExactCargoLaws({ cwd: this.repoRoot, groups: [{ package: PACKAGE_NAME, target: { kind: "test", name: "flow_retained_decode" }, laws: ["semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures", "semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes"] }] });
+    assert.equal(receipts[0]!.assertions, 2);
+  }
+}
+
+type ArtifactDirectoryRow = { directory: string; id: string; kind: string; responsibility: string };
+
+function artifactDirectorySemanticKey(segment: string): string {
+  return segment.replace(/^[^A-Za-z0-9_.]+/u, "");
+}
+
+function resolveTaxonomyDirectoryReference(sourcePath: string, token: string, stdioRoot: string, repoRoot: string, accepts: (pieces: string[]) => boolean): string {
+  const pieces = token.split("/");
+  if (!accepts(pieces)) return token;
+  let current: string;
+  if (token.startsWith("✏️s/")) current = repoRoot;
+  else if (token.startsWith("🗿️artifacts/")) current = stdioRoot;
+  else if (token.startsWith("/../../🗿️artifacts/")) current = import.meta.dir;
+  else if (token.startsWith("./") || token.startsWith("../")) current = dirname(sourcePath);
+  else return token;
+  const rendered: string[] = [];
+  for (const piece of pieces) {
+    if (!piece) { rendered.push(piece); continue; }
+    if (piece === ".") { rendered.push(piece); continue; }
+    if (piece === "..") { current = dirname(current); rendered.push(piece); continue; }
+    const exact = join(current, piece);
+    if (existsSync(exact)) { current = exact; rendered.push(piece); continue; }
+    const key = artifactDirectorySemanticKey(piece);
+    const matches = existsSync(current)
+      ? readdirSync(current, { withFileTypes: true }).filter((entry) => artifactDirectorySemanticKey(entry.name) === key)
+      : [];
+    if (matches.length !== 1) return token;
+    current = join(current, matches[0]!.name);
+    rendered.push(matches[0]!.name);
+  }
+  return rendered.join("/");
+}
+
+function resolveArtifactDirectoryReference(sourcePath: string, token: string, stdioRoot: string, repoRoot: string): string {
+  return resolveTaxonomyDirectoryReference(sourcePath, token, stdioRoot, repoRoot, (pieces) => {
+    const artifactIndex = pieces.findIndex((piece) => artifactDirectorySemanticKey(piece) === "artifacts");
+    return artifactIndex >= 0 && pieces.slice(artifactIndex + 1).some((piece) => artifactDirectorySemanticKey(piece) === "jpg");
+  });
+}
+
+function renderArtifactDirectoryReferences(sourcePath: string, content: string, stdioRoot: string, repoRoot: string, directory: string): string {
+  const canonicalRoot = content.replace(/(🗿️artifacts\/)([^/\s"'`]+)/gu, (match, prefix: string, candidate: string) => artifactDirectorySemanticKey(candidate) === "jpg" ? `${prefix}${directory}` : match);
+  return canonicalRoot.replace(/[^\s"'`]+/gu, (token) => resolveArtifactDirectoryReference(sourcePath, token, stdioRoot, repoRoot));
+}
+
+class ArtifactDirectoryWiringScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const mode = segments[0];
+    const artifact = segments[1];
+    if ((mode !== "generate" && mode !== "check") || artifact !== "jpg") throw new Error("artifact-directory-wiring expects generate|check jpg");
+    const stdioRoot = resolve(import.meta.dir, "../..");
+    const repoRoot = resolve(stdioRoot, "../../..");
+    const artifactsRoot = join(stdioRoot, "🗿️artifacts");
+    const definitions = readdirSync(artifactsRoot, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => ({ directory: entry.name, path: join(artifactsRoot, entry.name, "🧬️schema/📜️artifact-definition.json") }))
+      .filter((entry) => existsSync(entry.path))
+      .map((entry) => ({ directory: entry.directory, definition: JSON.parse(readFileSync(entry.path, "utf8")) as { artifact?: unknown; directory?: unknown; id?: unknown } }));
+    if (definitions.length !== 36) throw new Error(`artifact-directory-wiring expected 36 physical definitions, got ${definitions.length}`);
+    const selected = definitions.find((entry) => entry.definition.artifact === artifact);
+    if (!selected || selected.definition.id !== `s.stdio.${artifact}` || selected.definition.directory !== selected.directory) throw new Error(`artifact-directory-wiring ${artifact} definition does not own its physical directory`);
+    const collectionPath = join(artifactsRoot, "🔣️.json");
+    const collection = JSON.parse(readFileSync(collectionPath, "utf8")) as { "x-semio"?: { members?: ArtifactDirectoryRow[] } };
+    const members = collection["x-semio"]?.members;
+    if (!Array.isArray(members) || members.length !== 36) throw new Error("artifact-directory-wiring requires the complete 36-row artifact collection");
+    const row = members.find((entry) => entry.id === `s.stdio.${artifact}`);
+    if (!row || row.kind !== "artifact") throw new Error(`artifact-directory-wiring missing ${artifact} collection row`);
+    row.directory = selected.directory;
+    const expected = new Map<string, string>();
+    expected.set(collectionPath, `${JSON.stringify(collection, null, 2)}\n`);
+    const visit = (directory: string): void => {
+      for (const entry of readdirSync(directory, { withFileTypes: true })) {
+        if (entry.isDirectory() && ["target", "node_modules", "🗑️generated"].includes(entry.name)) continue;
+        const path = join(directory, entry.name);
+        if (entry.isDirectory()) { visit(path); continue; }
+        if (path === import.meta.filename) continue;
+        const original = readFileSync(path, "utf8");
+        const rendered = renderArtifactDirectoryReferences(path, original, stdioRoot, repoRoot, selected.directory);
+        if (rendered !== original) expected.set(path, rendered);
+      }
+    };
+    visit(stdioRoot);
+    const stale = [...expected].filter(([path, content]) => readFileSync(path, "utf8") !== content);
+    if (mode === "check") {
+      if (stale.length > 0) throw new Error(`artifact-directory-wiring ${artifact} has ${stale.length} stale files; first: ${relative(repoRoot, stale[0]![0])}`);
+    } else {
+      for (const [path, content] of stale) writeFileSync(path, content);
+    }
+    const remaining = stdioWalkText(stdioRoot).filter((path) => [...readFileSync(path, "utf8").matchAll(/🗿️artifacts\/([^/\s"'`]+)/gu)].some((match) => artifactDirectorySemanticKey(match[1]!) === "jpg" && match[1] !== selected.directory));
+    if (remaining.length > 0) throw new Error(`artifact-directory-wiring ${artifact} left stale identity in ${relative(repoRoot, remaining[0]!)}`);
+    console.log(`[stdio] artifact-directory-wiring ${mode}: ${artifact}=${selected.directory}; ${stale.length} files ${mode === "generate" ? "regenerated" : "stale"}`);
+  }
+}
+
+type SubsetDirectoryOutcome = "accepted" | "rewritten" | "missing-directory" | "ambiguous-directory";
+type SubsetDirectoryCase = { id: string; directories: string[]; reference: string; outcome: SubsetDirectoryOutcome };
+type SubsetDirectoryFixture = { version: number; artifact: string; standard: string; subset: string; schema: string; canonicalDirectory: string; cases: SubsetDirectoryCase[] };
+
+function selectSubsetDirectory(directories: string[], subset: string, reference: string): { outcome: SubsetDirectoryOutcome; directory?: string } {
+  const matches = directories.filter((directory) => artifactDirectorySemanticKey(directory) === subset);
+  if (matches.length === 0) return { outcome: "missing-directory" };
+  if (matches.length !== 1) return { outcome: "ambiguous-directory" };
+  return { outcome: matches[0] === reference ? "accepted" : "rewritten", directory: matches[0] };
+}
+
+function resolveSubsetDirectoryReference(sourcePath: string, token: string, stdioRoot: string, repoRoot: string, artifact: string, standard: string, subset: string): string {
+  return resolveTaxonomyDirectoryReference(sourcePath, token, stdioRoot, repoRoot, (pieces) => {
+    const keys = pieces.map(artifactDirectorySemanticKey);
+    const artifacts = keys.indexOf("artifacts");
+    const standards = keys.indexOf("standards", artifacts + 1);
+    const subsets = keys.indexOf("subsets", standards + 1);
+    return artifacts >= 0 && keys[artifacts + 1] === artifact && standards > artifacts && keys[standards + 1] === standard && subsets > standards && keys[subsets + 1] === subset;
+  });
+}
+
+class SubsetDirectoryWiringScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const [mode, artifact, subset] = segments;
+    if ((mode !== "generate" && mode !== "check") || artifact !== "semio" || subset !== "mesh") throw new Error("subset-directory-wiring expects generate|check semio mesh");
+    const { default: assert } = await import("node:assert/strict");
+    const fixtureRoot = join(import.meta.dir, "🧭️wiring-fixture/🗂️subset-directory-wiring");
+    const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as SubsetDirectoryFixture;
+    const schema = JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🗂️subset-directory-wiring/🔣️.json"), "utf8"));
+    const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+    const ajv = new Ajv2020({ strict: true });
+    const validate = ajv.compile(schema);
+    assert(validate(fixture), ajv.errorsText(validate.errors));
+    assert.equal(new Set(fixture.cases.map((row) => row.id)).size, fixture.cases.length);
+    for (const row of fixture.cases) {
+      const selected = selectSubsetDirectory(row.directories, fixture.subset, row.reference);
+      assert.equal(selected.outcome, row.outcome, row.id);
+      if (selected.directory) assert.equal(selected.directory, fixture.canonicalDirectory, row.id);
+    }
+    const stdioRoot = resolve(import.meta.dir, "../..");
+    const repoRoot = resolve(stdioRoot, "../../..");
+    const subsetsRoot = join(stdioRoot, `🗿️artifacts/🧿️${fixture.artifact}/🏅️standards/🔖️${fixture.standard}/🪆️subsets`);
+    const selection = selectSubsetDirectory(readdirSync(subsetsRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name), fixture.subset, fixture.canonicalDirectory);
+    if (!selection.directory || selection.outcome !== "accepted") throw new Error(`subset-directory-wiring ${fixture.subset} physical authority is ${selection.outcome}`);
+    const manifestPath = join(subsetsRoot, "🔣️.json");
+    const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as { artifact?: unknown; standard?: unknown; subsets?: Record<string, { schema?: unknown }> };
+    if (manifest.artifact !== `s.stdio.${fixture.artifact}` || manifest.standard !== fixture.standard || manifest.subsets?.[fixture.subset]?.schema !== fixture.schema) throw new Error("subset-directory-wiring logical mesh manifest row is absent or detached from its schema");
+    const expected = new Map<string, string>();
+    for (const path of stdioWalkText(stdioRoot)) {
+      if (path === import.meta.filename) continue;
+      const original = readFileSync(path, "utf8");
+      const rendered = original.replace(/[^\s"'`]+/gu, (token) => resolveSubsetDirectoryReference(path, token, stdioRoot, repoRoot, fixture.artifact, fixture.standard, fixture.subset));
+      if (rendered !== original) expected.set(path, rendered);
+    }
+    const stale = [...expected].filter(([path, content]) => readFileSync(path, "utf8") !== content);
+    if (mode === "check" && stale.length > 0) throw new Error(`subset-directory-wiring ${fixture.subset} has ${stale.length} stale files; first: ${relative(repoRoot, stale[0]![0])}`);
+    if (mode === "generate") for (const [path, content] of stale) writeFileSync(path, content);
+    const remaining = stdioWalkText(stdioRoot).filter((path) => [...readFileSync(path, "utf8").matchAll(/🗿️artifacts\/([^/\s"'`]+)\/🏅️standards\/([^/\s"'`]+)\/🪆️subsets\/([^/\s"'`]+)/gu)].some((match) => artifactDirectorySemanticKey(match[1]!) === fixture.artifact && artifactDirectorySemanticKey(match[2]!) === fixture.standard && artifactDirectorySemanticKey(match[3]!) === fixture.subset && match[3] !== selection.directory));
+    if (remaining.length > 0) throw new Error(`subset-directory-wiring ${fixture.subset} left stale identity in ${relative(repoRoot, remaining[0]!)}`);
+    console.log(`[DEBUG] Stdio subset directory oracle: ${fixture.cases.length} schema-valid accepted/stale/missing/ambiguous cases`);
+    console.log(`[stdio] subset-directory-wiring ${mode}: ${fixture.artifact}/${fixture.subset}=${selection.directory}; ${stale.length} files ${mode === "generate" ? "regenerated" : "stale"}`);
+  }
+}
+
+function stdioWalkText(directory: string, files: string[] = []): string[] {
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    if (entry.isDirectory() && ["target", "node_modules", "🗑️generated"].includes(entry.name)) continue;
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) stdioWalkText(path, files);
+    else if (/[.](?:rs|ts|json|feature|semio)$/u.test(entry.name) || ["Cargo.toml", "package.json"].includes(entry.name)) files.push(path);
+  }
+  return files;
+}
+
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await runCatalogRootContractTests(this.root);
@@ -372,7 +640,7 @@ class TestScript extends BundleScript {
   }
 }
 
-/** 📈️ Runs the owned deterministic-iteration `Brep` kernel benchmark suite (`benches/brep_kernel.rs`) — moved here
+/** 📈️ Runs the owned deterministic-iteration `Brep` kernel benchmark suite (`🏃️benches/⏱️brep-kernel.rs`) — moved here
  * from `semio-framework-3d` in ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-
  * ARTIFACTS wave G5, alongside the `Brep` kernel itself. */
 class BenchScript extends BundleScript {
@@ -438,7 +706,7 @@ function requireEmptyFreshRoot(repoRoot: string, value: string): string {
   if (readdirSync(root).length !== 0) throw new Error("catalog-root build root must be empty");
   const exact = realpathSync(root);
   const ambientTarget = resolve(repoRoot, "target");
-  const developmentCache = resolve(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🧑️‍💻️dev", "🔌️plugin-modules");
+  const developmentCache = resolve(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🧑‍💻dev", "🔌️plugin-modules");
   if (pathIsWithin(ambientTarget, exact)) throw new Error("catalog-root refuses the ambient shared target");
   if (pathIsWithin(developmentCache, exact)) throw new Error("catalog-root refuses the development cache");
   if (exact === resolve(repoRoot)) throw new Error("catalog-root requires a dedicated fresh directory");
@@ -547,6 +815,6 @@ class CatalogRootScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("bench", BenchScript).register("build-wasm-release", BuildWasmReleaseScript).register("describe", DescribeScript).register("catalog-root", CatalogRootScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("bench", BenchScript).register("build-wasm-release", BuildWasmReleaseScript).register("describe", DescribeScript).register("catalog-root", CatalogRootScript).register("flow-retained-decode-check", FlowRetainedDecodeScript).register("artifact-directory-wiring", ArtifactDirectoryWiringScript).register("subset-directory-wiring", SubsetDirectoryWiringScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

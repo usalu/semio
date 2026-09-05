@@ -1,0 +1,11 @@
+{
+  "ReplaceGraph": {
+    "graph": {
+      "directed": true,
+      "nodes": [],
+      "edges": [],
+      "algorithm": "",
+      "algorithmSeed": null
+    }
+  }
+}

@@ -476,6 +476,8 @@ export type FixedContractScope =
   | { readonly kind: "package-root"; readonly ecosystemId: string }
   | { readonly kind: "directory-kind"; readonly directoryKindId: string }
   | { readonly kind: "fixed-directory-contract"; readonly fixedDirectoryContractId: string }
+  | { readonly kind: "fixed-directory-contract-set"; readonly fixedDirectoryContractIds: readonly string[] }
+  | { readonly kind: "named-fixed-directory-contract-set"; readonly fixedDirectoryContractSetId: string }
   | { readonly kind: "sibling-fixed-filename-contract"; readonly fixedFilenameContractId: string }
   | { readonly kind: "path-pattern" };
 
@@ -496,6 +498,7 @@ export interface FixedDirectoryContract {
   readonly authority: string;
   readonly reason: string;
   readonly configurability: "unconfigurable";
+  readonly descendants?: "reserved";
   readonly scope: Exclude<FixedContractScope, { readonly kind: "package-root" }>;
   readonly verification: string;
   readonly expires: string | null;
@@ -541,7 +544,7 @@ export interface PackageGlueGrammarSpec {
 export interface PackageSourceDisposition {
   readonly contractKind: "fixed" | "configurable";
   readonly disposition: "adapter-source" | "tool-metadata";
-  readonly validator: "package-glue" | "command-router" | "vitest-configuration";
+  readonly validator: "package-glue" | "command-router" | "vitest-configuration" | "tool-config-vitest" | "tool-config-tailwind" | "tool-config-postcss" | "tool-config-eslint" | "tool-config-dependency-cruiser" | "pytest-configuration" | "eslint-configuration" | "vscode-test-configuration";
   readonly authority: string;
   readonly verification: string;
 }
@@ -592,7 +595,22 @@ export interface GeneratorProjectionActivation {
 export interface SemanticPackageGeneration {
   readonly kind: "wgpu-package-artifacts";
   readonly previewInput: { readonly protocol: "package-projected-inputs-v1"; readonly maxBytes: 67108864; readonly maxOperations: 200000 };
+  readonly catalogPath: string;
+  readonly catalogSha256: string;
   readonly browserProfile: SemanticPackageBrowserProfile;
+}
+
+/** 🧩️ Explicit current JCO coordinates, separate from digest-locked historical projection evidence. */
+export interface CurrentJcoPackageDestination {
+  readonly kind: "jco-canonical-package-v1";
+  readonly packageId: "jcoprobe-guest";
+  readonly semanticOwnerRoot: string;
+  readonly packageRoot: string;
+  readonly cargoManifestPath: string;
+  readonly cargoLockPath: string;
+  readonly componentPath: string;
+  readonly witPath: string;
+  readonly adapterPath: string;
 }
 
 /** ⚙️ Schema-owned generator identity; runnable commands derive only from exact Nx targets. */
@@ -601,10 +619,14 @@ export interface GeneratorContract {
   readonly ownerPath: string | null;
   readonly target: string | null;
   readonly previewTarget?: string;
+  readonly previewArguments?: readonly string[];
+  readonly previewLimits?: { readonly maxOutputBytes: number; readonly timeoutMs: number };
+  readonly compilerInputManifest?: { readonly kind: "compiler-input-manifest-v1"; readonly manifestOutputPath: string; readonly manifestSchemaPath: string; readonly staticAuthorityPath: string; readonly maxFiles: number };
   readonly checkTarget?: string;
   readonly inputPatterns: readonly string[];
   readonly inputDiscovery?: RegistryCatalogInputDiscovery;
   readonly packageGeneration?: SemanticPackageGeneration;
+  readonly currentPackageDestination?: CurrentJcoPackageDestination;
   readonly projectionActivation?: GeneratorProjectionActivation;
   readonly outputRoots: readonly GeneratorOutputRoot[];
   readonly reason: string;
@@ -620,7 +642,7 @@ export interface PathExclusion {
 /** 🔏️Repository path-identity rules for every non-reserved file and directory. */
 export interface PathEmojiPolicy {
   readonly inventory: "git-visible";
-  readonly identity: "leading-emoji-sequence";
+  readonly identity: "single-emoji-grapheme";
   readonly siblingNamespace: "files-and-directories";
   readonly genericEmojiIdentities: readonly string[];
   readonly reservedSubtreeDirectoryNames: readonly string[];
@@ -633,7 +655,7 @@ export interface PathEmojiEntry {
   readonly reserved?: boolean;
 }
 
-export type PathEmojiFindingKind = "missing" | "generic" | "presentation" | "spacing" | "duplicate";
+export type PathEmojiFindingKind = "missing" | "generic" | "presentation" | "spacing" | "duplicate" | "multiple" | "reserved-emoji";
 
 /** ⚠️One deterministic path-emoji statute finding. */
 export interface PathEmojiFinding {
@@ -661,27 +683,46 @@ export function foldPathEmojiIdentity(value: string): string {
   return value.normalize("NFC").replaceAll("\uFE0E", "").replaceAll("\uFE0F", "");
 }
 
+/** 📖️Identifies reserved documentation names independently of their optional format extension. */
+export function reservedDocumentationBasename(name: string): string | null {
+  const identity = leadingEmojiIdentity(name);
+  return /^(?:README(?:\.[^/]+)?|LICENSE(?:\.[^/]+)?|AGENTS\.md)$/u.test(identity.rest) ? identity.rest : null;
+}
+
+const RGI_EMOJI_SEQUENCE = new RegExp("^(?:\\p{RGI_Emoji})$", "v");
+
+/** 🔠️Recognizes one RGI emoji or one explicitly presented pictograph. */
+function canonicalTaxonomyEmoji(value: unknown): value is string {
+  return typeof value === "string" && value === value.normalize("NFC") && (RGI_EMOJI_SEQUENCE.test(value) || /^\p{Extended_Pictographic}\uFE0F$/u.test(value));
+}
+
 /** ⚖️Evaluates path emoji rules in one namespace shared by file and directory siblings. */
 export function pathEmojiStatuteFindings(entries: readonly PathEmojiEntry[], genericEmojiIdentities: readonly string[]): PathEmojiFinding[] {
   const generic = new Set(genericEmojiIdentities.map(foldPathEmojiIdentity));
   const seen = new Map<string, PathEmojiEntry>();
   const findings: PathEmojiFinding[] = [];
-  const sorted = [...entries].filter((entry) => !entry.reserved).sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
+  const sorted = [...entries].sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
   for (const entry of sorted) {
     const name = entry.path.split("/").at(-1) ?? "";
     const identity = leadingEmojiIdentity(name);
+    if (entry.nodeKind === "file" && reservedDocumentationBasename(name)) {
+      if (identity.emoji) findings.push({ kind: "reserved-emoji", path: entry.path, emoji: identity.emoji });
+      continue;
+    }
+    if (entry.reserved) continue;
     if (!identity.emoji) {
       findings.push({ kind: "missing", path: entry.path });
       continue;
     }
+    if (identity.emoji !== identity.first || /[\p{Extended_Pictographic}\p{Emoji_Presentation}\u20E3]/u.test(identity.rest)) findings.push({ kind: "multiple", path: entry.path, emoji: identity.emoji });
     if (generic.has(foldPathEmojiIdentity(identity.first))) findings.push({ kind: "generic", path: entry.path, emoji: identity.first });
     const firstCodePoint = [...identity.first][0] ?? "";
     if (firstCodePoint && !/\p{Emoji_Presentation}/u.test(firstCodePoint) && !identity.first.includes("\uFE0F")) findings.push({ kind: "presentation", path: entry.path, emoji: identity.first });
     if (/^\s/u.test(identity.rest)) findings.push({ kind: "spacing", path: entry.path, emoji: identity.emoji });
     const parent = entry.path.includes("/") ? entry.path.slice(0, entry.path.lastIndexOf("/")) : "";
-    const key = `${parent}\0${foldPathEmojiIdentity(identity.emoji)}`;
+    const key = `${parent}\0${foldPathEmojiIdentity(identity.first)}`;
     const previous = seen.get(key);
-    if (previous) findings.push({ kind: "duplicate", path: entry.path, sibling: previous.path, emoji: foldPathEmojiIdentity(identity.emoji) });
+    if (previous) findings.push({ kind: "duplicate", path: entry.path, sibling: previous.path, emoji: foldPathEmojiIdentity(identity.first) });
     else seen.set(key, entry);
   }
   return findings;
@@ -860,6 +901,7 @@ export interface Taxonomy {
   readonly fixedFilenameContracts: Readonly<Record<string, FixedFilenameContract>>;
   readonly fixedFilenameRejectionContracts: Readonly<Record<string, FixedFilenameRejectionContract>>;
   readonly fixedDirectoryContracts: Readonly<Record<string, FixedDirectoryContract>>;
+  readonly fixedDirectoryContractSets?: Readonly<Record<string, readonly string[]>>;
   readonly configurableEntryContracts: Readonly<Record<string, ConfigurableEntryContract>>;
   readonly packageBoundaryRules: Readonly<Record<string, PackageBoundaryRule>>;
   readonly packageBoundaryProfiles: Readonly<Record<string, PackageBoundaryProfile>>;
@@ -878,6 +920,8 @@ export interface Taxonomy {
   };
   readonly areaEnforcement: { readonly requiredState: "clean"; readonly undeclaredAreas: "enforce"; readonly opaquePathExclusionIds: readonly string[] };
   readonly semanticManifestFileKindId: string;
+  /** 📇️ Exact collection-owner manifest filenames whose semantic direction requires a stemmed identity. */
+  readonly semanticManifestFilenameOverrides?: Readonly<Record<string, string>>;
   readonly semanticExtensionKey: string;
   readonly semanticConsumerMinimum: number;
   readonly semanticAllowedOwnerLevels: readonly SemanticOwnerLevel[];
@@ -911,6 +955,8 @@ export interface Taxonomy {
   readonly subsetAnyId?: string;
   /** 🪆️ The on-disk dir name `subsetAnyId` maps to — canonical single source for the `"*"` ⇔ `✳️any` mapping. */
   readonly subsetAnyDirName?: string;
+  /** 🪆️ Exact per-`🪆️subsets` physical identities for standards whose sibling semantics require distinct emojis. */
+  readonly subsetDirectoryOverrides?: Readonly<Record<string, Readonly<Record<string, string>>>>;
   /** 🔣️ File kind of each per-standard subset vocabulary manifest. */
   readonly subsetsManifestFileKindId?: string;
   /** ✅️ COMPLETENESS set: every legacy artifact carries schema, engine, and IO. Lifecycle capabilities are schema-derived. */
@@ -954,12 +1000,16 @@ export interface Taxonomy {
   readonly ioFidelityClasses?: readonly string[];
   /** 🧬️ Full-match pattern for one direct `<emoji><verb>-<noun>` mutation owner directory. */
   readonly mutationDirectoryPattern: string;
+  /** 🏘️ Exact domain and operation owners; semantic IDs remain independent of compact operation basenames. */
+  readonly mutationDomainOwners: Readonly<Record<string, Readonly<Record<string, Readonly<Record<string, string>>>>>>;
+  /** 🧭️ Exact catalog subset owners whose physical mutations belong to another registered subset of the same artifact and standard. */
+  readonly mutationCatalogSourceOwners: Readonly<Record<string, string>>;
   /** 🦀️ File kind of the mandatory direct `<mutation>/🦀️.rs` owner leaf. */
   readonly mutationComponentFileKindId: string;
   /** 🪪️ Language-neutral descriptor file kind owned beside every direct mutation component. */
   readonly mutationDescriptorFileKindId: string;
   readonly mutationPayloadSchemaLocation: Readonly<{ directoryKindId: "schema"; directoryName: "🧬️schema"; fileKindId: "json" }>;
-  readonly mutationPayloadSchemaProjection: Readonly<{ contractKind: "descriptor-linked-mutation-payload-schema"; ownerPathPattern: string; sourceFilename: string; descriptorSourceFilename: string; descriptorField: "payloadSchema"; descriptorSchemaVersion: 1; descriptorOwnerField: "owner"; descriptorIdentityField: "semanticKind"; jsonSchemaDialect: string; destinationAuthority: "mutationPayloadSchemaLocation"; rationaleRule: "mutation-payload-schema-owner-projection-v1" }>;
+  readonly mutationPayloadSchemaAuthority: Readonly<{ contractKind: "descriptor-linked-mutation-payload-schema"; ownerAuthority: "mutationOwnerIdentity"; descriptorFileKindId: "json"; descriptorField: "payloadSchema"; descriptorSchemaVersion: 1; descriptorCardinality: "one-canonical-no-competing-descriptor"; descriptorOwnerField: "owner"; descriptorIdentityField: "semanticKind"; jsonSchemaDialect: string; targetAuthority: "owner-relative-regular-json-schema" }>;
   /** 🧬️ PLACEMENT-bound facets below a direct mutation owner: `🦠️mutation`/`🔺️diff`/`↩️inverse` behavior, required-when-present, never inlinable into the direct leaf. */
   readonly mutationBehaviorFacetDirs: readonly string[];
   /** 🔖️ Region marker whose presence in a direct mutation leaf proves that facet's behavior was inlined instead of split into its own directory. */
@@ -1057,6 +1107,7 @@ export interface Taxonomy {
   readonly testFeatureFileKindId: string;
   readonly testAdapterFileKinds: Readonly<Record<string, string>>;
   readonly testContributionFileKindId: string;
+  readonly testContributionDirectoryOverrides: Readonly<Record<string, string>>;
   readonly testOutputMarkerFileKindId: string;
   readonly testOracleRegistryLocation: { readonly directoryPath: string; readonly fileKindId: string };
   readonly testSchemaLocation: { readonly directoryPath: string; readonly fileKindId: string };
@@ -1239,6 +1290,31 @@ export function loadTaxonomy(): Taxonomy {
   return cachedTaxonomy.current;
 }
 
+/** 🪆️ Resolves one logical subset id to its exact owner-scoped physical directory identity. */
+export function subsetDirectoryNameForId(subsetsOwnerPath: string, subsetId: string, taxonomy: Taxonomy = loadTaxonomy()): string | null {
+  const owner = subsetsOwnerPath.replaceAll("\\", "/").replace(/\/$/u, "").normalize("NFC");
+  const overrides = taxonomy.subsetDirectoryOverrides?.[owner];
+  if (overrides) return overrides[subsetId] ?? null;
+  const anyId = taxonomy.subsetAnyId ?? "*";
+  if (subsetId === anyId) return taxonomy.subsetAnyDirName ?? "✳️any";
+  const slug = new RegExp(taxonomy.subsetSlugPattern ?? "^[a-z0-9][a-z0-9.\\-]*$", "u");
+  return slug.test(subsetId) ? `${taxonomy.subsetDirPrefix ?? "✳️"}${subsetId}` : null;
+}
+
+/** 🪆️ Resolves one physical subset directory identity back to its logical owner-scoped id. */
+export function subsetIdForDirectoryName(subsetsOwnerPath: string, directoryName: string, taxonomy: Taxonomy = loadTaxonomy()): string | null {
+  const owner = subsetsOwnerPath.replaceAll("\\", "/").replace(/\/$/u, "").normalize("NFC");
+  const overrides = taxonomy.subsetDirectoryOverrides?.[owner];
+  if (overrides) return Object.entries(overrides).find(([, name]) => name === directoryName)?.[0] ?? null;
+  const anyId = taxonomy.subsetAnyId ?? "*";
+  if (directoryName === (taxonomy.subsetAnyDirName ?? "✳️any")) return anyId;
+  const prefix = taxonomy.subsetDirPrefix ?? "✳️";
+  if (!directoryName.startsWith(prefix)) return null;
+  const id = directoryName.slice(prefix.length);
+  const slug = new RegExp(taxonomy.subsetSlugPattern ?? "^[a-z0-9][a-z0-9.\\-]*$", "u");
+  return slug.test(id) ? id : null;
+}
+
 type SchemaFormatSpec = { readonly fileKindId: string; readonly fieldCasing: string };
 
 /** 📄️ Returns every canonical kind-only filename for one file kind. */
@@ -1261,6 +1337,12 @@ export function canonicalPrimaryFilenameForKind(kindId: string, taxonomy: Taxono
   return filename;
 }
 
+/** 📇️ Resolves a semantic collection's manifest by exact owner, never by ancestor or suffix fallback. */
+export function semanticManifestFilenameForCollection(collectionPath: string, taxonomy: Taxonomy = loadTaxonomy()): string {
+  const owner = collectionPath.replaceAll("\\", "/").replace(/\/$/u, "").normalize("NFC");
+  return taxonomy.semanticManifestFilenameOverrides?.[owner] ?? canonicalPrimaryFilenameForKind(taxonomy.semanticManifestFileKindId, taxonomy);
+}
+
 /** 🍃️ Renders a source's exact longest-chain format; this does not authorize its owner or move. */
 export function canonicalLeafFilenameForSourcePath(path: string, taxonomy: Taxonomy = loadTaxonomy()): string | null {
   const kindId = fileKindIdForSourcePath(path, taxonomy);
@@ -1271,10 +1353,87 @@ export function canonicalLeafFilenameForSourcePath(path: string, taxonomy: Taxon
   return extension ? `${kind.emoji}${extension}` : null;
 }
 
-/** 🧬️ Renders the separate semantic owner for a mutation's optional JSON payload schema. */
+/** 🧬️ Renders the default schema location for a newly authored mutation, not existing descriptor authority. */
 export function mutationPayloadSchemaRelativePath(taxonomy: Taxonomy = loadTaxonomy()): string {
   const location = taxonomy.mutationPayloadSchemaLocation;
   return `${location.directoryName}/${canonicalPrimaryFilenameForKind(location.fileKindId, taxonomy)}`;
+}
+
+/** 📐️ Validates Draft-07 keyword shapes without imposing names on a schema's physical file. */
+export function mutationPayloadSchemaDocumentProblems(value: unknown, dialect = "http://json-schema.org/draft-07/schema#"): string[] {
+  const problems: string[] = [];
+  const object = (item: unknown): item is Record<string, unknown> => item !== null && typeof item === "object" && !Array.isArray(item);
+  const canonical = (item: unknown): string => Array.isArray(item) ? `[${item.map(canonical).join(",")}]` : object(item) ? `{${Object.keys(item).sort().map((key) => `${JSON.stringify(key)}:${canonical(item[key])}`).join(",")}}` : JSON.stringify(item) ?? String(item);
+  const unique = (items: readonly unknown[]): boolean => new Set(items.map(canonical)).size === items.length;
+  const strings = (item: unknown): boolean => Array.isArray(item) && item.every((part) => typeof part === "string") && unique(item);
+  const regex = (pattern: string): boolean => { try { new RegExp(pattern, "u"); return true; } catch { return false; } };
+  const visit = (item: unknown, path: string): void => {
+    if (typeof item === "boolean") return;
+    if (!object(item)) { problems.push(`${path} must be an object or boolean schema`); return; }
+    for (const [key, child] of Object.entries(item)) {
+      const at = `${path}/${key}`;
+      if (["$id", "$schema", "$ref", "$comment", "title", "description", "format", "contentMediaType", "contentEncoding", "pattern"].includes(key) && typeof child !== "string") problems.push(`${at} must be a string`);
+      if (["readOnly", "uniqueItems"].includes(key) && typeof child !== "boolean") problems.push(`${at} must be a boolean`);
+      if (["maximum", "exclusiveMaximum", "minimum", "exclusiveMinimum", "multipleOf"].includes(key) && (typeof child !== "number" || !Number.isFinite(child) || key === "multipleOf" && child <= 0)) problems.push(`${at} must be a valid numeric bound`);
+      if (["maxLength", "minLength", "maxItems", "minItems", "maxProperties", "minProperties"].includes(key) && (typeof child !== "number" || !Number.isInteger(child) || child < 0)) problems.push(`${at} must be a nonnegative integer`);
+      if (key === "pattern" && typeof child === "string" && !regex(child)) problems.push(`${at} must be a regular expression`);
+      if (key === "required" && !strings(child)) problems.push(`${at} must contain unique strings`);
+      if (key === "examples" && !Array.isArray(child)) problems.push(`${at} must be an array`);
+      if (key === "enum" && (!Array.isArray(child) || child.length === 0 || !unique(child))) problems.push(`${at} must contain unique values`);
+      if (key === "type") {
+        const types = Array.isArray(child) ? child : [child];
+        if (types.length === 0 || !unique(types) || types.some((type) => typeof type !== "string" || !["array", "boolean", "integer", "null", "number", "object", "string"].includes(type))) problems.push(`${at} must name unique JSON types`);
+      }
+      if (["additionalItems", "contains", "additionalProperties", "propertyNames", "if", "then", "else", "not"].includes(key)) visit(child, at);
+      if (["allOf", "anyOf", "oneOf"].includes(key) || key === "items" && Array.isArray(child)) {
+        if (!Array.isArray(child) || child.length === 0) problems.push(`${at} must contain schemas`);
+        else child.forEach((schema, index) => visit(schema, `${at}/${index}`));
+      } else if (key === "items") visit(child, at);
+      if (["definitions", "properties", "patternProperties", "dependencies"].includes(key)) {
+        if (!object(child)) problems.push(`${at} must be an object`);
+        else for (const [name, schema] of Object.entries(child)) {
+          if (key === "patternProperties" && !regex(name)) problems.push(`${at}/${name} must be a regular expression`);
+          if (key === "dependencies" && Array.isArray(schema)) { if (!strings(schema)) problems.push(`${at}/${name} must contain unique strings`); }
+          else visit(schema, `${at}/${name}`);
+        }
+      }
+    }
+  };
+  if (!object(value) || value.$schema !== dialect) problems.push("Payload must declare its registered JSON Schema dialect");
+  visit(value, "");
+  return problems;
+}
+
+/** 🛡️ Validates descriptor authority against admitted, non-linked nodes within one exact operation owner. */
+export function mutationPayloadSchemaProblems(owner: string, pointer: unknown, node: (path: string) => Readonly<{ kind: string; content?: string; repositoryBoundary?: boolean }>, dialect = "http://json-schema.org/draft-07/schema#"): string[] {
+  const local = (path: string): boolean => path.length > 0 && path === path.normalize("NFC") && !/^[\/]|[\\:#\u0000-\u001F\u007F\u2028\u2029]/u.test(path) && path.split("/").every((part) => part !== "" && part !== "." && part !== "..");
+  if (!local(owner) || typeof pointer !== "string" || !local(pointer) || !pointer.endsWith(".json")) return ["Payload schema must be an exact owner-relative JSON path without traversal, fragments, or absolute coordinates"];
+  const target = `${owner}/${pointer}`, parts = target.split("/");
+  for (let index = 1; index < parts.length; index++) {
+    const path = parts.slice(0, index).join("/"), observed = node(path);
+    if (observed.kind !== "directory" || observed.repositoryBoundary) return [`Payload schema ancestor ${path} is not an admitted regular owner directory`];
+  }
+  const observed = node(target);
+  if (observed.kind !== "file" || observed.repositoryBoundary || typeof observed.content !== "string") return [`Payload schema ${target} is not an admitted regular file`];
+  try { const document = JSON.parse(observed.content); return [...jsonDocumentDuplicateKeys(observed.content), ...mutationPayloadSchemaDocumentProblems(document, dialect)]; }
+  catch { return [`Payload schema ${target} is not valid JSON`]; }
+}
+
+/** 🗝️ Rejects duplicate decoded members in already parsed JSON authority documents. */
+export function jsonDocumentDuplicateKeys(source: string): string[] {
+  const stack: (Set<string> | null)[] = [], problems: string[] = [];
+  for (const token of source.matchAll(/"(?:\\.|[^"\\])*"\s*:?|[{}\[\]]/gu)) {
+    const value = token[0];
+    if (value === "{") stack.push(new Set());
+    else if (value === "[") stack.push(null);
+    else if (value === "}" || value === "]") stack.pop();
+    else if (value.endsWith(":")) {
+      const key = JSON.parse(value.slice(0, -1).trim()) as string, keys = stack.at(-1);
+      if (keys?.has(key)) problems.push(`Duplicate JSON member ${JSON.stringify(key)} at offset ${token.index}`);
+      keys?.add(key);
+    }
+  }
+  return problems;
 }
 
 /** 🧷️ Returns a semantic leaf filename using the file kind's schema-ordered primary extension. */
@@ -1480,6 +1639,27 @@ export function generatorNxPreviewCommand(contract: GeneratorContract): readonly
   return ["bun", "nx", "run", contract.previewTarget];
 }
 
+/** 👓️ Admits an exact read-only script invocation without sharing another generator's preview. */
+export function generatorPreviewScriptArguments(contract: Pick<GeneratorContract, "ownership" | "target" | "previewTarget" | "previewArguments">): readonly string[] {
+  if (contract.ownership !== "owned" || !contract.target || !contract.previewTarget) throw new Error("Only owned generator contracts have preview invocations");
+  const project = contract.target.slice(0, contract.target.lastIndexOf(":"));
+  if (contract.previewArguments === undefined) {
+    if (contract.previewTarget !== `${project}:preview-generated`) throw new Error("previewTarget must be the exact owner preview-generated target or an explicit same-project preview-* invocation");
+    return ["preview-generated"];
+  }
+  const args = contract.previewArguments, separator = contract.previewTarget.lastIndexOf(":");
+  if (contract.previewTarget.slice(0, separator) !== project || !/^preview-[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(contract.previewTarget.slice(separator + 1)) || !Array.isArray(args) || args.length < 1 || args.length > 8 || args.some(arg => typeof arg !== "string" || !/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(arg)) || args.at(-1) !== "preview") throw new Error("Invalid explicit same-project preview invocation");
+  return args;
+}
+
+/** ⏱️ Bounds a declared compiler preview without changing established generator defaults. */
+export function generatorPreviewResourceLimits(contract: Pick<GeneratorContract, "ownership" | "previewTarget" | "previewLimits">): { readonly maxOutputBytes: number; readonly timeoutMs: number } {
+  const limits = contract.previewLimits;
+  if (limits === undefined) return { maxOutputBytes: 134217728, timeoutMs: 60000 };
+  if (contract.ownership !== "owned" || !contract.previewTarget || !limits || typeof limits !== "object" || Array.isArray(limits) || Object.keys(limits).sort().join("|") !== "maxOutputBytes|timeoutMs" || !Number.isSafeInteger(limits.maxOutputBytes) || limits.maxOutputBytes < 1024 || limits.maxOutputBytes > 536870912 || !Number.isSafeInteger(limits.timeoutMs) || limits.timeoutMs < 1000 || limits.timeoutMs > 600000) throw new Error("Invalid bounded generator preview limits");
+  return limits;
+}
+
 /** ✅️ Derives an owned generator's exact optional freshness command. */
 export function generatorNxCheckCommand(contract: GeneratorContract): readonly ["bun", "nx", "run", string] | null {
   if (contract.ownership !== "owned" || !contract.checkTarget) return null;
@@ -1494,10 +1674,10 @@ export interface SemanticDirectoryMatchContext {
 
 function canonicalSemanticDirectoryName(name: string, taxonomy: Taxonomy): string {
   const normalized = name.normalize(taxonomy.unicodeNormalization.form);
-  const leading = normalized.match(/^(\p{Extended_Pictographic}\uFE0F?(?:\u200D\p{Extended_Pictographic}\uFE0F?)*)/u)?.[1];
+  const leading = leadingEmojiIdentity(normalized).first;
   if (!leading) return normalized;
-  const canonicalEmoji = leading.replace(/(\p{Extended_Pictographic})(?!\uFE0F)/gu, "$1\uFE0F");
-  return `${canonicalEmoji}${normalized.slice(leading.length)}`;
+  if (/^\p{Extended_Pictographic}$/u.test(leading)) return `${leading}\uFE0F${normalized.slice(leading.length)}`;
+  return normalized;
 }
 
 /** 📁️ Resolves one canonical semantic directory name to its unique global or owner-local registry identifier. */
@@ -1755,15 +1935,24 @@ export function semanticProjectionCatalogProblems(registrations: readonly Semant
       const mutationDirectoryName = typeof vector.mutationDirectoryName === "string" ? vector.mutationDirectoryName : "";
       for (const [field, value] of Object.entries({ mutationId, sourceMutationDirectoryName, mutationDirectoryName })) if (!value || value !== value.normalize("NFC") || /[\\/]/u.test(value)) problems.push(`${vectorScope}.${field} must be one non-empty NFC basename.`);
       if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(mutationId)) problems.push(`${vectorScope}.mutationId must be kebab-case.`);
-      if ((sourceMutationDirectoryName.match(/[a-z0-9][a-z0-9-]*$/u)?.[0] ?? "") !== mutationId) problems.push(`${vectorScope}.sourceMutationDirectoryName must render mutationId.`);
-      if ((mutationDirectoryName.match(/[a-z0-9][a-z0-9-]*$/u)?.[0] ?? "") !== mutationId) problems.push(`${vectorScope}.mutationDirectoryName must render mutationId.`);
-      const canonical = members ? canonicalSemanticDirectoryName(mutationDirectoryName, taxonomy) : mutationDirectoryName;
-      if (!members?.memberNames.includes(canonical)) problems.push(`${vectorScope}.mutationDirectoryName has no exact canonical schema membership.`);
+      const sourceOwner = mutationCatalogSourceOwner(catalog.ownerPath, taxonomy);
+      if (sourceOwner === null) problems.push(`${vectorScope} has invalid explicit catalog source ownership.`);
+      const mutationRoot = `${sourceOwner ?? catalog.ownerPath}/🧬️schema/🧬️mutations`;
+      const grouped = Object.hasOwn(taxonomy.mutationDomainOwners, mutationRoot);
+      const registeredOwner = grouped ? mutationOwnerRelativePath(mutationRoot, mutationId, taxonomy) : null;
+      const canonical = grouped ? registeredOwner ?? mutationDirectoryName : members ? canonicalSemanticDirectoryName(mutationDirectoryName, taxonomy) : mutationDirectoryName;
+      if (grouped) {
+        if (!registeredOwner || registeredOwner.split("/").at(-1) !== sourceMutationDirectoryName || registeredOwner.split("/").at(-1) !== mutationDirectoryName) problems.push(`${vectorScope} has no exact registered domain-operation owner for mutationId.`);
+      } else {
+        if ((sourceMutationDirectoryName.match(/[a-z0-9][a-z0-9-]*$/u)?.[0] ?? "") !== mutationId) problems.push(`${vectorScope}.sourceMutationDirectoryName must render mutationId.`);
+        if ((mutationDirectoryName.match(/[a-z0-9][a-z0-9-]*$/u)?.[0] ?? "") !== mutationId) problems.push(`${vectorScope}.mutationDirectoryName must render mutationId.`);
+        if (!members?.memberNames.includes(canonical)) problems.push(`${vectorScope}.mutationDirectoryName has no exact canonical schema membership.`);
+      }
       if (!Array.isArray(vector.scenarios) || vector.scenarios.length === 0) problems.push(`${vectorScope}.scenarios must be non-empty.`);
       for (const [scenarioIndex, scenario] of (vector.scenarios ?? []).entries()) {
         const scenarioScope = `${vectorScope}.scenarios[${scenarioIndex}]`;
         if (Object.keys(scenario).sort().join("\0") !== ["directoryName", "id"].join("\0")) problems.push(`${scenarioScope} must contain exactly id and directoryName.`);
-        if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(scenario.id) || scenario.directoryName !== `🧪️${scenario.id}` || scenario.directoryName !== scenario.directoryName.normalize("NFC")) problems.push(`${scenarioScope} must be one canonical NFC test-case identity.`);
+        if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(scenario.id) || leadingEmojiIdentity(scenario.directoryName).rest !== scenario.id || scenario.directoryName !== scenario.directoryName.normalize("NFC") || pathEmojiStatuteFindings([{ path: scenario.directoryName, nodeKind: "directory" }], taxonomy.pathEmojiPolicy.genericEmojiIdentities).length > 0) problems.push(`${scenarioScope} must be one canonical NFC test-case identity.`);
         const sourceTuple = `${mutationId}\0${sourceMutationDirectoryName}\0${scenario.id}`;
         const canonicalTuple = `${mutationId}\0${canonical}\0${scenario.id}`;
         if (sourceTuples.has(sourceTuple)) problems.push(`${scenarioScope} duplicates a source bundle tuple.`);
@@ -2353,12 +2542,38 @@ export function createTaxonomyPathMatcher(): TaxonomyPathMatcher {
   });
 }
 
-function fixedScopeMatches(contract: FixedFilenameContract | FixedDirectoryContract, path: string, context: FixedContractMatchContext): boolean {
+/** 🔒️Parses a finite union of literal, separately declared parent-directory authorities. */
+export function parseFixedDirectoryContractSetScope(input: unknown, parents: Readonly<Record<string, FixedDirectoryContract>>): Extract<FixedContractScope, { kind: "fixed-directory-contract-set" }> {
+  if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Fixed parent scope must be an object");
+  const row = input as Record<string, unknown>;
+  if (Object.keys(row).sort().join(",") !== "fixedDirectoryContractIds,kind" || row.kind !== "fixed-directory-contract-set" || !Array.isArray(row.fixedDirectoryContractIds) || row.fixedDirectoryContractIds.length < 1 || row.fixedDirectoryContractIds.length > 256) throw new Error("Fixed parent scope requires one nonempty finite parent ID set");
+  const ids = new Set<string>(), paths = new Set<string>();
+  for (const id of row.fixedDirectoryContractIds) {
+    if (typeof id !== "string" || !id || ids.has(id) || !parents[id]) throw new Error("Fixed parent scope contains a duplicate or unknown directory contract ID");
+    const parent = parents[id];
+    if (/[*?\[\]{}]/u.test(parent.pathPattern) || !["exact-path", "path-pattern", "repository-root"].includes(parent.scope.kind) || paths.has(parent.pathPattern)) throw new Error("Fixed parent scope requires distinct literal parent authorities");
+    ids.add(id);
+    paths.add(parent.pathPattern);
+  }
+  return { kind: "fixed-directory-contract-set", fixedDirectoryContractIds: [...ids] };
+}
+
+/** 🏷️Resolves only a declared finite parent set, with no recursive aliases or inferred parents. */
+export function parseNamedFixedDirectoryContractSetScope(input: unknown, parents: Readonly<Record<string, FixedDirectoryContract>>, sets: Readonly<Record<string, readonly string[]>>): Extract<FixedContractScope, { kind: "fixed-directory-contract-set" }> {
+  if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Named fixed parent scope must be an object");
+  const row = input as Record<string, unknown>;
+  if (Object.keys(row).sort().join(",") !== "fixedDirectoryContractSetId,kind" || row.kind !== "named-fixed-directory-contract-set" || typeof row.fixedDirectoryContractSetId !== "string" || !/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(row.fixedDirectoryContractSetId) || !Object.hasOwn(sets, row.fixedDirectoryContractSetId)) throw new Error("Named fixed parent scope requires one declared set ID");
+  return parseFixedDirectoryContractSetScope({ kind: "fixed-directory-contract-set", fixedDirectoryContractIds: sets[row.fixedDirectoryContractSetId] }, parents);
+}
+
+function fixedScopeMatches(contract: FixedFilenameContract | FixedDirectoryContract, path: string, context: FixedContractMatchContext, sets: Readonly<Record<string, readonly string[]>> = {}): boolean {
   if (contract.scope.kind === "exact-path") return path === contract.scope.path;
   if (contract.scope.kind === "repository-root") return !path.includes("/");
   if (contract.scope.kind === "package-root") return context.packageRoot === true && context.ecosystemId === contract.scope.ecosystemId;
   if (contract.scope.kind === "directory-kind") return context.parentDirectoryKindId === contract.scope.directoryKindId;
   if (contract.scope.kind === "fixed-directory-contract") return context.parentFixedDirectoryContractIds?.includes(contract.scope.fixedDirectoryContractId) === true;
+  if (contract.scope.kind === "fixed-directory-contract-set") return contract.scope.fixedDirectoryContractIds.some((id) => context.parentFixedDirectoryContractIds?.includes(id));
+  if (contract.scope.kind === "named-fixed-directory-contract-set") return sets[contract.scope.fixedDirectoryContractSetId]?.some((id) => context.parentFixedDirectoryContractIds?.includes(id)) === true;
   if (contract.scope.kind === "sibling-fixed-filename-contract") return context.siblingFixedFilenameContractIds?.includes(contract.scope.fixedFilenameContractId) === true;
   return true;
 }
@@ -2373,7 +2588,7 @@ export function fixedContractSpecificity(contract: FixedFilenameContract | Fixed
   const wildcardTokens = contract.pathPattern.match(/\*\*|\*|\?|\[[^\]]+\]/gu) ?? [];
   const literalSegments = contract.pathPattern.split("/").filter((segment) => !/\*|\?|\[/u.test(segment)).length;
   const literalCodePoints = [...contract.pathPattern.replace(/\*\*|\*|\?|\[[^\]]+\]|\//gu, "")].length;
-  const scopeStrength = { "path-pattern": 0, "directory-kind": 1, "package-root": 2, "fixed-directory-contract": 3, "sibling-fixed-filename-contract": 3, "repository-root": 4, "exact-path": 5 }[contract.scope.kind];
+  const scopeStrength = { "path-pattern": 0, "directory-kind": 1, "package-root": 2, "fixed-directory-contract": 3, "fixed-directory-contract-set": 3, "named-fixed-directory-contract-set": 3, "sibling-fixed-filename-contract": 3, "repository-root": 4, "exact-path": 5 }[contract.scope.kind];
   return [literalSegments, literalCodePoints, -wildcardTokens.length, scopeStrength];
 }
 
@@ -2397,14 +2612,14 @@ function fixedContractWinner<T extends FixedFilenameContract | FixedDirectoryCon
 export function fixedFilenameContractIdsForPath(path: string, taxonomy: Taxonomy = loadTaxonomy(), context: FixedContractMatchContext = {}): string[] {
   const normalized = path.replaceAll("\\", "/").replace(/^\.\//u, "").normalize(taxonomy.unicodeNormalization.form);
   return fixedContractWinner("filename", Object.entries(taxonomy.fixedFilenameContracts)
-    .filter(([, contract]) => (context.pathMatcher?.matches(normalized, contract.pathPattern) ?? taxonomyPathPatternMatches(normalized, contract.pathPattern)) && fixedScopeMatches(contract, normalized, context)));
+    .filter(([, contract]) => (context.pathMatcher?.matches(normalized, contract.pathPattern) ?? taxonomyPathPatternMatches(normalized, contract.pathPattern)) && fixedScopeMatches(contract, normalized, context, taxonomy.fixedDirectoryContractSets)));
 }
 
 /** 📁️ Resolves the single deterministic fixed directory winner. */
 export function fixedDirectoryContractIdsForPath(path: string, taxonomy: Taxonomy = loadTaxonomy(), context: FixedContractMatchContext = {}): string[] {
   const normalized = path.replaceAll("\\", "/").replace(/^\.\//u, "").replace(/\/$/u, "").normalize(taxonomy.unicodeNormalization.form);
   return fixedContractWinner("directory", Object.entries(taxonomy.fixedDirectoryContracts)
-    .filter(([, contract]) => (context.pathMatcher?.matches(normalized, contract.pathPattern) ?? taxonomyPathPatternMatches(normalized, contract.pathPattern)) && fixedScopeMatches(contract, normalized, context)));
+    .filter(([, contract]) => (context.pathMatcher?.matches(normalized, contract.pathPattern) ?? taxonomyPathPatternMatches(normalized, contract.pathPattern)) && fixedScopeMatches(contract, normalized, context, taxonomy.fixedDirectoryContractSets)));
 }
 
 /** 🧵️Invocation-owned fixed-contract resolver that indexes literal basenames and compiles each glob once. */
@@ -2424,7 +2639,7 @@ export function createFixedContractResolver(taxonomy: Taxonomy = loadTaxonomy())
       const normalized = path.replaceAll("\\", "/").replace(/^\.\//u, "").replace(kind === "directory" ? /\/$/u : /$^/u, "").normalize(taxonomy.unicodeNormalization.form);
       const name = normalized.slice(normalized.lastIndexOf("/") + 1);
       const candidates = [...(literal.get(name) ?? []), ...wildcard];
-      return fixedContractWinner(kind, candidates.filter(([, contract]) => matcher.matches(normalized, contract.pathPattern) && fixedScopeMatches(contract, normalized, context)));
+      return fixedContractWinner(kind, candidates.filter(([, contract]) => matcher.matches(normalized, contract.pathPattern) && fixedScopeMatches(contract, normalized, context, taxonomy.fixedDirectoryContractSets)));
     };
   };
   const filenames = index(taxonomy.fixedFilenameContracts), directories = index(taxonomy.fixedDirectoryContracts);
@@ -2450,10 +2665,6 @@ function exactContractFilename(contractId: string | null, taxonomy: Taxonomy): s
 
 function componentFilenames(taxonomy: Taxonomy): string[] {
   return [...new Set(Object.values(taxonomy.componentFileKinds).flatMap((kindId) => canonicalFilenamesForKind(kindId, taxonomy)))];
-}
-
-function semanticManifestFilename(taxonomy: Taxonomy): string {
-  return canonicalPrimaryFilenameForKind(taxonomy.semanticManifestFileKindId, taxonomy);
 }
 
 /** 🧬️ Resolves a schema facet's kind from its normative leaf on disk (`schemaFacetKinds`). */
@@ -2497,6 +2708,74 @@ type ArtifactFacetLevel =
  */
 function isEmojiPrefixedSlugDir(name: string, taxonomy: Taxonomy): boolean {
   return semanticDirectoryKindId(name, taxonomy) !== null;
+}
+
+/** 🏘️ Validates explicitly authored two-tier mutation owners without assigning names or traversing files. */
+export function mutationDomainOwnersProblems(owners: Taxonomy["mutationDomainOwners"], genericEmojiIdentities: readonly string[] = []): string[] {
+  const problems: string[] = [];
+  if (!owners || typeof owners !== "object" || Array.isArray(owners)) return ["mutationDomainOwners must be an exact-owner object."];
+  for (const [root, domains] of Object.entries(owners)) {
+    if (!root.endsWith("/🧬️mutations") || root !== root.normalize("NFC") || /[*?{}]/u.test(root) || root.includes(String.fromCharCode(92)) || [...root].some((character) => character.charCodeAt(0) < 32) || root.split("/").some((part) => !part || part === "." || part === "..")) problems.push(`mutationDomainOwners[${JSON.stringify(root)}] must name one exact repository mutation root.`);
+    if (!domains || typeof domains !== "object" || Array.isArray(domains) || Object.keys(domains).length === 0) {
+      problems.push(`mutationDomainOwners[${JSON.stringify(root)}] must declare non-empty domains.`);
+      continue;
+    }
+    const identities = new Set<string>();
+    const entries: { path: string; nodeKind: "directory" }[] = [];
+    for (const [domain, operations] of Object.entries(domains)) {
+      const domainId = leadingEmojiIdentity(domain).rest;
+      entries.push({ path: `${root}/${domain}`, nodeKind: "directory" });
+      if (domain.includes("/") || domain.includes(String.fromCharCode(92)) || !/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(domainId)) problems.push(`${root}/${domain} is not one domain basename.`);
+      if (!operations || typeof operations !== "object" || Array.isArray(operations) || Object.keys(operations).length === 0) {
+        problems.push(`${root}/${domain} must declare non-empty operations.`);
+        continue;
+      }
+      for (const [operation, identity] of Object.entries(operations)) {
+        const operationId = leadingEmojiIdentity(operation).rest;
+        entries.push({ path: `${root}/${domain}/${operation}`, nodeKind: "directory" });
+        if (operation.includes("/") || operation.includes(String.fromCharCode(92)) || !/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(operationId) || typeof identity !== "string" || !/^[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/u.test(identity)) problems.push(`${root}/${domain}/${operation} must declare one operation basename and its explicit full semantic identity.`);
+        if (identities.has(identity)) problems.push(`${root} has duplicate semantic identity ${JSON.stringify(identity)}.`);
+        identities.add(identity);
+      }
+    }
+    for (const finding of pathEmojiStatuteFindings(entries, genericEmojiIdentities)) problems.push(`${finding.path} violates mutation-domain ${finding.kind} emoji identity.`);
+  }
+  return problems;
+}
+
+/** 🛂️ Validates direct source ownership without cross-artifact, cross-standard, chained, or inferred ownership. */
+export function mutationCatalogSourceOwnersProblems(taxonomy: Pick<Taxonomy, "mutationCatalogSourceOwners" | "mutationDomainOwners">): string[] {
+  const owners = taxonomy.mutationCatalogSourceOwners, problems: string[] = [];
+  if (!owners || typeof owners !== "object" || Array.isArray(owners)) return ["mutationCatalogSourceOwners must be an exact-owner object."];
+  const profile = (path: unknown): RegExpMatchArray | null => typeof path === "string" && path === path.normalize("NFC") && !/[\\\\:*?{}\u0000-\u001F]/u.test(path) && path.split("/").every((part) => part && part !== "." && part !== "..") ? path.match(/^(.+)\/🏅️standards\/(🔖️[^/]+)\/🪆️subsets\/([^/]+)$/u) : null;
+  for (const [owner, source] of Object.entries(owners)) {
+    const catalogProfile = profile(owner), sourceProfile = profile(source);
+    if (!catalogProfile || !sourceProfile || catalogProfile[1] !== sourceProfile[1] || catalogProfile[2] !== sourceProfile[2] || owner === source || Object.hasOwn(owners, source) || !Object.hasOwn(taxonomy.mutationDomainOwners, `${source}/🧬️schema/🧬️mutations`)) problems.push(`mutationCatalogSourceOwners[${JSON.stringify(owner)}] must reference one distinct registered source subset in the same artifact and standard without ownership chains.`);
+  }
+  return problems;
+}
+
+/** 🧭️ Resolves only an exact declared catalog source; unmapped owners retain their own current source tree. */
+export function mutationCatalogSourceOwner(owner: string, taxonomy: Pick<Taxonomy, "mutationCatalogSourceOwners" | "mutationDomainOwners"> = loadTaxonomy()): string | null {
+  if (!Object.hasOwn(taxonomy.mutationCatalogSourceOwners, owner)) return owner;
+  return mutationCatalogSourceOwnersProblems(taxonomy).length === 0 ? taxonomy.mutationCatalogSourceOwners[owner]! : null;
+}
+
+/** 🪪️ Resolves a physical mutation owner only through its declared exact layout. */
+export function mutationOwnerIdentity(root: string, ownerPath: string, taxonomy: Taxonomy = loadTaxonomy()): string | null {
+  if (ownerPath !== ownerPath.normalize("NFC") || ownerPath.includes(String.fromCharCode(92))) return null;
+  const domains = taxonomy.mutationDomainOwners[root];
+  if (domains) {
+    const [domain, operation, extra] = ownerPath.split("/");
+    return extra === undefined && domain && operation && Object.hasOwn(domains, domain) && Object.hasOwn(domains[domain]!, operation) ? domains[domain]![operation]! : null;
+  }
+  return !ownerPath.includes("/") && mutationDirectoryNameIsValid(ownerPath, taxonomy) ? ownerPath.match(/[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/u)?.[0] ?? null : null;
+}
+
+/** 🗺️ Resolves one semantic ID to its explicitly registered domain and operation path. */
+export function mutationOwnerRelativePath(root: string, identity: string, taxonomy: Pick<Taxonomy, "mutationDomainOwners"> = loadTaxonomy()): string | null {
+  const paths = Object.entries(taxonomy.mutationDomainOwners[root] ?? {}).flatMap(([domain, operations]) => Object.entries(operations).filter(([, value]) => value === identity).map(([operation]) => `${domain}/${operation}`));
+  return paths.length === 1 ? paths[0]! : null;
 }
 
 /** 🧬️ Whether one direct mutation owner has the configured emoji + semantic verb-noun identity. */
@@ -2717,7 +2996,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     const canonical = new Map<string, string>();
     const extensionOwners = new Map<string, string>();
     for (const [id, spec] of Object.entries(taxonomy.fileKinds)) {
-      if (!/^\p{Extended_Pictographic}\uFE0F$/u.test(spec.emoji) || spec.emoji !== spec.emoji.normalize("NFC")) problems.push(`fileKinds[${JSON.stringify(id)}].emoji must be one NFC emoji plus U+FE0F.`);
+      if (!canonicalTaxonomyEmoji(spec.emoji)) problems.push(`fileKinds[${JSON.stringify(id)}].emoji must be one canonical NFC emoji sequence.`);
       if (!Array.isArray(spec.extensionChains) || spec.extensionChains.length === 0) problems.push(`fileKinds[${JSON.stringify(id)}].extensionChains must be non-empty.`);
       for (const extension of spec.extensionChains ?? []) {
         if (!/^\.[a-z0-9]+(?:[.-][a-z0-9]+)*$/u.test(extension)) problems.push(`fileKinds[${JSON.stringify(id)}] has invalid extension chain ${JSON.stringify(extension)}.`);
@@ -2752,7 +3031,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
   else for (const [id, spec] of Object.entries(taxonomy.scopedFileKinds)) {
     pathPattern(spec.pathPattern, `scopedFileKinds[${JSON.stringify(id)}].pathPattern`);
     if (spec.parentDirectoryKindId !== undefined && !taxonomy.semanticDirectoryKinds[spec.parentDirectoryKindId]) problems.push(`scopedFileKinds[${JSON.stringify(id)}].parentDirectoryKindId must reference a semantic directory kind.`);
-    if (typeof spec.emoji !== "string" || !/^\p{Extended_Pictographic}\uFE0F$/u.test(spec.emoji) || spec.emoji !== spec.emoji.normalize("NFC")) problems.push(`scopedFileKinds[${JSON.stringify(id)}].emoji must be one NFC emoji plus U+FE0F.`);
+    if (!canonicalTaxonomyEmoji(spec.emoji)) problems.push(`scopedFileKinds[${JSON.stringify(id)}].emoji must be one canonical NFC emoji sequence.`);
     if (!Array.isArray(spec.extensionChains) || spec.extensionChains.length === 0) problems.push(`scopedFileKinds[${JSON.stringify(id)}].extensionChains must be non-empty.`);
     for (const extension of spec.extensionChains ?? []) extensionChain(extension, `scopedFileKinds[${JSON.stringify(id)}].extensionChains`);
     if (spec.role !== "evidence") problems.push(`scopedFileKinds[${JSON.stringify(id)}].role must be evidence.`);
@@ -2762,7 +3041,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
   }
 
   if (record(taxonomy.semanticDirectoryKinds, "semanticDirectoryKinds")) for (const [id, spec] of Object.entries(taxonomy.semanticDirectoryKinds)) {
-      if (!/^\p{Extended_Pictographic}\uFE0F(?:\u200D\p{Extended_Pictographic}\uFE0F)*$/u.test(spec.emoji) || spec.emoji !== spec.emoji.normalize("NFC")) problems.push(`semanticDirectoryKinds[${JSON.stringify(id)}].emoji must be one canonical NFC emoji sequence with U+FE0F.`);
+    if (!canonicalTaxonomyEmoji(spec.emoji)) problems.push(`semanticDirectoryKinds[${JSON.stringify(id)}].emoji must be one canonical NFC emoji sequence.`);
     if (typeof spec.slugPattern !== "string") problems.push(`semanticDirectoryKinds[${JSON.stringify(id)}].slugPattern must be a string.`);
     else pattern(spec.slugPattern, `semanticDirectoryKinds[${JSON.stringify(id)}].slugPattern`);
     if (typeof spec.allowEmojiOnly !== "boolean") problems.push(`semanticDirectoryKinds[${JSON.stringify(id)}].allowEmojiOnly must be boolean.`);
@@ -2836,7 +3115,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       ids(spec.ownerKindIds, allDirectoryKinds, `semanticDirectoryMemberKinds[${JSON.stringify(id)}].ownerKindIds`);
       if (!Array.isArray(spec.memberNames) || spec.memberNames.length === 0) problems.push(`semanticDirectoryMemberKinds[${JSON.stringify(id)}].memberNames must be non-empty.`);
       for (const name of spec.memberNames ?? []) {
-        if (typeof name !== "string" || name !== name.normalize("NFC") || /[\\/]/u.test(name) || !/^\p{Extended_Pictographic}\uFE0F/u.test(name)) problems.push(`semanticDirectoryMemberKinds[${JSON.stringify(id)}] has invalid exact member ${JSON.stringify(name)}.`);
+        if (typeof name !== "string" || name !== name.normalize("NFC") || /[\\/]/u.test(name) || !canonicalTaxonomyEmoji(leadingEmojiIdentity(name).first)) problems.push(`semanticDirectoryMemberKinds[${JSON.stringify(id)}] has invalid exact member ${JSON.stringify(name)}.`);
         for (const owner of spec.ownerKindIds ?? []) {
           const key = `${owner}\0${name}`;
           if (ownerMembers.has(key)) problems.push(`semanticDirectoryMemberKinds collide for owner ${JSON.stringify(owner)} and member ${JSON.stringify(name)}.`);
@@ -3312,6 +3591,11 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
   if (!exactBundle || "contractKind" in exactBundle || exactBundle.realizedNodeCount !== 13 || exactBundle.exclusiveAlternatives.length !== 1 || exactBundle.exclusiveAlternatives[0]?.id !== "diff-leaf" || exactBundle.pathBudgetReserve.bytes !== 42) problems.push("semanticDescendantContracts.mutation-scenario-bundle-v1 must encode 13 nodes, one diff alternative, and the derived 42-byte reserve.");
   //#endregion 🪞️SemanticPathProjection
 
+  if (taxonomy.fixedDirectoryContractSets !== undefined && !(taxonomy.fixedDirectoryContractSets && typeof taxonomy.fixedDirectoryContractSets === "object" && !Array.isArray(taxonomy.fixedDirectoryContractSets))) problems.push("fixedDirectoryContractSets must be an object.");
+  else for (const [id, values] of Object.entries(taxonomy.fixedDirectoryContractSets ?? {})) {
+    if (!/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(id)) problems.push(`fixedDirectoryContractSets[${JSON.stringify(id)}] must use a literal set ID.`);
+    try { parseFixedDirectoryContractSetScope({ kind: "fixed-directory-contract-set", fixedDirectoryContractIds: values }, taxonomy.fixedDirectoryContracts); } catch (error) { problems.push(`fixedDirectoryContractSets[${JSON.stringify(id)}]: ${error instanceof Error ? error.message : String(error)}`); }
+  }
   const fixedScope = (scope: FixedContractScope, contractPathPattern: string, key: string, filenameContract: boolean): void => {
     if (!(typeof scope === "object" && scope !== null && !Array.isArray(scope)) || typeof scope.kind !== "string") {
       problems.push(`${key} must be a tagged fixed-contract scope.`);
@@ -3320,10 +3604,10 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     if (scope.kind === "exact-path") {
       exactKeys(scope, ["kind", "path"], key);
       pathPattern(scope.path, `${key}.path`);
-      if (scope.path !== contractPathPattern || /[*?\[]/u.test(scope.path)) problems.push(`${key}.path must equal the exact wildcard-free contract path.`);
+      if (scope.path !== contractPathPattern || /[*?\[\]{}]/u.test(scope.path)) problems.push(`${key}.path must equal the exact wildcard-free contract path.`);
     } else if (scope.kind === "repository-root") {
       exactKeys(scope, ["kind"], key);
-      if (contractPathPattern.includes("/") || /[*?\[]/u.test(contractPathPattern)) problems.push(`${key} repository-root contract must be one exact basename.`);
+      if (contractPathPattern.includes("/") || /[*?\[\]{}]/u.test(contractPathPattern)) problems.push(`${key} repository-root contract must be one exact basename.`);
     } else if (scope.kind === "package-root") {
       exactKeys(scope, ["kind", "ecosystemId"], key);
       if (!filenameContract) problems.push(`${key} cannot use package-root scope.`);
@@ -3335,6 +3619,12 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       exactKeys(scope, ["kind", "fixedDirectoryContractId"], key);
       if (!filenameContract) problems.push(`${key} cannot use fixed-directory-contract scope.`);
       if (!scope.fixedDirectoryContractId || !taxonomy.fixedDirectoryContracts[scope.fixedDirectoryContractId]) problems.push(`${key}.fixedDirectoryContractId must reference a fixed directory contract.`);
+    } else if (scope.kind === "fixed-directory-contract-set") {
+      if (!filenameContract) problems.push(`${key} cannot use fixed-directory-contract-set scope.`);
+      try { parseFixedDirectoryContractSetScope(scope, taxonomy.fixedDirectoryContracts); } catch (error) { problems.push(`${key}: ${error instanceof Error ? error.message : String(error)}`); }
+    } else if (scope.kind === "named-fixed-directory-contract-set") {
+      if (!filenameContract) problems.push(`${key} cannot use named-fixed-directory-contract-set scope.`);
+      try { parseNamedFixedDirectoryContractSetScope(scope, taxonomy.fixedDirectoryContracts, taxonomy.fixedDirectoryContractSets ?? {}); } catch (error) { problems.push(`${key}: ${error instanceof Error ? error.message : String(error)}`); }
     } else if (scope.kind === "sibling-fixed-filename-contract") {
       exactKeys(scope, ["kind", "fixedFilenameContractId"], key);
       if (!filenameContract) problems.push(`${key} cannot use sibling-fixed-filename-contract scope.`);
@@ -3345,7 +3635,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
 
   if (record(taxonomy.fixedFilenameContracts, "fixedFilenameContracts")) for (const [id, contract] of Object.entries(taxonomy.fixedFilenameContracts)) {
     pathPattern(contract.pathPattern, `fixedFilenameContracts[${JSON.stringify(id)}].pathPattern`);
-    if (typeof contract.pathPattern === "string" && /[*?\[]/u.test(fixedContractFilename(contract))) problems.push(`fixedFilenameContracts[${JSON.stringify(id)}].pathPattern must end in one exact literal basename.`);
+    if (typeof contract.pathPattern === "string" && /[*?\[\]{}]/u.test(fixedContractFilename(contract))) problems.push(`fixedFilenameContracts[${JSON.stringify(id)}].pathPattern must end in one exact literal basename.`);
     if (!contract.authority || !contract.reason || !contract.verification) problems.push(`fixedFilenameContracts[${JSON.stringify(id)}] must declare authority, reason, and verification.`);
     if (contract.configurability !== "unconfigurable") problems.push(`fixedFilenameContracts[${JSON.stringify(id)}].configurability must be unconfigurable.`);
     fixedScope(contract.scope, contract.pathPattern, `fixedFilenameContracts[${JSON.stringify(id)}].scope`, true);
@@ -3407,6 +3697,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     pathPattern(contract.pathPattern, `fixedDirectoryContracts[${JSON.stringify(id)}].pathPattern`);
     if (!contract.authority || !contract.reason || !contract.verification) problems.push(`fixedDirectoryContracts[${JSON.stringify(id)}] must declare authority, reason, and verification.`);
     if (contract.configurability !== "unconfigurable") problems.push(`fixedDirectoryContracts[${JSON.stringify(id)}].configurability must be unconfigurable.`);
+    if (contract.descendants !== undefined && contract.descendants !== "reserved") problems.push(`fixedDirectoryContracts[${JSON.stringify(id)}].descendants must be reserved when present.`);
     fixedScope(contract.scope, contract.pathPattern, `fixedDirectoryContracts[${JSON.stringify(id)}].scope`, false);
     if (!(contract.expires === null || /^\d{4}-\d{2}-\d{2}$/u.test(contract.expires))) problems.push(`fixedDirectoryContracts[${JSON.stringify(id)}].expires must be null or YYYY-MM-DD.`);
   }
@@ -3458,7 +3749,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       if (!expected.has(id)) problems.push(`packageSourceDispositions[${JSON.stringify(id)}] does not name a source-format fixed/configurable contract.`);
       else if (expected.get(id) !== disposition.contractKind) problems.push(`packageSourceDispositions[${JSON.stringify(id)}].contractKind does not match its registry.`);
       if (!["adapter-source", "tool-metadata"].includes(disposition.disposition)) problems.push(`packageSourceDispositions[${JSON.stringify(id)}].disposition is invalid.`);
-      const TOOL_CONFIG_VALIDATORS: Readonly<Record<string, string>> = { "vitest-configuration": "vitest-config-entry", "tool-config-vitest": "vitest-config", "tool-config-tailwind": "tailwind-config", "tool-config-postcss": "postcss-config", "tool-config-eslint": "eslint-config", "tool-config-dependency-cruiser": "dependency-cruiser-config", "pytest-configuration": "root-pytest-config", "eslint-configuration": "root-eslint-config" };
+      const TOOL_CONFIG_VALIDATORS: Readonly<Record<string, string>> = { "vitest-configuration": "vitest-config-entry", "tool-config-vitest": "vitest-config", "tool-config-tailwind": "tailwind-config", "tool-config-postcss": "postcss-config", "tool-config-eslint": "eslint-config", "tool-config-dependency-cruiser": "dependency-cruiser-config", "pytest-configuration": "root-pytest-config", "eslint-configuration": "root-eslint-config", "vscode-test-configuration": "vscode-test-cli-config" };
       const configValidatorOwner = TOOL_CONFIG_VALIDATORS[disposition.validator];
       if (!["package-glue", "command-router", ...Object.keys(TOOL_CONFIG_VALIDATORS)].includes(disposition.validator) || (disposition.disposition === "adapter-source") !== (disposition.validator === "package-glue") || (configValidatorOwner !== undefined && id !== configValidatorOwner)) problems.push(`packageSourceDispositions[${JSON.stringify(id)}] disposition/validator pair is invalid.`);
       if (!disposition.authority || !disposition.verification) problems.push(`packageSourceDispositions[${JSON.stringify(id)}] must declare authority and verification.`);
@@ -3483,7 +3774,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     const targets = new Map<string, string>();
     for (const [id, contract] of Object.entries(taxonomy.generatorContracts)) {
       if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(id)) problems.push(`generatorContracts id ${JSON.stringify(id)} must be kebab-case.`);
-      const allowedKeys = new Set(["ownership", "ownerPath", "target", "previewTarget", "checkTarget", "inputPatterns", "inputDiscovery", "packageGeneration", "projectionActivation", "outputRoots", "reason"]);
+      const allowedKeys = new Set(["ownership", "ownerPath", "target", "previewTarget", "previewArguments", "previewLimits", "checkTarget", "inputPatterns", "inputDiscovery", "compilerInputManifest", "packageGeneration", "currentPackageDestination", "projectionActivation", "outputRoots", "reason"]);
       for (const key of Object.keys(contract)) if (!allowedKeys.has(key)) problems.push(`generatorContracts[${JSON.stringify(id)}].${key} is forbidden.`);
       const ownership = contract.ownership as string;
       if (!["owned", "external"].includes(ownership)) problems.push(`generatorContracts[${JSON.stringify(id)}].ownership must be owned or external.`);
@@ -3501,18 +3792,37 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       if (runnable) {
         if (contract.previewTarget === undefined) problems.push(`generatorContracts[${JSON.stringify(id)}].previewTarget is required for owned contracts.`);
         else if (nxTarget(contract.previewTarget, `generatorContracts[${JSON.stringify(id)}].previewTarget`) && typeof contract.target === "string") {
-          const expected = `${contract.target.slice(0, contract.target.lastIndexOf(":"))}:preview-generated`;
-          if (contract.previewTarget !== expected) problems.push(`generatorContracts[${JSON.stringify(id)}].previewTarget must be the exact owner preview-generated target ${JSON.stringify(expected)}.`);
+          try { generatorPreviewScriptArguments(contract); }
+          catch (error) { problems.push(`generatorContracts[${JSON.stringify(id)}]: ${error instanceof Error ? error.message : String(error)}`); }
           const prior = targets.get(contract.previewTarget);
           if (prior) problems.push(`generatorContracts ${JSON.stringify(prior)} and ${JSON.stringify(id)} duplicate target ${JSON.stringify(contract.previewTarget)}.`);
           targets.set(contract.previewTarget, id);
         }
       } else if (contract.previewTarget !== undefined) problems.push(`generatorContracts[${JSON.stringify(id)}].previewTarget is forbidden for external contracts.`);
+      if (contract.previewArguments !== undefined && (!runnable || contract.previewTarget === undefined)) problems.push(`generatorContracts[${JSON.stringify(id)}].previewArguments requires an owned preview target.`);
+      try { generatorPreviewResourceLimits(contract); } catch (error) { problems.push(`generatorContracts[${JSON.stringify(id)}].previewLimits: ${(error as Error).message}`); }
+      if (contract.compilerInputManifest !== undefined) {
+        const authority = contract.compilerInputManifest;
+        if (!runnable || !authority || typeof authority !== "object" || Array.isArray(authority) || JSON.stringify(Object.keys(authority).sort()) !== JSON.stringify(["kind", "manifestOutputPath", "manifestSchemaPath", "maxFiles", "staticAuthorityPath"])) problems.push(`generatorContracts[${JSON.stringify(id)}].compilerInputManifest requires one closed owned authority.`);
+        else {
+          const literal = (path: unknown): path is string => typeof path === "string" && path === path.normalize("NFC") && path.length > 0 && !path.startsWith("/") && !/[\\*?\[\]\u0000-\u001f]/u.test(path) && !path.split("/").some(part => !part || part === "." || part === "..");
+          if (authority.kind !== "compiler-input-manifest-v1" || !literal(authority.manifestOutputPath) || !literal(authority.manifestSchemaPath) || !literal(authority.staticAuthorityPath) || !Number.isSafeInteger(authority.maxFiles) || authority.maxFiles < 1 || authority.maxFiles > 10000) problems.push(`generatorContracts[${JSON.stringify(id)}].compilerInputManifest has invalid bounded fields.`);
+          if (!contract.outputRoots?.some(root => authority.manifestOutputPath === root.path || authority.manifestOutputPath.startsWith(`${root.path}/`))) problems.push(`generatorContracts[${JSON.stringify(id)}].compilerInputManifest manifest is outside its output roots.`);
+          for (const path of [authority.manifestSchemaPath, authority.staticAuthorityPath]) if (!contract.inputPatterns?.includes(path)) problems.push(`generatorContracts[${JSON.stringify(id)}].compilerInputManifest authority is not one exact input: ${JSON.stringify(path)}.`);
+        }
+      }
       if (contract.checkTarget !== undefined) {
         if (!targetKnown || !nxTarget(contract.checkTarget, `generatorContracts[${JSON.stringify(id)}].checkTarget`)) problems.push(`generatorContracts[${JSON.stringify(id)}].checkTarget requires a known target.`);
         else if (typeof contract.target === "string" && contract.checkTarget.slice(0, contract.checkTarget.lastIndexOf(":")) !== contract.target.slice(0, contract.target.lastIndexOf(":"))) problems.push(`generatorContracts[${JSON.stringify(id)}].checkTarget must belong to the target project.`);
       }
-      if (["jco-package-adapter", "wgpu-frame-worker"].includes(id) && contract.projectionActivation === undefined) problems.push(`generatorContracts.${id} requires explicit package projection activation.`);
+      if (id === "jco-package-adapter" && contract.currentPackageDestination === undefined) problems.push(`generatorContracts.${id} requires explicit current package destination authority.`);
+      if (["jco-package-adapter", "wgpu-frame-worker"].includes(id) && contract.projectionActivation !== undefined) problems.push(`generatorContracts.${id} must use its current catalog instead of historical projection activation.`);
+      if (contract.currentPackageDestination !== undefined) {
+        try {
+          const current = parseCurrentJcoPackageDestination(contract.currentPackageDestination);
+          if (!runnable || id !== "jco-package-adapter" || contract.outputRoots.length !== 1 || contract.outputRoots[0]?.path !== current.adapterPath || contract.outputRoots[0]?.inclusion !== "tracked" || [current.cargoManifestPath, current.cargoLockPath, current.componentPath, current.witPath].some((path) => !contract.inputPatterns.includes(path))) problems.push(`generatorContracts.${id} current JCO ownership or inputs disagree.`);
+        } catch (error) { problems.push(`generatorContracts.${id}.currentPackageDestination: ${error instanceof Error ? error.message : String(error)}`); }
+      }
       if (id === "wgpu-frame-worker" && contract.packageGeneration === undefined) problems.push(`generatorContracts.${id} requires explicit package generation authority.`);
       if (contract.projectionActivation !== undefined) {
         const activation = contract.projectionActivation;
@@ -3521,10 +3831,14 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       }
       if (contract.packageGeneration !== undefined) {
         const generation = contract.packageGeneration;
-        exactKeys(generation, ["kind", "previewInput", "browserProfile"], `generatorContracts.${id}.packageGeneration`);
+        exactKeys(generation, ["kind", "previewInput", "catalogPath", "catalogSha256", "browserProfile"], `generatorContracts.${id}.packageGeneration`);
         const protocol = generation.previewInput;
         if (!runnable || id !== "wgpu-frame-worker" || contract.inputDiscovery || generation.kind !== "wgpu-package-artifacts" || !protocol || Object.keys(protocol).sort().join("\0") !== "maxBytes\0maxOperations\0protocol" || protocol.protocol !== "package-projected-inputs-v1" || protocol.maxBytes !== 67108864 || protocol.maxOperations !== 200000) problems.push(`generatorContracts.${id}.packageGeneration requires its exact bounded package protocol.`);
-        try { parseSemanticPackageBrowserProfile(generation.browserProfile); } catch (error) { problems.push(`generatorContracts.${id}.packageGeneration: ${error instanceof Error ? error.message : String(error)}`); }
+        try {
+          const profile = parseSemanticPackageBrowserProfile(generation.browserProfile, taxonomy.pathEmojiPolicy.genericEmojiIdentities);
+          if (generation.catalogPath !== profile.ownerPath + "/🪪️package-catalog.json" || !/^[0-9a-f]{64}$/u.test(generation.catalogSha256)) problems.push(`generatorContracts.${id}.packageGeneration requires its exact current catalog and digest.`);
+          if (profile.entries.some((entry) => !contract.outputRoots.some((output) => output.path === `${profile.ownerPath}/${entry.outputRelativePath}` && output.inclusion === entry.inclusion))) problems.push(`generatorContracts.${id}.packageGeneration browser outputs disagree with ownership.`);
+        } catch (error) { problems.push(`generatorContracts.${id}.packageGeneration: ${error instanceof Error ? error.message : String(error)}`); }
       }
       if (contract.inputDiscovery !== undefined) {
         const input = contract.inputDiscovery;
@@ -3617,7 +3931,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
   }
   if (taxonomy.unicodeNormalization?.form !== "NFC" || taxonomy.unicodeNormalization?.caseFold !== "lower" || taxonomy.unicodeNormalization?.locale !== "und") problems.push("unicodeNormalization must be NFC/lower/und.");
   if (taxonomy.variationSelectorPolicy?.selector !== "\uFE0F" || taxonomy.variationSelectorPolicy?.requiredAfterEmoji !== true || taxonomy.variationSelectorPolicy?.comparison !== "ignore-selector") problems.push("variationSelectorPolicy is invalid.");
-  if (taxonomy.pathEmojiPolicy?.inventory !== "git-visible" || taxonomy.pathEmojiPolicy?.identity !== "leading-emoji-sequence" || taxonomy.pathEmojiPolicy?.siblingNamespace !== "files-and-directories") problems.push("pathEmojiPolicy inventory, identity, and sibling namespace are invalid.");
+  if (taxonomy.pathEmojiPolicy?.inventory !== "git-visible" || taxonomy.pathEmojiPolicy?.identity !== "single-emoji-grapheme" || taxonomy.pathEmojiPolicy?.siblingNamespace !== "files-and-directories") problems.push("pathEmojiPolicy inventory, identity, and sibling namespace are invalid.");
   if (taxonomy.pathEmojiPolicy?.genericEmojiIdentities?.map(foldPathEmojiIdentity).join("\0") !== "📁\0📂\0📄") problems.push("pathEmojiPolicy.genericEmojiIdentities must reject the three generic file/folder glyphs.");
   if (!Array.isArray(taxonomy.pathEmojiPolicy?.reservedSubtreeDirectoryNames) || new Set(taxonomy.pathEmojiPolicy.reservedSubtreeDirectoryNames.map(foldPathEmojiIdentity)).size !== taxonomy.pathEmojiPolicy.reservedSubtreeDirectoryNames.length) problems.push("pathEmojiPolicy.reservedSubtreeDirectoryNames must be a unique array.");
   const comparisons = ["byte", "nfc", "case-fold", "vs16-fold", "same-kind"];
@@ -3671,6 +3985,39 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     ["windowEmptyFacetFileKindId", taxonomy.windowEmptyFacetFileKindId], ["mutationComponentFileKindId", taxonomy.mutationComponentFileKindId], ["mutationDescriptorFileKindId", taxonomy.mutationDescriptorFileKindId], ["testOracleRegistryLocation.fileKindId", taxonomy.testOracleRegistryLocation?.fileKindId],
     ["testSchemaLocation.fileKindId", taxonomy.testSchemaLocation?.fileKindId],
   ] as const) if (!kindId || !taxonomy.fileKinds[kindId]) problems.push(`${key} references a missing file kind.`);
+  if (record(taxonomy.testContributionDirectoryOverrides, "testContributionDirectoryOverrides")) {
+    for (const [owner, name] of Object.entries(taxonomy.testContributionDirectoryOverrides)) {
+      if (!owner || owner.startsWith("/") || owner !== owner.normalize("NFC") || /[\\*?{}\0]/u.test(owner) || owner !== "." && owner.split("/").some((segment) => !segment || segment === "." || segment === "..")) problems.push(`testContributionDirectoryOverrides[${JSON.stringify(owner)}] must name one exact repository owner.`);
+      if (typeof name !== "string" || leadingEmojiIdentity(name).rest !== "oracle" || pathEmojiStatuteFindings([{ path: name, nodeKind: "directory" }], taxonomy.pathEmojiPolicy.genericEmojiIdentities).length > 0 || !semanticDirectoryKindId(name, taxonomy)) problems.push(`testContributionDirectoryOverrides[${JSON.stringify(owner)}] must name one registered single-emoji oracle directory.`);
+    }
+  }
+  if (taxonomy.semanticManifestFilenameOverrides !== undefined && record(taxonomy.semanticManifestFilenameOverrides, "semanticManifestFilenameOverrides")) {
+    for (const [owner, name] of Object.entries(taxonomy.semanticManifestFilenameOverrides)) {
+      if (!owner || owner.startsWith("/") || owner !== owner.normalize("NFC") || /[\\*?{}\0]/u.test(owner) || owner.split("/").some((segment) => !segment || segment === "." || segment === "..")) problems.push(`semanticManifestFilenameOverrides[${JSON.stringify(owner)}] must name one exact repository-relative collection owner.`);
+      const identity = leadingEmojiIdentity(name);
+      const statuteProblems = pathEmojiStatuteFindings([{ path: name, nodeKind: "file" }], taxonomy.pathEmojiPolicy.genericEmojiIdentities);
+      if (!canonicalTaxonomyEmoji(identity.first) || identity.rest !== "manifest.json" || statuteProblems.some((problem) => problem.kind !== "duplicate") || fileKindIdForSourcePath(name, taxonomy) !== taxonomy.semanticManifestFileKindId) problems.push(`semanticManifestFilenameOverrides[${JSON.stringify(owner)}] must name one canonical semantic emoji followed by "manifest.json" in the semantic manifest file kind.`);
+    }
+  }
+  if (taxonomy.subsetDirectoryOverrides !== undefined && record(taxonomy.subsetDirectoryOverrides, "subsetDirectoryOverrides")) {
+    const subsetSlug = new RegExp(taxonomy.subsetSlugPattern ?? "^[a-z0-9][a-z0-9.\\-]*$", "u");
+    const anyId = taxonomy.subsetAnyId ?? "*";
+    for (const [owner, directories] of Object.entries(taxonomy.subsetDirectoryOverrides)) {
+      if (!owner || owner.startsWith("/") || owner !== owner.normalize("NFC") || /[\\*?{}\0]/u.test(owner) || owner.split("/").some((segment) => !segment || segment === "." || segment === "..") || posix.basename(owner) !== taxonomy.subsetsDirName) problems.push(`subsetDirectoryOverrides[${JSON.stringify(owner)}] must name one exact repository-relative ${JSON.stringify(taxonomy.subsetsDirName)} owner.`);
+      if (!record(directories, `subsetDirectoryOverrides[${JSON.stringify(owner)}]`)) continue;
+      const physicalNames = new Set<string>();
+      for (const [id, name] of Object.entries(directories)) {
+        if (id !== anyId && !subsetSlug.test(id)) problems.push(`subsetDirectoryOverrides[${JSON.stringify(owner)}][${JSON.stringify(id)}] must use the canonical logical subset id grammar.`);
+        const expectedRest = id === anyId ? "any" : id;
+        const identity = leadingEmojiIdentity(name);
+        const statuteProblems = pathEmojiStatuteFindings([{ path: name, nodeKind: "directory" }], taxonomy.pathEmojiPolicy.genericEmojiIdentities);
+        if (!canonicalTaxonomyEmoji(identity.first) || identity.rest !== expectedRest || statuteProblems.some((problem) => problem.kind !== "duplicate")) problems.push(`subsetDirectoryOverrides[${JSON.stringify(owner)}][${JSON.stringify(id)}] must name one canonical semantic emoji followed by ${JSON.stringify(expectedRest)}.`);
+        if (physicalNames.has(foldPathEmojiIdentity(name))) problems.push(`subsetDirectoryOverrides[${JSON.stringify(owner)}] has duplicate physical directory ${JSON.stringify(name)}.`);
+        physicalNames.add(foldPathEmojiIdentity(name));
+      }
+      if (!Object.hasOwn(directories, anyId)) problems.push(`subsetDirectoryOverrides[${JSON.stringify(owner)}] must declare the unconstrained subset id ${JSON.stringify(anyId)}.`);
+    }
+  }
   ids(taxonomy.textSpecFileKinds, taxonomy.fileKinds, "textSpecFileKinds");
   ids(taxonomy.binarySpecFileKinds, taxonomy.fileKinds, "binarySpecFileKinds");
   ids(taxonomy.rootDataContractIds, taxonomy.fixedFilenameContracts, "rootDataContractIds");
@@ -3690,6 +4037,8 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
   }
 
   fullPattern(taxonomy.mutationDirectoryPattern, "mutationDirectoryPattern");
+  problems.push(...mutationDomainOwnersProblems(taxonomy.mutationDomainOwners, taxonomy.pathEmojiPolicy.genericEmojiIdentities));
+  problems.push(...mutationCatalogSourceOwnersProblems(taxonomy));
   const mutationBehaviorFacetDirs = ["🦠️mutation", "🔺️diff", "↩️inverse"];
   if (taxonomy.mutationBehaviorFacetDirs?.join("\0") !== mutationBehaviorFacetDirs.join("\0")) problems.push(`mutationBehaviorFacetDirs must contain exactly ${mutationBehaviorFacetDirs.join(", ")} in canonical order.`);
   const mutationOrganizationalFacetDirs = ["🧩️plan", "📝️text", "💾️binary", "🧬️schema"];
@@ -3704,10 +4053,10 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     if (Object.keys(location).sort().join("\0") !== "directoryKindId\0directoryName\0fileKindId" || location.directoryKindId !== "schema" || location.directoryName !== "🧬️schema" || location.fileKindId !== "json" || semanticDirectoryKindId(location.directoryName, taxonomy) !== location.directoryKindId) problems.push("mutationPayloadSchemaLocation must select the registered schema directory and JSON physical leaf.");
   }
 
-  if (record(taxonomy.mutationPayloadSchemaProjection, "mutationPayloadSchemaProjection")) {
-    const expected = { contractKind: "descriptor-linked-mutation-payload-schema", ownerPathPattern: "✏️s/🔌️plugins/*/🗿️artifacts/*/🏅️standards/*/🪆️subsets/*/🧬️schema/🧬️mutations/*", sourceFilename: "🔣️.schema.json", descriptorSourceFilename: "🔣️.json", descriptorField: "payloadSchema", descriptorSchemaVersion: 1, descriptorOwnerField: "owner", descriptorIdentityField: "semanticKind", jsonSchemaDialect: "http://json-schema.org/draft-07/schema#", destinationAuthority: "mutationPayloadSchemaLocation", rationaleRule: "mutation-payload-schema-owner-projection-v1" };
-    const projection = taxonomy.mutationPayloadSchemaProjection;
-    if (Object.keys(projection).length !== Object.keys(expected).length || Object.entries(expected).some(([key, value]) => projection[key as keyof typeof projection] !== value)) problems.push("mutationPayloadSchemaProjection must bind exact mutation-owner descriptor and JSON Schema source semantics.");
+  if (record(taxonomy.mutationPayloadSchemaAuthority, "mutationPayloadSchemaAuthority")) {
+    const expected = { contractKind: "descriptor-linked-mutation-payload-schema", ownerAuthority: "mutationOwnerIdentity", descriptorFileKindId: "json", descriptorField: "payloadSchema", descriptorSchemaVersion: 1, descriptorCardinality: "one-canonical-no-competing-descriptor", descriptorOwnerField: "owner", descriptorIdentityField: "semanticKind", jsonSchemaDialect: "http://json-schema.org/draft-07/schema#", targetAuthority: "owner-relative-regular-json-schema" };
+    const authority = taxonomy.mutationPayloadSchemaAuthority;
+    if (Object.keys(authority).length !== Object.keys(expected).length || Object.entries(expected).some(([key, value]) => authority[key as keyof typeof authority] !== value)) problems.push("mutationPayloadSchemaAuthority must bind exact mutation descriptors to regular owner-contained JSON Schema files.");
   }
 
   const directoryValues = [
@@ -3811,26 +4160,58 @@ export interface SemanticPackageBrowserProfile {
   readonly schemaVersion: 1;
   readonly kind: "wgpu-browser-esm-v1";
   readonly inlineTestDefine: "undefined";
-  readonly entries: readonly Readonly<{ id: "frame-worker" | "browser-boot"; sourceRelativePath: string; inclusion: "tracked" | "ignored" }>[];
+  readonly ownerPath: string;
+  readonly entries: readonly Readonly<{ id: "frame-worker" | "browser-boot"; sourceRelativePath: string; outputRelativePath: string; inclusion: "tracked" | "ignored" }>[];
   readonly workspaceImports: Readonly<Record<string, Readonly<{ manifestPath: string; entryPath: string }>>>;
   readonly sourceModulePaths: readonly string[];
 }
 
 /** 📏️ Validates explicit browser input authority without discovering or reading unrelated modules. */
-export function parseSemanticPackageBrowserProfile(input: unknown, owner?: SemanticPackageProjectionCase): SemanticPackageBrowserProfile {
+export function parseSemanticPackageBrowserProfile(input: unknown, genericEmojiIdentities: readonly string[]): SemanticPackageBrowserProfile {
   const exact = (value: unknown, keys: readonly string[]): value is Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value) && Object.keys(value).sort().join("\0") === [...keys].sort().join("\0");
-  if (!exact(input, ["schemaVersion", "kind", "inlineTestDefine", "entries", "workspaceImports", "sourceModulePaths"]) || input.schemaVersion !== 1 || input.kind !== "wgpu-browser-esm-v1" || input.inlineTestDefine !== "undefined" || owner && owner.id !== "wgpu-renderer") throw new Error("Invalid WGPU browser profile");
-  const expected = [{ id: "frame-worker", sourceRelativePath: "🟦️typescript/🧵️frame-worker.ts", inclusion: "tracked" }, { id: "browser-boot", sourceRelativePath: "🟦️typescript/🟦️.ts", inclusion: "ignored" }];
-  if (!Array.isArray(input.entries) || input.entries.length !== expected.length || input.entries.some((entry, index) => !exact(entry, ["id", "sourceRelativePath", "inclusion"]) || entry.id !== expected[index]!.id || entry.sourceRelativePath !== expected[index]!.sourceRelativePath || entry.inclusion !== expected[index]!.inclusion)) throw new Error("WGPU browser entry authority drift");
+  if (!exact(input, ["schemaVersion", "kind", "inlineTestDefine", "ownerPath", "entries", "workspaceImports", "sourceModulePaths"]) || input.schemaVersion !== 1 || input.kind !== "wgpu-browser-esm-v1" || input.inlineTestDefine !== "undefined" || !exactOwnerPath(input.ownerPath)) throw new Error("Invalid WGPU browser profile");
+  const expected = [{ id: "frame-worker", inclusion: "tracked" }, { id: "browser-boot", inclusion: "ignored" }];
+  if (!Array.isArray(input.entries) || input.entries.length !== expected.length || input.entries.some((entry, index) => !exact(entry, ["id", "sourceRelativePath", "outputRelativePath", "inclusion"]) || entry.id !== expected[index]!.id || entry.inclusion !== expected[index]!.inclusion || !exactOwnerPath(entry.sourceRelativePath) || !exactOwnerPath(entry.outputRelativePath))) throw new Error("WGPU browser entry authority drift");
+  const directories = input.entries.map((entry) => ({ path: dirname(entry.sourceRelativePath).replaceAll("\\", "/"), nodeKind: "directory" as const }));
+  if (pathEmojiStatuteFindings(directories, genericEmojiIdentities).length || input.entries.some((entry, index) => directories[index]!.path.includes("/") || leadingEmojiIdentity(directories[index]!.path).rest !== entry.id || entry.sourceRelativePath !== directories[index]!.path + "/🟦️.ts" || entry.outputRelativePath !== directories[index]!.path + "/🤖️generated/🟨️.js")) throw new Error("WGPU browser entry requires one explicit semantic source and output owner");
   if (!Array.isArray(input.sourceModulePaths) || input.sourceModulePaths.length < expected.length || input.sourceModulePaths.some((path, index, paths) => !exactOwnerPath(path) || !/\.(?:tsx?|m?js|json)$/u.test(path) || index > 0 && projectionByteCompare(paths[index - 1], path) >= 0)) throw new Error("WGPU browser module paths must be exact, nonopaque, unique and byte ordered");
-  if (owner) for (const entry of expected) {
-    const sourcePath = owner.sourceRoot + "/" + entry.sourceRelativePath, mapping = owner.mappings.find((mapping) => mapping.sourcePath === sourcePath);
-    if (!mapping || mapping.disposition !== "implementation" || mapping.destinationPath !== owner.semanticOwnerRoot + "/🧵️" + entry.id + "/🟦️.ts" || !input.sourceModulePaths.includes(sourcePath)) throw new Error("WGPU browser entry is not selected by the exact package catalog");
-  }
+  if (input.entries.some((entry) => !(input.sourceModulePaths as string[]).includes(input.ownerPath + "/" + entry.sourceRelativePath))) throw new Error("WGPU browser entry is not an exact declared current module");
   if (!exact(input.workspaceImports, ["@semio-tech/framework", "@semio-tech/framework-os", "@semio-tech/framework-replication"])) throw new Error("WGPU browser workspace import identities drifted");
   for (const binding of Object.values(input.workspaceImports)) if (!exact(binding, ["manifestPath", "entryPath"]) || !exactOwnerPath(binding.manifestPath) || basename(binding.manifestPath) !== "package.json" || !exactOwnerPath(binding.entryPath) || !input.sourceModulePaths.includes(binding.entryPath)) throw new Error("WGPU browser workspace import binding drifted");
-  if (owner) for (const path of input.sourceModulePaths) if (path.startsWith(owner.sourceRoot + "/") && !owner.mappings.some((mapping) => mapping.sourcePath === path && mapping.disposition === "implementation")) throw new Error("WGPU browser module is not an authored package implementation: " + path);
   return input as unknown as SemanticPackageBrowserProfile;
+}
+
+/** 🪪️ Current WGPU package declarations, independent of frozen projection preimages. */
+export interface CanonicalWgpuPackageCatalog {
+  readonly $schema: "./🧬️package-catalog.schema.json";
+  readonly schemaVersion: 1;
+  readonly kind: "canonical-wgpu-package";
+  readonly ownerPath: string;
+  readonly packageRelativePath: "📦️packages/🦀️rust";
+  readonly identity: Readonly<{ cargoPackageName: string; nodePackageName: string; nxProjectName: string }>;
+  readonly entryPaths: Readonly<{ cargoLibrary: string; cargoBinary: string; cargoBuild: "build.rs"; nodeLibrary: string }>;
+  readonly artifacts: readonly Readonly<{ id: string; relativePath: string; targetRelativePath: string | null; language: "rust" | "typescript"; role: "declaration" | "implementation"; content: string }>[];
+}
+
+/** 🔐️ Validates one digest-bound current catalog without weakening historical source checks. */
+export function parseCanonicalWgpuPackageCatalog(bytes: string, digest: string, profile: SemanticPackageBrowserProfile, taxonomy: Taxonomy): CanonicalWgpuPackageCatalog {
+  if (createHash("sha256").update(bytes).digest("hex") !== digest) throw new Error("Current WGPU package catalog digest drift");
+  const row = JSON.parse(bytes) as CanonicalWgpuPackageCatalog;
+  const exact = (value: unknown, keys: readonly string[]): boolean => value !== null && typeof value === "object" && !Array.isArray(value) && Object.keys(value).sort().join("\0") === [...keys].sort().join("\0");
+  if (!exact(row, ["$schema", "schemaVersion", "kind", "ownerPath", "packageRelativePath", "identity", "entryPaths", "artifacts"]) || row.$schema !== "./🧬️package-catalog.schema.json" || row.schemaVersion !== 1 || row.kind !== "canonical-wgpu-package" || row.ownerPath !== profile.ownerPath || row.packageRelativePath !== "📦️packages/🦀️rust") throw new Error("Current WGPU package catalog identity drift");
+  if (!exact(row.identity, ["cargoPackageName", "nodePackageName", "nxProjectName"]) || row.identity.cargoPackageName !== "semio-framework-os-renderer-wgpu" || row.identity.nodePackageName !== "@semio-tech/framework-renderer-wgpu" || row.identity.nxProjectName !== row.identity.nodePackageName || !exact(row.entryPaths, ["cargoLibrary", "cargoBinary", "cargoBuild", "nodeLibrary"]) || Object.values(row.entryPaths).some((path) => !exactOwnerPath(path)) || row.entryPaths.cargoBuild !== "build.rs") throw new Error("Current WGPU package manifest authority drift");
+  const ids = ["build-adapter", "binary-adapter", "typescript-adapter", "renderer-registration"];
+  if (!Array.isArray(row.artifacts) || row.artifacts.length !== ids.length || row.artifacts.some((artifact, index) => !exact(artifact, ["id", "relativePath", "targetRelativePath", "language", "role", "content"]) || artifact.id !== ids[index] || !exactOwnerPath(artifact.relativePath) || artifact.targetRelativePath !== null && !exactOwnerPath(artifact.targetRelativePath) || !["rust", "typescript"].includes(artifact.language) || !["declaration", "implementation"].includes(artifact.role) || typeof artifact.content !== "string" || classifyPackageSourceRole(artifact.content, taxonomy.packageGlueGrammar[artifact.language]) !== artifact.role) || new Set(row.artifacts.map((artifact) => artifact.relativePath)).size !== ids.length) throw new Error("Current WGPU package artifact authority drift");
+  for (const artifact of row.artifacts) {
+    if (artifact.id === "renderer-registration") {
+      if (artifact.relativePath !== "🧊️renderer/📇️registry/🦀️.rs" || artifact.targetRelativePath !== null || artifact.role !== "implementation") throw new Error("Current WGPU registration ownership drift");
+    } else {
+      if (!artifact.relativePath.startsWith(row.packageRelativePath + "/") || !artifact.targetRelativePath || artifact.role !== "declaration") throw new Error("Current WGPU adapter ownership drift");
+      const relativeTarget = posix.relative(posix.dirname(artifact.relativePath), artifact.targetRelativePath);
+      if (!artifact.content.includes(JSON.stringify(relativeTarget))) throw new Error("Current WGPU adapter target drift");
+    }
+  }
+  return row;
 }
 
 /** 🏠️ One exact Cargo identity; standalone fixtures are not inferred from directory basenames. */
@@ -4010,8 +4391,8 @@ export function semanticPackageProjectionCatalog(repoRoot: string, taxonomy: Tax
     }
   }
   if (catalog.packages.flatMap((row) => row.mappings).filter((row) => row.sourceRole !== null).length !== contract.purityCount || catalog.packages.flatMap((row) => row.adapters).length !== contract.adapterCount) throw new Error("Nested Cargo purity census drift");
-  const generator = taxonomy.generatorContracts["jco-package-adapter"], activation = generator?.projectionActivation, jco = catalog.packages.find((row) => row.id === "jcoprobe-guest")!;
-  if (!activation || activation.kind !== "canonical-or-planned-package" || activation.projectionContractId !== "nested-cargo-packages-v1" || activation.packageId !== jco.id || activation.sourceManifestPath !== `${jco.sourceRoot}/Cargo.toml` || activation.destinationManifestPath !== `${jco.destinationRoot}/Cargo.toml` || jco.mappings.some((mapping) => !generator.inputPatterns.includes(mapping.sourcePath) || !generator.inputPatterns.includes(mapping.destinationPath)) || JSON.stringify(generator.outputRoots) !== JSON.stringify(jco.adapters.map((adapter) => ({ path: adapter.path, inclusion: "tracked" })))) throw new Error("Nested Cargo generator activation authority drift");
+  const generator = taxonomy.generatorContracts["jco-package-adapter"], current = parseCurrentJcoPackageDestination(generator?.currentPackageDestination);
+  if (!generator || generator.projectionActivation || [current.cargoManifestPath, current.cargoLockPath, current.componentPath, current.witPath].some((path) => !generator.inputPatterns.includes(path)) || JSON.stringify(generator.outputRoots) !== JSON.stringify([{ path: current.adapterPath, inclusion: "tracked" }])) throw new Error("Current JCO generator destination authority drift");
   return catalog;
 }
 
@@ -4029,10 +4410,11 @@ function nestedCargoField(content: string, section: string, key: string): unknow
 /** 🪺️ Derives optional ignored leaves only from exact package entry and generator output authority. */
 export function semanticPackageIgnoredGeneratedOutputPaths(row: SemanticPackageProjectionCase, taxonomy: Taxonomy): readonly string[] {
   const generator = taxonomy.generatorContracts["wgpu-frame-worker"];
-  if (row.id !== "wgpu-renderer" || generator?.packageGeneration?.kind !== "wgpu-package-artifacts" || generator.projectionActivation?.packageId !== row.id || generator.projectionActivation.sourceManifestPath !== row.sourceRoot + "/Cargo.toml" || generator.projectionActivation.destinationManifestPath !== row.destinationRoot + "/Cargo.toml") return [];
-  return parseSemanticPackageBrowserProfile(generator.packageGeneration.browserProfile, row).entries.filter((entry) => entry.inclusion === "ignored").flatMap((entry) => {
-    const mapping = row.mappings.find((mapping) => mapping.sourcePath === row.sourceRoot + "/" + entry.sourceRelativePath)!;
-    const path = dirname(mapping.destinationPath).replaceAll("\\", "/") + "/🤖️generated/🟨️.js";
+  if (row.id !== "wgpu-renderer" || generator?.packageGeneration?.kind !== "wgpu-package-artifacts") return [];
+  const profile = parseSemanticPackageBrowserProfile(generator.packageGeneration.browserProfile, taxonomy.pathEmojiPolicy.genericEmojiIdentities);
+  if (profile.ownerPath !== row.semanticOwnerRoot) return [];
+  return profile.entries.filter((entry) => entry.inclusion === "ignored").flatMap((entry) => {
+    const path = profile.ownerPath + "/" + entry.outputRelativePath;
     return generator.outputRoots.some((root) => root.path === path && root.inclusion === "ignored") ? [path] : [];
   });
 }
@@ -4112,7 +4494,7 @@ export function semanticPackageProjectionAuthority(
     if (workspace === undefined || workspace.replace(/#[^\r\n]*/gu, "").trim() !== "" || [...manifest.matchAll(/^\s*\[workspace\]\s*$/gmu)].length !== 1 || nestedCargoField(manifest, "package", "publish") !== false) problems.push("JCO requires its exact empty standalone workspace and non-publishing package");
     const lock = nodes.get(activeRoot + "/Cargo.lock")?.content ?? "";
     if (!lock.startsWith("# This file is automatically @generated by Cargo.\n") || !/^version = 4$/mu.test(lock) || !lock.includes('name = "semio-jcoprobe-guest"')) problems.push("JCO Cargo lock authority drift");
-    const wit = nodes.get(activeRoot + "/🧬️schema/🧪️world/📜️.wit")?.content ?? "";
+    const wit = nodes.get(activeRoot + (destination ? "/🧬️schema/📜️world.wit" : "/🧬️schema/🧪️world/📜️.wit"))?.content ?? "";
     if (!wit.includes("package semio:jcoprobe@0.1.0;") || !/\bworld\s+jcoprobe\s*\{/u.test(wit)) problems.push("JCO WIT world identity drift");
     const implementation = nodes.get(destination ? row.semanticOwnerRoot + "/🧩️component/🦀️.rs" : row.sourceRoot + "/🦀️.rs")?.content ?? "";
     if ([...implementation.matchAll(/^wit_bindgen::generate!\(\{\s*path:\s*"🧬️schema\/📜️world\.wit",\s*world:\s*"jcoprobe",\s*async:\s*true,?\s*\}\);/gmu)].length !== 1 || [...implementation.matchAll(/^wit_bindgen::generate!/gmu)].length !== 1) problems.push("JCO WIT binding must retain its exact Cargo-manifest-relative authority");
@@ -4163,9 +4545,37 @@ function semanticPackageGenerationAuthority(repoRoot: string, packageId: Semanti
   if (authority.problems.length) throw new Error(authority.problems.join(" | "));
   return { authority, generated };
 }
-/** 🧩️ Renders package adapter bytes only from complete no-follow package authority. */
+/** 🪪️ Rejects noncanonical, colliding or historical coordinates for the single current JCO package. */
+export function parseCurrentJcoPackageDestination(input: unknown): CurrentJcoPackageDestination {
+  const semanticOwnerRoot = "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest";
+  const packageRoot = semanticOwnerRoot + "/📦️packages/🦀️rust";
+  const expected: CurrentJcoPackageDestination = { kind: "jco-canonical-package-v1", packageId: "jcoprobe-guest", semanticOwnerRoot, packageRoot, cargoManifestPath: packageRoot + "/Cargo.toml", cargoLockPath: packageRoot + "/Cargo.lock", componentPath: semanticOwnerRoot + "/🧩️component/🦀️.rs", witPath: packageRoot + "/🧬️schema/📜️world.wit", adapterPath: packageRoot + "/📚️library/🦀️.rs" };
+  if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Current JCO destination must be an object");
+  const value = input as Record<string, unknown>;
+  if (Object.keys(value).sort().join("\0") !== Object.keys(expected).sort().join("\0") || Object.entries(expected).some(([key, path]) => value[key] !== path)) throw new Error("Current JCO destination differs from its explicit handpicked authority");
+  const paths = [expected.cargoManifestPath, expected.cargoLockPath, expected.componentPath, expected.witPath, expected.adapterPath];
+  const folded = paths.map((path) => path.normalize("NFC").replaceAll("\ufe0f", "").toLocaleLowerCase("und"));
+  if (paths.some((path) => !exactOwnerPath(path)) || new Set(folded).size !== paths.length || folded.some((path, index) => folded.some((other, otherIndex) => index !== otherIndex && other.startsWith(path + "/")))) throw new Error("Current JCO paths are invalid or collide");
+  return expected;
+}
+
+/** 🧩️ Renders unchanged frozen adapter bytes only after validating the complete current no-follow package. */
 export function semanticPackageAdapterPreview(repoRoot: string, packageId: "jcoprobe-guest", taxonomy: Taxonomy = loadTaxonomy()): readonly SemanticPackageAdapter[] {
-  return semanticPackageGenerationAuthority(repoRoot, packageId, taxonomy).authority.adapters;
+  const current = parseCurrentJcoPackageDestination(taxonomy.generatorContracts["jco-package-adapter"]?.currentPackageDestination);
+  const catalog = semanticPackageProjectionCatalog(repoRoot, taxonomy), frozen = catalog?.packages.find((row) => row.id === packageId);
+  if (!catalog || !frozen || frozen.mappings.length !== 4 || frozen.adapters.length !== 1 || frozen.adapters[0]?.id !== "jco-library") throw new Error("JCO frozen adapter evidence is unavailable");
+  const destinations = [current.cargoLockPath, current.cargoManifestPath, current.componentPath, current.witPath];
+  const row: SemanticPackageProjectionCase = { ...frozen, semanticOwnerRoot: current.semanticOwnerRoot, destinationRoot: current.packageRoot, mappings: frozen.mappings.map((mapping, index) => ({ ...mapping, destinationPath: destinations[index]! })), adapters: [{ ...frozen.adapters[0], path: current.adapterPath, targetPaths: [current.componentPath] }] };
+  const nodes: SemanticProjectionAuthorityNode[] = row.mappings.map((mapping) => {
+    if (exactOwnerRegularFile(repoRoot, mapping.destinationPath) !== "file") throw new Error("Current JCO input is absent or not a no-follow regular file: " + mapping.destinationPath);
+    return { path: mapping.destinationPath, nodeKind: "file", content: readFileSync(join(repoRoot, mapping.destinationPath), "utf8") };
+  });
+  const state = exactOwnerRegularFile(repoRoot, current.adapterPath);
+  if (state === "invalid") throw new Error("Current JCO adapter destination is not a no-follow regular file");
+  nodes.push({ path: current.adapterPath, nodeKind: "file", content: state === "file" ? readFileSync(join(repoRoot, current.adapterPath), "utf8") : row.adapters[0]!.content });
+  const authority = semanticPackageProjectionAuthority({ packageId, nodes, layout: "destination" }, { ...catalog, packages: [row] }, taxonomy);
+  if (authority.problems.length) throw new Error(authority.problems.join(" | "));
+  return authority.adapters;
 }
 /** 🏗️ Renders only new generated leaves, excluding authored mappings and their source splices. */
 export function semanticPackageGeneratedLeafPreview(repoRoot: string, packageId: SemanticPackageProjectionCase["id"], taxonomy: Taxonomy = loadTaxonomy()): readonly Readonly<{ path: string; content: string }>[] {
@@ -4487,7 +4897,9 @@ export function semanticExactOwnedFileCatalog(repoRoot: string, taxonomy: Taxono
     if (!row.preimage || !/^[0-9a-f]{64}$/u.test(row.preimage.sha256) || row.preimage.mode !== "0644" || !Number.isSafeInteger(row.preimage.size) || row.preimage.size < 0 || !Array.isArray(row.referenceOwnerIds) || row.referenceOwnerIds.length === 0 || new Set(row.referenceOwnerIds).size !== row.referenceOwnerIds.length || row.referenceOwnerIds.some((id) => !referenceOwners[id])) throw new Error("Exact owner catalog leaf/reference evidence is invalid: " + row.sourcePath);
     if (row.generatorOwnerId !== null) {
       const generator = generatorOwners[row.generatorOwnerId], registered = taxonomy.generatorContracts[row.generatorOwnerId];
-      if (!generator || !registered || generator.currentOutputPath !== row.sourcePath || generator.requiredOutputPath !== row.destinationPath || generator.ownerPath !== registered.ownerPath || generator.target !== registered.target || !registered.outputRoots.some((output) => output.path === row.destinationPath) || registered.outputRoots.some((output) => output.path === row.sourcePath)) throw new Error("Exact owner catalog generator registration drifted: " + row.sourcePath);
+      const currentOutputPath = reservedDocumentationBasename(basename(row.sourcePath)) ? row.sourcePath : row.destinationPath;
+      const retiredOutputPath = currentOutputPath === row.sourcePath ? row.destinationPath : row.sourcePath;
+      if (!generator || !registered || generator.currentOutputPath !== row.sourcePath || generator.requiredOutputPath !== row.destinationPath || generator.ownerPath !== registered.ownerPath || generator.target !== registered.target || !registered.outputRoots.some((output) => output.path === currentOutputPath) || retiredOutputPath !== currentOutputPath && registered.outputRoots.some((output) => output.path === retiredOutputPath)) throw new Error("Exact owner catalog generator registration drifted: " + row.sourcePath);
     }
     counts[readme ? "readme" : "license"]++;
     counts[fixed ? "fixed" : "projected"]++;
@@ -4554,7 +4966,7 @@ export function validateGeneratorContractsAgainstWorkspace(repoRoot: string, tax
               const previewName = contract.previewTarget.slice(previewSeparator + 1);
               const preview = project.targets?.[previewName];
               if (project.name !== previewProject || !preview) problems.push(`generatorContracts[${JSON.stringify(id)}].previewTarget ${JSON.stringify(contract.previewTarget)} is absent from its owner project.`);
-              else if (preview.executor !== "nx:run-commands" || preview.options?.cwd !== contract.ownerPath || preview.options?.command !== "bun ./📜️script.ts preview-generated") problems.push(`generatorContracts[${JSON.stringify(id)}].previewTarget must route exactly to bun ./📜️script.ts preview-generated in its owner project.`);
+              else if (preview.executor !== "nx:run-commands" || preview.options?.cwd !== contract.ownerPath || preview.options?.command !== `bun ./📜️script.ts ${generatorPreviewScriptArguments(contract).join(" ")}`) problems.push(`generatorContracts[${JSON.stringify(id)}].previewTarget must route exactly to its declared script invocation in its owner project.`);
             }
             if (contract.checkTarget) {
               const checkSeparator = contract.checkTarget.lastIndexOf(":");
@@ -8099,6 +8511,12 @@ export function readSemioMarkerSubTable(manifestPath: string, lang: PackageLang,
 //#endregion 🏷️SemioMarkerSubTable
 
 const DISCOVERY_SKIP_DIRS = new Set(["node_modules", "target", "dist", "📤️dist", ".git", ".🧬semio", "🤖️generated", "🔌️plugin-modules", "pkg", "storybook-static", "temp", ".venv", "coverage", "__pycache__", "client", "client_bin"]);
+const CARGO_TARGET_DIR_PATTERN = /^target(?:-[a-z0-9]+)*$/u;
+
+/** 🎯️ Cargo target roots (`target`, `target-<slug>`) are build output that concurrent lanes create and prune mid-walk; discovery never enters them. */
+export function isDiscoverySkipDirectory(name: string): boolean {
+  return DISCOVERY_SKIP_DIRS.has(name) || CARGO_TARGET_DIR_PATTERN.test(name);
+}
 
 /** 🚫️ Tests a repo-relative path against opaque prefixes without touching the candidate path. */
 export function pathIsExcluded(repoRoot: string, candidate: string, taxonomy: Taxonomy = loadTaxonomy()): boolean {
@@ -8274,7 +8692,7 @@ export function registryCatalogPathMayAffect(path: string, taxonomy: Taxonomy = 
   if (!authority || Object.values(taxonomy.pathExclusions).some((entry) => { const prefix = entry.path.replace(/\/+$/u, ""); return path === prefix || path.startsWith(prefix + "/"); })) return false;
   const roots = [...authority.implementationEntryPaths, ...Object.values(authority.workspaceImports).flatMap((entry) => [entry.entryPath, entry.manifestPath])].map((path) => path.split("/")[0]);
   if (roots.includes(path.split("/")[0])) return true;
-  return !path.split("/").some((segment) => segment.startsWith(".") || DISCOVERY_SKIP_DIRS.has(segment));
+  return !path.split("/").some((segment) => segment.startsWith(".") || isDiscoverySkipDirectory(segment));
 }
 
 const gitlinkBoundaryCache = ephemeralMap<string, ReadonlySet<string>>("framework.products.repo.modules.lib.discovery.component.ts.gitlinkBoundaryCache");
@@ -8339,7 +8757,7 @@ export function registryCatalogInputView(repoRoot: string, taxonomy: Taxonomy = 
       if (nodeKind === null) return [];
       if (nodeKind !== "directory") throw new Error(`Registry catalog directory is ${nodeKind}: ${path}`);
       if (gitlinkBoundaries.has(path.normalize("NFC"))) return [];
-      return readdirSync(absolute).filter((name) => !pathIsExcluded(repoRoot, join(absolute, name), taxonomy)).map((name) => {
+      return readdirSync(absolute).filter((name) => !isDiscoverySkipDirectory(name) && !pathIsExcluded(repoRoot, join(absolute, name), taxonomy)).map((name) => {
         const childPath = relative(repoRoot, join(absolute, name)).replaceAll("\\", "/"), childKind = kind(childPath);
         if (childKind === null) throw new Error(`Registry catalog enumerated input disappeared: ${childPath}`);
         return { name, nodeKind: childKind };
@@ -8628,7 +9046,7 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy, catalog?: { readonly vie
         const path = join(dir, entry.name);
         if (pathIsExcluded(repoRoot, path, taxonomy)) continue;
         if (entry.isDirectory()) {
-          if (DISCOVERY_SKIP_DIRS.has(entry.name)) continue;
+          if (isDiscoverySkipDirectory(entry.name)) continue;
           if (existsSync(join(path, "CACHEDIR.TAG")) && /cache directory tag created by cargo/iu.test(readFileSync(join(path, "CACHEDIR.TAG"), "utf8"))) continue;
           const directoryKindId = semanticDirectoryKindId(entry.name, taxonomy);
           if (!directoryKindId || !allowedDirectories.has(directoryKindId)) addPackageProblem(owner, path, "packaging-violation", "is not an allowed semantic package directory.");
@@ -8760,7 +9178,7 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy, catalog?: { readonly vie
       scanPackagesDir(join(absDir, packagesDirName), owner);
     }
     for (const entry of entries) {
-      if (!entry.isDirectory() || entry.name.startsWith(".") || DISCOVERY_SKIP_DIRS.has(entry.name) || entry.name === packagesDirName) continue;
+      if (!entry.isDirectory() || entry.name.startsWith(".") || isDiscoverySkipDirectory(entry.name) || entry.name === packagesDirName) continue;
       const path = join(absDir, entry.name);
       if (pathIsExcluded(repoRoot, path, taxonomy)) continue;
       if (forbiddenSegments.has(entry.name)) {
@@ -9477,7 +9895,7 @@ function semanticWalk(repoRoot: string, root: string, taxonomy: Taxonomy): strin
       const path = join(real, entry.name);
       if (pathIsExcluded(repoRoot, path, taxonomy)) continue;
       if (entry.isDirectory()) {
-        if (!entry.name.startsWith(".") && !SEMANTIC_SKIP_DIRS.has(entry.name)) walk(path);
+        if (!entry.name.startsWith(".") && !SEMANTIC_SKIP_DIRS.has(entry.name) && !CARGO_TARGET_DIR_PATTERN.test(entry.name)) walk(path);
       } else if (entry.isFile()) files.push(path);
     }
   };
@@ -9548,7 +9966,7 @@ function semanticLowestCommonOwner(records: readonly SemanticRecordDraft[]): str
 }
 
 function semanticReadManifest(path: string, taxonomy: Taxonomy, problems: SemanticProblem[], collectionPath: string): SemanticManifestExtension | null {
-  const filename = semanticManifestFilename(taxonomy);
+  const filename = basename(path);
   if (!existsSync(path)) {
     problems.push({ code: "collection-manifest-missing", severity: "error", path: collectionPath, message: `Collection is missing canonical ${filename}.` });
     return null;
@@ -9917,10 +10335,10 @@ export function buildSemanticCensus(repoRoot: string, options: { readonly scope?
     const collectionPath = semanticRel(repoRoot, collectionAbs);
     const collectionDirectory = basename(collectionAbs);
     const spec = semanticCollectionSpec(collectionAbs, taxonomy)!;
-    const manifestFilename = semanticManifestFilename(taxonomy);
+    const manifestFilename = semanticManifestFilenameForCollection(collectionPath, taxonomy);
     const manifest = semanticReadManifest(join(collectionAbs, manifestFilename), taxonomy, problems, collectionPath);
     const actualChildren = readdirSafe(collectionAbs)
-      .filter((entry) => entry.isDirectory() && !entry.name.startsWith(".") && !SEMANTIC_SKIP_DIRS.has(entry.name) && entry.name !== taxonomy.packagesDirName && entry.name !== "🤖️generated")
+      .filter((entry) => entry.isDirectory() && !entry.name.startsWith(".") && !SEMANTIC_SKIP_DIRS.has(entry.name) && !CARGO_TARGET_DIR_PATTERN.test(entry.name) && entry.name !== taxonomy.packagesDirName && entry.name !== "🤖️generated")
       .map((entry) => entry.name)
       .sort(semanticCompare);
     const declaredMembers = manifest?.members ?? [];

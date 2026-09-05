@@ -1,7 +1,7 @@
 use super::*;
 
 //#region 🧪️OutputAdmission
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap() }
 
 fn ready(surface: &str, generation: u64) -> (SurfaceReconciler, Option<SurfaceReconcileReadyPatch>) {
     let mut job = SurfaceReconcileJob::try_new(SurfaceReconciler::new(surface), tree(leaf("root")), generation).unwrap_or_else(|_| panic!("admitted output producer"));

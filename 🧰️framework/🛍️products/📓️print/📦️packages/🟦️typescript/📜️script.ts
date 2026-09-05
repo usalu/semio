@@ -4,7 +4,7 @@ import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../
 import { PrintFontProvisioningCommand } from "../../🎮️commands/🔤print-font-provisioning/🟦️.ts";
 import { TemplatePdfBuildCommand } from "../../🎮️commands/🖨️template-pdf-build/🟦️.ts";
 import { TemplatePdfWatchCommand } from "../../🎮️commands/👁️template-pdf-watch/🟦️.ts";
-import { PrintPipelineVerificationCommand } from "../../🎮️commands/🟦️print-pipeline-verification.ts";
+import { PrintPipelineVerificationCommand } from "../../🎮️commands/🧪️print-pipeline-verification/🟦️.ts";
 import { renderPrintLatexTokenStylesheet } from "../../🔨️modules/🎨print-design-token-paints/🟦️.ts";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";

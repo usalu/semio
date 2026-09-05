@@ -1,0 +1,16 @@
+{
+  "nodes": {
+    "modified": [
+      {
+        "key": "b",
+        "diff": {
+          "label": "Scale Twice",
+          "position": {
+            "x": 120.0,
+            "y": 40.0
+          }
+        }
+      }
+    ]
+  }
+}

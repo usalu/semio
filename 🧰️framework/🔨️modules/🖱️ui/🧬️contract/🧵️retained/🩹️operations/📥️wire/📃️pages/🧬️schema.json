@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.ui.retained.operation-payload.v1",
+  "title": "Retained Operation Payload Admission",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["declaredBytes", "destinationPageBytes", "inputOwner", "residentOwner", "completion"],
+  "properties": {
+    "declaredBytes": { "$ref": "semio.actor.byte-page.v1#/definitions/word", "description": "Neutral canonical decimal integer domain from zero through u64::MAX. This field length is not byte-page, allocation or release authority." },
+    "destinationPageBytes": { "const": 256 },
+    "inputOwner": { "const": "native-private-field-and-fragment" },
+    "residentOwner": { "const": "shared-host-exact-instance-payload" },
+    "completion": { "const": "copied-input-is-not-publication" }
+  }
+}

@@ -1,7 +1,0 @@
-syntax = "proto3";
-package semio.s_stdio_pdf_1_7_h.mutation.remove_font_file;
-
-// Direct remove-font-file protobuf payload.
-message RemoveFontFileMutation {
-  uint64 descriptor_ordinal = 1;
-}

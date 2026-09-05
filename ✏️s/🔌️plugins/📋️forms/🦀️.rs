@@ -35,6 +35,7 @@ pub fn plugin() -> Result<Plugin<FormsApps>, semio_framework_plugin::PluginAssem
     Plugin::<FormsApps>::builder("forms")
         .label("Forms")
         .version("0.1.0")
+        .package_id("semio:forms")
         .declare_artifact(crate::artifacts::forms::artifact())
         .editor_mutation_roster::<crate::editor::forms::FormsPlayApp>()
         .viewer_mutation_roster::<crate::viewer::forms::FormsViewer>()

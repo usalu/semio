@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 1,
+  "contract": "json-reference-owner-lookup-v1",
+  "semantics": {
+    "scope": "one-jsonTokens-call",
+    "admission": "first-non-key-unescaped-json-string-value",
+    "absentOwner": "cache-null",
+    "errorTiming": "first-admitted-value",
+    "output": "identical-token-values-utf16-offsets-order-and-metadata"
+  },
+  "cases": [
+    {
+      "id": "non-artifact-null",
+      "path": "config/🔣️.json",
+      "adapter": "json",
+      "source": "{\"alpha\":\"one\",\"beta\":\"two\",\"escaped\":\"line\\nend\",\"number\":1}",
+      "owner": null,
+      "lookups": 1,
+      "oracle": true
+    },
+    {
+      "id": "artifact-owner",
+      "path": "plugins/🗿️artifacts/🧊️cube/config/🔣️.json",
+      "adapter": "json",
+      "source": "{\"a\":\"first\",\"b\":[\"second\",\"third\"],\"duplicate\":\"last\"}",
+      "owner": "plugins/🗿️artifacts/🧊️cube",
+      "lookups": 1,
+      "oracle": true
+    },
+    {
+      "id": "standards-owner",
+      "path": "plugins/🧊️cube/🏅️standards/🔖️1/🔣️.json",
+      "adapter": "json",
+      "source": "[\"alpha\",\"beta\"]",
+      "owner": "plugins/🧊️cube",
+      "lookups": 1,
+      "oracle": true
+    },
+    {
+      "id": "nfc-variation-owner",
+      "path": "plugins/🗿artifacts/café/🔣️.json",
+      "adapter": "json",
+      "source": "{\"🧊️\":\"a\",\"b\":\"c\"}",
+      "owner": "plugins/🗿artifacts/café",
+      "lookups": 1,
+      "oracle": true
+    },
+    {
+      "id": "jsonc-comments-and-trailing-comma",
+      "path": "config/🔣️.jsonc",
+      "adapter": "jsonc",
+      "source": "{\n // an unquoted comment\n \"first\": \"one\",\n \"second\": \"two\",\n}",
+      "owner": null,
+      "lookups": 1,
+      "oracle": true
+    },
+    {
+      "id": "duplicate-properties",
+      "path": "config/🔣️.json",
+      "adapter": "json",
+      "source": "{\"same\":\"one\",\"same\":\"two\"}",
+      "owner": null,
+      "lookups": 1,
+      "oracle": true
+    },
+    {
+      "id": "scalar",
+      "path": "config/🔣️.json",
+      "adapter": "json",
+      "source": "\"value\"",
+      "owner": null,
+      "lookups": 1,
+      "oracle": true
+    },
+    {
+      "id": "only-keys-do-not-normalize",
+      "path": "../outside.json",
+      "adapter": "json",
+      "source": "{\"one\":1,\"two\":false,\"empty\":null}",
+      "owner": null,
+      "lookups": 0,
+      "oracle": true
+    },
+    {
+      "id": "escaped-value-does-not-normalize",
+      "path": "../outside.json",
+      "adapter": "json",
+      "source": "{\"key\":\"line\\nvalue\"}",
+      "owner": null,
+      "lookups": 0,
+      "oracle": true
+    },
+    {
+      "id": "malformed-string-does-not-normalize",
+      "path": "../outside.json",
+      "adapter": "json",
+      "source": "{\"key\":\"\\q\"}",
+      "owner": null,
+      "lookups": 0,
+      "oracle": false
+    },
+    {
+      "id": "empty-does-not-normalize",
+      "path": "../outside.json",
+      "adapter": "json",
+      "source": "",
+      "owner": null,
+      "lookups": 0,
+      "oracle": false
+    },
+    {
+      "id": "first-eligible-value-preserves-error",
+      "path": "../outside.json",
+      "adapter": "json",
+      "source": "{\"ignored\":1,\"escaped\":\"line\\nvalue\",\"first\":\"value\",\"later\":\"next\"}",
+      "owner": null,
+      "lookups": 1,
+      "error": "Path escapes repository scope: ../outside.json",
+      "oracle": true
+    },
+    {
+      "id": "embedded-command-and-glob",
+      "path": "config/project.json",
+      "adapter": "json",
+      "source": "{\"command\":\"bun ./📜️script.ts --file=./🟦️.ts\",\"inputs\":[\"{workspaceRoot}/src/**/*\"]}",
+      "owner": null,
+      "lookups": 1,
+      "oracle": true
+    }
+  ],
+  "projections": [
+    {
+      "id": "artifact-uri",
+      "path": "plugins/🗿️artifacts/🧊️cube/🔣️.json",
+      "owner": "plugins/🗿️artifacts/🧊️cube",
+      "prefix": "asset://",
+      "source": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/replace/🧪️tests/basic/🟦️.ts",
+      "destination": "🧪️tests/🪆️1-any/replace/🟦️basic.ts"
+    },
+    {
+      "id": "no-artifact-owner",
+      "path": "config/🔣️.json",
+      "owner": null,
+      "prefix": "",
+      "source": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/replace/🧪️tests/basic/🟦️.ts",
+      "destination": "🧪️tests/🪆️1-any/replace/🟦️basic.ts"
+    },
+    {
+      "id": "relative-standard-owner",
+      "path": "plugins/🧊️cube/🏅️standards/🔖️1/🔣️.json",
+      "owner": "plugins/🧊️cube",
+      "prefix": "../",
+      "source": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/replace/🧪️tests/basic/🟦️.ts",
+      "destination": "🧪️tests/🪆️1-any/replace/🟦️basic.ts"
+    }
+  ],
+  "corpus": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+    ".vscode/🧩️launch.seed.jsonc",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json"
+  ],
+  "execution": {
+    "target": "test-json-reference-owner-lookup",
+    "command": "bun ./📜️script.ts test json-reference-owner-lookup",
+    "launchName": "🧹clean🧩️taxonomy🔎️json-reference-owner-lookup",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-json-reference-owner-lookup --skip-nx-cache",
+    "launchGroup": "4_gate",
+    "launchOrder": 410.12
+  }
+}

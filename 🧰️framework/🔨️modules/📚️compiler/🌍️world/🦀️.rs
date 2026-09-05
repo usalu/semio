@@ -50,10 +50,10 @@ impl FontSet {
 /// @emoji 🏗️ The native/host font provider — bytes baked into the binary at compile time.
 pub fn embedded_fonts() -> FontSet {
     FontSet {
-        math: include_bytes!("🔤️fonts/🔤️LibertinusMath-Regular.otf"),
-        serif: include_bytes!("🔤️fonts/🔤️LibertinusSerif-Regular.otf"),
-        serif_italic: include_bytes!("🔤️fonts/🔤️LibertinusSerif-Italic.otf"),
-        mono: include_bytes!("🔤️fonts/🔤️LibertinusMono-Regular.otf"),
+        math: include_bytes!("🔤️fonts/🧮️LibertinusMath-Regular.otf"),
+        serif: include_bytes!("🔤️fonts/📖️LibertinusSerif-Regular.otf"),
+        serif_italic: include_bytes!("🔤️fonts/🖋️LibertinusSerif-Italic.otf"),
+        mono: include_bytes!("🔤️fonts/⌨️LibertinusMono-Regular.otf"),
         emoji: include_bytes!("🔤️fonts/🔤️NotoColorEmoji-subset.ttf"),
     }
 }

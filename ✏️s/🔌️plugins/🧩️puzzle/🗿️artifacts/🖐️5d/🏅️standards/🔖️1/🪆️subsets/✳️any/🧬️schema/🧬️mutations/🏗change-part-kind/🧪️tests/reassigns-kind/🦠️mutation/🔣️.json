@@ -1,5 +1,0 @@
-{
-  "mutation": "changePartKind",
-  "id": "part-a",
-  "newPartKind": "part-kind-c"
-}

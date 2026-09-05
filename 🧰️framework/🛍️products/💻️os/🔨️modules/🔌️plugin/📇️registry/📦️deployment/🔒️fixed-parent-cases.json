@@ -1,0 +1,30 @@
+{
+  "parents": { "left": "📦️fixture/📞️callback/interfaces", "right": "📦️fixture/⚡️promises/interfaces" },
+  "accepted": { "kind": "fixed-directory-contract-set", "fixedDirectoryContractIds": ["left", "right"] },
+  "namedSets": { "fixture-compilers": ["left", "right"] },
+  "namedAccepted": { "kind": "named-fixed-directory-contract-set", "fixedDirectoryContractSetId": "fixture-compilers" },
+  "namedRejected": [
+    { "kind": "named-fixed-directory-contract-set", "fixedDirectoryContractSetId": "unknown" },
+    { "kind": "named-fixed-directory-contract-set", "fixedDirectoryContractSetId": "" },
+    { "kind": "named-fixed-directory-contract-set", "fixedDirectoryContractSetId": ["fixture-compilers"] },
+    { "kind": "named-fixed-directory-contract-set", "fixedDirectoryContractSetId": "fixture-compilers", "fixedDirectoryContractIds": ["left"] },
+    { "kind": "fixed-directory-contract-set", "fixedDirectoryContractSetId": "fixture-compilers" }
+  ],
+  "invalidLiteralBasenames": ["{one,two}.d.ts", "module{1..2}.d.ts", "module?.d.ts", "module*.d.ts", "module[12].d.ts"],
+  "rejected": [
+    { "kind": "fixed-directory-contract-set", "fixedDirectoryContractIds": [] },
+    { "kind": "fixed-directory-contract-set", "fixedDirectoryContractIds": ["left", "left"] },
+    { "kind": "fixed-directory-contract-set", "fixedDirectoryContractIds": ["left", "missing"] },
+    { "kind": "fixed-directory-contract-set", "fixedDirectoryContractIds": ["left", "right"], "fixedDirectoryContractId": "left" },
+    { "kind": "fixed-directory-contract", "fixedDirectoryContractIds": ["left", "right"] },
+    { "kind": "fixed-directory-contract-set", "fixedDirectoryContractIds": "left" },
+    { "kind": "fixed-directory-contract-set", "fixedDirectoryContractIds": ["left", 2] }
+  ],
+  "matches": [
+    { "parent": "left", "filename": "wasi-io-poll.d.ts", "accepted": true },
+    { "parent": "right", "filename": "wasi-io-poll.d.ts", "accepted": true },
+    { "parent": "other", "filename": "wasi-io-poll.d.ts", "accepted": false },
+    { "parent": "left", "filename": "custom.d.ts", "accepted": false },
+    { "parent": "left", "filename": "wasi-io-poll.d.ts.extra", "accepted": false }
+  ]
+}

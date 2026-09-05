@@ -1,0 +1,25 @@
+{
+  "comment": "semio",
+  "entries": {
+    "modified": [
+      {
+        "name": "doc/readme.txt",
+        "diff": {
+          "data": [
+            104,
+            105,
+            33
+          ]
+        }
+      }
+    ],
+    "added": [
+      {
+        "name": "doc/version.txt",
+        "data": [
+          49
+        ]
+      }
+    ]
+  }
+}

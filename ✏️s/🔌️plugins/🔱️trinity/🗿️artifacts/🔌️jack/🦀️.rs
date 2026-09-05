@@ -740,29 +740,29 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
-        ("s.jack.standard.v1", "standard", "1", &[], None),
-        ("s.jack.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.jack.schema.artifact", "schema", "s.trinity.jack", &[("schema", "s.trinity.jack")], None),
-        ("s.jack.inference.artifact", "inference", "s.trinity.jack.inference", &[("schema", "s.trinity.jack.inference")], None),
-        ("s.jack.composer.native", "composer", "s.jack@1/*", &[("dialect", "s.jack@1/*")], None),
-        ("s.jack.composer.format-1", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
-        ("s.jack.composer.format-2", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None),
-        ("s.jack.composer.format-3", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
-        ("s.jack.composer.format-4", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
-        ("s.jack.composer.format-5", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.jack.grammar.1", "grammar", "jack.document", &[("grammar", "jack.document")], None),
-        ("s.jack.grammar.2", "grammar", "jack.op", &[("grammar", "jack.op")], None),
-        ("s.jack.grammar.3", "grammar", "jack.diff", &[("grammar", "jack.diff")], None),
-        ("s.jack.grammar.4", "grammar", "jack.pack", &[("grammar", "jack.pack")], None),
-        ("s.jack.grammar.5", "grammar", "jack.spr", &[("grammar", "jack.spr")], None),
+        ("s.trinity.jack.standard.v1", "standard", "1", &[], None),
+        ("s.trinity.jack.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.trinity.jack.schema.artifact", "schema", "s.trinity.jack", &[("schema", "s.trinity.jack")], None),
+        ("s.trinity.jack.inference.artifact", "inference", "s.trinity.jack.inference", &[("schema", "s.trinity.jack.inference")], None),
+        ("s.trinity.jack.composer.native", "composer", "s.trinity.jack@1/*", &[("dialect", "s.trinity.jack@1/*")], None),
+        ("s.trinity.jack.composer.format-1", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
+        ("s.trinity.jack.composer.format-2", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None),
+        ("s.trinity.jack.composer.format-3", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
+        ("s.trinity.jack.composer.format-4", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.trinity.jack.composer.format-5", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.trinity.jack.grammar.1", "grammar", "jack.document", &[("grammar", "jack.document")], None),
+        ("s.trinity.jack.grammar.2", "grammar", "jack.op", &[("grammar", "jack.op")], None),
+        ("s.trinity.jack.grammar.3", "grammar", "jack.diff", &[("grammar", "jack.diff")], None),
+        ("s.trinity.jack.grammar.4", "grammar", "jack.pack", &[("grammar", "jack.pack")], None),
+        ("s.trinity.jack.grammar.5", "grammar", "jack.spr", &[("grammar", "jack.spr")], None),
         // 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<TrinityJackPlayApp>>()`
         // derives its extension claim from `<JackSnapshot as store::ArtifactDsl>::EXTENSION`
         // (`…/🧬️schema/📸️snapshot/📝️text/🦀️.rs`), which is `"trinity"`, not `"jack"`.
-        ("s.jack.codec.document-1", "codec", "trinity.graph:trinity", &[("codec", "trinity.graph"), ("extension", "trinity")], None),
-        ("s.jack.localization.en", "localization", "Jack", &[], Some(("en", "Jack"))),
-        ("s.jack.localization.de", "localization", "Buchse", &[], Some(("de", "Buchse"))),
+        ("s.trinity.jack.codec.document-1", "codec", "trinity.graph:trinity", &[("codec", "trinity.graph"), ("codec-extension", "13:trinity.graph:trinity")], None),
+        ("s.trinity.jack.localization.en", "localization", "Jack", &[], Some(("en", "Jack"))),
+        ("s.trinity.jack.localization.de", "localization", "Buchse", &[], Some(("de", "Buchse"))),
     ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.jack")?);
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.trinity.jack")?);
     for (identity, kind, descriptor, claims, localization) in rows {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
         for (namespace, value) in *claims {

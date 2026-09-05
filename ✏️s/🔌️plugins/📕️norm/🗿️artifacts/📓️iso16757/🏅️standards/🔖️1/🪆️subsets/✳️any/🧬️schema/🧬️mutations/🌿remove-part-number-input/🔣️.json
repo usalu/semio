@@ -5,7 +5,7 @@
   "displayName": "Remove Part Number Input",
   "emoji": "🌿",
   "aggregateVariant": "RemovePartNumberInput",
-  "payloadSchema": "🔣️.schema.json",
+  "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",

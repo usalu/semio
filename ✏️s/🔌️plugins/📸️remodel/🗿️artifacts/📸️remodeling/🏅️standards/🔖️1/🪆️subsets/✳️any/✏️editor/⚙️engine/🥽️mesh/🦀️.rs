@@ -2221,7 +2221,7 @@ fn count_self_intersections(mesh: &TriMesh) -> usize {
 }
 
 /// 🔍️ The single source of truth for "is this mesh watertight": closed (no boundary), a true
-/// 2-manifold (no over-used edges or pinch vertices), and consistently oriented. `genus` is only
+/// 2-manifold (no over-used edges or pinch vertices), and consistently oriented. `🐨️genus` is only
 /// reported for a single-component closed 2-manifold, where `χ = 2 - 2g` is well-defined.
 pub fn validate_watertight(mesh: &TriMesh, check_self_intersections: bool) -> WatertightReport {
     let edges = mesh.edge_map();

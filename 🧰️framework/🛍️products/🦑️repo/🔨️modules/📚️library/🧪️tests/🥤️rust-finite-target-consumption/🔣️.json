@@ -1,0 +1,464 @@
+{
+  "schemaVersion": 1,
+  "contract": "rust-finite-target-consumption-v1",
+  "semantics": {
+    "authority": "candidate-only-never-editable",
+    "required": [
+      "complete-finite-expansion",
+      "exact-utf16-source-span",
+      "unique-cargo-owner",
+      "exact-hashed-source-chain",
+      "physically-present-admitted-targets",
+      "no-follow",
+      "non-opaque",
+      "coordinate-root-local",
+      "unshadowed-inherited-environment"
+    ],
+    "failure": "retain-conservative-unsupported-interpretation",
+    "suppression": "same-start-end-value-only",
+    "writablePrecedence": "existing-immutable-join-authority",
+    "bound": 256
+  },
+  "cases": [
+    {
+      "id": "foreign-disjoint",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "finite",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "regular"
+    },
+    {
+      "id": "mixed-intersection",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\"), root.join(\"../affected\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "affected/item.json",
+        "foreign/item.json"
+      ],
+      "expected": "finite",
+      "affected": [
+        "affected/item.json",
+        "pkg/item.json"
+      ],
+      "condition": "regular"
+    },
+    {
+      "id": "missing-target",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\"), root.join(\"../absent\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "regular"
+    },
+    {
+      "id": "unadmitted-target",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "unadmitted"
+    },
+    {
+      "id": "two-cargo-owners",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "two-owners"
+    },
+    {
+      "id": "no-cargo-owner",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "no-owner"
+    },
+    {
+      "id": "symlink-target-leaf",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "symlink-leaf"
+    },
+    {
+      "id": "symlink-target-ancestor",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "symlink-ancestor"
+    },
+    {
+      "id": "opaque-root-no-access",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../compose\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "opaque"
+    },
+    {
+      "id": "opaque-nested-no-access",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../temp/compose\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "opaque"
+    },
+    {
+      "id": "literal-temp-compose-not-opaque",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../temp-compose\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "temp-compose/item.json"
+      ],
+      "expected": "finite",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "regular"
+    },
+    {
+      "id": "coordinate-owner-escape",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "fallback",
+      "affected": [
+        "nested/pkg/item.json"
+      ],
+      "condition": "nested-coordinate"
+    },
+    {
+      "id": "nested-foreign-owner-entry",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "foreign-coordinate"
+    },
+    {
+      "id": "repository-escape",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../../outside\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "regular"
+    },
+    {
+      "id": "changed-consumer",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "changed-consumer"
+    },
+    {
+      "id": "changed-source-chain",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "changed-chain"
+    },
+    {
+      "id": "changed-manifest",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "changed-manifest"
+    },
+    {
+      "id": "missing-source-chain",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "missing-chain"
+    },
+    {
+      "id": "dynamic-receiver",
+      "source": "pub fn read() {\n    let root = std::env::current_dir().unwrap();\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "regular"
+    },
+    {
+      "id": "mutated-receiver",
+      "source": "pub fn read() {\n    let mut root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    root = std::path::Path::new(\".\");\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "regular"
+    },
+    {
+      "id": "cancelled-symlink-ancestor",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../alias/../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "cancelled-symlink"
+    },
+    {
+      "id": "cancelled-missing-directory",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../missing/../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "regular"
+    },
+    {
+      "id": "cancelled-opaque-directory",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../compose/../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "regular"
+    },
+    {
+      "id": "cancelled-nondirectory-parent",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../not-directory/../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "cancelled-file"
+    },
+    {
+      "id": "coordinate-root-excursion",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../../nested/foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "nested/foreign/item.json"
+      ],
+      "expected": "fallback",
+      "affected": [
+        "nested/pkg/item.json"
+      ],
+      "condition": "nested-coordinate"
+    },
+    {
+      "id": "cancelled-module-ownership-edge",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "cancelled-module-edge"
+    },
+    {
+      "id": "cancelled-manifest-ownership-edge",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "cancelled-manifest-edge"
+    },
+    {
+      "id": "inherited-env-macro",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            println!(\"TARGET:{}\", std::fs::read_to_string(directory.join(leaf)).unwrap().trim());\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "fallback",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "parent-env-macro"
+    },
+    {
+      "id": "ancestor-doc-comment-noise",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "finite",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "parent-doc-comment"
+    },
+    {
+      "id": "ancestor-known-transparent-macro",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "finite",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "parent-known-macro"
+    },
+    {
+      "id": "ancestor-cfg-gated-test-mod",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "finite",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "parent-cfg-test-mod"
+    },
+    {
+      "id": "ancestor-glob-reexport-with-super-star-target",
+      "source": "mod structural_correspondence_tests {\n    use super::*;\n    pub fn read() {\n        let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n        for directory in [root.join(\"../foreign\")] {\n            for leaf in [\"item.json\"] {\n                let _ = directory.join(leaf);\n                println!(\"{leaf}\");\n            }\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "finite",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "parent-glob-reexport"
+    },
+    {
+      "id": "ancestor-known-attribute-path",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "finite",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "parent-known-attribute-path"
+    },
+    {
+      "id": "ancestor-crate-local-macro-and-std-expression-macros",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "finite",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "parent-crate-local-macro-and-std-expression-macros"
+    }
+  ],
+  "correlated": {
+    "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for (directory, leaf) in [(root.join(\"../foreign\"), \"alpha.json\"), (root.join(\"../affected\"), \"beta.json\")] {\n        let _ = directory.join(leaf);\n        println!(\"{leaf}\");\n    }\n}\n",
+    "targets": [
+      {
+        "value": "alpha.json",
+        "target": "foreign/alpha.json"
+      },
+      {
+        "value": "beta.json",
+        "target": "affected/beta.json"
+      }
+    ]
+  },
+  "writable": {
+    "source": "pub fn read() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let _ = root.join(\"item.json\"); }\n",
+    "target": "foreign/item.json"
+  },
+  "registration": {
+    "projectPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+    "routerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+    "target": "test-rust-finite-target-consumption",
+    "command": "bun ./📜️script.ts test rust-finite-target-consumption",
+    "route": "rust-finite-target-consumption",
+    "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥤️rust-finite-target-consumption/🟦️.ts",
+    "launchName": "🧹clean🧩️taxonomy🥤️rust-finite-target-consumption",
+    "launchOrder": 410.193,
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-rust-finite-target-consumption --skip-nx-cache"
+  },
+  "retention": {
+    "parentSegments": [
+      "📓️energy-rust-reference-diagnostics",
+      "🧭️finite-target-consumption",
+      "🧾️runs"
+    ],
+    "runPrefix": "🔖️"
+  }
+}

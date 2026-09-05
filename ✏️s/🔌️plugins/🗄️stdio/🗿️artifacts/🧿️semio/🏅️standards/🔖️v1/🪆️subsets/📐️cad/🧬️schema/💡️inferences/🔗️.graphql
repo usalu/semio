@@ -1,0 +1,16 @@
+# 💡️ Semio cad inference schema — entity-derived planar bounding box.
+
+type SemioCadInference {
+  bounds: SemioCadBounds! @derived
+}
+
+type SemioCadBounds {
+  min: SemioPoint2!
+  max: SemioPoint2!
+  entityCount: Int!
+}
+
+type SemioPoint2 {
+  x: Float!
+  y: Float!
+}

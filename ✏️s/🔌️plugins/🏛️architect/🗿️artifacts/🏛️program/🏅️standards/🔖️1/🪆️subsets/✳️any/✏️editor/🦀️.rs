@@ -93,7 +93,7 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 /// domain this app declares: `HierarchyProvider::Flat` (the 68 registers are flat lists of
 /// `EntityId`-keyed rows, no parent/child nesting), one granularity ("entity") covering every
 /// register kind uniformly (mirrors note's single "block" granularity over several block kinds).
-/// The document panel's element rows are the sole real pick surface today (`📌️panels/📄️artifact`);
+/// The document panel's element rows are the sole real pick surface today (`📌️panels/🗿️artifact`);
 /// the register/graph/trace windows lost their per-selection detail entirely (`render` carries no
 /// `InteractionView` — see each window's own doc comment) rather than being force-wired to a
 /// surface (`BlockListScene`/`NodeGraphScene`) that cannot show it yet.
@@ -218,7 +218,7 @@ pub mod behavior {
                         communication_channels: Vec::new(),
                         success_metrics: Vec::new(),
                     };
-                    operations.push(ProgramMutation::CreateStakeholder(leaves::create_stakeholder::mutation::CreateStakeholder { stakeholder: item.clone() }));
+                    operations.push(ProgramMutation::CreateStakeholder(leaves::create_stakeholder::CreateStakeholder { stakeholder: item.clone() }));
                     program.stakeholders.push(item);
                 }
                 "user" => {
@@ -249,7 +249,7 @@ pub mod behavior {
                         validated: false,
                         stakeholder_ids: Vec::new(),
                     };
-                    operations.push(ProgramMutation::CreateUserProfile(leaves::create_user_profile::mutation::CreateUserProfile { user_profile: item.clone() }));
+                    operations.push(ProgramMutation::CreateUserProfile(leaves::create_user_profile::CreateUserProfile { user_profile: item.clone() }));
                     program.users.push(item);
                 }
                 "activity" => {
@@ -280,7 +280,7 @@ pub mod behavior {
                         temporal_pattern: None,
                         supervision_level: None,
                     };
-                    operations.push(ProgramMutation::CreateActivity(leaves::create_activity::mutation::CreateActivity { activity: item.clone() }));
+                    operations.push(ProgramMutation::CreateActivity(leaves::create_activity::CreateActivity { activity: item.clone() }));
                     program.activities.push(item);
                 }
                 "function" => {
@@ -309,7 +309,7 @@ pub mod behavior {
                         hierarchy_parent_id: None,
                         conflict_ids: Vec::new(),
                     };
-                    operations.push(ProgramMutation::CreateFunction(leaves::create_function::mutation::CreateFunction { function: item.clone() }));
+                    operations.push(ProgramMutation::CreateFunction(leaves::create_function::CreateFunction { function: item.clone() }));
                     program.functions.push(item);
                 }
                 "element" | "room" => {
@@ -341,7 +341,7 @@ pub mod behavior {
                         adjacency_preferences: Vec::new(),
                         environmental_zone: None,
                     };
-                    operations.push(ProgramMutation::CreateProgramElement(leaves::create_program_element::mutation::CreateProgramElement { program_element: item.clone() }));
+                    operations.push(ProgramMutation::CreateProgramElement(leaves::create_program_element::CreateProgramElement { program_element: item.clone() }));
                     program.elements.push(item);
                     element_ids.push(id.clone());
                 }
@@ -369,7 +369,7 @@ pub mod behavior {
                         trace_links: Vec::new(),
                         superseded_by: None,
                     };
-                    operations.push(ProgramMutation::CreateRequirement(leaves::create_requirement::mutation::CreateRequirement { requirement: item.clone() }));
+                    operations.push(ProgramMutation::CreateRequirement(leaves::create_requirement::CreateRequirement { requirement: item.clone() }));
                     program.requirements.push(item);
                 }
                 "risk" => {
@@ -395,7 +395,7 @@ pub mod behavior {
                         escalation_path: Vec::new(),
                         monitoring_plan: None,
                     };
-                    operations.push(ProgramMutation::CreateRisk(leaves::create_risk::mutation::CreateRisk { risk: item.clone() }));
+                    operations.push(ProgramMutation::CreateRisk(leaves::create_risk::CreateRisk { risk: item.clone() }));
                     program.risks.push(item);
                 }
                 "process" => {
@@ -425,7 +425,7 @@ pub mod behavior {
                         handoff_points: Vec::new(),
                         quality_gates: Vec::new(),
                     };
-                    operations.push(ProgramMutation::CreateProcess(leaves::create_process::mutation::CreateProcess { process: item.clone() }));
+                    operations.push(ProgramMutation::CreateProcess(leaves::create_process::CreateProcess { process: item.clone() }));
                     program.processes.push(item);
                 }
                 "equipment" => {
@@ -456,7 +456,7 @@ pub mod behavior {
                         commissioning_notes: Vec::new(),
                         spare_parts: Vec::new(),
                     };
-                    operations.push(ProgramMutation::CreateEquipment(leaves::create_equipment::mutation::CreateEquipment { equipment: item.clone() }));
+                    operations.push(ProgramMutation::CreateEquipment(leaves::create_equipment::CreateEquipment { equipment: item.clone() }));
                     program.equipment.push(item);
                 }
                 "adjacency" | "adjacency_bundle" if element_ids.len() >= 2 => {
@@ -484,7 +484,7 @@ pub mod behavior {
                         source_relationship_id: None,
                         internal_external_access: None,
                     };
-                    operations.push(ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::mutation::ConnectAdjacency { adjacency: adjacency.clone() }));
+                    operations.push(ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency: adjacency.clone() }));
                     set_adjacency(program, adjacency);
                 }
                 _ => {}

@@ -49,12 +49,12 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// replaces the old side-effecting `crate::artifacts::tiff::engine::register()`, previously called
 /// unconditionally from `🗄️stdio`'s plugin root. Mirrors `🗒️note`/`🔋️model`'s own `declaration()`
 /// exemplars: `.composers(...)` reaches `⚙️engine`'s OWN `io_registry` (the real `ComposerEntry`
-/// rows — ✳️any + ✳️baseline already folded into one list there) by its FULLY QUALIFIED path,
+/// rows — ✳️any + 🧱️baseline already folded into one list there) by its FULLY QUALIFIED path,
 /// never the bare `io_registry::entries()` shortcut that would silently rebind to this file's own
 /// shadowing `io_registry` module above/below (repo-wide "silent rebind" hazard this ticket
 /// tracks — that module returns `&[&ComposerEntry]`, a different type, and is left in place as
 /// orphaned dead code, matching `🔋️model`'s own precedent for its orphaned wrapper). The baseline
-/// subset's `SubsetValidator` (`✳️baseline/🚪️io`'s own `TiffBaselineValidator`, previously
+/// subset's `SubsetValidator` (`🧱️baseline/🚪️io`'s own `TiffBaselineValidator`, previously
 /// registered via `⚙️engine::register()`'s trailing `subsets::baseline::io::register()` call) is
 /// re-derived here via `subset_validator_entry_of::<TiffBaselineValidator>()` rather than reused
 /// from that file's own private `validator_entry()` cache (not `pub`) — same erasure helper, fresh
@@ -80,9 +80,9 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .try_build()
 }
 
-/// 🛡️ Re-derives the ✳️baseline subset's `SubsetValidatorEntry` — see `declaration()`'s own doc for
+/// 🛡️ Re-derives the 🧱️baseline subset's `SubsetValidatorEntry` — see `declaration()`'s own doc for
 /// why this calls `subset_validator_entry_of` directly instead of reusing the private cache in
-/// `✳️baseline/🚪️io`.
+/// `🧱️baseline/🚪️io`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn declared_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
     static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();

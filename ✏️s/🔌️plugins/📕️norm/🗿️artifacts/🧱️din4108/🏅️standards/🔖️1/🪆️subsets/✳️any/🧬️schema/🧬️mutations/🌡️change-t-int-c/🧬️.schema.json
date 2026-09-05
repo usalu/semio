@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeTIntC",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newTIntC"
+  ],
+  "properties": {
+    "newTIntC": {
+      "type": "number"
+    }
+  }
+}

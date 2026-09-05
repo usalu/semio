@@ -474,7 +474,7 @@ pub mod derived_analysis {
 
     impl ArtifactAnalysis for ShootingAnalyzerAnalysis {
         type Parts = ShootingParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.shooting", standard: StandardId("1"), subset: SubsetId("*") };
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.shooting.shooting", standard: StandardId("1"), subset: SubsetId("*") };
 
         async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium

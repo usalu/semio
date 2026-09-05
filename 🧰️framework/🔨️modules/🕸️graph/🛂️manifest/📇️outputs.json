@@ -1,0 +1,21 @@
+{
+  "$schema": "./🧬️outputs.schema.json",
+  "version": 1,
+  "shared": {
+    "rustRegistry": "🦀️registry.rs",
+    "typescriptIndex": "🟦️.ts",
+    "typescriptTypes": "🔠️types.ts",
+    "jsonSchema": "🔣️manifest.schema.json"
+  },
+  "manifests": [
+    { "id": "drawing-layers", "rust": "🖌️drawing-layers/🦀️.rs", "typescript": "🖌️drawing-layers/🟦️.ts" },
+    { "id": "flow-dag", "rust": "🌊️flow-dag/🦀️.rs", "typescript": "🌊️flow-dag/🟦️.ts" },
+    { "id": "nakagin", "rust": "🏢️nakagin/🦀️.rs", "typescript": "🏢️nakagin/🟦️.ts" },
+    { "id": "puzzle2d-default", "rust": "◻️puzzle2d-default/🦀️.rs", "typescript": "◻️puzzle2d-default/🟦️.ts" },
+    { "id": "puzzle3d-default", "rust": "🧊️puzzle3d-default/🦀️.rs", "typescript": "🧊️puzzle3d-default/🟦️.ts" },
+    { "id": "puzzle5d-default", "rust": "🖐️puzzle5d-default/🦀️.rs", "typescript": "🖐️puzzle5d-default/🟦️.ts" },
+    { "id": "rewrite-lhs", "rust": "🫲️rewrite-lhs/🦀️.rs", "typescript": "🫲️rewrite-lhs/🟦️.ts" },
+    { "id": "wires", "rust": "🧠️wires/🦀️.rs", "typescript": "🧠️wires/🟦️.ts" },
+    { "id": "writer-languages", "rust": "🗣️writer-languages/🦀️.rs", "typescript": "🗣️writer-languages/🟦️.ts" }
+  ]
+}

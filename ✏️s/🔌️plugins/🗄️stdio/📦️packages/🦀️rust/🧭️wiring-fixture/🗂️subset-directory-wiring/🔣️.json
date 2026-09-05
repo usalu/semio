@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "artifact": "semio",
+  "standard": "v1",
+  "subset": "mesh",
+  "schema": "s.stdio.semio.mesh",
+  "canonicalDirectory": "🔺️mesh",
+  "cases": [
+    {
+      "id": "canonical-physical-directory",
+      "directories": ["🔺️mesh"],
+      "reference": "🔺️mesh",
+      "outcome": "accepted"
+    },
+    {
+      "id": "stale-coordinate-is-rewritten",
+      "directories": ["🔺️mesh"],
+      "reference": "✳️mesh",
+      "outcome": "rewritten"
+    },
+    {
+      "id": "missing-physical-directory-is-denied",
+      "directories": [],
+      "reference": "✳️mesh",
+      "outcome": "missing-directory"
+    },
+    {
+      "id": "ambiguous-physical-directory-is-denied",
+      "directories": ["✳️mesh", "🔺️mesh"],
+      "reference": "✳️mesh",
+      "outcome": "ambiguous-directory"
+    }
+  ]
+}

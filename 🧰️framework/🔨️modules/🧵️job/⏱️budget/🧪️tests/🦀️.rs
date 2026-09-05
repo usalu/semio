@@ -39,7 +39,7 @@ fn microsecond_zero_expired_or_empty_fuel_never_enters_job() {
 
 #[test]
 fn microsecond_language_neutral_deadline_boundaries_and_overflow() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap();
     for law in fixture["cases"].as_array().unwrap() {
         let start = law["start"].as_str().unwrap().parse::<u64>().unwrap();
         let fuel = law["fuel"].as_u64().unwrap();
@@ -136,7 +136,7 @@ impl InteractiveJob for CompletionProbe {
 #[test]
 fn microsecond_exact_callback_quarantine_retains_original_output_and_session_identity() {
     assert!(install_microsecond_clock(now).is_ok());
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../⏱️trace/⏱️clock/🔣️contention.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../⏱️trace/⏱️clock/🧪️contention/🔣️.json")).unwrap();
     let operation = allocate_operation_id();
     let generation = Generation(71);
     for law in fixture["verdicts"].as_array().unwrap().iter().filter(|law| !law["start"].is_null()) {
@@ -182,7 +182,7 @@ fn microsecond_exact_callback_quarantine_retains_original_output_and_session_ide
 //#region 🌐️PlatformClock
 #[test]
 fn microsecond_browser_clock_fraction_and_invalid_source_vectors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️clock.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🕰️clock.json")).unwrap();
     for law in fixture["browser"].as_array().unwrap() {
         let milliseconds = law["milliseconds"].as_str().unwrap().parse::<f64>().unwrap();
         let expected = law["microseconds"].as_str().map(|value| value.parse::<u64>().unwrap());

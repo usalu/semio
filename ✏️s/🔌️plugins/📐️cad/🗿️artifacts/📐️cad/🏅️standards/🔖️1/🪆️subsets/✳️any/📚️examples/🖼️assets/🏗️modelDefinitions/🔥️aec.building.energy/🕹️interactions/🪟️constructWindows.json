@@ -1,0 +1,1054 @@
+{
+  "schema": "spatial.interaction",
+  "id": "energy.energy.constructWindows",
+  "version": "1.0.0",
+  "label": "Construct Windows",
+  "key": "w",
+  "interaction": {
+    "spatialGroundPick": true,
+    "pickDisabledStates": ["choose_mode", "committed"],
+    "groundPointerMoveStates": ["two_points_first", "two_points_second"],
+    "heightDragStates": ["two_points_height", "curve_height"],
+    "verticalRodStates": [],
+    "heightConfirmState": "two_points_height"
+  },
+  "guards": [
+    {
+      "name": "hasConstructMode",
+      "expr": {
+        "kind": "exists",
+        "target": {
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "constructMode"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "machine": {
+    "initial": "choose_mode",
+    "states": [
+      {
+        "name": "choose_mode",
+        "on": [
+          {
+            "event": "mode.2points",
+            "transitions": [
+              {
+                "target": "two_points_first",
+                "key": "1",
+                "label": "2 points + height",
+                "effects": [
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "constructMode"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": "2PointsAndHeight"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "mode.curve",
+            "transitions": [
+              {
+                "target": "curve_wire",
+                "key": "2",
+                "label": "Curve + height",
+                "effects": [
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "constructMode"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": "curveAndHeight"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "mode.surface",
+            "transitions": [
+              {
+                "target": "committed",
+                "key": "3",
+                "label": "Surface",
+                "effects": [
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "constructMode"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": "surface"
+                    }
+                  },
+                  {
+                    "mutation": "interaction.call",
+                    "interaction": "surface.construct",
+                    "outputs": [
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "faceId"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "faceId"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireId"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireId"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireIds"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireIds"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curves"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curves"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "points"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "points"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "targets"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "targets"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "surfaceConstructMode"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "surfaceConstructMode"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "two_points_first",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "pointer.down",
+            "transitions": [
+              {
+                "target": "two_points_second",
+                "effects": [
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "pointA"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "two_points_second",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "pointer.down",
+            "transitions": [
+              {
+                "target": "two_points_height",
+                "effects": [
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "pointB"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "height"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": 0.25
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "two_points_height",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "height"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "let",
+                      "bindings": [
+                        {
+                          "name": "z0",
+                          "value": {
+                            "kind": "path",
+                            "root": "context",
+                            "segments": [
+                              {
+                                "kind": "field",
+                                "name": "pointA"
+                              },
+                              {
+                                "kind": "index",
+                                "index": 2
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "z1",
+                          "value": {
+                            "kind": "path",
+                            "root": "event",
+                            "segments": [
+                              {
+                                "kind": "field",
+                                "name": "point"
+                              },
+                              {
+                                "kind": "index",
+                                "index": 2
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "in": {
+                        "kind": "binop",
+                        "operation": "+",
+                        "left": {
+                          "kind": "abs",
+                          "arg": {
+                            "kind": "binop",
+                            "operation": "-",
+                            "left": {
+                              "kind": "var",
+                              "name": "z1"
+                            },
+                            "right": {
+                              "kind": "var",
+                              "name": "z0"
+                            }
+                          }
+                        },
+                        "right": {
+                          "kind": "const",
+                          "value": 0.01
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "set.height",
+            "transitions": [
+              {
+                "target": "committed",
+                "key": "n",
+                "label": "Height",
+                "effects": [
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "height"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "value"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "curve_wire",
+        "selection": {
+          "accept": ["wire"],
+          "multiple": false,
+          "prompt": "Pick path wire"
+        },
+        "on": [
+          {
+            "event": "selection.changed",
+            "transitions": [
+              {
+                "target": "curve_height",
+                "effects": [
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "wireId"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "targets"
+                        },
+                        {
+                          "kind": "index",
+                          "index": 0
+                        },
+                        {
+                          "kind": "field",
+                          "name": "id"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "curve_height",
+        "on": [
+          {
+            "event": "set.height",
+            "transitions": [
+              {
+                "target": "committed",
+                "key": "n",
+                "label": "Height",
+                "effects": [
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "height"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "value"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "committed",
+        "final": true
+      }
+    ]
+  },
+  "display": {
+    "states": [
+      {
+        "state": "choose_mode",
+        "items": [
+          {
+            "kind": "label",
+            "id": "choose-mode",
+            "role": "prompt",
+            "text": "Construct Windows: 1=2pts+height 2=curve+height 3=surface",
+            "position": {
+              "kind": "const",
+              "value": [0, 0.25, 1.55]
+            }
+          }
+        ]
+      },
+      {
+        "state": "two_points_first",
+        "items": [
+          {
+            "kind": "label",
+            "id": "hint-first",
+            "role": "prompt",
+            "text": "Construct Windows: click first footprint corner",
+            "position": {
+              "kind": "const",
+              "value": [0, 0.25, 1.55]
+            }
+          },
+          {
+            "kind": "point",
+            "id": "cursor",
+            "role": "cursor",
+            "position": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "cursor"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "state": "two_points_second",
+        "items": [
+          {
+            "kind": "label",
+            "id": "hint-second",
+            "role": "prompt",
+            "text": "Construct Windows: click opposite footprint corner",
+            "position": {
+              "kind": "const",
+              "value": [0, 0.25, 1.55]
+            }
+          },
+          {
+            "kind": "point",
+            "id": "anchor-a",
+            "role": "anchor",
+            "position": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "pointA"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": "cursor",
+            "role": "cursor",
+            "position": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "cursor"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "segment",
+            "id": "footprint-rubber",
+            "role": "preview",
+            "from": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "pointA"
+                }
+              ]
+            },
+            "to": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "cursor"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "box-preview",
+            "id": "preview",
+            "role": "preview",
+            "cornerA": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "pointA"
+                }
+              ]
+            },
+            "cornerB": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "cursor"
+                }
+              ]
+            },
+            "height": {
+              "kind": "const",
+              "value": 0.01
+            }
+          }
+        ]
+      },
+      {
+        "state": "two_points_height",
+        "items": [
+          {
+            "kind": "label",
+            "id": "hint-height",
+            "role": "prompt",
+            "text": "Construct Windows: height (Z) — drag teal wall, Apply height, or Accept",
+            "position": {
+              "kind": "const",
+              "value": [0, 0.25, 1.55]
+            }
+          },
+          {
+            "kind": "box-preview",
+            "id": "preview",
+            "role": "preview",
+            "cornerA": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "pointA"
+                }
+              ]
+            },
+            "cornerB": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "pointB"
+                }
+              ]
+            },
+            "height": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "height"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "state": "curve_wire",
+        "items": [
+          {
+            "kind": "label",
+            "id": "hint-wire",
+            "role": "prompt",
+            "text": "Construct Windows: pick path wire",
+            "position": {
+              "kind": "const",
+              "value": [0, 0.25, 1.55]
+            }
+          }
+        ]
+      },
+      {
+        "state": "curve_height",
+        "items": [
+          {
+            "kind": "label",
+            "id": "hint-curve-height",
+            "role": "prompt",
+            "text": "Construct Windows: set height (Apply height or Accept)",
+            "position": {
+              "kind": "const",
+              "value": [0, 0.25, 1.55]
+            }
+          }
+        ]
+      },
+      {
+        "state": "committed",
+        "items": [
+          {
+            "kind": "label",
+            "id": "hint-commit",
+            "role": "prompt",
+            "text": "Construct Windows: Accept to create",
+            "position": {
+              "kind": "const",
+              "value": [0, 0.2, 1.55]
+            }
+          },
+          {
+            "kind": "box-preview",
+            "id": "preview-final",
+            "role": "preview",
+            "cornerA": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "pointA"
+                }
+              ]
+            },
+            "cornerB": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "pointB"
+                }
+              ]
+            },
+            "height": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "height"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "commit": {
+    "when": "hasConstructMode",
+    "fromStates": ["committed"],
+    "operation": {
+      "kind": "action",
+      "action": "energy.energy.constructWindowsFrom2PointsAndHeight",
+      "params": {
+        "typology": {
+          "kind": "const",
+          "value": "energy.energy.windows"
+        },
+        "constructMode": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "constructMode"
+            }
+          ]
+        },
+        "pointA": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "pointA"
+            }
+          ]
+        },
+        "pointB": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "pointB"
+            }
+          ]
+        },
+        "height": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "height"
+            }
+          ]
+        },
+        "wireId": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "wireId"
+            }
+          ]
+        },
+        "wireIds": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "wireIds"
+            }
+          ]
+        },
+        "curves": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "curves"
+            }
+          ]
+        },
+        "points": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "points"
+            }
+          ]
+        },
+        "targets": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "targets"
+            }
+          ]
+        },
+        "faceId": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "faceId"
+            }
+          ]
+        },
+        "surfaceConstructMode": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "surfaceConstructMode"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "produces": {
+    "typology": "energy.energy.windows"
+  }
+}

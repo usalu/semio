@@ -1,0 +1,28 @@
+{
+  "schema": "semio.hub.inference-catalog-selection-fixture/v1",
+  "scope": { "spaceId": "cccccccccccccccccccccccccccccccc", "documentId": "dddddddddddddddddddddddddddddddd" },
+  "descriptor": {
+    "spaceId": "cccccccccccccccccccccccccccccccc", "documentId": "dddddddddddddddddddddddddddddddd",
+    "artifactKind": "s.gis.gismap", "artifactSchema": "gis.map",
+    "owner": { "pluginId": "gis", "packageId": "semio:gis", "version": "1.0.0", "packageHash": "2222222222222222222222222222222222222222222222222222222222222222" },
+    "packSchemaHash": "3333333333333333333333333333333333333333333333333333333333333333",
+    "bootstrapVersion": 1, "bootstrapFrontier": { "headSeq": 0, "commitSeq": 0, "epoch": 0 },
+    "bootstrapSnapshotHash": "4444444444444444444444444444444444444444444444444444444444444444"
+  },
+  "package": { "pluginId": "gis", "packageId": "semio:gis", "version": "1.0.0", "componentSha256": "2222222222222222222222222222222222222222222222222222222222222222" },
+  "services": [{ "owner": "gis", "artifactKind": "s.gis.gismap", "artifactSchema": "s.gis.gismap", "artifactSchemaVersion": 1, "documentSchema": "gis.map", "documentSchemaVersion": 1, "inferenceSchema": "s.gis.gismap.inference", "inferenceSchemaVersion": 1, "algorithmVersion": 1, "policyVersion": 1, "contributor": "gis", "dependsOn": [] }],
+  "cases": [
+    { "name": "exact-selection", "path": [], "value": null, "accepted": true },
+    { "name": "same-document-other-space", "path": ["scope", "spaceId"], "value": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "accepted": false },
+    { "name": "other-document", "path": ["scope", "documentId"], "value": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "accepted": false },
+    { "name": "foreign-package", "path": ["package", "packageId"], "value": "semio:other", "accepted": false },
+    { "name": "foreign-version", "path": ["package", "version"], "value": "2.0.0", "accepted": false },
+    { "name": "other-component", "path": ["package", "componentSha256"], "value": "7777777777777777777777777777777777777777777777777777777777777777", "accepted": false },
+    { "name": "old-artifact-kind", "path": ["descriptor", "artifactKind"], "value": "s.gismap", "accepted": false },
+    { "name": "other-document-schema", "path": ["descriptor", "artifactSchema"], "value": "gis.terrain", "accepted": false },
+    { "name": "missing-declared-service", "path": ["services"], "value": [], "accepted": false },
+    { "name": "foreign-service-owner", "path": ["services", 0, "owner"], "value": "other", "accepted": false },
+    { "name": "wrong-algorithm", "path": ["services", 0, "algorithmVersion"], "value": 2, "accepted": false },
+    { "name": "wrong-policy", "path": ["services", 0, "policyVersion"], "value": 2, "accepted": false }
+  ]
+}

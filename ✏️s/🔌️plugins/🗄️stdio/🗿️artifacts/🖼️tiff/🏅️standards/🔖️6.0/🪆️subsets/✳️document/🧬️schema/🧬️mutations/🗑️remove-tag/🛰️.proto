@@ -1,4 +1,0 @@
-syntax = "proto3";
-package stdio.tiff.mutation;
-// 🧬️ remove-tag/RemoveTag; complex fields follow the direct payload schema.
-message RemoveTagMutation { uint64 ifd_index = 1; uint64 tag = 2; }
